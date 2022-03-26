@@ -1,10 +1,7 @@
-<script lang="ts">
+<script>
     import {fade, fly} from 'svelte/transition'
     import FillButton from "/src/components/buttons/FillButton.svelte";
 
-    const  handleRedirect = (link) => {
-        shell.openExternal(link)
-    }
 </script>
 
 <div class="wrapper" in:fade>
@@ -20,7 +17,7 @@
             <h2>In this update</h2>
         </div>
         <div in:fly="{{y: 100}}" class="socials">
-            <p on:click|preventDefault={() => handleRedirect('https://github.com')}>Github</p>
+            <p>Github</p>
             <p>Support</p>
             <p>Website</p>
         </div>
