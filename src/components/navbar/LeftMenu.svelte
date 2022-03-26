@@ -1,16 +1,18 @@
 <script>
+    import {fly} from 'svelte/transition'
     import logo from '/static/logo-white.png'
     import chat from '/static/CHAT.png'
+    import logout from '/static/logout.png'
 
 </script>
 
-<div class="leftMenu">
+<div class="leftMenu" in:fly="{{x:-100}}">
     <div class="top">
         <a class='button' href="/settings"><img class="icon" src={chat} alt=""></a>
 
     </div>
     <div class="bottom">
-        <a href="/">S</a>
+        <a href="/"><img src={logout} height="15px" alt=""></a>
         <img class="logo" src={logo} alt="kryptokrona logo">
     </div>
 </div>
