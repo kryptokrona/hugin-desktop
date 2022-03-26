@@ -6,16 +6,17 @@
 
 </script>
 
-<div class="leftMenu" in:fly="{{x:-100}}">
+<div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="top">
-        <a class='button' href="/settings"><img class="icon" src={chat} alt=""></a>
-
+        <a class='button' href="/messages"><img class="icon" src={chat} alt=""></a>
+        <a class='button' href="/dashboard"><img class="icon" src={chat} alt=""></a>
     </div>
     <div class="bottom">
         <a href="/"><img src={logout} height="15px" alt=""></a>
         <img class="logo" src={logo} alt="kryptokrona logo">
     </div>
 </div>
+
 
 <style>
 
@@ -59,6 +60,10 @@
         align-items: center;
         padding: 5px;
         border-radius: 5px;
+    }
+
+    a {
+        margin: 0 auto;
     }
 
 </style>
