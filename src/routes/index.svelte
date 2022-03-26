@@ -1,7 +1,6 @@
 <script>
     import {fade, fly} from 'svelte/transition'
     import FillButton from "/src/components/buttons/FillButton.svelte";
-
 </script>
 
 <div class="wrapper" in:fade>
