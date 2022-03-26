@@ -1,9 +1,10 @@
 <script>
 
-import LeftMenu from "/src/components/LeftMenu.svelte";
+import LeftMenu from "/src/components/navbar/LeftMenu.svelte";
 </script>
 
 <LeftMenu></LeftMenu>
+
 
 <style>
 

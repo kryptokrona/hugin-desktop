@@ -2,7 +2,7 @@
     import Counter from '$lib/Counter.svelte';
     import Logo from '$lib/Logo.svelte';
     import { browser } from '$app/env';
-    import LeftMenu from "/src/components/LeftMenu.svelte";
+    import LeftMenu from "/src/components/navbar/LeftMenu.svelte";
 
     let desktop: string;
 

@@ -19,6 +19,7 @@
 		"Chrome 89"
 	],
 	"dependencies": {
+		"better-sqlite3": "^7.5.0",
 		"electron-context-menu": "^2.5.2",
 		"electron-reloader": "^1.2.3",
 		"electron-serve": "^1.1.0",

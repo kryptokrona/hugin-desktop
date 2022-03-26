@@ -1,23 +1,13 @@
-<script lang="ts">
-	import Counter from '$lib/Counter.svelte';
-	import Logo from '$lib/Logo.svelte';
-	import { browser } from '$app/env';
-	import LeftMenu from "../components/LeftMenu.svelte";
+<script>
+    import {fade} from 'svelte/transition'
+    import FillButton from "/src/components/buttons/FillButton.svelte";
 
-	let desktop: string;
-
-	if (browser) {
-		window.api.receive('from-main', (data: any) => {
-			desktop = `Received Message "${data}" from Electron`;
-			console.log(desktop);
-		});
-	}
 </script>
 
-<main>
-    <p>Welcome to Hugin Messenger</p>
-    <a href="/settings">Log in</a>
-</main>
+<div class="main" in:fade>
+    <h1>Welcome to Hugin Messenger</h1>
+    <FillButton text="Log in" url="/settings"/>
+</div>
 
 <style>
 	:root {
@@ -25,26 +15,14 @@
 			Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 	}
 
-	:global(body) {
-		margin: 0;
-		padding: 0;
-	}
-
-	main {
+	.main {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
-		animation: fade 1s;
         height: 100vh;
         color: #fff;
 	}
 
-	@keyframes fade {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
+
 </style>

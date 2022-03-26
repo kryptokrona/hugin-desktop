@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import LeftMenu from "../components/LeftMenu.svelte";
+	import LeftMenu from "../components/navbar/LeftMenu.svelte";
 
 	let ready: boolean = false;
 	onMount(() => (ready = true));
