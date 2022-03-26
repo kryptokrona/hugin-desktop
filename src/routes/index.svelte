@@ -1,19 +1,28 @@
-<script>
+<script lang="ts">
     import {fade} from 'svelte/transition'
     import FillButton from "/src/components/buttons/FillButton.svelte";
-    import hugin from '/static/hugin.png'
+
+    const  handleRedirect = (link) => {
+        shell.openExternal(link)
+    }
 </script>
 
 <div class="wrapper" in:fade>
     <div class="left-wrapper">
         <div class="login-wrapper">
             <h1 class="title">Welcome to Hugin Messenger.</h1>
-            <FillButton text="Log in" url="/settings"/>
+            <FillButton text="Log in" url="/dashboard"/>
         </div>
     </div>
-    <div class="right-wrapper">
-        <div class="circle rgb">
-            <img class="hugin" src={hugin} alt="">
+    <div class="right-wrapper rgb">
+        <div></div>
+        <div>
+            <h2>In this update</h2>
+        </div>
+        <div class="socials">
+            <p on:click|preventDefault={() => handleRedirect('https://github.com')}>Github</p>
+            <p>Support</p>
+            <p>Website</p>
         </div>
     </div>
 </div>
@@ -24,6 +33,11 @@
 			Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 	}
 
+    :global(body) {
+        margin: 0;
+        padding: 0;
+    }
+
 	.wrapper {
         display: flex;
         height: 100vh;
@@ -33,7 +47,7 @@
     .right-wrapper {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
         width: 50%;
         height: 100vh;
@@ -58,15 +72,9 @@
         margin-bottom: 30px;
     }
 
-    .circle {
-        height: 300px;
-        width: 300px;
-        border-radius: 50%;
-    }
-
-    .hugin {
-        height: 300px;
-        margin-left: 40px;
+    .socials {
+        display: flex;
+        gap: 20px
     }
 
     @keyframes rgb {
