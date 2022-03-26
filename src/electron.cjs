@@ -6,10 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const fetch = require('electron-fetch').default;
 const WB = require('kryptokrona-wallet-backend-js');
-let { join, dirname } = require('path');
+let { join } = require('path');
 const { Low, JSONFile } = require('@commonify/lowdb');
-const { fileURLToPath } = require('url');
-
 
 let userDataDir = app.getPath('userData');
 
@@ -23,6 +21,10 @@ const serveURL = serve({ directory: "." });
 const port = process.env.PORT || 3000;
 const dev = !app.isPackaged;
 let mainWindow;
+
+let node = 'explorer.kryptokrona.se'
+let ports = 20001
+const daemon = new WB.Daemon(node, ports);
 
 function createWindow() {
 	let windowState = windowStateManager({
@@ -101,10 +103,14 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+//Create misc.db
 const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
-db
+
+const fileBoards = join(userDataDir, 'boards.db')
+const adapterBoards = new JSONFile(fileBoards)
+const dbBoards = new Low(adapterBoards)
 
 let js_wallet;
 let c = false;
@@ -120,16 +126,13 @@ let syncing = true;
 let start_js_wallet = async () => {
 	/* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
-	let node = 'explorer.kryptokrona.se'
-	let port = 20001
-	const daemon = new WB.Daemon(node, port);
 
 	if (c === 'c') {
 
 		let height = 2;
 
 		try {
-			let re = await fetch('http://' + node + ':' + port + '/getinfo');
+			let re = await fetch('http://' + node + ':' + ports + '/getinfo');
 
 			height = await re.json();
 
@@ -197,9 +200,9 @@ let start_js_wallet = async () => {
 
 	console.log('Started wallet');
 
-
 	while(true) {
-		await sleep(1000 * 10);
+		await sleep(1000 * 20);
+		await backgroundSyncMessages()
 		/* Save the wallet to disk */
 		js_wallet.saveWalletToFile(userDataDir + '/boards.wallet', 'hunter2');
 		const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
@@ -218,13 +221,95 @@ let start_js_wallet = async () => {
 				await sleep(3000 * 10);
 			}
 		}
-		db.data =  { walletBlockCount, localDaemonBlockCount, networkBlockCount }
+		//Save height to misc.db
+		db.data = { walletBlockCount, localDaemonBlockCount, networkBlockCount }
 		await db.write(db.data)
 	}
-
 	console.log('Save wallet to file');
 }
 start_js_wallet();
+
+
+
+function fromHex(hex,str){
+	try{
+		str = decodeURIComponent(hex.replace(/(..)/g,'%$1'))
+	}
+	catch(e){
+		str = hex
+		// console.log('invalid hex input: ' + hex)
+	}
+	return str
+}
+
+
+function trimExtra (extra) {
+
+	try {
+		let payload = fromHex(extra.substring(66));
+
+		let payload_json = JSON.parse(payload);
+		return fromHex(extra.substring(66))
+	}catch (e) {
+		return fromHex(Buffer.from(extra.substring(78)).toString())
+	}
+}
+
+let known_pool_txs = [];
+
+async function backgroundSyncMessages() {
+
+	console.log('Background syncing...');
+	let message_was_unknown;
+
+	let json = await fetch('http://' + 'explorer.kryptokrona.se:20001' + '/get_pool_changes_lite', {
+		method: 'POST',
+		body: JSON.stringify({
+			knownTxsIds: known_pool_txs
+		})
+	})
+
+	json = await json.json();
+
+	console.log(json);
+
+	json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
+
+	console.log('doc', json);
+
+	json = JSON.parse(json);
+
+	// known_pool_txs = $(known_pool_txs).not(json.deletedTxsIds).get();
+
+	let transactions = json.addedTxs;
+
+	dbBoards.data = dbBoards.data || { messages: [] }
+
+	for (transaction in transactions) {
+
+		try {
+			let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
+			let thisHash = transactions[transaction].transactionPrefixInfotxHash;
+			let extra = trimExtra(thisExtra);
+			console.log(extra)
+			dbBoards.data.messages.push(extra);
+			console.log(dbBoards.data)
+			await dbBoards.write(dbBoards.data);
+
+			if (known_pool_txs.indexOf(thisHash) === -1) {
+				known_pool_txs.push(thisHash);
+				message_was_unknown = true;
+			} else {
+				message_was_unknown = false;
+				console.log("This transaction is already known", thisHash);
+				continue;
+
+			}
+		}catch(err){
+			console.log(err)
+		}
+	}
+}
 
 app.once('ready', createMainWindow);
 app.on('activate', () => {
