@@ -117,9 +117,11 @@ let js_wallet;
 let c = false;
 if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
 	// We have found a boards wallet file
+	console.log('wallet found')
 	start_js_wallet();
 	c = 'o';
 } else {
+	console.log('wallet not found')
 
 	c = 'c';
 }
@@ -127,12 +129,13 @@ let syncing = true;
 
 let myPassword;
 
-ipcMain.on('create-account',  async (event, password, walletName) => {
+ipcMain.on('create-account',  async (event, password ) => {
 	myPassword = password
 	const newWallet = await WB.WalletBackend.createWallet(daemon);
-	newWallet.saveWalletToFile(userDataDir + '/' + walletName, myPassword)
+	newWallet.saveWalletToFile(userDataDir + '/mywallet.wallet' , myPassword)
+	js_wallet = newWallet
 	console.log(password)
-	start_js_wallet();
+	await start_js_wallet();
 })
 
 async function start_js_wallet() {
@@ -154,7 +157,7 @@ async function start_js_wallet() {
 
 	} else if (c === 'o') {
 		/* Open wallet, giving our wallet path and password */
-		const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', 'hunter2');
+		const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', myPassword);
 		if (error) {
 			console.log('Failed to open wallet: ' + error.toString());
 			return;
@@ -167,6 +170,7 @@ async function start_js_wallet() {
 		return;
 	}
 
+
 	js_wallet.enableAutoOptimization(false);
 
 	/* Enable debug logging to the console */
@@ -174,7 +178,6 @@ async function start_js_wallet() {
 
 	/* Start wallet sync process */
 	await js_wallet.start();
-
 
 
 	js_wallet.on('incomingtx', (transaction) => {
