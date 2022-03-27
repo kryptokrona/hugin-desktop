@@ -1,6 +1,6 @@
 const windowStateManager = require('electron-window-state');
 const contextMenu = require('electron-context-menu');
-const { app, BrowserWindow, ipcMain, ipcRenderer} = require('electron');
+const {app, BrowserWindow, ipcMain, ipcRenderer} = require('electron');
 const serve = require('electron-serve');
 const path = require('path');
 const {join} = require('path')
@@ -10,91 +10,93 @@ const WB = require("kryptokrona-wallet-backend-js");
 const {default: fetch} = require("electron-fetch");
 
 try {
-	require('electron-reloader')(module);
+    require('electron-reloader')(module);
 } catch (e) {
-	console.error(e);
+    console.error(e);
 }
 
-const serveURL = serve({ directory: "." });
+const serveURL = serve({directory: "."});
 const port = process.env.PORT || 3000;
 const dev = !app.isPackaged;
 let mainWindow;
 
 function createWindow() {
-	let windowState = windowStateManager({
-		defaultWidth: 1000,
-		defaultHeight: 600,
-	});
-	
-	const mainWindow = new BrowserWindow({
-		backgroundColor: 'whitesmoke',
-		titleBarStyle: 'hidden',
-		autoHideMenuBar: true,
-		trafficLightPosition: {
-			x: 17,
-			y: 12,
-		},
-		minHeight: 600,
-		minWidth: 500,
-		webPreferences: {
-			enableRemoteModule: true,
-			contextIsolation: true,
-			nodeIntegration: true,
-			spellcheck: false,
-			devTools: dev,
-			preload: path.join(__dirname, "preload.cjs")
-		},
-		x: windowState.x,
-		y: windowState.y,
-		width: windowState.width,
-		height: windowState.height,
-	});
+    let windowState = windowStateManager({
+        defaultWidth: 1000,
+        defaultHeight: 600,
+    });
 
-	windowState.manage(mainWindow);
+    const mainWindow = new BrowserWindow({
+        backgroundColor: 'whitesmoke',
+        titleBarStyle: 'hidden',
+        autoHideMenuBar: true,
+        trafficLightPosition: {
+            x: 17,
+            y: 12,
+        },
+        minHeight: 600,
+        minWidth: 500,
+        webPreferences: {
+            enableRemoteModule: true,
+            contextIsolation: true,
+            nodeIntegration: true,
+            spellcheck: false,
+            devTools: dev,
+            preload: path.join(__dirname, "preload.cjs")
+        },
+        x: windowState.x,
+        y: windowState.y,
+        width: windowState.width,
+        height: windowState.height,
+    });
 
-	mainWindow.once('ready-to-show', () => {
-		mainWindow.show();
-		mainWindow.focus();
-	});
+    windowState.manage(mainWindow);
 
-	mainWindow.on('close', () => {
-		windowState.saveState(mainWindow);
-	});
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
+        mainWindow.focus();
+    });
 
-	return mainWindow;
+    mainWindow.on('close', () => {
+        windowState.saveState(mainWindow);
+    });
+
+    return mainWindow;
 }
 
 contextMenu({
-	showLookUpSelection: false,
-	showSearchWithGoogle: false,
-	showCopyImage: false,
-	prepend: (defaultActions, params, browserWindow) => [
-		{
-			label: 'Make App 💻',
-		},
-	],
+    showLookUpSelection: false,
+    showSearchWithGoogle: false,
+    showCopyImage: false,
+    prepend: (defaultActions, params, browserWindow) => [
+        {
+            label: 'Make App 💻',
+        },
+    ],
 });
 
 function loadVite(port) {
-	mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
-		console.log('Error loading URL, retrying', e);
-		setTimeout(() => {
-			loadVite(port);
-		}, 200);
-	});
+    mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
+        console.log('Error loading URL, retrying', e);
+        setTimeout(() => {
+            loadVite(port);
+        }, 200);
+    });
 }
 
 function createMainWindow() {
-	mainWindow = createWindow();
-	mainWindow.once('close', () => { mainWindow = null });
+    mainWindow = createWindow();
+    mainWindow.once('close', () => {
+        mainWindow = null
+    });
 
-	if (dev) loadVite(port);
-	else serveURL(mainWindow);
+    if (dev) loadVite(port);
+    else serveURL(mainWindow);
 }
 
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 let userDataDir = app.getPath('userData');
@@ -116,227 +118,227 @@ const dbBoards = new Low(adapterBoards)
 let js_wallet;
 let c = false;
 
-ipcMain.on('app', (data) => {
-	if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
-		// We have found a boards wallet file
-		start_js_wallet();
-		return mainWindow.webContents.send('wallet-exist', true);
-		c = 'o';
-	} else {
-		console.log('wallet not found')
+if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
+    // We have found a wallet file
+    ipcMain.on('app', (data) => {
+        return mainWindow.webContents.send('wallet-exist', true);
+    })
+    c = 'o';
+    start_js_wallet();
+    console.log(c)
+} else {
 
-		c = 'c';
-	}
-})
+    console.log('wallet not found')
+    c = 'c';
+}
+
 let syncing = true;
 
 let myPassword;
 
-ipcMain.on('create-account',  async (event, password ) => {
-	myPassword = password
-	const newWallet = await WB.WalletBackend.createWallet(daemon);
-	newWallet.saveWalletToFile(userDataDir + '/mywallet.wallet' , myPassword)
-	js_wallet = newWallet
-	console.log(password)
-	await start_js_wallet();
+ipcMain.on('create-account', async (event, password) => {
+    myPassword = password
+    const newWallet = await WB.WalletBackend.createWallet(daemon);
+    newWallet.saveWalletToFile(userDataDir + '/mywallet.wallet', myPassword)
+    js_wallet = newWallet
+    console.log(password)
+    await start_js_wallet();
 })
 
 async function start_js_wallet() {
-	/* Initialise our blockchain cache api. Can use a public node or local node
+    /* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
 
-	if (c === 'c') {
+    if (c === 'c') {
 
-		let height = 2;
+        let height = 2;
 
-		try {
-			let re = await fetch('http://' + node + ':' + ports + '/getinfo');
+        try {
+            let re = await fetch('http://' + node + ':' + ports + '/getinfo');
 
-			height = await re.json();
+            height = await re.json();
 
-		} catch (err) {
+        } catch (err) {
 
-		}
+        }
 
-	} else if (c === 'o') {
-		/* Open wallet, giving our wallet path and password */
-		const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', myPassword);
-		if (error) {
-			console.log('Failed to open wallet: ' + error.toString());
-			return;
-		}
+    } else if (c === 'o') {
+        /* Open wallet, giving our wallet path and password */
+        const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', 'hunter2');
+        if (error) {
+            console.log('Failed to open wallet: ' + error.toString());
+            return;
+        }
 
-		js_wallet = openedWallet;
+        js_wallet = openedWallet;
 
-	} else {
-		console.log('Bad input');
-		return;
-	}
-
-
-	js_wallet.enableAutoOptimization(false);
-
-	/* Enable debug logging to the console */
+    } else {
+        console.log('Bad input');
+        return;
+    }
 
 
-	/* Start wallet sync process */
-	await js_wallet.start();
+    js_wallet.enableAutoOptimization(false);
+
+    /* Enable debug logging to the console */
 
 
-	js_wallet.on('incomingtx', (transaction) => {
+    /* Start wallet sync process */
+    await js_wallet.start();
 
-		console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
 
-		// if (!syncing) {
-		mainWindow.webContents.send('new-message', transaction.toJSON());
-		// }
+    js_wallet.on('incomingtx', (transaction) => {
 
-	});
+        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
 
-	let i = 1;
+        // if (!syncing) {
+        mainWindow.webContents.send('new-message', transaction.toJSON());
+        // }
 
-	for (const address of js_wallet.getAddresses()) {
-		console.log(`Address [${i}]: ${address}`);
-		i++;
-	}
+    });
 
-	i = 1;
+    let i = 1;
 
-	let boards_addresses = [];
+    for (const address of js_wallet.getAddresses()) {
+        console.log(`Address [${i}]: ${address}`);
+        i++;
+    }
 
-	for (const address of js_wallet.getAddresses()) {
-		const [publicSpendKey, privateSpendKey, err] = await js_wallet.getSpendKeys(address);
-		boards_addresses[boards_addresses.length] = [address, publicSpendKey];
-		console.log(`Address [${i}]: ${address}`);
-		i++;
-	}
+    i = 1;
 
-	global.boards_addresses = boards_addresses;
+    let boards_addresses = [];
 
-	console.log('Started wallet');
+    for (const address of js_wallet.getAddresses()) {
+        const [publicSpendKey, privateSpendKey, err] = await js_wallet.getSpendKeys(address);
+        boards_addresses[boards_addresses.length] = [address, publicSpendKey];
+        console.log(`Address [${i}]: ${address}`);
+        i++;
+    }
 
-	while(true) {
-		await sleep(1000 * 20);
-		await backgroundSyncMessages()
-		/* Save the wallet to disk */
-		js_wallet.saveWalletToFile(userDataDir + '/boards.wallet', 'hunter2');
-		const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
-			await js_wallet.getSyncStatus();
-		if((localDaemonBlockCount - walletBlockCount) < 2  ) {
-			// Diff between wallet height and node height is 1 or 0, we are synced
-			mainWindow.webContents.send('synced');
-			console.log('walletBlockCount',walletBlockCount);
-			console.log('localDaemonBlockCount', localDaemonBlockCount);
-			console.log('networkBlockCount', networkBlockCount);
-			syncing = false;
-		} else {
-			if ((localDaemonBlockCount - walletBlockCount) > 19000 ) {
-				console.log('rewinding forward');
-				js_wallet.rewind(networkBlockCount - 9000);
-				await sleep(3000 * 10);
-			}
-		}
-		//Save height to misc.db
-		db.data = { walletBlockCount, localDaemonBlockCount, networkBlockCount }
-		await db.write(db.data)
-	}
-	console.log('Save wallet to file');
+    global.boards_addresses = boards_addresses;
+
+    console.log('Started wallet');
+
+    while (true) {
+        await sleep(1000 * 20);
+        await backgroundSyncMessages()
+        /* Save the wallet to disk */
+        js_wallet.saveWalletToFile(userDataDir + '/boards.wallet', 'hunter2');
+        const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
+            await js_wallet.getSyncStatus();
+        if ((localDaemonBlockCount - walletBlockCount) < 2) {
+            // Diff between wallet height and node height is 1 or 0, we are synced
+            mainWindow.webContents.send('synced');
+            console.log('walletBlockCount', walletBlockCount);
+            console.log('localDaemonBlockCount', localDaemonBlockCount);
+            console.log('networkBlockCount', networkBlockCount);
+            syncing = false;
+        } else {
+            if ((localDaemonBlockCount - walletBlockCount) > 19000) {
+                console.log('rewinding forward');
+                js_wallet.rewind(networkBlockCount - 9000);
+                await sleep(3000 * 10);
+            }
+        }
+        //Save height to misc.db
+        db.data = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
+        await db.write(db.data)
+    }
+    console.log('Save wallet to file');
 }
 
 
-
-function fromHex(hex,str){
-	try{
-		str = decodeURIComponent(hex.replace(/(..)/g,'%$1'))
-	}
-	catch(e){
-		str = hex
-		// console.log('invalid hex input: ' + hex)
-	}
-	return str
+function fromHex(hex, str) {
+    try {
+        str = decodeURIComponent(hex.replace(/(..)/g, '%$1'))
+    } catch (e) {
+        str = hex
+        // console.log('invalid hex input: ' + hex)
+    }
+    return str
 }
 
 
-function trimExtra (extra) {
+function trimExtra(extra) {
 
-	try {
-		let payload = fromHex(extra.substring(66));
+    try {
+        let payload = fromHex(extra.substring(66));
 
-		let payload_json = JSON.parse(payload);
-		return fromHex(extra.substring(66))
-	}catch (e) {
-		return fromHex(Buffer.from(extra.substring(78)).toString())
-	}
+        let payload_json = JSON.parse(payload);
+        return fromHex(extra.substring(66))
+    } catch (e) {
+        return fromHex(Buffer.from(extra.substring(78)).toString())
+    }
 }
 
 let known_pool_txs = [];
 
 async function backgroundSyncMessages() {
 
-	console.log('Background syncing...');
-	let message_was_unknown;
+    console.log('Background syncing...');
+    let message_was_unknown;
 
-	let json = await fetch('http://' + 'explorer.kryptokrona.se:20001' + '/get_pool_changes_lite', {
-		method: 'POST',
-		body: JSON.stringify({
-			knownTxsIds: known_pool_txs
-		})
-	})
+    let json = await fetch('http://' + 'explorer.kryptokrona.se:20001' + '/get_pool_changes_lite', {
+        method: 'POST',
+        body: JSON.stringify({
+            knownTxsIds: known_pool_txs
+        })
+    })
 
-	json = await json.json();
+    json = await json.json();
 
-	console.log(json);
+    console.log(json);
 
-	json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
+    json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
-	console.log('doc', json);
+    console.log('doc', json);
 
-	json = JSON.parse(json);
+    json = JSON.parse(json);
 
-	// known_pool_txs = $(known_pool_txs).not(json.deletedTxsIds).get();
+    // known_pool_txs = $(known_pool_txs).not(json.deletedTxsIds).get();
 
-	let transactions = json.addedTxs;
+    let transactions = json.addedTxs;
 
-	dbBoards.data = dbBoards.data || {messages: []}
+    dbBoards.data = dbBoards.data || {messages: []}
 
-	for (transaction in transactions) {
+    for (transaction in transactions) {
 
-		try {
-			let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
-			let thisHash = transactions[transaction].transactionPrefixInfotxHash;
-			let extra = trimExtra(thisExtra);
-			console.log(extra)
-			dbBoards.data.messages.push(extra);
-			console.log(dbBoards.data)
-			await dbBoards.write(dbBoards.data);
+        try {
+            let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
+            let thisHash = transactions[transaction].transactionPrefixInfotxHash;
+            let extra = trimExtra(thisExtra);
+            console.log(extra)
+            dbBoards.data.messages.push(extra);
+            console.log(dbBoards.data)
+            await dbBoards.write(dbBoards.data);
 
-			if (known_pool_txs.indexOf(thisHash) === -1) {
-				known_pool_txs.push(thisHash);
-				message_was_unknown = true;
-			} else {
-				message_was_unknown = false;
-				console.log("This transaction is already known", thisHash);
-				continue;
-			}
-		} catch (err) {
-			console.log(err)
-		}
-	}
+            if (known_pool_txs.indexOf(thisHash) === -1) {
+                known_pool_txs.push(thisHash);
+                message_was_unknown = true;
+            } else {
+                message_was_unknown = false;
+                console.log("This transaction is already known", thisHash);
+
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
 }
 
 app.once('ready', createMainWindow);
 app.on('activate', () => {
-	if (!mainWindow) {
-		createMainWindow();
-	}
+    if (!mainWindow) {
+        createMainWindow();
+    }
 });
 
 app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin') app.quit();
 });
 
 //ipcMain.on('password',  (event, password) => {
-	//GÖR NÅTT MED PASS
+//GÖR NÅTT MED PASS
 //	console.log(password)
 //	return mainWindow.webContents.send('password', `password is ${password}`);
 //})

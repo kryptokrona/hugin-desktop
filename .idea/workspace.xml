@@ -87,12 +87,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>325</line>
+          <line>327</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>99</line>
+          <line>101</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>

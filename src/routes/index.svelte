@@ -29,7 +29,7 @@
             <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
             {#if !wallet}
                 <FillButton text="Create Account" url="/create-account" />
-                {/if}
+            {/if}
         </div>
     </div>
     <div class="right-wrapper rgb">
