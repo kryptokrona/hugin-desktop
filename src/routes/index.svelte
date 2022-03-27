@@ -2,8 +2,13 @@
     import {fade, fly} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
+    import {onMount} from "svelte";
 
     let password = 'no password'
+
+    onMount(() => {
+        ipcRenderer.receive('account-exist', data => console.log(data))
+    })
 
     const handleLogin = () => {
         window.api.send('password', password);

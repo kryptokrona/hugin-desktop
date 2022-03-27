@@ -1,6 +1,6 @@
 const windowStateManager = require('electron-window-state');
 const contextMenu = require('electron-context-menu');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, contextBridge, ipcRenderer } = require('electron');
 const serve = require('electron-serve');
 const path = require('path');
 const fs = require('fs');
@@ -108,22 +108,35 @@ const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
 
+//Create boards.db
 const fileBoards = join(userDataDir, 'boards.db')
 const adapterBoards = new JSONFile(fileBoards)
 const dbBoards = new Low(adapterBoards)
 
 let js_wallet;
 let c = false;
-if (fs.existsSync(userDataDir + '/boards.wallet')) {
+if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
 	// We have found a boards wallet file
+	start_js_wallet();
+	ipcRenderer.send('account-exist', true)
 	c = 'o';
 } else {
+
 	c = 'c';
 }
 let syncing = true;
 
+let myPassword;
 
-let start_js_wallet = async () => {
+ipcMain.on('create-account',  async (event, password, walletName) => {
+	myPassword = password
+	const newWallet = await WB.WalletBackend.createWallet(daemon);
+	newWallet.saveWalletToFile(userDataDir + '/' + walletName, myPassword)
+	console.log(password)
+	start_js_wallet();
+})
+
+async function start_js_wallet() {
 	/* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
 
@@ -140,12 +153,9 @@ let start_js_wallet = async () => {
 
 		}
 
-		const newWallet = await WB.WalletBackend.createWallet(daemon);
-
-		js_wallet = newWallet;
 	} else if (c === 'o') {
 		/* Open wallet, giving our wallet path and password */
-		const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/boards.wallet', 'hunter2');
+		const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', 'hunter2');
 		if (error) {
 			console.log('Failed to open wallet: ' + error.toString());
 			return;
@@ -227,7 +237,6 @@ let start_js_wallet = async () => {
 	}
 	console.log('Save wallet to file');
 }
-start_js_wallet();
 
 
 

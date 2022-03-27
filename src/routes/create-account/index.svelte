@@ -1,17 +1,25 @@
 <script>
     import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
+    import {onMount} from "svelte";
+    import {ipcRenderer} from "electron";
+
+    let password;
+    let walletName;
+
+    const handleLogin = () => {
+        window.api.send('create-account', password, walletName);
+    }
 </script>
 
 <main in:fade>
-
     <h1>Create Account</h1>
     <div class="wrapper">
         <label>Username</label>
-        <input type="text" placeholder="Satoshi">
+        <input type="text" placeholder="Satoshi" bind:value={walletName}>
         <label>Password</label>
-        <input type="password" placeholder="Something safe">
-        <FillButton text="Create" on:click={() => console.log('clicked')}/>
+        <input type="password" placeholder="Something safe" bind:value={password}>
+        <FillButton text="Create" on:click={handleLogin}/>
         <FillButton text="back" url="/"/>
     </div>
 </main>

@@ -2,19 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/routes/create-account/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/buttons/FillButton.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/buttons/FillButton.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/utils/hmr-stores.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/boards/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/boards/index.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/create-account/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/create-account/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/logout.png" beforeDir="false" afterPath="$PROJECT_DIR$/static/logout.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,7 +66,7 @@
       <option name="presentableId" value="Default" />
       <updated>1648305752979</updated>
       <workItem from="1648305755071" duration="33234000" />
-      <workItem from="1648343242604" duration="11822000" />
+      <workItem from="1648343242604" duration="16092000" />
     </task>
     <servers />
   </component>
@@ -97,22 +89,17 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>233</line>
+          <line>242</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>125</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>245</line>
+          <line>254</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>259</line>
+          <line>268</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
