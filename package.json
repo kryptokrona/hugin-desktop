@@ -20,6 +20,7 @@
 	],
 	"dependencies": {
 		"@commonify/lowdb": "^3.0.0",
+		"better-sqlite3": "^7.5.0",
 		"electron-context-menu": "^2.5.2",
 		"electron-fetch": "^1.7.4",
 		"electron-reloader": "^1.2.3",
