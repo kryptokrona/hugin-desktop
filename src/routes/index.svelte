@@ -2,8 +2,15 @@
     import {fade, fly} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
+    import {onMount} from "svelte";
 
     let password = 'no password'
+    let wallet
+
+    onMount(() => {
+        window.api.send('app', true)
+        window.api.receive('wallet-exist', data => wallet = data)
+    })
 
     const handleLogin = () => {
         window.api.send('password', password);
@@ -20,7 +27,9 @@
         <div class="login-wrapper">
             <h1 class="title">Welcome to Hugin Messenger.</h1>
             <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
-            <FillButton text="Create Account" url="/create-account" />
+            {#if !wallet}
+                <FillButton text="Create Account" url="/create-account" />
+                {/if}
         </div>
     </div>
     <div class="right-wrapper rgb">

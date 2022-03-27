@@ -115,16 +115,19 @@ const dbBoards = new Low(adapterBoards)
 
 let js_wallet;
 let c = false;
-if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
-	// We have found a boards wallet file
-	console.log('wallet found')
-	start_js_wallet();
-	c = 'o';
-} else {
-	console.log('wallet not found')
 
-	c = 'c';
-}
+ipcMain.on('app', (data) => {
+	if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
+		// We have found a boards wallet file
+		start_js_wallet();
+		return mainWindow.webContents.send('wallet-exist', true);
+		c = 'o';
+	} else {
+		console.log('wallet not found')
+
+		c = 'c';
+	}
+})
 let syncing = true;
 
 let myPassword;
