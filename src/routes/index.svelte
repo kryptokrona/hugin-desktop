@@ -6,10 +6,6 @@
 
     let password = 'no password'
 
-    onMount(() => {
-        ipcRenderer.receive('account-exist', data => console.log(data))
-    })
-
     const handleLogin = () => {
         window.api.send('password', password);
         user.set({
@@ -42,21 +38,21 @@
 </div>
 
 <style>
-	:root {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-			Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-	}
+    :root {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+        Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
 
     :global(body) {
         margin: 0;
         padding: 0;
     }
 
-	.wrapper {
+    .wrapper {
         display: flex;
         height: 100vh;
         color: #fff;
-	}
+    }
 
     .right-wrapper {
         display: flex;

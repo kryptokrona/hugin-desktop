@@ -1,8 +1,6 @@
 <script>
     import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
-    import {onMount} from "svelte";
-    import {ipcRenderer} from "electron";
 
     let password;
     let walletName;

@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mywallet.wallet" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/backend/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/backend/main.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/create-account/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/create-account/index.svelte" afterDir="false" />
@@ -66,7 +68,7 @@
       <option name="presentableId" value="Default" />
       <updated>1648305752979</updated>
       <workItem from="1648305755071" duration="33234000" />
-      <workItem from="1648343242604" duration="16092000" />
+      <workItem from="1648343242604" duration="11822000" />
     </task>
     <servers />
   </component>
@@ -89,18 +91,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>242</line>
+          <line>319</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>254</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>268</line>
-          <option name="timeStamp" value="8" />
+          <line>99</line>
+          <option name="timeStamp" value="6" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
