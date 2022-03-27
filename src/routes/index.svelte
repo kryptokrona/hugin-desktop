@@ -1,13 +1,24 @@
-<script>
-    import {fade, fly} from 'svelte/transition'
+<script lang="ts">
+    import {fade, fly} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
+    import { browser } from '$app/env';
+
+    let password
+    let loggedIn
+
+
+    const handleLogin = async () => {
+        window.api.send('password', password);
+    }
+
 </script>
 
 <div class="wrapper" in:fade>
     <div class="left-wrapper">
         <div class="login-wrapper">
             <h1 class="title">Welcome to Hugin Messenger.</h1>
-            <FillButton text="Log in" url="/dashboard"/>
+            <input placeholder="Insert Password" bind:value={password}>
+            <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
         </div>
     </div>
     <div class="right-wrapper rgb">
@@ -71,39 +82,5 @@
     .socials {
         display: flex;
         gap: 20px
-    }
-
-    @keyframes rgb {
-        0%, 100% {
-            background: #5f86f2;
-        }
-        12.5% {
-            background: #a65ff2;
-        }
-        25% {
-            background: #f25fd0;
-        }
-        37.5% {
-            background: #f25f61;
-        }
-        50% {
-            background: #f2cb5f;
-        }
-        62.5% {
-            background: #abf25f;
-        }
-        75% {
-            background: #5ff281;
-        }
-        87.5% {
-            background: #5ff2f0;
-        }
-    }
-    .rgb {
-
-        background: #5f86f2;
-        -webkit-animation: rgb 30s ease infinite;
-        -moz-animation: rgb 30s ease infinite;
-        animation: rgb 30s ease infinite;
     }
 </style>

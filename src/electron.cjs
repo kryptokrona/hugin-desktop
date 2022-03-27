@@ -8,6 +8,7 @@ const fetch = require('electron-fetch').default;
 const WB = require('kryptokrona-wallet-backend-js');
 let { join } = require('path');
 const { Low, JSONFile } = require('@commonify/lowdb');
+const utils = require('kryptokrona-utils');
 
 let userDataDir = app.getPath('userData');
 
@@ -140,7 +141,7 @@ let start_js_wallet = async () => {
 
 		}
 
-		const [newWallet, error] = await WB.WalletBackend.importViewWallet(daemon, parseInt(height.height)-1, '1ee35767b8a247c03423e78c302f7c3c64c5e3c145878e4fbf1cc3bbbb35b10c', 'SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc');
+		const newWallet = await WB.WalletBackend.createWallet(daemon);
 
 		js_wallet = newWallet;
 	} else if (c === 'o') {
@@ -303,7 +304,6 @@ async function backgroundSyncMessages() {
 				message_was_unknown = false;
 				console.log("This transaction is already known", thisHash);
 				continue;
-
 			}
 		}catch(err){
 			console.log(err)
@@ -321,6 +321,8 @@ app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') app.quit();
 });
 
-ipcMain.on('to-main', (event, count) => {
-	return mainWindow.webContents.send('from-main', `next count is ${count+1}`);
-  })
+ipcMain.on('password',  (event, password) => {
+	//GÖR NÅTT MED PASS
+	console.log(password)
+	return mainWindow.webContents.send('password', `password is ${password}`);
+})

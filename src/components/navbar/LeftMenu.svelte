@@ -8,7 +8,7 @@
 
 <div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="top">
-        <a class='button' href="/messages"><img class="icon" src={chat} alt=""></a>
+        <a class='button' href="/boards"><img class="icon" src={chat} alt=""></a>
         <a class='button' href="/dashboard"><img class="icon" src={chat} alt=""></a>
     </div>
     <div class="bottom">

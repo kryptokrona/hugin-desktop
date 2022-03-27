@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import LeftMenu from "../components/navbar/LeftMenu.svelte";
 	import { page } from '$app/stores';
+	import '/src/style.css'
 
 	let ready = false;
 	onMount(() => (ready = true));
