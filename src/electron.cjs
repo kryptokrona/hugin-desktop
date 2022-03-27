@@ -8,7 +8,6 @@ const fetch = require('electron-fetch').default;
 const WB = require('kryptokrona-wallet-backend-js');
 let { join } = require('path');
 const { Low, JSONFile } = require('@commonify/lowdb');
-const utils = require('kryptokrona-utils');
 
 let userDataDir = app.getPath('userData');
 

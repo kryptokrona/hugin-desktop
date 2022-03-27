@@ -2,16 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/routes/boards/index.svelte" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/routes/create-account/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/buttons/FillButton.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/buttons/FillButton.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/utils/hmr-stores.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/boards/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/boards/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/logout.png" beforeDir="false" afterPath="$PROJECT_DIR$/static/logout.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +46,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="dart.analysis.tool.window.visible" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/static" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/components/navbar" />
     <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
@@ -55,6 +58,7 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/components/navbar" />
       <recent name="$PROJECT_DIR$/static" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -70,6 +74,7 @@
       <option name="presentableId" value="Default" />
       <updated>1648305752979</updated>
       <workItem from="1648305755071" duration="33234000" />
+      <workItem from="1648343242604" duration="11822000" />
     </task>
     <servers />
   </component>
@@ -92,26 +97,22 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>234</line>
-          <properties lambdaOrdinal="-1" />
+          <line>233</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>126</line>
-          <properties lambdaOrdinal="-1" />
+          <line>125</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>246</line>
-          <properties lambdaOrdinal="-1" />
+          <line>245</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/electron.cjs</url>
-          <line>260</line>
-          <properties lambdaOrdinal="-1" />
+          <line>259</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>

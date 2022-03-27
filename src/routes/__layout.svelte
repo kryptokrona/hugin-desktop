@@ -1,20 +1,21 @@
 <script>
 	import { onMount } from 'svelte';
 	import LeftMenu from "../components/navbar/LeftMenu.svelte";
-	import { page } from '$app/stores';
+	import { user } from "$lib/stores/user.js";
+	import RightMenu from "/src/components/navbar/RightMenu.svelte";
+
 	import '/src/style.css'
 
 	let ready = false;
 	onMount(() => (ready = true));
-	let loginScreen = '/'
-	console.log($page.url.pathname)
 </script>
 
 
 {#if ready}
 
-	{#if $page.url.pathname !== loginScreen}
+	{#if $user.loggedIn}
 	<LeftMenu/>
+		<RightMenu/>
 	{/if}
 
 	<slot />

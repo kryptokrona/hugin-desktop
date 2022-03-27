@@ -1,6 +1,6 @@
 <script>
     //Export variables with default values
-    export let url = '/'
+    export let url
     export let text = 'Button'
 </script>
 
@@ -18,6 +18,8 @@
         padding: 8px 15px;
         text-decoration: none;
         transition: 250ms ease-in-out;
+        cursor: pointer;
+        margin-top: 10px;
     }
 
     a:hover {

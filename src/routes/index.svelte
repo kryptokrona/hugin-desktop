@@ -1,24 +1,26 @@
-<script lang="ts">
+<script>
     import {fade, fly} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
-    import { browser } from '$app/env';
+    import {user} from "$lib/stores/user.js";
 
-    let password
-    let loggedIn
+    let password = 'no password'
 
-
-    const handleLogin = async () => {
+    const handleLogin = () => {
         window.api.send('password', password);
+        user.set({
+            ...user,
+            loggedIn: true
+        })
+        console.log('User logged in')
     }
-
 </script>
 
 <div class="wrapper" in:fade>
     <div class="left-wrapper">
         <div class="login-wrapper">
             <h1 class="title">Welcome to Hugin Messenger.</h1>
-            <input placeholder="Insert Password" bind:value={password}>
             <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
+            <FillButton text="Create Account" url="/create-account" />
         </div>
     </div>
     <div class="right-wrapper rgb">

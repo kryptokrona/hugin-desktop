@@ -1,19 +1,22 @@
 <script>
-
-    let location
-
+    import {fade} from 'svelte/transition';
 </script>
 
-<main>
-    <button on:click={() => >Home</button>
+<main in:fade>
     <div class="board">
-        <PrintBoard/>
+        <h1>Boards</h1>
     </div>
 </main>
 
 <style>
     main {
         margin-left: 85px;
+        padding: 40px;
+    }
+
+    h1 {
+        color: white;
+        margin: 0
     }
 
 </style>

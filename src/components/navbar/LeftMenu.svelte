@@ -1,18 +1,24 @@
 <script>
     import {fly} from 'svelte/transition'
     import logo from '/static/logo-white.png'
-    import chat from '/static/CHAT.png'
     import logout from '/static/logout.png'
+    import {user} from "$lib/stores/user.js";
 
+    const handleLogout = () => {
+        user.set({
+            loggedIn: false,
+            ...user
+            })
+    }
 </script>
 
 <div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="top">
-        <a class='button' href="/boards"><img class="icon" src={chat} alt=""></a>
-        <a class='button' href="/dashboard"><img class="icon" src={chat} alt=""></a>
+        <a class='button' href="/dashboard">Dashboard</a>
+        <a class='button' href="/boards">Boards</a>
     </div>
     <div class="bottom">
-        <a href="/"><img src={logout} height="15px" alt=""></a>
+        <a href="/" on:click={handleLogout}><img src={logout} height="18px" alt=""></a>
         <img class="logo" src={logo} alt="kryptokrona logo">
     </div>
 </div>
@@ -32,7 +38,7 @@
         justify-content: space-between;
         align-items: center;
         -webkit-app-region: drag;
-        position: absolute;
+        position: fixed;
         z-index: 100;
     }
 
@@ -50,9 +56,6 @@
         width: 50px;
     }
 
-    .icon {
-        height: 20px;
-    }
 
     .button {
         display: flex;

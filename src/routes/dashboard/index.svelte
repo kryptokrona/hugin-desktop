@@ -1,8 +1,8 @@
 <script>
-
+    import { fade } from 'svelte/transition';
 </script>
 
-<main>
+<main in:fade>
     <h1>Dashboard</h1>
 </main>
 
