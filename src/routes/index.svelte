@@ -1,5 +1,5 @@
 <script>
-    import {fade, fly} from 'svelte/transition';
+    import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
     import {onMount} from "svelte";

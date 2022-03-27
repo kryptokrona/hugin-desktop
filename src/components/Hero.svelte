@@ -2,7 +2,7 @@
     import {fade, fly} from 'svelte/transition';
 </script>
 
-<div class="hero rgb">
+<div in:fade class="hero rgb">
     <div></div>
     <div in:fly="{{y: 50, delay: 200}}">
         <h2>In this update</h2>
