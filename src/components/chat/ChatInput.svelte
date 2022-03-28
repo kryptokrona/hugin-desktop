@@ -30,7 +30,7 @@
         border: none;
         border-radius: 10px 0 0 10px;
         color: #ffffff;
-        padding: 10px 20px;
+        padding: 10px 15px;
         margin: 0;
     }
 

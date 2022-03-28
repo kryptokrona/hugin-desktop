@@ -17,4 +17,8 @@
         border-radius: 10px;
     }
 
+    p {
+        margin: 0;
+    }
+
 </style>
