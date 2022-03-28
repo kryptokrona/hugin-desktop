@@ -5,4 +5,5 @@ export const user = writable({
     loggedIn: true,
     boardsArray: ['Home', 'Hugin'],
     node: '',
+    activeContact: ''
 })

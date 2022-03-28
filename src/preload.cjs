@@ -2,6 +2,8 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 const WINDOW_API = {
+
+  //GENERAL API CALLS
   send: (channel, data) => {
     ipcRenderer.send(channel, data)
   },
@@ -11,8 +13,14 @@ const WINDOW_API = {
   receive: (channel, func) => {
     ipcRenderer.on(channel, (event, ...args) => func(...args))
   },
-  sendMsg: msg => {
-    ipcRenderer.send('sendMsg', msg)
+
+
+  // SEND MESSAGES
+  sendMsg: (msg, address, key) => {
+    ipcRenderer.send('sendMsg', msg, address, key )
+  },
+  sendBoardMsg: (msg, address, key) => {
+    ipcRenderer.send('sendBoardMsg', msg, address, key )
   },
 
   //HANDLE NODES

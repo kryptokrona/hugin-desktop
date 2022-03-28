@@ -1,6 +1,6 @@
 const windowStateManager = require('electron-window-state');
 const contextMenu = require('electron-context-menu');
-const {app, BrowserWindow, ipcMain, ipcRenderer} = require('electron');
+const {app, BrowserWindow, ipcMain} = require('electron');
 const serve = require('electron-serve');
 const path = require('path');
 const {join} = require('path')
@@ -8,7 +8,41 @@ const {JSONFile, Low} = require("@commonify/lowdb");
 const fs = require('fs')
 const WB = require("kryptokrona-wallet-backend-js");
 const {default: fetch} = require("electron-fetch");
-const {logger} = require("kryptokrona-wallet-backend-js/dist/lib/Logger.js");
+const nacl = require('tweetnacl')
+const naclUtil = require('tweetnacl-util')
+const naclSealed = require('tweetnacl-sealed-box')
+const { Address,
+        AddressPrefix,
+        Block,
+        BlockTemplate,
+        Crypto,
+        CryptoNote,
+        LevinPacket,
+        Transaction} = require('kryptokrona-utils')
+const xkrUtils = new CryptoNote()
+const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+function getKeyPair() {
+    // return new Promise((resolve) => setTimeout(resolve, ms));
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+    const secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
+    const keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
+    return keyPair;
+}
+
+function toHex(str,hex){
+    try{
+        hex = unescape(encodeURIComponent(str))
+            .split('').map(function(v){
+                return v.charCodeAt(0).toString(16)
+            }).join('')
+    }
+    catch(e){
+        hex = str
+        //console.log('invalid text input: ' + str)
+    }
+    return hex
+}
 
 try {
     require('electron-reloader')(module);
@@ -156,7 +190,7 @@ async function start_js_wallet() {
 
     if (c === 'c') {
 
-        let height = 2;
+        let height = 9000;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -248,9 +282,30 @@ async function start_js_wallet() {
         //Save height to misc.db
         db.data = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
         await db.write(db.data)
+        console.log( await js_wallet.getBalance())
+
     }
     console.log('Save wallet to file');
 }
+
+
+function nonceFromTimestamp(tmstmp) {
+
+    let nonce = hexToUint(String(tmstmp));
+
+    while ( nonce.length < nacl.box.nonceLength ) {
+
+        tmp_nonce = Array.from(nonce);
+
+        tmp_nonce.push(0);
+
+        nonce = Uint8Array.from(tmp_nonce);
+
+    }
+
+    return nonce;
+}
+
 
 
 function fromHex(hex, str) {
@@ -276,20 +331,109 @@ function trimExtra(extra) {
 }
 
 let known_pool_txs = [];
+let known_keys = ['Tjeena', 'blablabla', 'tjena', 'blabalba', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
+console.log('known_keys', known_keys)
+
+async function decrypt_message (transaction) {
+    let payload_json;
+    let tx;
+    try {
+
+        try {
+            console.log(transaction);
+            tx = JSON.parse(transaction);
+            console.log('tx', tx);
+        } catch (err) {
+            console.log(err);
+            return
+        }
+
+            // If no key is appended to message we need to try the keys in our payload_keychain
+            let box = tx.box;
+
+            let timestamp = tx.t;
+
+            let i = 0;
+
+            let decryptBox = false;
+
+
+            try {
+                decryptBox = naclSealed.sealedbox.open(hexToUint(box),
+                    nonceFromTimestamp(timestamp),
+                    getKeyPair().secretKey);
+            } catch (err) {
+                console.log(err);
+            }
+
+            while (i < known_keys.length && !decryptBox) {
+                 console.log('Decrypting..');
+
+                let possibleKey = known_keys[i];
+                console.log('Trying key:', possibleKey);
+                i = i+1;
+                try {
+                    decryptBox = nacl.box.open(hexToUint(box),
+                        nonceFromTimestamp(timestamp),
+                        hexToUint(possibleKey),
+                        getKeyPair().secretKey);
+                } catch (err) {
+                    console.log(err);
+                }
+                console.log('Decrypted:', decryptBox);
+
+
+            }
+
+            if (!decryptBox) {
+                console.log('Cannot decrypt..');
+                return;
+            }
+
+
+            let message_dec = naclUtil.encodeUTF8(decryptBox);
+
+            payload_json = JSON.parse(message_dec);
+            payload_json.t = timestamp;
+            if (payload_json.s) {
+
+                let this_addr = await Address.fromAddress(payload_json.from);
+
+                let verified = await xkrUtils.verifyMessageSignature(payload_json.msg, this_addr.spend.publicKey, payload_json.s);
+
+                if (!verified) {
+                    return;
+                }
+
+            }
+            if (payload_json.k) {
+                console.log('Found key!', payload_json);
+             // CHECK IF NEW KEY, SAVE IF NOT!
+
+        }
+
+        console.log(payload_json)
+        return payload_json;
+
+    } catch (err) {
+        console.log(err);
+        return;
+    }
+}
 
 async function backgroundSyncMessages() {
 
     console.log('Background syncing...');
     let message_was_unknown;
-
-    let json = await fetch('http://' + 'explorer.kryptokrona.se:20001' + '/get_pool_changes_lite', {
+    let dec_message;
+    const resp = await fetch('http://' + 'explorer.kryptokrona.se:20001' + '/get_pool_changes_lite', {
         method: 'POST',
         body: JSON.stringify({
             knownTxsIds: known_pool_txs
         })
     })
 
-    json = await json.json();
+    json = await resp.json();
 
     console.log(json);
 
@@ -311,10 +455,8 @@ async function backgroundSyncMessages() {
             let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
             let thisHash = transactions[transaction].transactionPrefixInfotxHash;
             let extra = trimExtra(thisExtra);
-            console.log(extra)
-            dbBoards.data.messages.push(extra);
-            console.log(dbBoards.data)
-            await dbBoards.write(dbBoards.data);
+            let tx = JSON.parse(extra)
+            console.log('tx', tx)
 
             if (known_pool_txs.indexOf(thisHash) === -1) {
                 known_pool_txs.push(thisHash);
@@ -322,43 +464,26 @@ async function backgroundSyncMessages() {
             } else {
                 message_was_unknown = false;
                 console.log("This transaction is already known", thisHash);
-
+                continue;
             }
+                // PRIVATE BOX OR BOARD
+                if (tx.b || tx.box) {
+                    console.log('box found!')
+                    let decrypted_message = await decrypt_message(extra)
+                    console.log('Dekrypterat? ', decrypted_message)
+                }
+                if (tx.brd || decrypted_message.brd) {
+                    // PUBLIC BOARD MESSAGE OR
+                    dbBoards.data.messages.push(extra);
+                    console.log(dbBoards.data)
+                    await dbBoards.write(dbBoards.data);
+                    //save board message here??
+                }
         } catch (err) {
             console.log(err)
         }
     }
 }
-
-ipcMain.on('change-node', async (event, node, kill = true) => {
-
-    global.port = 8000 + parseInt(Math.random() * 100);
-    console.log(node) // prints "ping"
-
-    global.node = node;
-    const daemon = new WB.Daemon(node.split(':')[0], parseInt(node.split(':')[1]));
-    js_wallet.swapNode(daemon);
-
-    db.update({setting: 'walletData'}, {$set: {node: node}}, {}, function (err, numReplaced) {
-
-        console.log(numReplaced);
-        if (kill) {
-            try {
-                wallet.kill('SIGINT');
-            } catch (err) {
-                console.log('err');
-            }
-            wallet.on('close', () => {
-                console.log('Wallet is closed..');
-                startWallet();
-                event.reply('changed-node');
-            });
-
-        } else {
-        }
-
-    })
-})
 
 app.once('ready', createMainWindow);
 app.on('activate', () => {
@@ -371,12 +496,110 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-ipcMain.on('sendMsg', (e, msg) => console.log(msg))
-
 //SWITCH NODE
 ipcMain.on('switchNode', async (e, node) => {
     console.log(`Switching node to ${node}`)
     const daemon = new WB.Daemon(node.split(':')[0], parseInt(node.split(':')[1]));
     await js_wallet.swapNode(daemon);
     db.write()
-})
+});
+
+
+
+ipcMain.on('sendMsg', (e, msg, receiver, messageKey) => {
+    sendMessage(msg, receiver, messageKey);
+    console.log(msg, receiver, messageKey)
+}
+)
+
+async function sendMessage(message, receiver, messageKey) {
+    console.log('Want to send')
+
+    let has_history = false;
+
+    if (message.length == 0) {
+        return;
+    }
+
+
+    let my_address = await js_wallet.getPrimaryAddress();
+
+    let my_addresses = await js_wallet.getAddresses();
+
+    try {
+
+        let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance();
+        //console.log('bal', munlockedBalance, mlockedBalance);
+
+        if (munlockedBalance < 11 && mlockedBalance > 0) {
+
+            log
+            return;
+
+        }
+    } catch (err) {
+        return;
+    }
+
+    let timestamp = Date.now();
+
+
+    // **TO DO** Check whether this is the first outgoing transaction to the recipient
+    // CHECK IN SVELT FROM ACTIVE CONTACT???
+
+
+    // History has been asserted, continue sending message
+
+    let box;
+
+    if (!has_history) {
+        //console.log('No history found..');
+        // payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp};
+        const addr = await Address.fromAddress(my_address);
+        const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+        let xkr_private_key = privateSpendKey;
+        let signature = await xkrUtils.signMessage(message, xkr_private_key);
+        let payload_json = {
+            "from": my_address,
+            "k": Buffer.from(getKeyPair().publicKey).toString('hex'),
+            "msg": message,
+            "s": signature
+        };
+        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
+        box = new naclSealed.sealedbox(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(messageKey));
+    } else {
+        //console.log('Has history, not using sealedbox');
+        // Convert message data to json
+        let payload_json = {"from": my_address, "msg": message};
+
+        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
+
+
+        box = nacl.box(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(messageKey), getKeyPair().secretKey);
+
+    }
+
+    let payload_box = {"box": Buffer.from(box).toString('hex'), "t": timestamp};
+
+    // let payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp, "key":Buffer.from(getKeyPair().publicKey).toString('hex')};
+    // Convert json to hex
+    let payload_hex = toHex(JSON.stringify(payload_box));
+
+    let result = await js_wallet.sendTransactionAdvanced(
+        [[receiver, 1]], // destinations,
+        3, // mixin
+        {fixedFee: 2000, isFixedFee: true}, // fee
+        undefined, //paymentID
+        undefined, // subWalletsToTakeFrom
+        undefined, // changeAddress
+        true, // relayToNetwork
+        false, // sneedAll
+        Buffer.from(payload_hex, 'hex')
+    );
+
+    if (result.success) {
+        console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+    } else {
+        console.log(`Failed to send transaction: ${result.error.toString()}`);
+    }
+}
