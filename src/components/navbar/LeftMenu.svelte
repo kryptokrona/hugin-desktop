@@ -2,6 +2,7 @@
     import {fly} from 'svelte/transition'
     import logo from '/static/logo-white.png'
     import logout from '/static/logout.png'
+    import settings from '/static/settings.png'
     import {user} from "$lib/stores/user.js";
 
     const handleLogout = () => {
@@ -15,10 +16,12 @@
 <div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="top">
         <a class='button' href="/dashboard">Dashboard</a>
+        <a class='button' href="/messages">Messages</a>
         <a class='button' href="/boards">Boards</a>
     </div>
     <div class="bottom">
-        <a href="/" on:click={handleLogout}><img src={logout} height="18px" alt=""></a>
+        <a class="icon" href="/settings"><img src={settings} height="18px" alt=""></a>
+        <a class="icon" href="/" on:click={handleLogout}><img src={logout} height="18px" alt=""></a>
         <img class="logo" src={logo} alt="kryptokrona logo">
     </div>
 </div>
@@ -49,11 +52,12 @@
     .bottom {
         display: flex;
         flex-direction: column;
-        gap: 15px
+        gap: 10px
     }
 
     .logo {
         width: 50px;
+        margin-top: 10px;
     }
 
 
@@ -65,8 +69,15 @@
         border-radius: 5px;
     }
 
-    a {
+    .icon {
         margin: 0 auto;
+        transition: 250ms ease-in-out;
+        opacity: 40%;
     }
+
+    .icon:hover {
+        opacity: 100%;
+    }
+
 
 </style>
