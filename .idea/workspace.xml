@@ -2,22 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lib/stores/messages.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
-    <list id="68c00483-1810-444a-b541-43e8268f2dfc" name="Changes by ralls" comment="">
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -39,25 +28,6 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="LineStatusTrackerManager">
-    <file path="$PROJECT_DIR$/src/electron.cjs">
-      <ranges>
-        <range start1="2" end1="3" start2="2" end2="3" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="10" end1="11" start2="10" end2="45" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="158" end1="159" start2="192" end2="193" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="250" end1="250" start2="284" end2="286" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="253" end1="253" start2="289" end2="308" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="278" end1="278" start2="333" end2="422" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="283" end1="285" start2="427" end2="429" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="291" end1="292" start2="435" end2="436" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="313" end1="317" start2="457" end2="459" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="324" end1="326" start2="466" end2="481" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="331" end1="361" start2="486" end2="486" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="372" end1="374" start2="497" end2="497" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-        <range start1="381" end1="382" start2="504" end2="605" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
-      </ranges>
-    </file>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -105,7 +75,7 @@
       <updated>1648305752979</updated>
       <workItem from="1648305755071" duration="33234000" />
       <workItem from="1648343242604" duration="11822000" />
-      <workItem from="1648474846940" duration="23345000" />
+      <workItem from="1648474846940" duration="24115000" />
     </task>
     <servers />
   </component>

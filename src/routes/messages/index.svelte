@@ -17,7 +17,7 @@
 
 <main in:fade>
     <div class="list">
-        <h1>Messages</h1>
+
     </div>
     <ChatWindow>
         {#each $messages as message}
@@ -39,6 +39,6 @@
     }
 
     .list {
-        width: 30%;
+        width: 40%;
     }
 </style>
