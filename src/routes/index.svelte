@@ -2,25 +2,35 @@
     import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
+    import {nodelist} from "$lib/stores/nodes.js";
     import {onMount} from "svelte";
     import Hero from "/src/components/Hero.svelte";
 
-    let password = 'no password'
     let wallet
 
     onMount(() => {
         window.api.send('app', true)
+        window.api.getNodes()
         window.api.receive('wallet-exist', data => wallet = data)
     })
 
     const handleLogin = () => {
-        window.api.send('password', password);
         user.set({
             ...user,
             loggedIn: true
         })
         console.log('User logged in')
     }
+
+    let node;
+    const switchNode = () => {
+        window.api.switchNode(node)
+        user.set({
+            ...user,
+            node: node
+        })
+    }
+
 </script>
 
 <div class="wrapper" in:fade>
@@ -32,6 +42,12 @@
                 <FillButton text="Create Account" url="/create-account" />
             {/if}
         </div>
+        <select bind:value={node}>
+            {#each $nodelist as node}
+                <option value={`${node.url}:${node.port}`}>{node.name}</option>
+            {/each}
+        </select>
+        <button on:click={switchNode}>Connect</button>
     </div>
     <Hero/>
 </div>

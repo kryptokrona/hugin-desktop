@@ -2,14 +2,22 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/lib/stores/nodes.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/boards/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/boards/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/settings/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/settings/index.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/logout.png" beforeDir="false" afterPath="$PROJECT_DIR$/static/logout.png" afterDir="false" />
+    </list>
+    <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="">
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
+    </list>
+    <list id="68c00483-1810-444a-b541-43e8268f2dfc" name="Changes by ralls" comment="">
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,16 +29,43 @@
       <list>
         <option value="FillButton" />
         <option value="CSS File" />
-        <option value="JavaScript File" />
         <option value="settings/index" />
+        <option value="JavaScript File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="LineStatusTrackerManager">
+    <file path="$PROJECT_DIR$/src/routes/index.svelte">
+      <ranges>
+        <range start1="4" end1="4" start2="4" end2="5" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="7" end1="8" start2="8" end2="8" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="12" end1="12" start2="12" end2="13" changelist="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" />
+        <range start1="16" end1="17" start2="17" end2="17" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="23" end1="23" start2="23" end2="33" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="34" end1="34" start2="44" end2="50" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+      </ranges>
+    </file>
+    <file path="$PROJECT_DIR$/src/electron.cjs">
+      <ranges>
+        <range start1="10" end1="10" start2="10" end2="11" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="106" end1="106" start2="107" end2="108" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="117" end1="117" start2="119" end2="122" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="166" end1="167" start2="171" end2="172" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="225" end1="226" start2="230" end2="231" changelist="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" />
+        <range start1="260" end1="261" start2="265" end2="265" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="327" end1="327" start2="331" end2="361" changelist="68c00483-1810-444a-b541-43e8268f2dfc" />
+        <range start1="339" end1="344" start2="373" end2="382" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+      </ranges>
+    </file>
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectId" id="26vYux3qGNPai6E3Gs7eiAA2dob" />
   <component name="ProjectViewState">
@@ -48,7 +83,7 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="prettierjs.PrettierConfiguration.Package" value="$PROJECT_DIR$/node_modules/prettier" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="CodeWithMe" />
     <property name="ts.external.directory.path" value="$PROJECT_DIR$/node_modules/typescript/lib" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -71,6 +106,7 @@
       <updated>1648305752979</updated>
       <workItem from="1648305755071" duration="33234000" />
       <workItem from="1648343242604" duration="11822000" />
+      <workItem from="1648474846940" duration="12564000" />
     </task>
     <servers />
   </component>
@@ -87,5 +123,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

@@ -1,12 +1,12 @@
 <script>
     import {fly} from 'svelte/transition'
     import {page} from "$app/stores";
+
 </script>
 
 <div class="leftMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
     <div class="top">
         {#if $page.url.pathname === '/boards'}
-            <button>Home</button>
         {/if}
     </div>
     <div class="bottom">

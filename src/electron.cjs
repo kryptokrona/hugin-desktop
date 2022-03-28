@@ -8,6 +8,7 @@ const {JSONFile, Low} = require("@commonify/lowdb");
 const fs = require('fs')
 const WB = require("kryptokrona-wallet-backend-js");
 const {default: fetch} = require("electron-fetch");
+const {logger} = require("kryptokrona-wallet-backend-js/dist/lib/Logger.js");
 
 try {
     require('electron-reloader')(module);
@@ -105,6 +106,7 @@ let node = 'explorer.kryptokrona.se'
 let ports = 20001
 const daemon = new WB.Daemon(node, ports);
 
+
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
@@ -114,6 +116,9 @@ const db = new Low(adapter)
 const fileBoards = join(userDataDir, 'boards.db')
 const adapterBoards = new JSONFile(fileBoards)
 const dbBoards = new Low(adapterBoards)
+
+const dbdata = dbBoards.read()
+console.log(dbdata)
 
 let js_wallet;
 let c = false;
@@ -164,7 +169,7 @@ async function start_js_wallet() {
 
     } else if (c === 'o') {
         /* Open wallet, giving our wallet path and password */
-        const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', 'hunter2');
+        const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', 'aaa');
         if (error) {
             console.log('Failed to open wallet: ' + error.toString());
             return;
@@ -223,7 +228,7 @@ async function start_js_wallet() {
         await sleep(1000 * 20);
         await backgroundSyncMessages()
         /* Save the wallet to disk */
-        js_wallet.saveWalletToFile(userDataDir + '/boards.wallet', 'hunter2');
+        js_wallet.saveWalletToFile(userDataDir + '/boards.wallet', 'aaa');
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
@@ -257,7 +262,6 @@ function fromHex(hex, str) {
     }
     return str
 }
-
 
 function trimExtra(extra) {
 
@@ -326,6 +330,36 @@ async function backgroundSyncMessages() {
     }
 }
 
+ipcMain.on('change-node', async (event, node, kill = true) => {
+
+    global.port = 8000 + parseInt(Math.random() * 100);
+    console.log(node) // prints "ping"
+
+    global.node = node;
+    const daemon = new WB.Daemon(node.split(':')[0], parseInt(node.split(':')[1]));
+    js_wallet.swapNode(daemon);
+
+    db.update({setting: 'walletData'}, {$set: {node: node}}, {}, function (err, numReplaced) {
+
+        console.log(numReplaced);
+        if (kill) {
+            try {
+                wallet.kill('SIGINT');
+            } catch (err) {
+                console.log('err');
+            }
+            wallet.on('close', () => {
+                console.log('Wallet is closed..');
+                startWallet();
+                event.reply('changed-node');
+            });
+
+        } else {
+        }
+
+    })
+})
+
 app.once('ready', createMainWindow);
 app.on('activate', () => {
     if (!mainWindow) {
@@ -337,8 +371,12 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-//ipcMain.on('password',  (event, password) => {
-//GÖR NÅTT MED PASS
-//	console.log(password)
-//	return mainWindow.webContents.send('password', `password is ${password}`);
-//})
+ipcMain.on('sendMsg', (e, msg) => console.log(msg))
+
+//SWITCH NODE
+ipcMain.on('switchNode', async (e, node) => {
+    console.log(`Switching node to ${node}`)
+    const daemon = new WB.Daemon(node.split(':')[0], parseInt(node.split(':')[1]));
+    await js_wallet.swapNode(daemon);
+    db.write()
+})
