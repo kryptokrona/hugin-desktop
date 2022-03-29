@@ -11,7 +11,7 @@
     onMount(async () => {
       data = await window.api.getMessages()
         console.log(data)
-        messages.update( () => {
+        messages.update( oldMsg => {
             return [data.msg]
         })
     })

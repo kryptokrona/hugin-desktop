@@ -19,6 +19,7 @@
         height: 100vh;
         padding: 10px;
         gap: 10px;
+        transition: 250ms ease-in-out all;
     }
 
 </style>
