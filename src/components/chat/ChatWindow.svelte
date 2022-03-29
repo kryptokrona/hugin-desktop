@@ -2,6 +2,7 @@
     import ChatInput from "/src/components/chat/ChatInput.svelte";
 </script>
 
+<!--This is just a wrapper that takes nested components-->
 <div class="window">
     <slot></slot>
 </div>

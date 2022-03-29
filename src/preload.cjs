@@ -31,9 +31,14 @@ const WINDOW_API = {
   getNodes: async () => {
     ipcRenderer.send('getNodes')
   },
-  switchNode: node => (
+  switchNode: node => {
       ipcRenderer.send('switchNode', node)
-  )
+  },
+
+  //HANDLE FINANCE
+  getBalance: async () => {
+    return  await ipcRenderer.invoke('getBalance')
+  }
 }
 
 

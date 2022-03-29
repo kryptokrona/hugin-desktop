@@ -5,23 +5,24 @@
     import ChatWindow from "/src/components/chat/ChatWindow.svelte";
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import {onMount} from "svelte";
-
-    let data;
+    let timestamp = Date.now();
     let message;
+
+
     onMount(async () => {
-      data = await window.api.getMessages()
-        console.log(data)
-        messages.update( oldMsg => {
-            return [data.msg]
-        })
+      let data = await window.api.getMessages()
+        messages.set(data.messages)
+        console.log(data.messages)
     })
 
     const sendMsg = (e) => {
-        message = e.detail.text
+        console.log(e.detail.text)
+        message = {msg: e.detail.text, type: 'outgoing', time: timestamp}
         messages.update(oldMsg => {
             return [...oldMsg, message]
         })
-       window.api.sendMsg(message, 'SEKReThN49gfAWNJQvV9JwbiHvqj8LqAzUg4nr5ieWqSFPgirPZGnmqhWn5ULkxepuN7yK7RjyDh4dgiB56mcQHt1tqfhvQUfGq', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56')
+        console.log($messages)
+       //window.api.sendMsg(message, 'SEKReThN49gfAWNJQvV9JwbiHvqj8LqAzUg4nr5ieWqSFPgirPZGnmqhWn5ULkxepuN7yK7RjyDh4dgiB56mcQHt1tqfhvQUfGq', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56', timestamp)
     }
 </script>
 
@@ -31,7 +32,7 @@
     </div>
     <ChatWindow>
         {#each $messages as message}
-            <ChatBubble message={message}/>
+            <ChatBubble handleType={message.type} message={message.msg}/>
         {/each}
         <ChatInput on:message={sendMsg}/>
     </ChatWindow>

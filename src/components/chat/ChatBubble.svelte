@@ -1,10 +1,11 @@
 <script>
     import { fade } from 'svelte/transition'
     export let message
+    export let handleType
 
 </script>
 
-<div in:fade class="bubble">
+<div class:type={handleType === 'incoming'} in:fade class="bubble">
     <p>{message}</p>
 </div>
 
@@ -15,6 +16,10 @@
         color: #ffffff;
         padding: 20px;
         border-radius: 10px;
+    }
+
+    .type {
+        background-color: #5f86f2;
     }
 
     p {

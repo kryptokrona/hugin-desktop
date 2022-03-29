@@ -6,6 +6,7 @@
 
     //Input data to dispatch
     let messageInput
+
     //To handle button disabled enabled
     let enableSend = false
 

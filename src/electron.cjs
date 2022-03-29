@@ -24,9 +24,9 @@ const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byt
 
 function getKeyPair() {
     // return new Promise((resolve) => setTimeout(resolve, ms));
-    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
-    const secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
-    const keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
+    const [privateSpendKey, privateViewKey] = await js_wallet.getPrimaryAddressPrivateKeys();
+    const secretKey = await naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
+    con keyPair = await nacl.box.keyPair.fromSecretKey(secretKey);
     return keyPair;
 }
 
@@ -42,6 +42,48 @@ function toHex(str,hex){
         //console.log('invalid text input: ' + str)
     }
     return hex
+}
+
+
+
+function nonceFromTimestamp(tmstmp) {
+
+    let nonce = hexToUint(String(tmstmp));
+
+    while ( nonce.length < nacl.box.nonceLength ) {
+
+        tmp_nonce = Array.from(nonce);
+
+        tmp_nonce.push(0);
+
+        nonce = Uint8Array.from(tmp_nonce);
+
+    }
+
+    return nonce;
+}
+
+
+function fromHex(hex, str) {
+    try {
+        str = decodeURIComponent(hex.replace(/(..)/g, '%$1'))
+    } catch (e) {
+        str = hex
+        // console.log('invalid hex input: ' + hex)
+    }
+    return str
+}
+
+function trimExtra(extra) {
+
+    try {
+        let payload = fromHex(extra.substring(66));
+
+        let payload_json = JSON.parse(payload);
+        return fromHex(extra.substring(66))
+    } catch (e) {
+        return fromHex(Buffer.from(extra.substring(78)).toString())
+    }
 }
 
 try {
@@ -155,9 +197,6 @@ const dbBoards = new Low(adapterBoards)
 const fileMessages = join(userDataDir, 'messages.db')
 const adapterMessages= new JSONFile(fileMessages)
 const dbMessages = new Low(adapterMessages)
-
-const dbdata = dbBoards.read()
-console.log(dbdata)
 
 let js_wallet;
 let c = false;
@@ -295,47 +334,6 @@ async function start_js_wallet() {
 }
 
 
-function nonceFromTimestamp(tmstmp) {
-
-    let nonce = hexToUint(String(tmstmp));
-
-    while ( nonce.length < nacl.box.nonceLength ) {
-
-        tmp_nonce = Array.from(nonce);
-
-        tmp_nonce.push(0);
-
-        nonce = Uint8Array.from(tmp_nonce);
-
-    }
-
-    return nonce;
-}
-
-
-
-function fromHex(hex, str) {
-    try {
-        str = decodeURIComponent(hex.replace(/(..)/g, '%$1'))
-    } catch (e) {
-        str = hex
-        // console.log('invalid hex input: ' + hex)
-    }
-    return str
-}
-
-function trimExtra(extra) {
-
-    try {
-        let payload = fromHex(extra.substring(66));
-
-        let payload_json = JSON.parse(payload);
-        return fromHex(extra.substring(66))
-    } catch (e) {
-        return fromHex(Buffer.from(extra.substring(78)).toString())
-    }
-}
-
 let known_pool_txs = [];
 let known_keys = ['Tjeena', 'blablabla', 'tjena', 'blabalba', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
 console.log('known_keys', known_keys)
@@ -359,6 +357,7 @@ async function decrypt_message (transaction) {
                 decryptBox = naclSealed.sealedbox.open(hexToUint(box),
                     nonceFromTimestamp(timestamp),
                     getKeyPair().secretKey);
+
             } catch (err) {
                 console.log(err);
             }
@@ -374,8 +373,9 @@ async function decrypt_message (transaction) {
                         nonceFromTimestamp(timestamp),
                         hexToUint(possibleKey),
                         getKeyPair().secretKey);
+                    console.log('mykey', getKeyPair().secretKey)
                 } catch (err) {
-                    console.log(err);
+                    console.log('wrong key');
                 }
                 console.log('Decrypted:', decryptBox);
 
@@ -405,11 +405,10 @@ async function decrypt_message (transaction) {
             }
             if (payload_json.k) {
                 console.log('Found key!', payload_json);
-             // CHECK IF NEW KEY, SAVE IF NOT!
+                // CHECK IF NEW KEY, SAVE IF NOT!
+            }
 
-        }
-
-        console.log(payload_json)
+        console.log('DEKRYPT??', payload_json)
         return payload_json;
 
     } catch (err) {
@@ -417,6 +416,7 @@ async function decrypt_message (transaction) {
         return;
     }
 }
+
 
 async function backgroundSyncMessages() {
 
@@ -434,6 +434,9 @@ async function backgroundSyncMessages() {
 
     console.log(json);
 
+    dbBoards.data = dbBoards.data || {messages: []}
+    dbMessages.data = dbMessages.data || {messages: []}
+
     json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
     console.log('doc', json);
@@ -444,7 +447,6 @@ async function backgroundSyncMessages() {
 
     let transactions = json.addedTxs;
 
-    dbBoards.data = dbBoards.data || {messages: []}
 
     for (transaction in transactions) {
 
@@ -466,11 +468,30 @@ async function backgroundSyncMessages() {
                 // PRIVATE BOX OR BOARD
                 if (tx.b || tx.box) {
                     console.log('box found!')
-                    let decrypted_message = await decrypt_message(tx)
-                    console.log('Dekrypterat? ', decrypted_message)
+                    try {
+
+                     let dMsg = await decrypt_message(tx)
+                        let incomingMsg = {
+                            msg: dMsg.msg,
+                            type: 'incoming',
+                            conversation: dMsg.from,
+                            time: dMsg.t
+                        }
+
+                        dbMessages.data.messages.push(incomingMsg)
+                        await dbMessages.write()
+
+                    } catch (err) {
+                        console.log(err);
+                        continue;
+                    }
+                    console.log('THIS ' +  await dMsg)
+
+
                 }
-                if (tx.brd || decrypted_message.brd) {
+                if (tx.brd) {
                     // PUBLIC BOARD MESSAGE OR
+
                     dbBoards.data.messages.push(extra);
                     console.log(dbBoards.data)
                     await dbBoards.write(dbBoards.data);
@@ -480,7 +501,9 @@ async function backgroundSyncMessages() {
             console.log(err)
         }
     }
+
 }
+
 
 app.on('ready', createMainWindow)
 app.on('activate', () => {
@@ -503,9 +526,9 @@ ipcMain.on('switchNode', async (e, node) => {
 
 
 
-ipcMain.on('sendMsg', (e, msg, receiver, messageKey) => {
-    sendMessage(msg, receiver, messageKey);
-    console.log(msg, receiver, messageKey)
+ipcMain.on('sendMsg', (e, msg, receiver, messageKey, time) => {
+    sendMessage(msg, receiver, messageKey, time);
+    console.log(msg, receiver, messageKey, time)
 }
 )
 
@@ -596,7 +619,7 @@ async function sendMessage(message, receiver, messageKey) {
 
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        dbMessages.data = {msg: message, key: messageKey, conversation: receiver, time: timestamp}
+        dbMessages.data = {msg: message, key: messageKey, conversation: receiver, type: 'outgoing', time: timestamp}
         await dbMessages.write(dbMessages.data)
         known_pool_txs.push(result.transactionHash)
     } else {
@@ -606,6 +629,9 @@ async function sendMessage(message, receiver, messageKey) {
 
 ipcMain.handle('getMessages', async () => {
     await dbMessages.read()
-    console.log(dbMessages.data)
     return dbMessages.data
+})
+
+ipcMain.handle('getBalance', async () => {
+    return await js_wallet.getBalance()
 })

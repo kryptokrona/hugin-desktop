@@ -7,6 +7,8 @@
     import brdIcon from '/static/icons/brd.png'
     import settingsIcon from '/static/icons/settings.png'
     import logoutIcon from '/static/icons/logout.png'
+    import financeIcon from '/static/icons/finance.png'
+    import userIcon from '/static/icons/user.png'
 
     const handleLogout = () => {
         user.update( data => {
@@ -20,9 +22,10 @@
 
 <div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
-        <a class='button' href="/dashboard"><img class="icon" src={dashIcon} alt=""></a>
+        <a class='button' href="/dashboard"><img class="icon" src={userIcon} alt=""></a>
         <a class='button' href="/messages"><img class="icon" src={msgIcon} alt=""></a>
         <a class='button' href="/boards"><img class="icon" src={brdIcon} alt=""></a>
+        <a class='button' href="/boards"><img class="icon" src={financeIcon} alt=""></a>
     </div>
     <div class="nav">
         <a class='button' href="/settings"><img class="icon" src={settingsIcon} alt=""></a>
@@ -40,7 +43,7 @@
         background-color: #1d1d1d;
         box-sizing: border-box;
         padding-bottom: 1.5em;
-        padding-top: 4em;
+        padding-top: 3em;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
