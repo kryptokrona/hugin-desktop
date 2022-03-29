@@ -15,12 +15,16 @@ const WINDOW_API = {
   },
 
 
-  // SEND MESSAGES
+  // HANDLE MESSAGES
   sendMsg: (msg, address, key) => {
     ipcRenderer.send('sendMsg', msg, address, key )
   },
   sendBoardMsg: (msg, address, key) => {
     ipcRenderer.send('sendBoardMsg', msg, address, key )
+  },
+  getMessages: async () => {
+    const res = await ipcRenderer.invoke('getMessages')
+    return res
   },
 
   //HANDLE NODES

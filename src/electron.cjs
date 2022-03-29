@@ -1,6 +1,6 @@
 const windowStateManager = require('electron-window-state');
 const contextMenu = require('electron-context-menu');
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, ipcRenderer} = require('electron');
 const serve = require('electron-serve');
 const path = require('path');
 const {join} = require('path')
@@ -151,6 +151,11 @@ const fileBoards = join(userDataDir, 'boards.db')
 const adapterBoards = new JSONFile(fileBoards)
 const dbBoards = new Low(adapterBoards)
 
+//Create messages.db
+const fileMessages = join(userDataDir, 'messages.db')
+const adapterMessages= new JSONFile(fileMessages)
+const dbMessages = new Low(adapterMessages)
+
 const dbdata = dbBoards.read()
 console.log(dbdata)
 
@@ -160,6 +165,7 @@ let c = false;
 if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
     // We have found a wallet file
     ipcMain.on('app', (data) => {
+        mainWindow.webContents.send('getPath', userDataDir)
         return mainWindow.webContents.send('wallet-exist', true);
     })
     c = 'o';
@@ -336,17 +342,8 @@ console.log('known_keys', known_keys)
 
 async function decrypt_message (transaction) {
     let payload_json;
-    let tx;
+    let tx = transaction;
     try {
-
-        try {
-            console.log(transaction);
-            tx = JSON.parse(transaction);
-            console.log('tx', tx);
-        } catch (err) {
-            console.log(err);
-            return
-        }
 
             // If no key is appended to message we need to try the keys in our payload_keychain
             let box = tx.box;
@@ -469,7 +466,7 @@ async function backgroundSyncMessages() {
                 // PRIVATE BOX OR BOARD
                 if (tx.b || tx.box) {
                     console.log('box found!')
-                    let decrypted_message = await decrypt_message(extra)
+                    let decrypted_message = await decrypt_message(tx)
                     console.log('Dekrypterat? ', decrypted_message)
                 }
                 if (tx.brd || decrypted_message.brd) {
@@ -515,7 +512,7 @@ ipcMain.on('sendMsg', (e, msg, receiver, messageKey) => {
 async function sendMessage(message, receiver, messageKey) {
     console.log('Want to send')
 
-    let has_history = false;
+    let has_history = true;
 
     if (message.length == 0) {
         return;
@@ -588,7 +585,7 @@ async function sendMessage(message, receiver, messageKey) {
     let result = await js_wallet.sendTransactionAdvanced(
         [[receiver, 1]], // destinations,
         3, // mixin
-        {fixedFee: 2000, isFixedFee: true}, // fee
+        {fixedFee: 3000, isFixedFee: true}, // fee
         undefined, //paymentID
         undefined, // subWalletsToTakeFrom
         undefined, // changeAddress
@@ -599,7 +596,16 @@ async function sendMessage(message, receiver, messageKey) {
 
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+        dbMessages.data = {msg: message, key: messageKey, conversation: receiver, time: timestamp}
+        await dbMessages.write(dbMessages.data)
+        known_pool_txs.push(result.transactionHash)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
 }
+
+ipcMain.handle('getMessages', async () => {
+    await dbMessages.read()
+    console.log(dbMessages.data)
+    return dbMessages.data
+})

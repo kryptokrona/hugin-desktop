@@ -3,10 +3,17 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
+    <list id="d5b11f95-dd16-4f57-b69a-afae87b5592b" name="Changes by ralls" comment="">
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,16 +25,38 @@
         <option value="FillButton" />
         <option value="CSS File" />
         <option value="settings/index" />
-        <option value="JavaScript File" />
         <option value="ChattRoll" />
         <option value="ChatBubble" />
         <option value="ChatWindow" />
         <option value="ChatInput" />
+        <option value="JavaScript File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="LineStatusTrackerManager">
+    <file path="$PROJECT_DIR$/src/preload.cjs">
+      <ranges>
+        <range start1="17" end1="18" start2="17" end2="18" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="24" end1="24" start2="24" end2="28" changelist="d5b11f95-dd16-4f57-b69a-afae87b5592b" />
+      </ranges>
+    </file>
+    <file path="$PROJECT_DIR$/src/electron.cjs">
+      <ranges>
+        <range start1="2" end1="3" start2="2" end2="3" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="152" end1="152" start2="152" end2="157" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="162" end1="162" start2="167" end2="168" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="338" end1="339" start2="344" end2="345" changelist="d5b11f95-dd16-4f57-b69a-afae87b5592b" />
+        <range start1="340" end1="349" start2="346" end2="346" changelist="d5b11f95-dd16-4f57-b69a-afae87b5592b" />
+        <range start1="471" end1="472" start2="468" end2="469" changelist="d5b11f95-dd16-4f57-b69a-afae87b5592b" />
+        <range start1="517" end1="518" start2="514" end2="515" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="590" end1="591" start2="587" end2="588" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="601" end1="601" start2="598" end2="601" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="605" end1="605" start2="605" end2="611" changelist="d5b11f95-dd16-4f57-b69a-afae87b5592b" />
+      </ranges>
+    </file>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -75,7 +104,7 @@
       <updated>1648305752979</updated>
       <workItem from="1648305755071" duration="33234000" />
       <workItem from="1648343242604" duration="11822000" />
-      <workItem from="1648474846940" duration="24272000" />
+      <workItem from="1648474846940" duration="31636000" />
     </task>
     <servers />
   </component>

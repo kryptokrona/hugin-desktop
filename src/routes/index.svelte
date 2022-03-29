@@ -10,7 +10,7 @@
 
     onMount(() => {
         window.api.send('app', true)
-        window.api.getNodes()
+        window.api.getMessages()
         window.api.receive('wallet-exist', data => wallet = data)
     })
 

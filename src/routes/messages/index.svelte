@@ -4,8 +4,18 @@
     import ChatBubble from "/src/components/chat/ChatBubble.svelte";
     import ChatWindow from "/src/components/chat/ChatWindow.svelte";
     import ChatInput from "/src/components/chat/ChatInput.svelte";
+    import {onMount} from "svelte";
 
-    let message
+    let data;
+    let message;
+    onMount(async () => {
+      data = await window.api.getMessages()
+        console.log(data)
+        messages.update( () => {
+            return [data.msg]
+        })
+    })
+
     const sendMsg = (e) => {
         message = e.detail.text
         messages.update(oldMsg => {
