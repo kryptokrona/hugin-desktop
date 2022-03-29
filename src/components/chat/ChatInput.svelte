@@ -11,7 +11,7 @@
 
     //Check if enter is pressed and call sendMsg function
     window.addEventListener('keyup', e => {
-        if(e.keyCode === 13) {
+        if(messageInput && e.keyCode === 13) {
             sendMsg()
         }
     })
