@@ -3,7 +3,7 @@ import { writable } from "svelte/store";
 //Default values
 export const user = writable({
     loggedIn: true,
-    username: 'swepool',
+    username: 'Nilsjr',
     boardsArray: ['Home', 'Hugin'],
     node: '',
     activeContact: ''

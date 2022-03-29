@@ -11,10 +11,12 @@
     import logoutIcon from '/static/icons/logout.png'
 
     const handleLogout = () => {
-        user.set({
-            loggedIn: false,
-            ...user
-            })
+        user.update( data => {
+            return {
+                ...data,
+                loggedIn: false,
+            }
+        })
     }
 </script>
 
@@ -59,7 +61,7 @@
     }
 
     .logo {
-        width: 50px;
+        width: 45px;
         margin-top: 10px;
     }
 

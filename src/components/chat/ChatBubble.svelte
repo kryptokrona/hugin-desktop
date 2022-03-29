@@ -1,10 +1,10 @@
 <script>
-    import { fade, fly } from 'svelte/transition'
+    import { fade } from 'svelte/transition'
     export let message
 
 </script>
 
-<div in:fly="{{y: 50}}" class="bubble">
+<div in:fade class="bubble">
     <p>{message}</p>
 </div>
 

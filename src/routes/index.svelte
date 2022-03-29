@@ -15,9 +15,11 @@
     })
 
     const handleLogin = () => {
-        user.set({
-            ...user,
-            loggedIn: true
+        user.update(oldData => {
+            return {
+                ...oldData,
+                loggedIn: true
+            }
         })
         console.log('User logged in')
     }
@@ -25,18 +27,20 @@
     let node;
     const switchNode = () => {
         window.api.switchNode(node)
-        user.set({
-            ...user,
-            node: node
+        user.update(oldData => {
+            return {
+                ...oldData,
+                node: node
+            }
         })
     }
 
 </script>
 
-<div class="wrapper" in:fade>
+<div class="wrapper" in:fade out:fade="{{duration: 200}}">
     <div class="login-wrapper">
         <div class="login-wrapper">
-            <h1 class="title">Welcome to Hugin Messenger.</h1>
+            <h1 class="title">Welcome back {$user.username} 👋</h1>
             <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
             {#if !wallet}
                 <FillButton text="Create Account" url="/create-account" />
