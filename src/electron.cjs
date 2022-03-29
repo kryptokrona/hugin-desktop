@@ -482,10 +482,7 @@ async function backgroundSyncMessages() {
     }
 }
 
-app.on('ready', () => {
-    //Add loading sequence
-    createMainWindow
-});
+app.on('ready', createMainWindow)
 app.on('activate', () => {
     if (!mainWindow) {
         createMainWindow();

@@ -6,12 +6,12 @@
 </script>
 
 <main in:fade>
-    <div class="list">
-
-    </div>
     <ChatWindow>
         <ChatInput/>
     </ChatWindow>
+    <div class="list">
+
+    </div>
 </main>
 
 <style>
