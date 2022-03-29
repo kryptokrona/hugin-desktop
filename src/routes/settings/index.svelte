@@ -1,12 +1,14 @@
 <script>
     import { fade } from 'svelte/transition';
     import {nodelist} from "$lib/stores/nodes.js";
+    let node;
 </script>
 
 <main in:fade>
     <h1>Settings</h1>
-    {#each $nodelist as node}
-        <p>{node.name}</p>
+    <select bind:value={node}>
+        {#each $nodelist as node}
+            <option value={`${node.url}:${node.port}`}>{node.name}</option>
         {/each}
 </main>
 
