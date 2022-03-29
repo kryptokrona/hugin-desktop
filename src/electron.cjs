@@ -62,7 +62,7 @@ function createWindow() {
     });
 
     const mainWindow = new BrowserWindow({
-        backgroundColor: 'whitesmoke',
+        backgroundColor: '#2c2c2c',
         titleBarStyle: 'hidden',
         autoHideMenuBar: true,
         trafficLightPosition: {
@@ -482,7 +482,10 @@ async function backgroundSyncMessages() {
     }
 }
 
-app.once('ready', createMainWindow);
+app.on('ready', () => {
+    //Add loading sequence
+    createMainWindow
+});
 app.on('activate', () => {
     if (!mainWindow) {
         createMainWindow();

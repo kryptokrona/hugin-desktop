@@ -1,8 +1,6 @@
 <script>
     import {fly} from 'svelte/transition'
     import logo from '/static/logo-white.png'
-    import logout from '/static/logout.png'
-    import settings from '/static/settings.png'
     import {user} from "$lib/stores/user.js";
     import msgIcon from '/static/icons/msg.png'
     import dashIcon from '/static/icons/dash.png'

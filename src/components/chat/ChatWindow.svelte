@@ -17,7 +17,7 @@
         background-color: #333333;
         width: 100%;
         height: 100vh;
-        padding: 10px;
+        padding: 15px;
         gap: 10px;
         transition: 250ms ease-in-out all;
     }

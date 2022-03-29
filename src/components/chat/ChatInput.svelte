@@ -1,20 +1,40 @@
 <script>
     import { createEventDispatcher } from 'svelte'
+    import sendIcon from '/static/icons/send.png'
 
     const dispatch = createEventDispatcher();
 
-    export let messageInput
+    //Input data to dispatch
+    let messageInput
+    //To handle button disabled enabled
+    let enableSend = false
 
+    //Check if enter is pressed and call sendMsg function
+    window.addEventListener('keyup', e => {
+        if(e.keyCode === 13) {
+            sendMsg()
+        }
+    })
+
+    //Dispatches the input data to parent and resets input.
     const sendMsg = () => {
         dispatch('message', {
             text: messageInput
         });
+        messageInput = ''
+    }
+
+    //Checks if input is empty
+    $ : {
+        if (messageInput) {
+            enableSend = true
+        } else enableSend = false
     }
 </script>
 
 <div class="wrapper">
     <input type="text" placeholder="Message.." bind:value={messageInput}>
-    <button on:click={sendMsg}>Send</button>
+    <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px" alt=""></button>
 </div>
 
 <style>
@@ -39,19 +59,27 @@
     }
 
     button {
-        width: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 40px;
         box-sizing: border-box;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgb(225, 18, 80);
         border: none;
         border-left: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 0 10px 10px 0;
-        padding: 10px 20px;
+        padding: 10px 15px 10px 10px;
         color: white;
         margin: 0;
+        cursor: pointer;
     }
 
     button:focus {
         outline: none;
+    }
+
+    .enableSend {
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
 </style>

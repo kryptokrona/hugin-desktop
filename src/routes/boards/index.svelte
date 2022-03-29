@@ -26,6 +26,6 @@
     }
 
     .list {
-        width: 40%;
+        width: 350px;
     }
 </style>
