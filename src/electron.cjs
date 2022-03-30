@@ -11,6 +11,7 @@ const {default: fetch} = require("electron-fetch");
 const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
+
 const { Address,
         AddressPrefix,
         Block,
@@ -78,6 +79,7 @@ function fromHex(hex, str) {
     }
     return str
 }
+
 
 function trimExtra(extra) {
 
@@ -516,6 +518,7 @@ async function backgroundSyncMessages() {
 
 app.on('ready', createMainWindow)
 app.on('activate', () => {
+    mainWindow.loadFile()
     if (!mainWindow) {
         createMainWindow();
     }
@@ -535,9 +538,9 @@ ipcMain.on('switchNode', async (e, node) => {
 
 
 
-ipcMain.on('sendMsg', (e, msg, receiver, messageKey, time) => {
-    sendMessage(msg, receiver, messageKey, time);
-    console.log(msg, receiver, messageKey, time)
+ipcMain.on('sendMsg', (e, msg, receiver, messageKey) => {
+    sendMessage(msg, receiver, messageKey);
+    console.log(msg, receiver, messageKey)
 }
 )
 

@@ -21,7 +21,6 @@
     const filterConversation = async () => {
         let uniq = {}
         filterArr = allMsgs.filter(obj => !uniq[obj.conversation] && (uniq[obj.conversation] = true));
-        console.log(filterArr)
         return filterArr
     }
 
