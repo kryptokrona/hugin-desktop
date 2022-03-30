@@ -2,17 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/finance/Balance.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/finance/Balance.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/finance/Balance.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
     <list id="9a0ec34b-e340-40bc-b5c4-011008260bf0" name="Changes by ralls" comment="">
@@ -43,30 +35,20 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
   <component name="LineStatusTrackerManager">
     <file path="$PROJECT_DIR$/src/electron.cjs">
       <ranges>
-        <range start1="26" end1="29" start2="26" end2="29" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="45" end1="45" start2="45" end2="87" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="157" end1="160" start2="199" end2="199" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="296" end1="337" start2="335" end2="335" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="361" end1="361" start2="359" end2="360" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="376" end1="376" start2="375" end2="376" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="377" end1="378" start2="377" end2="378" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="407" end1="410" start2="407" end2="409" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="411" end1="412" start2="410" end2="411" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="419" end1="419" start2="418" end2="419" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="435" end1="435" start2="435" end2="438" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="446" end1="447" start2="449" end2="449" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="468" end1="470" start2="470" end2="490" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="471" end1="472" start2="491" end2="492" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="473" end1="473" start2="493" end2="494" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="482" end1="482" start2="503" end2="504" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="483" end1="483" start2="505" end2="506" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="505" end1="508" start2="528" end2="531" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="598" end1="599" start2="621" end2="622" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="608" end1="609" start2="631" end2="631" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="611" end1="611" start2="633" end2="637" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="26" end1="29" start2="26" end2="29" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="341" end1="343" start2="341" end2="341" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
+        <range start1="344" end1="344" start2="342" end2="345" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
       </ranges>
     </file>
   </component>
@@ -123,6 +105,7 @@
       <workItem from="1648512352484" duration="13254000" />
       <workItem from="1648558930736" duration="2587000" />
       <workItem from="1648561870334" duration="14844000" />
+      <workItem from="1648596670618" duration="1541000" />
     </task>
     <servers />
   </component>
@@ -146,7 +129,6 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte</url>
           <line>45</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

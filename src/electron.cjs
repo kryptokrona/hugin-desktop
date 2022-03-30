@@ -24,9 +24,9 @@ const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byt
 
 function getKeyPair() {
     // return new Promise((resolve) => setTimeout(resolve, ms));
-    const [privateSpendKey, privateViewKey] = await js_wallet.getPrimaryAddressPrivateKeys();
-    const secretKey = await naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
-    con keyPair = await nacl.box.keyPair.fromSecretKey(secretKey);
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+    let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
+    let keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
     return keyPair;
 }
 
@@ -339,9 +339,10 @@ let known_keys = ['Tjeena', 'blablabla', 'tjena', 'blabalba', '55544c5abf01f4ea1
 console.log('known_keys', known_keys)
 
 async function decrypt_message (transaction) {
-    let payload_json;
-    let tx = transaction;
     try {
+
+        let payload_json;
+        let tx = transaction;
 
             // If no key is appended to message we need to try the keys in our payload_keychain
             let box = tx.box;
