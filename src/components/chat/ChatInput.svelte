@@ -4,6 +4,17 @@
 
     const dispatch = createEventDispatcher();
 
+    import EmojiSelector from 'svelte-emoji-selector';
+
+    let textContent = '';
+
+    function onEmoji(event) {
+        if (messageInput) {
+            messageInput += event.detail
+        } else messageInput = event.detail
+
+    }
+
     //Input data to dispatch
     let messageInput
 
@@ -27,15 +38,15 @@
 
     //Checks if input is empty
     $ : {
-        if (messageInput) {
-            enableSend = true
-        } else enableSend = false
+        enableSend = !!messageInput;
     }
 </script>
 
 <div class="wrapper">
     <input type="text" placeholder="Message.." bind:value={messageInput}>
+    <EmojiSelector on:emoji={onEmoji} />
     <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px" alt=""></button>
+
 </div>
 
 <style>

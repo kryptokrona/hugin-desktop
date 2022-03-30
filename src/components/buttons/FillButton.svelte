@@ -2,6 +2,7 @@
     //Export variables with default values
     export let url
     export let text = 'Button'
+
 </script>
 
 <!-- The button in HTML with variables-->
@@ -26,4 +27,5 @@
         background-color: white;
         color: #1d1d1d;
     }
+
 </style>

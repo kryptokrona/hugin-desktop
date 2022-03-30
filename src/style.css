@@ -28,8 +28,8 @@ body {
         background: #5ff2f0;
     }
 }
-.rgb {
 
+.rgb {
     background: #5f86f2;
     -webkit-animation: rgb 30s ease infinite;
     -moz-animation: rgb 30s ease infinite;

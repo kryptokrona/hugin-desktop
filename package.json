@@ -26,8 +26,10 @@
 		"electron-reloader": "^1.2.3",
 		"electron-serve": "^1.1.0",
 		"electron-window-state": "^5.0.3",
+		"hugin-crypto": "^0.0.1",
 		"kryptokrona-utils": "^1.3.4",
 		"kryptokrona-wallet-backend-js": "^2.4.0",
+		"svelte-emoji-selector": "^1.0.1",
 		"tweetnacl": "^1.0.3",
 		"tweetnacl-sealed-box": "^1.0.5",
 		"tweetnacl-util": "^0.15.1"

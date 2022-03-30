@@ -24,7 +24,7 @@ const WINDOW_API = {
   },
   getMessages: async () => {
     const res = await ipcRenderer.invoke('getMessages')
-    return res
+    return res.messages
   },
 
   //HANDLE NODES

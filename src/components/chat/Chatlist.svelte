@@ -1,13 +1,13 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
+    import addIcon from '/static/icons/add-circle.png'
 
     let allMsgs
     let filterArr = []
 
     onMount(async () => {
         allMsgs = await window.api.getMessages()
-        console.log(allMsgs.messages)
-        filterConversation(allMsgs.messages[0])
+        filterConversation(allMsgs)
     })
 
     const dispatch = createEventDispatcher();
@@ -20,7 +20,7 @@
 
     const filterConversation = async () => {
         let uniq = {}
-        filterArr = allMsgs.messages.filter(obj => !uniq[obj.conversation] && (uniq[obj.conversation] = true));
+        filterArr = allMsgs.filter(obj => !uniq[obj.conversation] && (uniq[obj.conversation] = true));
         console.log(filterArr)
         return filterArr
     }
@@ -30,12 +30,12 @@
 <div class="wrapper">
     <div class="top">
         <h2>Messages</h2>
-        <button>+</button>
+        <button><img src={addIcon} alt=""></button>
     </div>
     <div class="list-wrapper">
         {#each filterArr as message}
             <div class="card" on:click={() => sendConversation(message.conversation)}>
-                <h3>{message.conversation}</h3>
+                <h4>{message.conversation}</h4>
                 <p>{message.msg.msg}</p>
             </div>
         {/each}
@@ -92,7 +92,7 @@
         background-color: #333333;
     }
 
-    h3{
+    h4{
         margin: 0;
         white-space: nowrap;
         max-width: 220px;
@@ -111,6 +111,21 @@
         max-width: 220px;
         overflow: hidden;
         text-overflow: ellipsis
+    }
+
+    button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 5px;
+        transition: 250ms ease-in-out;
+    }
+
+    button:hover {
+        opacity: 50%;
+        padding: 5px;
+
     }
 
 </style>

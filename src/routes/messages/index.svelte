@@ -1,46 +1,47 @@
 <script>
-    import { fade } from 'svelte/transition';
+    import {fade} from 'svelte/transition';
+    import {messages} from "$lib/stores/messages.js";
     import ChatBubble from "/src/components/chat/ChatBubble.svelte";
     import ChatWindow from "/src/components/chat/ChatWindow.svelte";
     import ChatInput from "/src/components/chat/ChatInput.svelte";
-    import {onDestroy, onMount} from "svelte";
+    import {onMount} from "svelte";
     import ChatList from "/src/components/chat/ChatList.svelte";
 
     let timestamp = Date.now();
-    let allMsgs = []
-    let msgs = []
-    let sendTo
+    let savedMsg
+    let conversation
 
-    onMount( async () => {
-        allMsgs = await window.api.getMessages()
-        console.log(allMsgs)
-        getMsgs(allMsgs.conversation)
+    //Get msgs from DB and save in store
+    onMount(async () => {
+        savedMsg = await window.api.getMessages()
+        messages.set(savedMsg)
+        console.log("FROM DB", $messages)
     })
 
-    const getMsgs = async conversation => {
-            sendTo = conversation
-            msgs = allMsgs.messages.filter(x => x.conversation === conversation)
-            console.log("REQUESTED MSGS")
-            return msgs
+    const filterMsgs = async clicked => {
+        $messages = savedMsg
+        conversation = clicked
+        $messages = $messages.filter(x => x.conversation === clicked)
+        return $messages
     }
 
     const sendMsg = e => {
-        console.log(e.detail.text)
         let msg = e.detail.text
-        const message = {msg, conversation: sendTo, type: 'outgoing', time: timestamp}
-        console.log(message)
-    }
+        const message = {msg, conversation: conversation, type: 'outgoing', time: timestamp}
+        messages.update(current => {
+            return[...current, message]
+        })
 
-    onDestroy(() => {
-        allMsgs = []
-    })
+        //window.api.sendMsg(msg, conversation, timestamp)
+        console.log("store", $messages)
+    }
 
 </script>
 
 <main in:fade>
-    <ChatList on:conversation={e => getMsgs(e.detail.conversation)}/>
+    <ChatList on:conversation={e => filterMsgs(e.detail.conversation)}/>
     <ChatWindow>
-        {#each msgs as message}
+        {#each $messages as message}
             <ChatBubble handleType={message.type} message={message.msg.msg}/>
         {/each}
         <ChatInput on:message={sendMsg}/>

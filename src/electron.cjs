@@ -31,7 +31,6 @@ function getKeyPair() {
 }
 
 function getMsgKey() {
-
     const naclPubKey = getKeyPair().publicKey
     return  Buffer.from(naclPubKey).toString('hex');
 }
@@ -320,6 +319,7 @@ async function start_js_wallet() {
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
+            console.log('SYNCED')
             mainWindow.webContents.send('synced');
             console.log('walletBlockCount', walletBlockCount);
             console.log('localDaemonBlockCount', localDaemonBlockCount);
@@ -490,13 +490,12 @@ async function backgroundSyncMessages() {
 
                         dbMessages.data.messages.push(incomingMsg)
                         await dbMessages.write()
+                        console.log('THIS ' +  await dMsg)
 
                     } catch (err) {
                         console.log(err);
                         continue;
                     }
-                    console.log('THIS ' +  await dMsg)
-
 
                 }
                 if (tx.brd) {
@@ -630,7 +629,8 @@ async function sendMessage(message, receiver, messageKey) {
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         dbMessages.data = {msg: message, key: messageKey, conversation: receiver, type: 'outgoing', time: timestamp}
-        await dbMessages.write(dbMessages.data)
+        dbMessages.data.messages.push(dbMessages.data)
+        await dbMessages.write()
         known_pool_txs.push(result.transactionHash)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);

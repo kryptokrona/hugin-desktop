@@ -6,6 +6,7 @@
 
 <main in:fade>
     <h1>Settings</h1>
+
     <select bind:value={node}>
         {#each $nodelist as node}
             <option value={`${node.url}:${node.port}`}>{node.name}</option>

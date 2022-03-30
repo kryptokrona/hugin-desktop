@@ -34,7 +34,6 @@
             }
         })
     }
-
 </script>
 
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
