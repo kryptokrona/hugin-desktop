@@ -20,7 +20,7 @@
     }
 </script>
 
-<div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
+<div class="leftMenu draggable" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
         <a class='button' href="/dashboard"><img class="icon" src={userIcon} alt=""></a>
         <a class='button' href="/messages"><img class="icon" src={msgIcon} alt=""></a>
@@ -48,7 +48,6 @@
         flex-direction: column;
         justify-content: space-between;
         align-items: center;
-        -webkit-app-region: drag;
         position: fixed;
         z-index: 100;
     }

@@ -6,7 +6,7 @@
 
 </script>
 
-<div class="leftMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
+<div class="leftMenu draggable" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
         {#if $page.url.pathname === '/boards'}
             <div class="add" on:click></div>
             {#each $user.boardsArray as board}
@@ -28,7 +28,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        -webkit-app-region: drag;
         position: fixed;
         right: 0;
         z-index: 100;

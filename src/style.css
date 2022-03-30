@@ -35,3 +35,9 @@ body {
     -moz-animation: rgb 30s ease infinite;
     animation: rgb 30s ease infinite;
 }
+
+.draggable {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-app-region: drag;
+}
