@@ -30,6 +30,12 @@ function getKeyPair() {
     return keyPair;
 }
 
+function getMsgKey() {
+
+    const naclPubKey = getKeyPair().publicKey
+    return  Buffer.from(naclPubKey).toString('hex');
+}
+
 function toHex(str,hex){
     try{
         hex = unescape(encodeURIComponent(str))
@@ -285,6 +291,8 @@ async function start_js_wallet() {
 
     for (const address of js_wallet.getAddresses()) {
         console.log(`Address [${i}]: ${address}`);
+        let msgKey = getMsgKey()
+        console.log('HuginAddress', address + msgKey)
         i++;
     }
 
@@ -332,6 +340,7 @@ async function start_js_wallet() {
     }
     console.log('Save wallet to file');
 }
+
 
 
 let known_pool_txs = [];
