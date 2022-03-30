@@ -1,5 +1,4 @@
 <script>
-    import ChatInput from "/src/components/chat/ChatInput.svelte";
 </script>
 
 <!--This is just a wrapper that takes nested components-->
@@ -20,7 +19,7 @@
         height: 100vh;
         padding: 15px;
         gap: 10px;
-        transition: 250ms ease-in-out all;
+        overflow: scroll;
     }
 
 </style>

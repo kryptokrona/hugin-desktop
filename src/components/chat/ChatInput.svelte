@@ -41,15 +41,17 @@
 <style>
 
     .wrapper {
+        margin-right: 85px;
+        box-sizing: border-box;
         display: flex;
+        width: 100%;
     }
 
     input {
-        box-sizing: border-box;
-        width: 100%;
+        width: inherit;
         background-color: rgba(255, 255, 255, 0.1);
         border: none;
-        border-radius: 10px 0 0 10px;
+        border-radius: 8px 0 0 8px;
         color: #ffffff;
         padding: 10px 15px;
         margin: 0;
@@ -68,7 +70,7 @@
         background-color: rgb(225, 18, 80);
         border: none;
         border-left: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0 10px 10px 0;
+        border-radius: 0 9px 9px 0;
         padding: 10px 15px 10px 10px;
         color: white;
         margin: 0;

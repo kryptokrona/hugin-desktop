@@ -25,7 +25,7 @@
         <a class='button' href="/dashboard"><img class="icon" src={userIcon} alt=""></a>
         <a class='button' href="/messages"><img class="icon" src={msgIcon} alt=""></a>
         <a class='button' href="/boards"><img class="icon" src={brdIcon} alt=""></a>
-        <a class='button' href="/boards"><img class="icon" src={financeIcon} alt=""></a>
+        <a class='button' href=""><img class="icon" src={financeIcon} alt=""></a>
     </div>
     <div class="nav">
         <a class='button' href="/settings"><img class="icon" src={settingsIcon} alt=""></a>

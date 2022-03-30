@@ -1,55 +1,59 @@
 <script>
     import { fade } from 'svelte/transition';
-    import { messages } from "$lib/stores/messages.js";
     import ChatBubble from "/src/components/chat/ChatBubble.svelte";
     import ChatWindow from "/src/components/chat/ChatWindow.svelte";
     import ChatInput from "/src/components/chat/ChatInput.svelte";
-    import {onMount} from "svelte";
+    import {onDestroy, onMount} from "svelte";
+    import ChatList from "/src/components/chat/ChatList.svelte";
+
     let timestamp = Date.now();
-    let message;
+    let allMsgs = []
+    let msgs = []
+    let sendTo
 
-
-    onMount(async () => {
-      let data = await window.api.getMessages()
-        messages.set(data.messages)
-        console.log(data.messages)
+    onMount( async () => {
+        allMsgs = await window.api.getMessages()
+        console.log(allMsgs)
+        getMsgs(allMsgs.conversation)
     })
 
-    const sendMsg = (e) => {
-        console.log(e.detail.text)
-        message = {msg: e.detail.text, type: 'outgoing', time: timestamp}
-        messages.update(oldMsg => {
-            return [...oldMsg, message]
-        })
-        console.log($messages)
-       //window.api.sendMsg(message, 'SEKReThN49gfAWNJQvV9JwbiHvqj8LqAzUg4nr5ieWqSFPgirPZGnmqhWn5ULkxepuN7yK7RjyDh4dgiB56mcQHt1tqfhvQUfGq', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56', timestamp)
+    const getMsgs = async conversation => {
+            sendTo = conversation
+            msgs = allMsgs.messages.filter(x => x.conversation === conversation)
+            console.log("REQUESTED MSGS")
+            return msgs
     }
+
+    const sendMsg = e => {
+        console.log(e.detail.text)
+        let msg = e.detail.text
+        const message = {msg, conversation: sendTo, type: 'outgoing', time: timestamp}
+        console.log(message)
+    }
+
+    onDestroy(() => {
+        allMsgs = []
+    })
+
 </script>
 
 <main in:fade>
-    <div class="list">
-
-    </div>
+    <ChatList on:conversation={e => getMsgs(e.detail.conversation)}/>
     <ChatWindow>
-        {#each $messages as message}
-            <ChatBubble handleType={message.type} message={message.msg}/>
+        {#each msgs as message}
+            <ChatBubble handleType={message.type} message={message.msg.msg}/>
         {/each}
         <ChatInput on:message={sendMsg}/>
     </ChatWindow>
 </main>
 
 <style>
-    h1 {
-        color: white;
-        margin: 0
-    }
 
     main {
         display: flex;
         margin-left: 85px;
+        height: 100vh;
+        overflow: hidden;
     }
 
-    .list {
-        width: 350px;
-    }
 </style>

@@ -35,10 +35,6 @@
         gap: 10px;
     }
 
-    a {
-        margin: 0 auto;
-    }
-
     .add {
         height: 50px;
         width: 50px;

@@ -2,14 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/finance/Balance.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/finance/Balance.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
-    <list id="9a0ec34b-e340-40bc-b5c4-011008260bf0" name="Changes by ralls" comment="">
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,6 +32,7 @@
         <option value="LoadingScreen" />
         <option value="loading" />
         <option value="balance" />
+        <option value="ContactList" />
       </list>
     </option>
   </component>
@@ -42,15 +46,6 @@
       <filtered-out-file-type name="TAG" />
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
-  </component>
-  <component name="LineStatusTrackerManager">
-    <file path="$PROJECT_DIR$/src/electron.cjs">
-      <ranges>
-        <range start1="26" end1="29" start2="26" end2="29" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="341" end1="343" start2="341" end2="341" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-        <range start1="344" end1="344" start2="342" end2="345" changelist="9a0ec34b-e340-40bc-b5c4-011008260bf0" />
-      </ranges>
-    </file>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -105,7 +100,7 @@
       <workItem from="1648512352484" duration="13254000" />
       <workItem from="1648558930736" duration="2587000" />
       <workItem from="1648561870334" duration="14844000" />
-      <workItem from="1648596670618" duration="1541000" />
+      <workItem from="1648596670618" duration="21929000" />
     </task>
     <servers />
   </component>

@@ -14,8 +14,8 @@
     .bubble {
         background-color: rgba(255, 255, 255, 0.15);
         color: #ffffff;
-        padding: 20px;
-        border-radius: 10px;
+        padding: 10px;
+        border-radius: 8px;
     }
 
     .type {
