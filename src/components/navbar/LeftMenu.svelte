@@ -9,6 +9,13 @@
     import logoutIcon from '/static/icons/logout.png'
     import financeIcon from '/static/icons/finance.png'
     import userIcon from '/static/icons/user.png'
+    import {onMount} from "svelte";
+
+    let myAddress
+    onMount(async () => {
+        myAddress = await window.api.receive('myHuginAddr')
+        console.log(myAddress)
+    })
 
     const handleLogout = () => {
         user.update( data => {

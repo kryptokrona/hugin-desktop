@@ -37,7 +37,7 @@
         {#each filterArr as message}
             <div class="card" on:click={() => sendConversation(message.conversation)}>
                 <h4>{message.conversation}</h4>
-                <p>{message.msg.msg}</p>
+                <p>{message.msg}</p>
             </div>
         {/each}
     </div>

@@ -34,7 +34,6 @@
         messages.update(oldMsg => {
             return[...oldMsg, message]
         })
-
         //window.api.sendMsg(msg, conversation, timestamp)
         console.log("store", $messages)
     }
@@ -63,7 +62,7 @@
     <ChatList on:conversation={e => filterMsgs(e.detail.conversation)} on:click={openAdd}/>
     <ChatWindow>
         {#each $messages as message}
-            <ChatBubble handleType={message.type} message={message.msg.msg}/>
+            <ChatBubble handleType={message.type} message={message.msg}/>
         {/each}
         <ChatInput on:message={sendMsg}/>
     </ChatWindow>

@@ -1,27 +1,42 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import {fade, fly} from "svelte/transition";
-    import {createEventDispatcher} from "svelte";
+    import {createEventDispatcher, onMount} from "svelte";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
     const dispatch = createEventDispatcher()
     let enableButton = false
     let nickname
-    let address
-    let key
-
+    let addr
+    let pubkey
+    let text = ''
+    let myAddress
+    
+    $: {
+    if (text.length == 163) {
+        // If both addr and pub key is put in
+        addr = text.substring(0,99);
+        pubkey = text.substring(99,163);
+        text = addr
+        console.log('huginAddress', addr + pubkey)
+    }
+    }
 
     // Dispatch the inputted data
     const handleAdd = () => {
         dispatch('addChat', {
             nickname,
-            address,
-            key
+            addr,
+            pubkey
         })
     }
 
-
     //Handle state of the button, disabled by default, when enabled RGB class will be added.
  $: {
-        enableButton = !!(address && key);
+        enableButton = !!(addr && pubkey);
+        if (!text) {
+            addr = ''
+            pubkey = ''
+        }
  }
 
 </script>
@@ -32,9 +47,9 @@
             <h4>Nickname</h4>
             <input type="text" bind:value={nickname}>
             <h4>Address*</h4>
-            <input type="text" bind:value={address}>
-            <h4>Message key*</h4>
-            <input type="text" bind:value={key}>
+            <input type="text" bind:value={text}>
+            <h4>Message key</h4>
+            <input disabled="true" class="key" type="text" bind:value={pubkey}>
         </div>
         <button disabled={!enableButton} class:rgb={enableButton} on:click={handleAdd}>Add</button>
     </div>
@@ -48,7 +63,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(51, 51, 51, 0.7);
+        background-color: rgba(44, 44, 44, 0.7);
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
         margin-right: 85px;
@@ -97,6 +112,10 @@
         outline: none;
         border: 1px solid rgba(255, 255, 255, 0.6);
 
+    }
+
+    .key {
+        background-color: rgba(255, 255, 255, 0.2);
     }
 
     button {
