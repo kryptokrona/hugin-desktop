@@ -8,14 +8,16 @@
     let address
     let key
 
+
     // Dispatch the inputted data
-    const dispatchAdd = () => {
+    const handleAdd = () => {
         dispatch('addChat', {
             nickname,
             address,
             key
         })
     }
+
 
     //Handle state of the button, disabled by default, when enabled RGB class will be added.
  $: {
@@ -25,7 +27,7 @@
 </script>
 
 <div in:fade="{{duration: 200}}" out:fade class="backdrop" on:click|self>
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card" >
         <div class="wrapper">
             <h4>Nickname</h4>
             <input type="text" bind:value={nickname}>
@@ -34,7 +36,7 @@
             <h4>Message key*</h4>
             <input type="text" bind:value={key}>
         </div>
-        <button disabled={!enableButton} class:rgb={enableButton} on:click={dispatchAdd}>Add</button>
+        <button disabled={!enableButton} class:rgb={enableButton} on:click={handleAdd}>Add</button>
     </div>
 </div>
 

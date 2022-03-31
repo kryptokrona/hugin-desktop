@@ -42,14 +42,15 @@
     //Default value should be false to hide the AddChat form.
     let wantToAdd = false
     const openAdd = () => {
-        console.log('clicked')
         wantToAdd = !wantToAdd
     }
 
     //Incoming chat to add
     const handleAddChat = e => {
-       wantToAdd = false
-       console.log("Conversation to add", e.detail)
+        if(e) {
+            wantToAdd = false
+            console.log("Conversation to add", e.detail)
+        }
     }
 
 </script>
