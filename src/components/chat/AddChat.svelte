@@ -48,7 +48,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(51, 51, 51, 0.8);
+        background-color: rgba(51, 51, 51, 0.7);
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
         margin-right: 85px;
@@ -63,9 +63,10 @@
         height: 360px;
         width: 320px;
         padding: 30px;
-        background-color: #2c2c2c;
+        background-color: #1d1d1d;
         border-radius: 8px;
-        box-shadow: 0 0 20px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
+        border: 1px solid #3c3c3c;
     }
 
     .wrapper{
@@ -73,8 +74,9 @@
     }
 
     h4 {
-        color: white;
+        color: rgba(255, 255, 255, 0.8);
         margin: 0;
+        margin-left: 4px;
     }
 
     input {
@@ -88,10 +90,13 @@
         margin-top: 10px;
         margin-bottom: 20px;
         color: white;
+        transition: 250ms ease-in-out;
     }
 
     input:focus {
         outline: none;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+
     }
 
     button {
