@@ -358,87 +358,6 @@ let known_pool_txs = [];
 let known_keys = ['55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
 console.log('known_keys', known_keys)
 
-async function decrypt_message (transaction) {
-    try {
-
-        let payload_json;
-        let tx = transaction;
-
-            // If no key is appended to message we need to try the keys in our payload_keychain
-            let box = tx.box;
-
-            let timestamp = tx.t;
-
-            let i = 0;
-
-            let decryptBox = false;
-
-
-            try {
-                decryptBox = naclSealed.sealedbox.open(hexToUint(box),
-                    nonceFromTimestamp(timestamp),
-                    getKeyPair().secretKey);
-
-            } catch (err) {
-                console.log(err);
-            }
-
-            while (i < known_keys.length && !decryptBox) {
-                 console.log('Decrypting..');
-
-                let possibleKey = known_keys[i];
-                console.log('Trying key:', possibleKey);
-                i = i+1;
-                try {
-                    decryptBox = nacl.box.open(hexToUint(box),
-                        nonceFromTimestamp(timestamp),
-                        hexToUint(possibleKey),
-                        getKeyPair().secretKey);
-                    console.log('mykey', getKeyPair().secretKey)
-                } catch (err) {
-                    console.log('wrong key');
-                }
-                console.log('Decrypted:', decryptBox);
-
-
-            }
-
-            if (!decryptBox) {
-                console.log('Cannot decrypt..');
-                return;
-            }
-
-
-            let message_dec = naclUtil.encodeUTF8(decryptBox);
-
-            payload_json = JSON.parse(message_dec);
-            payload_json.t = timestamp;
-            if (payload_json.s) {
-
-                let this_addr = await Address.fromAddress(payload_json.from);
-
-                let verified = await xkrUtils.verifyMessageSignature(payload_json.msg, this_addr.spend.publicKey, payload_json.s);
-
-                if (!verified) {
-                    return;
-                }
-
-            }
-            if (payload_json.k) {
-                console.log('Found key!', payload_json);
-                // CHECK IF NEW KEY, SAVE IF NOT!
-            }
-
-        console.log('DEKRYPT??', payload_json)
-        return payload_json;
-
-    } catch (err) {
-        console.log(err);
-        return;
-    }
-}
-
-
 async function backgroundSyncMessages() {
 
     console.log('Background syncing...');
@@ -453,18 +372,12 @@ async function backgroundSyncMessages() {
 
     let json = await resp.json();
 
-    console.log(json);
-
     dbBoards.data = dbBoards.data || {messages: []}
     dbMessages.data = dbMessages.data || {messages: []}
 
     json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
-    console.log('doc', json);
-
     json = JSON.parse(json);
-
-    // known_pool_txs = $(known_pool_txs).not(json.deletedTxsIds).get();
 
     let transactions = json.addedTxs;
 
@@ -472,6 +385,7 @@ async function backgroundSyncMessages() {
     for (transaction in transactions) {
 
         try {
+            console.log('tx', transactions[transaction].transactionPrefixInfo);
             let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
             let thisHash = transactions[transaction].transactionPrefixInfotxHash;
             let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
@@ -495,12 +409,12 @@ async function backgroundSyncMessages() {
                 await dbMessages.write()
                 break;
               default:
-                dbBoards.data.messages.push(message)
-                await dbBoards.write()
+                if (message) {
+                  dbBoards.data.messages.push(message)
+                  await dbBoards.write()
+                }
                 break;
             }
-            dbMessages.data.messages.push(message)
-            await dbMessages.write()
 
         } catch (err) {
             console.log(err)
