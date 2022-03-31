@@ -13,6 +13,7 @@
                     <button>{board}</button>
                 {/each}
         {/if}
+    <div class="draggable hitbox"></div>
 </div>
 
 
@@ -28,11 +29,15 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        -webkit-app-region: drag;
         position: fixed;
         right: 0;
         z-index: 100;
         gap: 10px;
+    }
+
+    .hitbox {
+        height: 100%;
+        width: 85px;
     }
 
     .add {

@@ -11,7 +11,10 @@ const {default: fetch} = require("electron-fetch");
 const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
+<<<<<<< HEAD
 const {extraDataToMessage} = require('hugin-crypto')
+=======
+>>>>>>> 58fc54f904346c0ca8ded8d9c347d31845b4720e
 
 const { Address,
         AddressPrefix,
@@ -87,6 +90,7 @@ function fromHex(hex, str) {
     }
     return str
 }
+
 
 function trimExtra(extra) {
 
@@ -528,9 +532,9 @@ ipcMain.on('switchNode', async (e, node) => {
 
 
 
-ipcMain.on('sendMsg', (e, msg, receiver, messageKey, time) => {
-    sendMessage(msg, receiver, messageKey, time);
-    console.log(msg, receiver, messageKey, time)
+ipcMain.on('sendMsg', (e, msg, receiver, messageKey) => {
+    sendMessage(msg, receiver, messageKey);
+    console.log(msg, receiver, messageKey)
 }
 )
 
