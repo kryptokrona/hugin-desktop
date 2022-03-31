@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/hugintv/index.svelte" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
     <option name="SHOW_DIALOG" value="false" />
@@ -100,7 +104,7 @@
       <workItem from="1648684412806" duration="818000" />
       <workItem from="1648715581193" duration="1746000" />
       <workItem from="1648717335319" duration="9637000" />
-      <workItem from="1648733010573" duration="118000" />
+      <workItem from="1648733010573" duration="2875000" />
     </task>
     <servers />
   </component>
@@ -125,6 +129,12 @@
           <url>file://$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte</url>
           <line>45</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/routes/messages/index.svelte</url>
+          <line>1</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
