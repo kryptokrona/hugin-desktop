@@ -6,7 +6,7 @@
 
 </script>
 
-<div class="leftMenu draggable" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
+<div class="leftMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
         {#if $page.url.pathname === '/boards'}
             <div class="add" on:click></div>
             {#each $user.boardsArray as board}
