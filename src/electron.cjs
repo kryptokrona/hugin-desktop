@@ -518,7 +518,6 @@ async function backgroundSyncMessages() {
 
 app.on('ready', createMainWindow)
 app.on('activate', () => {
-    mainWindow.loadFile()
     if (!mainWindow) {
         createMainWindow();
     }
