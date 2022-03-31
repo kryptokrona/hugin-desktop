@@ -9,6 +9,7 @@
     //Get msgs from DB and call the filter function
     onMount(async () => {
         allMsgs = await window.api.getMessages()
+
         filterConversation(allMsgs)
     })
 
@@ -34,10 +35,11 @@
         <img src={addIcon} on:click>
     </div>
     <div class="list-wrapper">
+    {console.log('filterArr', filterArr)}
         {#each filterArr as message}
-            <div class="card" on:click={() => sendConversation(message.conversation)}>
-                <h4>{message.conversation}</h4>
-                <p>{message.msg.msg}</p>
+            <div class="card" on:click={() => sendConversation(message.from)}>
+                <h4>{message.from}</h4>
+                <p>{message.msg}</p>
             </div>
         {/each}
     </div>
@@ -100,7 +102,7 @@
         overflow: hidden;
         text-overflow: ellipsis
     }
-    
+
     h2 {
         margin: 0;
         color: #fff;
