@@ -57,7 +57,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px
+        gap: 10px;
+        -webkit-app-region: no-drag;
     }
 
     .logo {
