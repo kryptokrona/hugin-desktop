@@ -13,6 +13,7 @@
                     <button>{board}</button>
                 {/each}
         {/if}
+    <div class="draggable hitbox"></div>
 </div>
 
 
@@ -32,6 +33,11 @@
         right: 0;
         z-index: 100;
         gap: 10px;
+    }
+
+    .hitbox {
+        height: 100%;
+        width: 85px;
     }
 
     .add {

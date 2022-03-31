@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
     </list>
@@ -97,7 +96,7 @@
       <workItem from="1648561870334" duration="14844000" />
       <workItem from="1648596670618" duration="33483000" />
       <workItem from="1648673381969" duration="10960000" />
-      <workItem from="1648684412806" duration="719000" />
+      <workItem from="1648684412806" duration="818000" />
     </task>
     <servers />
   </component>
