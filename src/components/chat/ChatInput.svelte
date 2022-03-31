@@ -1,18 +1,15 @@
 <script>
     import { createEventDispatcher } from 'svelte'
     import sendIcon from '/static/icons/send.png'
+    import EmojiSelector from 'svelte-emoji-selector';
 
     const dispatch = createEventDispatcher();
 
-    import EmojiSelector from 'svelte-emoji-selector';
-
-    let textContent = '';
-
+    //This handles the emojis, lets fork the repo and make a darker theme.
     function onEmoji(event) {
         if (messageInput) {
             messageInput += event.detail
         } else messageInput = event.detail
-
     }
 
     //Input data to dispatch
@@ -46,7 +43,6 @@
     <input type="text" placeholder="Message.." bind:value={messageInput}>
     <EmojiSelector on:emoji={onEmoji} />
     <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px" alt=""></button>
-
 </div>
 
 <style>

@@ -45,6 +45,7 @@
         console.log('clicked')
         wantToAdd = !wantToAdd
     }
+
     //Incoming chat to add
     const handleAddChat = e => {
        wantToAdd = false

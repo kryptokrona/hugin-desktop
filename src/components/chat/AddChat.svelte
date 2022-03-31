@@ -3,10 +3,12 @@
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
     const dispatch = createEventDispatcher()
+    let enableButton = false
     let nickname
     let address
     let key
 
+    // Dispatch the inputted data
     const dispatchAdd = () => {
         dispatch('addChat', {
             nickname,
@@ -15,8 +17,7 @@
         })
     }
 
-    let enableButton = false
-
+    //Handle state of the button, disabled by default, when enabled RGB class will be added.
  $: {
         enableButton = !!(address && key);
  }

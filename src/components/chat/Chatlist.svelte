@@ -1,30 +1,29 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
     import addIcon from '/static/icons/add-circle.png'
-    import AddChat from "/src/components/chat/AddChat.svelte";
-    import FillButton from "/src/components/buttons/FillButton.svelte";
 
-
+    const dispatch = createEventDispatcher();
     let allMsgs
     let filterArr = []
 
+    //Get msgs from DB and call the filter function
     onMount(async () => {
         allMsgs = await window.api.getMessages()
         filterConversation(allMsgs)
     })
 
-    const dispatch = createEventDispatcher();
-
-    const sendConversation = (conversation) => {
-        dispatch('conversation', {
-            conversation
-        });
-    }
-
+    //Filters the incoming data to create one card per conversation
     const filterConversation = async () => {
         let uniq = {}
         filterArr = allMsgs.filter(obj => !uniq[obj.conversation] && (uniq[obj.conversation] = true));
         return filterArr
+    }
+
+    //Dispatches the clicked conversation, so we know which msgs to show.
+    const sendConversation = (conversation) => {
+        dispatch('conversation', {
+            conversation
+        });
     }
 
 </script>

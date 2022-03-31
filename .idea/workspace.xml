@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
@@ -102,7 +105,7 @@
       <workItem from="1648673381969" duration="10960000" />
       <workItem from="1648684412806" duration="818000" />
       <workItem from="1648715581193" duration="1746000" />
-      <workItem from="1648717335319" duration="4862000" />
+      <workItem from="1648717335319" duration="6484000" />
     </task>
     <servers />
   </component>
@@ -130,7 +133,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/chat/AddChat.svelte</url>
-          <line>93</line>
+          <line>94</line>
           <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="8" />
         </line-breakpoint>
