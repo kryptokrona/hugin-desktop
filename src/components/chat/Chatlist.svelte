@@ -1,6 +1,9 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
     import addIcon from '/static/icons/add-circle.png'
+    import AddChat from "/src/components/chat/AddChat.svelte";
+    import FillButton from "/src/components/buttons/FillButton.svelte";
+
 
     let allMsgs
     let filterArr = []
@@ -29,7 +32,7 @@
 <div class="wrapper">
     <div class="top">
         <h2>Messages</h2>
-        <button><img src={addIcon} alt=""></button>
+        <img src={addIcon} on:click>
     </div>
     <div class="list-wrapper">
         {#each filterArr as message}
@@ -112,7 +115,7 @@
         text-overflow: ellipsis
     }
 
-    button {
+    img {
         background-color: transparent;
         border: none;
         cursor: pointer;
@@ -121,7 +124,7 @@
         transition: 250ms ease-in-out;
     }
 
-    button:hover {
+    img:hover {
         opacity: 50%;
         padding: 5px;
 
