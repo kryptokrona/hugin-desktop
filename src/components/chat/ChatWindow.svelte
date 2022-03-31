@@ -1,4 +1,5 @@
 <script>
+    //Don't know if we can handle date here, to print today, yesterday etc in chat.
 </script>
 
 <!--This is just a wrapper that takes nested components-->

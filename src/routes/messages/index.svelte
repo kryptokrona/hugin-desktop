@@ -6,6 +6,7 @@
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import {onMount} from "svelte";
     import ChatList from "/src/components/chat/ChatList.svelte";
+    import AddChat from "/src/components/chat/AddChat.svelte";
 
     let timestamp = Date.now();
     let savedMsg
@@ -18,6 +19,7 @@
         console.log("FROM DB", $messages)
     })
 
+    //Filter clicked conversation
     const filterMsgs = async clicked => {
         $messages = savedMsg
         conversation = clicked
@@ -25,21 +27,40 @@
         return $messages
     }
 
+    //Send message to store and DB
     const sendMsg = e => {
         let msg = e.detail.text
         const message = {msg, conversation: conversation, type: 'outgoing', time: timestamp}
-        messages.update(current => {
-            return[...current, message]
+        messages.update(oldMsg => {
+            return[...oldMsg, message]
         })
 
         //window.api.sendMsg(msg, conversation, timestamp)
         console.log("store", $messages)
     }
 
+    //Default value should be false to hide the AddChat form.
+    let wantToAdd = false
+    const openAdd = () => {
+        wantToAdd = !wantToAdd
+    }
+
+    //Incoming chat to add
+    const handleAddChat = e => {
+        if(e) {
+            wantToAdd = false
+            console.log("Conversation to add", e.detail)
+        }
+    }
+
 </script>
 
+{#if wantToAdd}
+<AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)}/>
+{/if}
+
 <main in:fade>
-    <ChatList on:conversation={e => filterMsgs(e.detail.conversation)}/>
+    <ChatList on:conversation={e => filterMsgs(e.detail.conversation)} on:click={openAdd}/>
     <ChatWindow>
         {#each $messages as message}
             <ChatBubble handleType={message.type} message={message.msg.msg}/>

@@ -41,3 +41,22 @@ body {
     user-select: none;
     -webkit-app-region: drag;
 }
+
+.svelte-emoji-picker__trigger {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    border: none;
+    padding-right: 10px;
+}
+
+.svelte-emoji-picker__emoji-detail {
+    display: none;
+}
+
+.svelte-emoji-picker__emoji-list {
+    height: 13.4rem!important;
+}
+
+.fa-svelte {
+    color: white;
+}

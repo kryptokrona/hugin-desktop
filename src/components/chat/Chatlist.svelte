@@ -2,26 +2,28 @@
     import {createEventDispatcher, onMount} from 'svelte'
     import addIcon from '/static/icons/add-circle.png'
 
+    const dispatch = createEventDispatcher();
     let allMsgs
     let filterArr = []
 
+    //Get msgs from DB and call the filter function
     onMount(async () => {
         allMsgs = await window.api.getMessages()
         filterConversation(allMsgs)
     })
 
-    const dispatch = createEventDispatcher();
-
-    const sendConversation = (conversation) => {
-        dispatch('conversation', {
-            conversation
-        });
-    }
-
+    //Filters the incoming data to create one card per conversation
     const filterConversation = async () => {
         let uniq = {}
         filterArr = allMsgs.filter(obj => !uniq[obj.conversation] && (uniq[obj.conversation] = true));
         return filterArr
+    }
+
+    //Dispatches the clicked conversation, so we know which msgs to show.
+    const sendConversation = (conversation) => {
+        dispatch('conversation', {
+            conversation
+        });
     }
 
 </script>
@@ -29,7 +31,7 @@
 <div class="wrapper">
     <div class="top">
         <h2>Messages</h2>
-        <button><img src={addIcon} alt=""></button>
+        <img src={addIcon} on:click>
     </div>
     <div class="list-wrapper">
         {#each filterArr as message}
@@ -112,7 +114,7 @@
         text-overflow: ellipsis
     }
 
-    button {
+    img {
         background-color: transparent;
         border: none;
         cursor: pointer;
@@ -121,7 +123,7 @@
         transition: 250ms ease-in-out;
     }
 
-    button:hover {
+    img:hover {
         opacity: 50%;
         padding: 5px;
 
