@@ -1,27 +1,51 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import {fade, fly} from "svelte/transition";
-    import {createEventDispatcher} from "svelte";
+    import {createEventDispatcher, onMount} from "svelte";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
+
     const dispatch = createEventDispatcher()
+
     let enableButton = false
     let nickname
-    let address
-    let key
+    let addr
+    let pubkey
+    let text = ''
+    let myAddress
+    let avatar
 
+    $: {
+    if (text.length > 98) {
+        // spilt input to addr and pubkey
+        addr = text.substring(0,99);
+        pubkey = text.substring(99,163);
+        text = addr
+
+        avatar = get_avatar(addr)
+        console.log(avatar)
+        console.log('huginAddress', addr + pubkey)
+
+    }
+    }
 
     // Dispatch the inputted data
     const handleAdd = () => {
         dispatch('addChat', {
             nickname,
-            address,
-            key
+            addr,
+            pubkey
         })
     }
 
-
-    //Handle state of the button, disabled by default, when enabled RGB class will be added.
  $: {
-        enableButton = !!(address && key);
+        //Handle state of the button, disabled by default, when enabled RGB class will be added.
+        enableButton = !!(addr && pubkey);
+
+        ///Empty fields if input is empty
+        if (!text) {
+            addr = ''
+            pubkey = ''
+        }
  }
 
 </script>
@@ -30,11 +54,16 @@
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card" >
         <div class="wrapper">
             <h4>Nickname</h4>
-            <input type="text" bind:value={nickname}>
-            <h4>Address*</h4>
-            <input type="text" bind:value={address}>
-            <h4>Message key*</h4>
-            <input type="text" bind:value={key}>
+            <div class="nickname-wrapper">
+                <input type="text" bind:value={nickname}>
+                {#if (pubkey)}
+                    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
+                {/if}
+            </div>
+            <h4>Payment address*</h4>
+            <input type="text" bind:value={text}>
+            <h4>Message key</h4>
+            <input disabled="true" class="key" type="text" bind:value={pubkey}>
         </div>
         <button disabled={!enableButton} class:rgb={enableButton} on:click={handleAdd}>Add</button>
     </div>
@@ -48,7 +77,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(51, 51, 51, 0.7);
+        background-color: rgba(44, 44, 44, 0.7);
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
         margin-right: 85px;
@@ -71,6 +100,18 @@
 
     .wrapper{
         width: 100%;
+    }
+
+    .nickname-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .avatar {
+        margin-bottom: 9px;
+        width: 50px;
+        height: 50px;
     }
 
     h4 {
@@ -97,6 +138,10 @@
         outline: none;
         border: 1px solid rgba(255, 255, 255, 0.6);
 
+    }
+
+    .key {
+        background-color: rgba(255, 255, 255, 0.2);
     }
 
     button {

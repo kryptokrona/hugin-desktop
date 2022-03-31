@@ -301,7 +301,9 @@ async function start_js_wallet() {
     for (const address of js_wallet.getAddresses()) {
         console.log(`Address [${i}]: ${address}`);
         let msgKey = getMsgKey()
-        console.log('HuginAddress', address + msgKey)
+        console.log('HuginAddress',address + msgKey)
+        mainWindow.webContents.send('myHuginAddr', address + msgKey);
+
         i++;
     }
 
