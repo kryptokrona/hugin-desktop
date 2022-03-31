@@ -11,10 +11,7 @@ const {default: fetch} = require("electron-fetch");
 const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
-<<<<<<< HEAD
 const {extraDataToMessage} = require('hugin-crypto')
-=======
->>>>>>> 58fc54f904346c0ca8ded8d9c347d31845b4720e
 
 const { Address,
         AddressPrefix,
