@@ -11,6 +11,8 @@ const {default: fetch} = require("electron-fetch");
 const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
+const {extraDataToMessage} = require('hugin-crypto')
+
 const { Address,
         AddressPrefix,
         Block,
@@ -19,8 +21,14 @@ const { Address,
         CryptoNote,
         LevinPacket,
         Transaction} = require('kryptokrona-utils')
+
 const xkrUtils = new CryptoNote()
 const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+function getXKRKeypair() {
+  const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+  return {privateSpendKey: privateSpendKey, privateViewKey: privateViewKey};
+}
 
 function getKeyPair() {
     // return new Promise((resolve) => setTimeout(resolve, ms));
@@ -31,6 +39,7 @@ function getKeyPair() {
 }
 
 function getMsgKey() {
+
     const naclPubKey = getKeyPair().publicKey
     return  Buffer.from(naclPubKey).toString('hex');
 }
@@ -319,7 +328,6 @@ async function start_js_wallet() {
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
-            console.log('SYNCED')
             mainWindow.webContents.send('synced');
             console.log('walletBlockCount', walletBlockCount);
             console.log('localDaemonBlockCount', localDaemonBlockCount);
@@ -344,7 +352,7 @@ async function start_js_wallet() {
 
 
 let known_pool_txs = [];
-let known_keys = ['Tjeena', 'blablabla', 'tjena', 'blabalba', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
+let known_keys = ['55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
 console.log('known_keys', known_keys)
 
 async function decrypt_message (transaction) {
@@ -440,7 +448,7 @@ async function backgroundSyncMessages() {
         })
     })
 
-    json = await resp.json();
+    let json = await resp.json();
 
     console.log(json);
 
@@ -463,9 +471,7 @@ async function backgroundSyncMessages() {
         try {
             let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
             let thisHash = transactions[transaction].transactionPrefixInfotxHash;
-            let extra = trimExtra(thisExtra);
-            let tx = JSON.parse(extra)
-            console.log('tx', tx)
+            let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
 
             if (known_pool_txs.indexOf(thisHash) === -1) {
                 known_pool_txs.push(thisHash);
@@ -475,37 +481,24 @@ async function backgroundSyncMessages() {
                 console.log("This transaction is already known", thisHash);
                 continue;
             }
-                // PRIVATE BOX OR BOARD
-                if (tx.b || tx.box) {
-                    console.log('box found!')
-                    try {
 
-                     let dMsg = await decrypt_message(tx)
-                        let incomingMsg = {
-                            msg: dMsg.msg,
-                            type: 'incoming',
-                            conversation: dMsg.from,
-                            time: dMsg.t
-                        }
+            switch (message.type) {
+              case "sealedbox":
+                dbMessages.data.messages.push(message)
+                await dbMessages.write()
+                break;
+              case "box":
+                dbMessages.data.messages.push(message)
+                await dbMessages.write()
+                break;
+              default:
+                dbBoards.data.messages.push(message)
+                await dbBoards.write()
+                break;
+            }
+            dbMessages.data.messages.push(message)
+            await dbMessages.write()
 
-                        dbMessages.data.messages.push(incomingMsg)
-                        await dbMessages.write()
-                        console.log('THIS ' +  await dMsg)
-
-                    } catch (err) {
-                        console.log(err);
-                        continue;
-                    }
-
-                }
-                if (tx.brd) {
-                    // PUBLIC BOARD MESSAGE OR
-
-                    dbBoards.data.messages.push(extra);
-                    console.log(dbBoards.data)
-                    await dbBoards.write(dbBoards.data);
-                    //save board message here??
-                }
         } catch (err) {
             console.log(err)
         }
@@ -629,8 +622,7 @@ async function sendMessage(message, receiver, messageKey) {
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         dbMessages.data = {msg: message, key: messageKey, conversation: receiver, type: 'outgoing', time: timestamp}
-        dbMessages.data.messages.push(dbMessages.data)
-        await dbMessages.write()
+        await dbMessages.write(dbMessages.data)
         known_pool_txs.push(result.transactionHash)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
