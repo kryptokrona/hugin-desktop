@@ -3,21 +3,28 @@
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher, onMount} from "svelte";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+
     const dispatch = createEventDispatcher()
+
     let enableButton = false
     let nickname
     let addr
     let pubkey
     let text = ''
     let myAddress
-    
+    let avatar
+
     $: {
-    if (text.length == 163) {
-        // If both addr and pub key is put in
+    if (text.length > 98) {
+        // spilt input to addr and pubkey
         addr = text.substring(0,99);
         pubkey = text.substring(99,163);
         text = addr
+
+        avatar = get_avatar(addr)
+        console.log(avatar)
         console.log('huginAddress', addr + pubkey)
+
     }
     }
 
@@ -30,9 +37,11 @@
         })
     }
 
-    //Handle state of the button, disabled by default, when enabled RGB class will be added.
  $: {
+        //Handle state of the button, disabled by default, when enabled RGB class will be added.
         enableButton = !!(addr && pubkey);
+
+        ///Empty fields if input is empty
         if (!text) {
             addr = ''
             pubkey = ''
@@ -45,8 +54,13 @@
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card" >
         <div class="wrapper">
             <h4>Nickname</h4>
-            <input type="text" bind:value={nickname}>
-            <h4>Address*</h4>
+            <div class="nickname-wrapper">
+                <input type="text" bind:value={nickname}>
+                {#if (pubkey)}
+                    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
+                {/if}
+            </div>
+            <h4>Payment address*</h4>
             <input type="text" bind:value={text}>
             <h4>Message key</h4>
             <input disabled="true" class="key" type="text" bind:value={pubkey}>
@@ -86,6 +100,18 @@
 
     .wrapper{
         width: 100%;
+    }
+
+    .nickname-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .avatar {
+        margin-bottom: 9px;
+        width: 50px;
+        height: 50px;
     }
 
     h4 {
