@@ -60,7 +60,7 @@
                     <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
                 {/if}
             </div>
-            <h4>Payment address*</h4>
+            <h4>Address*</h4>
             <input type="text" bind:value={text}>
             <h4>Message key</h4>
             <input disabled="true" class="key" type="text" bind:value={pubkey}>

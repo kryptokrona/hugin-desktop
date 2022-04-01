@@ -193,10 +193,9 @@ function sleep(ms) {
 
 let userDataDir = app.getPath('userData');
 
-let node = 'explorer.kryptokrona.se'
-let ports = 20001
+let node = 'blocksum.org'
+let ports = 11898
 const daemon = new WB.Daemon(node, ports);
-
 
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
@@ -250,7 +249,7 @@ async function start_js_wallet() {
 
     if (c === 'c') {
 
-        let height = 9000;
+        let height = 1010000;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -331,7 +330,7 @@ async function start_js_wallet() {
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
-            mainWindow.webContents.send('synced');
+            mainWindow.webContents.send('synced', true);
             console.log('walletBlockCount', walletBlockCount);
             console.log('localDaemonBlockCount', localDaemonBlockCount);
             console.log('networkBlockCount', networkBlockCount);
@@ -355,15 +354,16 @@ async function start_js_wallet() {
 
 
 let known_pool_txs = [];
-let known_keys = ['55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
+let known_keys = ['641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75'];
 console.log('known_keys', known_keys)
 
 async function backgroundSyncMessages() {
 
     console.log('Background syncing...');
+    mainWindow.webContents.send('syncing', true);
     let message_was_unknown;
     let dec_message;
-    const resp = await fetch('http://' + 'explorer.kryptokrona.se:20001' + '/get_pool_changes_lite', {
+    const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
         method: 'POST',
         body: JSON.stringify({
             knownTxsIds: known_pool_txs
@@ -389,6 +389,7 @@ async function backgroundSyncMessages() {
             let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
             let thisHash = transactions[transaction].transactionPrefixInfotxHash;
             let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
+            message.sent = false
 
             if (known_pool_txs.indexOf(thisHash) === -1) {
                 known_pool_txs.push(thisHash);
@@ -403,10 +404,12 @@ async function backgroundSyncMessages() {
               case "sealedbox":
                 dbMessages.data.messages.push(message)
                 await dbMessages.write()
+                  mainWindow.webContents.send('newMsg', dbMessages.data)
                 break;
               case "box":
                 dbMessages.data.messages.push(message)
                 await dbMessages.write()
+                  mainWindow.webContents.send('newMsg', dbMessages.data)
                 break;
               default:
                 if (message) {
@@ -538,8 +541,10 @@ async function sendMessage(message, receiver, messageKey) {
 
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        dbMessages.data = {msg: message, key: messageKey, conversation: receiver, type: 'outgoing', time: timestamp}
-        await dbMessages.write(dbMessages.data)
+        const sentMsg = {msg: message, k: messageKey, from: receiver, sent: true, time: timestamp}
+        dbMessages.data.messages.push(sentMsg)
+        await dbMessages.write()
+        mainWindow.webContents.send('newMsg', dbMessages.data)
         known_pool_txs.push(result.transactionHash)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);

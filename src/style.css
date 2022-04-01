@@ -36,6 +36,40 @@ body {
     animation: rgb 30s ease infinite;
 }
 
+@keyframes rgbFill {
+    0%, 100% {
+        fill: #5f86f2;
+    }
+    12.5% {
+        fill: #a65ff2;
+    }
+    25% {
+        fill: #f25fd0;
+    }
+    37.5% {
+        fill: #f25f61;
+    }
+    50% {
+        fill: #f2cb5f;
+    }
+    62.5% {
+        fill: #abf25f;
+    }
+    75% {
+        fill: #5ff281;
+    }
+    87.5% {
+        fill: #5ff2f0;
+    }
+}
+
+.rgbFill {
+    fill: #5f86f2;
+    -webkit-animation: rgbFill 15s ease infinite;
+    -moz-animation: rgbFill 15s ease infinite;
+    animation: rgbFill 15s ease infinite;
+}
+
 .draggable {
     -webkit-user-select: none;
     user-select: none;

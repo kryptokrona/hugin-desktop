@@ -1,29 +1,26 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
-    import addIcon from '/static/icons/add-circle.png'
+    import {messages} from "$lib/stores/messages.js";
+    import addIcon from '/static/images/add-circle.png'
 
     const dispatch = createEventDispatcher();
-    let allMsgs
     let filterArr = []
 
-    //Get msgs from DB and call the filter function
-    onMount(async () => {
-        allMsgs = await window.api.getMessages()
-
-        filterConversation(allMsgs)
-    })
-
-    //Filters the incoming data to create one card per conversation
-    const filterConversation = async () => {
+    const filterConversation = () => {
+        console.log($messages)
         let uniq = {}
-        filterArr = allMsgs.filter(obj => !uniq[obj.conversation] && (uniq[obj.conversation] = true));
-        return filterArr
+        filterArr = $messages.filter(obj => !uniq[obj.from] && (uniq[obj.from] = true));
     }
 
+    onMount(async () => {
+        filterConversation()
+    })
+
     //Dispatches the clicked conversation, so we know which msgs to show.
-    const sendConversation = (conversation) => {
+    const sendConversation = (from, key) => {
         dispatch('conversation', {
-            conversation
+            from,
+            key
         });
     }
 
@@ -35,9 +32,8 @@
         <img src={addIcon} on:click>
     </div>
     <div class="list-wrapper">
-    {console.log('filterArr', filterArr)}
         {#each filterArr as message}
-            <div class="card" on:click={() => sendConversation(message.from)}>
+            <div class="card" on:click={() => sendConversation(message.from, message.k)}>
                 <h4>{message.from}</h4>
                 <p>{message.msg}</p>
             </div>

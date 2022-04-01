@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte'
-    import sendIcon from '/static/icons/send.png'
+    import sendIcon from '/static/images/send.png'
     import EmojiSelector from 'svelte-emoji-selector';
 
     const dispatch = createEventDispatcher();
