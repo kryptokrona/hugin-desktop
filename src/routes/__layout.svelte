@@ -3,10 +3,15 @@
 	import LeftMenu from "../components/navbar/LeftMenu.svelte";
 	import RightMenu from "/src/components/navbar/RightMenu.svelte";
 	import { user } from "$lib/stores/user.js";
-	import '/src/style.css'
+
+	import '$lib/theme/global.css'
+	import {messages} from "$lib/stores/messages.js";
 
 	let ready = false;
-	onMount(() => (ready = true));
+	onMount( async () =>{
+		ready = true
+		messages.set(await window.api.getMessages())
+	});
 
 </script>
 
