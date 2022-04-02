@@ -1,5 +1,6 @@
 <script>
-    import { fade } from 'svelte/transition'
+    import {fade} from 'svelte/transition'
+
     export let message
     export let handleType
 </script>

@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from 'svelte'
+    import {createEventDispatcher} from 'svelte'
     import sendIcon from '/static/images/send.png'
     import EmojiSelector from 'svelte-emoji-selector';
 
@@ -20,7 +20,7 @@
 
     //Check if enter is pressed and call sendMsg function
     window.addEventListener('keyup', e => {
-        if(messageInput && e.keyCode === 13) {
+        if (messageInput && e.keyCode === 13) {
             sendMsg()
         }
     })
@@ -41,8 +41,9 @@
 
 <div class="wrapper">
     <input type="text" placeholder="Message.." bind:value={messageInput}>
-    <EmojiSelector on:emoji={onEmoji} />
-    <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px" alt=""></button>
+    <EmojiSelector on:emoji={onEmoji}/>
+    <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px"
+                                                                                         alt=""></button>
 </div>
 
 <style>
@@ -64,7 +65,7 @@
         margin: 0;
     }
 
-    input:focus{
+    input:focus {
         outline: none;
     }
 

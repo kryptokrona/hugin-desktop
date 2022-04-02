@@ -15,29 +15,29 @@
     let avatar
 
     $: {
-    if (text.length > 98) {
-        // spilt input to addr and pubkey
-        addr = text.substring(0,99);
-        pubkey = text.substring(99,163);
-        text = addr
+        if (text.length > 98) {
+            // spilt input to addr and pubkey
+            addr = text.substring(0, 99);
+            pubkey = text.substring(99, 163);
+            text = addr
 
-        avatar = get_avatar(addr)
-        console.log(avatar)
-        console.log('huginAddress', addr + pubkey)
+            avatar = get_avatar(addr)
+            console.log(avatar)
+            console.log('huginAddress', addr + pubkey)
 
-    }
+        }
     }
 
     // Dispatch the inputted data
     const handleAdd = () => {
         dispatch('addChat', {
-            nickname,
-            addr,
-            pubkey
+            msg: 'Founf a friend? 🥳',
+            from: addr,
+            k: pubkey
         })
     }
 
- $: {
+    $: {
         //Handle state of the button, disabled by default, when enabled RGB class will be added.
         enableButton = !!(addr && pubkey);
 
@@ -46,12 +46,12 @@
             addr = ''
             pubkey = ''
         }
- }
+    }
 
 </script>
 
 <div in:fade="{{duration: 200}}" out:fade class="backdrop" on:click|self>
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card" >
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
         <div class="wrapper">
             <h4>Nickname</h4>
             <div class="nickname-wrapper">
@@ -98,7 +98,7 @@
         border: 1px solid #3c3c3c;
     }
 
-    .wrapper{
+    .wrapper {
         width: 100%;
     }
 
@@ -155,7 +155,7 @@
         cursor: pointer;
     }
 
-    button:hover{
+    button:hover {
         opacity: 80%;
     }
 </style>
