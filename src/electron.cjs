@@ -541,7 +541,7 @@ async function sendMessage(message, receiver, messageKey) {
 
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        const sentMsg = {msg: message, k: messageKey, from: receiver, sent: true, time: timestamp}
+        const sentMsg = {from: receiver, k: messageKey, msg: message, sent: true, t: timestamp}
         dbMessages.data.messages.push(sentMsg)
         await dbMessages.write()
         mainWindow.webContents.send('newMsg', dbMessages.data)
