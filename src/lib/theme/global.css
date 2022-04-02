@@ -76,6 +76,19 @@ body {
     -webkit-app-region: drag;
 }
 
+.svelte-emoji-picker {
+    background-color: #1d1d1d!important;
+    border: none!important;
+    box-shadow: none!important;
+    color: white!important;
+    padding: 10px!important;
+}
+
+.svelte-emoji-picker__search > input {
+    width: 90%!important;
+}
+
+
 .svelte-emoji-picker__trigger {
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 0;
