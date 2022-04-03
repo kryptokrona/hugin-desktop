@@ -26,6 +26,19 @@ const WINDOW_API = {
     const res = await ipcRenderer.invoke('getMessages')
     return res.messages
   },
+  //HANDLE CALLS
+  startCall: async (contact, callType) => {
+  ipcRenderer.send('startCall', contact, callType)
+  },
+
+answerCall: async (contact, callType) => {
+  ipcRenderer.send('answerCall', callType)
+  },
+
+endCall: async (peer, stream) => {
+  ipcRenderer.send('endCall',peer, stream)
+  },
+
 
   //HANDLE NODES
   getNodes: async () => {

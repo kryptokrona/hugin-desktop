@@ -7,70 +7,55 @@
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import ChatList from "/src/components/chat/ChatList.svelte";
     import AddChat from "/src/components/chat/AddChat.svelte";
-    import {user} from "$lib/stores/user.js";
 
+    let timestamp = Date.now();
     let savedMsg = []
-    let from
+    let address
     let key
-
-    onMount(async () => {
-        //Get messages and save to a variable.
-        messages.set(await window.api.getMessages(res => {
-            savedMsg = res
-        }))
-
-        //Log to verify
+    let active_contact
+    //Get messages on mount
+    onMount( async () => {
+        messages.set(await window.api.getMessages())
+        savedMsg = $messages
         console.log('FROM ELECTRON DB', savedMsg)
-
-        //If we have an active chat in store we show that conversation
-        if ($user.activeChat) {
-            filterMsgs($user.activeChat)
-        }
     })
 
     //Filter clicked conversation
     const filterMsgs = active => {
-        from = active.from
-        key = active.k
-        savedMsg = $messages.filter(x => x.from === from)
-
-        //Remember which conversation we clicked on
-        user.update(user => {
-            return {
-                ...user,
-                activeChat: {from: active.from, k: active.k}
-            }
-        })
+        console.log(active)
+        address = active.from
+        key = active.key
+        active_contact = address + key;
+        savedMsg = $messages.filter(x => x.from === address)
     }
 
-    //Update messages live if user keeps chat mounted
+    //Update messages live if users keep chat mounted
     $: {
         window.api.receive('newMsg', data => {
             messages.update(() => data.messages)
             savedMsg = $messages
+            console.log('UPDATED MSG', savedMsg)
         })
-    }
-
-    //Chat to add
-    const handleAddChat = e => {
-        //Add input to message arr
-        messages.update(current => {
-            return [e.detail, ...current]
-        })
-        //Prepare send function and filter
-        filterMsgs(e.detail)
-
-        console.log("Conversation to add", e.detail)
-
-        //Close popup
-        wantToAdd = false
     }
 
     //Send message to store and DB
     const sendMsg = e => {
         let msg = e.detail.text
         console.log(e)
-        window.api.sendMsg(msg, from, key)
+        window.api.sendMsg(msg, active_contact)
+    }
+    //Starts any call
+    const startCall = async (calltype) => {
+        console.log(calltype)
+        window.api.startCall(active_contact, calltype)
+    }
+
+    //Incoming chat to add
+    const handleAddChat = e => {
+        if(e) {
+            wantToAdd = false
+            console.log("Conversation to add", e.detail)
+        }
     }
 
     //Default value should be false to hide the AddChat form.
@@ -82,7 +67,7 @@
 </script>
 
 {#if wantToAdd}
-    <AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)}/>
+<AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)}/>
 {/if}
 
 <main in:fade>
@@ -91,9 +76,12 @@
         {#each savedMsg as message}
             <ChatBubble handleType={message.sent} message={message.msg}/>
         {/each}
+
         <ChatInput on:message={sendMsg}/>
+        <button on:click={startCall}></button>
     </ChatWindow>
 </main>
+
 
 <style>
 
@@ -102,6 +90,13 @@
         margin-left: 85px;
         height: 100vh;
         overflow: hidden;
+    }
+
+    .button {
+      background: magenta;
+      color: white;
+      position: center;
+      top: 5px;
     }
 
 </style>

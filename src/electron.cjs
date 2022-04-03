@@ -12,6 +12,7 @@ const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
 const {extraDataToMessage} = require('hugin-crypto')
+const { startCall, answerCall, endCall, parseCall  } = import('./lib/utils/hugin-calls.js');
 
 const { Address,
         AddressPrefix,
@@ -21,6 +22,7 @@ const { Address,
         CryptoNote,
         LevinPacket,
         Transaction} = require('kryptokrona-utils')
+
 
 const xkrUtils = new CryptoNote()
 const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
@@ -66,7 +68,7 @@ function nonceFromTimestamp(tmstmp) {
 
     while ( nonce.length < nacl.box.nonceLength ) {
 
-        tmp_nonce = Array.from(nonce);
+        let tmp_nonce = Array.from(nonce);
 
         tmp_nonce.push(0);
 
@@ -187,6 +189,19 @@ function createMainWindow() {
 }
 
 
+app.on('ready', createMainWindow)
+app.on('activate', () => {
+    if (!mainWindow) {
+        createMainWindow();
+    }
+});
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+});
+
+
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -249,7 +264,7 @@ async function start_js_wallet() {
 
     if (c === 'c') {
 
-        let height = 1010000;
+        let height = 23000;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -317,8 +332,6 @@ async function start_js_wallet() {
         i++;
     }
 
-    global.boards_addresses = boards_addresses;
-
     console.log('Started wallet');
 
     while (true) {
@@ -354,7 +367,7 @@ async function start_js_wallet() {
 
 
 let known_pool_txs = [];
-let known_keys = ['641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75'];
+let known_keys = ['641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
 console.log('known_keys', known_keys)
 
 async function backgroundSyncMessages() {
@@ -363,80 +376,75 @@ async function backgroundSyncMessages() {
     mainWindow.webContents.send('syncing', true);
     let message_was_unknown;
     let dec_message;
-    const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
-        method: 'POST',
-        body: JSON.stringify({
-            knownTxsIds: known_pool_txs
+    try {
+        const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
+            method: 'POST',
+            body: JSON.stringify({
+                knownTxsIds: known_pool_txs
+            })
         })
-    })
 
-    let json = await resp.json();
+        let json = await resp.json();
 
-    dbBoards.data = dbBoards.data || {messages: []}
-    dbMessages.data = dbMessages.data || {messages: []}
+        dbBoards.data = dbBoards.data || {messages: []}
+        dbMessages.data = dbMessages.data || {messages: []}
 
-    json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
+        json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
-    json = JSON.parse(json);
+        json = JSON.parse(json);
 
-    let transactions = json.addedTxs;
+        let transactions = json.addedTxs;
+        let transaction;
 
+        for (transaction in transactions) {
 
-    for (transaction in transactions) {
+            try {
+                console.log('tx', transactions[transaction].transactionPrefixInfo);
+                let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
+                let thisHash = transactions[transaction].transactionPrefixInfotxHash;
 
-        try {
-            console.log('tx', transactions[transaction].transactionPrefixInfo);
-            let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
-            let thisHash = transactions[transaction].transactionPrefixInfotxHash;
-            let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
-            message.sent = false
-
-            if (known_pool_txs.indexOf(thisHash) === -1) {
-                known_pool_txs.push(thisHash);
-                message_was_unknown = true;
-            } else {
-                message_was_unknown = false;
-                console.log("This transaction is already known", thisHash);
-                continue;
-            }
-
-            switch (message.type) {
-              case "sealedbox":
-                dbMessages.data.messages.push(message)
-                await dbMessages.write()
-                  mainWindow.webContents.send('newMsg', dbMessages.data)
-                break;
-              case "box":
-                dbMessages.data.messages.push(message)
-                await dbMessages.write()
-                  mainWindow.webContents.send('newMsg', dbMessages.data)
-                break;
-              default:
-                if (message) {
-                  dbBoards.data.messages.push(message)
-                  await dbBoards.write()
+                if (known_pool_txs.indexOf(thisHash) === -1) {
+                    known_pool_txs.push(thisHash);
+                    message_was_unknown = true;
+                } else {
+                    message_was_unknown = false;
+                    console.log("This transaction is already known", thisHash);
+                    continue;
                 }
-                break;
+
+                let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
+                message.sent = false
+
+                parseCall(message.msg)
+
+                console.log('Message?', message.msg)
+
+                switch (message.type) {
+                    case "sealedbox":
+                        dbMessages.data.messages.push(message)
+                        await dbMessages.write()
+                        mainWindow.webContents.send('newMsg', dbMessages.data)
+                        break;
+                    case "box":
+                        dbMessages.data.messages.push(message)
+                        await dbMessages.write()
+                        mainWindow.webContents.send('newMsg', dbMessages.data)
+                        break;
+                    default:
+                        if (message) {
+                            dbBoards.data.messages.push(message)
+                            await dbBoards.write()
+                        }
+                        break;
+                }
+            } catch (err) {
+                console.log(err)
             }
-
-        } catch (err) {
-            console.log(err)
         }
+    } catch (err) {
+        console.log('Sync error')
     }
-
 }
-
-
-app.on('ready', createMainWindow)
-app.on('activate', () => {
-    if (!mainWindow) {
-        createMainWindow();
-    }
-});
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
-});
 
 //SWITCH NODE
 ipcMain.on('switchNode', async (e, node) => {
@@ -448,15 +456,16 @@ ipcMain.on('switchNode', async (e, node) => {
 
 
 
-ipcMain.on('sendMsg', (e, msg, receiver, messageKey) => {
-    sendMessage(msg, receiver, messageKey);
-    console.log(msg, receiver, messageKey)
+ipcMain.on('sendMsg', (e, msg, receiver) => {
+    sendMessage(msg, receiver);
+    console.log(msg, receiver)
 }
 )
 
-async function sendMessage(message, receiver, messageKey) {
+async function sendMessage(message, receiver) {
     console.log('Want to send')
-
+    let address = receiver.substring(0,99);
+    let messageKey =  receiver.substring(99,163);
     let has_history = true;
 
     if (message.length == 0) {
@@ -528,7 +537,7 @@ async function sendMessage(message, receiver, messageKey) {
     let payload_hex = toHex(JSON.stringify(payload_box));
 
     let result = await js_wallet.sendTransactionAdvanced(
-        [[receiver, 1]], // destinations,
+        [[address, 1]], // destinations,
         3, // mixin
         {fixedFee: 3000, isFixedFee: true}, // fee
         undefined, //paymentID
@@ -541,7 +550,7 @@ async function sendMessage(message, receiver, messageKey) {
 
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        const sentMsg = {from: receiver, k: messageKey, msg: message, sent: true, t: timestamp}
+        const sentMsg = {msg: message, k: messageKey, from: address, sent: true, time: timestamp}
         dbMessages.data.messages.push(sentMsg)
         await dbMessages.write()
         mainWindow.webContents.send('newMsg', dbMessages.data)
@@ -558,4 +567,36 @@ ipcMain.handle('getMessages', async () => {
 
 ipcMain.handle('getBalance', async () => {
     return await js_wallet.getBalance()
+})
+
+
+
+ipcMain.on('startCall', async (contact, callType) => {
+    console.log('CALL STARTED')
+    switch (callType) {
+
+        case "audio":
+            return await startCall(contact, true, false,)
+
+    }
+})
+
+
+ipcMain.on('answerCall', async (contact, callType) => {
+    console.log('CALL STARTED')
+    switch (callType) {
+
+        case "audio":
+            return answerCall(contact, true, false,)
+
+    }
+})
+
+
+ipcMain.on('endCall', async (peer, stream) => {
+    console.log('CALL STARTED')
+
+    return endCall(peer, stream)
+
+
 })
