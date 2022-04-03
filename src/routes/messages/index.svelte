@@ -9,9 +9,7 @@
     import AddChat from "/src/components/chat/AddChat.svelte";
     import {user} from "$lib/stores/user.js";
 
-    let timestamp = Date.now();
-    let savedMsg = []
-    let address
+    let from
     let active_contact
     let savedMsg = []
     let key
@@ -32,7 +30,7 @@
       const filterMsgs = active => {
       from = active.from
       key = active.k
-      active_contact = address + key;
+      active_contact = from + key;
       savedMsg = $messages.filter(x => x.from === from)
       //Remember which conversation we clicked on
       user.update(user => {
@@ -74,7 +72,7 @@
         console.log(calltype)
         window.api.startCall(active_contact, calltype)
     }
-    
+
 
     //Default value should be false to hide the AddChat form.
     let wantToAdd = false
