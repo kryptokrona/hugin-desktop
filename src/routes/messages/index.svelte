@@ -7,28 +7,53 @@
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import ChatList from "/src/components/chat/ChatList.svelte";
     import AddChat from "/src/components/chat/AddChat.svelte";
+    import {user} from "$lib/stores/user.js";
 
     let timestamp = Date.now();
     let savedMsg = []
     let address
-    let key
     let active_contact
+    let savedMsg = []
+    let key
+
     //Get messages on mount
-    onMount( async () => {
-        messages.set(await window.api.getMessages())
-        savedMsg = $messages
-        console.log('FROM ELECTRON DB', savedMsg)
-    })
-
-    //Filter clicked conversation
-    const filterMsgs = active => {
-        console.log(active)
-        address = active.from
-        key = active.key
-        active_contact = address + key;
-        savedMsg = $messages.filter(x => x.from === address)
-    }
-
+    onMount(async () => {
+          //Get messages and save to a variable.
+          messages.set(await window.api.getMessages(res => {
+              savedMsg = res
+          }))
+          //Log to verify
+          console.log('FROM ELECTRON DB', savedMsg)
+          //If we have an active chat in store we show that conversation
+          if ($user.activeChat) {
+              filterMsgs($user.activeChat)
+          }
+      })
+      const filterMsgs = active => {
+      from = active.from
+      key = active.k
+      active_contact = address + key;
+      savedMsg = $messages.filter(x => x.from === from)
+      //Remember which conversation we clicked on
+      user.update(user => {
+          return {
+              ...user,
+              activeChat: {from: active.from, k: active.k}
+          }
+      })
+  }
+  //Chat to add
+  const handleAddChat = e => {
+      //Add input to message arr
+      messages.update(current => {
+          return [e.detail, ...current]
+      })
+      //Prepare send function and filter
+      filterMsgs(e.detail)
+      console.log("Conversation to add", e.detail)
+      //Close popup
+      wantToAdd = false
+  }
     //Update messages live if users keep chat mounted
     $: {
         window.api.receive('newMsg', data => {
