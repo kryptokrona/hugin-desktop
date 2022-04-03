@@ -32,13 +32,6 @@
       key = active.k
       active_contact = from + key;
       savedMsg = $messages.filter(x => x.from === from)
-      //Remember which conversation we clicked on
-      user.update(user => {
-          return {
-              ...user,
-              activeChat: {from: active.from, k: active.k}
-          }
-      })
   }
   //Chat to add
   const handleAddChat = e => {
@@ -67,11 +60,7 @@
         console.log(e)
         window.api.sendMsg(msg, active_contact)
     }
-    //Starts any call
-    const startCall = async (calltype) => {
-        console.log(calltype)
-        window.api.startCall(active_contact, calltype)
-    }
+
 
 
     //Default value should be false to hide the AddChat form.
@@ -94,7 +83,6 @@
         {/each}
 
         <ChatInput on:message={sendMsg}/>
-        <button on:click={startCall}></button>
     </ChatWindow>
 </main>
 

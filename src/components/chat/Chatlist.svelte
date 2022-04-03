@@ -34,6 +34,13 @@
             from,
             k: key
         });
+        //Saved clicked chat
+        user.update(user => {
+            return{
+                ...user,
+               activeChat: {from: from, k: key}
+            }
+        })
     }
 
 </script>

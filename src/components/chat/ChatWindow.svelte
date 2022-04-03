@@ -18,7 +18,11 @@
         background-color: #202020;
         width: 100%;
         height: 100vh;
-        overflow: scroll;
+        overflow: hidden;
+    }
+
+    .window::-webkit-scrollbar {
+    display: none;
     }
 
 </style>
