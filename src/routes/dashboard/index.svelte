@@ -17,6 +17,7 @@
     main {
         margin-left: 85px;
         padding: 40px;
+        background-color: #202020;
     }
 
 </style>

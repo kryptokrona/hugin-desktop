@@ -121,7 +121,7 @@ function createWindow() {
     });
 
     const mainWindow = new BrowserWindow({
-        backgroundColor: '#2c2c2c',
+        backgroundColor: '#202020',
         titleBarStyle: 'hidden',
         autoHideMenuBar: true,
         trafficLightPosition: {
@@ -316,8 +316,6 @@ async function start_js_wallet() {
         console.log(`Address [${i}]: ${address}`);
         let msgKey = getMsgKey()
         console.log('HuginAddress',address + msgKey)
-        mainWindow.webContents.send('myHuginAddr', address + msgKey);
-
         i++;
     }
 
@@ -567,6 +565,11 @@ ipcMain.handle('getMessages', async () => {
 
 ipcMain.handle('getBalance', async () => {
     return await js_wallet.getBalance()
+})
+
+ipcMain.handle('getAddress',  async () => {
+    return js_wallet.getAddresses()
+
 })
 
 

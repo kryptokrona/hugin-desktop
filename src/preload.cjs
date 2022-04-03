@@ -26,6 +26,7 @@ const WINDOW_API = {
     const res = await ipcRenderer.invoke('getMessages')
     return res.messages
   },
+
   //HANDLE CALLS
   startCall: async (contact, callType) => {
   ipcRenderer.send('startCall', contact, callType)
@@ -39,7 +40,6 @@ endCall: async (peer, stream) => {
   ipcRenderer.send('endCall',peer, stream)
   },
 
-
   //HANDLE NODES
   getNodes: async () => {
     ipcRenderer.send('getNodes')
@@ -51,7 +51,12 @@ endCall: async (peer, stream) => {
   //HANDLE FINANCE
   getBalance: async () => {
     return  await ipcRenderer.invoke('getBalance')
-  }
+  },
+
+  //HANDLE ADDRESS
+  getAddress: async () => {
+    await ipcRenderer.invoke('getAddress')
+  },
 }
 
 

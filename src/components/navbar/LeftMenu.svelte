@@ -12,12 +12,7 @@
     let myAddress
     let syncing
     let synced
-    let avatar = get_avatar('SEKReTbS2zwCinXL1iPz9pEaahYSumPzNeoZjQJF3qDiXsfrFWXu2u8QVSpUuYNexp5nxA8SM8jqVdpKzwGLWSu32mJvXqM75Ns')
-
-    onMount(async () => {
-        myAddress = await window.api.receive('myHuginAddr')
-    })
-
+    let avatar
     //Handle logo color depending on sync-status
     $: {
         if (!synced) {

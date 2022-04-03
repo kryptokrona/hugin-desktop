@@ -13,13 +13,14 @@
         window.api.receive('wallet-exist', data => wallet = data)
     })
 
-    const handleLogin = () => {
-        user.update(oldData => {
-            return {
-                ...oldData,
-                loggedIn: true
-            }
-        })
+    //Handle login, sets logeged in to true and gets user address
+    const handleLogin = async () => {
+            user.update(oldData => {
+                return {
+                    ...oldData,
+                    loggedIn: true
+                }
+            })
         console.log('User logged in')
     }
 
@@ -69,6 +70,7 @@
         display: flex;
         height: 100vh;
         color: #fff;
+        background-color: #202020;
     }
 
     .login-wrapper {
