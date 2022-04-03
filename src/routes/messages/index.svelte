@@ -74,14 +74,7 @@
         console.log(calltype)
         window.api.startCall(active_contact, calltype)
     }
-
-    //Incoming chat to add
-    const handleAddChat = e => {
-        if(e) {
-            wantToAdd = false
-            console.log("Conversation to add", e.detail)
-        }
-    }
+    
 
     //Default value should be false to hide the AddChat form.
     let wantToAdd = false
