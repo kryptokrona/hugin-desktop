@@ -11,14 +11,14 @@
 
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
-    <div class:type={handleType} in:fade class="bubble">
+    <div class:type={handleType} class="bubble">
         <img class="avatar"
              src="data:image/png;base64,{get_avatar("SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT")}" alt="">
 
         <p>{message}</p>
     </div>
 {:else}
-    <div class:type={handleType} in:fade class="bubble">
+    <div class:type={handleType} class="bubble">
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
 

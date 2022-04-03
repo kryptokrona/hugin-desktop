@@ -52,7 +52,7 @@
     </div>
     <div class="list-wrapper">
         {#each filterArr as message}
-            <div in:fade class="card" on:click={() => sendConversation(message.from, message.k)}>
+            <div class="card" on:click={() => sendConversation(message.from, message.k)}>
                 <img class="avatar" src="data:image/png;base64,{get_avatar(message.from)}" alt="">
                 <div class="content">
                     <h4>{message.from}</h4>

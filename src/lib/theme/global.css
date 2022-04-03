@@ -31,9 +31,10 @@ body {
 
 .rgb {
     background: #5f86f2;
-    -webkit-animation: rgb 30s ease infinite;
-    -moz-animation: rgb 30s ease infinite;
-    animation: rgb 30s ease infinite;
+    -webkit-animation: rgb 5s ease infinite;
+    -moz-animation: rgb 5s ease infinite;
+    animation: rgb 5s ease infinite;
+    transition: 300ms ease-in-out;
 }
 
 @keyframes rgbFill {
@@ -69,6 +70,8 @@ body {
     -moz-animation: rgbFill 15s ease infinite;
     animation: rgbFill 15s ease infinite;
 }
+
+
 
 .draggable {
     -webkit-user-select: none;

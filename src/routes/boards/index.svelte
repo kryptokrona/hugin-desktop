@@ -5,7 +5,7 @@
 
 </script>
 
-<main in:fade>
+<main>
     <ChatWindow>
         <ChatInput/>
     </ChatWindow>
@@ -23,9 +23,11 @@
     main {
         display: flex;
         margin-left: 85px;
+        margin-right: 85px;
     }
 
     .list {
         width: 350px;
+        border-left: 1px solid rgba(255,255,255,0.1);
     }
 </style>
