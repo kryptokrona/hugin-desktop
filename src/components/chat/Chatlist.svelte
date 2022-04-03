@@ -62,6 +62,8 @@
         width: 100%;
         max-width: 280px;
         box-sizing: border-box;
+        background-color: #202020;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .list-wrapper {
@@ -88,8 +90,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-        background-color: #2c2c2c;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         z-index: 9;
     }
 

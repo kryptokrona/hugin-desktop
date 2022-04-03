@@ -3,11 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/AddChat.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
@@ -134,7 +136,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte</url>
-          <line>71</line>
+          <line>72</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">

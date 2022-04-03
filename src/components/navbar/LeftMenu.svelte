@@ -66,7 +66,8 @@
     .leftMenu {
         height: 100vh;
         width: 85px;
-        background-color: #1d1d1d;
+        background-color: #202020;
+        border-right: 1px solid rgba(255,255,255, 0.1);
         box-sizing: border-box;
         padding-bottom: 1.5em;
         padding-top: 3em;

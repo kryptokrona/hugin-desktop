@@ -71,10 +71,10 @@
 {/if}
 
 <main in:fade>
-    <ChatList on:conversation={e => filterMsgs(e.detail)} on:click={openAdd}/>
+    <ChatList on:conversation={e => filterMsgs(e.detail)} on:click={openAdd} />
     <ChatWindow>
         {#each savedMsg as message}
-            <ChatBubble handleType={message.sent} message={message.msg}/>
+            <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.from}/>
         {/each}
 
         <ChatInput on:message={sendMsg}/>

@@ -6,5 +6,7 @@ export const user = writable({
     username: 'Nilsjr',
     boardsArray: ['Home', 'Hugin'],
     node: '',
-    activeChat: null
+    activeChat: '',
+    address: '',
+    key: '',
 })

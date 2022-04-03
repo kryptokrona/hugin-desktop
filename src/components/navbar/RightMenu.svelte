@@ -6,7 +6,7 @@
 
 </script>
 
-<div class="leftMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
+<div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
         {#if $page.url.pathname === '/boards'}
             <div class="add" on:click></div>
             {#each $user.boardsArray as board}
@@ -19,10 +19,11 @@
 
 <style>
 
-    .leftMenu {
+    .rightMenu {
         height: 100vh;
         width: 85px;
-        background-color: #1d1d1d;
+        background-color: #202020;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
         box-sizing: border-box;
         padding-bottom: 1.5em;
         padding-top: 1em;

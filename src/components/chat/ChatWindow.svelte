@@ -15,11 +15,9 @@
         box-sizing: border-box;
         flex-direction: column;
         justify-content: flex-end;
-        background-color: #333333;
+        background-color: #202020;
         width: 100%;
         height: 100vh;
-        padding: 15px;
-        gap: 10px;
         overflow: scroll;
     }
 
