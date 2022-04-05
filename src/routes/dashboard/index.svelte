@@ -4,8 +4,10 @@
 </script>
 
 <main in:fade>
-    <h1>Dashboard</h1>
-    <Balance/>
+    <div class="top">
+        <h1>Dashboard</h1>
+        <Balance/>
+    </div>
 </main>
 
 <style>
@@ -15,9 +17,20 @@
     }
 
     main {
-        margin-left: 85px;
-        padding: 40px;
-        background-color: #202020;
+        margin: 0 85px;
+    }
+
+    .top {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding: 15px 20px 15px 20px;
+        box-sizing: border-box;
+    }
+
+    h1 {
+        font-weight: 400;
     }
 
 </style>

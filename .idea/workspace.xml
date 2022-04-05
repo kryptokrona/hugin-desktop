@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/lib/theme/global.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/theme/global.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/finance/Balance.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/finance/Balance.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
     <list id="ee7bdc2f-92b2-4628-a6ae-6d0b17f857b0" name="Changes by ralls" comment="" />
@@ -107,6 +110,9 @@
       <workItem from="1648923258633" duration="12468000" />
       <workItem from="1648941422560" duration="2477000" />
       <workItem from="1648978795874" duration="9926000" />
+      <workItem from="1649109044778" duration="2017000" />
+      <workItem from="1649177542792" duration="1391000" />
+      <workItem from="1649190270795" duration="2207000" />
     </task>
     <servers />
   </component>
