@@ -13,7 +13,7 @@
     let syncing
     let synced
     let avatar
-    //Handle logo color depending on sync-status
+    //Handle logo color depending on sync-status (THIS SHOULD BE HANDLED WITH A STORE)
     $: {
         if (!synced) {
             window.api.receive('syncing', res => {
@@ -42,7 +42,7 @@
         <a class='button' href="/dashboard"><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></a>
         <a class='button' href="/messages"><img class="icon" src={msgIcon} alt="msgs"></a>
         <a class='button' href="/boards"><img class="icon" src={brdIcon} alt="brds"></a>
-        <a class='button' href=""><img class="icon" src={financeIcon} alt="finance"></a>
+        <a class='button' href="/finance"><img class="icon" src={financeIcon} alt="finance"></a>
     </div>
     <div class="nav">
         <a class='button' href="/settings"><img class="icon" src={settingsIcon} alt="settings"></a>

@@ -1,41 +1,59 @@
 <script>
     import {onMount, onDestroy} from "svelte";
     import {fade} from "svelte/transition";
+
+    //Variables that holds the amounts
     let unlockedAmount
     let lockedAmount
-    let showFunds = true
 
+    //Handle state of sync and clicks
+    let showFunds = true
+    let syncing
+    let synced
+
+    //Get balance and then look every 15 seconds
     onMount( () => {
         getBalance()
         setInterval(getBalance, 1000*15)
     })
 
-    //Get bala
+    //Check sync status to determine what to show (THIS SHOULD BE HANDLED WITH A STORE)
+    $: {
+        if (!synced) {
+            window.api.receive('syncing', res => {
+                syncing = res
+            })
+        }
+        window.api.receive('synced', res => {
+            synced = res
+        })
+    }
+
+    //Get balance function
     async function getBalance() {
         let balance = await window.api.getBalance()
         unlockedAmount = (balance[0] / 100000).toFixed(3)
         lockedAmount = (balance[1] / 100000).toFixed(3)
-        return await balance
     }
 
+    //If click we show opposite (locked/unlocked)
     const handleClick = () => {
         showFunds = !showFunds
     }
-
+    //Auto "click" every X seconds
     setInterval(handleClick,6000)
-
-    onDestroy(() => {
-        clearInterval()
-    })
 
 </script>
 
 <div class="wrapper" on:click={handleClick}>
     <div>
-        {#if (showFunds)}
+        {#if (!synced)}
+            <p in:fade>Syncing..</p>
+        {/if}
+        {#if (showFunds && synced)}
             <p in:fade>{unlockedAmount !== 0 ? `💰 ${unlockedAmount} XKR` : 'No unlocked funds 😭'}</p>
         {/if}
-        {#if (!showFunds)}
+        {#if (!showFunds && synced)}
             <p in:fade>{lockedAmount = 0 ? `🔐 ${lockedAmount} XKR` : 'No locked funds 🥳'}</p>
         {/if}
     </div>
