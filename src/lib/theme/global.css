@@ -1,6 +1,7 @@
 body {
     background-color: #202020;
     font-family: Montserrat;
+    font-weight: 400;
 }
 
 @font-face {
@@ -23,6 +24,11 @@ body {
 
 p {
     font-family: "Roboto Mono";
+}
+
+h1, h2, h3, h4 ,h5 ,h6 {
+    font-family: Montserrat;
+    font-weight: normal;
 }
 
 @keyframes rgb {
