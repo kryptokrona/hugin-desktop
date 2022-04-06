@@ -341,7 +341,7 @@ async function start_js_wallet() {
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
-            mainWindow.webContents.send('synced', true);
+            mainWindow.webContents.send('sync', 'synced');
             console.log('walletBlockCount', walletBlockCount);
             console.log('localDaemonBlockCount', localDaemonBlockCount);
             console.log('networkBlockCount', networkBlockCount);
@@ -365,13 +365,13 @@ async function start_js_wallet() {
 
 
 let known_pool_txs = [];
-let known_keys = ['641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56'];
+let known_keys = ['641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56', 'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d'];
 console.log('known_keys', known_keys)
 
 async function backgroundSyncMessages() {
 
     console.log('Background syncing...');
-    mainWindow.webContents.send('syncing', true);
+    mainWindow.webContents.send('sync', 'syncing');
     let message_was_unknown;
     let dec_message;
     try {
