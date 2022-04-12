@@ -4,20 +4,22 @@
     import {user} from "$lib/stores/user.js";
     import callIcon from '/static/images/call.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
-
+    let contact
     let active_contact
     let avatar
+    let calltype
     $: {
         if($user.activeChat) {
             active_contact = $user.activeChat
+            contact =  $user.activeChat.from +  $user.activeChat.k
             avatar = get_avatar(active_contact.from)
         }
     }
 
     //Starts any call
-    const startCall = async (calltype) => {
-        console.log(calltype, active_contact)
-        window.api.startCall(active_contact, calltype)
+    const startCall = async (contact, calltype) => {
+        console.log(calltype, contact)
+        window.api.startCall(contact, calltype)
     }
 
 </script>
@@ -33,7 +35,7 @@
 
     {#if $page.url.pathname === '/messages' && active_contact}
         <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-        <button class='button' on:click={() => startCall('audio')}><img class="icon" src={callIcon} alt="msgs"></button>
+        <button class='button' on:click={() => startCall(contact, 'audio')}><img class="icon" src={callIcon} alt="msgs"></button>
     {/if}
 
     {#if $page.url.pathname === '/webrtc'}
