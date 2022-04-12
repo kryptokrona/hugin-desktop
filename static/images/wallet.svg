@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="22px" height="20px" viewBox="0 0 22 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>wallet-2</title>
+    <g id="Linear" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Money" transform="translate(-685.000000, -318.000000)">
+            <g id="Vector" transform="translate(684.000000, 316.000000)">
+                <line x1="13" y1="9" x2="7" y2="9" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0"></line>
+                <path d="M21.999969,13.0299683 C21.999969,13.5799683 21.559969,14.0299268 20.999969,14.0499268 L19.0399473,14.0499268 C17.9599472,14.0499268 16.9699741,13.2599317 16.8799741,12.1799316 C16.8199741,11.5499316 17.0599497,10.9599268 17.4799497,10.5499268 C17.8499497,10.1699268 18.3599522,9.94995117 18.9199522,9.94995117 L20.999969,9.94995117 C21.559969,9.96995117 21.999969,10.4199097 21.999969,10.9699097 L21.999969,13.0299683 Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0" fill-rule="nonzero"></path>
+                <path d="M16.8800049,12.1799927 C16.9700049,13.2599927 17.959978,14.0499878 19.039978,14.0499878 L21,14.0499878 L21,15.5 C21,18.5 19,20.5 16,20.5 L7,20.5 C4,20.5 2,18.5 2,15.5 L2,8.5 C2,5.77999997 3.64000249,3.87999755 6.19000244,3.55999756 C6.45000243,3.51999756 6.72,3.5 7,3.5 L16,3.5 C16.26,3.5 16.51,3.50998779 16.75,3.54998779 C19.3299999,3.8499878 21,5.75999999 21,8.5 L21,9.95001221 L18.9199829,9.95001221 C18.3599829,9.95001221 17.8499805,10.1699878 17.4799805,10.5499878 C17.0599805,10.9599878 16.8200049,11.5499927 16.8800049,12.1799927 Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0" fill-rule="nonzero"></path>
+                <path d="M24,0 L24,24 L0,24 L0,0 L24,0 Z" opacity="0" transform="translate(12.000000, 12.000000) rotate(-180.000000) translate(-12.000000, -12.000000) "></path>
+            </g>
+        </g>
+    </g>
+</svg>

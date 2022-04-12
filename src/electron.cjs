@@ -413,8 +413,6 @@ async function backgroundSyncMessages() {
                 let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
                 message.sent = false
 
-                parseCall(message.msg, msg.from)
-
                 console.log('Message?', message.msg)
 
                 switch (message.type) {

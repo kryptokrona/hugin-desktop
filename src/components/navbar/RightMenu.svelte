@@ -35,6 +35,14 @@
         <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
         <button class='button' on:click={() => startCall('audio')}><img class="icon" src={callIcon} alt="msgs"></button>
     {/if}
+
+    {#if $page.url.pathname === '/webrtc'}
+        <p>Mute</p>
+        <p>Sound</p>
+        <p>Mute</p>
+        <p>Mute</p>
+
+    {/if}
     <div class="draggable hitbox"></div>
 </div>
 
