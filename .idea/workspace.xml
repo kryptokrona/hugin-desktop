@@ -2,15 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/audio-call/IncomingCall.svelte" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/stores/contacts.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/stores/nodes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/nodes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
     <list id="ee7bdc2f-92b2-4628-a6ae-6d0b17f857b0" name="Changes by ralls" comment="" />
@@ -125,6 +118,7 @@
       <workItem from="1649362936759" duration="7864000" />
       <workItem from="1649604767114" duration="26000" />
       <workItem from="1649679688173" duration="17000" />
+      <workItem from="1649778445015" duration="308000" />
     </task>
     <servers />
   </component>
