@@ -12,24 +12,27 @@ const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
 const {extraDataToMessage} = require('hugin-crypto')
-const { startCall, answerCall, endCall, parseCall  } = import('./lib/utils/hugin-calls.js');
+const wrtc = require('@koush/wrtc')
+// const { startCall, answerCall, endCall, parseCall  } = import('./lib/utils/hugin-calls.js');
+
+const en = require ('int-encoder');
 
 const { Address,
-        AddressPrefix,
-        Block,
-        BlockTemplate,
-        Crypto,
-        CryptoNote,
-        LevinPacket,
-        Transaction} = require('kryptokrona-utils')
+    AddressPrefix,
+    Block,
+    BlockTemplate,
+    Crypto,
+    CryptoNote,
+    LevinPacket,
+    Transaction} = require('kryptokrona-utils')
 
 
 const xkrUtils = new CryptoNote()
 const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
 function getXKRKeypair() {
-  const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
-  return {privateSpendKey: privateSpendKey, privateViewKey: privateViewKey};
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+    return {privateSpendKey: privateSpendKey, privateViewKey: privateViewKey};
 }
 
 function getKeyPair() {
@@ -149,6 +152,7 @@ function createWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
         mainWindow.focus();
+        mainWindow.webContents.openDevTools()
     });
 
     mainWindow.on('close', () => {
@@ -264,7 +268,7 @@ async function start_js_wallet() {
 
     if (c === 'c') {
 
-        let height = 23000;
+        let height = 1020500;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -365,7 +369,7 @@ async function start_js_wallet() {
 
 
 let known_pool_txs = [];
-let known_keys = ['641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56', 'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d'];
+let known_keys = ['23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34', '21863496282548462aaf47bc93d2be46ec8eff1f053f47b77f96d9e69d1fd133', '641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56', 'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d', 'ca6ecad317b5c4913ad77a71c94af75b8f56d179febc939b6c78be6d2fa76b2e'];
 console.log('known_keys', known_keys)
 
 async function backgroundSyncMessages() {
@@ -436,7 +440,7 @@ async function backgroundSyncMessages() {
                         break;
                 }
             } catch (err) {
-                console.log(err)
+                //console.log(err)
             }
         }
     } catch (err) {
@@ -455,9 +459,9 @@ ipcMain.on('switchNode', async (e, node) => {
 
 
 ipcMain.on('sendMsg', (e, msg, receiver) => {
-    sendMessage(msg, receiver);
-    console.log(msg, receiver)
-}
+        sendMessage(msg, receiver);
+        console.log(msg, receiver)
+    }
 )
 
 async function sendMessage(message, receiver) {
@@ -574,32 +578,935 @@ ipcMain.handle('getAddress',  async () => {
 
 
 
-ipcMain.on('startCall', async (contact, callType) => {
-    console.log('CALL STARTED')
-    switch (callType) {
+ipcMain.on('startCall', async (e ,contact, calltype) => {
+    console.log('CALL STARTEeeeeeeeeeeeeD')
 
-        case "audio":
-            return await startCall(contact, true, false,)
+    console.log('contact', contact + calltype);
+    startCall(contact, true, true)
 
-    }
+    // }
 })
 
 
-ipcMain.on('answerCall', async (contact, callType) => {
+ipcMain.on('answerCall', async (e, msg, contact) => {
     console.log('CALL STARTED')
-    switch (callType) {
-
-        case "audio":
-            return answerCall(contact, true, false,)
-
-    }
+    return answerCall(msg, contact)
 })
 
 
-ipcMain.on('endCall', async (peer, stream) => {
+ipcMain.on('endCall', async (e, peer, stream) => {
     console.log('CALL STARTED')
 
     return endCall(peer, stream)
-
-
 })
+
+// const { expand_sdp_offer, expand_sdp_answer } = require("./sdp.js")
+const Peer = require('simple-peer')
+
+//const wrtc = require('wrtc)')
+
+let emitCall;
+let awaiting_callback;
+let active_calls = []
+let callback;
+
+function parse_sdp (sdp) {
+
+    let ice_ufrag = '';
+    let ice_pwd = '';
+    let fingerprint = '';
+    let ips = [];
+    let ports = [];
+    let ssrcs = "";
+    let msid = "";
+    let ip;
+    let port;
+
+
+
+    let lines = sdp.sdp.split('\n')
+        .map(l => l.trim()); // split and remove trailing CR
+    lines.forEach(function(line) {
+
+        if (line.includes('a=fingerprint:') && fingerprint == '') {
+
+            let parts = line.substr(14).split(' ');
+            let hex = line.substr(22).split(':').map(function (h) {
+                return parseInt(h, 16);
+            });
+
+            fingerprint = btoa(String.fromCharCode.apply(String, hex))
+
+
+
+            console.log('BASED64', fingerprint);
+
+
+        } else if (line.includes('a=ice-ufrag:') && ice_ufrag == '') {
+
+            ice_ufrag = line.substr(12);
+
+
+        } else if (line.includes('a=ice-pwd:') && ice_pwd == '') {
+
+            ice_pwd = line.substr(10);
+
+        } else if (line.includes('a=candidate:')) {
+
+            let candidate = line.substr(12).split(" ");
+
+            ip = candidate[4]
+            port = candidate[5]
+            type = candidate[7]
+
+
+
+            let hexa = ip.split('.').map(function (h) {
+                return h.toString(16);
+            });
+
+            let ip_hex = btoa(String.fromCharCode.apply(String, hexa))
+            console.log('IP CODED', ip_hex);
+
+            if (type == "srflx") {
+                ip_hex = "!" + ip_hex
+            } else {
+                ip_hex = "?" + ip_hex
+            }
+
+            if (!ips.includes(ip_hex)) {
+                ips = ips.concat(ip_hex)
+
+            }
+
+            let indexedport = port+ips.indexOf(ip_hex).toString();
+
+            ports = ports.concat(en.encode(parseInt(indexedport)));
+
+
+        } else if (line.includes('a=ssrc:')) {
+
+            // let ssrc = en.encode(line.substr(7).split(" ")[0]);
+            //
+            // if (!ssrcs.includes(ssrc)) {
+            //
+            //     ssrcs = ssrcs.concat(ssrc)
+            //
+            // }
+
+
+        } else if (line.includes('a=msid-semantic:')) {
+
+            // msid = line.substr(16).split(" ")[2];
+            // console.log('msid', msid);
+
+        }
+
+
+
+    })
+
+    return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + ports.join('&');
+
+}
+
+
+async function startCall (contact, audio, video, screenshare=false) {
+    // spilt input to addr and pubkey
+    let contact_address = contact.substring(0,99);
+    console.log('contact address', contact_address)
+    let msg;
+
+    console.log('Starting call..');
+
+    // $('#video-button').unbind('click');
+    //
+    // $('#call-button').unbind('click');
+    //
+    // $('#screen-button').unbind('click');
+
+    mainWindow.webContents.send('start-call', audio, contact)
+    ipcMain.on('got-media', () => {
+        console.log('got MEDIA BACKKK');
+        console.log('got audo BACKKK', video);
+        //console.log('got contact BACKKK', contact);
+        let sdp;
+
+        let peer1 = new Peer({
+            initiator: true,
+            trickle: false,
+            stream: stream,
+            wrtc: wrtc,
+            offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
+            sdpTransform: (sdp) => {
+                return sdp;
+            }
+        })
+
+        // let transceivers =  peer1._pc.getTransceivers();
+        // console.log('transievers', transceivers);
+        // select the desired transceiver
+        //  if (video) {
+        //    transceivers[1].setCodecPreferences(custom_codecs)
+        // }
+
+        let first = true;
+
+        peer1.on('close', () => {
+
+            console.log('Connection lost..')
+
+            endCall(peer1, stream);
+
+            // ENDCALL AUDIO
+        })
+
+        peer1.on('error', () => {
+
+            console.log('Connection lost..')
+
+            endCall(peer1, stream);
+            // ENDCALL AUDIO
+
+        })
+
+        peer1.on('stream', stream => {
+            // got remote video stream, now let's show it in a video tag
+            let extra_class = "";
+            if (video) {
+                extra_class = " video"
+            }
+            // SELECT AND SHOW VIDEO ELEMENT
+            let video_element = ""
+
+
+            if ('srcObject' in video_element) {
+                video_element.srcObject = stream
+            } else {
+                video_element.src = window.URL.createObjectURL(stream) // for older browsers
+            }
+            video_element.play()
+
+        })
+
+        peer1.on('connect', () => {
+            // CONNECT SOUND
+            // SEND WEBCONTENTS " CONNECTED "
+            console.log('Connection established; with', contact)
+
+        });
+
+
+        peer1.on('signal', data => {
+            try {
+                //  console.log('real data:', data);
+                console.log('SDP', data);
+                mainWindow.webContents.send('sdp-data', data)
+                let parsed_data = `${video ? "Δ" : "Λ"}` + parse_sdp(data);
+                // console.log('parsed data:', parsed_data);
+                let recovered_data = expand_sdp_offer(parsed_data);
+                // console.log('recovered data:', recovered_data);
+                // console.log('some other data:', {'type': 'offer', 'sdp': recovered_data});
+                // peer1._pc.setLocalDescription(recovered_data);
+                msg = parsed_data;
+
+                console.log('PARSED MESSAGE', msg)
+            } catch (err) {
+                console.log('error', err)
+            }
+
+            if (!first) {
+                return
+            }
+            sendMessage(msg, contact);
+
+            awaiting_callback = true;
+
+            first = false;
+
+        })
+        //Awaits msg answer with sdp from contact
+        ipcMain.on('got-callback', async (e, data, sender) => {
+            console.log('callback', data);
+            console.log('from', sender);
+            peer1.signal(data);
+            console.log('Connecting to ...', sender)
+
+        })
+
+    })
+}
+
+function parseCall (msg, sender=false, emitCall=true) {
+
+    switch (msg.substring(0,1)) {
+        case "Δ":
+        // Fall through
+        case "Λ":
+            // Call offer
+            if (emitCall) {
+
+                // Start ringing sequence
+
+                mainWindow.webContents.send('call-incoming', msg, sender)
+                // Handle answer/decline here
+
+                console.log('call incoming')
+            }
+            return `${msg.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
+            break;
+        case "δ":
+        // Fall through
+        case "λ":
+            // Answer
+            if (emitCall) {
+                callback = JSON.stringify(expand_sdp_answer(msg));
+                mainWindow.webContents.send('got-callback', callback, sender)
+                console.log('got sdp', msg)
+                console.log('got answer expanded', callback)
+            }
+            return "";
+
+            break;
+        default:
+            return msg;
+
+    }
+
+}
+
+let stream;
+
+function answerCall (msg, contact_address) {
+
+    let video = msg.substring(0,1) == 'Δ';
+    // $('#messages_contacts').addClass('in-call');
+    // $('#settings').addClass('in-call');
+
+    // get video/voice stream
+    navigator.mediaDevices.getUserMedia({
+        video: video,
+        audio: true
+    }).then(gotMedia).catch(() => {})
+
+    function gotMedia (stream) {
+        let extra_class = '';
+        if (video) {
+            extra_class = ' video'
+            // var myvideo = document.getElementById('myvideo')
+            myvideo.srcObject = stream;
+
+            myvideo.play();
+            console.log('god video here plz stream it in frontend')
+        }
+
+
+        // let video_codecs = window.RTCRtpSender.getCapabilities('video');
+        //
+        // let custom_codecs = [];
+        //
+        // for (codec in video_codecs.codecs) {
+        //     let this_codec = video_codecs.codecs[codec];
+        //     if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0,5) == "level") {
+        //         custom_codecs.push(this_codec);
+        //     }
+        //
+        // }
+        let peer2 = new Peer({stream: stream, trickle: false})
+
+        // let transceivers = peer2._pc.getTransceivers();
+        //
+        // // select the desired transceiver
+        // if (video) {
+        //     transceivers[1].setCodecPreferences(custom_codecs);
+        // }
+
+        peer2.on('close', () => {
+
+            console.log('Connection closed..')
+            endCall(peer2, stream);
+
+        })
+
+        peer2.on('error', () => {
+
+            console.log('Connection lost..')
+
+            endCall(peer2, stream);
+
+        })
+
+        let first = true;
+
+        peer2.on('signal', data => {
+            console.log('initial data:', data);
+            let parsed_data = `${video ? 'δ' : 'λ'}` + parse_sdp(data);
+            console.log('parsed data really cool sheet:', parsed_data);
+            let recovered_data = expand_sdp_answer(parsed_data);
+            data = recovered_data;
+            console.log('recovered data:', recovered_data);
+            // peer2._pc.setLocalDescription(recovered_data);
+            if (!first) {
+                return
+            }
+            console.log('Sending answer ', parsed_data);
+            sendMessage(parsed_data, contact);
+            first = false;
+
+        })
+        let signal = expand_sdp_offer(msg);
+        peer2.signal(signal);
+
+        peer2.on('track', (track, stream) => {
+            console.log('Setting up link..')
+        })
+
+        peer2.on('connect', () => {
+
+            // SOUND EFFECT
+            console.log('Connection established;')
+            mainWindow.webContents.send('call-established')
+
+        });
+
+        peer2.on('stream', stream => {
+            // got remote video stream, now let's show it in a video tag
+
+            if ('srcObject' in video) {
+                video.srcObject = stream
+            } else {
+                video.src = window.URL.createObjectURL(stream) // for older browsers
+            }
+
+            video.play();
+
+            console.log('Setting up link..');
+
+        })
+    }
+
+}
+
+function endCall (peer, stream) {
+    peer.destroy();
+    stream.getTracks().forEach(function(track) {
+        track.stop();
+    });
+
+    //var myvideo = document.getElementById('myvideo');
+
+    myvideo.srcObject = stream;
+    myvideo.pause();
+    myvideo.srcObject = null;
+
+    awaiting_callback = false;
+
+}
+
+function expand_sdp_offer (compressed_string) {
+
+    let type = compressed_string.substring(0,1);
+
+    let split = compressed_string.split(",");
+
+    console.log('split', split);
+
+    let ice_ufrag = split[0].substring(1);
+
+    let ice_pwd = split[1];
+
+    let fingerprint = decode_fingerprint(split[2]);
+
+    console.log('fingerprint', fingerprint);
+
+    let ipss = split[3];
+
+    console.log('IPS', ipss);
+
+    let prts =  split[4];
+
+    let ssrc = "";
+
+    console.log('src', ssrc);
+
+    let msid = "";
+
+    console.log('msida ', msid);
+
+    let external_ip = '';
+
+    let external_ports = [];
+
+    let candidates = ['','','',''];
+
+    console.log('IPS', ipss)
+
+    let ips = ipss.split('&').map(function (h) {
+        return decode_ip(h.substring(1),h.substring(0,1));
+    })
+
+    if (ips[0] == undefined) {
+        ips.splice(0, 1);
+    }
+
+    console.log('IPS SPLIT', ips);
+
+    let ports = prts.split('&').map(function (h) {
+        return en.decode(h);
+    });
+
+    let prio = 2122260223;
+
+    let tcp_prio = 1518280447;
+
+    let i = 1;
+    let j = 1;
+    let external_port_found = false;
+
+    let current_internal = '';
+    let p;
+    for (p in ports) {
+        try {
+            console.log('port', parseInt(ports[p]));
+            let prt = parseInt(ports[p])
+            if (!prt) {
+                console.log('nanananananaa', prt);
+                return;
+            }
+
+            let ip_index = ports[p].slice(-1);
+            console.log('ip_index', ip_index);
+            if (i == 1 ) {
+
+                current_internal = ports[p].substring(0, ports[p].length - 1);
+
+            }
+
+            if (ips[ip_index] == undefined) {
+                continue;
+            }
+
+            if (ips[ip_index].substring(0,1) == '!') {
+                external_ip = ips[ip_index].substring(1);
+                external_ports = external_ports.concat(ports[p].substring(0, ports[p].length - 1));
+                console.log('external', external_ports);
+                external_port_found = true;
+                candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + ports[p].substring(0, ports[p].length - 1) + " typ srflx raddr " + ips[0].replace('!','').replace('?','') + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n"
+            } else if (ports[p].substring(0, ports[p].length - 1) == "9") {
+
+                candidates[j] += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1) +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
+                tcp_prio = tcp_prio - 500;
+
+            } else {
+                candidates[j] += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n"
+                prio = parseInt(prio*0.8);
+            }
+
+
+            if ( i == (ports.length / 3) ) {
+                i = 0;
+                j += 1;
+                external_port_found = false;
+            }
+
+        } catch (err) {
+            console.log('err', err);
+
+            console.log('IPS', ips)
+            continue;
+        }
+
+        i += 1;
+
+    }
+
+    if (external_ip.length == 0) {
+        external_ip = ips[0].substring(1);
+    }
+
+    console.log(candidates);
+    console.log("ports:", external_ports);
+
+    console.log((external_ports.length / 3));
+    console.log(((external_ports.length / 3)*2));
+
+    if (!external_ports[0]) {
+        external_ports[0] = "9";
+    }
+
+    let sdp = `v=0
+o=- 5726742634414877819 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1 2
+a=msid-semantic: WMS ` + msid + `
+m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+c=IN IP4 ` + external_ip + `
+a=rtcp:9 IN IP4 0.0.0.0
+` + candidates[1] +
+        `a=ice-ufrag:` + ice_ufrag + `
+a=ice-pwd:` + ice_pwd + `
+a=fingerprint:sha-256 ` + fingerprint +  `
+a=setup:actpass
+a=mid:0
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=sendrecv
+a=rtcp-mux
+a=rtpmap:111 opus/48000/2
+a=rtcp-fb:111 transport-cc
+a=fmtp:111 minptime=10;useinbandfec=1
+a=rtpmap:103 ISAC/16000
+a=rtpmap:104 ISAC/32000
+a=rtpmap:9 G722/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:106 CN/32000
+a=rtpmap:105 CN/16000
+a=rtpmap:13 CN/8000
+a=rtpmap:110 telephone-event/48000
+a=rtpmap:112 telephone-event/32000
+a=rtpmap:113 telephone-event/16000
+a=rtpmap:126 telephone-event/8000
+m=video ` + external_ports[(external_ports.length / 3)] +  ` UDP/TLS/RTP/SAVPF 102 104 106 108
+c=IN IP4 ` + external_ip + `
+a=rtcp:9 IN IP4 0.0.0.0
+` + candidates[2] +
+        `a=ice-ufrag:` + ice_ufrag + `
+a=ice-pwd:` + ice_pwd + `
+a=fingerprint:sha-256 ` + fingerprint +  `
+a=setup:actpass
+a=mid:1
+a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+a=extmap:13 urn:3gpp:video-orientation
+a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
+a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
+a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
+a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:102 H264/90000
+a=rtcp-fb:102 goog-remb
+a=rtcp-fb:102 transport-cc
+a=rtcp-fb:102 ccm fir
+a=rtcp-fb:102 nack
+a=rtcp-fb:102 nack pli
+a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f
+a=rtpmap:104 H264/90000
+a=rtcp-fb:104 goog-remb
+a=rtcp-fb:104 transport-cc
+a=rtcp-fb:104 ccm fir
+a=rtcp-fb:104 nack
+a=rtcp-fb:104 nack pli
+a=fmtp:104 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f
+a=rtpmap:106 H264/90000
+a=rtcp-fb:106 goog-remb
+a=rtcp-fb:106 transport-cc
+a=rtcp-fb:106 ccm fir
+a=rtcp-fb:106 nack
+a=rtcp-fb:106 nack pli
+a=fmtp:106 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtpmap:108 H264/90000
+a=rtcp-fb:108 goog-remb
+a=rtcp-fb:108 transport-cc
+a=rtcp-fb:108 ccm fir
+a=rtcp-fb:108 nack
+a=rtcp-fb:108 nack pli
+a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+m=application ` + external_ports[((external_ports.length / 3)*2)] + ` UDP/DTLS/SCTP webrtc-datachannel
+c=IN IP4 ` + external_ip +  `
+` + candidates[3] +
+        `a=ice-ufrag:` + ice_ufrag + `
+a=ice-pwd:` + ice_pwd + `
+a=fingerprint:sha-256 ` + fingerprint +  `
+a=setup:actpass
+a=mid:2
+a=sctp-port:5000
+a=max-message-size:262144
+`
+
+    console.log('ice', ice_ufrag)
+    console.log('ice', ice_pwd)
+    console.log('fingerprint', fingerprint)
+    console.log('SRCS', ssrc)
+    console.log('MSID', msid)
+    console.log('MSID', candidates)
+    return {type: "offer", sdp: sdp};
+
+}
+
+function expand_sdp_answer (compressed_string) {
+
+    let split = compressed_string.split(",");
+
+    console.log("split:", split);
+
+    let type = compressed_string.substring(0,1);
+
+    let ice_ufrag = split[0].substring(1);
+
+    let ice_pwd = split[1];
+
+    let fingerprint = decode_fingerprint(split[2]);
+
+    let ips = split[3];
+
+    console.log('ips1', ips)
+
+    let prts =  split[4];
+
+    // let ssrc = split[5].split('&').map(function (h) {
+    //   return en.decode(h);
+    // });
+    let ssrc = "";
+
+    // if (ssrc[1] == undefined) {
+    //   ssrc[1] = ssrc[0];
+    // }
+
+    let msid = "";
+
+    let candidates = '';
+
+    let external_ip = '';
+
+    ips = ips.split('&').map(function (h) {
+        return decode_ip(h.substring(1),h.substring(0,1));
+    })
+
+    let ports = prts.split('&').map(function (h) {
+        return en.decode(h);
+    });;
+
+    let external_port = '';
+
+    console.log("ips:", ips);
+    console.log("ports:", ports);
+
+    let prio = 2122260223;
+    let tcp_prio = 1518280447;
+    if (ports.length > 1) {
+
+        console.log('More than 1 port!');
+        let p;
+        for (p in ports) {
+            if (ports[p] == undefined) {
+                continue;
+            }
+            console.log('IPS', ips);
+
+            console.log('this expand port', ports[p]);
+            try {
+                let ip_index = ports[p].slice(-1);
+                if (ips[ip_index].substring(0,1) == '!') {
+                    if (external_port.length == 0) {
+                        external_port = ports[p].substring(0, ports[p].length - 1);
+                    }
+                    external_ip = ips[ip_index].substring(1);
+                    candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + ports[p].substring(0, ports[p].length - 1)  + " typ srflx raddr " + ips[0].replace('?','') + " rport " + ports[0].substring(0, ports[p].length - 1)  + " generation 0 network-id 1 network-cost 50\r\n"
+                } else if (ports[p].substring(0, ports[p].length - 1)  == "9") {
+
+                    candidates += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','').replace('!','') + " " + ports[p].substring(0, ports[p].length - 1)  +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
+                    tcp_prio = tcp_prio - 500;
+
+                } else {
+
+                    candidates += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
+                    prio = parseInt(prio*0.8);
+                }
+
+            } catch (err) {
+                console.log('err', err);
+                continue;
+            }
+
+        }
+    } else {
+
+        external_ip = ips[0].replace('!','').replace('?','');
+
+        external_port = ports[0].substring(0, ports[0].length - 1) ;
+        candidates = "a=candidate:1410536466 1 udp 2122260223 " + ips[0].replace('!','').replace('?','') + " " + ports[0].substring(0, ports[0].length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
+    }
+
+    if (external_port == "") {
+        external_port = "9";
+    }
+
+    let sdp = `v=0
+o=- 8377786102162672707 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1 2
+a=msid-semantic: WMS ` + msid + `
+m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+c=IN IP4 ` + external_ip + `
+a=rtcp:9 IN IP4 0.0.0.0
+` + candidates +
+        `a=ice-ufrag:` + ice_ufrag + `
+a=ice-pwd:` + ice_pwd + `
+a=fingerprint:sha-256 ` + fingerprint +  `
+a=setup:active
+a=mid:0
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=sendrecv
+a=rtcp-mux
+a=rtpmap:111 opus/48000/2
+a=rtcp-fb:111 transport-cc
+a=fmtp:111 minptime=10;useinbandfec=1
+a=rtpmap:103 ISAC/16000
+a=rtpmap:104 ISAC/32000
+a=rtpmap:9 G722/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:106 CN/32000
+a=rtpmap:105 CN/16000
+a=rtpmap:13 CN/8000
+a=rtpmap:110 telephone-event/48000
+a=rtpmap:112 telephone-event/32000
+a=rtpmap:113 telephone-event/16000
+a=rtpmap:126 telephone-event/8000
+m=video 9 UDP/TLS/RTP/SAVPF 102 104 106 108
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:` + ice_ufrag + `
+a=ice-pwd:` + ice_pwd + `
+a=fingerprint:sha-256 ` + fingerprint +  `
+a=setup:active
+a=mid:1
+a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+a=extmap:13 urn:3gpp:video-orientation
+a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
+a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
+a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
+a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:102 H264/90000
+a=rtcp-fb:102 goog-remb
+a=rtcp-fb:102 transport-cc
+a=rtcp-fb:102 ccm fir
+a=rtcp-fb:102 nack
+a=rtcp-fb:102 nack pli
+a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f
+a=rtpmap:104 H264/90000
+a=rtcp-fb:104 goog-remb
+a=rtcp-fb:104 transport-cc
+a=rtcp-fb:104 ccm fir
+a=rtcp-fb:104 nack
+a=rtcp-fb:104 nack pli
+a=fmtp:104 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f
+a=rtpmap:106 H264/90000
+a=rtcp-fb:106 goog-remb
+a=rtcp-fb:106 transport-cc
+a=rtcp-fb:106 ccm fir
+a=rtcp-fb:106 nack
+a=rtcp-fb:106 nack pli
+a=fmtp:106 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtpmap:108 H264/90000
+a=rtcp-fb:108 goog-remb
+a=rtcp-fb:108 transport-cc
+a=rtcp-fb:108 ccm fir
+a=rtcp-fb:108 nack
+a=rtcp-fb:108 nack pli
+a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+c=IN IP4 0.0.0.0
+b=AS:30
+a=ice-ufrag:` + ice_ufrag + `
+a=ice-pwd:` + ice_pwd + `
+a=fingerprint:sha-256 ` + fingerprint +  `
+a=setup:active
+a=mid:2
+a=sctp-port:5000
+a=max-message-size:262144
+`
+
+
+    return {type: 'answer', sdp: sdp}
+}
+
+
+let decode_fingerprint = (fingerprint) => {
+    console.log('fingerprint', fingerprint);
+    let decoded_fingerprint = "";
+    let piece;
+    let letters = atob(fingerprint).split('')
+    for (letter in letters) {
+        try {
+
+            let piece = letters[letter].charCodeAt(0).toString(16);
+            console.log('del', piece);
+            if (piece.length == 1) {
+                piece = "0" + piece;
+            }
+            decoded_fingerprint += piece;
+
+
+
+        } catch (err) {
+            console.log('error', piece)
+            console.log('error', letter)
+
+            continue;
+        }
+    }
+    console.log('almost', decoded_fingerprint) ;
+
+    decoded_fingerprint = decoded_fingerprint.toUpperCase().replace(/(.{2})/g,"$1:").slice(0,-1);
+
+    console.log('There', decoded_fingerprint) ;
+
+    return decoded_fingerprint;
+}
+
+let decode_ip = (ip, type) => {
+    let decoded_ip = "";
+    let piece;
+    let letters = atob(ip).split('')
+    if (letters.length < 2) {
+        console.log('RETURN', letters)
+        return;
+    }
+    for (letter in letters) {
+        try {
+            let piece = letters[letter].charCodeAt(0).toString(16);
+            console.log('del ip', piece);
+            if (piece.length == 1) {
+                piece = "0" + piece;
+            }
+            decoded_ip += parseInt(piece, 16) + ".";
+
+
+        } catch (err) {
+            console.log('error', piece)
+            continue;
+        }
+    }
+    console.log('decoded ip', decoded_ip.slice(0,-1))
+
+    decoded_ip = decoded_ip.slice(0,-1)
+
+    return type+decoded_ip
+}

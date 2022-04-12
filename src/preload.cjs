@@ -28,16 +28,21 @@ const WINDOW_API = {
   },
 
   //HANDLE CALLS
-  startCall: async (contact, callType) => {
-  ipcRenderer.send('startCall', contact, callType)
+  gotMedia: async (video, audio) => {
+    ipcRenderer.send('got-media')
   },
 
-answerCall: async (contact, callType) => {
-  ipcRenderer.send('answerCall', callType)
+  //HANDLE CALLS
+  startCall: async (contact, calltype) => {
+    ipcRenderer.send('startCall', contact, calltype)
   },
 
-endCall: async (peer, stream) => {
-  ipcRenderer.send('endCall',peer, stream)
+  answerCall: async (msg, contact) => {
+    ipcRenderer.send('answerCall', msg, contact)
+  },
+
+  endCall: async (peer, stream) => {
+    ipcRenderer.send('endCall',peer, stream)
   },
 
   //HANDLE NODES
@@ -45,7 +50,7 @@ endCall: async (peer, stream) => {
     ipcRenderer.send('getNodes')
   },
   switchNode: node => {
-      ipcRenderer.send('switchNode', node)
+    ipcRenderer.send('switchNode', node)
   },
 
   //HANDLE FINANCE

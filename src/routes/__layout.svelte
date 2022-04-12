@@ -11,7 +11,7 @@
 	import '$lib/theme/global.css'
 
 	//Handle incoming call
-	let incoming_call = true
+	let incoming_call = false
 	const closePopup = () => {
 		incoming_call = false
 	}
