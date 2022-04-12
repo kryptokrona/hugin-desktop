@@ -65,6 +65,11 @@
         window.api.sendMsg(msg, active_contact)
     }
 
+
+  window.api.receive('get-callback', async (callback, contact) => {
+      window.api.send('got-callback', callback, contact)
+    })
+
     window.api.receive('start-call', async (data, contact) => {
         // console.log();
         // let data = 'audio'
