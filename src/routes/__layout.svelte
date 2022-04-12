@@ -18,11 +18,21 @@
 
 	let ready = false;
 
-	//Load stores on first mount
+
 	onMount( async () => {
 		ready = true
 
 		messages.set(await window.api.getMessages())
+
+		window.api.receive('call-incoming', (msg, sender) => {
+			incoming_call = true
+			user.update(current => {
+				return{
+					...current,
+					call: {msg, sender}
+				}
+			})
+		})
 
 		window.api.receive('sync', res => {
 			user.update(user => {

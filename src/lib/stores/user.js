@@ -9,5 +9,6 @@ export const user = writable({
     activeChat: null,
     address: '',
     key: '',
-    syncState: ''
+    syncState: '',
+    call: {}
 })

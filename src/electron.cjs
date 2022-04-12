@@ -369,7 +369,15 @@ async function start_js_wallet() {
 
 
 let known_pool_txs = [];
-let known_keys = ['23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34', '21863496282548462aaf47bc93d2be46ec8eff1f053f47b77f96d9e69d1fd133', '641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75', '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56', 'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d', 'ca6ecad317b5c4913ad77a71c94af75b8f56d179febc939b6c78be6d2fa76b2e'];
+let known_keys = [
+    '23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34',
+    '21863496282548462aaf47bc93d2be46ec8eff1f053f47b77f96d9e69d1fd133',
+    '641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75',
+    '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56',
+    'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d',
+    'ca6ecad317b5c4913ad77a71c94af75b8f56d179febc939b6c78be6d2fa76b2e',
+    '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e'
+];
 console.log('known_keys', known_keys)
 
 async function backgroundSyncMessages() {
@@ -416,8 +424,11 @@ async function backgroundSyncMessages() {
 
                 let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
                 message.sent = false
+                console.log('HELA', message)
+                let sender = message.from + message.k
+                console.log('🤤🤤🤤🤤🤤🤤', message.k)
 
-                parseCall(message.msg, message.from)
+                parseCall(message.msg, sender)
 
                 console.log('Message?', message.msg)
 
@@ -467,9 +478,9 @@ ipcMain.on('sendMsg', (e, msg, receiver) => {
 async function sendMessage(message, receiver) {
     console.log('Want to send')
     let address = receiver.substring(0,99);
-    let messageKey =  receiver.substring(99,163);
+    let messageKey =  '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e'
     let has_history = true;
-
+//receiver.substring(99,163);
     if (message.length == 0) {
         return;
     }
@@ -602,6 +613,7 @@ ipcMain.on('endCall', async (e, peer, stream) => {
 
 // const { expand_sdp_offer, expand_sdp_answer } = require("./sdp.js")
 const Peer = require('simple-peer')
+const {logger} = require("kryptokrona-wallet-backend-js/dist/lib/Logger.js");
 
 //const wrtc = require('wrtc)')
 
@@ -837,8 +849,8 @@ async function startCall (contact, audio, video, screenshare=false) {
     })
 }
 
-function parseCall (msg, sender=false, emitCall=true) {
-
+function parseCall (msg, sender, emitCall=true) {
+    console.log('🤤🤤🤤🤤🤤🤤',sender)
     switch (msg.substring(0,1)) {
         case "Δ":
         // Fall through
@@ -877,26 +889,28 @@ function parseCall (msg, sender=false, emitCall=true) {
 
 let stream;
 
-function answerCall (msg, contact_address) {
+function answerCall (msg, contact) {
+    console.log('APPLE', msg, contact)
 
     let video = msg.substring(0,1) == 'Δ';
     // $('#messages_contacts').addClass('in-call');
     // $('#settings').addClass('in-call');
 
     // get video/voice stream
-    navigator.mediaDevices.getUserMedia({
-        video: video,
-        audio: true
-    }).then(gotMedia).catch(() => {})
+    mainWindow.webContents.send('get-media', contact)
+    ipcMain.on('send-media', () => {
+        console.log('Got media')
+        gotMedia()
+    })
 
     function gotMedia (stream) {
         let extra_class = '';
         if (video) {
             extra_class = ' video'
             // var myvideo = document.getElementById('myvideo')
-            myvideo.srcObject = stream;
+            //myvideo.srcObject = stream;
 
-            myvideo.play();
+            //myvideo.play();
             console.log('god video here plz stream it in frontend')
         }
 
@@ -912,7 +926,7 @@ function answerCall (msg, contact_address) {
         //     }
         //
         // }
-        let peer2 = new Peer({stream: stream, trickle: false})
+        let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
 
         // let transceivers = peer2._pc.getTransceivers();
         //
@@ -1071,7 +1085,7 @@ function expand_sdp_offer (compressed_string) {
             let prt = parseInt(ports[p])
             if (!prt) {
                 console.log('nanananananaa', prt);
-                return;
+                continue;
             }
 
             let ip_index = ports[p].slice(-1);

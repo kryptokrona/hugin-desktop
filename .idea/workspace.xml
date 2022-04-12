@@ -3,9 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/stores/nodes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/nodes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preload.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
     </list>
@@ -122,7 +123,7 @@
       <workItem from="1649362936759" duration="7864000" />
       <workItem from="1649604767114" duration="26000" />
       <workItem from="1649679688173" duration="17000" />
-      <workItem from="1649778445015" duration="1081000" />
+      <workItem from="1649778445015" duration="12161000" />
     </task>
     <servers />
   </component>
@@ -147,11 +148,6 @@
           <url>file://$PROJECT_DIR$/src/lib/utils/hugin-utils.js</url>
           <line>34</line>
           <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte</url>
-          <line>2</line>
-          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -4,10 +4,13 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
+    import {user} from "$lib/stores/user.js";
 
     export let paused = false
     let avatar = get_avatar("SEKReXYY1Vagn3PBEhQTHc9PygmC2NJzf9i9im8at2z2JGwxWTib2zaQ4eLH6zjeNgV8gbFYydxKLQFwRjmMXhzqDWvo1kE3qLQ")
     let ringtone = new Audio("/static/audio/static_ringtone.mp3")
+
+
     onMount(() => {
         ringtone.play()
     })
@@ -15,6 +18,19 @@
     onDestroy(() => {
         ringtone.pause()
     })
+
+    let stream;
+    const handleAnswer = () => {
+        window.api.answerCall($user.call.msg, $user.call.sender)
+        console.log('BANANA', $user.call.msg, $user.call.sender)
+        window.api.receive('get-media', (audio, contact) => {
+            navigator.mediaDevices.getUserMedia({
+                video: false,
+                audio: true
+            })
+            window.api.send('send-media')
+        })
+    }
 
 </script>
 
@@ -27,7 +43,7 @@
             <h3>Swepool</h3>
         </div>
         <div class="options">
-            <div class="answer hover">
+            <div class="answer hover" on:click={handleAnswer}>
                 <img src="/static/images/call.svg" alt="">
             </div>
             <div class="decline hover" on:click>

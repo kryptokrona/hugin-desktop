@@ -64,6 +64,7 @@
         console.log(e)
         window.api.sendMsg(msg, active_contact)
     }
+
     window.api.receive('start-call', async (data, contact) => {
         // console.log();
         // let data = 'audio'
@@ -131,7 +132,7 @@
 
         console.log('GOT MEDIA SENDING');
 
-        window.api.gotMedia()
+        await window.api.gotMedia()
     }
 
 
@@ -141,13 +142,9 @@
         wantToAdd = !wantToAdd
     }
 
-    window.api.receive('sdp-data', async (data) => {
-        console.log('sdp', data);
-    })
-
-
-    window.api.receive('call-incoming', async (msg ,contact, type) => {
-        console.log('incoming call from', contact);
+    window.api.receive('sdp-data', data => {
+        console.log('SDP')
+        console.log(data)
     })
 
 </script>
