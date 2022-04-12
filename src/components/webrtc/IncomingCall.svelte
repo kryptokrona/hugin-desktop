@@ -1,5 +1,6 @@
 <script>
     //To handle true and false, or in this case show and hide.
+    import {goto} from "$app/navigation";
     import {fade, fly} from "svelte/transition";
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -19,17 +20,9 @@
         ringtone.pause()
     })
 
-    let stream;
     const handleAnswer = () => {
         window.api.answerCall($user.call.msg, $user.call.sender)
-        console.log('BANANA', $user.call.msg, $user.call.sender)
-        window.api.receive('get-media', (audio, contact) => {
-            navigator.mediaDevices.getUserMedia({
-                video: false,
-                audio: true
-            })
-            window.api.send('send-media')
-        })
+        goto('/webrtc')
     }
 
 </script>

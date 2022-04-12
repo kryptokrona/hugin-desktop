@@ -424,11 +424,8 @@ async function backgroundSyncMessages() {
 
                 let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
                 message.sent = false
-                console.log('HELA', message)
-                let sender = message.from + message.k
-                console.log('🤤🤤🤤🤤🤤🤤', message.k)
 
-                parseCall(message.msg, sender)
+                parseCall(message.msg, message.from)
 
                 console.log('Message?', message.msg)
 
@@ -552,7 +549,7 @@ async function sendMessage(message, receiver) {
     let result = await js_wallet.sendTransactionAdvanced(
         [[address, 1]], // destinations,
         3, // mixin
-        {fixedFee: 3000, isFixedFee: true}, // fee
+        {fixedFee: 7500, isFixedFee: true}, // fee
         undefined, //paymentID
         undefined, // subWalletsToTakeFrom
         undefined, // changeAddress
@@ -613,7 +610,6 @@ ipcMain.on('endCall', async (e, peer, stream) => {
 
 // const { expand_sdp_offer, expand_sdp_answer } = require("./sdp.js")
 const Peer = require('simple-peer')
-const {logger} = require("kryptokrona-wallet-backend-js/dist/lib/Logger.js");
 
 //const wrtc = require('wrtc)')
 
@@ -891,29 +887,18 @@ let stream;
 
 function answerCall (msg, contact) {
     console.log('APPLE', msg, contact)
-
-    let video = msg.substring(0,1) == 'Δ';
+    let video
+    let audio
+    if(msg.substring(0,1) === 'Δ') {
+        video = true
+    } else {audio = true}
     // $('#messages_contacts').addClass('in-call');
     // $('#settings').addClass('in-call');
 
     // get video/voice stream
-    mainWindow.webContents.send('get-media', contact)
+    mainWindow.webContents.send('get-media', audio ,contact)
     ipcMain.on('send-media', () => {
         console.log('Got media')
-        gotMedia()
-    })
-
-    function gotMedia (stream) {
-        let extra_class = '';
-        if (video) {
-            extra_class = ' video'
-            // var myvideo = document.getElementById('myvideo')
-            //myvideo.srcObject = stream;
-
-            //myvideo.play();
-            console.log('god video here plz stream it in frontend')
-        }
-
 
         // let video_codecs = window.RTCRtpSender.getCapabilities('video');
         //
@@ -972,7 +957,7 @@ function answerCall (msg, contact) {
         peer2.signal(signal);
 
         peer2.on('track', (track, stream) => {
-            console.log('Setting up link..')
+            console.log('Setting up link..', track, stream)
         })
 
         peer2.on('connect', () => {
@@ -985,27 +970,29 @@ function answerCall (msg, contact) {
 
         peer2.on('stream', stream => {
             // got remote video stream, now let's show it in a video tag
+            console.log('peer2 stream', stream)
+            //if ('srcObject' in video) {
+              //  video.srcObject = stream
+            //} else {
+              //  video.src = window.URL.createObjectURL(stream) // for older browsers
+            //}
 
-            if ('srcObject' in video) {
-                video.srcObject = stream
-            } else {
-                video.src = window.URL.createObjectURL(stream) // for older browsers
-            }
-
-            video.play();
 
             console.log('Setting up link..');
 
         })
-    }
-
+    })
 }
 
 function endCall (peer, stream) {
-    peer.destroy();
-    stream.getTracks().forEach(function(track) {
-        track.stop();
-    });
+    try {
+        peer.destroy();
+        stream.getTracks().forEach(function(track) {
+            track.stop();
+        });
+    } catch (e) {
+        console.log('TRACKS', e)
+    }
 
     //var myvideo = document.getElementById('myvideo');
 
@@ -1322,6 +1309,11 @@ function expand_sdp_answer (compressed_string) {
             console.log('this expand port', ports[p]);
             try {
                 let ip_index = ports[p].slice(-1);
+
+                if (ips[ip_index] == undefined) {
+                    continue;
+                }
+
                 if (ips[ip_index].substring(0,1) == '!') {
                     if (external_port.length == 0) {
                         external_port = ports[p].substring(0, ports[p].length - 1);
