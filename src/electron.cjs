@@ -376,7 +376,8 @@ let known_keys = [
     '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56',
     'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d',
     'ca6ecad317b5c4913ad77a71c94af75b8f56d179febc939b6c78be6d2fa76b2e',
-    '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e'
+    '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e',
+    '8ef256b7f2387644617f6a8fcee21aff7f9772cb334a85aae5b5c4fd7b7ddc7c'
 ];
 console.log('known_keys', known_keys)
 
@@ -834,10 +835,10 @@ async function startCall (contact, audio, video, screenshare=false) {
 
         })
         //Awaits msg answer with sdp from contact
-        ipcMain.on('got-callback', async (e, data, sender) => {
-            console.log('callback', data);
+        ipcMain.on('got-callback', async (e, callback, sender) => {
+            console.log('callback', callback);
             console.log('from', sender);
-            peer1.signal(data);
+            peer1.signal(callback);
             console.log('Connecting to ...', sender)
 
         })
@@ -869,7 +870,7 @@ function parseCall (msg, sender, emitCall=true) {
             // Answer
             if (emitCall) {
                 callback = JSON.stringify(expand_sdp_answer(msg));
-                mainWindow.webContents.send('got-callback', callback, sender)
+                mainWindow.webContents.send('get-callback', callback, sender)
                 console.log('got sdp', msg)
                 console.log('got answer expanded', callback)
             }
