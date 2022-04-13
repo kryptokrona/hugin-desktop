@@ -268,7 +268,7 @@ async function start_js_wallet() {
 
     if (c === 'c') {
 
-        let height = 1020500;
+        let height = 1022500;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -476,7 +476,7 @@ ipcMain.on('sendMsg', (e, msg, receiver) => {
 async function sendMessage(message, receiver) {
     console.log('Want to send')
     let address = receiver.substring(0,99);
-    let messageKey =  '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e'
+    let messageKey =  receiver.substring(99,163);
     let has_history = true;
 //receiver.substring(99,163);
     if (message.length == 0) {
@@ -1141,7 +1141,8 @@ o=- 5726742634414877819 2 IN IP4 127.0.0.1
 s=-
 t=0 0
 a=group:BUNDLE 0 1 2
-a=msid-semantic: WMS ` + msid + `
+a=extmap-allow-mixed
+a=msid-semantic: WMS
 m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
@@ -1155,16 +1156,17 @@ a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-a=sendrecv
+a=recvonly
 a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
+a=rtpmap:63 red/48000/2
+a=fmtp:63 111/111
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
 a=rtpmap:9 G722/8000
+a=rtpmap:102 ILBC/8000
 a=rtpmap:0 PCMU/8000
 a=rtpmap:8 PCMA/8000
 a=rtpmap:106 CN/32000
@@ -1187,37 +1189,76 @@ a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:13 urn:3gpp:video-orientation
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
-a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
+a=extmap:5 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
 a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
-a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
-a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
+a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=recvonly
 a=rtcp-mux
 a=rtcp-rsize
-a=rtpmap:102 H264/90000
-a=rtcp-fb:102 goog-remb
-a=rtcp-fb:102 transport-cc
-a=rtcp-fb:102 ccm fir
-a=rtcp-fb:102 nack
-a=rtcp-fb:102 nack pli
-a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f
-a=rtpmap:104 H264/90000
-a=rtcp-fb:104 goog-remb
-a=rtcp-fb:104 transport-cc
-a=rtcp-fb:104 ccm fir
-a=rtcp-fb:104 nack
-a=rtcp-fb:104 nack pli
-a=fmtp:104 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f
-a=rtpmap:106 H264/90000
-a=rtcp-fb:106 goog-remb
-a=rtcp-fb:106 transport-cc
-a=rtcp-fb:106 ccm fir
-a=rtcp-fb:106 nack
-a=rtcp-fb:106 nack pli
-a=fmtp:106 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 goog-remb
+a=rtcp-fb:96 transport-cc
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+a=rtpmap:98 VP9/90000
+a=rtcp-fb:98 goog-remb
+a=rtcp-fb:98 transport-cc
+a=rtcp-fb:98 ccm fir
+a=rtcp-fb:98 nack
+a=rtcp-fb:98 nack pli
+a=fmtp:98 profile-id=0
+a=rtpmap:99 rtx/90000
+a=fmtp:99 apt=98
+a=rtpmap:100 VP9/90000
+a=rtcp-fb:100 goog-remb
+a=rtcp-fb:100 transport-cc
+a=rtcp-fb:100 ccm fir
+a=rtcp-fb:100 nack
+a=rtcp-fb:100 nack pli
+a=fmtp:100 profile-id=2
+a=rtpmap:101 rtx/90000
+a=fmtp:101 apt=100
+a=rtpmap:121 VP9/90000
+a=rtcp-fb:121 goog-remb
+a=rtcp-fb:121 transport-cc
+a=rtcp-fb:121 ccm fir
+a=rtcp-fb:121 nack
+a=rtcp-fb:121 nack pli
+a=fmtp:121 profile-id=1
+a=rtpmap:127 H264/90000
+a=rtcp-fb:127 goog-remb
+a=rtcp-fb:127 transport-cc
+a=rtcp-fb:127 ccm fir
+a=rtcp-fb:127 nack
+a=rtcp-fb:127 nack pli
+a=fmtp:127 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f
+a=rtpmap:120 rtx/90000
+a=fmtp:120 apt=127
+a=rtpmap:125 H264/90000
+a=rtcp-fb:125 goog-remb
+a=rtcp-fb:125 transport-cc
+a=rtcp-fb:125 ccm fir
+a=rtcp-fb:125 nack
+a=rtcp-fb:125 nack pli
+a=fmtp:125 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f
+a=rtpmap:119 rtx/90000
+a=fmtp:119 apt=125
+a=rtpmap:124 H264/90000
+a=rtcp-fb:124 goog-remb
+a=rtcp-fb:124 transport-cc
+a=rtcp-fb:124 ccm fir
+a=rtcp-fb:124 nack
+a=rtcp-fb:124 nack pli
+a=fmtp:124 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtpmap:107 rtx/90000
+a=fmtp:107 apt=124
 a=rtpmap:108 H264/90000
 a=rtcp-fb:108 goog-remb
 a=rtcp-fb:108 transport-cc
@@ -1225,6 +1266,42 @@ a=rtcp-fb:108 ccm fir
 a=rtcp-fb:108 nack
 a=rtcp-fb:108 nack pli
 a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+a=rtpmap:109 rtx/90000
+a=fmtp:109 apt=108
+a=rtpmap:123 H264/90000
+a=rtcp-fb:123 goog-remb
+a=rtcp-fb:123 transport-cc
+a=rtcp-fb:123 ccm fir
+a=rtcp-fb:123 nack
+a=rtcp-fb:123 nack pli
+a=fmtp:123 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f
+a=rtpmap:118 rtx/90000
+a=fmtp:118 apt=123
+a=rtpmap:122 H264/90000
+a=rtcp-fb:122 goog-remb
+a=rtcp-fb:122 transport-cc
+a=rtcp-fb:122 ccm fir
+a=rtcp-fb:122 nack
+a=rtcp-fb:122 nack pli
+a=fmtp:122 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f
+a=rtpmap:117 rtx/90000
+a=fmtp:117 apt=122
+a=rtpmap:35 AV1/90000
+a=rtcp-fb:35 goog-remb
+a=rtcp-fb:35 transport-cc
+a=rtcp-fb:35 ccm fir
+a=rtcp-fb:35 nack
+a=rtcp-fb:35 nack pli
+a=rtpmap:36 rtx/90000
+a=fmtp:36 apt=35
+a=rtpmap:114 red/90000
+a=rtpmap:115 rtx/90000
+a=fmtp:115 apt=114
+a=rtpmap:116 ulpfec/90000
+a=rtpmap:37 flexfec-03/90000
+a=rtcp-fb:37 goog-remb
+a=rtcp-fb:37 transport-cc
+a=fmtp:37 repair-window=10000000
 m=application ` + external_ports[((external_ports.length / 3)*2)] + ` UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 ` + external_ip +  `
 ` + candidates[3] +
@@ -1355,7 +1432,7 @@ o=- 8377786102162672707 2 IN IP4 127.0.0.1
 s=-
 t=0 0
 a=group:BUNDLE 0 1 2
-a=msid-semantic: WMS ` + msid + `
+a=msid-semantic: WMS
 m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
@@ -1369,8 +1446,6 @@ a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 a=sendrecv
 a=rtcp-mux
 a=rtpmap:111 opus/48000/2
@@ -1403,7 +1478,6 @@ a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extension
 a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
 a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
 a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
-a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
 a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
@@ -1440,7 +1514,6 @@ a=rtcp-fb:108 nack pli
 a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
 m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
-b=AS:30
 a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
 a=fingerprint:sha-256 ` + fingerprint +  `
