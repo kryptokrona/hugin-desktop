@@ -3,21 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/theme/global.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/theme/global.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/svelte.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/svelte.config.js" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
-    <list id="ee71b43f-5b81-4281-811b-17705aafcc33" name="Changes by krypt" comment="">
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-    </list>
+    <list id="ee71b43f-5b81-4281-811b-17705aafcc33" name="Changes by krypt" comment="" />
     <list id="ee7bdc2f-92b2-4628-a6ae-6d0b17f857b0" name="Changes by ralls" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,34 +46,6 @@
       <filtered-out-file-type name="TAG" />
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
-  </component>
-  <component name="LineStatusTrackerManager">
-    <file path="$PROJECT_DIR$/src/electron.cjs">
-      <ranges>
-        <range start1="15" end1="15" start2="15" end2="16" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="468" end1="469" start2="469" end2="469" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
-        <range start1="474" end1="474" start2="474" end2="479" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
-        <range start1="478" end1="479" start2="483" end2="485" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="598" end1="603" start2="604" end2="604" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="721" end1="847" start2="722" end2="722" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="888" end1="924" start2="763" end2="769" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="925" end1="927" start2="770" end2="770" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="928" end1="929" start2="771" end2="772" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="930" end1="931" start2="773" end2="774" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="932" end1="933" start2="775" end2="780" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="934" end1="935" start2="781" end2="782" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="936" end1="958" start2="783" end2="789" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="959" end1="962" start2="790" end2="792" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="963" end1="986" start2="793" end2="793" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="999" end1="1002" start2="806" end2="809" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="1049" end1="1050" start2="856" end2="857" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="1051" end1="1051" start2="858" end2="862" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="1162" end1="1163" start2="973" end2="973" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="1364" end1="1364" start2="1174" end2="1182" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="1452" end1="1453" start2="1270" end2="1270" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-        <range start1="1592" end1="1593" start2="1409" end2="1409" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
-      </ranges>
-    </file>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -160,7 +122,8 @@
       <workItem from="1649604767114" duration="26000" />
       <workItem from="1649679688173" duration="17000" />
       <workItem from="1649778445015" duration="25101000" />
-      <workItem from="1649888812203" duration="35695000" />
+      <workItem from="1649888812203" duration="35960000" />
+      <workItem from="1650026647640" duration="186000" />
     </task>
     <servers />
   </component>

@@ -3,8 +3,6 @@
     import wrtc from '@koush/wrtc'
     import {fade} from "svelte/transition";
     import Peer from "simple-peer";
-    import {onMount} from "svelte";
-    import {expand_sdp_offer, expand_sdp_answer} from "$lib/utils/sdp.js";
 
     let stream;
     let myvideo
@@ -345,7 +343,7 @@
     {/if}
 </main>
 
-<style>
+<style lang="scss">
 
     main {
         margin: 0 85px;

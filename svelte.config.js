@@ -8,7 +8,7 @@ const config = {
 	},
 	preprocess: sveltePreprocess({
 		scss: {
-			prependData: `@import '/src/lib/theme/global.scss';`
+			prependData: `@import 'src/lib/theme/global.scss';`
 		}
 	}),
 };
