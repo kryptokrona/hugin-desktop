@@ -8,7 +8,7 @@
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
-	import '$lib/theme/global.css'
+	import '/src/lib/theme/global.scss'
 
 	//Handle incoming call
 	let incoming_call = false

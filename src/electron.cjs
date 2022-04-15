@@ -13,6 +13,7 @@ const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
 const {extraDataToMessage} = require('hugin-crypto')
 const wrtc = require('@koush/wrtc')
+const { RTCPeerConnection, RTCRtpTransceiver } = require('@koush/wrtc')
 // const { startCall, answerCall, endCall, parseCall  } = import('./lib/utils/hugin-calls.js');
 
 const en = require ('int-encoder');
@@ -466,17 +467,22 @@ ipcMain.on('switchNode', async (e, node) => {
 });
 
 
-
 ipcMain.on('sendMsg', (e, msg, receiver) => {
         sendMessage(msg, receiver);
         console.log(msg, receiver)
     }
 )
 
+ipcMain.on('answerCall', (e, msg, contact) => {
+    mainWindow.webContents.send('answer-call', msg, contact)
+    }
+)
+
 async function sendMessage(message, receiver) {
     console.log('Want to send')
     let address = receiver.substring(0,99);
-    let messageKey =  receiver.substring(99,163);
+    let messageKey =  '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e'
+        //receiver.substring(99,163);
     let has_history = true;
 //receiver.substring(99,163);
     if (message.length == 0) {
@@ -597,11 +603,6 @@ ipcMain.on('startCall', async (e ,contact, calltype) => {
 })
 
 
-ipcMain.on('answerCall', async (e, msg, contact) => {
-    console.log('CALL STARTED')
-    return answerCall(msg, contact)
-})
-
 
 ipcMain.on('endCall', async (e, peer, stream) => {
     console.log('CALL STARTED')
@@ -720,132 +721,6 @@ function parse_sdp (sdp) {
 }
 
 
-async function startCall (contact, audio, video, screenshare=false) {
-    // spilt input to addr and pubkey
-    let contact_address = contact.substring(0,99);
-    console.log('contact address', contact_address)
-    let msg;
-
-    console.log('Starting call..');
-
-    // $('#video-button').unbind('click');
-    //
-    // $('#call-button').unbind('click');
-    //
-    // $('#screen-button').unbind('click');
-
-    mainWindow.webContents.send('start-call', audio, contact)
-    ipcMain.on('got-media', () => {
-        console.log('got MEDIA BACKKK');
-        console.log('got audo BACKKK', video);
-        //console.log('got contact BACKKK', contact);
-        let sdp;
-
-        let peer1 = new Peer({
-            initiator: true,
-            trickle: false,
-            stream: stream,
-            wrtc: wrtc,
-            offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
-            sdpTransform: (sdp) => {
-                return sdp;
-            }
-        })
-
-        // let transceivers =  peer1._pc.getTransceivers();
-        // console.log('transievers', transceivers);
-        // select the desired transceiver
-        //  if (video) {
-        //    transceivers[1].setCodecPreferences(custom_codecs)
-        // }
-
-        let first = true;
-
-        peer1.on('close', () => {
-
-            console.log('Connection lost..')
-
-            endCall(peer1, stream);
-
-            // ENDCALL AUDIO
-        })
-
-        peer1.on('error', () => {
-
-            console.log('Connection lost..')
-
-            endCall(peer1, stream);
-            // ENDCALL AUDIO
-
-        })
-
-        peer1.on('stream', stream => {
-            // got remote video stream, now let's show it in a video tag
-            let extra_class = "";
-            if (video) {
-                extra_class = " video"
-            }
-            // SELECT AND SHOW VIDEO ELEMENT
-            let video_element = ""
-
-
-            if ('srcObject' in video_element) {
-                video_element.srcObject = stream
-            } else {
-                video_element.src = window.URL.createObjectURL(stream) // for older browsers
-            }
-            video_element.play()
-
-        })
-
-        peer1.on('connect', () => {
-            // CONNECT SOUND
-            // SEND WEBCONTENTS " CONNECTED "
-            console.log('Connection established; with', contact)
-
-        });
-
-
-        peer1.on('signal', data => {
-            try {
-                //  console.log('real data:', data);
-                console.log('SDP', data);
-                mainWindow.webContents.send('sdp-data', data)
-                let parsed_data = `${video ? "Δ" : "Λ"}` + parse_sdp(data);
-                // console.log('parsed data:', parsed_data);
-                let recovered_data = expand_sdp_offer(parsed_data);
-                // console.log('recovered data:', recovered_data);
-                // console.log('some other data:', {'type': 'offer', 'sdp': recovered_data});
-                // peer1._pc.setLocalDescription(recovered_data);
-                msg = parsed_data;
-
-                console.log('PARSED MESSAGE', msg)
-            } catch (err) {
-                console.log('error', err)
-            }
-
-            if (!first) {
-                return
-            }
-            sendMessage(msg, contact);
-
-            awaiting_callback = true;
-
-            first = false;
-
-        })
-        //Awaits msg answer with sdp from contact
-        ipcMain.on('got-callback', async (e, callback, sender) => {
-            console.log('callback', callback);
-            console.log('from', sender);
-            peer1.signal(callback);
-            console.log('Connecting to ...', sender)
-
-        })
-
-    })
-}
-
 function parseCall (msg, sender, emitCall=true) {
     console.log('🤤🤤🤤🤤🤤🤤',sender)
     switch (msg.substring(0,1)) {
@@ -886,104 +761,36 @@ function parseCall (msg, sender, emitCall=true) {
 
 let stream;
 
-function answerCall (msg, contact) {
-    console.log('APPLE', msg, contact)
-    let video
-    let audio
-    if(msg.substring(0,1) === 'Δ') {
-        video = true
-    } else {audio = true}
-    // $('#messages_contacts').addClass('in-call');
-    // $('#settings').addClass('in-call');
-
-    // get video/voice stream
-    mainWindow.webContents.send('get-media', audio ,contact)
-    ipcMain.on('send-media', () => {
-        console.log('Got media')
-
-        // let video_codecs = window.RTCRtpSender.getCapabilities('video');
-        //
-        // let custom_codecs = [];
-        //
-        // for (codec in video_codecs.codecs) {
-        //     let this_codec = video_codecs.codecs[codec];
-        //     if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0,5) == "level") {
-        //         custom_codecs.push(this_codec);
-        //     }
-        //
-        // }
-        let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
-
-        // let transceivers = peer2._pc.getTransceivers();
-        //
-        // // select the desired transceiver
-        // if (video) {
-        //     transceivers[1].setCodecPreferences(custom_codecs);
-        // }
-
-        peer2.on('close', () => {
-
-            console.log('Connection closed..')
-            endCall(peer2, stream);
-
-        })
-
-        peer2.on('error', () => {
-
-            console.log('Connection lost..')
-
-            endCall(peer2, stream);
-
-        })
-
-        let first = true;
-
-        peer2.on('signal', data => {
-            console.log('initial data:', data);
-            let parsed_data = `${video ? 'δ' : 'λ'}` + parse_sdp(data);
-            console.log('parsed data really cool sheet:', parsed_data);
-            let recovered_data = expand_sdp_answer(parsed_data);
-            data = recovered_data;
-            console.log('recovered data:', recovered_data);
-            // peer2._pc.setLocalDescription(recovered_data);
-            if (!first) {
-                return
-            }
-            console.log('Sending answer ', parsed_data);
-            sendMessage(parsed_data, contact);
-            first = false;
-
-        })
-        let signal = expand_sdp_offer(msg);
-        peer2.signal(signal);
-
-        peer2.on('track', (track, stream) => {
-            console.log('Setting up link..', track, stream)
-        })
-
-        peer2.on('connect', () => {
-
-            // SOUND EFFECT
-            console.log('Connection established;')
-            mainWindow.webContents.send('call-established')
-
-        });
-
-        peer2.on('stream', stream => {
-            // got remote video stream, now let's show it in a video tag
-            console.log('peer2 stream', stream)
-            //if ('srcObject' in video) {
-              //  video.srcObject = stream
-            //} else {
-              //  video.src = window.URL.createObjectURL(stream) // for older browsers
-            //}
+ipcMain.on('expand-sdp', (e, data) => {
+    console.log('INCOMING EXPAND SDP', e, data)
+        let recovered_data = expand_sdp_offer(data);
+        console.log('TYPE EXPAND_O', recovered_data)
+        mainWindow.webContents.send('got-expanded',  recovered_data)
+});
 
 
-            console.log('Setting up link..');
+ipcMain.on('get-sdp', (e,data, type, contact, video) => {
 
-        })
-    })
-}
+    if(type === 'offer') {
+
+        console.log('initial offer data:', data);
+        let parsed_data = `${video ? "Δ" : "Λ"}` + parse_sdp(data);
+        let recovered_data = expand_sdp_offer(parsed_data);
+        console.log('recovered offer data:', recovered_data);
+        sendMessage(parsed_data, contact)
+
+    } else {
+
+        console.log('initial data:', data);
+        let parsed_data = `${video ? 'δ' : 'λ'}` + parse_sdp(data);
+        console.log('parsed data really cool sheet:', parsed_data);
+        let recovered_data = expand_sdp_answer(parsed_data);
+        console.log('recovered data:', recovered_data);
+        sendMessage(parsed_data, contact)
+
+    }
+})
+
 
 function endCall (peer, stream) {
     try {
@@ -997,9 +804,9 @@ function endCall (peer, stream) {
 
     //var myvideo = document.getElementById('myvideo');
 
-    myvideo.srcObject = stream;
-    myvideo.pause();
-    myvideo.srcObject = null;
+    //myvideo.srcObject = stream;
+    //myvideo.pause();
+    //myvideo.srcObject = null;
 
     awaiting_callback = false;
 
@@ -1047,8 +854,12 @@ function expand_sdp_offer (compressed_string) {
         return decode_ip(h.substring(1),h.substring(0,1));
     })
 
-    if (ips[0] == undefined) {
+    if (ips[0]  === undefined) {
         ips.splice(0, 1);
+    }
+
+    if (ips[1]  === undefined) {
+        ips.splice(1, 2);
     }
 
     console.log('IPS SPLIT', ips);
@@ -1160,7 +971,6 @@ a=recvonly
 a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
-a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:63 red/48000/2
 a=fmtp:63 111/111
 a=rtpmap:103 ISAC/16000
@@ -1363,6 +1173,14 @@ function expand_sdp_answer (compressed_string) {
         return decode_ip(h.substring(1),h.substring(0,1));
     })
 
+    if (ips[0]  === undefined) {
+        ips.splice(0, 1);
+    }
+
+    if (ips[1]  === undefined) {
+        ips.splice(1, 2);
+    }
+
     let ports = prts.split('&').map(function (h) {
         return en.decode(h);
     });;
@@ -1450,7 +1268,6 @@ a=sendrecv
 a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
-a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
 a=rtpmap:9 G722/8000

@@ -1,6 +1,5 @@
 <script>
     //To handle true and false, or in this case show and hide.
-    import {goto} from "$app/navigation";
     import {fade, fly} from "svelte/transition";
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -8,7 +7,7 @@
     import {user} from "$lib/stores/user.js";
 
     export let paused = false
-    let avatar = get_avatar("SEKReXYY1Vagn3PBEhQTHc9PygmC2NJzf9i9im8at2z2JGwxWTib2zaQ4eLH6zjeNgV8gbFYydxKLQFwRjmMXhzqDWvo1kE3qLQ")
+    let avatar = get_avatar($user.call.sender)
     let ringtone = new Audio("/static/audio/static_ringtone.mp3")
 
 
@@ -22,7 +21,6 @@
 
     const handleAnswer = () => {
         window.api.answerCall($user.call.msg, $user.call.sender)
-        goto('/webrtc')
     }
 
 </script>
@@ -33,12 +31,12 @@
     <div class="inner-card">
         <div class="caller">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <h3>Swepool</h3>
+            <p>{$user.call.sender}</p>
         </div>
         <div class="options">
-            <div class="answer hover" on:click={handleAnswer}>
+            <a class="answer hover" on:click={handleAnswer} href="/webrtc">
                 <img src="/static/images/call.svg" alt="">
-            </div>
+            </a>
             <div class="decline hover" on:click>
                 <img src="/static/images/call-slash.svg" alt="">
             </div>
@@ -110,5 +108,8 @@
         margin: 0;
         color: rgba(255, 255, 255, 0.8);
         font-weight: normal;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis
     }
 </style>
