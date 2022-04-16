@@ -291,8 +291,16 @@
                 let first = true;
 
                 peer2.on('signal', data => {
+
+                    let dataToSend = {
+                        data: data,
+                        type: 'answer',
+                        contact: contact,
+                        video: video,
+                    }
+
                     console.log('initial data:', data);
-                    window.api.send('get-sdp', data, 'answer', contact, video)
+                    window.api.send('get-sdp', dataToSend)
                     // peer2._pc.setLocalDescription(recovered_data);
                     if (!first) {
                         return

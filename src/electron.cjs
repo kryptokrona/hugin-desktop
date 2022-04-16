@@ -949,7 +949,7 @@ t=0 0
 a=group:BUNDLE 0 1 2
 a=extmap-allow-mixed
 a=msid-semantic: WMS
-m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF  111 103 104 9 0 8 106 105 13 110 112 113 126
+m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[1] +

@@ -2,6 +2,7 @@
     import {createEventDispatcher} from 'svelte'
     import sendIcon from '/static/images/send.png'
     import EmojiSelector from 'svelte-emoji-selector';
+    import {user} from "$lib/stores/user.js";
 
     const dispatch = createEventDispatcher();
 
@@ -33,6 +34,7 @@
         messageInput = ''
     }
 
+
     //Checks if input is empty
     $ : {
         enableSend = !!messageInput;
@@ -49,12 +51,15 @@
 <style>
 
     .wrapper {
-        margin-right: 85px;
-        box-sizing: border-box;
+        position: static;
         display: flex;
-        width: 100%;
         padding: 20px 20px 20px 20px;
+        width: 100%;
+        margin-right: 85px;
+        z-index: 3;
+            box-sizing: border-box;
     }
+
 
     input {
         width: inherit;

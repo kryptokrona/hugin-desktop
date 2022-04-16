@@ -45,6 +45,7 @@
         color: rgba(255, 255, 255, 0.8);
         padding: 15px 25px 15px 15px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);;
+        z-index: 3;
     }
 
     .type {
@@ -53,6 +54,7 @@
 
     p {
         margin: 0;
+        word-break: break-word;
     }
 
 </style>

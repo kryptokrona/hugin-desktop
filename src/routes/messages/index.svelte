@@ -80,16 +80,17 @@
 
 <main in:fade>
     <ChatList on:conversation={e => filterMsgs(e.detail)} on:click={openAdd} />
-    <ChatWindow>
-        {#each savedMsg as message}
-            <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.from}/>
-        {/each}
-
+    <div class="rightside">
+        <ChatWindow>
+            {#each savedMsg as message}
+                <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.from}/>
+            {/each}
+        </ChatWindow>
         <ChatInput on:message={sendMsg}/>
-    </ChatWindow>
+    </div>
 </main>
 
-<style>
+<style lang="scss">
 
     main {
         display: flex;
@@ -99,11 +100,13 @@
         z-index: 3;
     }
 
-    .button {
-        background: magenta;
-        color: white;
-        position: center;
-        top: 5px;
+    .rightside {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      box-sizing: border-box;
+      width: 100%;
+      margin-right: 85px;
     }
 
 </style>
