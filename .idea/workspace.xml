@@ -3,8 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/theme/global.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/theme/global.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/svelte.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/svelte.config.js" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
     <list id="ee71b43f-5b81-4281-811b-17705aafcc33" name="Changes by krypt" comment="" />
@@ -51,7 +55,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="26vYux3qGNPai6E3Gs7eiAA2dob" />
   <component name="ProjectViewState">
@@ -123,7 +127,8 @@
       <workItem from="1649679688173" duration="17000" />
       <workItem from="1649778445015" duration="25101000" />
       <workItem from="1649888812203" duration="35960000" />
-      <workItem from="1650026647640" duration="186000" />
+      <workItem from="1650026647640" duration="3512000" />
+      <workItem from="1650051051617" duration="12609000" />
     </task>
     <servers />
   </component>

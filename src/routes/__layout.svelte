@@ -3,6 +3,7 @@
 	import LeftMenu from "../components/navbar/LeftMenu.svelte";
 	import RightMenu from "/src/components/navbar/RightMenu.svelte";
 	import IncomingCall from "/src/components/webrtc/IncomingCall.svelte";
+
 	//Stores
 	import { user } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -10,20 +11,27 @@
 	//Global CSS
 	import '/src/lib/theme/global.scss'
 
-	//Handle incoming call
-	let incoming_call = false
+	let ready = false;
+
+	let incoming_call
 	const closePopup = () => {
 		incoming_call = false
 	}
 
-	let ready = false;
-
-
 	onMount( async () => {
+
+		window.process = {
+			...window.process,
+			env: { DEBUG: undefined },
+			nextTick: function() {
+				return null;
+			}
+		};
+
 		ready = true
 
 		messages.set(await window.api.getMessages())
-
+		//Handle incoming call
 		window.api.receive('call-incoming', (msg, sender) => {
 			incoming_call = true
 			user.update(current => {
@@ -34,6 +42,7 @@
 			})
 		})
 
+		//Handle sync status
 		window.api.receive('sync', res => {
 			user.update(user => {
 				return{

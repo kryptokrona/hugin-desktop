@@ -65,92 +65,12 @@
         window.api.sendMsg(msg, active_contact)
     }
 
-
-  window.api.receive('get-callback', async (callback, contact) => {
-      window.api.send('got-callback', callback, contact)
-    })
-
-    window.api.receive('start-call', async (data, contact) => {
-        // console.log();
-        // let data = 'audio'
-        console.log('data', data);
-        console.log('contact', contact);
-
-
-        if (data) {
-            console.log('getting media');
-
-            // get video/voice stream
-            navigator.mediaDevices.getUserMedia({
-                video: false,
-                audio: true
-            }).then (gotMedia()).catch(() => {
-                console.log('errrors');
-                console.log('video', video);
-                console.log('audio', audio);
-                //   audio = 'audio';
-                // gotMedia(contact, audio)
-                //
-                // gotMedia(contact, audio)
-            })
-        }
-    })
-
-
-    async function gotMedia (contact, stream, screen_stream=false) {
-        console.log('GOTTTING MEDIAa')
-        console.log('contacting this', contact);
-        console.log('stream', stream);
-
-
-        if (video) {
-            var myvideo = document.getElementById('myvideo')
-
-
-            if (screen_stream) {
-                myvideo.srcObject = screen_stream;
-                screen_stream.addTrack(stream.getAudioTracks()[0]);
-
-                stream = screen_stream;
-            } else {
-                myvideo.srcObject = stream;
-            }
-            myvideo.play();
-            //VIDEO SCREEN FADE IN
-        } else {
-
-        }
-
-
-        let video_codecs = window.RTCRtpSender.getCapabilities('video');
-        console.log('video codec', video_codecs);
-
-        let custom_codecs = [];
-
-        for (codec in video_codecs.codecs) {
-            let this_codec = video_codecs.codecs[codec];
-            if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) == "level") {
-                custom_codecs.push(this_codec);
-            }
-
-        }
-
-        console.log('GOT MEDIA SENDING');
-
-        await window.api.gotMedia()
-    }
-
-
     //Default value should be false to hide the AddChat form.
     let wantToAdd = false
     const openAdd = () => {
         wantToAdd = !wantToAdd
     }
 
-    window.api.receive('sdp-data', data => {
-        console.log('SDP')
-        console.log(data)
-    })
 
 </script>
 
@@ -168,8 +88,6 @@
         <ChatInput on:message={sendMsg}/>
     </ChatWindow>
 </main>
-
-<div class="myvideo"> </div>
 
 <style>
 

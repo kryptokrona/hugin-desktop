@@ -10,28 +10,41 @@
     let avatar = get_avatar($user.call.sender)
     let ringtone = new Audio("/static/audio/static_ringtone.mp3")
 
+    let answered = false
 
+    // When incoming call and this get mounted we play the ringtone
     onMount(() => {
         ringtone.play()
     })
 
+    //When a user clicks answer
+    const handleAnswer = () => {
+
+        //Variable to activate visual feedback
+        answered = true
+
+        //We delay the answerCall for routing purposes
+        window.api.answerCall($user.call.msg, $user.call.sender)
+
+        //We pause the ringtone and destroy the popup
+        ringtone.pause()
+
+    }
+
+    //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
         ringtone.pause()
     })
 
-    const handleAnswer = () => {
-        window.api.answerCall($user.call.msg, $user.call.sender)
-    }
-
 </script>
 
 
-<div in:fly="{{y: -200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card rgb">
+<div in:fly="{{y: -200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card" class:answered={answered} class:rgb={!answered}>
     <audio bind:paused src="/static/audio/static_ringtone.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <p>{$user.call.sender}</p>
+            <p>{'SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT'}</p>
         </div>
         <div class="options">
             <a class="answer hover" on:click={handleAnswer} href="/webrtc">
@@ -45,7 +58,7 @@
 </div>
 
 
-<style>
+<style lang="scss">
     .card {
         display: flex;
         position: absolute;
@@ -68,6 +81,10 @@
         width: 100%;
         border-radius: 3px;
         background-color: #202020;
+    }
+
+    .answered {
+      background-color: #5ff281;
     }
 
     .caller {
