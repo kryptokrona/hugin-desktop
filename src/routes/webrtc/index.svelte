@@ -9,7 +9,11 @@
     let myvideo
 
     onMount(() => {
-        async function startCall (contact, audio, video, screenshare=false) {
+        window.api.receive('start-call', (conatct, calltype) => {
+            startCall(conatct, calltype)
+        })
+
+        async function startCall (contact, isVideo, screenshare=false) {
             // spilt input to addr and pubkey
             let contact_address = contact.substring(0, 99);
             console.log('contact address', contact_address)
@@ -18,10 +22,10 @@
             console.log('Starting call..');
             if (!screenshare) {
                 // get video/voice stream
-                navigator.mediaDevices.getUserMedia({
-                    video: video,
-                    audio: audio
-                }).then(gotMedia(contact)).catch(() => {
+                stream = navigator.mediaDevices.getUserMedia({
+                    video: isVideo,
+                    audio: true
+                }).then(gotMedia(stream, contact)).catch(() => {
                 })
             } else {
                 window.desktopCapturer.getSources({types: ['window', 'screen']}).then(async sources => {
@@ -45,10 +49,10 @@
                                 });
                                 console.log('Got stream..');
                                 navigator.mediaDevices.getUserMedia({
-                                    video: video,
+                                    video: isVideo,
                                     audio: true
                                 }).then(function (stream) {
-                                    gotMedia(stream, screen_stream, contact)
+                                    gotMedia(stream, contact, screen_stream)
                                 }).catch(() => {
                                 })
 
@@ -62,7 +66,8 @@
             }
         }
         let video;
-        async function gotMedia (stream, screen_stream=false, contact) {
+        async function gotMedia (stream, contact, screen_stream=false) {
+            console.log('We want contact', contact)
             if ( video ) {
                 myvideo = document.getElementById('myvideo')
 
@@ -174,10 +179,16 @@
 
             peer1.on('signal', data => {
                 try {
+                    let dataToSend = {
+                        data: data,
+                        type: 'offer',
+                        contact: contact,
+                        video: video,
+                    }
                     //  console.log('real data:', data);
                     console.log('SDP', data);
                     // console.log('parsed data:', parsed_data);
-                    window.api.send('get-sdp', data, 'offer', contact, video)
+                    window.api.send('get-sdp', dataToSend)
                     // console.log('recovered data:', recovered_data);
                     // console.log('some other data:', {'type': 'offer', 'sdp': recovered_data});
                     // peer1._pc.setLocalDescription(recovered_data);
@@ -341,12 +352,14 @@
 <style lang="scss">
 
     main {
+      position: absolute;
         margin: 0 85px;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
         width: 100%;
+        z-index: 0;
     }
 
     video {

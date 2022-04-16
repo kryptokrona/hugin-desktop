@@ -24,6 +24,7 @@
         display: flex;
         margin-left: 85px;
         margin-right: 85px;
+        z-index: 3;
     }
 
     .list {

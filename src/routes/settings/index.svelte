@@ -22,6 +22,7 @@
     main {
         margin-left: 85px;
         padding: 40px;
+        z-index: 3;
     }
 
 </style>

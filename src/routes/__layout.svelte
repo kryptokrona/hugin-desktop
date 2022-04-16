@@ -3,6 +3,7 @@
 	import LeftMenu from "../components/navbar/LeftMenu.svelte";
 	import RightMenu from "/src/components/navbar/RightMenu.svelte";
 	import IncomingCall from "/src/components/webrtc/IncomingCall.svelte";
+	import Webrtc from "/src/routes/webrtc/index.svelte";
 
 	//Stores
 	import { user } from "$lib/stores/user.js";
@@ -63,6 +64,7 @@
 
 	{#if $user.loggedIn}
 		<LeftMenu/>
+		<Webrtc/>
 		<RightMenu/>
 	{/if}
 

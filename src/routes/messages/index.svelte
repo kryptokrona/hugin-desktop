@@ -96,6 +96,7 @@
         margin-left: 85px;
         height: 100vh;
         overflow: hidden;
+        z-index: 3;
     }
 
     .button {

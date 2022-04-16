@@ -62,6 +62,7 @@
         height: 100vh;
         color: #fff;
         background-color: #202020;
+        z-index: 3;
     }
 
     .login-wrapper {

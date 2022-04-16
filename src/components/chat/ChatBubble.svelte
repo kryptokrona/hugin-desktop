@@ -7,6 +7,17 @@
     export let msgFrom
     export let ownMsg
 
+    $: {
+        switch (message.substring(0,1)) {
+            case "Δ":
+            // Fall through
+            case "Λ":
+                // Call offer
+                message = `${message.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
+                break;
+        }
+    }
+
 </script>
 
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
@@ -29,7 +40,6 @@
 <style>
 
     .bubble {
-        border-radius: 8px;
         display: flex;
         align-items: center;
         color: rgba(255, 255, 255, 0.8);

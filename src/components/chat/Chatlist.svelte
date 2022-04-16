@@ -71,6 +71,7 @@
         box-sizing: border-box;
         background-color: #202020;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 3;
     }
 
     .list-wrapper {
