@@ -1,6 +1,5 @@
 <script>
     //To handle true and false, or in this case show and hide.
-    import {goto} from "$app/navigation";
     import {fade, fly} from "svelte/transition";
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -8,37 +7,49 @@
     import {user} from "$lib/stores/user.js";
 
     export let paused = false
-    let avatar = get_avatar("SEKReXYY1Vagn3PBEhQTHc9PygmC2NJzf9i9im8at2z2JGwxWTib2zaQ4eLH6zjeNgV8gbFYydxKLQFwRjmMXhzqDWvo1kE3qLQ")
+    let avatar = get_avatar($user.call.sender)
     let ringtone = new Audio("/static/audio/static_ringtone.mp3")
 
+    let answered = false
 
+    // When incoming call and this get mounted we play the ringtone
     onMount(() => {
         ringtone.play()
     })
 
+    //When a user clicks answer
+    const handleAnswer = () => {
+
+        //Variable to activate visual feedback
+        answered = true
+
+        //We delay the answerCall for routing purposes
+        window.api.answerCall($user.call.msg, $user.call.sender)
+
+        //We pause the ringtone and destroy the popup
+        ringtone.pause()
+
+    }
+
+    //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
         ringtone.pause()
     })
 
-    const handleAnswer = () => {
-        window.api.answerCall($user.call.msg, $user.call.sender)
-        goto('/webrtc')
-    }
-
 </script>
 
 
-<div in:fly="{{y: -200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card rgb">
+<div in:fly="{{y: -200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card" class:answered={answered} class:rgb={!answered}>
     <audio bind:paused src="/static/audio/static_ringtone.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <h3>Swepool</h3>
+            <p>{'SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT'}</p>
         </div>
         <div class="options">
-            <div class="answer hover" on:click={handleAnswer}>
+            <a class="answer hover" on:click={handleAnswer} href="/webrtc">
                 <img src="/static/images/call.svg" alt="">
-            </div>
+            </a>
             <div class="decline hover" on:click>
                 <img src="/static/images/call-slash.svg" alt="">
             </div>
@@ -47,7 +58,7 @@
 </div>
 
 
-<style>
+<style lang="scss">
     .card {
         display: flex;
         position: absolute;
@@ -70,6 +81,10 @@
         width: 100%;
         border-radius: 3px;
         background-color: #202020;
+    }
+
+    .answered {
+      background-color: #5ff281;
     }
 
     .caller {
@@ -110,5 +125,8 @@
         margin: 0;
         color: rgba(255, 255, 255, 0.8);
         font-weight: normal;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis
     }
 </style>

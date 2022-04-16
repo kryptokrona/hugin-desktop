@@ -3,12 +3,28 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Hero.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Hero.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/Chatlist.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/LeftMenu.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/stores/nodes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/nodes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/boards/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/boards/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/create-account/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/create-account/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/dashboard/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/finance/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/finance/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/settings/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/settings/index.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/call.svg" beforeDir="false" afterPath="$PROJECT_DIR$/static/images/call.svg" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
+    <list id="ee71b43f-5b81-4281-811b-17705aafcc33" name="Changes by krypt" comment="">
+      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
+    </list>
     <list id="ee7bdc2f-92b2-4628-a6ae-6d0b17f857b0" name="Changes by ralls" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,11 +64,41 @@
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
   </component>
+  <component name="LineStatusTrackerManager">
+    <file path="$PROJECT_DIR$/src/electron.cjs">
+      <ranges>
+        <range start1="14" end1="17" start2="14" end2="14" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="599" end1="600" start2="596" end2="597" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="601" end1="602" start2="598" end2="598" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="771" end1="772" start2="767" end2="769" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="773" end1="774" start2="770" end2="771" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="775" end1="777" start2="772" end2="773" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="779" end1="780" start2="775" end2="776" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="781" end1="782" start2="777" end2="778" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="783" end1="785" start2="779" end2="780" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="788" end1="789" start2="783" end2="784" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="956" end1="957" start2="951" end2="952" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="971" end1="972" start2="966" end2="967" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="976" end1="976" start2="971" end2="973" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="979" end1="979" start2="976" end2="977" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="988" end1="989" start2="986" end2="987" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1009" end1="1009" start2="1007" end2="1008" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1011" end1="1039" start2="1010" end2="1059" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1178" end1="1179" start2="1198" end2="1199" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1191" end1="1194" start2="1211" end2="1212" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1198" end1="1198" start2="1216" end2="1218" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1201" end1="1201" start2="1221" end2="1222" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1210" end1="1211" start2="1231" end2="1232" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1216" end1="1217" start2="1237" end2="1238" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+        <range start1="1232" end1="1260" start2="1253" end2="1302" changelist="ee71b43f-5b81-4281-811b-17705aafcc33" />
+      </ranges>
+    </file>
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="26vYux3qGNPai6E3Gs7eiAA2dob" />
   <component name="ProjectViewState">
@@ -64,6 +110,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="dart.analysis.tool.window.visible" value="false" />
+    <property name="js.last.introduce.type" value="LET" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/static/fonts" />
     <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="node.js.detected.package.eslint" value="true" />
@@ -122,6 +169,10 @@
       <workItem from="1649604767114" duration="26000" />
       <workItem from="1649679688173" duration="17000" />
       <workItem from="1649778445015" duration="25101000" />
+      <workItem from="1649888812203" duration="35960000" />
+      <workItem from="1650026647640" duration="3512000" />
+      <workItem from="1650051051617" duration="12727000" />
+      <workItem from="1650128303105" duration="8766000" />
     </task>
     <servers />
   </component>
@@ -138,17 +189,6 @@
         </entry>
       </map>
     </option>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/lib/utils/hugin-utils.js</url>
-          <line>34</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

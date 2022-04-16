@@ -23,6 +23,7 @@
         width: 50%;
         border-left: 1px solid rgba(255,255,255, 0.1);
         height: 100vh;
+        z-index: 3;
     }
 
     .socials {

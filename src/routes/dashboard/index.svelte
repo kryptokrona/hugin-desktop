@@ -18,6 +18,7 @@
 
     main {
         margin: 0 85px;
+        z-index: 3;
     }
 
     .top {

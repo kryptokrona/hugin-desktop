@@ -29,6 +29,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        z-index: 3;
     }
 
     .wrapper {

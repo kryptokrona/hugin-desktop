@@ -3,6 +3,7 @@
     import {page} from "$app/stores";
     import {user} from "$lib/stores/user.js";
     import callIcon from '/static/images/call.svg'
+    import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     let contact
     let active_contact
@@ -35,7 +36,8 @@
 
     {#if $page.url.pathname === '/messages' && active_contact}
         <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-        <button class='button' on:click={() => startCall(contact, 'audio')}><img class="icon" src={callIcon} alt="msgs"></button>
+        <button class='button' on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call"></button>
+        <button class='button' on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video"></button>
     {/if}
 
     {#if $page.url.pathname === '/webrtc'}
