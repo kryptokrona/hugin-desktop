@@ -266,7 +266,7 @@ async function start_js_wallet() {
 
     if (c === 'c') {
 
-        let height = 1022500;
+        let height = 1026200;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -349,9 +349,12 @@ async function start_js_wallet() {
             console.log('networkBlockCount', networkBlockCount);
             syncing = false;
         } else {
-            if ((localDaemonBlockCount - walletBlockCount) > 19000) {
+        console.log('Syncing wallet ', walletBlockCount);
+        console.log('Syncing local d', localDaemonBlockCount);
+        console.log('Syncing network', networkBlockCount);
+            if ((localDaemonBlockCount - walletBlockCount) > 1000) {
                 console.log('rewinding forward');
-                js_wallet.rewind(networkBlockCount - 9000);
+                js_wallet.rewind(networkBlockCount - 500);
                 await sleep(3000 * 10);
             }
         }
@@ -368,6 +371,7 @@ async function start_js_wallet() {
 
 let known_pool_txs = [];
 let known_keys = [
+    '23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34',
     '23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34',
     '21863496282548462aaf47bc93d2be46ec8eff1f053f47b77f96d9e69d1fd133',
     '641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75',
@@ -478,7 +482,7 @@ ipcMain.on('answerCall', (e, msg, contact) => {
 async function sendMessage(message, receiver) {
     console.log('Want to send')
     let address = receiver.substring(0,99);
-    let messageKey =  '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e'
+    let messageKey =  receiver.substring(99,163);
         //receiver.substring(99,163);
     let has_history = true;
 //receiver.substring(99,163);
@@ -623,7 +627,7 @@ function parse_sdp (sdp) {
     let fingerprint = '';
     let ips = [];
     let ports = [];
-    let ssrcs = "";
+    let ssrcs = [];
     let msid = "";
     let ip;
     let port;
@@ -692,19 +696,19 @@ function parse_sdp (sdp) {
 
         } else if (line.includes('a=ssrc:')) {
 
-            // let ssrc = en.encode(line.substr(7).split(" ")[0]);
-            //
-            // if (!ssrcs.includes(ssrc)) {
-            //
-            //     ssrcs = ssrcs.concat(ssrc)
-            //
-            // }
+              let ssrc = en.encode(line.substr(7).split(" ")[0]);
+
+             if (!ssrcs.includes(ssrc)) {
+
+               ssrcs = ssrcs.concat(ssrc)
+
+             }
 
 
         } else if (line.includes('a=msid-semantic:')) {
 
-            // msid = line.substr(16).split(" ")[2];
-            // console.log('msid', msid);
+             msid = line.substr(16).split(" ")[2];
+             console.log('msid', msid);
 
         }
 
@@ -712,7 +716,7 @@ function parse_sdp (sdp) {
 
     })
 
-    return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + ports.join('&');
+    return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + ports.join('&') + "," + ssrcs.join('&') + "," + msid;
 
 }
 
@@ -740,8 +744,12 @@ function parseCall (msg, sender, emitCall=true) {
         case "λ":
             // Answer
             if (emitCall) {
-                callback = JSON.stringify(expand_sdp_answer(msg));
-                mainWindow.webContents.send('get-callback', callback, sender)
+                let callback = JSON.stringify(expand_sdp_answer(msg));
+                let callerdata = {
+                    data: callback,
+                    sender: sender
+                }
+                mainWindow.webContents.send('got-callback', callerdata)
                 console.log('got sdp', msg)
                 console.log('got answer expanded', callback)
             }
@@ -765,18 +773,18 @@ ipcMain.on('expand-sdp', (e, data) => {
 });
 
 
-ipcMain.on('get-sdp', async (e,data) => {
+ipcMain.on('get-sdp', (e,data) => {
     console.log('get-sdp', data.data, data.type, data.contact, data.video)
 
     if(data.type == 'offer') {
-
+    console.log('Answerrrrrrrr', data.data, data.type, data.contact, data.video)
         let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
         let recovered_data = expand_sdp_offer(parsed_data);
         console.log('recovered offer data:', recovered_data);
         sendMessage(parsed_data, data.contact)
 
     } else if (data.type == 'answer') {
-
+    console.log('Answerrrrrrrr',data.data, data.type, data.contact, data.video)
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data);
         console.log('parsed data really cool sheet:', parsed_data);
         let recovered_data = expand_sdp_answer(parsed_data);
@@ -829,11 +837,13 @@ function expand_sdp_offer (compressed_string) {
 
     let prts =  split[4];
 
-    let ssrc = "";
+    let ssrc = split[5].split('&').map(function (h) {
+      return en.decode(h);
+    });
 
     console.log('src', ssrc);
 
-    let msid = "";
+    let msid = split[6];
 
     console.log('msida ', msid);
 
@@ -942,18 +952,17 @@ function expand_sdp_offer (compressed_string) {
         external_ports[0] = "9";
     }
 
-    let sdp = `v=0
+let sdp = `v=0
 o=- 5726742634414877819 2 IN IP4 127.0.0.1
 s=-
 t=0 0
 a=group:BUNDLE 0 1 2
-a=extmap-allow-mixed
-a=msid-semantic: WMS
+a=msid-semantic: WMS ` + msid + `
 m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[1] +
-        `a=ice-ufrag:` + ice_ufrag + `
+`a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
 a=fingerprint:sha-256 ` + fingerprint +  `
 a=setup:actpass
@@ -965,7 +974,7 @@ a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 a=sendrecv
-a=msid:\` + msid + \` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
+a=msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
@@ -982,11 +991,15 @@ a=rtpmap:110 telephone-event/48000
 a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
 a=rtpmap:126 telephone-event/8000
+a=ssrc:` + ssrc[0] + ` cname:c2J8K3mNIXGEi9qt
+a=ssrc:` + ssrc[0] + ` msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
+a=ssrc:` + ssrc[0] + ` mslabel:` + msid + `
+a=ssrc:` + ssrc[0] + ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
 m=video ` + external_ports[(external_ports.length / 3)] +  ` UDP/TLS/RTP/SAVPF 102 104 106 108
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[2] +
-        `a=ice-ufrag:` + ice_ufrag + `
+`a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
 a=fingerprint:sha-256 ` + fingerprint +  `
 a=setup:actpass
@@ -1003,7 +1016,7 @@ a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-${type == 'Δ' ? "a=sendrecv" : "a=recvonly"}
+${type == 'Δ' ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=recvonly" }
 a=rtcp-mux
 a=rtcp-rsize
 a=rtpmap:102 H264/90000
@@ -1034,10 +1047,14 @@ a=rtcp-fb:108 ccm fir
 a=rtcp-fb:108 nack
 a=rtcp-fb:108 nack pli
 a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
-m=application ` + external_ports[((external_ports.length / 3)*2)] + ` UDP/DTLS/SCTP webrtc-datachannel
+${type == "Δ" ?
+"a=ssrc:" + ssrc[1] + " cname:qwjy1Thr/obQUvqd\r\n" +
+"a=ssrc:" + ssrc[1] + " msid:" + msid + " 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
+"a=ssrc:" + ssrc[1] + " mslabel:" + msid + "\r\n" +
+"a=ssrc:" + ssrc[1] + " label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" : "" }m=application ` + external_ports[((external_ports.length / 3)*2)] + ` UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 ` + external_ip +  `
 ` + candidates[3] +
-        `a=ice-ufrag:` + ice_ufrag + `
+`a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
 a=fingerprint:sha-256 ` + fingerprint +  `
 a=setup:actpass
@@ -1076,16 +1093,16 @@ function expand_sdp_answer (compressed_string) {
 
     let prts =  split[4];
 
-    // let ssrc = split[5].split('&').map(function (h) {
-    //   return en.decode(h);
-    // });
-    let ssrc = "";
+    let ssrc = split[5].split('&').map(function (h) {
+      return en.decode(h);
+    });
 
-    // if (ssrc[1] == undefined) {
-    //   ssrc[1] = ssrc[0];
-    // }
 
-    let msid = "";
+   if (ssrc[1] == undefined) {
+     ssrc[1] = ssrc[0];
+     }
+
+    let msid = split[6];
 
     let candidates = '';
 
@@ -1167,17 +1184,17 @@ function expand_sdp_answer (compressed_string) {
         external_port = "9";
     }
 
-    let sdp = `v=0
+let sdp = `v=0
 o=- 8377786102162672707 2 IN IP4 127.0.0.1
 s=-
 t=0 0
 a=group:BUNDLE 0 1 2
-a=msid-semantic: WMS
+a=msid-semantic: WMS ` + msid + `
 m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates +
-        `a=ice-ufrag:` + ice_ufrag + `
+`a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
 a=fingerprint:sha-256 ` + fingerprint +  `
 a=setup:active
@@ -1189,6 +1206,7 @@ a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 a=sendrecv
+a=msid:` + msid + ` a18f5f6a-2e4e-4012-8caa-8c28936bdb66
 a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
@@ -1205,6 +1223,7 @@ a=rtpmap:110 telephone-event/48000
 a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
 a=rtpmap:126 telephone-event/8000
+a=ssrc:` + ssrc[0] +  ` cname:vhWDFlNcJ4vSUvs5
 m=video 9 UDP/TLS/RTP/SAVPF 102 104 106 108
 c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
@@ -1225,7 +1244,7 @@ a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-${type == 'δ' ? "a=sendrecv" : "a=inactive" }
+${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=inactive"}
 a=rtcp-mux
 a=rtcp-rsize
 a=rtpmap:102 H264/90000
@@ -1256,6 +1275,7 @@ a=rtcp-fb:108 ccm fir
 a=rtcp-fb:108 nack
 a=rtcp-fb:108 nack pli
 a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT
 m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
 b=AS:30
