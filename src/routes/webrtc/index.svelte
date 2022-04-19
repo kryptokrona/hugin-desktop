@@ -13,7 +13,7 @@
             startCall(conatct, calltype)
         })
 
-        async function startCall (contact, isVideo, screenshare=false) {
+        function startCall (contact, isVideo, screenshare=false) {
             // spilt input to addr and pubkey
             let contact_address = contact.substring(0, 99);
             console.log('contact address', contact_address)
@@ -22,10 +22,14 @@
             console.log('Starting call..');
             if (!screenshare) {
                 // get video/voice stream
-                stream = navigator.mediaDevices.getUserMedia({
+                   navigator.mediaDevices.getUserMedia({
                     video: isVideo,
                     audio: true
-                }).then(gotMedia(stream, contact)).catch(() => {
+                }).then(function (stream) {
+                    gotMedia(stream, contact)
+                }).catch(() => {
+                  console.log('error', stream);
+
                 })
             } else {
                 window.desktopCapturer.getSources({types: ['window', 'screen']}).then(async sources => {
@@ -67,7 +71,9 @@
         }
         let video;
         async function gotMedia (stream, contact, screen_stream=false) {
-            console.log('We want contact', contact)
+          console.log('contact', contact);
+
+            console.log('We want contact stream', stream)
             if ( video ) {
                 myvideo = document.getElementById('myvideo')
 
@@ -108,6 +114,9 @@
                 }
             })
 
+            console.log('streaMMM?', stream);
+
+
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
 
             let custom_codecs = [];
@@ -121,9 +130,13 @@
 
             }
 
+            let trans = new RTCPeerConnection();
+            //let test = RTCPeerConnection.getTransceivers();
+            console.log('trans', trans);
 
+            let transceivers = trans.getTransceivers()
+            console.log('transc', transceivers);
 
-            let transceivers = peer1._pc.getTransceivers()
 
             // select the desired transceiver
             if (video) {
@@ -152,20 +165,22 @@
 
             peer1.on('stream', stream => {
                 // got remote video stream, now let's show it in a video tag
-                let extra_class = "";
-                if (video) {
-                    extra_class = " video"
-                }
-                // SELECT AND SHOW VIDEO ELEMENT
-                let video_element = ""
+                console.log('stream ready', stream);
 
-
-                if ('srcObject' in video_element) {
-                    video_element.srcObject = stream
-                } else {
-                    video_element.src = window.URL.createObjectURL(stream) // for older browsers
-                }
-                video_element.play()
+                // let extra_class = "";
+                // if (video) {
+                //     extra_class = " video"
+                // }
+                // // SELECT AND SHOW VIDEO ELEMENT
+                // let video_element = ""
+                //
+                //
+                // if ('srcObject' in video_element) {
+                //     video_element.srcObject = stream
+                // } else {
+                //     video_element.src = window.URL.createObjectURL(stream) // for older browsers
+                // }
+                // video_element.play()
 
             })
 
@@ -206,11 +221,11 @@
 
             })
             //Awaits msg answer with sdp from contact
-            window.api.receive('got-callback', async (e, callback, sender) => {
-                console.log('callback', callback);
-                console.log('from', sender);
-                peer1.signal(callback);
-                console.log('Connecting to ...', sender)
+            window.api.receive('got-callback', async (callerdata) => {
+                console.log('callback', callerdata);
+                console.log('from', callerdata.sender);
+                peer1.signal(callerdata.data);
+                console.log('Connecting to ...',  callerdata.sender)
 
             })
 
