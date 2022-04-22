@@ -751,7 +751,6 @@ function parseCall (msg, sender, emitCall=true) {
                 }
                 mainWindow.webContents.send('got-callback', callerdata)
                 console.log('got sdp', msg)
-                console.log('got answer expanded', callback)
             }
             return "";
 
@@ -891,17 +890,17 @@ function expand_sdp_offer (compressed_string) {
                 console.log('nanananananaa', prt);
                 continue;
             }
-
             let ip_index = ports[p].slice(-1);
             console.log('ip_index', ip_index);
+
+            if (ips[ip_index] == undefined) {
+                continue;
+            }
+
             if (i == 1 ) {
 
                 current_internal = ports[p].substring(0, ports[p].length - 1);
 
-            }
-
-            if (ips[ip_index] == undefined) {
-                continue;
             }
 
             if (ips[ip_index].substring(0,1) == '!') {
@@ -957,6 +956,7 @@ o=- 5726742634414877819 2 IN IP4 127.0.0.1
 s=-
 t=0 0
 a=group:BUNDLE 0 1 2
+a=extmap-allow-mixed
 a=msid-semantic: WMS ` + msid + `
 m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
@@ -1136,18 +1136,19 @@ function expand_sdp_answer (compressed_string) {
         console.log('More than 1 port!');
         let p;
         for (p in ports) {
-            if (ports[p] == undefined) {
-                continue;
-            }
-            console.log('IPS', ips);
+          try {
+              console.log('port', parseInt(ports[p]));
+              let prt = parseInt(ports[p])
+              if (!prt) {
+                  console.log('nanananananaa', prt);
+                  continue;
+              }
+              let ip_index = ports[p].slice(-1);
+              console.log('ip_index', ip_index);
 
-            console.log('this expand port', ports[p]);
-            try {
-                let ip_index = ports[p].slice(-1);
-
-                if (ips[ip_index] == undefined) {
-                    continue;
-                }
+              if (ips[ip_index] == undefined) {
+                  continue;
+              }
 
                 if (ips[ip_index].substring(0,1) == '!') {
                     if (external_port.length == 0) {
@@ -1327,31 +1328,19 @@ let decode_fingerprint = (fingerprint) => {
 }
 
 let decode_ip = (ip, type) => {
-    let decoded_ip = "";
-    let piece;
-    let letters = atob(ip).split('')
-    if (letters.length < 2) {
-        console.log('RETURN', letters)
-        return;
+  let decoded_ip = "";
+
+  for (letter in atob(ip).split('')) {
+
+    let piece = atob(ip).split('')[letter].charCodeAt(0).toString(16);
+    if (piece.length == 1) {
+      piece = "0" + piece;
     }
-    for (letter in letters) {
-        try {
-            let piece = letters[letter].charCodeAt(0).toString(16);
-            console.log('del ip', piece);
-            if (piece.length == 1) {
-                piece = "0" + piece;
-            }
-            decoded_ip += parseInt(piece, 16) + ".";
+    decoded_ip += parseInt(piece, 16) + ".";
 
 
-        } catch (err) {
-            console.log('error', piece)
-            continue;
-        }
-    }
-    console.log('decoded ip', decoded_ip.slice(0,-1))
+  }
 
-    decoded_ip = decoded_ip.slice(0,-1)
 
-    return type+decoded_ip
+  return type+decoded_ip.slice(0,-1);
 }
