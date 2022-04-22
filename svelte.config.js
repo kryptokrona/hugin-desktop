@@ -5,6 +5,13 @@ import adapter from '@sveltejs/adapter-static';
 const config = {
 	kit: {
 		adapter: adapter({}),
+		vite: {
+			server: {
+				fs: {
+					allow: ['..']
+				}
+			}
+		}
 	},
 	preprocess: sveltePreprocess({
 		scss: {
