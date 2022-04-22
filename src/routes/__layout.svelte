@@ -60,11 +60,12 @@
 
 	{#if $user.loggedIn && incoming_call}
 		<IncomingCall on:click={closePopup} paused={!incoming_call}/>
+
 	{/if}
 
 	{#if $user.loggedIn}
-		<LeftMenu/>
-		<Webrtc/>
+		<LeftMenu />
+		<Webrtc />
 		<RightMenu/>
 	{/if}
 

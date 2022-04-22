@@ -5,10 +5,12 @@
     import callIcon from '/static/images/call.svg'
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+
     let contact
     let active_contact
     let avatar
     let calltype
+
     $: {
         if($user.activeChat) {
             active_contact = $user.activeChat
@@ -19,7 +21,7 @@
 
     //Starts any call
     const startCall = async (contact, calltype) => {
-        console.log(calltype, contact)
+        console.log(contact, calltype)
         window.api.startCall(contact, calltype)
     }
 

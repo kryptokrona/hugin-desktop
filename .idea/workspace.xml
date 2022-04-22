@@ -3,11 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/navbar/RightMenu.svelte" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/stores/user.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/__layout.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/__layout.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
-    <list id="590d3937-479c-4aef-981f-dbef58beb941" name="Changes by krypt" comment="" />
+    <list id="590d3937-479c-4aef-981f-dbef58beb941" name="Changes by krypt" comment="">
+      <change beforePath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" afterDir="false" />
+    </list>
     <list id="ee7bdc2f-92b2-4628-a6ae-6d0b17f857b0" name="Changes by ralls" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +51,25 @@
       <filtered-out-file-type name="TAG" />
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
+  </component>
+  <component name="LineStatusTrackerManager">
+    <file path="$PROJECT_DIR$/src/routes/webrtc/index.svelte">
+      <ranges>
+        <range start1="1" end1="2" start2="1" end2="1" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="8" end1="9" start2="7" end2="9" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="11" end1="11" start2="11" end2="15" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="77" end1="78" start2="81" end2="82" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="79" end1="82" start2="83" end2="83" changelist="590d3937-479c-4aef-981f-dbef58beb941" />
+        <range start1="83" end1="84" start2="84" end2="85" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="88" end1="89" start2="89" end2="90" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="90" end1="91" start2="91" end2="92" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+        <range start1="168" end1="172" start2="169" end2="173" changelist="590d3937-479c-4aef-981f-dbef58beb941" />
+        <range start1="176" end1="182" start2="177" end2="183" changelist="590d3937-479c-4aef-981f-dbef58beb941" />
+        <range start1="264" end1="266" start2="265" end2="269" changelist="590d3937-479c-4aef-981f-dbef58beb941" />
+        <range start1="347" end1="352" start2="350" end2="355" changelist="590d3937-479c-4aef-981f-dbef58beb941" />
+        <range start1="365" end1="368" start2="368" end2="370" changelist="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" />
+      </ranges>
+    </file>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />

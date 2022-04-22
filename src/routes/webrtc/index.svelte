@@ -1,14 +1,18 @@
 <script>
-    import {RTCPeerConnection, RTCRtpTransceiver} from '@koush/wrtc'
     import wrtc from '@koush/wrtc'
     import {fade} from "svelte/transition";
     import Peer from "simple-peer";
     import {onMount} from "svelte";
 
     let stream;
-    let myvideo
+    let myVideo;
+    let peerVideo;
 
     onMount(() => {
+
+        myVideo = document.getElementById('myVideo')
+        peerVideo = document.getElementById('peerVideo')
+
         window.api.receive('start-call', (conatct, calltype) => {
             startCall(conatct, calltype)
         })
@@ -75,20 +79,17 @@
 
             console.log('We want contact stream', stream)
             if ( video ) {
-                myvideo = document.getElementById('myvideo')
-
-
-
+                myVideo = document.getElementById('myvideo')
 
                 if (screen_stream) {
-                    myvideo.srcObject = screen_stream;
+                    myVideo.srcObject = screen_stream;
                     screen_stream.addTrack(stream.getAudioTracks()[0]);
 
                     stream = screen_stream;
                 } else {
-                    myvideo.srcObject = stream;
+                    myVideo.srcObject = stream;
                 }
-                myvideo.play();
+                myVideo.play();
                 //$('video').fadeIn();
             } else {
 
@@ -166,20 +167,20 @@
                 // got remote video stream, now let's show it in a video tag
                 console.log('stream ready', stream);
 
-                // let extra_class = "";
-                // if (video) {
-                //     extra_class = " video"
-                // }
+                 //let extra_class = "";
+                 //if (video) {
+                     extra_class = " video"
+                 //}
                 // // SELECT AND SHOW VIDEO ELEMENT
                 // let video_element = ""
                 //
                 //
-                // if ('srcObject' in video_element) {
-                //     video_element.srcObject = stream
-                // } else {
-                //     video_element.src = window.URL.createObjectURL(stream) // for older browsers
-                // }
-                // video_element.play()
+                 if ('srcObject' in peerVideo) {
+                     peerVideo.srcObject = stream
+                 } else {
+                     peerVideo.src = window.URL.createObjectURL(stream) // for older browsers
+                 }
+                 peerVideo.play()
 
             })
 
@@ -262,8 +263,10 @@
                 // select the desired transceiver
 
                 if (video) {
-                    //stream.play();
-                    console.log('god video here plz stream it in frontend')
+                    myVideo = document.getElementById('myvideo')
+                    myVideo.srcObject = stream;
+
+                    myVideo.play();
                 }
 
                 let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
@@ -345,11 +348,11 @@
                 peer2.on('stream', stream => {
                     // got remote video stream, now let's show it in a video tag
                     console.log('peer2 stream', stream)
-                    //if ('srcObject' in video) {
-                    //  video.srcObject = stream
-                    //} else {
-                    //  video.src = window.URL.createObjectURL(stream) // for older browsers
-                    //}
+                    if ('srcObject' in peerVideo) {
+                      peerVideo.srcObject = stream
+                    } else {
+                      peerVideo.src = window.URL.createObjectURL(stream) // for older browsers
+                    }
 
 
                     console.log('Setting up link..');
@@ -363,9 +366,8 @@
 
 <main>
     <audio src={stream}></audio>
-    {#if myvideo}
-    <video in:fade id="myvideo" playsinline autoplay bind:this={myvideo}></video>
-    {/if}
+    <video in:fade id="myvideo" playsinline autoplay bind:this={myVideo}></video>
+    <video in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
 </main>
 
 <style lang="scss">
