@@ -3,15 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="aad559cc-8c4d-4b50-a5b7-66acbbbe9cb8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatBubble.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatInput.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/chat/ChatWindow.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/electron.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/electron.cjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/messages/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/messages/index.svelte" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/webrtc/index.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/webrtc/IncomingCall.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/index.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/index.svelte" afterDir="false" />
     </list>
     <list id="afba4188-6450-4db6-9a9f-1aa6e2fd2d88" name="Changes by Hem" comment="" />
-    <list id="ee71b43f-5b81-4281-811b-17705aafcc33" name="Changes by krypt" comment="" />
+    <list id="590d3937-479c-4aef-981f-dbef58beb941" name="Changes by krypt" comment="" />
     <list id="ee7bdc2f-92b2-4628-a6ae-6d0b17f857b0" name="Changes by ralls" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
