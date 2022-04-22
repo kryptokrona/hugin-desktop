@@ -908,8 +908,7 @@ function expand_sdp_offer (compressed_string) {
                 external_ports = external_ports.concat(ports[p].substring(0, ports[p].length - 1));
                 console.log('external', external_ports);
                 external_port_found = true;
-                let external = ports[p].substring(0, ports[p].length - 1)
-                candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + external + " typ srflx raddr " + ips[0].replace('!','').replace('?','') + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n"
+                candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + ports[p].substring(0, ports[p].length - 1) + " typ srflx raddr " + ips[0].replace('!','').replace('?','') + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n"
             } else if (ports[p].substring(0, ports[p].length - 1) == "9") {
 
                 candidates[j] += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1) +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
@@ -1156,7 +1155,7 @@ function expand_sdp_answer (compressed_string) {
                         external_port = ports[p].substring(0, ports[p].length - 1);
                     }
                     external_ip = ips[ip_index].substring(1);
-                    candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + external_port  + " typ srflx raddr " + ips[0].replace('?','') + " rport " + external_port  + " generation 0 network-id 1 network-cost 50\r\n"
+                    candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + ports[p].substring(0, ports[p].length - 1)  + " typ srflx raddr " + ips[0].replace('?','') + " rport " + ports[0].substring(0, ports[p].length - 1)  + " generation 0 network-id 1 network-cost 50\r\n"
                 } else if (ports[p].substring(0, ports[p].length - 1)  == "9") {
 
                     candidates += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','').replace('!','') + " " + ports[p].substring(0, ports[p].length - 1)  +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
@@ -1225,7 +1224,6 @@ a=rtpmap:110 telephone-event/48000
 a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
 a=rtpmap:126 telephone-event/8000
-a=ssrc:` + ssrc[0] +  ` cname:vhWDFlNcJ4vSUvs5
 m=video 9 UDP/TLS/RTP/SAVPF 102 104 106 108
 c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
