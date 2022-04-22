@@ -118,6 +118,7 @@
 
 
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
+            console.log('video codecs', video_codecs);
 
             let custom_codecs = [];
 
@@ -127,21 +128,19 @@
                 if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0,5) == "level") {
                     custom_codecs.push(this_codec);
                 }
+                console.log('custom codenccc', custom_codecs);
 
             }
 
-            let trans = new RTCPeerConnection();
-            //let test = RTCPeerConnection.getTransceivers();
-            console.log('trans', trans);
-
-            let transceivers = trans.getTransceivers()
-            console.log('transc', transceivers);
+            let transceiverList = peer1._pc.getTransceivers();
+            console.log('audio tracks', transceiverList);
 
 
             // select the desired transceiver
-            if (video) {
-                transceivers[1].setCodecPreferences(custom_codecs)
-            }
+            //transceiverList[1].setCodecPreferences(custom_codecs)
+
+            console.log('codec set');
+
 
             let first = true;
 
@@ -224,7 +223,10 @@
             window.api.receive('got-callback', async (callerdata) => {
                 console.log('callback', callerdata);
                 console.log('from', callerdata.sender);
-                peer1.signal(callerdata.data);
+                let callback = JSON.parse(callerdata.data)
+                console.log('callback parsed', callback);
+
+                peer1.signal(callback);
                 console.log('Connecting to ...',  callerdata.sender)
 
             })
@@ -239,7 +241,7 @@
         async function answerCall (msg, contact) {
             console.log('APPLE', msg, contact)
 
-            let video
+            let video = false
             if (msg.substring(0, 1) === 'Δ') {
                 video = true
             }
@@ -247,17 +249,10 @@
             // $('#settings').addClass('in-call');
 
             // get video/voice stream
-            try {
-                let stream = await navigator.mediaDevices.getUserMedia({
-                    video: video,
-                    audio: true
-                })
-                gotMedia(stream)
-                console.log('ssssstream', stream)
-            }catch (e) {
-                console.log(e)
-            }
-
+            navigator.mediaDevices.getUserMedia({
+               video: video,
+               audio: true
+             }).then(gotMedia).catch(() => {})
             console.log('Got media')
 
 
@@ -272,7 +267,6 @@
                 }
 
                 let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
-                let trans = new RTCPeerConnection();
 
                 let custom_codecs = [];
                 let video_codecs = window.RTCRtpSender.getCapabilities('video');
@@ -286,13 +280,13 @@
                     console.log(custom_codecs)
                 }
 
-                //let transceivers = trans.getTransceivers()
-                //if (video) {
-                //    console.log('trans', transceivers)
-                //    let data = window.RTCRtpTransceiver.setCodecPreferences(custom_codecs)
-                //    //mainWindow.webContents.send('transceivers', data)
-                //    console.log('transceivers in backend', data)
-                //}
+                let transceivers = peer2._pc.getTransceivers()
+                if (video) {
+                   console.log('trans', transceivers)
+                   window.RTCRtpTransceiver.setCodecPreferences(custom_codecs)
+                   //mainWindow.webContents.send('transceivers', data)
+                   // console.log('transceivers in backend', data)
+                }
                 peer2.on('close', () => {
                     console.log('Connection closed..')
                     window.api.endCall(peer2, stream)
@@ -307,14 +301,16 @@
 
                 peer2.on('signal', data => {
 
+
+                  console.log('initial offer data:', data);
                     let dataToSend = {
                         data: data,
                         type: 'answer',
                         contact: contact,
                         video: video,
                     }
+                    console.log('sending sdp');
 
-                    console.log('initial data:', data);
                     window.api.send('get-sdp', dataToSend)
                     // peer2._pc.setLocalDescription(recovered_data);
                     if (!first) {
