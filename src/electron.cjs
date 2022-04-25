@@ -229,8 +229,27 @@ const fileMessages = join(userDataDir, 'messages.db')
 const adapterMessages= new JSONFile(fileMessages)
 const dbMessages = new Low(adapterMessages)
 
+//Create keychain.db
+const fileKeys = join(userDataDir, 'keychain.db')
+const adapterChain = new JSONFile(fileKeys)
+const keychain = new Low(adapterChain)
+
+//Create knownTxs.db
+const fileTxs = join(userDataDir, 'knowntxs.db')
+const adapterTxs = new JSONFile(fileTxs)
+const knownTxs = new Low(adapterTxs)
+
+
+
 let js_wallet;
 let c = false;
+
+
+startCheck()
+let known_keys
+let known_pool_txs
+
+async function startCheck() {
 
 if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
     // We have found a wallet file
@@ -242,9 +261,20 @@ if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
     start_js_wallet();
     console.log(c)
 } else {
+  //Create DBs on first start
+  dbBoards.data = {messages: []}
+  dbMessages.data = {messages: []}
+  keychain.data = {known_keys:[]}
+  knownTxs.data = {known_txs:[]}
 
+  await keychain.write(keychain.data)
+  await knownTxs.write(knownTxs.data)
+
+  await dbBoards.write(dbBoards.data)
+  await dbMessages.write(dbMessages.data)
     console.log('wallet not found')
     c = 'c';
+}
 }
 
 let syncing = true;
@@ -257,16 +287,42 @@ ipcMain.on('create-account', async (event, password) => {
     newWallet.saveWalletToFile(userDataDir + '/mywallet.wallet', myPassword)
     js_wallet = newWallet
     console.log(password)
+
     await start_js_wallet();
-})
+
+  })
+
+async function loadKeys() {
+
+//Load known public keys from db and push them to known_keys
+await keychain.read()
+known_keys = keychain.data.known_keys
+console.log('known keys', known_keys);
+
+}
+
+async function loadKnownTxs() {
+
+//Load known txs from db and then load them in to known_pool_txs
+await knownTxs.read()
+known_pool_txs = knownTxs.data.known_txs
+console.log('KNOWN POOOL TXS', known_pool_txs);
+
+}
 
 async function start_js_wallet() {
     /* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
+       //Load known public keys
+      await loadKeys();
+
+       //Load known pool txs from db.
+      await loadKnownTxs()
+
+
+       await db.read()
 
     if (c === 'c') {
-
-        let height = 1026200;
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -364,24 +420,8 @@ async function start_js_wallet() {
         console.log( await js_wallet.getBalance())
 
     }
-    console.log('Save wallet to file');
 }
 
-
-
-let known_pool_txs = [];
-let known_keys = [
-    '23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34',
-    '23bca14514952399f6bb1f5052f6a680e3248210f2e5c92498f2c8b47c8f5b34',
-    '21863496282548462aaf47bc93d2be46ec8eff1f053f47b77f96d9e69d1fd133',
-    '641d345f2da0cc77bbc8a32d766cc57a53e2723da01c972b4930eccce1f4fb75',
-    '55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d56',
-    'c01f004798701d6ab148ed1bec614634c0560ae6b1cd90a253beb7971a94da0d',
-    'ca6ecad317b5c4913ad77a71c94af75b8f56d179febc939b6c78be6d2fa76b2e',
-    '1b0034a4745a5e49224a93eec14cd95460690ef401d762e3b1fe1eb25d68343e',
-    '8ef256b7f2387644617f6a8fcee21aff7f9772cb334a85aae5b5c4fd7b7ddc7c'
-];
-console.log('known_keys', known_keys)
 
 async function backgroundSyncMessages() {
 
@@ -398,9 +438,6 @@ async function backgroundSyncMessages() {
         })
 
         let json = await resp.json();
-
-        dbBoards.data = dbBoards.data || {messages: []}
-        dbMessages.data = dbMessages.data || {messages: []}
 
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
@@ -432,24 +469,8 @@ async function backgroundSyncMessages() {
 
                 console.log('Message?', message.msg)
 
-                switch (message.type) {
-                    case "sealedbox":
-                        dbMessages.data.messages.push(message)
-                        await dbMessages.write()
-                        mainWindow.webContents.send('newMsg', dbMessages.data)
-                        break;
-                    case "box":
-                        dbMessages.data.messages.push(message)
-                        await dbMessages.write()
-                        mainWindow.webContents.send('newMsg', dbMessages.data)
-                        break;
-                    default:
-                        if (message) {
-                            dbBoards.data.messages.push(message)
-                            await dbBoards.write()
-                        }
-                        break;
-                }
+                saveMsg(message, thisHash);
+
             } catch (err) {
                 //console.log(err)
             }
@@ -457,6 +478,42 @@ async function backgroundSyncMessages() {
     } catch (err) {
         console.log('Sync error')
     }
+}
+
+async function saveMsg(message, hash) {
+  //Save messages and known tx hashes
+   dbBoards.data = dbBoards.data
+   dbMessages.data = dbMessages.data
+
+  switch (message.type) {
+      case "sealedbox":
+      let senderKey = message.k
+      console.log('saving this senderkey', senderKey)
+      known_keys.push(senderKey)
+      console.log('Pushing this to known keys ', known_keys)
+      keychain.data.known_keys.push(senderKey)
+      await keychain.write()
+      console.log('wrote to key db')
+          dbMessages.data.messages.push(message)
+          await dbMessages.write()
+          mainWindow.webContents.send('newMsg', dbMessages.data)
+          break;
+      case "box":
+          dbMessages.data.messages.push(message)
+          await dbMessages.write()
+          mainWindow.webContents.send('newMsg', dbMessages.data)
+          break;
+      default:
+          if (message) {
+              dbBoards.data.messages.push(message)
+              await dbBoards.write()
+          }
+          break;
+  }
+
+  knownTxs.data.known_txs.push(hash)
+  await knownTxs.write()
+
 }
 
 //SWITCH NODE
