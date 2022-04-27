@@ -261,23 +261,24 @@ if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
     start_js_wallet();
     console.log(c)
 } else {
+  //No wallet found, probably first start
+  console.log('wallet not found')
+
   //Create DBs on first start
   dbBoards.data = {messages: []}
   dbMessages.data = {messages: []}
   keychain.data = {known_keys:[]}
   knownTxs.data = {known_txs:[]}
-
+  //
   await keychain.write(keychain.data)
   await knownTxs.write(knownTxs.data)
-
   await dbBoards.write(dbBoards.data)
   await dbMessages.write(dbMessages.data)
-    console.log('wallet not found')
+  console.console.log('creating dbs...');
+
     c = 'c';
 }
 }
-
-let syncing = true;
 
 let myPassword;
 
@@ -310,19 +311,22 @@ console.log('KNOWN POOOL TXS', known_pool_txs);
 
 }
 
+let syncing = true;
+
 async function start_js_wallet() {
     /* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
        //Load known public keys
-      await loadKeys();
+      loadKeys();
 
        //Load known pool txs from db.
-      await loadKnownTxs()
+      loadKnownTxs()
 
-
-       await db.read()
+      await db.read()
 
     if (c === 'c') {
+
+      let height = 1033909
 
         try {
             let re = await fetch('http://' + node + ':' + ports + '/getinfo');
@@ -357,7 +361,6 @@ async function start_js_wallet() {
     /* Start wallet sync process */
     await js_wallet.start();
 
-
     js_wallet.on('incomingtx', (transaction) => {
 
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
@@ -391,10 +394,9 @@ async function start_js_wallet() {
     console.log('Started wallet');
 
     while (true) {
-        await sleep(1000 * 20);
-        await backgroundSyncMessages()
-        /* Save the wallet to disk */
-        js_wallet.saveWalletToFile(userDataDir + '/boards.wallet', 'aaa');
+      try {
+        await sleep(1000 * 3);
+        backgroundSyncMessages()
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
@@ -419,6 +421,9 @@ async function start_js_wallet() {
         await db.write(db.data)
         console.log( await js_wallet.getBalance())
 
+      } catch (err) {
+      console.log(err);
+      }
     }
 }
 
@@ -432,12 +437,12 @@ async function backgroundSyncMessages() {
     try {
         const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
             method: 'POST',
-            body: JSON.stringify({
-                knownTxsIds: known_pool_txs
-            })
+            body: JSON.stringify({knownTxsIds: known_pool_txs})
         })
 
         let json = await resp.json();
+
+        console.log('RESP JSON', json);
 
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
@@ -445,6 +450,16 @@ async function backgroundSyncMessages() {
 
         let transactions = json.addedTxs;
         let transaction;
+
+        //Try clearing known pool txs from checked
+        console.log('known pool tx', known_pooL_txs);
+        known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
+        console.log('cleared txs', known_pooL_txs);
+
+        if (transactions.length === 0) {
+            console.log('Empty array...')
+            return;
+        }
 
         for (transaction in transactions) {
 
@@ -455,29 +470,47 @@ async function backgroundSyncMessages() {
 
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash);
+                    knownTxs.data.known_txs.push(thisHash)
+                    await knownTxs.write()
                     message_was_unknown = true;
+
                 } else {
                     message_was_unknown = false;
                     console.log("This transaction is already known", thisHash);
                     continue;
                 }
 
-                let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
-                message.sent = false
+                  let message
+                  if (thisExtra !== undefined && thisExtra.length > 200) {
+                      message = await extraDataToMessage(thisExtra, knownk, keypair);
+                  }
 
-                parseCall(message.msg, message.from)
+                  message.sent = false
 
-                console.log('Message?', message.msg)
+                  parseCall(message.msg, message.from)
 
-                saveMsg(message, thisHash);
+                  console.log('Message?', message.msg)
 
-            } catch (err) {
-                //console.log(err)
-            }
-        }
-    } catch (err) {
+                  saveMsg(message, thisHash);
+
+                } catch (err) {
+                console.log(err)
+                }
+
+                }
+
+        } catch (err) {
         console.log('Sync error')
-    }
+        }
+}
+
+async function saveKey(key) {
+
+  known_keys.push(key)
+  console.log('Pushing this to known keys ', known_keys)
+  keychain.data.known_keys.push(key)
+  await keychain.write()
+
 }
 
 async function saveMsg(message, hash) {
@@ -489,11 +522,7 @@ async function saveMsg(message, hash) {
       case "sealedbox":
       let senderKey = message.k
       console.log('saving this senderkey', senderKey)
-      known_keys.push(senderKey)
-      console.log('Pushing this to known keys ', known_keys)
-      keychain.data.known_keys.push(senderKey)
-      await keychain.write()
-      console.log('wrote to key db')
+      saveKey(sendeKey)
           dbMessages.data.messages.push(message)
           await dbMessages.write()
           mainWindow.webContents.send('newMsg', dbMessages.data)
@@ -510,9 +539,6 @@ async function saveMsg(message, hash) {
           }
           break;
   }
-
-  knownTxs.data.known_txs.push(hash)
-  await knownTxs.write()
 
 }
 
@@ -630,6 +656,7 @@ async function sendMessage(message, receiver) {
         await dbMessages.write()
         mainWindow.webContents.send('newMsg', dbMessages.data)
         known_pool_txs.push(result.transactionHash)
+        saveKey(messageKey)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
@@ -833,7 +860,7 @@ ipcMain.on('get-sdp', (e,data) => {
     console.log('get-sdp', data.data, data.type, data.contact, data.video)
 
     if(data.type == 'offer') {
-    console.log('Answerrrrrrrr', data.data, data.type, data.contact, data.video)
+    console.log('Offer', data.data, data.type, data.contact, data.video)
         let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
         let recovered_data = expand_sdp_offer(parsed_data);
         console.log('recovered offer data:', recovered_data);
