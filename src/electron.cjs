@@ -246,8 +246,7 @@ let c = false;
 
 
 startCheck()
-let known_keys
-let known_pool_txs
+let known_keys = [];
 
 async function startCheck() {
 
@@ -306,9 +305,9 @@ async function loadKnownTxs() {
 
 //Load known txs from db and then load them in to known_pool_txs
 await knownTxs.read()
-known_pool_txs = knownTxs.data.known_txs
+const known_pool_txs = knownTxs.data.known_txs
 console.log('KNOWN POOOL TXS', known_pool_txs);
-
+return known_pool_txs
 }
 
 let syncing = true;
@@ -317,12 +316,10 @@ async function start_js_wallet() {
     /* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
        //Load known public keys
-      loadKeys();
+      await loadKeys();
 
        //Load known pool txs from db.
-      loadKnownTxs()
-
-      await db.read()
+      let knownTxs = await loadKnownTxs()
 
     if (c === 'c') {
 
@@ -396,7 +393,7 @@ async function start_js_wallet() {
     while (true) {
       try {
         await sleep(1000 * 3);
-        backgroundSyncMessages()
+        await backgroundSyncMessages(knownTxs)
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
@@ -420,6 +417,7 @@ async function start_js_wallet() {
         db.data = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
         await db.write(db.data)
         console.log( await js_wallet.getBalance())
+        console.log('');
 
       } catch (err) {
       console.log(err);
@@ -428,14 +426,13 @@ async function start_js_wallet() {
 }
 
 
-async function backgroundSyncMessages() {
-
+async function backgroundSyncMessages(known_pooL_txs) {
+    let known_pool_txs = known_pooL_txs
     console.log('Background syncing...');
     mainWindow.webContents.send('sync', 'syncing');
     let message_was_unknown;
-    let dec_message;
     try {
-        const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
+        const resp = await fetch('http://' + 'pool.kryptokrona.se:11898' + '/get_pool_changes_lite', {
             method: 'POST',
             body: JSON.stringify({knownTxsIds: known_pool_txs})
         })
@@ -455,7 +452,7 @@ async function backgroundSyncMessages() {
         console.log('known pool tx', known_pooL_txs);
         known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
         console.log('cleared txs', known_pooL_txs);
-
+        console.log('txs?', transactions);
         if (transactions.length === 0) {
             console.log('Empty array...')
             return;
@@ -464,14 +461,14 @@ async function backgroundSyncMessages() {
         for (transaction in transactions) {
 
             try {
-                console.log('tx', transactions[transaction].transactionPrefixInfo);
+                console.log('tx', transactions[transaction]);
                 let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
                 let thisHash = transactions[transaction].transactionPrefixInfotxHash;
 
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash);
-                    knownTxs.data.known_txs.push(thisHash)
-                    await knownTxs.write()
+                    //knownTxs.data.known_txs.push(thisHash)
+                    //await knownTxs.write()
                     message_was_unknown = true;
 
                 } else {
@@ -482,24 +479,29 @@ async function backgroundSyncMessages() {
 
                   let message
                   if (thisExtra !== undefined && thisExtra.length > 200) {
-                      message = await extraDataToMessage(thisExtra, knownk, keypair);
+                      message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
+                      if (message == undefined) {
+                        console.log('Caught undefined msg, continue');
+                        continue;
+                      }
+                      message.sent = false
                   }
 
-                  message.sent = false
 
                   parseCall(message.msg, message.from)
 
                   console.log('Message?', message.msg)
 
-                  saveMsg(message, thisHash);
+                  saveMsg(message);
 
                 } catch (err) {
-                console.log(err)
+                  console.log(err)
                 }
 
-                }
+            }
 
         } catch (err) {
+        console.log(err);
         console.log('Sync error')
         }
 }
