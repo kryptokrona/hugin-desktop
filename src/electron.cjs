@@ -389,11 +389,13 @@ async function start_js_wallet() {
     }
 
     console.log('Started wallet');
-
+    //Load knownTxsIds to backgroundSyncMessages on startup
+    await backgroundSyncMessages(knownTxs)
     while (true) {
       try {
+        //Start syncing
+        await backgroundSyncMessages()
         await sleep(1000 * 3);
-        await backgroundSyncMessages(knownTxs)
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
@@ -425,11 +427,16 @@ async function start_js_wallet() {
     }
 }
 
+let known_pooL_txs = []
 
-async function backgroundSyncMessages(known_pooL_txs) {
-    let known_pool_txs = known_pooL_txs
+async function backgroundSyncMessages(knownTxsIds) {
+
+    if (knownTxsIds) {
+    console.log('First start, push knownTxs db to known pool txs');
+    known_pool_txs = knownTxsIds
+    }
+
     console.log('Background syncing...');
-    mainWindow.webContents.send('sync', 'syncing');
     let message_was_unknown;
     try {
         const resp = await fetch('http://' + 'pool.kryptokrona.se:11898' + '/get_pool_changes_lite', {
@@ -438,8 +445,6 @@ async function backgroundSyncMessages(known_pooL_txs) {
         })
 
         let json = await resp.json();
-
-        console.log('RESP JSON', json);
 
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
@@ -467,8 +472,6 @@ async function backgroundSyncMessages(known_pooL_txs) {
 
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash);
-                    //knownTxs.data.known_txs.push(thisHash)
-                    //await knownTxs.write()
                     message_was_unknown = true;
 
                 } else {
@@ -480,19 +483,25 @@ async function backgroundSyncMessages(known_pooL_txs) {
                   let message
                   if (thisExtra !== undefined && thisExtra.length > 200) {
                       message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
-                      if (message == undefined) {
-                        console.log('Caught undefined msg, continue');
+                      if (!message) {
+                        console.log('Caught undefined null message, continue');
                         continue;
                       }
                       message.sent = false
+                      //Checking if private msg is a call
+                      if (message.type == "sealedbox" || "box") {
+                      console.log('Checking if private msg is a call');
+                      parseCall(message.msg, message.from)
+
+                      }
+
+                      console.log('Message?', message.msg)
+
+                      saveMsg(message);
                   }
 
-
-                  parseCall(message.msg, message.from)
-
-                  console.log('Message?', message.msg)
-
-                  saveMsg(message);
+                  console.log('Transaction checked');
+                  //saveHash(thisHash)
 
                 } catch (err) {
                   console.log(err)
@@ -515,7 +524,18 @@ async function saveKey(key) {
 
 }
 
+async function saveHash(hash) {
+
+    //Saving checked txHash to db to avoid doublesyncing messages from mempool *** Munin
+    //console.log('Saving checked txHash to db');
+    //knownTxs.data.known_txs.push(thisHash)
+    //await knownTxs.write()
+
+}
+
 async function saveMsg(message, hash) {
+
+
   //Save messages and known tx hashes
    dbBoards.data = dbBoards.data
    dbMessages.data = dbMessages.data
