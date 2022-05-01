@@ -7,11 +7,15 @@
     let stream;
     let myVideo;
     let peerVideo;
-
+    let call
+    let calling
     onMount(() => {
 
         myVideo = document.getElementById('myVideo')
         peerVideo = document.getElementById('peerVideo')
+
+        console.log('peervidya', peerVideo);
+          console.log('MyVidya', myVideo);
 
         window.api.receive('start-call', (conatct, calltype) => {
             startCall(conatct, calltype)
@@ -73,13 +77,16 @@
                 })
             }
         }
-        let video;
+        let video
+
         async function gotMedia (stream, contact, screen_stream=false) {
           console.log('contact', contact);
-
             console.log('We want contact stream', stream)
+            video = true;
             if ( video ) {
-                myVideo = document.getElementById('myvideo')
+
+              calling = true;
+
 
                 if (screen_stream) {
                     myVideo.srcObject = screen_stream;
@@ -87,7 +94,11 @@
 
                     stream = screen_stream;
                 } else {
+
                     myVideo.srcObject = stream;
+
+                    console.log('stream again', stream);
+
                 }
                 myVideo.play();
                 //$('video').fadeIn();
@@ -114,8 +125,6 @@
                     // return recovered_data.sdp;
                 }
             })
-
-            console.log('streaMMM?', stream);
 
 
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
@@ -175,11 +184,21 @@
                 // let video_element = ""
                 //
                 //
+                console.log('Got Stream Peer1', stream);
+
+                console.log('peerVideo', peerVideo);
+
                  if ('srcObject' in peerVideo) {
+
+                   console.log('ppeeeer?');
+
                      peerVideo.srcObject = stream
                  } else {
                      peerVideo.src = window.URL.createObjectURL(stream) // for older browsers
                  }
+                 call = true
+                 let tracks = stream.getTracks()
+                 console.log('tracks', tracks);
                  peerVideo.play()
 
             })
@@ -263,7 +282,7 @@
                 // select the desired transceiver
 
                 if (video) {
-                    myVideo = document.getElementById('myvideo')
+                    myVideo = document.getElementById('myVideo')
                     myVideo.srcObject = stream;
 
                     myVideo.play();
@@ -354,6 +373,9 @@
                       peerVideo.src = window.URL.createObjectURL(stream) // for older browsers
                     }
 
+                    call = true;
+                    let tracks = stream.getTracks()
+                    console.log('tracks', tracks);
 
                     console.log('Setting up link..');
 
@@ -366,8 +388,9 @@
 
 <main>
     <audio src={stream}></audio>
-    <video in:fade id="myvideo" playsinline autoplay bind:this={myVideo}></video>
-    <video in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
+    <video class:show={calling} in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
+    <video class:show={call} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
+
 </main>
 
 <style lang="scss">
@@ -379,14 +402,32 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
-        width: 100%;
-        z-index: 0;
+        width: 25%;
+        height: 25%;
+        right: 15%;
+        z-index: 999999;
+        background: transparent;
     }
 
     video {
         width: 200px;
         height: 200px;
         border: 1px solid red;
+        z-index: 99999;
+        display: none;
+    }
+
+    .show {
+      display: block;
+    }
+
+    #myVideo {
+
+    }
+
+    #peerVideo {
+
+
     }
 
 </style>
