@@ -586,10 +586,15 @@ ipcMain.on('answerCall', (e, msg, contact) => {
 
 async function sendMessage(message, receiver) {
     console.log('Want to send')
+    let has_history = false
     let address = receiver.substring(0,99);
     let messageKey =  receiver.substring(99,163);
         //receiver.substring(99,163);
-    let has_history = true;
+    if (known_keys.indexOf(messageKey) > 0) {
+      console.log('I know this contact?');
+      has_history = true;
+
+    }
 //receiver.substring(99,163);
     if (message.length == 0) {
         return;
@@ -678,7 +683,6 @@ async function sendMessage(message, receiver) {
         await dbMessages.write()
         mainWindow.webContents.send('newMsg', dbMessages.data)
         known_pool_txs.push(result.transactionHash)
-        saveKey(messageKey)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
