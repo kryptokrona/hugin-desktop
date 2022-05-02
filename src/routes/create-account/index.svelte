@@ -32,7 +32,7 @@
         <input type="text" placeholder="Satoshi" bind:value={walletName}>
         <label>Password</label>
         <input type="password" placeholder="Something safe" bind:value={password}>
-        <FillButton text="Create" on:click={handleLogin}/>
+        <FillButton text="Create" url="/dashboard" on:click={handleLogin}/>
         <FillButton text="back" url="/"/>
     </div>
 </main>
