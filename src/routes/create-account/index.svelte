@@ -1,12 +1,27 @@
 <script>
     import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
+    import {user} from "$lib/stores/user.js";
 
     let password;
     let walletName;
+    $ : { console.log('walletname', walletName) }
 
     const handleLogin = () => {
-        window.api.send('create-account', password, walletName);
+
+      let accountData = {
+        walletName: walletName,
+        password: password
+      }
+        window.api.send('create-account', accountData);
+
+        user.update(oldData => {
+            return {
+                ...oldData,
+                loggedIn: true
+            }
+        })
+    console.log('Creating user account')
     }
 </script>
 
