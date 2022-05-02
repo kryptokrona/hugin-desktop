@@ -243,29 +243,49 @@ const knownTxs = new Low(adapterTxs)
 
 let js_wallet;
 let c = false;
-
+let walletName
 
 startCheck()
 let known_keys = [];
 
 async function startCheck() {
 
-if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
+
+if (fs.existsSync(userDataDir + '/messages.db')) {
     // We have found a wallet file
+    await db.read()
+    let walletName = db.data.walletNames
+    console.log('walletname', walletName);
     ipcMain.on('app', (data) => {
         mainWindow.webContents.send('getPath', userDataDir)
-        return mainWindow.webContents.send('wallet-exist', true);
+        return mainWindow.webContents.send('wallet-exist', true, walletName);
     })
-    c = 'o';
-    start_js_wallet();
-    console.log(c)
+
+
+    ipcMain.on('login', async (event, walletName, password) => {
+      c = 'o';
+      console.log('creating this wallet', walletName);
+      console.log('password', password);
+      start_js_wallet(walletName, password);
+      console.log(c)
+    })
+
 } else {
   //No wallet found, probably first start
   console.log('wallet not found')
 
   //Create DBs on first start
+  db.data = {walletNames:[],
+            blockHeight:[],}
   dbBoards.data = {messages: []}
-  dbMessages.data = {messages: []}
+  dbMessages.data = {messages: [ {
+      "from": "Hugin Messenger",
+      "k": "munin",
+      "msg": "Welcome to Hugin Messenger",
+      "t": 1650919475320,
+      "type": "box",
+      "sent": false
+    },]}
   keychain.data = {known_keys:[]}
   knownTxs.data = {known_txs:[]}
   //
@@ -273,23 +293,25 @@ if (fs.existsSync(userDataDir + '/mywallet.wallet')) {
   await knownTxs.write(knownTxs.data)
   await dbBoards.write(dbBoards.data)
   await dbMessages.write(dbMessages.data)
-  console.console.log('creating dbs...');
-
-    c = 'c';
+  await db.write(db.data)
+  console.log('creating dbs...');
+  return mainWindow.webContents.send('wallet-exist', false, walletName)
 }
 }
 
 let myPassword;
 
-ipcMain.on('create-account', async (event, password) => {
-    myPassword = password
+ipcMain.on('create-account', async (e, accountData) => {
+    let walletName = accountData.walletName
+    let myPassword = accountData.password
+    console.log('creating', walletName);
     const newWallet = await WB.WalletBackend.createWallet(daemon);
-    newWallet.saveWalletToFile(userDataDir + '/mywallet.wallet', myPassword)
+    newWallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', myPassword)
     js_wallet = newWallet
-    console.log(password)
-
-    await start_js_wallet();
-
+    console.log(myPassword)
+    db.data.walletNames.push(walletName)
+    await db.write()
+    await start_js_wallet(walletName, myPassword);
   })
 
 async function loadKeys() {
@@ -312,7 +334,7 @@ return known_pool_txs
 
 let syncing = true;
 
-async function start_js_wallet() {
+async function start_js_wallet(walletName, password) {
     /* Initialise our blockchain cache api. Can use a public node or local node
        with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
        //Load known public keys
@@ -320,34 +342,37 @@ async function start_js_wallet() {
 
        //Load known pool txs from db.
       let knownTxs = await loadKnownTxs()
-
-    if (c === 'c') {
-
-      let height = 1033909
+    //
+    // if (c === 'c') {
+    //
+    //   let height = 1033909
+    //
+    //     try {
+    //         let re = await fetch('http://' + node + ':' + ports + '/getinfo');
+    //
+    //         height = await re.json();
+    //
+    //     } catch (err) {
+    //
+    //     }
+    //
+    // } else if (c === 'o') {
+        /* Open wallet, giving our wallet path and password */
 
         try {
-            let re = await fetch('http://' + node + ':' + ports + '/getinfo');
 
-            height = await re.json();
+          const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/' + walletName + '.wallet', password);
+          if (error) {
+              console.log('Failed to open wallet: ' + error.toString());
+              return;
+          // }
 
-        } catch (err) {
+              js_wallet = openedWallet;
+              }
 
+        } catch(err) {
+          console.log('Error', err);
         }
-
-    } else if (c === 'o') {
-        /* Open wallet, giving our wallet path and password */
-        const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/mywallet.wallet', 'aaa');
-        if (error) {
-            console.log('Failed to open wallet: ' + error.toString());
-            return;
-        }
-
-        js_wallet = openedWallet;
-
-    } else {
-        console.log('Bad input');
-        return;
-    }
 
 
     js_wallet.enableAutoOptimization(false);
@@ -416,7 +441,7 @@ async function start_js_wallet() {
             }
         }
         //Save height to misc.db
-        db.data = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
+        db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
         await db.write(db.data)
         console.log( await js_wallet.getBalance())
         console.log('');
@@ -544,7 +569,7 @@ async function saveMsg(message, hash) {
       case "sealedbox":
       let senderKey = message.k
       console.log('saving this senderkey', senderKey)
-      saveKey(sendeKey)
+      saveKey(senderKey)
           dbMessages.data.messages.push(message)
           await dbMessages.write()
           mainWindow.webContents.send('newMsg', dbMessages.data)
