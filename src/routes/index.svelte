@@ -8,18 +8,30 @@
     let wallet
     let walletName
     let myPassword
+    let data
+    let thisWallet
 
     onMount(() => {
         window.api.send('app', true)
-        window.api.receive('wallet-exist', (data, walletName) => wallet = data)
+        window.api.receive('wallet-exist', async (data, walletName) => {
+        wallet = data
         console.log('wallet exists', walletName);
-        walletName = walletName
+        $ : thisWallet = walletName[0]
+        $ : console.log('wale', thisWallet);
+
+      })
     })
 
     //Handle login, sets logeged in to true and gets user address
     const handleLogin = async () => {
 
-      window.api.send('login', walletName , myPassword)
+      let accountData = {
+        thisWallet: thisWallet,
+        myPassword: myPassword
+      }
+      console.log('data', accountData);
+
+      window.api.send('login', accountData)
 
             user.update(oldData => {
                 return {
@@ -48,6 +60,14 @@
     //       passwordInput = false;
     //     }
 
+      $ :  myPassword
+      $ :  console.log('mypass', myPassword);
+
+      let clean
+        window.api.receive('clean', async (clean) => {
+          console.log('clean', clean);
+
+        })
 </script>
 
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
@@ -55,7 +75,8 @@
         <div class="login-wrapper">
         {#if wallet}
             <h1 class="title">Welcome back {$user.username} 👋</h1>
-            <h3 class="title">Log in to wallet: {walletName}</h3>
+            <h3 class="title">Log in to wallet:</h3>
+            <p class="wallets">{thisWallet}</p>
             <input type="password" placeholder="Something safe" bind:value={myPassword}>
             <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
             {:else}
