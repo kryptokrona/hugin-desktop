@@ -7,6 +7,7 @@
     let stream;
     let myVideo;
     let peerVideo;
+    let peerStream;
     let call
     let calling
     onMount(() => {
@@ -172,9 +173,8 @@
 
             })
 
-            peer1.on('stream', stream => {
+            peer1.on('stream', peerStream => {
                 // got remote video stream, now let's show it in a video tag
-                console.log('stream ready', stream);
 
                  //let extra_class = "";
                  //if (video) {
@@ -184,7 +184,7 @@
                 // let video_element = ""
                 //
                 //
-                console.log('Got Stream Peer1', stream);
+                console.log('Got Stream Peer1', peerStream);
 
                 console.log('peerVideo', peerVideo);
 
@@ -192,12 +192,12 @@
 
                    console.log('ppeeeer?');
 
-                     peerVideo.srcObject = stream
+                     peerVideo.srcObject = peerStream
                  } else {
-                     peerVideo.src = window.URL.createObjectURL(stream) // for older browsers
+                     peerVideo.src = window.URL.createObjectURL(peerStream) // for older browsers
                  }
                  call = true
-                 let tracks = stream.getTracks()
+                 let tracks = peerStream.getTracks()
                  console.log('tracks', tracks);
                  peerVideo.play()
 
@@ -364,17 +364,17 @@
                     console.log('Connection established;')
                 });
 
-                peer2.on('stream', stream => {
+                peer2.on('stream', peerStream => {
                     // got remote video stream, now let's show it in a video tag
-                    console.log('peer2 stream', stream)
+                    console.log('peer2 stream', peerStream)
                     if ('srcObject' in peerVideo) {
-                      peerVideo.srcObject = stream
+                      peerVideo.srcObject = peerStream
                     } else {
-                      peerVideo.src = window.URL.createObjectURL(stream) // for older browsers
+                      peerVideo.src = window.URL.createObjectURL(peerStream) // for older browsers
                     }
 
                     call = true;
-                    let tracks = stream.getTracks()
+                    let tracks = peerStream.getTracks()
                     console.log('tracks', tracks);
 
                     console.log('Setting up link..');
@@ -387,8 +387,8 @@
 </script>
 
 <main>
-    <audio src={stream}></audio>
-    <video class:show={calling} in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
+    <audio src={peerStream}></audio>
+    <video muted class:show={calling} in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
     <video class:show={call} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
 
 </main>
