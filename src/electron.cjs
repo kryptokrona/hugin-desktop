@@ -12,6 +12,7 @@ const nacl = require('tweetnacl')
 const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
 const {extraDataToMessage} = require('hugin-crypto')
+const sanitizeHtml = require('sanitize-html')
 
 const en = require ('int-encoder');
 
@@ -262,8 +263,9 @@ if (fs.existsSync(userDataDir + '/messages.db')) {
     })
 
 
-    ipcMain.on('login', async (event, walletName, password) => {
-      c = 'o';
+    ipcMain.on('login', async (event, data) => {
+      let walletName = data.thisWallet
+      let password = data.myPassword
       console.log('creating this wallet', walletName);
       console.log('password', password);
       start_js_wallet(walletName, password);
@@ -365,10 +367,9 @@ async function start_js_wallet(walletName, password) {
           if (error) {
               console.log('Failed to open wallet: ' + error.toString());
               return;
-          // }
+              }
 
               js_wallet = openedWallet;
-              }
 
         } catch(err) {
           console.log('Error', err);
@@ -512,7 +513,13 @@ async function backgroundSyncMessages(knownTxsIds) {
                         console.log('Caught undefined null message, continue');
                         continue;
                       }
-                      message.sent = false
+                      let clean = sanitizeHtml(message);
+                      console.log('message', message.msg);
+                      clean.sent = false
+
+                      console.log('Clean', clean);
+
+                      mainWindow.webContents.send('clean', clean)
                       //Checking if private msg is a call
                       if (message.type == "sealedbox" || "box") {
                       console.log('Checking if private msg is a call');
@@ -616,8 +623,14 @@ async function sendMessage(message, receiver) {
     let messageKey =  receiver.substring(99,163);
         //receiver.substring(99,163);
     if (known_keys.indexOf(messageKey) > 0) {
+
       console.log('I know this contact?');
       has_history = true;
+
+    } else {
+
+      has_history = false
+      saveKey(messageKey);
 
     }
 //receiver.substring(99,163);
