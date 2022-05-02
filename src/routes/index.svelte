@@ -6,14 +6,21 @@
     import {nodelist} from "$lib/stores/nodes.js";
     import {onMount} from "svelte";
     let wallet
+    let walletName
+    let myPassword
 
     onMount(() => {
         window.api.send('app', true)
-        window.api.receive('wallet-exist', data => wallet = data)
+        window.api.receive('wallet-exist', (data, walletName) => wallet = data)
+        console.log('wallet exists', walletName);
+        walletName = walletName
     })
 
     //Handle login, sets logeged in to true and gets user address
     const handleLogin = async () => {
+
+      window.api.send('login', walletName , myPassword)
+
             user.update(oldData => {
                 return {
                     ...oldData,
@@ -33,16 +40,28 @@
             }
         })
     }
+
+    // $ :
+    //     if (myPassword.length > 1) {
+    //       passwordInput = true;
+    //     } else {
+    //       passwordInput = false;
+    //     }
+
 </script>
 
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
     <div class="login-wrapper">
         <div class="login-wrapper">
+        {#if wallet}
             <h1 class="title">Welcome back {$user.username} 👋</h1>
+            <h3 class="title">Log in to wallet: {walletName}</h3>
+            <input type="password" placeholder="Something safe" bind:value={myPassword}>
             <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
-            {#if !wallet}
+            {:else}
                 <FillButton text="Create Account" url="/create-account" />
-            {/if}
+              {/if}
+
         </div>
         <select bind:value={node}>
             {#each $nodelist as node}
@@ -141,6 +160,10 @@
     .socials {
         display: flex;
         gap: 20px
+    }
+
+    .show {
+      display: block;
     }
 
 </style>
