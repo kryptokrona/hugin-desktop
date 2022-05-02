@@ -13,7 +13,6 @@ const naclUtil = require('tweetnacl-util')
 const naclSealed = require('tweetnacl-sealed-box')
 const {extraDataToMessage} = require('hugin-crypto')
 const sanitizeHtml = require('sanitize-html')
-
 const en = require ('int-encoder');
 
 const { Address,
@@ -394,6 +393,24 @@ async function start_js_wallet(walletName, password) {
 
     });
 
+    js_wallet.on('heightchange', (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
+      console.log('Height changed');
+      if ((localDaemonBlockCount - walletBlockCount) < 2) {
+
+      //Save height to misc.db
+      db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
+      db.write(db.data)
+      // Save js wallet to file
+      console.log('******** SAVING WALLET ********');
+      js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
+    } else {
+      //Log
+      console.log('******** SYNCING HEIGHT *******', walletBlockCount);
+      console.log('///////NETWORK HEIGHT///////// ', networkBlockCount);
+    }
+
+    })
+
     let i = 1;
 
     for (const address of js_wallet.getAddresses()) {
@@ -417,7 +434,9 @@ async function start_js_wallet(walletName, password) {
     console.log('Started wallet');
     //Load knownTxsIds to backgroundSyncMessages on startup
     await backgroundSyncMessages(knownTxs)
+
     while (true) {
+
       try {
         //Start syncing
         await backgroundSyncMessages()
@@ -435,22 +454,13 @@ async function start_js_wallet(walletName, password) {
         console.log('Syncing wallet ', walletBlockCount);
         console.log('Syncing local d', localDaemonBlockCount);
         console.log('Syncing network', networkBlockCount);
-            if ((localDaemonBlockCount - walletBlockCount) > 1000) {
-                console.log('rewinding forward');
-                js_wallet.rewind(networkBlockCount - 500);
-                await sleep(3000 * 10);
-            }
         }
-        //Save height to misc.db
-        db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
-        await db.write(db.data)
-        console.log( await js_wallet.getBalance())
-        console.log('');
 
       } catch (err) {
       console.log(err);
       }
     }
+
 }
 
 let known_pooL_txs = []
