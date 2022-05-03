@@ -5,7 +5,6 @@
 
     let password;
     let walletName;
-    $ : { console.log('walletname', walletName) }
 
     const handleLogin = () => {
 

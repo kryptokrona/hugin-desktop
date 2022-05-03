@@ -17,7 +17,6 @@
         wallet = data
         console.log('wallet exists', walletName);
         $ : thisWallet = walletName[0]
-        $ : console.log('wale', thisWallet);
 
       })
     })
