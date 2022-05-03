@@ -13,6 +13,15 @@
     let sync
     let avatar
 
+    onMount(() => {
+        window.api.receive('addr', async (data) => {
+        avatar = get_avatar(data)
+        console.log('wallet exists', walletName);
+        $ : console.log('wale', data);
+
+      })
+    })
+
     $: sync = $user.syncState
 
     const handleLogout = () => {

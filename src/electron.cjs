@@ -415,6 +415,7 @@ async function start_js_wallet(walletName, password) {
 
     for (const address of js_wallet.getAddresses()) {
         console.log(`Address [${i}]: ${address}`);
+        mainWindow.webContents.send('addr', address)
         let msgKey = getMsgKey()
         console.log('HuginAddress',address + msgKey)
         i++;
