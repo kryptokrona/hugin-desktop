@@ -23,16 +23,17 @@
 
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
-    <div class:type={handleType} class="bubble">
-        <img class="avatar"
-             src="data:image/png;base64,{get_avatar(address)}" alt="">
+<img class="avatar"
+     src="data:image/png;base64,{get_avatar(address)}" alt="">
+    <div class="bubble sent">
+
 
         <p>{message}</p>
     </div>
 {:else}
-    <div class:type={handleType} class="bubble">
-        <img class="avatar"
-             src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+<img class="avatar"
+         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+    <div class="bubble from">
 
         <p>{message}</p>
     </div>
@@ -41,8 +42,6 @@
 <style>
 
     .bubble {
-        display: flex;
-        align-items: center;
         color: rgba(255, 255, 255, 0.8);
         padding: 15px 25px 15px 15px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);;
@@ -57,5 +56,28 @@
         margin: 0;
         word-break: break-word;
     }
+
+    .sent {
+      background: cornflowerblue;
+      border-radius: 5px;
+      display: inline-flex;
+      margin-left: 5%;
+      align-items: center;
+    }
+
+    .from {
+      background: grey;
+      border-radius: 5px;
+      display: inline-flex;
+      margin-left: 5%;
+      margin-right: 40%;
+      align-items: center;
+
+    }
+
+    .avatar {
+      display: block;
+    }
+
 
 </style>
