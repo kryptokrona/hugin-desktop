@@ -1,12 +1,13 @@
 <script>
     import {fade} from 'svelte/transition'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
-
+    import {user} from '$lib/stores/user.js'
     export let message
     export let handleType
     export let msgFrom
     export let ownMsg
 
+    let address = $user.huginAddress.substring(0,99)
     $: {
         switch (message.substring(0,1)) {
             case "Δ":
@@ -24,7 +25,7 @@
 {#if ownMsg}
     <div class:type={handleType} class="bubble">
         <img class="avatar"
-             src="data:image/png;base64,{get_avatar("SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT")}" alt="">
+             src="data:image/png;base64,{get_avatar(address)}" alt="">
 
         <p>{message}</p>
     </div>
