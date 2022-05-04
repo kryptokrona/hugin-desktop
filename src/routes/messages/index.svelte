@@ -20,12 +20,7 @@
     let stream
     //Get messages on mount
     onMount(async () => {
-        //Get messages and save to a variable.
-        messages.set(await window.api.getMessages(res => {
-            savedMsg = res
-        }))
-        //Log to verify
-        console.log('FROM ELECTRON DB', savedMsg)
+
         //If we have an active chat in store we show that conversation
         if ($user.activeChat) {
             filterMsgs($user.activeChat)
