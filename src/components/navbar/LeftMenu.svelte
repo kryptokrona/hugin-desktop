@@ -12,14 +12,25 @@
     let myAddress
     let sync
     let avatar
+    let huginAddr
 
     onMount(() => {
-        window.api.receive('addr', async (data) => {
-        avatar = get_avatar(data)
-        console.log('wallet exists', walletName);
-        $ : console.log('wale', data);
+        window.api.receive('addr', async (huginAddr) => {
+
+        let address = huginAddr.substring(0,99);
+        let messageKey =  huginAddr.substring(99,163);
+        avatar = get_avatar(address)
+        console.log('Hugin Address', huginAddr);
+
+        user.update(data => {
+            return {
+                ...data,
+                huginAddress: huginAddr,
+            }
+        })
 
       })
+
     })
 
     $: sync = $user.syncState
