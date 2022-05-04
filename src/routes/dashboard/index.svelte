@@ -3,9 +3,25 @@
     import Balance from "/src/components/finance/Balance.svelte";
     import {user} from "$lib/stores/user.js";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import {messages} from "$lib/stores/messages.js";
+    import {onMount} from "svelte";
 
+    export let myAddress
+    let res
+    let savedMsgs
+    onMount(async () => {
+    //Get messages and save to a variable.
+    messages.set(await window.api.getMessages(res => {
+      console.log('response', res);
+
+        savedMsgs = res
+    }))
+  })
+    //Log to verify
+    console.log('FROM ELECTRON DB', savedMsgs)
+
+    myAddress = $user.huginAddress
     console.log('myAddress',$user.huginAddress);
-    let myAddress = $user.huginAddress
     let address = myAddress.substring(0,99);
     let messageKey =  myAddress.substring(99,163);
     let avatar = get_avatar(address)
@@ -14,9 +30,8 @@
     //Copy address, msgkey or both
     function copyThis(copy) {
 
-      console.log('COOPY', copy);
-
       navigator.clipboard.writeText(copy)
+
       }
 
 </script>
@@ -26,7 +41,7 @@
         <h1>Dashboard</h1>
         <Balance/>
     </div>
-    <h1>Welcome back!</h1>
+    <h1>Welcome back! {$user.username}</h1>
 
      <div id="profile">
 
