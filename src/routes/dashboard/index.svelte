@@ -6,24 +6,21 @@
     import {messages} from "$lib/stores/messages.js";
     import {onMount} from "svelte";
 
-    export let myAddress
     let res
     let savedMsgs
+
     onMount(async () => {
     //Get messages and save to a variable.
     messages.set(await window.api.getMessages(res => {
       console.log('response', res);
 
-        savedMsgs = res
+        savedMsgs
     }))
   })
-    //Log to verify
-    console.log('FROM ELECTRON DB', savedMsgs)
 
-    myAddress = $user.huginAddress
-    console.log('myAddress',$user.huginAddress);
+    let myAddress = $user.huginAddress
     let address = myAddress.substring(0,99);
-    let messageKey =  myAddress.substring(99,163);
+    let messageKey = myAddress.substring(99,163);
     let avatar = get_avatar(address)
     let copy
 
