@@ -5,10 +5,20 @@
     import {get_avatar} from "$lib/utils/hugin-utils.js";
 
     console.log('myAddress',$user.huginAddress);
-    const myAddress = $user.huginAddress
+    let myAddress = $user.huginAddress
     let address = myAddress.substring(0,99);
     let messageKey =  myAddress.substring(99,163);
     let avatar = get_avatar(address)
+    let copy
+
+    //Copy address, msgkey or both
+    function copyThis(copy) {
+
+      console.log('COOPY', copy);
+
+      navigator.clipboard.writeText(copy)
+      }
+
 </script>
 
 <main in:fade>
@@ -16,7 +26,6 @@
         <h1>Dashboard</h1>
         <Balance/>
     </div>
-
     <h1>Welcome back!</h1>
 
      <div id="profile">
@@ -27,25 +36,21 @@
           <img class="avatar" src="data:image/png;base64,{avatar}" alt="avatar">
           </div>
        </div>
-         <table style="width:100%">
            <br>
-             <div id="headerText" class="inline">
-               <div id="currentAddr" class="inline">
+                 <div id="contactInfo" class="inline">
 
-                 <span class="description">Payment address</span>&nbsp;
+                 <span class="description">Payment address</span>
                  <br>
-                 <span id="currentAddrSpan">{address}</span>
+                 <span id="address" on:click={() => copyThis(address)}>{address}</span>
                  <br>
 
-                 <span class="description">Message key</span>&nbsp;
+                 <span class="description">Message key</span>
                  <br>
-                 <span id="currentPubKey">{messageKey}</span>
+                 <span id="myMsgKey" on:click={() => copyThis(messageKey)}>{messageKey}</span>
 
                </div>
-               <button id="profile_copy_address">Copy both</button>
 
-             </div>
-         </table>
+               <button on:click={() => copyThis(myAddress)}> Copy Both </button>
 
        </div>
 
@@ -53,7 +58,7 @@
 </main>
 
 <style>
-    h1 {
+    h1, h2 {
         color: white;
         margin: 0
     }
@@ -77,7 +82,29 @@
     }
 
     .huginAddress {
+        color: white;
+    }
 
+    .description {
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    #address, #myMsgKey {
+        text-overflow: ellipsis;
+        color: white;
+        display: block;
+        padding: 5px;
+        font-size: 14px;
+        font-family: 'Roboto Mono';
+        overflow: hidden;
+
+    }
+
+    #contactInfo {
+        width: 25%;
+        text-overflow: ellipsis;
     }
 
 </style>
