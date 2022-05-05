@@ -16,6 +16,6 @@ export const user = writable({
 
 export const userAvatar = derived(user, $user => {
     if ($user.huginAddress.length > 15) {
-        return get_avatar($user.huginAddress)
+        return get_avatar($user.huginAddress.substring(0,99))
     }
 })
