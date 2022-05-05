@@ -2,7 +2,6 @@
     import { fade } from 'svelte/transition';
     import Balance from "/src/components/finance/Balance.svelte";
     import {user, userAvatar} from "$lib/stores/user.js";
-    import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {messages} from "$lib/stores/messages.js";
     import {onMount} from "svelte";
     import {boardMessages} from "$lib/stores/boardmsgs.js";
