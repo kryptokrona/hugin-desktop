@@ -1,6 +1,6 @@
 <script>
     import { fade } from 'svelte/transition';
-    import ChatWindow from "/src/components/chat/ChatWindow.svelte";
+    import BoardWindow from "/src/components/chat/BoardWindow.svelte";
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import {boardMessages} from '$lib/stores/boardmsgs.js';
     import ChatBubble from "/src/components/chat/ChatBubble.svelte";
@@ -49,12 +49,12 @@
 <main>
         <ChatInput on:message={sendboardMsg}/>
 
-            <ChatWindow>
+            <BoardWindow>
                     {#each boardMsgs.reverse() as message}
                     <ChatBubble handleType={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}/>
 
                     {/each}
-    </ChatWindow>
+    </BoardWindow>
     <div class="list">
 
     </div>
