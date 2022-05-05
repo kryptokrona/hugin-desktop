@@ -3,7 +3,7 @@
     import BoardWindow from "/src/components/chat/BoardWindow.svelte";
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import {boardMessages} from '$lib/stores/boardmsgs.js';
-    import ChatBubble from "/src/components/chat/ChatBubble.svelte";
+    import BoardMessage from "/src/components/chat/BoardMessage.svelte";
     import {user} from '$lib/stores/user.js'
     import {onMount} from "svelte";
 
@@ -51,7 +51,7 @@
 
             <BoardWindow>
                     {#each boardMsgs.reverse() as message}
-                    <ChatBubble handleType={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}/>
+                    <BoardMessage handleType={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}/>
 
                     {/each}
     </BoardWindow>
