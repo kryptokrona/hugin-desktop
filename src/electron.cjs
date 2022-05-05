@@ -540,10 +540,9 @@ async function backgroundSyncMessages(knownTxsIds) {
 
                       }
 
-                      if (message.m) {
+                      if (message.brd && message.s) {
                           console.log('Boards message', message);
-                          message.type = 'board'
-                          mainWindow.webContents.send('boardMsg', message)
+                          message.type = "board"
                       }
 
                       saveMsg(message);
@@ -608,6 +607,7 @@ async function saveMsg(message, hash) {
           break;
       case "board":
           console.log('Save board message?', message);
+          mainWindow.webContents.send('boardMsg', message)
               message.sent = false
               dbBoards.data.boardMessages.push(message)
               await dbBoards.write()
