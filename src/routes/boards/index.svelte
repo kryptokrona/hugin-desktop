@@ -10,7 +10,7 @@
     let boardMsgs = []
     onMount(async () => {
 
-        //If we have an active chat in store we show that conversation
+        //If we have saved board messages we will print them once on mount
             printMessages()
     })
 
@@ -47,9 +47,10 @@
 </script>
 
 <main>
-    <ChatWindow>
         <ChatInput on:message={sendboardMsg}/>
-                    {#each boardMsgs as message}
+
+            <ChatWindow>
+                    {#each boardMsgs.reverse() as message}
                     <ChatBubble handleType={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}/>
 
                     {/each}
@@ -70,6 +71,9 @@
         margin-left: 85px;
         margin-right: 85px;
         z-index: 3;
+        height: 700px;
+        overflow: scroll;
+        overflow-x: hidden;
     }
 
     .list {
