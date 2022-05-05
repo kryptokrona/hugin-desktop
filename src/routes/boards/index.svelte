@@ -7,15 +7,13 @@
     import {user} from '$lib/stores/user.js'
     import {onMount} from "svelte";
 
+    let boardMsgs = []
     onMount(async () => {
 
         //If we have an active chat in store we show that conversation
             printMessages()
     })
 
-    $ : boardMsgs = []
-
-    $: {
         window.api.receive('boardMsg', async (data) => {
           console.log('boardMsg', data)
             //Push new message to store
@@ -28,7 +26,8 @@
             //console.log('Updated boardmsgs', bMessages);
             //<ChatBubble message={boardmessage.m} ownMsg={boardmessage.sent} msgFrom={boardmessage.k} board={boardmessage.brd}/>
         })
-    }
+
+    $: boardMsgs
 
     function printMessages() {
       boardMsgs = $boardMessages
