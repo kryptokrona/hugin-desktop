@@ -51,13 +51,14 @@
 <style>
 
     .wrapper {
-        position: static;
-        display: flex;
-        padding: 20px 20px 20px 20px;
-        width: 100%;
-        margin-right: 85px;
-        z-index: 3;
-            box-sizing: border-box;
+      position: absolute;
+      padding: 20px 20px 20px 20px;
+      width: 73%;
+      margin-right: 85px;
+      display: inline-flex;
+      z-index: 3;
+      box-sizing: border-box;
+      margin-top: 0%;
     }
 
 
