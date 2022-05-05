@@ -49,7 +49,6 @@
         window.api.receive('newMsg', data => {
             messages.update(() => data.messages)
             savedMsg = $messages
-            console.log('UPDATED MSG', savedMsg)
         })
     }
 
