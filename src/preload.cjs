@@ -22,9 +22,13 @@ const WINDOW_API = {
   sendBoardMsg: (msg, address, key) => {
     ipcRenderer.send('sendBoardMsg', msg, address, key )
   },
-  getMessages: async () => {
+  getMessages: async (data) => {
     const res = await ipcRenderer.invoke('getMessages')
     return res.messages
+  },
+  getBoardMsgs: async (data) => {
+    let resp = await ipcRenderer.invoke('getBoardMsgs')
+    return resp.boardMessages
   },
 
   //HANDLE CALLS
