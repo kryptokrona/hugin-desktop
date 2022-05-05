@@ -526,26 +526,17 @@ async function backgroundSyncMessages(knownTxsIds) {
                         continue;
                       }
 
-                      console.log('message?', message);
-                      let clean = sanitizeHtml(message.m);
                       message.sent = false
-
-                      console.log('Clean', clean);
-
-                      mainWindow.webContents.send('clean', clean)
-                      //Checking if private msg is a call
-                      if (message.type == "sealedbox" || "box" && !message.brd) {
-                      console.log('Checking if private msg is a call');
-                      parseCall(message.msg, message.from)
-
-                      }
 
                       if (message.brd && message.s) {
                           console.log('Boards message', message);
                           message.type = "board"
-                      }
+                          saveBoardMsg(message)
+                      } else {
 
-                      saveMsg(message);
+                        saveMsg(message);
+
+                      }
                   }
 
                   console.log('Transaction checked');
@@ -581,11 +572,45 @@ async function saveHash(hash) {
 
 }
 
-async function saveMsg(message, hash) {
+async function saveBoardMsg(msg) {
 
+  let text = sanitizeHtml(msg.m);
+  let addr = sanitizeHtml(msg.k);
+  let reply = sanitizeHtml(msg.r);
+  let to_board = sanitizeHtml(msg.brd);
+  let sig = sanitizeHtml(msg.s)
+  let timestamp = sanitizeHtml(msg.t)
+  let nick = sanitizeHtml(msg.n)
 
-  //Save messages and known tx hashes
    dbBoards.data = dbBoards.data
+
+   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, sent: msg.sent, type: msg.type}
+
+      console.log('Save board message?', message);
+      mainWindow.webContents.send('boardMsg', message)
+      message.sent = false
+      dbBoards.data.boardMessages.push(message)
+      await dbBoards.write()
+
+    }
+
+async function saveMsg(msg, hash) {
+
+  console.log('message?', msg);
+
+  let text = sanitizeHtml(msg.msg);
+  let addr = sanitizeHtml(msg.from);
+  let timestamp = escape(msg.t)
+  let key = sanitizeHtml(msg.key)
+
+  //Checking if private msg is a call
+  console.log('Checking if private msg is a call');
+  parseCall(msg, addr)
+
+  let message = {from: addr , k: key ,msg: text, t: timestamp}
+
+  console.log('clean message', message);
+  //Save messages and known tx hashes
    dbMessages.data = dbMessages.data
    if (message === undefined) {
      console.log('message undefined');
@@ -604,13 +629,6 @@ async function saveMsg(message, hash) {
           dbMessages.data.messages.push(message)
           await dbMessages.write()
           mainWindow.webContents.send('newMsg', dbMessages.data)
-          break;
-      case "board":
-          console.log('Save board message?', message);
-          mainWindow.webContents.send('boardMsg', message)
-              message.sent = false
-              dbBoards.data.boardMessages.push(message)
-              await dbBoards.write()
           break;
   }
 
@@ -680,11 +698,11 @@ async function sendBoardMessage(message, to_board, reply=false) {
 
   if (result.success) {
       console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-      const sentMsg = payload_json
-      dbBoards.data.messages.push(sentMsg)
-      await dbBoards.write()
-      mainWindow.webContents.send('boardMsg', dbBoards.data)
       known_pool_txs.push(result.transactionHash)
+      const sentMsg = payload_json
+      sentMsg.sent = true
+      sentMsg.type = "board"
+      saveBoardMsg(sentMsg)
   } else {
       console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
@@ -796,8 +814,7 @@ async function sendMessage(message, receiver) {
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         const sentMsg = {msg: message, k: messageKey, from: address, sent: true, t: timestamp}
-        dbMessages.data.messages.push(sentMsg)
-        await dbMessages.write()
+        saveMsg(sentMsg)
         mainWindow.webContents.send('newMsg', dbMessages.data)
         known_pool_txs.push(result.transactionHash)
     } else {
