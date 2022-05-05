@@ -23,22 +23,31 @@
 
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
+<div class="bubble sent">
 <img class="avatar"
      src="data:image/png;base64,{get_avatar(address)}" alt="">
-    <div class="bubble sent">
 
 
         <p>{message}</p>
     </div>
 {:else}
+<div class="bubble from">
 <img class="avatar"
          src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-    <div class="bubble from">
 
         <p>{message}</p>
     </div>
 {/if}
 
+{#if message.brd}
+
+<div class="bubble board">
+<img class="avatar"
+         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+
+        <p>{message}</p>
+    </div>
+{/if}
 <style>
 
     .bubble {
@@ -77,6 +86,10 @@
 
     .avatar {
       display: block;
+    }
+
+    .board p {
+      font-size: 17px;
     }
 
 
