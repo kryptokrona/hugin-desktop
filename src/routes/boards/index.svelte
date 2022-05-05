@@ -52,7 +52,7 @@
 
             <BoardWindow>
                     {#each boardMsgs as message}
-                    <BoardMessage handleType={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}/>
+                    <BoardMessage reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
 
                     {/each}
     </BoardWindow>
