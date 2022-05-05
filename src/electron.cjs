@@ -521,7 +521,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                   let message
                   if (thisExtra !== undefined && thisExtra.length > 200) {
                       message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
-                      if (!message) {
+                      if (!message || message === undefined) {
                         console.log('Caught undefined null message, continue');
                         continue;
                       }
