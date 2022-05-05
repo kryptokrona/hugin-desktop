@@ -5,21 +5,27 @@
     export let message
     export let handleType
     export let msgFrom
+    export let board
+    export let reply
+    export let myMsg
+    export let signature
+    export let timestamp
+    export let nickname = "Anonymous"
 </script>
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-  {#if message.reply}
+  {#if message.r != ''}
   <div class="reply">     <img class="reply_avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-
-      <p>{message.reply}</p>
+           <p class="reply_nickname">{nickname.r}</p> <br>
+      <p>{message.r}</p>
       </div>
 
   <div class:type={handleType} class="boardMessage reply">
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-
+           <p class="nickname">{nickname}</p><br>
       <p>{message}</p>
   </div>
 
@@ -28,10 +34,10 @@
     <div class:type={handleType} class="boardMessage">
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-
-        <p>{message}</p>
+             <p class="nickname">{nickname}</p><br>
+        <p>{message}</p><br>
     </div>
-    
+
   {/if}
 
 <style>
@@ -49,6 +55,7 @@
     p {
         margin: 0;
         word-break: break-word;
+        display: contents;
     }
 
     .reply_avatar {
@@ -64,5 +71,11 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);;
       z-index: 3;
       font-size: 14px;
+    }
+
+    .nickname {
+      color: white;
+      font-size: 17px;
+      font-family: "Montserrat";
     }
 </style>
