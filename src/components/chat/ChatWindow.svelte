@@ -20,6 +20,7 @@ import ChatInput from "/src/components/chat/ChatInput.svelte";
         width: 100%;
         overflow: scroll;
         z-index: 3;
+        margin-top: 10%;
     }
 
     .window::-webkit-scrollbar {
