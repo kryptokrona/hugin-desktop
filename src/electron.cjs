@@ -435,6 +435,8 @@ async function start_js_wallet(walletName, password) {
 
     console.log('Started wallet');
     //Load knownTxsIds to backgroundSyncMessages on startup
+    await sleep(1500)
+    console.log('Loading Sync');
     await backgroundSyncMessages(knownTxs)
 
     while (true) {
