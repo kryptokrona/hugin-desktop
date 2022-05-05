@@ -574,7 +574,7 @@ async function saveHash(hash) {
 
 }
 
-async function saveBoardMsg(msg) {
+async function saveBoardMsg(msg, hash) {
 
   let text = sanitizeHtml(msg.m);
   let addr = sanitizeHtml(msg.k);
@@ -583,10 +583,12 @@ async function saveBoardMsg(msg) {
   let sig = sanitizeHtml(msg.s)
   let timestamp = sanitizeHtml(msg.t)
   let nick = sanitizeHtml(msg.n)
-
+  if (nick === '') {
+    nick = 'Anonymous'
+  }
    dbBoards.data = dbBoards.data
 
-   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, sent: msg.sent, type: msg.type}
+   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: hash, sent: msg.sent, type: msg.type}
 
       console.log('Save board message?', message);
       mainWindow.webContents.send('boardMsg', message)
@@ -704,7 +706,7 @@ async function sendBoardMessage(message, to_board, reply=false) {
       const sentMsg = payload_json
       sentMsg.sent = true
       sentMsg.type = "board"
-      saveBoardMsg(sentMsg)
+      saveBoardMsg(sentMsg, result.transactionHash)
   } else {
       console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
