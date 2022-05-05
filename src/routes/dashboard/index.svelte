@@ -5,22 +5,22 @@
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {messages} from "$lib/stores/messages.js";
     import {onMount} from "svelte";
-
-    let res
-    let savedMsgs
+    import {boardMessages} from "$lib/stores/boardmsgs.js";
 
     onMount(async () => {
     //Get messages and save to a variable.
     messages.set(await window.api.getMessages(res => {
-      console.log('response', res);
+      console.log('response', res)
+    }))
 
-        savedMsgs
+    boardMessages.set(await window.api.getBoardMsgs(data => {
+      console.log('response', data)
     }))
   })
 
-    let myAddress = $user.huginAddress
-    let address = myAddress.substring(0,99);
-    let messageKey = myAddress.substring(99,163);
+    let huginAddress = $user.huginAddress
+    let address = huginAddress.substring(0,99);
+    let messageKey = huginAddress.substring(99,163);
     let avatar = get_avatar(address)
     let copy
 
@@ -62,7 +62,7 @@
 
                </div>
 
-               <button on:click={() => copyThis(myAddress)}> Copy Both </button>
+               <button on:click={() => copyThis(huginAddress)}> Copy Both </button>
 
        </div>
 
