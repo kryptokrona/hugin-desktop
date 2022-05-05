@@ -278,7 +278,7 @@ if (fs.existsSync(userDataDir + '/messages.db')) {
   //Create DBs on first start
   db.data = {walletNames:[],
             blockHeight:[],}
-  dbBoards.data = {messages: []}
+  dbBoards.data = {boardMessages: []}
   dbMessages.data = {messages: [ {
       "from": "Hugin Messenger",
       "k": "munin",
@@ -525,21 +525,26 @@ async function backgroundSyncMessages(knownTxsIds) {
                         console.log('Caught undefined null message, continue');
                         continue;
                       }
-                      let clean = sanitizeHtml(message);
-                      console.log('message', message.msg);
-                      clean.sent = false
+
+                      console.log('message?', message);
+                      let clean = sanitizeHtml(message.m);
+                      message.sent = false
 
                       console.log('Clean', clean);
 
                       mainWindow.webContents.send('clean', clean)
                       //Checking if private msg is a call
-                      if (message.type == "sealedbox" || "box") {
+                      if (message.type == "sealedbox" || "box" && !message.brd) {
                       console.log('Checking if private msg is a call');
                       parseCall(message.msg, message.from)
 
                       }
 
-                      console.log('Message?', message.msg)
+                      if (message.m) {
+                          console.log('Boards message', message);
+                          message.type = 'board'
+                          mainWindow.webContents.send('boardMsg', message)
+                      }
 
                       saveMsg(message);
                   }
@@ -583,7 +588,10 @@ async function saveMsg(message, hash) {
   //Save messages and known tx hashes
    dbBoards.data = dbBoards.data
    dbMessages.data = dbMessages.data
-
+   if (message === undefined) {
+     console.log('message undefined');
+     return;
+   }
   switch (message.type) {
       case "sealedbox":
       let senderKey = message.k
@@ -598,11 +606,11 @@ async function saveMsg(message, hash) {
           await dbMessages.write()
           mainWindow.webContents.send('newMsg', dbMessages.data)
           break;
-      default:
-          if (message) {
-              dbBoards.data.messages.push(message)
+      case "board":
+          console.log('Save board message?', message);
+              message.sent = false
+              dbBoards.data.boardMessages.push(message)
               await dbBoards.write()
-          }
           break;
   }
 
@@ -623,10 +631,69 @@ ipcMain.on('sendMsg', (e, msg, receiver) => {
     }
 )
 
+ipcMain.on('sendBoardMsg', (e, msg, to_board, reply=false) => {
+        sendBoardMessage(msg, to_board, reply);
+        console.log(msg, to_board)
+    }
+)
+
 ipcMain.on('answerCall', (e, msg, contact) => {
     mainWindow.webContents.send('answer-call', msg, contact)
     }
 )
+
+async function sendBoardMessage(message, to_board, reply=false) {
+
+  try {
+
+  let my_address = await js_wallet.getPrimaryAddress();
+  let  timestamp = parseInt(Date.now()/1000);
+  let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+  let xkr_private_key = privateSpendKey;
+  let signature = await xkrUtils.signMessage(message, xkr_private_key);
+
+  let payload_json = {
+      "m": message,
+      "k": my_address,
+      "s": signature,
+      "brd": to_board,
+      "t": timestamp
+  };
+
+  if (reply) {
+    payload_json.r = reply
+  }
+
+  payload_hex = toHex(JSON.stringify(payload_json))
+
+  let result = await js_wallet.sendTransactionAdvanced(
+      [[my_address, 1]], // destinations,
+      3, // mixin
+      {fixedFee: 7500, isFixedFee: true}, // fee
+      undefined, //paymentID
+      undefined, // subWalletsToTakeFrom
+      undefined, // changeAddress
+      true, // relayToNetwork
+      false, // sneedAll
+      Buffer.from(payload_hex, 'hex')
+  );
+
+  if (result.success) {
+      console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+      const sentMsg = payload_json
+      dbBoards.data.messages.push(sentMsg)
+      await dbBoards.write()
+      mainWindow.webContents.send('boardMsg', dbBoards.data)
+      known_pool_txs.push(result.transactionHash)
+  } else {
+      console.log(`Failed to send transaction: ${result.error.toString()}`);
+  }
+
+  } catch(err) {
+console.log('Error', err);
+}
+
+}
 
 async function sendMessage(message, receiver) {
     console.log('Want to send')
@@ -738,9 +805,15 @@ async function sendMessage(message, receiver) {
     }
 }
 
-ipcMain.handle('getMessages', async () => {
+ipcMain.handle('getMessages', async (data) => {
     await dbMessages.read()
     return dbMessages.data
+})
+
+ipcMain.handle('getBoardMsgs', async (data) => {
+    await dbBoards.read()
+    console.log('BoardsData',dbBoards.data);
+    return dbBoards.data
 })
 
 ipcMain.handle('getBalance', async () => {
