@@ -832,6 +832,7 @@ ipcMain.handle('getMessages', async (data) => {
 ipcMain.handle('getBoardMsgs', async (data) => {
     await dbBoards.read()
     console.log('BoardsData',dbBoards.data);
+    let rData = dbBoards.data.boardMessages.reverse()
     return dbBoards.data
 })
 
