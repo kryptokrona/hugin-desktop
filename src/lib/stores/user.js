@@ -9,5 +9,6 @@ export const user = writable({
     activeChat: null,
     huginAddress: '',
     syncState: '',
-    call: {}
+    call: {},
+    thisBoard: "test"
 })
