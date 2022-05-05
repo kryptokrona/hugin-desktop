@@ -9,6 +9,7 @@
 
     let boardMsgs = []
     onMount(async () => {
+      console.log('mounting');
 
         //If we have saved board messages we will print them once on mount
             printMessages()
@@ -19,7 +20,7 @@
             //Push new message to store
             //boardMessages.update(() => data.boardMessages)
             //Update boardsMsgs from store
-            boardMsgs.push(data)
+            boardMsgs.unshift(data)
             boardMsgs = boardMsgs
             console.log('Boards msgs array?', boardMsgs)
 
@@ -50,7 +51,7 @@
         <ChatInput on:message={sendboardMsg}/>
 
             <BoardWindow>
-                    {#each boardMsgs.reverse() as message}
+                    {#each boardMsgs as message}
                     <BoardMessage handleType={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}/>
 
                     {/each}
