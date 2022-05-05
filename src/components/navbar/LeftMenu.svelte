@@ -1,39 +1,20 @@
 <script>
     import {fly} from 'svelte/transition'
-    import {user} from "$lib/stores/user.js";
+    import {user, userAvatar} from "$lib/stores/user.js";
     import msgIcon from '/static/images/msg.png'
     import brdIcon from '/static/images/brd.png'
     import settingsIcon from '/static/images/settings.png'
     import logoutIcon from '/static/images/logout.png'
     import financeIcon from '/static/images/finance.png'
-    import {onMount} from "svelte";
-    import {get_avatar} from "$lib/utils/hugin-utils.js";
 
-    let myAddress
     let sync
     let avatar
-    let huginAddr
-
-    onMount(() => {
-        window.api.receive('addr', async (huginAddr) => {
-
-        let address = huginAddr.substring(0,99);
-        let messageKey =  huginAddr.substring(99,163);
-        avatar = get_avatar(address)
-        console.log('Hugin Address', huginAddr);
-
-        user.update(data => {
-            return {
-                ...data,
-                huginAddress: huginAddr,
-            }
-        })
-
-      })
-
-    })
 
     $: sync = $user.syncState
+
+    userAvatar.subscribe(output => {
+        avatar = output
+    })
 
     const handleLogout = () => {
         user.update(data => {

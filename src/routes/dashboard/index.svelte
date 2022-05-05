@@ -1,11 +1,16 @@
 <script>
     import { fade } from 'svelte/transition';
     import Balance from "/src/components/finance/Balance.svelte";
-    import {user} from "$lib/stores/user.js";
+    import {user, userAvatar} from "$lib/stores/user.js";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {messages} from "$lib/stores/messages.js";
     import {onMount} from "svelte";
     import {boardMessages} from "$lib/stores/boardmsgs.js";
+
+    let huginAddress
+    let address
+    let messageKey
+    let avatar
 
     onMount(async () => {
     //Get messages and save to a variable.
@@ -18,11 +23,15 @@
     }))
   })
 
-    let huginAddress = $user.huginAddress
-    let address = huginAddress.substring(0,99);
-    let messageKey = huginAddress.substring(99,163);
-    let avatar = get_avatar(address)
-    let copy
+    user.subscribe(user => {
+        huginAddress = user.huginAddress
+        address = huginAddress.substring(0,99);
+        messageKey = huginAddress.substring(99,163);
+    })
+
+    userAvatar.subscribe(output => {
+        avatar = output
+    })
 
     //Copy address, msgkey or both
     function copyThis(copy) {

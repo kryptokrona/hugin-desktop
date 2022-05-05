@@ -20,7 +20,6 @@
 	}
 
 	onMount( async () => {
-
 		window.process = {
 			...window.process,
 			env: { DEBUG: undefined },
@@ -30,6 +29,7 @@
 		};
 
 		ready = true
+
 
 		messages.set(await window.api.getMessages())
 		//Handle incoming call
@@ -49,6 +49,16 @@
 				return{
 					...user,
 					syncState: res
+				}
+			})
+		})
+
+		window.api.receive('addr', async (huginAddr) => {
+			console.log('Addr incoming')
+			user.update(data => {
+				return {
+					...data,
+					huginAddress: huginAddr,
 				}
 			})
 		})

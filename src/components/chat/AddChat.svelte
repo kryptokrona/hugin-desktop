@@ -31,7 +31,7 @@
     // Dispatch the inputted data
     const handleAdd = () => {
         dispatch('addChat', {
-            msg: 'Founf a friend? 🥳',
+            msg: 'Found a friend? 🥳',
             from: addr,
             k: pubkey
         })

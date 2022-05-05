@@ -1,4 +1,5 @@
-import { writable } from "svelte/store";
+import { writable, derived } from "svelte/store";
+import {get_avatar} from "$lib/utils/hugin-utils.js";
 
 //Default values
 export const user = writable({
@@ -8,7 +9,14 @@ export const user = writable({
     node: '',
     activeChat: null,
     huginAddress: '',
+    userAvatar: '',
     syncState: '',
     call: {},
     thisBoard: "test"
+})
+
+export const userAvatar = derived(user, $user => {
+    if ($user.huginAddress.length > 15) {
+        return get_avatar($user.huginAddress)
+    }
 })
