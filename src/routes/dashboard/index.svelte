@@ -10,6 +10,7 @@
     let address
     let messageKey
     let avatar
+    let huginAddr
 
     onMount(async () => {
     //Get messages and save to a variable.
@@ -21,6 +22,15 @@
       console.log('response', data)
     }))
   })
+
+
+  user.update(oldData => {
+     return {
+         ...oldData,
+         loggedIn: true
+     }
+ })
+
 
     user.subscribe(user => {
         huginAddress = user.huginAddress
@@ -38,6 +48,17 @@
       navigator.clipboard.writeText(copy)
 
       }
+
+      window.api.receive('addr', async (huginAddr) => {
+  			console.log('Addr incoming')
+  			user.update(data => {
+  				return {
+  					...data,
+  					huginAddress: huginAddr,
+  				}
+  			})
+  		})
+
 
 </script>
 
