@@ -600,7 +600,7 @@ async function saveMsg(msg, hash) {
 
   //Checking if private msg is a call
   console.log('Checking if private msg is a call');
-  parseCall(msg, addr)
+  parseCall(text, addr)
 
   let message = {from: addr , k: key ,msg: text, t: timestamp}
 
