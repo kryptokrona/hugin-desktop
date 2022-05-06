@@ -15,7 +15,7 @@
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-  {#if message.r != ''}
+  {#if message.r}
   <div class="reply">     <img class="reply_avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
            <p class="reply_nickname">{nickname.r}</p> <br>
