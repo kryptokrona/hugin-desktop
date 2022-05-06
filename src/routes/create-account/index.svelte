@@ -2,6 +2,7 @@
     import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
+    import { goto } from '$app/navigation';
 
     let password;
     let walletName;
@@ -14,14 +15,15 @@
       }
         window.api.send('create-account', accountData);
 
-        user.update(oldData => {
-            return {
-                ...oldData,
-                loggedIn: true
-            }
-        })
-    console.log('Creating user account')
+        console.log('Creating user account')
     }
+
+    window.api.receive('wallet-started', async () => {
+
+        goto("/dashboard")
+
+    })
+
 </script>
 
 <main in:fade>
@@ -31,7 +33,7 @@
         <input type="text" placeholder="Satoshi" bind:value={walletName}>
         <label>Password</label>
         <input type="password" placeholder="Something safe" bind:value={password}>
-        <FillButton text="Create" url="/dashboard" on:click={handleLogin}/>
+        <FillButton text="Create" on:click={handleLogin}/>
         <FillButton text="back" url="/"/>
     </div>
 </main>
