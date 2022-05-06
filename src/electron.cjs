@@ -242,25 +242,23 @@ const knownTxs = new Low(adapterTxs)
 
 
 let js_wallet;
-let c = false;
 let walletName
-
-startCheck()
 let known_keys = [];
+
+ipcMain.on('app', (data) => {
+    mainWindow.webContents.send('getPath', userDataDir)
+    startCheck()
+})
 
 async function startCheck() {
 
 
-if (fs.existsSync(userDataDir + '/messages.db')) {
+if (fs.existsSync(userDataDir + '/misc.db')) {
     // We have found a wallet file
     await db.read()
     let walletName = db.data.walletNames
-    console.log('walletname', walletName);
-    ipcMain.on('app', (data) => {
-        mainWindow.webContents.send('getPath', userDataDir)
-        return mainWindow.webContents.send('wallet-exist', true, walletName);
-    })
-
+    console.log('walletname', walletName)
+    mainWindow.webContents.send('wallet-exist', true, walletName)
 
     ipcMain.on('login', async (event, data) => {
       let walletName = data.thisWallet
@@ -268,51 +266,51 @@ if (fs.existsSync(userDataDir + '/messages.db')) {
       console.log('creating this wallet', walletName);
       console.log('password', password);
       start_js_wallet(walletName, password);
-      console.log(c)
     })
 
-} else {
-  //No wallet found, probably first start
-  console.log('wallet not found')
+    } else {
+    //No wallet found, probably first start
+    console.log('wallet not found')
 
-  //Create DBs on first start
-  db.data = {walletNames:[],
-            blockHeight:[],}
-  dbBoards.data = {boardMessages: []}
-  dbMessages.data = {messages: [ {
-      "from": "Hugin Messenger",
-      "k": "munin",
-      "msg": "Welcome to Hugin Messenger",
-      "t": 1650919475320,
-      "type": "box",
-      "sent": false
-    },]}
-  keychain.data = {known_keys:[]}
-  knownTxs.data = {known_txs:[]}
-  //
-  await keychain.write(keychain.data)
-  await knownTxs.write(knownTxs.data)
-  await dbBoards.write(dbBoards.data)
-  await dbMessages.write(dbMessages.data)
-  await db.write(db.data)
-  console.log('creating dbs...');
-  return mainWindow.webContents.send('wallet-exist', false, walletName)
-}
-}
+    mainWindow.webContents.send('wallet-exist', false)
+    }
+
+  }
 
 let myPassword;
 
 ipcMain.on('create-account', async (e, accountData) => {
+
     let walletName = accountData.walletName
     let myPassword = accountData.password
     console.log('creating', walletName);
-    const newWallet = await WB.WalletBackend.createWallet(daemon);
-    newWallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', myPassword)
-    js_wallet = newWallet
+    const js_wallet = await WB.WalletBackend.createWallet(daemon);
     console.log(myPassword)
+    //Create DBs on first start
+    db.data = {walletNames:[],
+              blockHeight:[],}
+    dbBoards.data = {boardMessages: []}
+    dbMessages.data = {messages: [ {
+        "from": "Hugin Messenger",
+        "k": "munin",
+        "msg": "Welcome to Hugin Messenger",
+        "t": 1650919475320,
+        "type": "box",
+        "sent": false
+      },]}
+    keychain.data = {known_keys:[]}
+    knownTxs.data = {known_txs:[]}
+    //
+    await keychain.write(keychain.data)
+    await knownTxs.write(knownTxs.data)
+    await dbBoards.write(dbBoards.data)
+    await dbMessages.write(dbMessages.data)
+    //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
-    await start_js_wallet(walletName, myPassword);
+    console.log('creating dbs...');
+    await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', myPassword)
+    start_js_wallet(walletName, myPassword);
   })
 
 async function loadKeys() {
@@ -333,55 +331,41 @@ console.log('KNOWN POOOL TXS', known_pool_txs);
 return known_pool_txs
 }
 
-let syncing = true;
+async function logIntoWallet(walletName, password) {
 
-async function start_js_wallet(walletName, password) {
-    /* Initialise our blockchain cache api. Can use a public node or local node
-       with `const daemon = new WB.Daemon('127.0.0.1', 11898);` */
-       //Load known public keys
-      await loadKeys();
-
-       //Load known pool txs from db.
-      let knownTxs = await loadKnownTxs()
-    //
-    // if (c === 'c') {
-    //
-    //   let height = 1033909
-    //
-    //     try {
-    //         let re = await fetch('http://' + node + ':' + ports + '/getinfo');
-    //
-    //         height = await re.json();
-    //
-    //     } catch (err) {
-    //
-    //     }
-    //
-    // } else if (c === 'o') {
-        /* Open wallet, giving our wallet path and password */
-
-        try {
-
-          const [openedWallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/' + walletName + '.wallet', password);
-          if (error) {
-              console.log('Failed to open wallet: ' + error.toString());
-              return;
-              }
-
-              js_wallet = openedWallet;
-
-        } catch(err) {
-          console.log('Error', err);
+    const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/' + walletName + '.wallet', password);
+    console.log('My wallet', js_wallet);
+    if (error) {
+        console.log('Failed to open wallet: ' + error.toString());
+        return 'Wrong password'
         }
 
+  return js_wallet
+}
 
-    js_wallet.enableAutoOptimization(false);
+async function start_js_wallet(walletName, password) {
+       //Load known public keys
+    await loadKeys();
 
-    /* Enable debug logging to the console */
+     //Load known pool txs from db.
+    let knownTxs = await loadKnownTxs()
 
+    js_wallet = await logIntoWallet(walletName, password)
 
+    console.log('GOt wallet', js_wallet);
+
+    if (js_wallet === 'Wrong password') {
+      console.log('A', js_wallet);
+      return;
+    }
     /* Start wallet sync process */
     await js_wallet.start();
+
+    //let syncdata = daemon.getWalletSyncData('', height)
+    //console.log('SYNC DATA', syncdata);
+    //js_wallet.heig
+
+    js_wallet.enableAutoOptimization(false);
 
     js_wallet.on('incomingtx', (transaction) => {
 
@@ -392,24 +376,6 @@ async function start_js_wallet(walletName, password) {
         // }
 
     });
-
-    js_wallet.on('heightchange', (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
-      console.log('Height changed');
-      if ((localDaemonBlockCount - walletBlockCount) < 2) {
-
-      //Save height to misc.db
-      db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
-      db.write(db.data)
-      // Save js wallet to file
-      console.log('******** SAVING WALLET ********');
-      js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
-    } else {
-      //Log
-      console.log('******** SYNCING HEIGHT *******', walletBlockCount);
-      console.log('///////NETWORK HEIGHT///////// ', networkBlockCount);
-    }
-
-    })
 
     let i = 1;
 
@@ -433,9 +399,31 @@ async function start_js_wallet(walletName, password) {
         i++;
     }
 
+
+    mainWindow.webContents.send('wallet-started')
+
+    js_wallet.on('heightchange', (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
+      console.log('Height changed');
+      if ((localDaemonBlockCount - walletBlockCount) < 2) {
+
+      //Save height to misc.db
+      db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
+      db.write(db.data)
+      // Save js wallet to file
+      console.log('******** SAVING WALLET ********');
+      js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
+    } else {
+
+      //Log
+      console.log('******** SYNCING HEIGHT *******', walletBlockCount);
+      console.log('///////NETWORK HEIGHT///////// ', networkBlockCount);
+    }
+
+  })
+
     console.log('Started wallet');
     //Load knownTxsIds to backgroundSyncMessages on startup
-    await sleep(1500)
+    await sleep(2000)
     console.log('Loading Sync');
     await backgroundSyncMessages(knownTxs)
 
@@ -453,11 +441,14 @@ async function start_js_wallet(walletName, password) {
             console.log('walletBlockCount', walletBlockCount);
             console.log('localDaemonBlockCount', localDaemonBlockCount);
             console.log('networkBlockCount', networkBlockCount);
-            syncing = false;
         } else {
-        console.log('Syncing wallet ', walletBlockCount);
-        console.log('Syncing local d', localDaemonBlockCount);
-        console.log('Syncing network', networkBlockCount);
+            if ((networkBlockCount - walletBlockCount) > 100000 || walletBlockCount === 0) {
+
+          await js_wallet.reset(1044088)
+          console.log('Syncing wallet ', walletBlockCount);
+          console.log('Syncing local d', localDaemonBlockCount);
+          console.log('Syncing network', networkBlockCount);
+            }
         }
 
       } catch (err) {
