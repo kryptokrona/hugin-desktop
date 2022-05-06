@@ -5,6 +5,7 @@
     import {user} from "$lib/stores/user.js";
     import {nodelist} from "$lib/stores/nodes.js";
     import {onMount} from "svelte";
+    import { goto } from '$app/navigation';
     let wallet
     let walletName
     let myPassword
@@ -32,13 +33,6 @@
 
       window.api.send('login', accountData)
 
-            user.update(oldData => {
-                return {
-                    ...oldData,
-                    loggedIn: true
-                }
-            })
-        console.log('User logged in')
     }
 
     let node;
@@ -62,11 +56,12 @@
       $ :  myPassword
       $ :  console.log('mypass', myPassword);
 
-      let clean
-        window.api.receive('clean', async (clean) => {
-          console.log('clean', clean);
+      window.api.receive('wallet-started', async () => {
 
-        })
+        goto("/dashboard")
+
+      })
+
 </script>
 
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
