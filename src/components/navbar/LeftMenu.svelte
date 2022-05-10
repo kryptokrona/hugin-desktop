@@ -15,7 +15,8 @@
     userAvatar.subscribe(output => {
         avatar = output
     })
-
+    $ : avatar
+    
     const handleLogout = () => {
         user.update(data => {
             return {
