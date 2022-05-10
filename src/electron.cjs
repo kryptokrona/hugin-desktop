@@ -323,7 +323,7 @@ await keychain.read()
 let contacts = db.data.contacts
 console.log('contacts', contacts);
 for (keys in contacts) {
-let thiskey = key_chain[key].substring(99,163)
+let thiskey = contacts[key].substring(99,163)
 known_keys.push(thiskey)
 console.log('Pushin this', thiskey);
 }
