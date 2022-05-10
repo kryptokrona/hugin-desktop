@@ -11,7 +11,8 @@ export const user = writable({
     huginAddress: '',
     syncState: '',
     call: {},
-    thisBoard: "test"
+    thisBoard: "test",
+    contacts: []
 })
 
 export const userAvatar = derived(user, $user => {
