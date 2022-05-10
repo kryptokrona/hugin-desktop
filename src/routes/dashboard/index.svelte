@@ -49,16 +49,6 @@
 
       }
 
-      window.api.receive('addr', async (huginAddr) => {
-  			console.log('Addr incoming')
-  			user.update(data => {
-  				return {
-  					...data,
-  					huginAddress: huginAddr,
-  				}
-  			})
-  		})
-
 
 </script>
 
