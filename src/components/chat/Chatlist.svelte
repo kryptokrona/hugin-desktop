@@ -8,37 +8,58 @@
 
     const dispatch = createEventDispatcher();
     let filterArr = []
-
+    let contacts = []
     //Get message updates and trigger filter
     messages.subscribe(() => {
         if ($messages.length > 0) {
             filterConversation($messages)
         }
+    })
 
-        //If we have no active chat we take the latest known message and dispatch.
-        if (!$user.activeChat) {
-            sendConversation($messages[0].from, $messages[0].k)
-        }
+    window.api.receive('saved-addr', huginaddr => {
+      console.log('new contact', huginaddr);
+
+      let chat = hugin_address.substring(0,99)
+      let key = hugin_address.substring(99, 163)
+      let hugin_address = {chat: chat, key: key}
+      console.log('updating', hugin_address);
+      contacts.push(hugin_address)
+      console.log('Contacts', contacts);
+
     })
 
     //Function to filer array after last msg and conversation
     function filterConversation(arr) {
         let uniq = {}
-        filterArr = arr.filter(obj => !uniq[obj.from] && (uniq[obj.from] = true))
+        filterArr = arr.filter(obj => !uniq[obj.chat] && (uniq[obj.chat] = true))
         console.log('FILTERARR', filterArr)
+        //If we have no active chat we take the latest known message and dispatch.
+        if (!$user.activeChat) {
+          console.log('no userchat', $user.activeChat);
+            console.log(filterArr);
+
+            sendConversation(filterArr[0])
+        }
     }
 
+    $ : filterArr
+
     //Dispatches the clicked conversation to parent
-    function sendConversation(from, key) {
+    function sendConversation(message) {
+
+      let chat = message.chat
+      let key = message.k
+      console.log('dispatching', chat + key);
+
         dispatch('conversation', {
-            from,
+            chat: chat,
             k: key
         });
         //Saved clicked chat
         user.update(user => {
             return{
                 ...user,
-               activeChat: {from: from, k: key}
+               activeChat: {chat: chat, k: key}
             }
         })
     }
@@ -52,10 +73,10 @@
     </div>
     <div class="list-wrapper">
         {#each filterArr as message}
-            <div class="card" on:click={() => sendConversation(message.from, message.k)}>
-                <img class="avatar" src="data:image/png;base64,{get_avatar(message.from)}" alt="">
+            <div class="card" on:click={(e) => sendConversation(message)}>
+                <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="">
                 <div class="content">
-                    <h4>{message.from}</h4>
+                    <h4>{message.chat}</h4>
                     <p>{message.msg}</p>
                 </div>
             </div>
