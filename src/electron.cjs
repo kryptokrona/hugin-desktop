@@ -263,7 +263,7 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     ipcMain.on('login', async (event, data) => {
       let walletName = data.thisWallet
       let password = data.myPassword
-      console.log('creating this wallet', walletName);
+      console.log('Starting this wallet', walletName);
       console.log('password', password);
       start_js_wallet(walletName, password);
     })
@@ -291,14 +291,14 @@ ipcMain.on('create-account', async (e, accountData) => {
               blockHeight:[],}
     dbBoards.data = {boardMessages: []}
     dbMessages.data = {messages: [ {
-        "from": "Hugin Messenger",
+        "chat": "Hugin Messenger",
         "k": "munin",
         "msg": "Welcome to Hugin Messenger",
         "t": 1650919475320,
         "type": "box",
         "sent": false
       },]}
-    keychain.data = {known_keys:[]}
+    keychain.data = {contacts:[]}
     knownTxs.data = {known_txs:[]}
     //
     await keychain.write(keychain.data)
@@ -317,9 +317,18 @@ async function loadKeys() {
 
 //Load known public keys from db and push them to known_keys
 await keychain.read()
-known_keys = keychain.data.known_keys
+
+let contacts = db.data.contacts
+console.log('contacts', contacts);
+for (keys in contacts) {
+let thiskey = key_chain[key].substring(99,163)
+known_keys.push(thiskey)
+console.log('Pushin this', thiskey);
+}
+
 console.log('known keys', known_keys);
 
+return contacts
 }
 
 async function loadKnownTxs() {
@@ -334,7 +343,6 @@ return known_pool_txs
 async function logIntoWallet(walletName, password) {
 
     const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/' + walletName + '.wallet', password);
-    console.log('My wallet', js_wallet);
     if (error) {
         console.log('Failed to open wallet: ' + error.toString());
         return 'Wrong password'
@@ -344,15 +352,8 @@ async function logIntoWallet(walletName, password) {
 }
 
 async function start_js_wallet(walletName, password) {
-       //Load known public keys
-    await loadKeys();
-
-     //Load known pool txs from db.
-    let knownTxs = await loadKnownTxs()
 
     js_wallet = await logIntoWallet(walletName, password)
-
-    console.log('GOt wallet', js_wallet);
 
     if (js_wallet === 'Wrong password') {
       console.log('A', js_wallet);
@@ -360,13 +361,16 @@ async function start_js_wallet(walletName, password) {
     }
     /* Start wallet sync process */
     await js_wallet.start();
+    //Load known pool txs from db.
+    let knownTxs = await loadKnownTxs()
+     //Load known public keys
+    let myContacts = await loadKeys()
 
     //let syncdata = daemon.getWalletSyncData('', height)
     //console.log('SYNC DATA', syncdata);
     //js_wallet.heig
 
     js_wallet.enableAutoOptimization(false);
-
     js_wallet.on('incomingtx', (transaction) => {
 
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
@@ -388,39 +392,7 @@ async function start_js_wallet(walletName, password) {
         i++;
     }
 
-    i = 1;
-
-    let boards_addresses = [];
-
-    for (const address of js_wallet.getAddresses()) {
-        const [publicSpendKey, privateSpendKey, err] = await js_wallet.getSpendKeys(address);
-        boards_addresses[boards_addresses.length] = [address, publicSpendKey];
-        console.log(`Address [${i}]: ${address}`);
-        i++;
-    }
-
-
-    mainWindow.webContents.send('wallet-started')
-
-    js_wallet.on('heightchange', (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
-      console.log('Height changed');
-      if ((localDaemonBlockCount - walletBlockCount) < 2) {
-
-      //Save height to misc.db
-      db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
-      db.write(db.data)
-      // Save js wallet to file
-      console.log('******** SAVING WALLET ********');
-      js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
-    } else {
-
-      //Log
-      console.log('******** SYNCING HEIGHT *******', walletBlockCount);
-      console.log('///////NETWORK HEIGHT///////// ', networkBlockCount);
-    }
-
-  })
-
+    mainWindow.webContents.send('wallet-started', myContacts)
     console.log('Started wallet');
     //Load knownTxsIds to backgroundSyncMessages on startup
     await sleep(2000)
@@ -444,17 +416,33 @@ async function start_js_wallet(walletName, password) {
         } else {
             if ((networkBlockCount - walletBlockCount) > 100000 || walletBlockCount === 0) {
 
-          await js_wallet.reset(1044088)
-          console.log('Syncing wallet ', walletBlockCount);
-          console.log('Syncing local d', localDaemonBlockCount);
-          console.log('Syncing network', networkBlockCount);
+              await js_wallet.reset(1044088)
+
             }
+
+            console.log('********SYNCING********');
+            console.log('Wallet ', walletBlockCount);
+            console.log('LocalD', localDaemonBlockCount);
+            console.log('Network', networkBlockCount);
         }
 
       } catch (err) {
       console.log(err);
       }
     }
+
+    js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
+      if ((localDaemonBlockCount - walletBlockCount) < 2) {
+
+      //Save height to misc.db
+      db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
+      db.write(db.data)
+      // Save js wallet to file
+      console.log('******** SAVING WALLET ********');
+      await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
+    }
+
+  })
 
 }
 
@@ -521,12 +509,12 @@ async function backgroundSyncMessages(knownTxsIds) {
 
                       message.sent = false
 
-                      if (message.brd && message.s) {
+                      if (message.brd) {
                           console.log('Boards message', message);
                           message.type = "board"
                           saveBoardMsg(message)
                       } else {
-
+                        console.log('Saving Message');
                         saveMsg(message);
 
                       }
@@ -547,11 +535,15 @@ async function backgroundSyncMessages(knownTxsIds) {
         }
 }
 
-async function saveKey(key) {
+async function saveContact(hugin_address) {
 
+  let addr = hugin_address.substring(0,99)
+  let key = hugin_address.substring(99, 163)
+  hugin_address = {chat: addr, key: key}
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
-  keychain.data.known_keys.push(key)
+  mainWindow.webContents.send('saved-addr', hugin_address)
+  keychain.data.contacts.push(hugin_address)
   await keychain.write()
 
 }
@@ -596,37 +588,33 @@ async function saveMsg(msg, hash) {
   let text = sanitizeHtml(msg.msg);
   let addr = sanitizeHtml(msg.from);
   let timestamp = escape(msg.t)
-  let key = sanitizeHtml(msg.key)
-
+  let key = sanitizeHtml(msg.k)
+  let sent = msg.sent
   //Checking if private msg is a call
   console.log('Checking if private msg is a call');
   parseCall(text, addr)
 
-  let message = {from: addr , k: key ,msg: text, t: timestamp}
+  let message = {chat: addr, k: key ,msg: text, t: timestamp, sent: sent}
 
-  console.log('clean message', message);
   //Save messages and known tx hashes
    dbMessages.data = dbMessages.data
-   if (message === undefined) {
-     console.log('message undefined');
-     return;
-   }
-  switch (message.type) {
-      case "sealedbox":
-      let senderKey = message.k
-      console.log('saving this senderkey', senderKey)
-      saveKey(senderKey)
-          dbMessages.data.messages.push(message)
-          await dbMessages.write()
-          mainWindow.webContents.send('newMsg', dbMessages.data)
-          break;
-      case "box":
-          dbMessages.data.messages.push(message)
-          await dbMessages.write()
-          mainWindow.webContents.send('newMsg', dbMessages.data)
-          break;
-  }
+     if (message === undefined) {
+       console.log('message undefined');
+       return;
+     }
 
+     console.log('TAJP', msg.type);
+
+     if (msg.type === 'sealedbox') {
+      console.log('Saving key', key);
+      let hugin = addr + key
+      saveContact(hugin)
+     }
+
+      mainWindow.webContents.send('newMsg', message)
+      dbMessages.data.messages.push(message)
+      await dbMessages.write()
+      console.log('message', message);
 }
 
 //SWITCH NODE
@@ -710,11 +698,11 @@ console.log('Error', err);
 
 async function sendMessage(message, receiver) {
     console.log('Want to send')
-    let has_history = false
+    let has_history
     let address = receiver.substring(0,99);
     let messageKey =  receiver.substring(99,163);
         //receiver.substring(99,163);
-    if (known_keys.indexOf(messageKey) > 0) {
+    if (known_keys.indexOf(messageKey) > -1) {
 
       console.log('I know this contact?');
       has_history = true;
@@ -722,7 +710,7 @@ async function sendMessage(message, receiver) {
     } else {
 
       has_history = false
-      saveKey(messageKey);
+      saveContact(receiver);
 
     }
 //receiver.substring(99,163);
@@ -806,11 +794,12 @@ async function sendMessage(message, receiver) {
         Buffer.from(payload_hex, 'hex')
     );
 
+    let sentMsg = {msg: message, k: messageKey, chat: address, sent: true, t: timestamp}
+
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        const sentMsg = {msg: message, k: messageKey, from: address, sent: true, t: timestamp}
         saveMsg(sentMsg)
-        mainWindow.webContents.send('newMsg', dbMessages.data)
+        mainWindow.webContents.send('sent', sentMsg)
         known_pool_txs.push(result.transactionHash)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
