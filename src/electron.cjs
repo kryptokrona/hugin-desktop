@@ -298,7 +298,9 @@ ipcMain.on('create-account', async (e, accountData) => {
         "type": "box",
         "sent": false
       },]}
-    keychain.data = {contacts:[]}
+    keychain.data = {contacts:[ {
+        chat: "Hugin Messenger",
+        k: "munin"},]}
     knownTxs.data = {known_txs:[]}
     //
     await keychain.write(keychain.data)
