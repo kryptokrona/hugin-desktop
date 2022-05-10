@@ -17,13 +17,7 @@
 
         console.log('Creating user account')
     }
-
-    window.api.receive('wallet-started', async () => {
-
-        goto("/dashboard")
-
-    })
-
+    
 </script>
 
 <main in:fade>
