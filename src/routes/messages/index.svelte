@@ -10,7 +10,7 @@
     import {user} from "$lib/stores/user.js";
     let video
     let audio
-    let from
+    let chat
     let active_contact
     let savedMsg = []
     let key
@@ -23,14 +23,18 @@
 
         //If we have an active chat in store we show that conversation
         if ($user.activeChat) {
-            filterMsgs($user.activeChat)
+            printConversation($user.activeChat)
         }
     })
-    const filterMsgs = active => {
-        from = active.from
+
+    //Prints conversation from active contact
+    const printConversation = (active) => {
+
+      console.log('printing conversation', active);
+        chat = active.chat
         key = active.k
-        active_contact = from + key;
-        savedMsg = $messages.filter(x => x.from === from)
+        active_contact = chat + key;
+        savedMsg = $messages.filter(x => x.chat === chat)
     }
     //Chat to add
     const handleAddChat = e => {
@@ -39,18 +43,32 @@
             return [e.detail, ...current]
         })
         //Prepare send function and filter
-        filterMsgs(e.detail)
+        printConversation(e.detail)
         console.log("Conversation to add", e.detail)
         //Close popup
         wantToAdd = false
     }
-    //Update messages live if users keep chat mounted
-    $: {
-        window.api.receive('newMsg', data => {
-            messages.update(() => data.messages)
-            savedMsg = $messages
-        })
+        //Update messages live if users keep chat mounted
+          const printMessage = (data) =>  {
+          savedMsg.unshift(data)
+          savedMsg = savedMsg
+          messages.update(() => savedMsg)
     }
+
+
+    $: {
+          window.api.receive('newMsg', data => {
+          if (data.chat === chat) {
+            printMessage(data)
+          }
+        })
+
+
+    }
+
+    $ : savedMsg
+
+    $: active_contact
 
     //Send message to store and DB
     const sendMsg = e => {
@@ -73,11 +91,11 @@
 {/if}
 
 <main in:fade>
-    <ChatList on:conversation={e => filterMsgs(e.detail)} on:click={openAdd} />
+    <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
     <div class="rightside">
         <ChatWindow>
             {#each savedMsg as message}
-                <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.from}/>
+                <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}/>
             {/each}
         </ChatWindow>
         <ChatInput on:message={sendMsg}/>
