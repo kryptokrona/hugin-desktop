@@ -14,8 +14,8 @@
     $: {
         if($user.activeChat) {
             active_contact = $user.activeChat
-            contact =  $user.activeChat.from +  $user.activeChat.k
-            avatar = get_avatar(active_contact.from)
+            contact =  $user.activeChat.chat +  $user.activeChat.k
+            avatar = get_avatar(active_contact.chat)
         }
     }
 
