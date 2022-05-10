@@ -56,11 +56,29 @@
       $ :  myPassword
       $ :  console.log('mypass', myPassword);
 
-      window.api.receive('wallet-started', async () => {
+      window.api.receive('wallet-started', async (myContacts) => {
+
+        user.update(data => {
+  				return {
+  					...data,
+  					contacts: myContacts,
+  				}
+
+        })
 
         goto("/dashboard")
 
       })
+
+      window.api.receive('addr', async (huginAddr) => {
+  			console.log('Addr incoming')
+  			user.update(data => {
+  				return {
+  					...data,
+  					huginAddress: huginAddr
+  				}
+  			})
+  		})
 
 </script>
 
