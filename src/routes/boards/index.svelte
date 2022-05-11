@@ -15,7 +15,7 @@
             printMessages()
     })
 
-        window.api.receive('boardMsg', async (data) => {
+        window.api.receive('boardMsg', data => {
           console.log('boardMsg', data)
             //Push new message to store
             //boardMessages.update(() => data.boardMessages)
