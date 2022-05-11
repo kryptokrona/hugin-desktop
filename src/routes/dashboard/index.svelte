@@ -13,14 +13,7 @@
     let huginAddr
 
     onMount(async () => {
-    //Get messages and save to a variable.
-    messages.set(await window.api.getMessages(res => {
-      console.log('response', res)
-    }))
-
-    boardMessages.set(await window.api.getBoardMsgs(data => {
-      console.log('response', data)
-    }))
+  
   })
 
 
