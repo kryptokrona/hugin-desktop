@@ -323,8 +323,8 @@ await keychain.read()
 let contacts = keychain.data.contacts
 console.log('contacts', contacts);
 for (keys in contacts) {
-console.log('thiskey', contacts[keys].k)
-let thiskey = contacts[keys].k
+console.log('thiskey', contacts[keys].key)
+let thiskey = contacts[keys].key
 known_keys.push(thiskey)
 console.log('Pushin this', thiskey);
 }
@@ -404,22 +404,22 @@ async function start_js_wallet(walletName, password) {
 
     while (true) {
 
+      try {
+
         //Start syncing
         await sleep(1000 * 3);
-        backgroundSyncMessages()
-      try {
+        await backgroundSyncMessages()
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
-            mainWindow.webContents.send('sync', 'synced');
             console.log('walletBlockCount', walletBlockCount);
             console.log('localDaemonBlockCount', localDaemonBlockCount);
             console.log('networkBlockCount', networkBlockCount);
         } else {
             if ((networkBlockCount - walletBlockCount) > 100000 || walletBlockCount === 0) {
 
-              await js_wallet.reset(1044088)
+              await js_wallet.reset(networkBlockCount - 1000)
 
             }
 
@@ -437,6 +437,7 @@ async function start_js_wallet(walletName, password) {
     js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
       if ((localDaemonBlockCount - walletBlockCount) < 2) {
 
+      mainWindow.webContents.send('sync', 'synced');
       //Save height to misc.db
       db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
       db.write(db.data)
@@ -515,10 +516,10 @@ async function backgroundSyncMessages(knownTxsIds) {
                       if (message.brd) {
                           console.log('Boards message', message);
                           message.type = "board"
-                          saveBoardMsg(message, thisHash)
+                          await saveBoardMsg(message, thisHash)
                       } else {
                         console.log('Saving Message');
-                        saveMsg(message);
+                        await saveMsg(message);
 
                       }
                   }
@@ -537,6 +538,8 @@ async function backgroundSyncMessages(knownTxsIds) {
         console.log('Sync error')
         }
 }
+
+let hugin_address
 
 async function saveContact(hugin_address) {
 
@@ -817,8 +820,6 @@ ipcMain.handle('getMessages', async (data) => {
 
 ipcMain.handle('getBoardMsgs', async (data) => {
     await dbBoards.read()
-    console.log('BoardsData',dbBoards.data);
-    let rData = dbBoards.data.boardMessages.reverse()
     return dbBoards.data
 })
 
