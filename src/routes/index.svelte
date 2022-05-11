@@ -57,6 +57,7 @@
       $ :  console.log('mypass', myPassword);
 
       window.api.receive('wallet-started', async (myContacts) => {
+        console.log('Mycontacts', myContacts);
 
         user.update(data => {
   				return {
