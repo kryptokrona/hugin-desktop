@@ -404,10 +404,10 @@ async function start_js_wallet(walletName, password) {
 
     while (true) {
 
-      try {
         //Start syncing
-        await backgroundSyncMessages()
         await sleep(1000 * 3);
+        backgroundSyncMessages()
+      try {
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
@@ -515,7 +515,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                       if (message.brd) {
                           console.log('Boards message', message);
                           message.type = "board"
-                          saveBoardMsg(message)
+                          saveBoardMsg(message, thisHash)
                       } else {
                         console.log('Saving Message');
                         saveMsg(message);
@@ -569,16 +569,17 @@ async function saveBoardMsg(msg, hash) {
   let sig = sanitizeHtml(msg.s)
   let timestamp = sanitizeHtml(msg.t)
   let nick = sanitizeHtml(msg.n)
+  let txHash = hash
   if (nick === '') {
     nick = 'Anonymous'
   }
    dbBoards.data = dbBoards.data
 
-   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: hash, sent: msg.sent, type: msg.type}
+   msg.sent = false
+   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: txHash, sent: msg.sent, type: msg.type}
 
       console.log('Save board message?', message);
       mainWindow.webContents.send('boardMsg', message)
-      message.sent = false
       dbBoards.data.boardMessages.push(message)
       await dbBoards.write()
 
