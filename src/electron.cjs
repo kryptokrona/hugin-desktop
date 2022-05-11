@@ -320,10 +320,11 @@ async function loadKeys() {
 //Load known public keys from db and push them to known_keys
 await keychain.read()
 
-let contacts = db.data.contacts
+let contacts = keychain.data.contacts
 console.log('contacts', contacts);
 for (keys in contacts) {
-let thiskey = contacts[key].substring(99,163)
+console.log('thiskey', contacts[keys].k)
+let thiskey = contacts[keys].k
 known_keys.push(thiskey)
 console.log('Pushin this', thiskey);
 }
