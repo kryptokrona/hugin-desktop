@@ -12,7 +12,7 @@ export const user = writable({
     syncState: '',
     call: {},
     thisBoard: "test",
-    contacts: []
+    contacts: null
 })
 
 export const userAvatar = derived(user, $user => {
