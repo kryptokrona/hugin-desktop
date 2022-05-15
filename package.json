@@ -37,6 +37,7 @@
 		"node-pre-gyp": "^0.17.0",
 		"sanitize-html": "^2.7.0",
 		"simple-peer": "^9.11.1",
+		"sqlite3": "^5.0.8",
 		"svelte-emoji-selector": "^1.0.1",
 		"tweetnacl": "^1.0.3",
 		"tweetnacl-sealed-box": "^1.0.5",
