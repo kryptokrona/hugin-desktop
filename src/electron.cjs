@@ -14,6 +14,7 @@ const naclSealed = require('tweetnacl-sealed-box')
 const {extraDataToMessage} = require('hugin-crypto')
 const sanitizeHtml = require('sanitize-html')
 const en = require ('int-encoder');
+const sqlite3 = require('sqlite3').verbose();
 
 const { Address,
     AddressPrefix,
@@ -208,7 +209,14 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-let userDataDir = app.getPath('userData');
+
+const userDataDir = app.getPath('userData');
+
+const dbPath = userDataDir + "/SQLmessages.db"
+const database = new sqlite3.Database(dbPath, (err) => {
+  if ( err) { console.log('Err', err); }
+});
+
 
 let node = 'blocksum.org'
 let ports = 11898
@@ -250,11 +258,12 @@ ipcMain.on('app', (data) => {
     startCheck()
 })
 
+
 async function startCheck() {
 
 
 if (fs.existsSync(userDataDir + '/misc.db')) {
-    // We have found a wallet file
+
     await db.read()
     let walletName = db.data.walletNames
     console.log('walletname', walletName)
@@ -271,16 +280,56 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     } else {
     //No wallet found, probably first start
     console.log('wallet not found')
-
+    // await createBoardsMessagesTable()
+    await createMessagesTable()
     mainWindow.webContents.send('wallet-exist', false)
     }
 
   }
 
+  function createMessagesTable() {
+      const table = `
+                    CREATE TABLE IF NOT EXISTS messages (
+                       msg TEXT,
+                       chat TEXT,
+                       type BOOLEAN,
+                       timestamp TEXT,
+                       UNIQUE (timestamp)
+                   )`
+     return new Promise((resolve, reject) => {
+      database.run(table, (err) => {
+        })
+        console.log('created Table');
+       }, () => {
+         resolve();
+       });
+     }
+
+
+    function welcomeMessage() {
+         const huginMessage = `REPLACE INTO messages (msg, chat, type, timestamp)
+                                VALUES (?, ?, ?, ?)`
+         return new Promise((resolve, reject) => {
+          database.run(huginMessage,
+              [
+                  'Welcome to hugin',
+                  'Hugin Messenger',
+                  false,
+                  '1650919475320'
+              ], (err) => {
+                console.log('Error creating msg', err);
+            })
+            console.log('created welcome msg');
+           }, () => {
+             resolve();
+           });
+   }
+
 let myPassword;
 
 ipcMain.on('create-account', async (e, accountData) => {
 
+    welcomeMessage()
     let walletName = accountData.walletName
     let myPassword = accountData.password
     console.log('creating', walletName);
@@ -290,17 +339,17 @@ ipcMain.on('create-account', async (e, accountData) => {
     db.data = {walletNames:[],
               blockHeight:[],}
     dbBoards.data = {boardMessages: []}
-    dbMessages.data = {messages: [ {
-        "chat": "Hugin Messenger",
-        "k": "munin",
-        "msg": "Welcome to Hugin Messenger",
-        "t": 1650919475320,
-        "type": "box",
-        "sent": false
-      },]}
+    // dbMessages.data = {messages: [ {
+    //     "chat": "Hugin Messenger",
+    //     "k": "55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d54",
+    //     "msg": "Welcome to Hugin Messenger",
+    //     "t": 1650919475320,
+    //     "type": "box",
+    //     "sent": false
+    //   },]}
     keychain.data = {contacts:[ {
         chat: "Hugin Messenger",
-        k: "munin"},]}
+        key: "55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d54"},]}
     knownTxs.data = {known_txs:[]}
     //
     await keychain.write(keychain.data)
@@ -368,7 +417,9 @@ async function start_js_wallet(walletName, password) {
     let knownTxs = await loadKnownTxs()
      //Load known public keys
     let myContacts = await loadKeys()
+    let messg = await getMessages()
 
+    console.log(messg);
     //let syncdata = daemon.getWalletSyncData('', height)
     //console.log('SYNC DATA', syncdata);
     //js_wallet.heig
@@ -519,7 +570,8 @@ async function backgroundSyncMessages(knownTxsIds) {
                           await saveBoardMsg(message, thisHash)
                       } else {
                         console.log('Saving Message');
-                        await saveMsg(message);
+                        // await saveMsg(message);
+                        saveMessageSQL(message)
 
                       }
                   }
@@ -588,9 +640,105 @@ async function saveBoardMsg(msg, hash) {
 
     }
 
-async function saveMsg(msg, hash) {
+    async function getMessages() {
+     const rows = [];
+     return new Promise((resolve, reject) => {
+       const getAllMessages = `SELECT * FROM messages`
+       database.each(getAllMessages, (err, row) => {
+           console.log(row);
+         if (err) {
+           console.log('Error', err);
+         }
+         rows.push(row);
+       }, () => {
+         resolve(rows);
+       });
+     })
 
-  console.log('message?', msg);
+    }
+
+       async function getConversation(chat=false) {
+
+            const rows = [];
+            return new Promise((resolve, reject) => {
+              const getChat = `SELECT
+                  msg,
+                  chat,
+                  type,
+                  timestamp
+              FROM
+                  messages
+              ${chat ? 'WHERE chat = "' + chat + '"' : ''}
+              ORDER BY
+                  timestamp
+              ASC`
+              database.each(getChat, (err, row) => {
+                  console.log(row);
+                if (err) {
+                  console.log('Error', err);
+                }
+                rows.push(row);
+              }, () => {
+                resolve(rows);
+              });
+            })
+       }
+
+       async function getBoardmessages(board=false) {
+
+            const rows = [];
+            return new Promise((resolve, reject) => {
+              const getBoard = `SELECT
+                  msg,
+                  k,
+                  s,
+                  brd,
+                  hash,
+                  r,
+                  timestamp
+              FROM
+                  messages
+              ${board ? 'WHERE brd = "' + board + '"' : ''}
+              ORDER BY
+                  timestamp
+              ASC`
+              database.each(getBoard, (err, row) => {
+                  console.log(row);
+                if (err) {
+                  console.log('Error', err);
+                }
+                rows.push(row);
+              }, () => {
+                resolve(rows);
+              });
+            })
+       }
+
+    async function saveMessageSQL(msg) {
+
+      let text = sanitizeHtml(msg.msg);
+      let addr = sanitizeHtml(msg.from);
+      let timestamp = escape(msg.t)
+      let key = sanitizeHtml(msg.k)
+      let sent = msg.sent
+
+     console.log('Saving message', text, addr, sent, timestamp);
+
+         database.run(
+             `REPLACE INTO messages
+                (msg, chat, type, timestamp)
+             VALUES
+                 (?, ?, ?, ?)`,
+             [
+                 text,
+                 addr,
+                 sent,
+                 timestamp
+             ]
+         );
+     }
+
+async function saveMsg(msg, hash) {
 
   let text = sanitizeHtml(msg.msg);
   let addr = sanitizeHtml(msg.from);
@@ -599,9 +747,9 @@ async function saveMsg(msg, hash) {
   let sent = msg.sent
   //Checking if private msg is a call
   console.log('Checking if private msg is a call');
-  parseCall(text, addr)
+  let message = parseCall(text, addr)
 
-  let message = {chat: addr, k: key ,msg: text, t: timestamp, sent: sent}
+  message = {chat: addr, k: key ,msg: text, t: timestamp, sent: sent}
 
   //Save messages and known tx hashes
    dbMessages.data = dbMessages.data
@@ -814,12 +962,12 @@ async function sendMessage(message, receiver) {
 }
 
 ipcMain.handle('getMessages', async (data) => {
-    await dbMessages.read()
-    return dbMessages.data
+    return await getMessages()
 })
 
 ipcMain.handle('getBoardMsgs', async (data) => {
     await dbBoards.read()
+    dbBoards.data.boardMessages.reverse()
     return dbBoards.data
 })
 
