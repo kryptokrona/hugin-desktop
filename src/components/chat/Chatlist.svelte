@@ -9,6 +9,7 @@
     const dispatch = createEventDispatcher();
     let filterArr = []
     let contacts = []
+    let msgkey;
     //Get message updates and trigger filter
     messages.subscribe(() => {
         if ($messages.length > 0) {
@@ -48,18 +49,34 @@
     function sendConversation(message) {
 
       let chat = message.chat
-      let key = message.k
-      console.log('dispatching', chat + key);
+      // console.log('myContacts', myContacts);
+      contacts = $user.contacts
+      console.log('mycontacts', contacts);
+      let c
+      for (c in contacts) {
+        console.log(contacts[c].chat);
+
+        if (chat === contacts[c].chat) {
+          msgkey = contacts[c].key
+
+        } else {
+
+          continue;
+        }
+      }
+
+      //let key = message.k
+      console.log('dispatching', chat);
 
         dispatch('conversation', {
             chat: chat,
-            k: key
+            k: msgkey
         });
         //Saved clicked chat
         user.update(user => {
             return{
                 ...user,
-               activeChat: {chat: chat, k: key}
+               activeChat: {chat: chat, k: msgkey}
             }
         })
     }
