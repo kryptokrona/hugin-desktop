@@ -24,7 +24,7 @@ const WINDOW_API = {
   },
   getMessages: async (data) => {
     const res = await ipcRenderer.invoke('getMessages')
-    return res.messages
+    return res
   },
   getBoardMsgs: async (data) => {
     let resp = await ipcRenderer.invoke('getBoardMsgs')
