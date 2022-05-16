@@ -30,6 +30,10 @@ const WINDOW_API = {
     let resp = await ipcRenderer.invoke('getBoardMsgs')
     return resp.boardMessages
   },
+  printBoard: async (data) => {
+    let resp = await ipcRenderer.invoke('printBoard')
+    return resp
+  },
 
   //HANDLE CALLS
   gotMedia: async (video, audio) => {
