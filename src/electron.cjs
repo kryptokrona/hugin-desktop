@@ -280,50 +280,91 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     } else {
     //No wallet found, probably first start
     console.log('wallet not found')
-    // await createBoardsMessagesTable()
-    await createMessagesTable()
+    boardMessageTable()
+    messagesTable()
+    knownTxsTable()
     mainWindow.webContents.send('wallet-exist', false)
     }
 
   }
 
-  function createMessagesTable() {
-      const table = `
-                    CREATE TABLE IF NOT EXISTS messages (
-                       msg TEXT,
-                       chat TEXT,
-                       type BOOLEAN,
-                       timestamp TEXT,
-                       UNIQUE (timestamp)
-                   )`
-     return new Promise((resolve, reject) => {
-      database.run(table, (err) => {
-        })
-        console.log('created Table');
-       }, () => {
-         resolve();
-       });
-     }
 
+function knownTxsTable() {
+    const knownTxTable = `
+                  CREATE TABLE knownTxs (
+                     hash TEXT,
+                     UNIQUE (hash)
+                 )`
+   return new Promise((resolve, reject) => {
+    database.run(knownTxTable, (err) => {
+      })
+      console.log('created Known TX Table');
 
-    function welcomeMessage() {
-         const huginMessage = `REPLACE INTO messages (msg, chat, type, timestamp)
-                                VALUES (?, ?, ?, ?)`
-         return new Promise((resolve, reject) => {
-          database.run(huginMessage,
-              [
-                  'Welcome to hugin',
-                  'Hugin Messenger',
-                  false,
-                  '1650919475320'
-              ], (err) => {
-                console.log('Error creating msg', err);
-            })
-            console.log('created welcome msg');
-           }, () => {
-             resolve();
-           });
+     }, () => {
+       resolve();
+     });
    }
+
+
+function boardMessageTable() {
+  const boardTable = `
+                CREATE TABLE boards (
+                     m TEXT,
+                     k TEXT,
+                     s TEXT
+                     brd TEXT,
+                     t TEXT,
+                     n TEXT,
+                     r TEXT,
+                     hash TEXT,
+                     sent BOOLEAN
+                    )`
+ return new Promise((resolve, reject) => {
+  database.run(boardTable, (err) => {
+    })
+    console.log('created Board Table');
+   }, () => {
+     resolve();
+   });
+ }
+
+function messagesTable() {
+  const messageTable = `
+                CREATE TABLE messages (
+                   msg TEXT,
+                   chat TEXT,
+                   sent BOOLEAN,
+                   timestamp TEXT,
+                   UNIQUE (timestamp)
+               )`
+ return new Promise((resolve, reject) => {
+  database.run(messageTable, (err) => {
+    })
+    console.log('created Table');
+   }, () => {
+     resolve();
+   });
+ }
+
+
+function welcomeMessage() {
+   const huginMessage = `REPLACE INTO messages (msg, chat, sent, timestamp)
+                          VALUES (?, ?, ?, ?)`
+   return new Promise((resolve, reject) => {
+    database.run(huginMessage,
+        [
+            'Welcome to hugin',
+            'Hugin Messenger',
+            false,
+            '1650919475320'
+        ], (err) => {
+          console.log('Error creating msg', err);
+      })
+      console.log('created welcome msg');
+     }, () => {
+       resolve();
+     });
+}
 
 let myPassword;
 
@@ -339,17 +380,9 @@ ipcMain.on('create-account', async (e, accountData) => {
     db.data = {walletNames:[],
               blockHeight:[],}
     dbBoards.data = {boardMessages: []}
-    // dbMessages.data = {messages: [ {
-    //     "chat": "Hugin Messenger",
-    //     "k": "55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d54",
-    //     "msg": "Welcome to Hugin Messenger",
-    //     "t": 1650919475320,
-    //     "type": "box",
-    //     "sent": false
-    //   },]}
     keychain.data = {contacts:[ {
         chat: "Hugin Messenger",
-        key: "55544c5abf01f4ea13b15223d24d68fc35d1a33b480ee24b4530cb3011227d54"},]}
+        key: "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f"},]}
     knownTxs.data = {known_txs:[]}
     //
     await keychain.write(keychain.data)
@@ -417,12 +450,11 @@ async function start_js_wallet(walletName, password) {
     let knownTxs = await loadKnownTxs()
      //Load known public keys
     let myContacts = await loadKeys()
+    //Load messages
     let messg = await getMessages()
 
     console.log(messg);
-    //let syncdata = daemon.getWalletSyncData('', height)
-    //console.log('SYNC DATA', syncdata);
-    //js_wallet.heig
+
 
     js_wallet.enableAutoOptimization(false);
     js_wallet.on('incomingtx', (transaction) => {
@@ -577,7 +609,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                   }
 
                   console.log('Transaction checked');
-                  //saveHash(thisHash)
+                  saveHash(thisHash)
 
                 } catch (err) {
                   console.log(err)
@@ -591,27 +623,31 @@ async function backgroundSyncMessages(knownTxsIds) {
         }
 }
 
-let hugin_address
-
 async function saveContact(hugin_address) {
 
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
-  hugin_address = {chat: addr, key: key}
+  let huginaddr = {chat: addr, key: key}
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
-  mainWindow.webContents.send('saved-addr', hugin_address)
-  keychain.data.contacts.push(hugin_address)
+  mainWindow.webContents.send('saved-addr', huginaddr)
+  keychain.data.contacts.push(huginaddr)
   await keychain.write()
 
 }
 
-async function saveHash(hash) {
+async function saveHash(txHash) {
 
-    //Saving checked txHash to db to avoid doublesyncing messages from mempool *** Munin
-    //console.log('Saving checked txHash to db');
-    //knownTxs.data.known_txs.push(thisHash)
-    //await knownTxs.write()
+
+           database.run(
+               `REPLACE INTO knownTxs
+                  (hash)
+               VALUES
+                   (?)`,
+               [
+                   txHash
+               ]
+           );
 
 }
 
@@ -628,15 +664,38 @@ async function saveBoardMsg(msg, hash) {
   if (nick === '') {
     nick = 'Anonymous'
   }
-   dbBoards.data = dbBoards.data
 
-   msg.sent = false
-   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: txHash, sent: msg.sent, type: msg.type}
+   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: txHash, sent: msg.sent}
 
-      console.log('Save board message?', message);
+   console.log('Save board message?', message);
+
+       database.run(
+           `REPLACE INTO boards
+              (m,
+               k,
+               s,
+               brd,
+               t,
+               n,
+               r,
+               hash,
+               sent,)
+           VALUES
+               (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
+           [
+               text,
+               addr,
+               sig,
+               to_board,
+               timestamp,
+               nick,
+               reply,
+               txHash,
+               msg.sent
+           ]
+       );
       mainWindow.webContents.send('boardMsg', message)
-      dbBoards.data.boardMessages.push(message)
-      await dbBoards.write()
+
 
     }
 
@@ -664,7 +723,7 @@ async function saveBoardMsg(msg, hash) {
               const getChat = `SELECT
                   msg,
                   chat,
-                  type,
+                  sent,
                   timestamp
               FROM
                   messages
@@ -684,18 +743,20 @@ async function saveBoardMsg(msg, hash) {
             })
        }
 
-       async function getBoardmessages(board=false) {
+       async function printBoard(board=false) {
 
             const rows = [];
             return new Promise((resolve, reject) => {
               const getBoard = `SELECT
-                  msg,
-                  k,
-                  s,
-                  brd,
-                  hash,
-                  r,
-                  timestamp
+                     m,
+                     k,
+                     s,
+                     brd,
+                     t,
+                     n,
+                     r,
+                     hash,
+                     sent
               FROM
                   messages
               ${board ? 'WHERE brd = "' + board + '"' : ''}
@@ -722,11 +783,23 @@ async function saveBoardMsg(msg, hash) {
       let key = sanitizeHtml(msg.k)
       let sent = msg.sent
 
+      //Checking if private msg is a call
+      console.log('Checking if private msg is a call');
+      let message = parseCall(text, addr)
+
+      if (msg.type === 'sealedbox') {
+
+       console.log('Saving key', key);
+       let hugin = addr + key
+       saveContact(hugin)
+
+      }
+
      console.log('Saving message', text, addr, sent, timestamp);
 
          database.run(
              `REPLACE INTO messages
-                (msg, chat, type, timestamp)
+                (msg, chat, sent, timestamp)
              VALUES
                  (?, ?, ?, ?)`,
              [
@@ -738,39 +811,6 @@ async function saveBoardMsg(msg, hash) {
          );
      }
 
-async function saveMsg(msg, hash) {
-
-  let text = sanitizeHtml(msg.msg);
-  let addr = sanitizeHtml(msg.from);
-  let timestamp = escape(msg.t)
-  let key = sanitizeHtml(msg.k)
-  let sent = msg.sent
-  //Checking if private msg is a call
-  console.log('Checking if private msg is a call');
-  let message = parseCall(text, addr)
-
-  message = {chat: addr, k: key ,msg: text, t: timestamp, sent: sent}
-
-  //Save messages and known tx hashes
-   dbMessages.data = dbMessages.data
-     if (message === undefined) {
-       console.log('message undefined');
-       return;
-     }
-
-     console.log('TAJP', msg.type);
-
-     if (msg.type === 'sealedbox') {
-      console.log('Saving key', key);
-      let hugin = addr + key
-      saveContact(hugin)
-     }
-
-      mainWindow.webContents.send('newMsg', message)
-      dbMessages.data.messages.push(message)
-      await dbMessages.write()
-      console.log('message', message);
-}
 
 //SWITCH NODE
 ipcMain.on('switchNode', async (e, node) => {
@@ -953,7 +993,7 @@ async function sendMessage(message, receiver) {
 
     if (result.success) {
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        saveMsg(sentMsg)
+        saveMessageSQL(sentMsg)
         mainWindow.webContents.send('sent', sentMsg)
         known_pool_txs.push(result.transactionHash)
     } else {
@@ -964,6 +1004,12 @@ async function sendMessage(message, receiver) {
 ipcMain.handle('getMessages', async (data) => {
     return await getMessages()
 })
+
+
+ipcMain.handle('printBoard', async (data) => {
+  return await printBoard(data)
+})
+
 
 ipcMain.handle('getBoardMsgs', async (data) => {
     await dbBoards.read()
