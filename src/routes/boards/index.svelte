@@ -28,7 +28,14 @@
             //<ChatBubble message={boardmessage.m} ownMsg={boardmessage.sent} msgFrom={boardmessage.k} board={boardmessage.brd}/>
         })
 
-    $: boardMsgs
+        console.log('Board messages?', $boardMessages);
+
+
+        boardMessages.subscribe(output => {
+          console.log('Printing board');
+
+          printMessages()
+        })
 
     function printMessages() {
       boardMsgs = $boardMessages
