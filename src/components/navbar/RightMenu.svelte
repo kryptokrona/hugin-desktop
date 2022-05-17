@@ -5,6 +5,7 @@
     import callIcon from '/static/images/call.svg'
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import {boardMessages} from '$lib/stores/boardmsgs.js';
 
     let contact
     let active_contact
@@ -25,6 +26,11 @@
         window.api.startCall(contact, calltype)
     }
 
+    const printBoard = async (board) => {
+        console.log('Printing Board', board)
+        boardMessages.set(await window.api.printBoard(board))
+    }
+
 </script>
 
 <div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
@@ -32,7 +38,7 @@
     {#if $page.url.pathname === '/boards'}
         <div class="add" on:click></div>
         {#each $user.boardsArray as board}
-            <button>{board}</button>
+            <button on:click={() => printBoard(board)}>{board}</button>
         {/each}
     {/if}
 
