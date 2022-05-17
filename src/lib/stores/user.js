@@ -5,7 +5,7 @@ import {get_avatar} from "$lib/utils/hugin-utils.js";
 export const user = writable({
     loggedIn: false,
     username: 'Nilsjr',
-    boardsArray: ['Home', 'Hugin'],
+    boardsArray: ['Home', 'hugin-development','test', 'software-devs'],
     node: '',
     activeChat: null,
     huginAddress: '',
