@@ -30,8 +30,8 @@ const WINDOW_API = {
     let resp = await ipcRenderer.invoke('getBoardMsgs')
     return resp.boardMessages
   },
-  printBoard: async (data) => {
-    let resp = await ipcRenderer.invoke('printBoard')
+  printBoard: async (board) => {
+    let resp = await ipcRenderer.invoke('printBoard', board)
     return resp
   },
 
