@@ -311,7 +311,7 @@ function boardMessageTable() {
                 CREATE TABLE boards (
                      m TEXT,
                      k TEXT,
-                     s TEXT
+                     s TEXT,
                      brd TEXT,
                      t TEXT,
                      n TEXT,
@@ -452,7 +452,7 @@ async function start_js_wallet(walletName, password) {
     let myContacts = await loadKeys()
     //Load messages
     let messg = await getMessages()
-
+    let booards = await getBoardMsgs()
     console.log(messg);
 
 
@@ -637,18 +637,19 @@ async function saveContact(hugin_address) {
 }
 
 async function saveHash(txHash) {
-
+  console.log('saving hash');
 
            database.run(
-               `REPLACE INTO knownTxs
-                  (hash)
+               `REPLACE INTO knownTxs (
+                 hash
+               )
                VALUES
-                   (?)`,
+                   ( ? )`,
                [
                    txHash
                ]
            );
-
+  console.log('saved hash');
 }
 
 async function saveBoardMsg(msg, hash) {
@@ -670,8 +671,8 @@ async function saveBoardMsg(msg, hash) {
    console.log('Save board message?', message);
 
        database.run(
-           `REPLACE INTO boards
-              (m,
+           `REPLACE INTO boards  (
+               m,
                k,
                s,
                brd,
@@ -679,7 +680,8 @@ async function saveBoardMsg(msg, hash) {
                n,
                r,
                hash,
-               sent,)
+               sent
+              )
            VALUES
                (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
            [
@@ -716,6 +718,23 @@ async function saveBoardMsg(msg, hash) {
 
     }
 
+    async function getBoardMsgs() {
+     const allBoards = [];
+     return new Promise((resolve, reject) => {
+       const getAllBrds = `SELECT * FROM boards`
+       database.each(getAllBrds, (err, row) => {
+           console.log(row);
+         if (err) {
+           console.log('Error', err);
+         }
+         allBoards.push(row);
+       }, () => {
+         resolve(allBoards);
+       });
+     })
+
+    }
+
        async function getConversation(chat=false) {
 
             const rows = [];
@@ -744,8 +763,8 @@ async function saveBoardMsg(msg, hash) {
        }
 
        async function printBoard(board=false) {
-
-            const rows = [];
+         console.log('printboard', board);
+            const boardArray = [];
             return new Promise((resolve, reject) => {
               const getBoard = `SELECT
                      m,
@@ -757,20 +776,19 @@ async function saveBoardMsg(msg, hash) {
                      r,
                      hash,
                      sent
-              FROM
-                  messages
+              FROM boards
               ${board ? 'WHERE brd = "' + board + '"' : ''}
               ORDER BY
-                  timestamp
+                  t
               ASC`
               database.each(getBoard, (err, row) => {
                   console.log(row);
                 if (err) {
                   console.log('Error', err);
                 }
-                rows.push(row);
+                boardArray.push(row);
               }, () => {
-                resolve(rows);
+                resolve(boardArray);
               });
             })
        }
@@ -1005,17 +1023,17 @@ ipcMain.handle('getMessages', async (data) => {
     return await getMessages()
 })
 
-
-ipcMain.handle('printBoard', async (data) => {
-  return await printBoard(data)
+//Listens for ipc call from RightMenu board picker and prints any board chosen
+ipcMain.handle('printBoard', async (e, board) => {
+  return await printBoard(board)
 })
 
 
-ipcMain.handle('getBoardMsgs', async (data) => {
-    await dbBoards.read()
-    dbBoards.data.boardMessages.reverse()
-    return dbBoards.data
-})
+// ipcMain.handle('getBoardMsgs', async (data) => {
+//     await dbBoards.read()
+//     dbBoards.data.boardMessages.reverse()
+//     return dbBoards.data
+// })
 
 ipcMain.handle('getBalance', async () => {
     return await js_wallet.getBalance()
