@@ -419,10 +419,19 @@ return contacts
 async function loadKnownTxs() {
 
 //Load known txs from db and then load them in to known_pool_txs
-await knownTxs.read()
-const known_pool_txs = knownTxs.data.known_txs
-console.log('KNOWN POOOL TXS', known_pool_txs);
-return known_pool_txs
+const knownTransactions = [];
+return new Promise((resolve, reject) => {
+  const getAllknownTxs = `SELECT * FROM knownTxs`
+  database.each(getAllknownTxs, (err, txs) => {
+      console.log(txs);
+    if (err) {
+      console.log('Error', err);
+    }
+    knownTransactions.push(txs);
+  }, () => {
+    resolve(knownTransactions);
+  });
+})
 }
 
 async function logIntoWallet(walletName, password) {
@@ -447,7 +456,7 @@ async function start_js_wallet(walletName, password) {
     /* Start wallet sync process */
     await js_wallet.start();
     //Load known pool txs from db.
-    let knownTxs = await loadKnownTxs()
+    //let knownTxsIds = await loadKnownTxs()
      //Load known public keys
     let myContacts = await loadKeys()
     //Load messages
@@ -477,13 +486,13 @@ async function start_js_wallet(walletName, password) {
         mainWindow.webContents.send('addr', address + msgKey)
         i++;
     }
-
+    let knownTxsIds = []
     mainWindow.webContents.send('wallet-started', myContacts)
     console.log('Started wallet');
     //Load knownTxsIds to backgroundSyncMessages on startup
     await sleep(2000)
     console.log('Loading Sync');
-    await backgroundSyncMessages(knownTxs)
+    backgroundSyncMessages(knownTxsIds)
 
     while (true) {
 
@@ -545,7 +554,7 @@ async function backgroundSyncMessages(knownTxsIds) {
     console.log('Background syncing...');
     let message_was_unknown;
     try {
-        const resp = await fetch('http://' + 'pool.kryptokrona.se:11898' + '/get_pool_changes_lite', {
+        const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
             method: 'POST',
             body: JSON.stringify({knownTxsIds: known_pool_txs})
         })
@@ -698,7 +707,6 @@ async function saveBoardMsg(msg, hash) {
        );
       mainWindow.webContents.send('boardMsg', message)
 
-
     }
 
     async function getMessages() {
@@ -788,7 +796,73 @@ async function saveBoardMsg(msg, hash) {
                 }
                 boardArray.push(row);
               }, () => {
+                boardArray.reverse()
                 resolve(boardArray);
+              });
+            })
+       }
+
+       async function getReply(reply=false) {
+         console.log('Get reply', reply);
+            let thisReply
+            return new Promise((resolve, reject) => {
+              let sql = `SELECT
+                     m,
+                     k,
+                     s,
+                     brd,
+                     t,
+                     n,
+                     r,
+                     hash,
+                     sent
+              FROM boards
+              ${reply ? 'WHERE hash = "' + reply + '"' : ''}
+              ORDER BY
+                  t
+              ASC`
+              database.each(sql, (err, row) => {
+                  console.log('Found reply', row);
+
+                  thisReply = row
+                if (err) {
+                  console.log('Error', err);
+                }
+              }, () => {
+
+                console.log('thisreply', thisReply);
+                resolve(thisReply);
+              });
+            })
+       }
+
+       async function getReplies(hash=false) {
+         console.log('printboard', board);
+            const replies = [];
+            return new Promise((resolve, reject) => {
+              let sql = `SELECT
+                     m,
+                     k,
+                     s,
+                     brd,
+                     t,
+                     n,
+                     r,
+                     hash,
+                     sent
+              FROM boards
+              ${hash ? 'WHERE r = "' + hash + '"' : ''}
+              ORDER BY
+                  t
+              ASC`
+              database.each(sql, (err, row) => {
+                  console.log(row);
+                if (err) {
+                  console.log('Error', err);
+                }
+                replies.push(row);
+              }, () => {
+                resolve(replies);
               });
             })
        }
@@ -1021,6 +1095,9 @@ async function sendMessage(message, receiver) {
 
 ipcMain.handle('getMessages', async (data) => {
     return await getMessages()
+})
+ipcMain.handle('getReply', async (e, data) => {
+    return await getReply(data)
 })
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
