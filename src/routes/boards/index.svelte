@@ -6,7 +6,7 @@
     import BoardMessage from "/src/components/chat/BoardMessage.svelte";
     import {user} from '$lib/stores/user.js'
     import {onMount} from "svelte";
-
+    import { toast } from '@zerodevx/svelte-toast'
     let boardMsgs = []
     onMount(async () => {
       console.log('mounting');
@@ -16,16 +16,23 @@
     })
 
         window.api.receive('boardMsg', data => {
-          console.log('boardMsg', data)
+          console.log('boardMsg', data.brd)
+          console.log('thisboard', thisBoard);
+          console.log('user', $user.thisBoard);
+
+          if (data.brd === thisBoard) {
             //Push new message to store
             //boardMessages.update(() => data.boardMessages)
             //Update boardsMsgs from store
             boardMsgs.unshift(data)
             boardMsgs = boardMsgs
             console.log('Boards msgs array?', boardMsgs)
-
-            //console.log('Updated boardmsgs', bMessages);
-            //<ChatBubble message={boardmessage.m} ownMsg={boardmessage.sent} msgFrom={boardmessage.k} board={boardmessage.brd}/>
+          } else {
+            console.log('not this board');
+            toast.push('New board message', data.msg, {
+              })
+            return
+          }
         })
 
         console.log('Board messages?', $boardMessages);
@@ -37,7 +44,8 @@
           printMessages()
         })
 
-    function printMessages() {
+  async function printMessages() {
+
       boardMsgs = $boardMessages
     }
 
@@ -55,6 +63,7 @@
 </script>
 
 <main>
+
         <ChatInput on:message={sendboardMsg}/>
 
             <BoardWindow>
@@ -93,4 +102,5 @@
       font-size: 17px;
       color: white;
     }
+
 </style>
