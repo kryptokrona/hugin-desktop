@@ -4,7 +4,7 @@
 	import RightMenu from "/src/components/navbar/RightMenu.svelte";
 	import IncomingCall from "/src/components/webrtc/IncomingCall.svelte";
 	import Webrtc from "/src/routes/webrtc/index.svelte";
-
+	import { SvelteToast } from '@zerodevx/svelte-toast'
 	//Stores
 	import { user } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -53,6 +53,8 @@
 			})
 		})
 
+
+
 		window.api.receive('addr', async (huginAddr) => {
 			console.log('Addr incoming')
 			user.update(data => {
@@ -63,9 +65,23 @@
 			})
 		})
 	});
+
+
+
+	const options = {
+		duration: 10000,       // duration of progress bar tween to the `next` value
+		initial: 1,           // initial progress bar value
+		next: 0,              // next progress value
+		pausable: false,      // pause progress bar tween on mouse hover
+		dismissable: true,    // allow dismiss with close button
+		reversed: false,      // insert new toast to bottom of stack
+		intro: { x: 256 },    // toast intro fly animation settings
+		classes: []
+	}
 </script>
-
-
+<div class="wrap">
+  <SvelteToast {options}/>
+</div>
 {#if ready}
 
 	{#if $user.loggedIn && incoming_call}
@@ -83,5 +99,13 @@
 {/if}
 
 <style>
-</style>
 
+    .wrap {
+      display: contents;
+      font-family: Roboto, sans-serif;
+      font-size: 0.875rem;
+    }
+    .wrap :global(strong) {
+      font-weight: 600;
+    }
+</style>
