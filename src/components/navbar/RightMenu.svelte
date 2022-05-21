@@ -6,7 +6,6 @@
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {boardMessages} from '$lib/stores/boardmsgs.js';
-
     let contact
     let active_contact
     let avatar
@@ -29,6 +28,12 @@
     const printBoard = async (board) => {
         console.log('Printing Board', board)
         boardMessages.set(await window.api.printBoard(board))
+        user.update(data => {
+          return {
+            ...data,
+            thisBoard: board,
+          }
+        })
     }
 
 </script>
