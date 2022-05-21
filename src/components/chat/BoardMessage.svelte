@@ -6,29 +6,42 @@
     export let handleType
     export let msgFrom
     export let board
-    export let reply
+    export let reply = ''
     export let myMsg
     export let signature
     export let timestamp
     export let nickname = "Anonymous"
+
+    let thisreply = ''
+
+      async function checkreply(reply) {
+        console.log('checking reply');
+
+          thisreply = await window.api.getReply(reply)
+          console.log('thisreply found', thisreply);
+
+          return thisreply
+      }
+
 </script>
-
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
-
-  {#if message.r}
+  {#if reply.length === 64}
+  {#await checkreply(reply)}
+  {:then thisreply}
   <div class="reply">     <img class="reply_avatar"
-           src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-           <p class="reply_nickname">{nickname.r}</p> <br>
-      <p>{message.r}</p>
+           src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
+           <p class="reply_nickname">{thisreply.n}</p> <br>
+      <p>{thisreply.m}</p>
       </div>
-
+  {:catch error}
+  	<p style="color: red">{error.message}</p>
+  {/await}
   <div class:type={handleType} class="boardMessage reply">
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
            <p class="nickname">{nickname}</p><br>
       <p>{message}</p>
   </div>
-
   {:else}
 
     <div class:type={handleType} class="boardMessage">
@@ -39,7 +52,6 @@
     </div>
 
   {/if}
-
 <style>
     .boardMessage {
         display: flex;
