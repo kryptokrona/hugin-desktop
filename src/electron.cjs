@@ -15,7 +15,6 @@ const {extraDataToMessage} = require('hugin-crypto')
 const sanitizeHtml = require('sanitize-html')
 const en = require ('int-encoder');
 const sqlite3 = require('sqlite3').verbose();
-
 const { Address,
     AddressPrefix,
     Block,
@@ -316,7 +315,7 @@ function boardMessageTable() {
                      t TEXT,
                      n TEXT,
                      r TEXT,
-                     hash TEXT,
+                     hash TEXT UNIQUE,
                      sent BOOLEAN
                     )`
  return new Promise((resolve, reject) => {
@@ -423,7 +422,6 @@ const knownTransactions = [];
 return new Promise((resolve, reject) => {
   const getAllknownTxs = `SELECT * FROM knownTxs`
   database.each(getAllknownTxs, (err, txs) => {
-      console.log(txs);
     if (err) {
       console.log('Error', err);
     }
@@ -456,13 +454,9 @@ async function start_js_wallet(walletName, password) {
     /* Start wallet sync process */
     await js_wallet.start();
     //Load known pool txs from db.
-    //let knownTxsIds = await loadKnownTxs()
+    let knownTxsIds = await loadKnownTxs()
      //Load known public keys
     let myContacts = await loadKeys()
-    //Load messages
-    let messg = await getMessages()
-    let booards = await getBoardMsgs()
-    console.log(messg);
 
 
     js_wallet.enableAutoOptimization(false);
@@ -471,36 +465,39 @@ async function start_js_wallet(walletName, password) {
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
 
         // if (!syncing) {
+
+        console.log('transaction', transaction);
         mainWindow.webContents.send('new-message', transaction.toJSON());
         // }
 
     });
 
     let i = 1;
-
+    let myAddress
     for (const address of js_wallet.getAddresses()) {
         console.log(`Address [${i}]: ${address}`);
         let msgKey = getMsgKey()
-        console.log('HuginAddress',address + msgKey)
+        myAddress = address
+        console.log('HuginAddress',myAddress + msgKey)
 
-        mainWindow.webContents.send('addr', address + msgKey)
+        mainWindow.webContents.send('addr', myAddress + msgKey)
+
         i++;
     }
-    let knownTxsIds = []
     mainWindow.webContents.send('wallet-started', myContacts)
     console.log('Started wallet');
-    //Load knownTxsIds to backgroundSyncMessages on startup
     await sleep(2000)
     console.log('Loading Sync');
+    //Load knownTxsIds to backgroundSyncMessages on startup
     backgroundSyncMessages(knownTxsIds)
 
     while (true) {
 
       try {
-
+        console.log('*****\\\\\ SYNC STATUS /////*****');
         //Start syncing
         await sleep(1000 * 3);
-        await backgroundSyncMessages()
+        backgroundSyncMessages()
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
@@ -511,11 +508,11 @@ async function start_js_wallet(walletName, password) {
         } else {
             if ((networkBlockCount - walletBlockCount) > 100000 || walletBlockCount === 0) {
 
-              await js_wallet.reset(networkBlockCount - 1000)
+              await js_wallet.reset(networkBlockCount - 100)
 
             }
 
-            console.log('********SYNCING********');
+            console.log('** .  . .SYNCING . . . **');
             console.log('Wallet ', walletBlockCount);
             console.log('LocalD', localDaemonBlockCount);
             console.log('Network', networkBlockCount);
@@ -528,19 +525,19 @@ async function start_js_wallet(walletName, password) {
 
     js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
       if ((localDaemonBlockCount - walletBlockCount) < 2) {
-
-      mainWindow.webContents.send('sync', 'synced');
       //Save height to misc.db
       db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
       db.write(db.data)
       // Save js wallet to file
       console.log('******** SAVING WALLET ********');
       await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
+    } else {
+      console.log('height changed');
+      return
     }
-
-  })
-
+    })
 }
+
 
 let known_pooL_txs = []
 
@@ -561,6 +558,8 @@ async function backgroundSyncMessages(knownTxsIds) {
 
         let json = await resp.json();
 
+        console.log('json', json);
+
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
         json = JSON.parse(json);
@@ -572,19 +571,15 @@ async function backgroundSyncMessages(knownTxsIds) {
         console.log('known pool tx', known_pooL_txs);
         known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
         console.log('cleared txs', known_pooL_txs);
-        console.log('txs?', transactions);
         if (transactions.length === 0) {
             console.log('Empty array...')
             return;
         }
 
         for (transaction in transactions) {
-
             try {
-                console.log('tx', transactions[transaction]);
                 let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
                 let thisHash = transactions[transaction].transactionPrefixInfotxHash;
-
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash);
                     message_was_unknown = true;
@@ -594,7 +589,6 @@ async function backgroundSyncMessages(knownTxsIds) {
                     console.log("This transaction is already known", thisHash);
                     continue;
                 }
-
                   let message
                   if (thisExtra !== undefined && thisExtra.length > 200) {
                       message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
@@ -616,7 +610,6 @@ async function backgroundSyncMessages(knownTxsIds) {
 
                       }
                   }
-
                   console.log('Transaction checked');
                   saveHash(thisHash)
 
@@ -631,6 +624,11 @@ async function backgroundSyncMessages(knownTxsIds) {
         console.log('Sync error')
         }
 }
+
+ipcMain.on('addChat', async (e, hugin) => {
+  console.log('Adding', hugin);
+  saveContact(hugin)
+})
 
 async function saveContact(hugin_address) {
 
@@ -1000,7 +998,7 @@ async function sendMessage(message, receiver) {
       saveContact(receiver);
 
     }
-//receiver.substring(99,163);
+
     if (message.length == 0) {
         return;
     }
