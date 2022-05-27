@@ -34,25 +34,36 @@
         chat = active.chat
         key = active.k
         active_contact = chat + key;
-        savedMsg = $messages.filter(x => x.chat === chat)
+        savedMsg = $messages.filter(x => x.chat === chat).reverse()
     }
     //Chat to add
     const handleAddChat = e => {
+      console.log('event', e.detail);
+      let addContact = e.detail.chat + e.detail.k
         //Add input to message arr
-        messages.update(current => {
-            return [e.detail, ...current]
-        })
+        let newMessage = e.detail
+        newMessage.t = Date.now()
+        window.api.send('addChat', addContact)
+        //Saves message to svelte store
+        saveToStore(newMessage)
         //Prepare send function and filter
-        printConversation(e.detail)
-        console.log("Conversation to add", e.detail)
+        printConversation(newMessage)
         //Close popup
         wantToAdd = false
     }
         //Update messages live if users keep chat mounted
           const printMessage = (data) =>  {
-          savedMsg.unshift(data)
-          savedMsg = savedMsg
-          messages.update(() => savedMsg)
+            savedMsg.push(data)
+            savedMsg = savedMsg
+            saveToStore(data)
+
+    }
+
+    const saveToStore = (data) => {
+
+      messages.update(current => {
+          return [data, ...current]
+      })
     }
 
 
@@ -60,21 +71,25 @@
           window.api.receive('newMsg', data => {
           if (data.chat === chat) {
             printMessage(data)
+          } else {
+            saveToStore(data)
           }
         })
 
 
     }
 
-    $ : savedMsg
-
     $: active_contact
 
     //Send message to store and DB
     const sendMsg = e => {
+
         let msg = e.detail.text
-        console.log(e)
+        let myaddr = $user.huginAddress.substring(0,99)
+        let myMessage = {chat: chat, msg: msg, sent: true, t: Date.now()}
+
         window.api.sendMsg(msg, active_contact)
+        printMessage(myMessage)
     }
 
     //Default value should be false to hide the AddChat form.
@@ -82,6 +97,8 @@
     const openAdd = () => {
         wantToAdd = !wantToAdd
     }
+
+    $ : savedMsg
 
 
 </script>
@@ -94,8 +111,8 @@
     <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
     <div class="rightside">
         <ChatWindow>
-            {#each savedMsg as message}
-                <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}/>
+            {#each savedMsg as message (message.t)}
+                <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat} timestamp={message.t}/>
             {/each}
         </ChatWindow>
         <ChatInput on:message={sendMsg}/>
