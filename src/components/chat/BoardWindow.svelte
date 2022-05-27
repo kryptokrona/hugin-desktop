@@ -14,7 +14,7 @@ import ChatInput from "/src/components/chat/ChatInput.svelte";
 <style>
 
     .window {
-        margin-right: 85px;
+        margin-right: 1%;
         box-sizing: border-box;
         background-color: #202020;
         width: 100%;
