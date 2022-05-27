@@ -52,13 +52,15 @@
 
     .wrapper {
       position: absolute;
-      padding: 20px 20px 20px 20px;
+      padding: 30px 20px 20px 20px;
       width: 73%;
       margin-right: 85px;
       display: inline-flex;
       z-index: 3;
       box-sizing: border-box;
       margin-top: 0%;
+      border-bottom-right-radius: 5px;
+      border-bottom-left-radius: 5px;
     }
 
 
