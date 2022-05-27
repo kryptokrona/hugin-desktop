@@ -8,11 +8,14 @@
     import {onMount} from "svelte";
     import { toast } from '@zerodevx/svelte-toast'
     let boardMsgs = []
+    let replyto = ''
+    let navbar
+    let navOpen = false
     onMount(async () => {
       console.log('mounting');
 
         //If we have saved board messages we will print them once on mount
-            printMessages()
+            // printMessages()
     })
 
         window.api.receive('boardMsg', data => {
@@ -24,57 +27,55 @@
             //Push new message to store
             //boardMessages.update(() => data.boardMessages)
             //Update boardsMsgs from store
-            boardMsgs.unshift(data)
-            boardMsgs = boardMsgs
-            console.log('Boards msgs array?', boardMsgs)
+            printBoardMessage(data)
           } else {
             console.log('not this board');
-            toast.push('New board message', data.msg, {
+            toast.push('New board message', {
               })
             return
           }
         })
-
-        console.log('Board messages?', $boardMessages);
-
-
-        boardMessages.subscribe(output => {
-          console.log('Printing board');
-
-          printMessages()
-        })
-
-  async function printMessages() {
-
-      boardMsgs = $boardMessages
-    }
 
     //Send message to store and DB
     const sendboardMsg = e => {
       console.log('Sending board msg');
 
         let msg = e.detail.text
-        console.log(e)
-        window.api.sendBoardMsg(msg, thisBoard)
+        let myaddr = $user.huginAddress.substring(0,99)
+        let time = Date.now()
+        let myName = $user.username
+        let myBoardMessage = {m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time}
+        window.api.sendBoardMsg(msg, thisBoard, replyto)
+        printBoardMessage(myBoardMessage)
+
+    }
+
+    const printBoardMessage = (boardmessage) => {
+      boardMessages.update(current => {
+          return [boardmessage, ...current]
+      })
     }
 
     $ : thisBoard = $user.thisBoard
+
+    const replyToMessage = (hash) => {
+      console.log('test reply', hash)
+      replyto = hash
+    }
+
 
 </script>
 
 <main>
 
         <ChatInput on:message={sendboardMsg}/>
+        <BoardWindow>
+                {#each $boardMessages as message (message.hash)}
+                <BoardMessage on:click={()=> { replyToMessage(message.hash)}} reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
 
-            <BoardWindow>
-                    {#each boardMsgs as message}
-                    <BoardMessage reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
+                {/each}
+        </BoardWindow>
 
-                    {/each}
-    </BoardWindow>
-    <div class="list">
-
-    </div>
 </main>
 
 <style>
@@ -89,7 +90,6 @@
         margin-right: 85px;
         z-index: 3;
         height: 700px;
-        overflow: scroll;
         overflow-x: hidden;
     }
 
