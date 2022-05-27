@@ -17,17 +17,6 @@
         }
     })
 
-    window.api.receive('saved-addr', huginaddr => {
-      console.log('new contact', huginaddr);
-
-      let chat = hugin_address.substring(0,99)
-      let key = hugin_address.substring(99, 163)
-      let hugin_address = {chat: chat, key: key}
-      console.log('updating', hugin_address);
-      contacts.push(hugin_address)
-      console.log('Contacts', contacts);
-
-    })
 
     //Function to filer array after last msg and conversation
     function filterConversation(arr) {
@@ -171,7 +160,10 @@
         white-space: nowrap;
         max-width: 180px;
         overflow: hidden;
-        text-overflow: ellipsis
+        text-overflow: ellipsis;
+        font-family: "Montserrat";
+        text-overflow: ellipsis;
+
     }
 
     h2 {
@@ -180,11 +172,13 @@
     }
 
     p {
-        margin: 0;
-        white-space: nowrap;
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis
+      margin: 0;
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      font-size: 12px;
+      margin-top: 5px;
+      text-overflow: ellipsis;
     }
 
     .add-icon {
