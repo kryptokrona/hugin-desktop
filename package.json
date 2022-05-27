@@ -49,6 +49,7 @@
 		"@types/electron-window-state": "^2.0.34",
 		"@typescript-eslint/eslint-plugin": "^4.33.0",
 		"@typescript-eslint/parser": "^4.33.0",
+		"@zerodevx/svelte-toast": "^0.7.1",
 		"concurrently": "^6.5.1",
 		"cross-env": "^7.0.3",
 		"dotenv": "^8.6.0",
