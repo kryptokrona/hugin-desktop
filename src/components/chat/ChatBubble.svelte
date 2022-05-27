@@ -30,6 +30,7 @@
 
         <p>{message}</p>
     </div>
+    <br>
 {:else}
 <div class="bubble from">
 <img class="avatar"
@@ -37,6 +38,7 @@
 
         <p>{message}</p>
     </div>
+    <br>
 {/if}
 
 {#if message.brd}
@@ -55,6 +57,8 @@
         padding: 15px 25px 15px 15px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);;
         z-index: 3;
+        margin-bottom: 10px;
+        margin-top: 10px;
     }
 
     .type {
@@ -64,6 +68,7 @@
     p {
         margin: 0;
         word-break: break-word;
+        font-family: "Montserrat";
     }
 
     .sent {
