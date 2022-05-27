@@ -48,12 +48,17 @@
         })
     }
 
-    // $ :
-    //     if (myPassword.length > 1) {
-    //       passwordInput = true;
-    //     } else {
-    //       passwordInput = false;
-    //     }
+    window.api.receive('saved-addr', huginaddr => {
+      console.log('new contact', huginaddr);
+
+      let chat = hugin_address.substring(0,99)
+      let key = hugin_address.substring(99, 163)
+      let hugin_address = {chat: chat, key: key}
+      console.log('updating', hugin_address);
+      contacts.push(hugin_address)
+      console.log('Contacts', contacts);
+
+    })
 
       $ :  myPassword
       $ :  console.log('mypass', myPassword);
@@ -74,9 +79,9 @@
           console.log('response', res)
         }))
 
-        boardMessages.set(await window.api.getBoardMsgs(data => {
-          console.log('response', data)
-        }))
+        // boardMessages.set(await window.api.getBoardMsgs(data => {
+        //   console.log('response', data)
+        // }))
 
         goto("/dashboard")
 
