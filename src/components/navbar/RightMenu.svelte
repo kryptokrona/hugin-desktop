@@ -43,7 +43,7 @@
     {#if $page.url.pathname === '/boards'}
         <div class="add" on:click></div>
         {#each $user.boardsArray as board}
-            <button on:click={() => printBoard(board)}>{board}</button>
+            <button class="boardicon" on:click={() => printBoard(board)}>{board}</button>
         {/each}
     {/if}
 
@@ -99,6 +99,20 @@
     .add:hover {
 
         background-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .boardicon {
+
+    font-family: 'Roboto Mono';
+    border: none;
+    background: none;
+    color: white;
+    font-size: 12px;
+    opacity: 0.9
+    }
+
+    .boardicon:hover {
+      opacity: 1
     }
 
     .button {
