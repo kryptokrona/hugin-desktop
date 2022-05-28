@@ -28,7 +28,7 @@
         console.log(contact, calltype)
         window.api.startCall(contact, calltype)
     }
-
+    //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     const printBoard = async (board) => {
         console.log('Printing Board', board)
         boardMessages.set(await window.api.printBoard(board))
