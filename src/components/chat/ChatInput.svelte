@@ -53,7 +53,7 @@
     .wrapper {
       position: absolute;
       padding: 30px 20px 20px 20px;
-      width: 73%;
+      width: 70%;
       margin-right: 85px;
       display: inline-flex;
       z-index: 3;
