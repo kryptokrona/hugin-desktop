@@ -15,6 +15,8 @@ const {extraDataToMessage} = require('hugin-crypto')
 const sanitizeHtml = require('sanitize-html')
 const en = require ('int-encoder');
 const sqlite3 = require('sqlite3').verbose();
+const Peer = require('simple-peer')
+
 const { Address,
     AddressPrefix,
     Block,
@@ -928,7 +930,7 @@ ipcMain.on('answerCall', (e, msg, contact) => {
 )
 
 async function sendBoardMessage(message, to_board, reply=false) {
-  
+
   try {
 
   let my_address = await js_wallet.getPrimaryAddress();
@@ -1030,10 +1032,6 @@ async function sendMessage(message, receiver) {
     let timestamp = Date.now();
 
 
-    // **TO DO** Check whether this is the first outgoing transaction to the recipient
-    // CHECK IN SVELT FROM ACTIVE CONTACT???
-
-
     // History has been asserted, continue sending message
 
     let box;
@@ -1108,11 +1106,6 @@ ipcMain.handle('printBoard', async (e, board) => {
 })
 
 
-// ipcMain.handle('getBoardMsgs', async (data) => {
-//     await dbBoards.read()
-//     dbBoards.data.boardMessages.reverse()
-//     return dbBoards.data
-// })
 
 ipcMain.handle('getBalance', async () => {
     return await js_wallet.getBalance()
@@ -1140,11 +1133,6 @@ ipcMain.on('endCall', async (e, peer, stream) => {
 
     return endCall(peer, stream)
 })
-
-// const { expand_sdp_offer, expand_sdp_answer } = require("./sdp.js")
-const Peer = require('simple-peer')
-
-//const wrtc = require('wrtc)')
 
 let emitCall;
 let awaiting_callback;
