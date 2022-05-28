@@ -14,13 +14,10 @@
             filterActiveHugins($boardMessages)
     })
 
-
-
-    //Function to filer array after last msg and conversation
+    //Function to filer array of active users on board.
     function filterActiveHugins(arr) {
         let uniq = {}
         activeHugins = arr.filter(obj => !uniq[obj.k] && (uniq[obj.k] = true))
-        console.log('FILTERARR', activeHugins)
     }
 
     $ : activeHugins
