@@ -494,7 +494,6 @@ async function start_js_wallet(walletName, password) {
     while (true) {
 
       try {
-        console.log('*****\\\\\ SYNC STATUS /////*****');
         //Start syncing
         await sleep(1000 * 3);
         backgroundSyncMessages()
@@ -502,20 +501,20 @@ async function start_js_wallet(walletName, password) {
             await js_wallet.getSyncStatus();
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
-            console.log('walletBlockCount', walletBlockCount);
-            console.log('localDaemonBlockCount', localDaemonBlockCount);
-            console.log('networkBlockCount', networkBlockCount);
+            console.log('**********SYNCED**********');
+            console.log('My Wallet ', walletBlockCount);
+            console.log('The Network', networkBlockCount);
         } else {
-            if ((networkBlockCount - walletBlockCount) > 100000 || walletBlockCount === 0) {
+            //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
+            if (walletBlockCount === 0) {
 
               await js_wallet.reset(networkBlockCount - 100)
 
             }
 
-            console.log('** .  . .SYNCING . . . **');
-            console.log('Wallet ', walletBlockCount);
-            console.log('LocalD', localDaemonBlockCount);
-            console.log('Network', networkBlockCount);
+            console.log('*.[~~~].SYNCING BLOCKS.[~~~].*');
+            console.log('My Wallet ', walletBlockCount);
+            console.log('The Network', networkBlockCount);
         }
 
       } catch (err) {
@@ -929,7 +928,7 @@ ipcMain.on('answerCall', (e, msg, contact) => {
 )
 
 async function sendBoardMessage(message, to_board, reply=false) {
-
+  
   try {
 
   let my_address = await js_wallet.getPrimaryAddress();
@@ -982,8 +981,13 @@ console.log('Error', err);
 }
 
 async function sendMessage(message, receiver) {
+
     console.log('Want to send')
     let has_history
+    console.log('address', receiver.length);
+    if (receiver.length !== 163) {
+      return
+    }
     let address = receiver.substring(0,99);
     let messageKey =  receiver.substring(99,163);
         //receiver.substring(99,163);
