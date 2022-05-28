@@ -9,8 +9,10 @@
     import {onMount} from "svelte";
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
+    import RightMenu from "/src/components/navbar/RightMenu.svelte";
     let boardMsgs = []
     let replyto = ''
+    let active
     onMount(async () => {
       console.log('mounting');
 
@@ -90,6 +92,19 @@
            }
          })
          openAddBoard()
+         printBoard(board)
+    }
+
+    //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
+    const printBoard = async (board) => {
+        console.log('Printing Board', board)
+        boardMessages.set(await window.api.printBoard(board))
+        user.update(data => {
+          return {
+            ...data,
+            thisBoard: board,
+          }
+        })
     }
 
 </script>
@@ -98,11 +113,11 @@
     <AddBoard on:click={openAddBoard} on:addBoard={e =>addNewBoard(e)}/>
 {/if}
 <main>
+
         <ChatInput on:message={sendboardMsg}/>
         <BoardWindow>
                 {#each $boardMessages as message (message.hash)}
-                <BoardMessage on:click={()=> { replyToMessage(message.hash)}} reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
-
+                <BoardMessage reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
                 {/each}
         </BoardWindow>
       <div id="board_box">
@@ -144,5 +159,4 @@
       font-size: 17px;
       color: white;
     }
-
 </style>
