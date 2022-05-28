@@ -3,16 +3,14 @@
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher, onMount} from "svelte";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import GreenButton from "/src/components/chat/GreenButton.svelte"
+
     const dispatch = createEventDispatcher()
 
     let enableAddBoardButton = false
-    let nickname
-    let addr
-    let pubkey
     let text = ''
-    let myAddress
-    let avatar
     let board
+    let add_board = 'Add'
 
     $: {
         if (text.length > 0) {
@@ -35,13 +33,50 @@
 </script>
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
-            <h4>Board*</h4>
-            <input type="text" bind:value={text}> <br>
 
-            <button disabled={!enableAddBoardButton} class:rgb={enableAddBoardButton} on:click={()=> addBoard(text)}>Add</button>
-        </div>
+<div class="card">
+    <div>
+        <h3>Add new board</h3>
+        <input placeholder="Join or create a new public board" type="text" bind:value={text}>
+          <GreenButton text={add_board}  disabled={!enableAddBoardButton} enabled={enableAddBoardButton} on:click={()=> addBoard(text)}/>
+    </div>
+</div>
 
-<style>
+</div>
+<style lang="scss">
+  .card {
+    box-sizing: border-box;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    padding: 20px;
+    border-radius: 0.4rem;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    @media only screen and (max-width: 1000px) {
+      max-width: 100%;
+    }
+    }
+    h3 {
+      margin: 0;
+      color: var(--title-color);
+    }
+    input {
+      box-sizing: border-box;
+      background-color: var(--backgound-color);
+      border: 1px solid var(--card-border);
+      border-radius: 0.4rem;
+      color: var(--title-color);
+      padding: 0 10px;
+      margin-bottom: 20px;
+      height: 36px;
+      width: 100%;
+      &:focus {
+        outline: none;
+        border: 1px solid var(--title-color);
+        }
+      }
     .backdrop {
         display: flex;
         justify-content: center;
@@ -85,7 +120,7 @@
         border-radius: 8px;
         padding-left: 8px;
         height: 35px;
-        width: 50%;
+        width: 90%;
         margin-top: 10px;
         margin-bottom: 20px;
         color: white;
