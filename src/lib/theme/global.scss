@@ -5,22 +5,77 @@ body {
     margin: 0;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --logo-color: #ffffff;
+    --backgound-color: #121212;
+    --title-color: rgba(255, 255, 255, 0.8);
+    --text-color: rgba(255, 255, 255, 0.6);
+
+    --hamburger: rgba(255, 255, 255, 0.5);
+    --nav-backgound-color: rgba(32, 32, 32, 0.9);
+    --nav-link-color: #ffffff;
+    --link-color: #ffffff;
+
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-border: #252525;
+    --card-background: #171717;
+
+    --desktop-padding: 0 40px;
+    --mobile-padding: 0 20px;
+    --website-width: 1400px;
+
+    --success-color: #3fd782;
+    --warn-color: #f25f61;
+    --info-color: #5f86f2;
+    --alert-color: #f2cb5f;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --logo-color: #121212;
+    --backgound-color: #f9f8f9;
+    --title-color: rgba(0, 0, 0, 0.8);
+    --text-color: rgba(0, 0, 0, 0.6);
+
+    --hamburger: rgba(0, 0, 0, 0.5);
+    --nav-backgound-color: rgba(32, 32, 32, 0.9);
+    --nav-link-color: #000000;
+    --link-color: #000000;
+
+    --border-color: rgba(0, 0, 0, 0.1);
+    --card-border: #ced1d2;
+    --card-background: #fff;
+
+    --desktop-padding: 0 40px;
+    --mobile-padding: 0 20px;
+    --website-width: 1400px;
+
+    --success-color: #3fd782;
+    --warn-color: #f25f61;
+    --info-color: #5f86f2;
+    --alert-color: #f2cb5f;
+  }
+}
+
+
 @font-face {
-    font-family: 'Montserrat';
-    src: url('/static/fonts/Montserrat-Regular.woff') format('woff'),
-    url('/static/fonts/Montserrat-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Roboto Mono';
+  src: url('/static/fonts/RobotoMono-Regular.woff') format('woff'),
+  url('/static/fonts/RobotoMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: auto;
 }
 
 @font-face {
-    font-family: 'Roboto Mono';
-    src: url('/static/fonts/RobotoMono-Regular.woff') format('woff'),
-    url('/static/fonts/RobotoMono-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Montserrat';
+  src: url('/static/fonts/Montserrat-Regular.woff') format('woff'),
+  url('/static/fonts/Montserrat-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: auto;
 }
 
 p {
@@ -32,75 +87,166 @@ h1, h2, h3, h4 ,h5 ,h6 {
     font-weight: normal;
 }
 
+code {
+  color: var(--success-color);
+}
+
+.blink_me {
+  animation: blinker 2s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
 @keyframes rgb {
-    0%, 100% {
-        background: #5f86f2;
-    }
-    12.5% {
-        background: #a65ff2;
-    }
-    25% {
-        background: #f25fd0;
-    }
-    37.5% {
-        background: #f25f61;
-    }
-    50% {
-        background: #f2cb5f;
-    }
-    62.5% {
-        background: #abf25f;
-    }
-    75% {
-        background: #5ff281;
-    }
-    87.5% {
-        background: #5ff2f0;
-    }
+  0%, 100% {
+    background: #5f86f2;
+  }
+  12.5% {
+    background: #a65ff2;
+  }
+  25% {
+    background: #f25fd0;
+  }
+  37.5% {
+    background: #f25f61;
+  }
+  50% {
+    background: #f2cb5f;
+  }
+  62.5% {
+    background: #abf25f;
+  }
+  75% {
+    background: #5ff281;
+  }
+  87.5% {
+    background: #5ff2f0;
+  }
 }
 
 .rgb {
-    background: #5f86f2;
-    -webkit-animation: rgb 5s ease infinite;
-    -moz-animation: rgb 5s ease infinite;
-    animation: rgb 5s ease infinite;
-    transition: 300ms ease-in-out;
+  background: #5f86f2;
+  -webkit-animation: rgb 15s ease infinite;
+  -moz-animation: rgb 15s ease infinite;
+  animation: rgb 15s ease infinite;
+  transition: 300ms ease-in-out;
+}
+
+@keyframes rgbStroke {
+  0%, 100% {
+    stroke: #5f86f2;
+  }
+  12.5% {
+    stroke: #a65ff2;
+  }
+  25% {
+    stroke: #f25fd0;
+  }
+  37.5% {
+    stroke: #f25f61;
+  }
+  50% {
+    stroke: #f2cb5f;
+  }
+  62.5% {
+    stroke: #abf25f;
+  }
+  75% {
+    stroke: #5ff281;
+  }
+  87.5% {
+    stroke: #5ff2f0;
+  }
+}
+
+.rgbStroke {
+  stroke: #5f86f2;
+  -webkit-animation: rgbStroke 15s ease infinite;
+  -moz-animation: rgbStroke 15s ease infinite;
+  animation: rgbStroke 15s ease infinite;
+  transition: 300ms ease-in-out;
 }
 
 @keyframes rgbFill {
-    0%, 100% {
-        fill: #5f86f2;
-    }
-    12.5% {
-        fill: #a65ff2;
-    }
-    25% {
-        fill: #f25fd0;
-    }
-    37.5% {
-        fill: #f25f61;
-    }
-    50% {
-        fill: #f2cb5f;
-    }
-    62.5% {
-        fill: #abf25f;
-    }
-    75% {
-        fill: #5ff281;
-    }
-    87.5% {
-        fill: #5ff2f0;
-    }
+  0%, 100% {
+    fill: #5f86f2;
+  }
+  12.5% {
+    fill: #a65ff2;
+  }
+  25% {
+    fill: #f25fd0;
+  }
+  37.5% {
+    fill: #f25f61;
+  }
+  50% {
+    fill: #f2cb5f;
+  }
+  62.5% {
+    fill: #abf25f;
+  }
+  75% {
+    fill: #5ff281;
+  }
+  87.5% {
+    fill: #5ff2f0;
+  }
 }
 
 .rgbFill {
-    fill: #5f86f2;
-    -webkit-animation: rgbFill 15s ease infinite;
-    -moz-animation: rgbFill 15s ease infinite;
-    animation: rgbFill 15s ease infinite;
+  fill: #5f86f2;
+  -webkit-animation: rgbFill 15s ease infinite;
+  -moz-animation: rgbFill 15s ease infinite;
+  animation: rgbFill 15s ease infinite;
 }
 
+.border_rgb {
+  animation: border_rgb 2s linear infinite;
+  -webkit-animation: border_rgb 2s linear infinite;
+  -moz-animation: border_rgb 2s linear infinite;
+  transition: 250ms ease-in-out;
+}
+
+@keyframes border_rgb {
+  0% {
+    border: 1px solid var(--success-color);
+    box-shadow: 0 0 10px var(--success-color);
+  }
+  20% {
+    border: 1px solid var(--alert-color);
+    box-shadow: 0 0 10px var(--alert-color);
+  }
+  40% {
+    border: 1px solid var(--warn-color);
+    box-shadow: 0 0 10px var(--warn-color);
+  }
+  60% {
+    border: 1px solid #f25fd0;;
+    box-shadow: 0 0 10px #f25fd0;;
+  }
+  80% {
+    border: 1px solid var(--info-color);
+    box-shadow: 0 0 10px var(--info-color);
+  }
+  100% {
+    border: 1px solid #5ff2f0;
+    box-shadow: 0 0 10px #5ff2f0;
+  }
+}
+
+.fixed {
+  position: fixed;
+}
+
+.box_light {
+  border: 1px solid #fff;
+  box-shadow: 0 0 10px #fff;
+}
 
 
 .draggable {
