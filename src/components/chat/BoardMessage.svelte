@@ -12,6 +12,20 @@
     export let timestamp
     export let nickname = "Anonymous"
 
+  	export let active
+
+  	function enter() {
+        console.log('logg leaving');
+  		active = true;
+  	}
+
+  	function leave() {
+      console.log('logg leaving');
+
+  		active = false;
+  	}
+
+
     let thisreply = ''
 
       async function checkreply(reply) {
@@ -42,7 +56,17 @@
       </div>
   {/await}
   <div class="replyline"> </div>
-  <div on:click class:type={handleType} class="boardMessage replyer">
+
+  <div class="reply_button" class:active>
+  {#if active}
+    <p on:click={()=> { replyToMessage(message.hash)}}>Reply</p>
+  {:else}
+    <p>Hover!!</p>
+  {/if}
+  </div>
+
+  <div on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
+
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
            <p class="nickname">{nickname}</p><br>
@@ -50,27 +74,35 @@
   </div>
   {:else}
 
-    <div class:type={handleType} class="boardMessage">
+  <div class="reply_button" class:active>
+  {#if active}
+    <p on:click={()=> { replyToMessage(message.hash)}}>Reply</p>
+  {:else}
+    <p>Hover!!</p>
+  {/if}
+  </div>
+
+    <div class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
              <p class="nickname">{nickname}</p><br>
         <p>{message}</p><br>
     </div>
-
   {/if}
 <style>
     .boardMessage {
-    display: flex;
-    align-items: center;
-    color: rgba(255, 255, 255, 0.8);
-    padding: 15px 25px 15px 15px;
-    z-index: 3;
-    font-size: 12px;
-    margin-left: 2%;
-    width: 92%;
-    background: rgba(0,0,0,0.2);
-    border-radius: 15px;
-    margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.8);
+      padding: 15px 25px 15px 15px;
+      z-index: 3;
+      font-size: 12px;
+      margin-left: 2%;
+      width: 92%;
+      background: rgba(0,0,0,0.2);
+      border-radius: 15px;
+      margin-bottom: 5px;
     }
 
     .nickname {
@@ -117,7 +149,21 @@
     .reply p {
       font-size: 11px;
     }
+
     .replyer {
       border-top: none;
     }
+
+    .reply_button {
+      position: abslute;
+      top: 10px;
+      right: 15px;
+      color: white;
+    }
+
+    .active {
+		background-color: #ff3e00;
+		color: white;
+	}
+
 </style>
