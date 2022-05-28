@@ -6,6 +6,10 @@
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {boardMessages} from '$lib/stores/boardmsgs.js';
+    import openAddBoard from '/src/routes/boards/index.svelte';
+    import {createEventDispatcher} from "svelte";
+
+    const dispatch = createEventDispatcher()
     let contact
     let active_contact
     let avatar
@@ -36,12 +40,22 @@
         })
     }
 
+    const openAdd = () => {
+
+      user.update(data => {
+        return {
+          ...data,
+          addBoard: true,
+        }
+      })
+    }
+
 </script>
 
 <div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
 
     {#if $page.url.pathname === '/boards'}
-        <div class="add" on:click></div>
+        <div class="add" on:click={openAdd}></div>
         {#each $user.boardsArray as board}
             <button class="boardicon" on:click={() => printBoard(board)}>{board}</button>
         {/each}
