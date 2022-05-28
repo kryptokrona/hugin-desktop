@@ -4,15 +4,17 @@ import {get_avatar} from "$lib/utils/hugin-utils.js";
 //Default values
 export const user = writable({
     loggedIn: false,
-    username: 'Nilsjr',
-    boardsArray: ['Home', 'hugin-development','test', 'software-devs'],
+    username: 'nilsjr!',
+    boardsArray: ['Home', 'hugin-development','test', 'software-devs', 'softwaredevs'],
     node: '',
     activeChat: null,
     huginAddress: '',
     syncState: '',
     call: {},
-    thisBoard: "test",
-    contacts: null
+    thisBoard: 'All',
+    contacts: null,
+    addBoard: false,
+    addChat: false
 })
 
 export const userAvatar = derived(user, $user => {
