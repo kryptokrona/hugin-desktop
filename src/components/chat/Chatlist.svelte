@@ -160,7 +160,6 @@
         white-space: nowrap;
         max-width: 180px;
         overflow: hidden;
-        text-overflow: ellipsis;
         font-family: "Montserrat";
         text-overflow: ellipsis;
 
