@@ -22,8 +22,6 @@
             text = addr
 
             avatar = get_avatar(addr)
-            console.log(avatar)
-            console.log('huginAddress', addr + pubkey)
 
         }
     }
@@ -50,7 +48,7 @@
 
 </script>
 
-<div in:fade="{{duration: 200}}" out:fade class="backdrop" on:click|self>
+<div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
         <div class="wrapper">
             <h4>Nickname</h4>
