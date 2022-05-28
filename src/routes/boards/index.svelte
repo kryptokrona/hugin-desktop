@@ -4,13 +4,13 @@
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import {boardMessages} from '$lib/stores/boardmsgs.js';
     import BoardMessage from "/src/components/chat/BoardMessage.svelte";
+    import ActiveHugins from "/src/components/chat/ActiveHugins.svelte";
     import {user} from '$lib/stores/user.js'
     import {onMount} from "svelte";
     import { toast } from '@zerodevx/svelte-toast'
+    import AddBoard from '/src/components/chat/AddBoard.svelte'
     let boardMsgs = []
     let replyto = ''
-    let navbar
-    let navOpen = false
     onMount(async () => {
       console.log('mounting');
 
@@ -25,8 +25,6 @@
 
           if (data.brd === thisBoard) {
             //Push new message to store
-            //boardMessages.update(() => data.boardMessages)
-            //Update boardsMsgs from store
             printBoardMessage(data)
           } else {
             console.log('not this board');
@@ -63,11 +61,43 @@
       replyto = hash
     }
 
+    //Default value should be false to hide the AddBoard form.
+    let wantToAdd = false
+    const openAddBoard = () => {
+      console.log('open?');
+
+        wantToAdd = !wantToAdd
+
+        if (!wantToAdd) {
+          user.update(data => {
+            return {
+              ...data,
+              addBoard: false,
+            }
+        })
+        }
+    }
+
+    $ : wantToAdd = $user.addBoard
+
+    const addNewBoard = (e) => {
+
+      let board = e.detail.brd
+      user.update(current => {
+           return {
+               ...current,
+               boardsArray: [board, ...current.boardsArray]
+           }
+         })
+         openAddBoard()
+    }
 
 </script>
 
+{#if wantToAdd}
+    <AddBoard on:click={openAddBoard} on:addBoard={e =>addNewBoard(e)}/>
+{/if}
 <main>
-
         <ChatInput on:message={sendboardMsg}/>
         <BoardWindow>
                 {#each $boardMessages as message (message.hash)}
@@ -75,10 +105,21 @@
 
                 {/each}
         </BoardWindow>
-
+      <div id="board_box">
+            <div id="active_hugins">
+          <div class="list">
+          <ActiveHugins/>
+          </div>
+        </div>
+      </div>
 </main>
 
 <style>
+
+    h3 {
+      font-size: 16px;
+      color: white;
+    }
     h1 {
         color: white;
         margin: 0
@@ -93,9 +134,10 @@
         overflow-x: hidden;
     }
 
-    .list {
+    #board_box {
         width: 350px;
         border-left: 1px solid rgba(255,255,255,0.1);
+        overflow: hidden;
     }
 
     p {
