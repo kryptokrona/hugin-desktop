@@ -2,7 +2,6 @@
     //To handle true and false, or in this case show and hide.
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher, onMount} from "svelte";
-    import {get_avatar} from "$lib/utils/hugin-utils.js";
     import GreenButton from "/src/components/chat/GreenButton.svelte"
 
     const dispatch = createEventDispatcher()
@@ -32,7 +31,7 @@
 
 </script>
 
-<div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
+<div in:fade="{{duration: 100}}" out:fade="{{duration: 170}}" class="backdrop" on:click|self>
 
 <div class="card">
     <div>
