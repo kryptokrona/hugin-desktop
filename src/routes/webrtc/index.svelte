@@ -405,7 +405,7 @@
         width: 25%;
         height: 25%;
         right: 15%;
-        z-index: 999999;
+        z-index: 2;
         background: transparent;
     }
 
