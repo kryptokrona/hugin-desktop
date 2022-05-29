@@ -3,7 +3,7 @@
     import sendIcon from '/static/images/send.png'
     import EmojiSelector from 'svelte-emoji-selector';
     import {user} from "$lib/stores/user.js";
-
+    export let reply_to = false
     const dispatch = createEventDispatcher();
 
     //This handles the emojis, lets fork the repo and make a darker theme.
@@ -42,7 +42,7 @@
 </script>
 
 <div class="wrapper">
-    <input type="text" placeholder="Message.." bind:value={messageInput}>
+    <input type="text" placeholder="Message.." bind:value={messageInput} class:reply={reply_to}>
     <EmojiSelector on:emoji={onEmoji}/>
     <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px"
                                                                                          alt=""></button>
@@ -100,6 +100,11 @@
 
     .enableSend {
         background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .reply {
+      border: 1px solid white
+      
     }
 
 </style>
