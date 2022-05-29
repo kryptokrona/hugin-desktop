@@ -19,8 +19,8 @@ const WINDOW_API = {
   sendMsg: (msg, address, key) => {
     ipcRenderer.send('sendMsg', msg, address, key )
   },
-  sendBoardMsg: (msg, address, key) => {
-    ipcRenderer.send('sendBoardMsg', msg, address, key )
+  sendBoardMsg: (msg) => {
+    ipcRenderer.send('sendBoardMsg', msg)
   },
   getMessages: async (data) => {
     const res = await ipcRenderer.invoke('getMessages')
