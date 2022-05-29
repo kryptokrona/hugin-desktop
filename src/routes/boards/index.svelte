@@ -51,7 +51,7 @@
         let myBoardMessage = {m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time}
         window.api.sendBoardMsg(msg, thisBoard, replyto)
         printBoardMessage(myBoardMessage)
-
+        replyExit()
     }
 
     const printBoardMessage = (boardmessage) => {
@@ -137,7 +137,7 @@
 <main>
 
 {#if replyColor}
- <div class="reply_to_exit" class:reply_to={replyColor} on:click={()=> replyExit()}>{reply_exit_icon} Reply to:{$user.replyTo.nick}</div>
+ <div class="reply_to_exit" class:reply_to={replyColor} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$user.replyTo.nick}</div>
 {/if}
         <ChatInput on:message={sendboardMsg} reply_to={replyColor}/>
 
