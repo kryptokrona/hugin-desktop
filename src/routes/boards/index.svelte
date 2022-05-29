@@ -49,7 +49,7 @@
         let time = Date.now()
         let myName = $user.username
         let myBoardMessage = {m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time}
-        window.api.sendBoardMsg(msg, thisBoard, replyto)
+        window.api.sendBoardMsg(myBoardMessage)
         printBoardMessage(myBoardMessage)
         replyExit()
     }
