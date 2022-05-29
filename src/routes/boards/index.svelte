@@ -10,9 +10,12 @@
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
     import RightMenu from "/src/components/navbar/RightMenu.svelte";
-    let boardMsgs = []
+    let boardMsgs = [];
     let replyto = ''
+    let reply_exit_icon = 'x'
     let active
+    let replyColor
+    let nickname
     onMount(async () => {
       console.log('mounting');
 
@@ -21,6 +24,8 @@
     })
 
         window.api.receive('boardMsg', data => {
+
+          //*TODO*//Keep logs to experiment with toast popups
           console.log('boardMsg', data.brd)
           console.log('thisboard', thisBoard);
           console.log('user', $user.thisBoard);
@@ -38,8 +43,7 @@
 
     //Send message to store and DB
     const sendboardMsg = e => {
-      console.log('Sending board msg');
-
+        //Construct a new json object (myBoardMessage) to be able to print our message instant.
         let msg = e.detail.text
         let myaddr = $user.huginAddress.substring(0,99)
         let time = Date.now()
@@ -51,6 +55,7 @@
     }
 
     const printBoardMessage = (boardmessage) => {
+      //Prints any single board message. Takes boardmessage and updates to store.
       boardMessages.update(current => {
           return [boardmessage, ...current]
       })
@@ -58,15 +63,33 @@
 
     $ : thisBoard = $user.thisBoard
 
-    const replyToMessage = (hash) => {
-      console.log('test reply', hash)
+    const replyExit = () => {
+      //Exit reply mode
+      replyto = ''
+      replyColor = false
+      user.update(data => {
+        return {
+          ...data,
+          replyTo: false,
+        }
+      })
+    }
+
+    const replyToMessage = (hash, nickname) => {
+      //Enter reply mode
       replyto = hash
+      replyColor = true
+      user.update(data => {
+        return {
+          ...data,
+          replyTo: {to: hash, nick: nickname},
+        }
+      })
     }
 
     //Default value should be false to hide the AddBoard form.
     let wantToAdd = false
     const openAddBoard = () => {
-      console.log('open?');
 
         wantToAdd = !wantToAdd
 
@@ -97,7 +120,6 @@
 
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     const printBoard = async (board) => {
-        console.log('Printing Board', board)
         boardMessages.set(await window.api.printBoard(board))
         user.update(data => {
           return {
@@ -114,10 +136,14 @@
 {/if}
 <main>
 
-        <ChatInput on:message={sendboardMsg}/>
+{#if replyColor}
+ <div class="reply_to_exit" class:reply_to={replyColor} on:click={()=> replyExit()}>{reply_exit_icon} Reply to:{$user.replyTo.nick}</div>
+{/if}
+        <ChatInput on:message={sendboardMsg} reply_to={replyColor}/>
+
         <BoardWindow>
                 {#each $boardMessages as message (message.hash)}
-                <BoardMessage reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
+                <BoardMessage on:replyTo={(e)=> replyToMessage(message.hash, message.n)} reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
                 {/each}
         </BoardWindow>
       <div id="board_box">
@@ -158,5 +184,31 @@
     p {
       font-size: 17px;
       color: white;
+    }
+
+    .replyColor {
+      border: 1px solid var(--card-border);
+      border-radius: 0.4rem;
+      color: var(--title-color);
+    }
+    .reply_to_exit {
+      width: 50px;
+      padding-right: 5px;
+      display: none;
+    }
+    .reply_to {
+      display: inline-flex;
+      font-size: 11px;
+      font-family: 'Roboto Mono';
+      font-weight: 100;
+      position: absolute;
+      left: 10%;
+      top: 1%;
+      justify-content: center;
+      color: white;
+      padding: 4px;
+      width: fit-content;
+      z-index: 9;
+      cursor: pointer;
     }
 </style>
