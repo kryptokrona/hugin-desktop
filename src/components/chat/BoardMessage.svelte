@@ -51,13 +51,13 @@
   {#if reply.length === 64}
   {#await checkreply(reply)}
   {:then thisreply}
-  <div in:fade="{{duration: 70}}" class="reply">     <img class="reply_avatar"
+  <div in:fade="{{duration: 150}}" class="reply">     <img class="reply_avatar"
            src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
            <p class="reply_nickname">{thisreply.n}</p> <br>
       <p>{thisreply.m}</p>
       </div>
   {:catch error}
-  <div  in:fade="{{duration: 70}}" class="reply">     <img class="reply_avatar"
+  <div  in:fade="{{duration: 150}}" class="reply">     <img class="reply_avatar"
   src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
   <p class="reply_nickname">Can't find reply</p> <br>
     	<p style="color: red">{error.message}</p>
