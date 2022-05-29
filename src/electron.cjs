@@ -702,7 +702,7 @@ async function saveBoardMsg(msg, hash) {
                msg.sent
            ]
        );
-      mainWindow.webContents.send('boardMsg', message)
+      mainWindow.webContents.send('saved boardMsg', message)
 
     }
 
@@ -912,9 +912,9 @@ ipcMain.on('sendMsg', (e, msg, receiver) => {
     }
 )
 
-ipcMain.on('sendBoardMsg', (e, msg, to_board, reply=false) => {
-        sendBoardMessage(msg, to_board, reply);
-        console.log(msg, to_board)
+ipcMain.on('sendBoardMsg', (e, msg) => {
+        sendBoardMessage(msg);
+        console.log('Reply????',msg)
     }
 )
 
@@ -923,22 +923,26 @@ ipcMain.on('answerCall', (e, msg, contact) => {
     }
 )
 
-async function sendBoardMessage(message, to_board, reply=false) {
-
+async function sendBoardMessage(message) {
+  console.log('sending board', message);
+  let reply = message.r
+  let to_board = message.brd
+  let my_address = message.k
+  let nickname = message.n
   try {
 
-  let my_address = await js_wallet.getPrimaryAddress();
   let  timestamp = parseInt(Date.now()/1000);
   let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
   let xkr_private_key = privateSpendKey;
   let signature = await xkrUtils.signMessage(message, xkr_private_key);
 
   let payload_json = {
-      "m": message,
+      "m": message.m,
       "k": my_address,
       "s": signature,
       "brd": to_board,
-      "t": timestamp
+      "t": timestamp,
+      "n": nickname
   };
 
   if (reply) {
