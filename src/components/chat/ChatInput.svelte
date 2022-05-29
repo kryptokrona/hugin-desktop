@@ -48,7 +48,7 @@
                                                                                          alt=""></button>
 </div>
 
-<style>
+<style lang="scss">
 
     .wrapper {
       position: absolute;
@@ -99,12 +99,18 @@
     }
 
     .enableSend {
-        background-color: rgba(255, 255, 255, 0.1);
+      background-color: #3FD782;
+      border-color: #63e79f;
+      color: #fff;
+      font-weight: 600;
+      &:hover {
+        background-color: #63e79f;
+      }
     }
 
     .reply {
       border: 1px solid white
-      
+
     }
 
 </style>
