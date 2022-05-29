@@ -15,7 +15,7 @@ const {extraDataToMessage} = require('hugin-crypto')
 const sanitizeHtml = require('sanitize-html')
 const en = require ('int-encoder');
 const sqlite3 = require('sqlite3').verbose();
-const Peer = require('simple-peer')
+const Peer = require('simple-peer');
 
 const { Address,
     AddressPrefix,
@@ -486,6 +486,18 @@ async function start_js_wallet(walletName, password) {
 
         i++;
     }
+
+
+    js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
+      let synced = localDaemonBlockCount - walletBlockCount <= 2
+      if (synced) {
+      // Save js wallet to file
+      console.log('******** SAVING WALLET ********');
+      await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
+    } else if (!synced) {
+      return
+      }
+    })
     mainWindow.webContents.send('wallet-started', myContacts)
     console.log('Started wallet');
     await sleep(2000)
@@ -511,7 +523,6 @@ async function start_js_wallet(walletName, password) {
             if (walletBlockCount === 0) {
 
               await js_wallet.reset(networkBlockCount - 100)
-
             }
 
             console.log('*.[~~~].SYNCING BLOCKS.[~~~].*');
@@ -523,20 +534,6 @@ async function start_js_wallet(walletName, password) {
       console.log(err);
       }
     }
-
-    js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
-      if ((localDaemonBlockCount - walletBlockCount) < 2) {
-      //Save height to misc.db
-      db.data.blockHeight = {walletBlockCount, localDaemonBlockCount, networkBlockCount}
-      db.write(db.data)
-      // Save js wallet to file
-      console.log('******** SAVING WALLET ********');
-      await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
-    } else {
-      console.log('height changed');
-      return
-    }
-    })
 }
 
 
@@ -619,6 +616,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                 }
 
             }
+            return;
 
         } catch (err) {
         console.log(err);
@@ -821,22 +819,18 @@ async function saveBoardMsg(msg, hash) {
                   t
               ASC`
               database.each(sql, (err, row) => {
-                  console.log('Found reply', row);
 
                   thisReply = row
                 if (err) {
                   console.log('Error', err);
                 }
               }, () => {
-
-                console.log('thisreply', thisReply);
                 resolve(thisReply);
               });
             })
        }
 
        async function getReplies(hash=false) {
-         console.log('printboard', board);
             const replies = [];
             return new Promise((resolve, reject) => {
               let sql = `SELECT
