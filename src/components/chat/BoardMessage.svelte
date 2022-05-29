@@ -2,6 +2,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import {createEventDispatcher, onMount} from "svelte";
     export let message
     export let handleType
     export let msgFrom
@@ -11,45 +12,52 @@
     export let signature
     export let timestamp
     export let nickname = "Anonymous"
-
   	export let active
+    export let reply_to
+    let replyicon = '<'
+    let thisreply = ''
 
+    const dispatch = createEventDispatcher()
+
+    //Hover functions
   	function enter() {
-        console.log('logg leaving');
   		active = true;
   	}
 
   	function leave() {
-      console.log('logg leaving');
-
   		active = false;
   	}
 
-
-    let thisreply = ''
-
       async function checkreply(reply) {
-        console.log('checking reply');
 
           thisreply = await window.api.getReply(reply)
-          console.log('thisreply found', thisreply);
           //Add extra number to avoid collision for keys in Svelte each loop
           thisreply.hash = thisreply.hash + '1337'
           return thisreply
       }
+
+      const replyTo = () => {
+        // Dispatch the inputted data
+            dispatch('replyTo', {
+                reply: 'reply',
+            })
+      }
+
+    $ :  console.log('Replyto?', reply_to);
+
 
 </script>
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
   {#if reply.length === 64}
   {#await checkreply(reply)}
   {:then thisreply}
-  <div class="reply">     <img class="reply_avatar"
+  <div in:fade="{{duration: 70}}" class="reply">     <img class="reply_avatar"
            src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
            <p class="reply_nickname">{thisreply.n}</p> <br>
       <p>{thisreply.m}</p>
       </div>
   {:catch error}
-  <div class="reply">     <img class="reply_avatar"
+  <div  in:fade="{{duration: 70}}" class="reply">     <img class="reply_avatar"
   src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
   <p class="reply_nickname">Can't find reply</p> <br>
     	<p style="color: red">{error.message}</p>
@@ -57,39 +65,40 @@
   {/await}
   <div class="replyline"> </div>
 
-  <div class="reply_button" class:active>
-  {#if active}
-    <p on:click={()=> { replyToMessage(message.hash)}}>Reply</p>
-  {:else}
-    <p>Hover!!</p>
-  {/if}
-  </div>
 
-  <div on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
+  <div in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
 
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
            <p class="nickname">{nickname}</p><br>
       <p>{message}</p>
+
+        <div class="reply_button" on:mouseenter={enter} on:mouseleave={leave} class:active>
+        {#if active}
+          <p in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
+        {:else}
+          <p></p>
+        {/if}
+        </div>
   </div>
   {:else}
 
-  <div class="reply_button" class:active>
-  {#if active}
-    <p on:click={()=> { replyToMessage(message.hash)}}>Reply</p>
-  {:else}
-    <p>Hover!!</p>
-  {/if}
-  </div>
-
-    <div class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+    <div in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
              <p class="nickname">{nickname}</p><br>
         <p>{message}</p><br>
+        <div class="reply_button" on:mouseenter={enter} on:mouseleave={leave} class:active>
+        {#if active}
+          <p in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
+        {:else}
+          <p></p>
+        {/if}
+        </div>
     </div>
   {/if}
+
 <style>
     .boardMessage {
       display: flex;
@@ -155,14 +164,27 @@
     }
 
     .reply_button {
-      position: abslute;
-      top: 10px;
-      right: 15px;
+      font-family: 'Roboto Mono';
       color: white;
+      opacity: 0.9;
+      width: 15px;
+      height: 15px;
+      justify-content: right;
+      width: 50px;
+      display: flex;
+      flex: auto;
+    }
+
+    .reply_button:hover {
+      opacity: 1
+    }
+
+    .reply_button p {
+      cursor: pointer;
+
     }
 
     .active {
-		background-color: #ff3e00;
 		color: white;
 	}
 
