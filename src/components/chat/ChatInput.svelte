@@ -72,6 +72,7 @@
         color: #ffffff;
         padding: 10px 15px;
         margin: 0;
+        border: 1px solid transparent;
     }
 
     input:focus {
@@ -109,7 +110,11 @@
     }
 
     .reply {
-      border: 1px solid white
+      border-color: #5f86f2;
+      border: 1px solid #5f86f2;
+      -webkit-animation: border_rgb 10s ease infinite;
+      -moz-animation: border_rgb 10s ease infinite;
+      animation: border_rgb 10s ease infinite;
 
     }
 
