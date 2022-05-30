@@ -16,11 +16,12 @@
     let active
     let replyColor
     let nickname
+    let WelcomeMsg = {m: 'Welcome to Hugin public boards', brd: 'WelcomeToHugin', r: 'replyto', k: 'SEKReSq89d6e5ENoJTQ1YnJKZyj4oLYVUZRx8dqHqk2fXUBdNcuhp9HSCSyXdPFocPNXMRwsTRmcYE3BLe7t4XTLM4qNajfujtB', t: Date.now(), n: 'Hugin', hash: Date.now()}
+    let noMsgs = false
     onMount(async () => {
       console.log('mounting');
-
-        //If we have saved board messages we will print them once on mount
-            // printMessages()
+      printBoard(Date.now().toString())
+        //If we have no saved boardMessages, set empty to true. Displays WelcomeMsg
     })
 
         window.api.receive('boardMsg', data => {
@@ -43,28 +44,30 @@
 
     //Send message to store and DB
     const sendboardMsg = e => {
-        //Construct a new json object (myBoardMessage) to be able to print our message instant.
         let msg = e.detail.text
         let myaddr = $user.huginAddress.substring(0,99)
         let time = Date.now()
         let myName = $user.username
+
+        //Construct a new json object (myBoardMessage) to be able to print our message instant.
         let myBoardMessage = {m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time}
         window.api.sendBoardMsg(myBoardMessage)
         printBoardMessage(myBoardMessage)
         replyExit()
     }
 
+    //Prints any single board message. Takes boardmessage and updates to store.
     const printBoardMessage = (boardmessage) => {
-      //Prints any single board message. Takes boardmessage and updates to store.
       boardMessages.update(current => {
           return [boardmessage, ...current]
       })
     }
 
+    //Reactive, updates thisBoard.
     $ : thisBoard = $user.thisBoard
 
+    //Exit reply mode
     const replyExit = () => {
-      //Exit reply mode
       replyto = ''
       replyColor = false
       user.update(data => {
@@ -75,8 +78,8 @@
       })
     }
 
+    //Enter reply mode
     const replyToMessage = (hash, nickname) => {
-      //Enter reply mode
       replyto = hash
       replyColor = true
       user.update(data => {
@@ -89,6 +92,8 @@
 
     //Default value should be false to hide the AddBoard form.
     let wantToAdd = false
+
+    //Open AddBoard component and update state in store.
     const openAddBoard = () => {
 
         wantToAdd = !wantToAdd
@@ -103,8 +108,10 @@
         }
     }
 
+    //Reactive depending on user.addBoard boolean, displays AddBoard component.
     $ : wantToAdd = $user.addBoard
 
+    //Adds new board to boardArray and prints that board, its probably empty.
     const addNewBoard = (e) => {
 
       let board = e.detail.brd
@@ -117,9 +124,16 @@
          openAddBoard()
          printBoard(board)
     }
+    //Svelte reactive. Sets noMsgs boolean for welcome message
+    $ : if ($boardMessages.length == 0) {
+      noMsgs = true
+    } else {
+      noMsgs = false
+    }
 
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
-    const printBoard = async (board) => {
+    async function printBoard(board) {
+        noMsgs = false
         boardMessages.set(await window.api.printBoard(board))
         user.update(data => {
           return {
@@ -127,6 +141,7 @@
             thisBoard: board,
           }
         })
+
     }
 
 </script>
@@ -142,8 +157,13 @@
         <ChatInput on:message={sendboardMsg} reply_to={replyColor}/>
 
         <BoardWindow>
+
+        {#if noMsgs}
+          <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
+        {/if}
                 {#each $boardMessages as message (message.hash)}
                 <BoardMessage on:replyTo={(e)=> replyToMessage(message.hash, message.n)} reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
+
                 {/each}
         </BoardWindow>
       <div id="board_box">
