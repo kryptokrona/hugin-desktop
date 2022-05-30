@@ -457,9 +457,15 @@ async function start_js_wallet(walletName, password) {
     await js_wallet.start();
     //Load known pool txs from db.
     let knownTxsIds = await loadKnownTxs()
+    let checkedTxs = []
+    for (n in knownTxsIds) {
+        let knownTxId = knownTxsIds[n].hash
+        checkedTxs.push(knownTxId)
+    }
      //Load known public keys
     let myContacts = await loadKeys()
 
+    let my_boards = await getMyBoardList()
 
     js_wallet.enableAutoOptimization(false);
     js_wallet.on('incomingtx', (transaction) => {
@@ -487,7 +493,6 @@ async function start_js_wallet(walletName, password) {
         i++;
     }
 
-
     js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
       let synced = localDaemonBlockCount - walletBlockCount <= 2
       if (synced) {
@@ -503,8 +508,7 @@ async function start_js_wallet(walletName, password) {
     await sleep(2000)
     console.log('Loading Sync');
     //Load knownTxsIds to backgroundSyncMessages on startup
-    backgroundSyncMessages(knownTxsIds)
-
+    backgroundSyncMessages(checkedTxs)
     while (true) {
 
       try {
@@ -556,8 +560,6 @@ async function backgroundSyncMessages(knownTxsIds) {
 
         let json = await resp.json();
 
-        console.log('json', json);
-
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
         json = JSON.parse(json);
@@ -566,11 +568,10 @@ async function backgroundSyncMessages(knownTxsIds) {
         let transaction;
 
         //Try clearing known pool txs from checked
-        console.log('known pool tx', known_pooL_txs);
         known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
-        console.log('cleared txs', known_pooL_txs);
         if (transactions.length === 0) {
             console.log('Empty array...')
+            console.log('No incoming messages...');
             return;
         }
 
@@ -600,6 +601,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                       if (message.brd) {
                           console.log('Boards message', message);
                           message.type = "board"
+                          console.log('my Boards?', my_boards);
                           await saveBoardMsg(message, thisHash)
                       } else {
                         console.log('Saving Message');
@@ -616,7 +618,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                 }
 
             }
-            return;
+
 
         } catch (err) {
         console.log(err);
@@ -660,10 +662,14 @@ async function saveHash(txHash) {
 
 async function saveBoardMsg(msg, hash) {
 
+
+  let to_board = sanitizeHtml(msg.brd);
+  if (my_boards.indexOf(to_board) > 0) {
+    console.log('One of my board');
+  }
   let text = sanitizeHtml(msg.m);
   let addr = sanitizeHtml(msg.k);
   let reply = sanitizeHtml(msg.r);
-  let to_board = sanitizeHtml(msg.brd);
   let sig = sanitizeHtml(msg.s)
   let timestamp = sanitizeHtml(msg.t)
   let nick = sanitizeHtml(msg.n)
@@ -739,6 +745,31 @@ async function saveBoardMsg(msg, hash) {
      })
 
     }
+
+
+ async function getMyBoardList() {
+
+     const myBoards = [];
+        return new Promise((resolve, reject) => {
+          const getMyBoards =   `
+            SELECT *
+            FROM boards D
+            WHERE t = (SELECT MAX(t) FROM boards WHERE brd = D.brd)
+            ORDER BY
+                t
+            ASC
+            `
+          database.each(getMyBoards, (err, row) => {
+            if (err) {
+              console.log('Error', err);
+            }
+            myBoards.push(row.brd);
+          }, () => {
+            resolve(myBoards);
+          });
+        })
+
+       }
 
        async function getConversation(chat=false) {
 
@@ -914,7 +945,6 @@ ipcMain.on('sendMsg', (e, msg, receiver) => {
 
 ipcMain.on('sendBoardMsg', (e, msg) => {
         sendBoardMessage(msg);
-        console.log('Reply????',msg)
     }
 )
 
@@ -1103,7 +1133,9 @@ ipcMain.handle('printBoard', async (e, board) => {
   return await printBoard(board)
 })
 
-
+ipcMain.handle('getMyBoards', async () => {
+  return await getMyBoardList()
+})
 
 ipcMain.handle('getBalance', async () => {
     return await js_wallet.getBalance()
@@ -1113,8 +1145,6 @@ ipcMain.handle('getAddress',  async () => {
     return js_wallet.getAddresses()
 
 })
-
-
 
 ipcMain.on('startCall', async (e ,contact, calltype) => {
     console.log('CALL STARTEeeeeeeeeeeeeD')
