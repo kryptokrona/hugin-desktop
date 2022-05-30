@@ -75,18 +75,23 @@
       background: cornflowerblue;
       border-radius: 5px;
       display: inline-flex;
-      margin-left: 5%;
+      margin-right: 4%;
       align-items: center;
+      flex-direction: unset;
+      justify-self: end;
+      width: fit-content;
+      justify-content: end;
+      margin-left: 40%;
     }
 
     .from {
       background: grey;
       border-radius: 5px;
       display: inline-flex;
-      margin-left: 5%;
+      margin-left: 4%;
       margin-right: 40%;
       align-items: center;
-
+      width: fit-content;
     }
 
     .avatar {
