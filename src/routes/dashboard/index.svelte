@@ -13,7 +13,19 @@
     let huginAddr
 
     onMount(async () => {
-  
+
+      //Set boardsarray to store
+        let myBoards = await window.api.getMyBoards()
+            console.log('respone?', myBoards);
+
+            user.update(data => {
+              return {
+                ...data,
+                boardsArray: myBoards,
+              }
+
+            })
+
   })
 
 
