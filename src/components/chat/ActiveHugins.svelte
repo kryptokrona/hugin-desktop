@@ -14,6 +14,10 @@
             filterActiveHugins($boardMessages)
     })
 
+    const sendPM = (user) => {
+      console.log('User', user);
+    }
+
     //Function to filer array of active users on board.
     function filterActiveHugins(arr) {
         let uniq = {}
@@ -31,7 +35,7 @@
     </div>
     <div class="list-wrapper">
         {#each activeHugins as user}
-            <div class="card" on:click={(e) => sendConversation(message)}>
+            <div class="card" on:click={(e) => sendPM(user)}>
               <div class="boardUser">
                   <img class="avatar"
                        src="data:image/png;base64,{get_avatar(user.k)}" alt="">
