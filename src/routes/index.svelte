@@ -21,6 +21,7 @@
         console.log('wallet exists', walletName);
         $ : thisWallet = walletName[0]
 
+
       })
     })
 
@@ -79,9 +80,7 @@
           console.log('response', res)
         }))
 
-        // boardMessages.set(await window.api.getBoardMsgs(data => {
-        //   console.log('response', data)
-        // }))
+
 
         goto("/dashboard")
 
