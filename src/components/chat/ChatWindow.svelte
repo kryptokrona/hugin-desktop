@@ -21,6 +21,7 @@ import ChatInput from "/src/components/chat/ChatInput.svelte";
         overflow: scroll;
         z-index: 3;
         margin-bottom: 10%;
+        display: grid;
     }
 
     .window::-webkit-scrollbar {
