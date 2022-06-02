@@ -65,19 +65,14 @@
           return [data, ...current]
       })
     }
-
-
-    $: {
-          window.api.receive('newMsg', data => {
-          if (data.chat === chat) {
-            printMessage(data)
-          } else {
-            saveToStore(data)
-          }
-        })
-
-
-    }
+    //Listen for new message private messages saved in DB
+      window.api.receive('newMsg', data => {
+      if (data.chat === chat) {
+        printMessage(data)
+      } else {
+        saveToStore(data)
+      }
+    })
 
     $: active_contact
 
@@ -111,7 +106,7 @@
     <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
     <div class="rightside">
         <ChatWindow>
-            {#each savedMsg as message (message.t)}
+            {#each savedMsg as message}
                 <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat} timestamp={message.t}/>
             {/each}
         </ChatWindow>
