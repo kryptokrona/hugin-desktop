@@ -368,6 +368,7 @@ function welcomeMessage() {
 }
 
 let myPassword;
+let my_boards = []
 
 ipcMain.on('create-account', async (e, accountData) => {
 
@@ -465,7 +466,7 @@ async function start_js_wallet(walletName, password) {
      //Load known public keys
     let myContacts = await loadKeys()
 
-    let my_boards = await getMyBoardList()
+    my_boards = await getMyBoardList()
 
     js_wallet.enableAutoOptimization(false);
     js_wallet.on('incomingtx', (transaction) => {
@@ -497,6 +498,7 @@ async function start_js_wallet(walletName, password) {
       let synced = localDaemonBlockCount - walletBlockCount <= 2
       if (synced) {
       // Save js wallet to file
+      mainWindow.webContents.send('sync', true)
       console.log('******** SAVING WALLET ********');
       await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
     } else if (!synced) {
@@ -599,9 +601,11 @@ async function backgroundSyncMessages(knownTxsIds) {
                       message.sent = false
 
                       if (message.brd) {
-                          console.log('Boards message', message);
                           message.type = "board"
-                          console.log('my Boards?', my_boards);
+                          if (my_boards.indexOf(message.brd) == -1) {
+                            console.log('Not my board');
+                            continue
+                          }
                           await saveBoardMsg(message, thisHash)
                       } else {
                         console.log('Saving Message');
@@ -664,9 +668,6 @@ async function saveBoardMsg(msg, hash) {
 
 
   let to_board = sanitizeHtml(msg.brd);
-  if (my_boards.indexOf(to_board) > 0) {
-    console.log('One of my board');
-  }
   let text = sanitizeHtml(msg.m);
   let addr = sanitizeHtml(msg.k);
   let reply = sanitizeHtml(msg.r);
@@ -925,6 +926,8 @@ async function saveBoardMsg(msg, hash) {
                  timestamp
              ]
          );
+         let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
+         mainWindow.webContents.send('newMsg', newMsg)
      }
 
 
@@ -955,6 +958,7 @@ ipcMain.on('answerCall', (e, msg, contact) => {
 
 async function sendBoardMessage(message) {
   console.log('sending board', message);
+  return;
   let reply = message.r
   let to_board = message.brd
   let my_address = message.k
@@ -1011,7 +1015,6 @@ console.log('Error', err);
 }
 
 async function sendMessage(message, receiver) {
-
     console.log('Want to send')
     let has_history
     console.log('address', receiver.length);
@@ -1109,13 +1112,13 @@ async function sendMessage(message, receiver) {
         Buffer.from(payload_hex, 'hex')
     );
 
-    let sentMsg = {msg: message, k: messageKey, chat: address, sent: true, t: timestamp}
+    let sentMsg = {msg: message, k: messageKey, from: address, sent: true, t: timestamp}
 
     if (result.success) {
+        known_pool_txs.push(result.transactionHash)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         saveMessageSQL(sentMsg)
         mainWindow.webContents.send('sent', sentMsg)
-        known_pool_txs.push(result.transactionHash)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
