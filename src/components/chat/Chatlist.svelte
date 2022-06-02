@@ -13,16 +13,14 @@
     //Get message updates and trigger filter
     messages.subscribe(() => {
         if ($messages.length > 0) {
-            filterConversation($messages)
+          let array = $messages
+            printConversations()
         }
     })
 
-
-    //Function to filer array after last msg and conversation
-    function filterConversation(arr) {
-        let uniq = {}
-        filterArr = arr.filter(obj => !uniq[obj.chat] && (uniq[obj.chat] = true))
-        console.log('FILTERARR', filterArr)
+    //Print our conversations from DB
+    async function printConversations() {
+        filterArr = await window.api.getConversations()
         //If we have no active chat we take the latest known message and dispatch.
         if (!$user.activeChat) {
           console.log('no userchat', $user.activeChat);
@@ -54,18 +52,17 @@
         }
       }
 
+      let active_chat = {chat: chat, k: msgkey}
+
       //let key = message.k
       console.log('dispatching', chat);
 
-        dispatch('conversation', {
-            chat: chat,
-            k: msgkey
-        });
+        dispatch('conversation', active_chat);
         //Saved clicked chat
         user.update(user => {
             return{
                 ...user,
-               activeChat: {chat: chat, k: msgkey}
+               activeChat: active_chat
             }
         })
     }
