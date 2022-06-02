@@ -34,16 +34,18 @@
         chat = active.chat
         key = active.k
         active_contact = chat + key;
-        savedMsg = $messages.filter(x => x.chat === chat).reverse()
+        savedMsg = $messages.filter(x => x.chat === chat)
     }
     //Chat to add
     const handleAddChat = e => {
       console.log('event', e.detail);
       let addContact = e.detail.chat + e.detail.k
+      //Add new contact to contacts array
+      contacts.push(e.detail)
         //Add input to message arr
         let newMessage = e.detail
         newMessage.t = Date.now()
-        window.api.send('addChat', addContact)
+        window.api.send('addChat', addContact, e.detail.name)
         //Saves message to svelte store
         saveToStore(newMessage)
         //Prepare send function and filter
@@ -51,22 +53,22 @@
         //Close popup
         wantToAdd = false
     }
-        //Update messages live if users keep chat mounted
-          const printMessage = (data) =>  {
-            savedMsg.push(data)
-            savedMsg = savedMsg
-            saveToStore(data)
-
+      //Update messages live if users keep chat mounted
+    const printMessage = (data) =>  {
+          savedMsg.push(data)
+          saveToStore(data)
+          savedMsg = savedMsg
     }
 
     const saveToStore = (data) => {
 
       messages.update(current => {
-          return [data, ...current]
+          return [...current, data]
       })
     }
     //Listen for new message private messages saved in DB
       window.api.receive('newMsg', data => {
+
       if (data.chat === chat) {
         printMessage(data)
       } else {
