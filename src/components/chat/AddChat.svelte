@@ -30,6 +30,7 @@
     const handleAdd = () => {
         dispatch('addChat', {
             msg: 'Found a friend? 🥳',
+            name: nickname,
             chat: addr,
             k: pubkey
         })
