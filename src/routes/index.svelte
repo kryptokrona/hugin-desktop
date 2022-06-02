@@ -50,14 +50,7 @@
     }
 
     window.api.receive('saved-addr', huginaddr => {
-      console.log('new contact', huginaddr);
-
-      let chat = hugin_address.substring(0,99)
-      let key = hugin_address.substring(99, 163)
-      let hugin_address = {chat: chat, key: key}
-      console.log('updating', hugin_address);
-      contacts.push(hugin_address)
-      console.log('Contacts', contacts);
+      contacts.push(huginaddr)
 
     })
 
