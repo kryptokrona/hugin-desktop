@@ -42,6 +42,14 @@ const WINDOW_API = {
     let resp = await ipcRenderer.invoke('getMyBoards')
     return resp
   },
+  getConversations: async () => {
+    let resp = await ipcRenderer.invoke('getConversations')
+    return resp
+  },
+  printConversation: async (chat) => {
+    let resp = await ipcRenderer.invoke('printConversation', chat)
+    return resp
+  },
   //HANDLE CALLS
   gotMedia: async (video, audio) => {
     ipcRenderer.send('got-media')
