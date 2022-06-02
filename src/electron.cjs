@@ -630,16 +630,16 @@ async function backgroundSyncMessages(knownTxsIds) {
         }
 }
 
-ipcMain.on('addChat', async (e, hugin) => {
+ipcMain.on('addChat', async (e, hugin_address, nickname) => {
   console.log('Adding', hugin);
-  saveContact(hugin)
+  saveContact(hugin_address, nickname)
 })
 
-async function saveContact(hugin_address) {
+async function saveContact(hugin_address, nickname) {
 
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
-  let huginaddr = {chat: addr, key: key}
+  let huginaddr = {chat: addr, key: key, name: nickname}
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
   mainWindow.webContents.send('saved-addr', huginaddr)
@@ -772,32 +772,57 @@ async function saveBoardMsg(msg, hash) {
 
        }
 
-       async function getConversation(chat=false) {
+async function getConversations() {
 
-            const rows = [];
-            return new Promise((resolve, reject) => {
-              const getChat = `SELECT
-                  msg,
-                  chat,
-                  sent,
-                  timestamp
-              FROM
-                  messages
-              ${chat ? 'WHERE chat = "' + chat + '"' : ''}
-              ORDER BY
-                  timestamp
-              ASC`
-              database.each(getChat, (err, row) => {
-                  console.log(row);
-                if (err) {
-                  console.log('Error', err);
-                }
-                rows.push(row);
-              }, () => {
-                resolve(rows);
-              });
-            })
-       }
+   const myConversations = [];
+      return new Promise((resolve, reject) => {
+        const getMyConversations =   `
+          SELECT *
+          FROM messages D
+          WHERE timestamp = (SELECT MAX(timestamp) FROM messages WHERE chat = D.chat)
+          ORDER BY
+              timestamp
+          ASC
+          `
+        database.each(getMyConversations, (err, row) => {
+          if (err) {
+            console.log('Error', err);
+          }
+          console.log('row', row);
+          myConversations.push(row);
+        }, () => {
+          resolve(myConversations);
+        });
+      })
+
+     }
+
+ async function getConversation(chat=false) {
+
+      const thisConversation = [];
+      return new Promise((resolve, reject) => {
+        const getChat = `SELECT
+            msg,
+            chat,
+            sent,
+            timestamp
+        FROM
+            messages
+        ${chat ? 'WHERE chat = "' + chat + '"' : ''}
+        ORDER BY
+            timestamp
+        ASC`
+        database.each(getChat, (err, row) => {
+            console.log(row);
+          if (err) {
+            console.log('Error', err);
+          }
+          thisConversation.push(row);
+        }, () => {
+          resolve(thisConversation);
+        });
+      })
+ }
 
        async function printBoard(board=false) {
          console.log('printboard', board);
@@ -1113,8 +1138,8 @@ async function sendMessage(message, receiver) {
     );
 
     let sentMsg = {msg: message, k: messageKey, from: address, sent: true, t: timestamp}
-
     if (result.success) {
+        saveMessageSQL(sentMsg)
         known_pool_txs.push(result.transactionHash)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         saveMessageSQL(sentMsg)
@@ -1127,8 +1152,15 @@ async function sendMessage(message, receiver) {
 ipcMain.handle('getMessages', async (data) => {
     return await getMessages()
 })
+
 ipcMain.handle('getReply', async (e, data) => {
     return await getReply(data)
+})
+
+ipcMain.handle('getConversations', async (e) => {
+  console.log('Event');
+  let contacts = await getConversations();
+  return contacts.reverse()
 })
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
