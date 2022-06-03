@@ -14,7 +14,8 @@ export const user = writable({
     thisBoard: 'All',
     contacts: null,
     addBoard: false,
-    addChat: false
+    addChat: false,
+    replyTo: {reply: false}
 })
 
 export const userAvatar = derived(user, $user => {
