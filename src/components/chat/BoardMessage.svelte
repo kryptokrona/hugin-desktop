@@ -14,6 +14,7 @@
     export let timestamp
     export let nickname = "Anonymous"
   	export let active
+    export let hash
     let replyicon = '<'
     let thisreply = ''
     export let reply_to_this = false
@@ -47,7 +48,7 @@
 
       $ : if ($user.replyTo.reply == false) {
         reply_to_this = false
-      } else if ($user.replyTo.to == message.hash) {
+      } else if ( $user.replyTo.to == hash) {
         reply_to_this = true
       }
 
