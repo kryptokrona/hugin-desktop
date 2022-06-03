@@ -347,6 +347,42 @@ function messagesTable() {
    });
  }
 
+ function welcomeBoardMessage() {
+   let sent = false
+    const boardMessage =
+        `REPLACE INTO boards  (
+            m,
+            k,
+            s,
+            brd,
+            t,
+            n,
+            r,
+            hash,
+            sent
+           )
+        VALUES
+            (? ,?, ?, ?, ?, ?, ?, ?, ?)`
+    return new Promise((resolve, reject) => {
+     database.run(boardMessage,
+         [
+             'Welcome to Hugin',
+             'SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc',
+             'lol',
+             'Home',
+             '1650919475320',
+             'Hugin Messenger',
+             '',
+             'b80a4dc4fa60bf26dd31161702a165e43295adc1895f7333ad9eeeb819e20936',
+             sent
+         ], (err) => {
+           console.log('Error creating msg', err);
+       })
+       console.log('created board msg');
+      }, () => {
+        resolve();
+      });
+ }
 
 function welcomeMessage() {
    const huginMessage = `REPLACE INTO messages (msg, chat, sent, timestamp)
@@ -371,26 +407,23 @@ let myPassword;
 let my_boards = []
 
 ipcMain.on('create-account', async (e, accountData) => {
-
+    //Create welcome message
     welcomeMessage()
     let walletName = accountData.walletName
     let myPassword = accountData.password
     console.log('creating', walletName);
     const js_wallet = await WB.WalletBackend.createWallet(daemon);
     console.log(myPassword)
+    //Create Boards welcome message
+    welcomeBoardMessage()
     //Create DBs on first start
     db.data = {walletNames:[],
               blockHeight:[],}
-    dbBoards.data = {boardMessages: []}
     keychain.data = {contacts:[ {
         chat: "Hugin Messenger",
         key: "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f"},]}
-    knownTxs.data = {known_txs:[]}
-    //
+    //Save welcome Hugin messenger test contact
     await keychain.write(keychain.data)
-    await knownTxs.write(knownTxs.data)
-    await dbBoards.write(dbBoards.data)
-    await dbMessages.write(dbMessages.data)
     //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
@@ -467,6 +500,8 @@ async function start_js_wallet(walletName, password) {
     let myContacts = await loadKeys()
 
     my_boards = await getMyBoardList()
+
+    console.log('myboads', my_boards);
 
     js_wallet.enableAutoOptimization(false);
     js_wallet.on('incomingtx', (transaction) => {
@@ -709,7 +744,7 @@ async function saveBoardMsg(msg, hash) {
                msg.sent
            ]
        );
-      mainWindow.webContents.send('saved boardMsg', message)
+      mainWindow.webContents.send('boardMsg', message)
 
     }
 
