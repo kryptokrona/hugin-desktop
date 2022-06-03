@@ -69,23 +69,22 @@
     //Exit reply mode
     const replyExit = () => {
       replyto = ''
-      replyColor = false
       user.update(data => {
         return {
           ...data,
-          replyTo: false,
+          replyTo: {reply: false},
         }
       })
     }
 
     //Enter reply mode
     const replyToMessage = (hash, nickname) => {
+      replyExit()
       replyto = hash
-      replyColor = true
       user.update(data => {
         return {
           ...data,
-          replyTo: {to: hash, nick: nickname},
+          replyTo: {to: hash, nick: nickname, reply: true},
         }
       })
     }
@@ -151,10 +150,10 @@
 {/if}
 <main>
 
-{#if replyColor}
- <div class="reply_to_exit" class:reply_to={replyColor} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$user.replyTo.nick}</div>
+{#if $user.replyTo.reply}
+ <div class="reply_to_exit" class:reply_to={$user.replyTo.reply} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$user.replyTo.nick}</div>
 {/if}
-        <ChatInput on:message={sendboardMsg} reply_to={replyColor}/>
+        <ChatInput on:message={sendboardMsg} reply_to={$user.replyTo.reply}/>
 
         <BoardWindow>
 
