@@ -29,9 +29,7 @@
 		};
 
 		ready = true
-
-
-		messages.set(await window.api.getMessages())
+		
 		//Handle incoming call
 		window.api.receive('call-incoming', (msg, sender) => {
 			incoming_call = true
