@@ -20,7 +20,7 @@
     let noMsgs = false
     onMount(async () => {
       console.log('mounting');
-      printBoard(Date.now().toString())
+      printBoard('Home')
         //If we have no saved boardMessages, set empty to true. Displays WelcomeMsg
     })
 
@@ -158,9 +158,9 @@
 
         <BoardWindow>
 
-        {#if noMsgs}
+        <!-- {#if noMsgs}
           <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
-        {/if}
+        {/if} -->
                 {#each $boardMessages as message (message.hash)}
                 <BoardMessage on:replyTo={(e)=> replyToMessage(message.hash, message.n)} reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
 
