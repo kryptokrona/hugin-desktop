@@ -16,6 +16,7 @@
   	export let active
     let replyicon = '<'
     let thisreply = ''
+    export let reply_to_this = false
 
     const dispatch = createEventDispatcher()
 
@@ -37,13 +38,18 @@
       }
 
       const replyTo = () => {
+        reply_to_this = true
         // Dispatch the inputted data
             dispatch('replyTo', {
                 reply: 'reply',
             })
       }
 
-    $ :  console.log('Replyto?', $user.replyTo);
+      $ : if ($user.replyTo.reply == false) {
+        reply_to_this = false
+      } else if ($user.replyTo.to == message.hash) {
+        reply_to_this = true
+      }
 
 
 </script>
@@ -66,7 +72,7 @@
   <div class="replyline"> </div>
 
 
-  <div class:reply_active={$user.replyTo.reply} in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
+  <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
 
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
@@ -83,7 +89,7 @@
   </div>
   {:else}
 
-    <div class:reply_active={$user.replyTo.reply} in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+    <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
