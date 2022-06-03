@@ -214,8 +214,8 @@ code {
 
 @keyframes border_rgb {
   0% {
-    border: 1px solid var(--success-color);
-    box-shadow: 0 0 10px var(--success-color);
+    border: 1px solid  #5f86f2;
+    box-shadow: 0 0 10px #5ff2f0;
   }
   20% {
     border: 1px solid var(--alert-color);
@@ -230,11 +230,11 @@ code {
     box-shadow: 0 0 10px #f25fd0;;
   }
   80% {
-    border: 1px solid var(--info-color);
+    border: 1px solid #5ff281;
     box-shadow: 0 0 10px var(--info-color);
   }
   100% {
-    border: 1px solid #5ff2f0;
+    border: 1px solid #5f86f2;
     box-shadow: 0 0 10px #5ff2f0;
   }
 }
