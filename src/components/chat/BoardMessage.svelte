@@ -14,7 +14,6 @@
     export let timestamp
     export let nickname = "Anonymous"
   	export let active
-    export let reply_to
     let replyicon = '<'
     let thisreply = ''
 
@@ -44,7 +43,7 @@
             })
       }
 
-    $ :  console.log('Replyto?', reply_to);
+    $ :  console.log('Replyto?', $user.replyTo);
 
 
 </script>
@@ -67,7 +66,7 @@
   <div class="replyline"> </div>
 
 
-  <div class:reply_active={$user.replyTo} in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
+  <div class:reply_active={$user.replyTo.reply} in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
 
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
@@ -84,7 +83,7 @@
   </div>
   {:else}
 
-    <div class:reply_active={$user.replyTo} in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+    <div class:reply_active={$user.replyTo.reply} in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
