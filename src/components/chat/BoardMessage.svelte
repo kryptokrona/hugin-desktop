@@ -3,6 +3,7 @@
     import {fade} from 'svelte/transition'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {createEventDispatcher, onMount} from "svelte";
+    import {user} from '$lib/stores/user.js'
     export let message
     export let handleType
     export let msgFrom
@@ -66,7 +67,7 @@
   <div class="replyline"> </div>
 
 
-  <div in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
+  <div class:reply_active={replyColor} in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
 
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
@@ -83,7 +84,7 @@
   </div>
   {:else}
 
-    <div in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+    <div class:reply_active={$user.replyTo} in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
@@ -112,6 +113,8 @@
       background: rgba(0,0,0,0.2);
       border-radius: 15px;
       margin-bottom: 5px;
+      border: 1px solid transparent;
+      padding-right: 2%;
     }
 
     .nickname {
@@ -187,5 +190,13 @@
     .active {
 		color: white;
 	}
+
+  .reply_active {
+    border-color: #5f86f2;
+    border: 1px solid #5f86f2;
+    -webkit-animation: border_rgb 10s ease infinite;
+    -moz-animation: border_rgb 10s ease infinite;
+    animation: border_rgb 10s ease infinite;
+  }
 
 </style>
