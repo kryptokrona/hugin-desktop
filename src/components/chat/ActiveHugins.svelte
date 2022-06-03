@@ -30,8 +30,11 @@
 </script>
 
 <div class="wrapper">
-    <div class="top">
-        <h2>Active Hugins</h2>
+<div class="top">
+    <h2>{$user.thisBoard}</h2>
+    </div>
+    <div class="active_hugins">
+        <h4>Active Hugins</h4>
     </div>
     <div class="list-wrapper">
         {#each activeHugins as user}
@@ -103,7 +106,7 @@
         padding: 20px;
         height: 85px;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         z-index: 9;
@@ -174,6 +177,13 @@
     .add-icon:hover {
         opacity: 50%;
         padding: 5px;
+    }
+
+    .active_hugins {
+      height: 30px;
+      padding-left: 10px;
+      color: white;
+      padding-top: 10px;
     }
 
 </style>
