@@ -16,8 +16,8 @@
     let active
     let replyColor
     let nickname
-    let WelcomeMsg = {m: 'Welcome to Hugin public boards', brd: 'WelcomeToHugin', r: 'replyto', k: 'SEKReSq89d6e5ENoJTQ1YnJKZyj4oLYVUZRx8dqHqk2fXUBdNcuhp9HSCSyXdPFocPNXMRwsTRmcYE3BLe7t4XTLM4qNajfujtB', t: Date.now(), n: 'Hugin', hash: Date.now()}
     let noMsgs = false
+
     onMount(async () => {
       console.log('mounting');
       printBoard('Home')
@@ -68,6 +68,7 @@
 
     //Exit reply mode
     const replyExit = () => {
+
       replyto = ''
       user.update(data => {
         return {
@@ -78,8 +79,10 @@
     }
 
     //Enter reply mode
-    const replyToMessage = (hash, nickname) => {
-      replyExit()
+    async function replyToMessage(hash, nickname) {
+      if (replyto != false) {
+        await replyExit()
+      }
       replyto = hash
       user.update(data => {
         return {
