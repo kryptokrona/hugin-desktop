@@ -21,6 +21,13 @@
     //Get messages on mount
     onMount(async () => {
 
+      user.update(data => {
+        return {
+          ...data,
+          replyTo: {reply: false},
+        }
+      })
+
         //If we have an active chat in store we show that conversation
         if ($user.activeChat) {
             printConversation($user.activeChat)
@@ -35,6 +42,7 @@
         key = active.k
         active_contact = chat + key;
         savedMsg = $messages.filter(x => x.chat === chat)
+        scrollDown()
     }
     //Chat to add
     const handleAddChat = e => {
@@ -58,6 +66,7 @@
           savedMsg.push(data)
           saveToStore(data)
           savedMsg = savedMsg
+          scrollDown()
     }
 
     const saveToStore = (data) => {
@@ -68,6 +77,7 @@
     }
     //Listen for new message private messages saved in DB
       window.api.receive('newMsg', data => {
+      console.log('new message', data);
 
       if (data.chat === chat) {
         printMessage(data)
@@ -75,6 +85,7 @@
         saveToStore(data)
       }
     })
+
 
     $: active_contact
 
@@ -97,21 +108,28 @@
 
     $ : savedMsg
 
+    let box;
 
+	function scrollDown() {
+	box.scrollIntoView({block: "end"});
+	}
 </script>
 
 {#if wantToAdd}
     <AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)}/>
 {/if}
-
 <main in:fade>
     <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
     <div class="rightside">
+
+
+    <div class="board_window" bind:this={box}>
         <ChatWindow>
             {#each savedMsg as message}
                 <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat} timestamp={message.t}/>
             {/each}
         </ChatWindow>
+      </div>
         <ChatInput on:message={sendMsg}/>
     </div>
 </main>
@@ -134,5 +152,6 @@
       width: 100%;
       margin-right: 85px;
     }
+
 
 </style>
