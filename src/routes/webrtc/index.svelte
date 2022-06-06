@@ -403,7 +403,7 @@
         align-items: center;
         height: 100vh;
         width: 25%;
-        height: 25%;
+        height: 10%;
         right: 15%;
         z-index: 2;
         background: transparent;
