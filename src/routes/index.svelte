@@ -50,7 +50,13 @@
     }
 
     window.api.receive('saved-addr', huginaddr => {
-      contacts.push(huginaddr)
+      user.update(data => {
+        return {
+          ...data,
+          contacts: [...data, huginaddr],
+        }
+
+      })
 
     })
 
