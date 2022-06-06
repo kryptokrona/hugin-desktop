@@ -7,14 +7,15 @@
 
     const switchNode = (node) => {
 
-      console.log('swiitching', node);
+      let nodeAddress = node.url
+      let nodePort = node.port
 
-      //window.api.switchNode(node)
+      window.api.switchNode(nodeAddress + ':' +  nodePort)
 
       user.update(oldData => {
           return {
               ...oldData,
-              node: node
+              node: nodeAddress + nodePort
           }
       })
 
