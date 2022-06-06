@@ -665,6 +665,12 @@ async function backgroundSyncMessages(knownTxsIds) {
         }
 }
 
+ipcMain.on('addBoard', async (e, board) => {
+  console.log('Adding boards', board);
+  my_boards.push(board)
+  console.log('my boards', my_boards);
+})
+
 ipcMain.on('addChat', async (e, hugin_address, nickname) => {
   console.log('Adding', hugin);
   saveContact(hugin_address, nickname)
@@ -823,7 +829,6 @@ async function getConversations() {
           if (err) {
             console.log('Error', err);
           }
-          console.log('row', row);
           myConversations.push(row);
         }, () => {
           resolve(myConversations);
@@ -987,6 +992,7 @@ async function getConversations() {
              ]
          );
          let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
+         console.log('sending newmessage');
          mainWindow.webContents.send('newMsg', newMsg)
      }
 
