@@ -9,7 +9,7 @@
 
     //Handle state of sync and clicks
     let showFunds = true
-    let sync
+    let sync = false
     $: sync = $user.syncState
 
     //Get balance and then look every 15 seconds
@@ -39,10 +39,10 @@
         {#if (!sync)}
             <p in:fade>Syncing..</p>
         {/if}
-        {#if (showFunds && sync === 'synced')}
+        {#if (showFunds && sync)}
             <p in:fade>{unlockedAmount !== 0 ? `💰 ${unlockedAmount} XKR` : 'No unlocked funds 😭'}</p>
         {/if}
-        {#if (!showFunds && sync === 'synced')}
+        {#if (!showFunds && sync)}
             <p in:fade>{lockedAmount = 0 ? `🔐 ${lockedAmount} XKR` : 'No locked funds 🥳'}</p>
         {/if}
     </div>
