@@ -15,25 +15,36 @@
       user.update(oldData => {
           return {
               ...oldData,
-              node: nodeAddress + nodePort
+              node: nodeAddress + ':' +  nodePort
           }
       })
 
-
     }
-    $ : console.log('node?', node);
 
 </script>
 
 <main in:fade>
-    <h1>Settings</h1>
-
+<h1>Settings</h1>
+  <div id="settings">
+       <div class="inner">
+        <div class="nodelist">
+        <h4>Nodes</h4>
         {#each $nodelist as node}
         <div on:click={()=> switchNode(node)}>
             <h4>{node.name}</h4>
-            <p>{`${node.url}:${node.port}`}</p>
         </div>
         {/each}
+      </div>
+     </div>
+
+      <div class="inner">
+        <div class="nodestatus">
+          <h4>Status</h4>
+           <p>{$user.node}</p>
+       </div>
+        </div>
+
+   </div>
 </main>
 
 <style>
@@ -51,6 +62,28 @@
 
     p {
       font-family: "Roboto Mono";
+      color: white;
+    }
+
+    #settings {
+      background: rgba(0,0,0,0.1);
+      border-radius: 10px;
+      display: grid;
+      transition: .25s ease-in-out all;
+      grid-template-columns: repeat(2,1fr);
+    }
+
+    #settings .inner {
+      padding: 2rem;
+      border-radius: 0.4rem;
+      height: 220px;
+      transition: 0.25s ease-in-out all;
+      width: 40%;
+      height: 700px;
+    }
+
+    #nodelist {
+      width: 80%;
       color: white;
     }
 
