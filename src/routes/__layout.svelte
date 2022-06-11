@@ -29,7 +29,7 @@
 		};
 
 		ready = true
-		
+
 		//Handle incoming call
 		window.api.receive('call-incoming', (msg, sender) => {
 			incoming_call = true
@@ -62,6 +62,17 @@
 				}
 			})
 		})
+
+window.api.receive('node', async (node) => {
+
+		user.update(oldData => {
+				return {
+						...oldData,
+						node: node
+				}
+		})
+	})
+	
 	});
 
 
