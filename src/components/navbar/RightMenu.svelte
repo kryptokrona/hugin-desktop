@@ -38,6 +38,12 @@
             thisBoard: board,
           }
         })
+        user.update(data => {
+          return {
+            ...data,
+            replyTo: {reply: false},
+          }
+        })
     }
 
     const openAdd = () => {
@@ -111,18 +117,18 @@
     }
 
     .add:hover {
-
         background-color: rgba(255, 255, 255, 0.4);
     }
 
     .boardicon {
-
-    font-family: 'Roboto Mono';
-    border: none;
-    background: none;
-    color: white;
-    font-size: 12px;
-    opacity: 0.9
+        border: none;
+        background: none;
+        color: white;
+        font-size: 12px;
+        opacity: 0.9;
+        word-break: break-word;
+        font-family: 'Montserrat';
+        cursor: pointer;
     }
 
     .boardicon:hover {
