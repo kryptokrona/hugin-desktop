@@ -68,7 +68,7 @@
 
     //Exit reply mode
     const replyExit = () => {
-
+      console.log('reply exit');
       replyto = ''
       user.update(data => {
         return {
@@ -110,6 +110,12 @@
         }
     }
 
+    $ : if ($user.replyTo.reply) {
+      console.log('true');
+    } else {
+      replyExit()
+    }
+
     //Reactive depending on user.addBoard boolean, displays AddBoard component.
     $ : wantToAdd = $user.addBoard
 
@@ -120,7 +126,7 @@
       user.update(current => {
            return {
                ...current,
-               boardsArray: [board, ...current.boardsArray]
+               boardsArray: [...current.boardsArray, board]
            }
          })
          openAddBoard()
@@ -136,6 +142,8 @@
 
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     async function printBoard(board) {
+        console.log('printing board');
+
         noMsgs = false
         boardMessages.set(await window.api.printBoard(board))
         user.update(data => {
@@ -144,7 +152,6 @@
             thisBoard: board,
           }
         })
-
     }
 
 </script>
