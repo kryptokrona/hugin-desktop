@@ -503,6 +503,8 @@ async function start_js_wallet(walletName, password) {
 
     console.log('myboads', my_boards);
 
+    mainWindow.webContents.send('sync', false)
+
     js_wallet.enableAutoOptimization(false);
     js_wallet.on('incomingtx', (transaction) => {
 
@@ -530,10 +532,12 @@ async function start_js_wallet(walletName, password) {
     }
 
     js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
-      let synced = localDaemonBlockCount - walletBlockCount <= 2
+      let synced = networkBlockCount - walletBlockCount <= 2
       if (synced) {
-      // Save js wallet to file
+      //Send synced event to frontend
       mainWindow.webContents.send('sync', true)
+
+      // Save js wallet to file
       console.log('******** SAVING WALLET ********');
       await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
     } else if (!synced) {
@@ -562,10 +566,8 @@ async function start_js_wallet(walletName, password) {
         } else {
             //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
             if (walletBlockCount === 0) {
-
               await js_wallet.reset(networkBlockCount - 100)
             }
-
             console.log('*.[~~~].SYNCING BLOCKS.[~~~].*');
             console.log('My Wallet ', walletBlockCount);
             console.log('The Network', networkBlockCount);
@@ -664,18 +666,16 @@ async function backgroundSyncMessages(knownTxsIds) {
         console.log('Sync error')
         }
 }
-
+//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
 ipcMain.on('addBoard', async (e, board) => {
-  console.log('Adding boards', board);
   my_boards.push(board)
-  console.log('my boards', my_boards);
 })
 
+//Listens for event from frontend and saves contact and nickname.
 ipcMain.on('addChat', async (e, hugin_address, nickname) => {
-  console.log('Adding', hugin);
   saveContact(hugin_address, nickname)
 })
-
+//Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname) {
 
   let addr = hugin_address.substring(0,99)
@@ -688,9 +688,8 @@ async function saveContact(hugin_address, nickname) {
   await keychain.write()
 
 }
-
+//Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
 async function saveHash(txHash) {
-  console.log('saving hash');
 
            database.run(
                `REPLACE INTO knownTxs (
@@ -705,8 +704,8 @@ async function saveHash(txHash) {
   console.log('saved hash');
 }
 
+//Saves board message.
 async function saveBoardMsg(msg, hash) {
-
 
   let to_board = sanitizeHtml(msg.brd);
   let text = sanitizeHtml(msg.m);
@@ -721,8 +720,6 @@ async function saveBoardMsg(msg, hash) {
   }
 
    let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: txHash, sent: msg.sent}
-
-   console.log('Save board message?', message);
 
        database.run(
            `REPLACE INTO boards  (
@@ -750,69 +747,73 @@ async function saveBoardMsg(msg, hash) {
                msg.sent
            ]
        );
+       //Send new board message to frontend.
       mainWindow.webContents.send('boardMsg', message)
 
-    }
+}
 
-    async function getMessages() {
-     const rows = [];
-     return new Promise((resolve, reject) => {
-       const getAllMessages = `SELECT * FROM messages`
-       database.each(getAllMessages, (err, row) => {
-           console.log(row);
-         if (err) {
-           console.log('Error', err);
-         }
-         rows.push(row);
-       }, () => {
-         resolve(rows);
-       });
-     })
-
-    }
-
-    async function getBoardMsgs() {
-     const allBoards = [];
-     return new Promise((resolve, reject) => {
-       const getAllBrds = `SELECT * FROM boards`
-       database.each(getAllBrds, (err, row) => {
-           console.log(row);
-         if (err) {
-           console.log('Error', err);
-         }
-         allBoards.push(row);
-       }, () => {
-         resolve(allBoards);
-       });
-     })
-
-    }
-
-
- async function getMyBoardList() {
-
-     const myBoards = [];
-        return new Promise((resolve, reject) => {
-          const getMyBoards =   `
-            SELECT *
-            FROM boards D
-            WHERE t = (SELECT MAX(t) FROM boards WHERE brd = D.brd)
-            ORDER BY
-                t
-            ASC
-            `
-          database.each(getMyBoards, (err, row) => {
-            if (err) {
-              console.log('Error', err);
-            }
-            myBoards.push(row.brd);
-          }, () => {
-            resolve(myBoards);
-          });
-        })
-
+//Get all messages from db
+async function getMessages() {
+   const rows = [];
+   return new Promise((resolve, reject) => {
+     const getAllMessages = `SELECT * FROM messages`
+     database.each(getAllMessages, (err, row) => {
+         console.log(row);
+       if (err) {
+         console.log('Error', err);
        }
+       rows.push(row);
+     }, () => {
+       resolve(rows);
+     });
+   })
 
+}
+
+//Get all boardmessages from db.
+async function getBoardMsgs() {
+   const allBoards = [];
+   return new Promise((resolve, reject) => {
+     const getAllBrds = `SELECT * FROM boards`
+     database.each(getAllBrds, (err, row) => {
+         console.log(row);
+       if (err) {
+         console.log('Error', err);
+       }
+       allBoards.push(row);
+     }, () => {
+       resolve(allBoards);
+     });
+   })
+
+}
+
+//Get one message from every unique board sorted by latest timestmap.
+async function getMyBoardList() {
+
+   const myBoards = [];
+      return new Promise((resolve, reject) => {
+        const getMyBoards =   `
+          SELECT *
+          FROM boards D
+          WHERE t = (SELECT MAX(t) FROM boards WHERE brd = D.brd)
+          ORDER BY
+              t
+          ASC
+          `
+        database.each(getMyBoards, (err, row) => {
+          if (err) {
+            console.log('Error', err);
+          }
+          myBoards.push(row.brd);
+        }, () => {
+          resolve(myBoards);
+        });
+      })
+
+ }
+
+ //Get one message from every unique user sorted by latest timestmap.
 async function getConversations() {
 
    const myConversations = [];
@@ -837,6 +838,7 @@ async function getConversations() {
 
      }
 
+ //Get a chosen conversation from the reciepients xkr address.
  async function getConversation(chat=false) {
 
       const thisConversation = [];
@@ -864,137 +866,139 @@ async function getConversations() {
       })
  }
 
-       async function printBoard(board=false) {
-         console.log('printboard', board);
-            const boardArray = [];
-            return new Promise((resolve, reject) => {
-              const getBoard = `SELECT
-                     m,
-                     k,
-                     s,
-                     brd,
-                     t,
-                     n,
-                     r,
-                     hash,
-                     sent
-              FROM boards
-              ${board ? 'WHERE brd = "' + board + '"' : ''}
-              ORDER BY
-                  t
-              ASC`
-              database.each(getBoard, (err, row) => {
-                  console.log(row);
-                if (err) {
-                  console.log('Error', err);
-                }
-                boardArray.push(row);
-              }, () => {
-                boardArray.reverse()
-                resolve(boardArray);
-              });
-            })
-       }
+//Get all messages from a specific board from db
+async function printBoard(board=false) {
+   console.log('printboard', board);
+      const boardArray = [];
+      return new Promise((resolve, reject) => {
+        const getBoard = `SELECT
+               m,
+               k,
+               s,
+               brd,
+               t,
+               n,
+               r,
+               hash,
+               sent
+        FROM boards
+        ${board ? 'WHERE brd = "' + board + '"' : ''}
+        ORDER BY
+            t
+        ASC`
+        database.each(getBoard, (err, row) => {
+            console.log(row);
+          if (err) {
+            console.log('Error', err);
+          }
+          boardArray.push(row);
+        }, () => {
+          boardArray.reverse()
+          resolve(boardArray);
+        });
+      })
+ }
+//Get original messsage from a chosen reply hash
+async function getReply(reply=false) {
+  console.log('Get reply', reply);
+    let thisReply
+    return new Promise((resolve, reject) => {
+      let sql = `SELECT
+             m,
+             k,
+             s,
+             brd,
+             t,
+             n,
+             r,
+             hash,
+             sent
+      FROM boards
+      ${reply ? 'WHERE hash = "' + reply + '"' : ''}
+      ORDER BY
+          t
+      ASC`
+      database.each(sql, (err, row) => {
 
-       async function getReply(reply=false) {
-         console.log('Get reply', reply);
-            let thisReply
-            return new Promise((resolve, reject) => {
-              let sql = `SELECT
-                     m,
-                     k,
-                     s,
-                     brd,
-                     t,
-                     n,
-                     r,
-                     hash,
-                     sent
-              FROM boards
-              ${reply ? 'WHERE hash = "' + reply + '"' : ''}
-              ORDER BY
-                  t
-              ASC`
-              database.each(sql, (err, row) => {
+          thisReply = row
+        if (err) {
+          console.log('Error', err);
+        }
+      }, () => {
+        resolve(thisReply);
+      });
+    })
+}
+//Get all replies to a specific post
+ async function getReplies(hash=false) {
+      const replies = [];
+      return new Promise((resolve, reject) => {
+        let sql = `SELECT
+               m,
+               k,
+               s,
+               brd,
+               t,
+               n,
+               r,
+               hash,
+               sent
+        FROM boards
+        ${hash ? 'WHERE r = "' + hash + '"' : ''}
+        ORDER BY
+            t
+        ASC`
+        database.each(sql, (err, row) => {
+            console.log(row);
+          if (err) {
+            console.log('Error', err);
+          }
+          replies.push(row);
+        }, () => {
+          resolve(replies);
+        });
+      })
+ }
 
-                  thisReply = row
-                if (err) {
-                  console.log('Error', err);
-                }
-              }, () => {
-                resolve(thisReply);
-              });
-            })
-       }
+//Saves private message
+async function saveMessageSQL(msg) {
 
-       async function getReplies(hash=false) {
-            const replies = [];
-            return new Promise((resolve, reject) => {
-              let sql = `SELECT
-                     m,
-                     k,
-                     s,
-                     brd,
-                     t,
-                     n,
-                     r,
-                     hash,
-                     sent
-              FROM boards
-              ${hash ? 'WHERE r = "' + hash + '"' : ''}
-              ORDER BY
-                  t
-              ASC`
-              database.each(sql, (err, row) => {
-                  console.log(row);
-                if (err) {
-                  console.log('Error', err);
-                }
-                replies.push(row);
-              }, () => {
-                resolve(replies);
-              });
-            })
-       }
+  let text = sanitizeHtml(msg.msg);
+  let addr = sanitizeHtml(msg.from);
+  let timestamp = escape(msg.t)
+  let key = sanitizeHtml(msg.k)
+  let sent = msg.sent
 
-    async function saveMessageSQL(msg) {
+  //Checking if private msg is a call
+  console.log('Checking if private msg is a call');
+  let message = parseCall(text, addr)
 
-      let text = sanitizeHtml(msg.msg);
-      let addr = sanitizeHtml(msg.from);
-      let timestamp = escape(msg.t)
-      let key = sanitizeHtml(msg.k)
-      let sent = msg.sent
+  if (msg.type === 'sealedbox') {
 
-      //Checking if private msg is a call
-      console.log('Checking if private msg is a call');
-      let message = parseCall(text, addr)
+   console.log('Saving key', key);
+   let hugin = addr + key
+   saveContact(hugin)
 
-      if (msg.type === 'sealedbox') {
+  }
 
-       console.log('Saving key', key);
-       let hugin = addr + key
-       saveContact(hugin)
+ console.log('Saving message', text, addr, sent, timestamp);
 
-      }
-
-     console.log('Saving message', text, addr, sent, timestamp);
-
-         database.run(
-             `REPLACE INTO messages
-                (msg, chat, sent, timestamp)
-             VALUES
-                 (?, ?, ?, ?)`,
-             [
-                 text,
-                 addr,
-                 sent,
-                 timestamp
-             ]
-         );
-         let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
-         console.log('sending newmessage');
-         mainWindow.webContents.send('newMsg', newMsg)
-     }
+     database.run(
+         `REPLACE INTO messages
+            (msg, chat, sent, timestamp)
+         VALUES
+             (?, ?, ?, ?)`,
+         [
+             text,
+             addr,
+             sent,
+             timestamp
+         ]
+     );
+     let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
+     console.log('sending newmessage');
+     mainWindow.webContents.send('newMsg', newMsg)
+ }
 
 
 //SWITCH NODE
