@@ -49,17 +49,6 @@
         })
     }
 
-    window.api.receive('saved-addr', huginaddr => {
-      user.update(data => {
-        return {
-          ...data,
-          contacts: [...data, huginaddr],
-        }
-
-      })
-
-    })
-
       $ :  myPassword
       $ :  console.log('mypass', myPassword);
 
