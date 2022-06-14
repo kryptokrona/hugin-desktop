@@ -30,7 +30,7 @@
 
 <div class="leftMenu draggable" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
-        <a class='button' href="/dashboard"><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></a>
+        <a class='button myavatar' href="/dashboard"><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></a>
         <a class='button' href="/messages"><img class="icon" src={msgIcon} alt="msgs"></a>
         <a class='button' href="/boards"><img class="icon" src={brdIcon} alt="brds"></a>
         <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a>
@@ -102,6 +102,15 @@
     .button:hover, .button:hover > .icon {
         background-color: #313131;
         opacity: 100%;
+    }
+
+    .myavatar {
+      margin-bottom: 10px;
+      margin-top: -25px;
+    }
+
+    .avatar {
+      height: 55px;
     }
 
 </style>
