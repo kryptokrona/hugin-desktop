@@ -37,10 +37,18 @@
     //Prints conversation from active contact
     const printConversation = (active) => {
 
+
       console.log('printing conversation', active);
         chat = active.chat
         key = active.k
         active_contact = chat + key;
+        let active_chat = {chat: chat, k: key, name: active.name}
+        user.update(user => {
+            return{
+                ...user,
+               activeChat: active_chat
+            }
+        })
         savedMsg = $messages.filter(x => x.chat === chat)
         scrollDown()
     }
@@ -48,16 +56,16 @@
     const handleAddChat = e => {
       console.log('event', e.detail);
       let addContact = e.detail.chat + e.detail.k
-      //Add new contact to contacts array
-      contacts.push(e.detail)
         //Add input to message arr
         let newMessage = e.detail
+
         newMessage.t = Date.now()
-        window.api.send('addChat', addContact, e.detail.name)
         //Saves message to svelte store
         saveToStore(newMessage)
         //Prepare send function and filter
         printConversation(newMessage)
+        window.api.addChat(addContact, e.detail.name)
+
         //Close popup
         wantToAdd = false
     }
