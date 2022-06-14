@@ -160,4 +160,8 @@
         opacity: 100%;
     }
 
+    .avatar {
+      height: 70px;
+    }
+
 </style>
