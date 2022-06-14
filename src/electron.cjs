@@ -421,7 +421,8 @@ ipcMain.on('create-account', async (e, accountData) => {
               blockHeight:[],}
     keychain.data = {contacts:[ {
         chat: "Hugin Messenger",
-        key: "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f"},]}
+        key: "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f",
+        name: "Hugin",}]}
     //Save welcome Hugin messenger test contact
     await keychain.write(keychain.data)
     //Saving wallet name
@@ -432,20 +433,21 @@ ipcMain.on('create-account', async (e, accountData) => {
     start_js_wallet(walletName, myPassword);
   })
 
-async function loadKeys() {
+async function loadKeys(start=false) {
 
 //Load known public keys from db and push them to known_keys
 await keychain.read()
 
-let contacts = keychain.data.contacts
-console.log('contacts', contacts);
-for (keys in contacts) {
-console.log('thiskey', contacts[keys].key)
-let thiskey = contacts[keys].key
-known_keys.push(thiskey)
-console.log('Pushin this', thiskey);
-}
 
+let contacts = keychain.data.contacts
+if  (start) {
+  for (keys in contacts) {
+
+    let thiskey = contacts[keys].key
+    known_keys.push(thiskey)
+
+    }
+}
 console.log('known keys', known_keys);
 
 return contacts
@@ -497,7 +499,7 @@ async function start_js_wallet(walletName, password) {
         checkedTxs.push(knownTxId)
     }
      //Load known public keys
-    let myContacts = await loadKeys()
+    let myContacts = await loadKeys(true)
 
     my_boards = await getMyBoardList()
 
@@ -673,19 +675,29 @@ ipcMain.on('addBoard', async (e, board) => {
 
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('addChat', async (e, hugin_address, nickname) => {
-  saveContact(hugin_address, nickname)
+  let first = true
+  saveContact(hugin_address, nickname, first)
 })
 //Saves contact and nickname to db.
-async function saveContact(hugin_address, nickname) {
+async function saveContact(hugin_address, nickname=false, first=false) {
+
+  if (!nickname) {
+    console.log('no nickname')
+    nickname = 'Anon'
+  }
 
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
   let huginaddr = {chat: addr, key: key, name: nickname}
-  known_keys.push(key)
-  console.log('Pushing this to known keys ', known_keys)
-  mainWindow.webContents.send('saved-addr', huginaddr)
   keychain.data.contacts.push(huginaddr)
   await keychain.write()
+  if (first) {
+    saveMessageSQL({msg: 'Added friend', k: key, from: addr, sent: false, t: Date.now()})
+  }
+  known_keys.push(key)
+  console.log('Pushing this to known keys ', known_keys)
+  // mainWindow.webContents.send('saved-addr', huginaddr)
+
 
 }
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
@@ -815,7 +827,10 @@ async function getMyBoardList() {
 
  //Get one message from every unique user sorted by latest timestmap.
 async function getConversations() {
-
+  let contacts = await loadKeys()
+  let name
+  let newRow
+  let key
    const myConversations = [];
       return new Promise((resolve, reject) => {
         const getMyConversations =   `
@@ -827,10 +842,22 @@ async function getConversations() {
           ASC
           `
         database.each(getMyConversations, (err, row) => {
+
           if (err) {
             console.log('Error', err);
           }
-          myConversations.push(row);
+
+          for (c in contacts) {
+            if (contacts[c].chat == row.chat) {
+              name = contacts[c].name
+              key = contacts[c].key
+            }
+             else {
+               continue
+             }
+          }
+          newRow = {name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key}
+          myConversations.push(newRow);
         }, () => {
           resolve(myConversations);
         });
