@@ -10,17 +10,20 @@
     let filterArr = []
     let contacts = []
     let msgkey;
+    let nickname
     //Get message updates and trigger filter
     messages.subscribe(() => {
-        if ($messages.length > 0) {
-          let array = $messages
-            printConversations()
-        }
+
+            console.log('Printing conversations');
+
+              printConversations()
     })
 
     //Print our conversations from DB
     async function printConversations() {
         filterArr = await window.api.getConversations()
+        console.log('Printing conversations');
+
         //If we have no active chat we take the latest known message and dispatch.
         if (!$user.activeChat) {
           console.log('no userchat', $user.activeChat);
@@ -36,25 +39,12 @@
     function sendConversation(message) {
 
       let chat = message.chat
-      // console.log('myContacts', myContacts);
-      contacts = $user.contacts
-      console.log('mycontacts', contacts);
-      let c
-      for (c in contacts) {
-        console.log(contacts[c].chat);
+      let msgkey = message.key
+      let name = message.name
 
-        if (chat === contacts[c].chat) {
-          msgkey = contacts[c].key
+      console.log('message', message);
 
-        } else {
-
-          continue;
-        }
-      }
-
-      let active_chat = {chat: chat, k: msgkey}
-
-      //let key = message.k
+      let active_chat = {chat: chat, k: msgkey, name: name}
       console.log('dispatching', chat);
 
         dispatch('conversation', active_chat);
@@ -65,7 +55,8 @@
                activeChat: active_chat
             }
         })
-    }
+        printConversations()
+}
 
 </script>
 
@@ -79,7 +70,7 @@
             <div class="card" on:click={(e) => sendConversation(message)}>
                 <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="">
                 <div class="content">
-                    <h4>{message.chat}</h4>
+                    <h4>{message.name}</h4>
                     <p>{message.msg}</p>
                 </div>
             </div>
@@ -165,6 +156,8 @@
     h2 {
         margin: 0;
         color: #fff;
+        font-size: 22px;
+
     }
 
     p {
