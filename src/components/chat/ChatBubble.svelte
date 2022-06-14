@@ -23,25 +23,31 @@
 
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
-<div class="bubble sent">
-<img class="avatar"
-     src="data:image/png;base64,{get_avatar(address)}" alt="">
 
+<img class="avatar sent"
+     src="data:image/png;base64,{get_avatar(address)}" alt="">
+<div class="bubble sent">
 
         <p>{message}</p>
     </div>
     <br>
 {:else}
-<div class="bubble from">
-<img class="avatar"
+<!--
+{#if !message.name}
+<img class="avatar from"
          src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+         {:else} -->
+         <h5 class="from">{$user.activeChat.name}</h5>
+
+         <!-- {/if} -->
+<div class="bubble from">
 
         <p>{message}</p>
     </div>
     <br>
 {/if}
 
-{#if message.brd}
+<!-- {#if message.brd}
 
 <div class="bubble board">
 <img class="avatar"
@@ -49,7 +55,7 @@
 
         <p>{message}</p>
     </div>
-{/if}
+{/if} -->
 <style>
 
     .bubble {
@@ -69,6 +75,8 @@
         margin: 0;
         word-break: break-word;
         font-family: "Montserrat";
+        margin-left: 5px;
+        margin-right: -5px;
     }
 
     .sent {
@@ -96,10 +104,20 @@
 
     .avatar {
       display: block;
+      background: none !important;
+      height: 25px;
     }
 
     .board p {
       font-size: 17px;
+    }
+
+    h5 {
+      color: white;
+      font-weight: bold;
+      background: none !important;
+      margin-bottom: 0px !important;
+      margin-left: 4.5% !important;
     }
 
 
