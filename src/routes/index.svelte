@@ -158,7 +158,7 @@
     </div>
 </div>
 
-<style>
+<style lang="scss">
 
     .wrapper {
         display: flex;
@@ -202,5 +202,28 @@
     .show {
       display: block;
     }
+
+    input {
+      box-sizing: border-box;
+      background-color: var(--backgound-color);
+      border: 1px solid var(--card-border);
+      border-radius: 0.4rem;
+      color: var(--title-color);
+      padding: 0 10px;
+      margin-bottom: 20px;
+      position: fixed;
+      font-size: 15px !important;
+      width: 85%;
+      font-size: 16px;
+      height: 40px;
+      display: inline-flex;
+      position: relative;
+      font-family: "Roboto Mono";
+      padding-left: 15px;
+      &:focus {
+        outline: none;
+        border: 1px solid var(--title-color);
+        }
+      }
 
 </style>
