@@ -27,6 +27,7 @@
 
     //If click we show opposite (locked/unlocked)
     const handleClick = () => {
+      console.log('logging interval');
         showFunds = !showFunds
     }
     //Auto "click" every X seconds
@@ -37,13 +38,13 @@
 <div class="wrapper" on:click={handleClick}>
     <div>
         {#if (!sync)}
-            <p in:fade>Syncing..</p>
+            <p class="funds" in:fade>Syncing..</p>
         {/if}
         {#if (showFunds && sync)}
-            <p in:fade>{unlockedAmount !== 0 ? `💰 ${unlockedAmount} XKR` : 'No unlocked funds 😭'}</p>
+            <p class="funds" in:fade>{unlockedAmount !== 0 ? `💰 ${unlockedAmount} XKR` : 'No unlocked funds 😭'}</p>
         {/if}
         {#if (!showFunds && sync)}
-            <p in:fade>{lockedAmount = 0 ? `🔐 ${lockedAmount} XKR` : 'No locked funds 🥳'}</p>
+            <p class="funds" in:fade>{lockedAmount = 0 ? `🔐 ${lockedAmount} XKR` : 'No locked funds 🥳'}</p>
         {/if}
     </div>
 </div>
@@ -66,6 +67,12 @@
         height: 24px;
         opacity: 80%;
         margin-right: 10px;
+    }
+
+    .funds {
+      font-family: "Major Mono Display";
+      font-size: 16px;
+
     }
 
 </style>
