@@ -722,10 +722,6 @@ async function saveContact(hugin_address, nickname=false, first=false) {
 
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
-  // let huginaddr = {chat: addr, key: key, name: name}
-  // keychain.data.contacts.push(huginaddr)
-  // console.log('pushin to keychain', keychain);
-  // await keychain.write()
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
   // mainWindow.webContents.send('saved-addr', huginaddr)
@@ -742,7 +738,7 @@ async function saveContact(hugin_address, nickname=false, first=false) {
   );
 
   if (first) {
-    saveMessageSQL({msg: 'Friend', k: key, from: addr, sent: false, t: Date.now()})
+    saveMessageSQL({msg: 'New friend added!', k: key, from: addr, sent: true, t: Date.now()})
   }
 
 }
