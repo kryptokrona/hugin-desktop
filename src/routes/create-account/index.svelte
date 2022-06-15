@@ -6,29 +6,60 @@
 
     let password;
     let walletName;
+    let node;
+    let port
+    let nodeInput = ''
+    let username = false
+    let pass
+
 
     const handleLogin = () => {
 
       let accountData = {
         walletName: walletName,
-        password: password
+        password: password,
+        node: nodeInput.split(':')[0],
+        port: parseInt(nodeInput.split(':')[1])
       }
         window.api.send('create-account', accountData);
 
         console.log('Creating user account')
     }
-    
+
+    const next = (type) => {
+
+      switch (type) {
+        case 'node':
+        username = true
+        break;
+        case 'wallet':
+        pass = true
+        break;
+      }
+
+    }
+
 </script>
 
 <main in:fade>
     <h1>Create Account</h1>
     <div class="wrapper">
+      {#if !username}
+      <label>Node</label>
+      <input type="text" placeholder="node:port" bind:value={nodeInput}>
+      <FillButton text="Next" on:click={()=> next('node')}/>
+      {/if}
+      {#if username && !pass}
         <label>Username</label>
         <input type="text" placeholder="Satoshi" bind:value={walletName}>
+        <FillButton text="Next" on:click={()=> next('wallet')}/>
+      {/if}
+      {#if pass}
         <label>Password</label>
         <input type="password" placeholder="Something safe" bind:value={password}>
         <FillButton text="Create" on:click={handleLogin}/>
-        <FillButton text="back" url="/"/>
+      {/if}
+        <!-- <FillButton text="back" url="/"/> -->
     </div>
 </main>
 
