@@ -130,7 +130,7 @@
       font-family: 'Roboto Mono';
       padding-left: 15px;
       margin-top: 10px;
-      margin-left: -5px;
+      margin-left: -10px;
       &:focus {
         outline: none;
         border: 1px solid var(--title-color);
