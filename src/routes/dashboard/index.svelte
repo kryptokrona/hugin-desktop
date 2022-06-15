@@ -26,7 +26,6 @@
 
             })
 
-        		messages.set(await window.api.getMessages())
 
   })
 
