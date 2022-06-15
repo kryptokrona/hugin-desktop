@@ -54,18 +54,15 @@
     }
     //Chat to add
     const handleAddChat = e => {
-      console.log('event', e.detail);
+
       let addContact = e.detail.chat + e.detail.k
+      //Send contact to backend and to saveContact()
+        window.api.addChat(addContact, e.detail.name)
+        console.log('event', e.detail)
         //Add input to message arr
         let newMessage = e.detail
-
-        newMessage.t = Date.now()
-        //Saves message to svelte store
-        saveToStore(newMessage)
         //Prepare send function and filter
         printConversation(newMessage)
-        window.api.addChat(addContact, e.detail.name)
-
         //Close popup
         wantToAdd = false
     }
