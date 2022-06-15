@@ -218,10 +218,9 @@ const database = new sqlite3.Database(dbPath, (err) => {
   if ( err) { console.log('Err', err); }
 });
 
-
-let node = 'blocksum.org'
-let ports = 11898
-const daemon = new WB.Daemon(node, ports);
+let daemon
+let node
+let ports
 
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
@@ -269,7 +268,9 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     let walletName = db.data.walletNames
     console.log('walletname', walletName)
     mainWindow.webContents.send('wallet-exist', true, walletName)
-
+    node = db.data.node.node
+    ports = db.data.node.port
+    daemon = new WB.Daemon(node, ports);
     ipcMain.on('login', async (event, data) => {
       let walletName = data.thisWallet
       let password = data.myPassword
@@ -446,8 +447,12 @@ let my_boards = []
 ipcMain.on('create-account', async (e, accountData) => {
     //Create welcome message
     welcomeMessage()
+    console.log('accdata', accountData);
     let walletName = accountData.walletName
     let myPassword = accountData.password
+    node = accountData.node
+    ports = accountData.port
+    daemon = new WB.Daemon(node, ports);
     console.log('creating', walletName);
     const js_wallet = await WB.WalletBackend.createWallet(daemon);
     console.log(myPassword)
@@ -455,10 +460,12 @@ ipcMain.on('create-account', async (e, accountData) => {
     firstContact()
     //Create Boards welcome message
     welcomeBoardMessage()
-    //Create DBs on first start
+    //Create misc DB template on first start
     db.data = {walletNames:[],
-              blockHeight:[],}
-    // await keychain.write(keychain.data)
+              node:{node:'', port:''},}
+    //Saving node
+    let mynode = {node: node, port: ports}
+    db.data.node = mynode
     //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
@@ -530,7 +537,6 @@ async function start_js_wallet(walletName, password) {
     }
      //Load known public keys
     let myContacts = await loadKeys(true)
-    console.log('mycontacts here', myContacts);
     my_boards = await getMyBoardList()
 
     console.log('myboads', my_boards);
@@ -1075,7 +1081,6 @@ async function saveMessageSQL(msg) {
     return new Promise((resolve, reject) => {
       const getMyContacts = `SELECT * FROM contacts`
       database.each(getMyContacts, (err, row) => {
-          console.log(row);
         if (err) {
           console.log('Error', err);
         }
