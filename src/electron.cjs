@@ -284,10 +284,29 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     boardMessageTable()
     messagesTable()
     knownTxsTable()
+    contactsTable()
     mainWindow.webContents.send('wallet-exist', false)
     }
 
   }
+
+  function contactsTable() {
+      const contactsTable = `
+                    CREATE TABLE contacts (
+                       address TEXT,
+                       key TEXT,
+                       name TEXT,
+                       UNIQUE (key)
+                   )`
+     return new Promise((resolve, reject) => {
+      database.run(contactsTable, (err) => {
+        })
+        console.log('created contacts Table');
+
+       }, () => {
+         resolve();
+       });
+     }
 
 
 function knownTxsTable() {
@@ -391,13 +410,31 @@ function welcomeMessage() {
     database.run(huginMessage,
         [
             'Welcome to hugin',
-            'Hugin Messenger',
+            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU',
             false,
             '1650919475320'
         ], (err) => {
           console.log('Error creating msg', err);
       })
       console.log('created welcome msg');
+     }, () => {
+       resolve();
+     });
+}
+
+function firstContact() {
+   const firstContact = `REPLACE INTO contacts (address, key, name)
+                          VALUES (?, ?, ?)`
+   return new Promise((resolve, reject) => {
+    database.run(firstContact,
+        [
+            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU',
+            '133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f',
+            'Hugin'
+        ], (err) => {
+          console.log('Error creating contact msg', err);
+      })
+      console.log('created first contact msg');
      }, () => {
        resolve();
      });
@@ -414,17 +451,14 @@ ipcMain.on('create-account', async (e, accountData) => {
     console.log('creating', walletName);
     const js_wallet = await WB.WalletBackend.createWallet(daemon);
     console.log(myPassword)
+    //Create Hugin welcome contact
+    firstContact()
     //Create Boards welcome message
     welcomeBoardMessage()
     //Create DBs on first start
     db.data = {walletNames:[],
               blockHeight:[],}
-    keychain.data = {contacts:[ {
-        chat: "Hugin Messenger",
-        key: "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f",
-        name: "Hugin",}]}
-    //Save welcome Hugin messenger test contact
-    await keychain.write(keychain.data)
+    // await keychain.write(keychain.data)
     //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
@@ -436,10 +470,8 @@ ipcMain.on('create-account', async (e, accountData) => {
 async function loadKeys(start=false) {
 
 //Load known public keys from db and push them to known_keys
-await keychain.read()
-
-
-let contacts = keychain.data.contacts
+let contacts = await getContacts()
+console.log('contacts', contacts);
 if  (start) {
   for (keys in contacts) {
 
@@ -448,7 +480,6 @@ if  (start) {
 
     }
 }
-console.log('known keys', known_keys);
 
 return contacts
 }
@@ -500,7 +531,7 @@ async function start_js_wallet(walletName, password) {
     }
      //Load known public keys
     let myContacts = await loadKeys(true)
-
+    console.log('mycontacts here', myContacts);
     my_boards = await getMyBoardList()
 
     console.log('myboads', my_boards);
@@ -540,7 +571,7 @@ async function start_js_wallet(walletName, password) {
       mainWindow.webContents.send('sync', true)
 
       // Save js wallet to file
-      console.log('******** SAVING WALLET ********');
+      console.log('///////******** SAVING WALLET *****\\\\\\\\');
       await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
     } else if (!synced) {
       return
@@ -680,24 +711,39 @@ ipcMain.on('addChat', async (e, hugin_address, nickname) => {
 })
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname=false, first=false) {
-
+  console.log('huginadress', hugin_address);
+  let name
   if (!nickname) {
     console.log('no nickname')
-    nickname = 'Anon'
+    name = 'Anon'
+  } else {
+    name = nickname
   }
 
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
-  let huginaddr = {chat: addr, key: key, name: nickname}
-  keychain.data.contacts.push(huginaddr)
-  await keychain.write()
-  if (first) {
-    saveMessageSQL({msg: 'Added friend', k: key, from: addr, sent: false, t: Date.now()})
-  }
+  // let huginaddr = {chat: addr, key: key, name: name}
+  // keychain.data.contacts.push(huginaddr)
+  // console.log('pushin to keychain', keychain);
+  // await keychain.write()
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
   // mainWindow.webContents.send('saved-addr', huginaddr)
+  database.run(
+      `REPLACE INTO contacts
+         (address, key, name)
+      VALUES
+          (?, ?, ?)`,
+      [
+          addr,
+          key,
+          name
+      ]
+  );
 
+  if (first) {
+    saveMessageSQL({msg: 'Friend', k: key, from: addr, sent: false, t: Date.now()})
+  }
 
 }
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
@@ -827,7 +873,7 @@ async function getMyBoardList() {
 
  //Get one message from every unique user sorted by latest timestmap.
 async function getConversations() {
-  let contacts = await loadKeys()
+  let contacts = await getContacts()
   let name
   let newRow
   let key
@@ -846,9 +892,9 @@ async function getConversations() {
           if (err) {
             console.log('Error', err);
           }
-
+          console.log('contacts convesatin', contacts);
           for (c in contacts) {
-            if (contacts[c].chat == row.chat) {
+            if (contacts[c].address == row.chat) {
               name = contacts[c].name
               key = contacts[c].key
             }
@@ -1025,6 +1071,27 @@ async function saveMessageSQL(msg) {
      let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
      console.log('sending newmessage');
      mainWindow.webContents.send('newMsg', newMsg)
+ }
+
+
+ //Get all contacts from db
+ async function getContacts() {
+
+    const myContactList = [];
+    return new Promise((resolve, reject) => {
+      const getMyContacts = `SELECT * FROM contacts`
+      database.each(getMyContacts, (err, row) => {
+          console.log(row);
+        if (err) {
+          console.log('Error', err);
+        }
+        myContactList.push(row);
+      }, () => {
+        console.log('mycontactslist', myContactList);
+        resolve(myContactList);
+      });
+    })
+
  }
 
 
