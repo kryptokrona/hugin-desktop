@@ -471,7 +471,6 @@ async function loadKeys(start=false) {
 
 //Load known public keys from db and push them to known_keys
 let contacts = await getContacts()
-console.log('contacts', contacts);
 if  (start) {
   for (keys in contacts) {
 
@@ -888,7 +887,6 @@ async function getConversations() {
           if (err) {
             console.log('Error', err);
           }
-          console.log('contacts convesatin', contacts);
           for (c in contacts) {
             if (contacts[c].address == row.chat) {
               name = contacts[c].name
@@ -1083,7 +1081,6 @@ async function saveMessageSQL(msg) {
         }
         myContactList.push(row);
       }, () => {
-        console.log('mycontactslist', myContactList);
         resolve(myContactList);
       });
     })
