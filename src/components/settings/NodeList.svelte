@@ -3,16 +3,25 @@
 import { fade } from 'svelte/transition';
 import {nodelist} from "$lib/stores/nodes.js";
 import {user} from "$lib/stores/user.js";
+import GreenButton from "/src/components/chat/GreenButton.svelte"
 
 export let node;
-export let nodeInput
+export let nodeInput = ''
 export let nodeAddress
 export let nodePort
+export let enableConnect
 
-const switchNode = (node) => {
-
-  let nodeAddress = node.url
-  let nodePort = node.port
+const switchNode = (node, input=false) => {
+  console.log('node', node);
+  console.log('input', input);
+  //Switch between custom and node list
+  if (input) {
+      nodeAddress = nodeInput.split(':')[0]
+      nodePort = parseInt(nodeInput.split(':')[1])
+  } else {
+      nodeAddress = node.url
+      nodePort = node.port
+  }
 
   window.api.switchNode(nodeAddress + ':' +  nodePort)
 
@@ -22,10 +31,20 @@ const switchNode = (node) => {
           node: nodeAddress + ':' +  nodePort
       }
   })
-
 }
 
 $ : console.log('nodeinput', nodeInput);
+
+
+    $: {
+        if (nodeInput.length > 1) {
+            //Enable add button
+            enableConnect = true
+
+        } else {
+          enableConnect = false
+        }
+    }
 
 </script>
 
@@ -40,7 +59,7 @@ $ : console.log('nodeinput', nodeInput);
 <br>
 <h4>Custom node</h4>
 <input placeholder="node:url" type="text" bind:value={nodeInput}>
-
+<GreenButton text="Connect" on:click={()=> switchNode(nodeInput, true)}/>
 <style lang="scss">
 
 h1,h2,h3,h4 {
