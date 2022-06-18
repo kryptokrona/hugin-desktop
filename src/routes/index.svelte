@@ -1,6 +1,7 @@
 <script>
     import {fade, fly, draw, blur} from 'svelte/transition';
     import {quadInOut} from "svelte/easing";
+    import GreenButton from "/src/components/buttons/GreenButton.svelte";
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
     import {nodelist} from "$lib/stores/nodes.js";
@@ -13,7 +14,8 @@
     let myPassword
     let data
     let thisWallet
-
+    let loginStatus = true
+    let errorMessage = 'Wrong password'
     onMount(() => {
         window.api.send('app', true)
         window.api.receive('wallet-exist', async (data, walletName) => {
@@ -24,10 +26,14 @@
 
       })
     })
+      window.api.receive('login-failed', async () => {
+        console.log('failed login');
+        loginStatus = false
+      })
 
     //Handle login, sets logeged in to true and gets user address
     const handleLogin = async () => {
-
+      loginStatus = true
       let accountData = {
         thisWallet: thisWallet,
         myPassword: myPassword
@@ -54,7 +60,6 @@
 
       window.api.receive('wallet-started', async (myContacts) => {
         console.log('Mycontacts', myContacts);
-
         user.update(data => {
   				return {
   					...data,
@@ -63,17 +68,17 @@
 
         })
 
-        //Get messages and save to a variable.
+        //Get messages and save to a svelte store variable.
         messages.set(await window.api.getMessages(res => {
-          console.log('response', res)
         }))
 
 
-
+        //Go to dashboard if login was successful
         goto("/dashboard")
 
       })
 
+      //Sets our own address in svelte store
       window.api.receive('addr', async (huginAddr) => {
   			console.log('Addr incoming')
   			user.update(data => {
@@ -94,11 +99,13 @@
             <h3 class="title">Log in to wallet:</h3>
             <p class="wallets">{thisWallet}</p>
             <input type="password" placeholder="Something safe" bind:value={myPassword}>
-            <FillButton text="Log in" url="/dashboard" on:click={handleLogin}/>
+            <GreenButton text="Log in" on:click={handleLogin}/>
             {:else}
                 <FillButton text="Create Account" url="/create-account" />
               {/if}
-
+            {#if !loginStatus}
+              <p class="error">{errorMessage}</p>
+            {/if}
         </div>
         <select bind:value={node}>
             {#each $nodelist as node}
@@ -224,6 +231,10 @@
         outline: none;
         border: 1px solid var(--title-color);
         }
+      }
+
+      .error {
+        color: red
       }
 
 </style>

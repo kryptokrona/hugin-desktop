@@ -3,7 +3,7 @@
 import { fade } from 'svelte/transition';
 import {nodelist} from "$lib/stores/nodes.js";
 import {user} from "$lib/stores/user.js";
-import GreenButton from "/src/components/chat/GreenButton.svelte"
+import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
 export let node;
 export let nodeInput = ''
@@ -75,7 +75,7 @@ h3 {
 }
 
 h4 {
-  font-size: 20px;
+  font-size: 15px;
 }
 
 
@@ -89,7 +89,7 @@ h4 {
   color: #f1f2f3;
   font-family: 'Roboto Mono';
   font-size: 17px;
-  padding: 7px;
+  padding: 3px;
   cursor: pointer;
 }
 

@@ -3,7 +3,7 @@
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
     import { goto } from '$app/navigation';
-    import GreenButton from "/src/components/chat/GreenButton.svelte"
+    import GreenButton from "/src/components/buttons/GreenButton.svelte";
     import {nodelist} from "$lib/stores/nodes.js";
 
     let password = ''
@@ -124,7 +124,6 @@
                   <br>
                   <h4>Custom node</h4>
                   <input placeholder="node:url" type="text" bind:value={nodeInput}>
-                  <FillButton text="Connect" on:click={()=> chooseNode(nodeInput, true)}/>
                 </div>
               {/if}
           <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('node') }/>
