@@ -272,11 +272,8 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     ports = db.data.node.port
     daemon = new WB.Daemon(node, ports);
     ipcMain.on('login', async (event, data) => {
-      let walletName = data.thisWallet
-      let password = data.myPassword
-      console.log('Starting this wallet', walletName);
-      console.log('password', password);
-      start_js_wallet(walletName, password);
+      await startWallet(data)
+
     })
 
     } else {
@@ -289,6 +286,14 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     mainWindow.webContents.send('wallet-exist', false)
     }
 
+  }
+
+  async function startWallet(data) {
+    let walletName = data.thisWallet
+    let password = data.myPassword
+    console.log('Starting this wallet', walletName);
+    console.log('password', password);
+    start_js_wallet(walletName, password);
   }
 
   function contactsTable() {
@@ -512,6 +517,7 @@ async function logIntoWallet(walletName, password) {
     const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/' + walletName + '.wallet', password);
     if (error) {
         console.log('Failed to open wallet: ' + error.toString());
+        mainWindow.webContents.send('login-failed')
         return 'Wrong password'
         }
 
