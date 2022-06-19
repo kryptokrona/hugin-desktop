@@ -58,8 +58,8 @@
       $ :  myPassword
       $ :  console.log('mypass', myPassword);
 
-      window.api.receive('wallet-started', async (myContacts) => {
-        console.log('Mycontacts', myContacts);
+      window.api.receive('wallet-started', async (myContacts, node) => {
+        //Set contacts to store
         user.update(data => {
   				return {
   					...data,
@@ -67,6 +67,14 @@
   				}
 
         })
+        //Set chosen node from last startup in store
+        user.update(oldData => {
+            return {
+                ...oldData,
+                node: node.node + ':' +  node.port
+            }
+        })
+
 
         //Get messages and save to a svelte store variable.
         messages.set(await window.api.getMessages(res => {
