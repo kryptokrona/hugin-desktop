@@ -4,6 +4,40 @@
     import {user} from "$lib/stores/user.js";
     import NodeList from '/src/components/settings/NodeList.svelte';
 
+    let networkHeight = ''
+    let walletHeight = ''
+    let synced = false
+    let status = 'Connecting'
+
+    async function getHeight() {
+      console.log('GettingHeighttttt');
+      let heightStatus = await window.api.getHeight()
+      walletHeight = heightStatus.walletHeight
+      networkHeight = heightStatus.networkHeight
+
+    console.log('wallet', walletHeight);
+    console.log('network', networkHeight);
+
+    }
+
+    setInterval(getHeight, 10000)
+
+    $: { if (networkHeight - walletHeight < 2) {
+      synced = true
+      status = 'Connected'
+    }  else {
+      synced = false
+      status = 'Connecting'
+    }
+    }
+
+    const changeNode = () => {
+      console.log('Changed');
+      networkHeight = ''
+      walletHeight = ''
+      status = 'Connecting'
+      getHeight()
+    }
 
 </script>
 
@@ -12,7 +46,7 @@
   <div id="settings">
        <div class="inner">
 
-  <NodeList/>
+  <NodeList on:changeNode={changeNode}/>
      </div>
 
       <div class="inner">
@@ -20,6 +54,13 @@
           <h3>Status</h3>
         <div class="nodestatus">
            <p>{$user.node}</p>
+            {#if synced}
+
+           <p class="syncstatus" class:sync={synced}>{status} {networkHeight}</p>
+             {:else}
+           <p class="syncstatus" class:sync={synced}>Syncing blocks {walletHeight} / {networkHeight}</p>
+
+            {/if}
        </div>
         </div>
 
@@ -64,6 +105,14 @@
       transition: 0.25s ease-in-out all;
       width: 80%;
       height: 700px;
+    }
+
+    .sync {
+      color: green !important;
+    }
+
+    .syncstatus {
+      color: red;
     }
 
 
