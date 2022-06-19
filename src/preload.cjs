@@ -87,6 +87,11 @@ const WINDOW_API = {
   getAddress: async () => {
     await ipcRenderer.invoke('getAddress')
   },
+
+  //HANDLE FINANCE
+  getHeight: async () => {
+    return await ipcRenderer.invoke('getHeight')
+  },
 }
 
 
