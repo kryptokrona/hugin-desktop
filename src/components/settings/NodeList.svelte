@@ -4,6 +4,9 @@ import { fade } from 'svelte/transition';
 import {nodelist} from "$lib/stores/nodes.js";
 import {user} from "$lib/stores/user.js";
 import GreenButton from "/src/components/buttons/GreenButton.svelte";
+import {createEventDispatcher} from "svelte";
+
+const dispatch = createEventDispatcher()
 
 export let node;
 export let nodeInput = ''
@@ -22,6 +25,10 @@ const switchNode = (node, input=false) => {
       nodeAddress = node.url
       nodePort = node.port
   }
+
+  dispatch('changeNode', {
+      node: 'changed-node',
+  })
 
   window.api.switchNode(nodeAddress + ':' +  nodePort)
 
@@ -45,6 +52,7 @@ $ : console.log('nodeinput', nodeInput);
           enableConnect = false
         }
     }
+
 
 </script>
 
