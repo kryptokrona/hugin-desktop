@@ -270,9 +270,10 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     mainWindow.webContents.send('wallet-exist', true, walletName)
     node = db.data.node.node
     ports = db.data.node.port
+    let mynode = {node: node, port: ports}
     daemon = new WB.Daemon(node, ports);
     ipcMain.on('login', async (event, data) => {
-      await startWallet(data)
+      await startWallet(data, mynode)
 
     })
 
@@ -288,12 +289,12 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
 
   }
 
-  async function startWallet(data) {
+  async function startWallet(data, mynode) {
     let walletName = data.thisWallet
     let password = data.myPassword
     console.log('Starting this wallet', walletName);
     console.log('password', password);
-    start_js_wallet(walletName, password);
+    start_js_wallet(walletName, password, mynode);
   }
 
   function contactsTable() {
@@ -476,7 +477,7 @@ ipcMain.on('create-account', async (e, accountData) => {
     await db.write()
     console.log('creating dbs...');
     await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', myPassword)
-    start_js_wallet(walletName, myPassword);
+    start_js_wallet(walletName, myPassword, mynode);
   })
 
 async function loadKeys(start=false) {
@@ -524,7 +525,7 @@ async function logIntoWallet(walletName, password) {
   return js_wallet
 }
 
-async function start_js_wallet(walletName, password) {
+async function start_js_wallet(walletName, password, mynode) {
 
     js_wallet = await logIntoWallet(walletName, password)
 
@@ -588,7 +589,7 @@ async function start_js_wallet(walletName, password) {
       return
       }
     })
-    mainWindow.webContents.send('wallet-started', myContacts)
+    mainWindow.webContents.send('wallet-started', myContacts, mynode)
     console.log('Started wallet');
     await sleep(2000)
     console.log('Loading Sync');
@@ -687,7 +688,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                             console.log('Not my board');
                             continue
                           }
-                          await saveBoardMsg(message, thisHash)
+                          saveBoardMsg(message, thisHash)
                       } else {
                         console.log('Saving Message');
                         // await saveMsg(message);
@@ -947,7 +948,6 @@ async function getConversations() {
 
 //Get all messages from a specific board from db
 async function printBoard(board=false) {
-   console.log('printboard', board);
       const boardArray = [];
       return new Promise((resolve, reject) => {
         const getBoard = `SELECT
@@ -966,7 +966,6 @@ async function printBoard(board=false) {
             t
         ASC`
         database.each(getBoard, (err, row) => {
-            console.log(row);
           if (err) {
             console.log('Error', err);
           }
@@ -1126,7 +1125,6 @@ ipcMain.on('answerCall', (e, msg, contact) => {
 
 async function sendBoardMessage(message) {
   console.log('sending board', message);
-  return;
   let reply = message.r
   let to_board = message.brd
   let my_address = message.k
@@ -1322,6 +1320,11 @@ ipcMain.handle('getBalance', async () => {
 ipcMain.handle('getAddress',  async () => {
     return js_wallet.getAddresses()
 
+})
+
+ipcMain.handle('getHeight',  async () => {
+  let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus();
+  return {walletHeight, networkHeight}
 })
 
 ipcMain.on('startCall', async (e ,contact, calltype) => {
