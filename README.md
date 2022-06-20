@@ -32,7 +32,11 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 - [Development resources](#development-resources)
 - [Technologies](#technologies)
-- [Get Started](#getting-started)
+- [Usage](#usage)
+- [Contribute](#contribute)
+    - [Pull Request](#pull-request)
+- [Contributors](#contributors)
+- [License](#license)
 
 # Development Resources
 
@@ -47,7 +51,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - Svelte
 - WebRTC
 
-# Getting Started
+# Usage
 > *Feel free to substitute `npm` with `pnpm` or `yarn`.
 
 |         |                                             |
@@ -56,3 +60,36 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 | Develop | · `npm run dev`                             |
 | Build   | · `npm run build`                           |
 
+# Contribute
+
+## Pull Request
+
+We appreciate all contributions whether it be small changes such as documentation of source code to major improvement of code. The easiest way is to make a fork and then make a pull request into our main branch. To make the PR go through make sure to include this information:
+
+```
+What does this PR do?
+
+Why are these changes required?
+
+This PR has been tested using (e.g. Unit Tests, Manual Testing):
+
+Extra details?
+```
+
+A pull request is approved if the GitHub Actions pipeline is marked green. Otherwise it will be closed directly. Always make sure to run the unit tests before creating a pull request.
+
+
+# Contributors
+
+The following contributors have either helped to start this project, have contributed
+code, are actively maintaining it (including documentation), or in other ways
+being awesome contributors to this project. **We'd like to take a moment to recognize them.**
+
+[<img src="https://avatars.githubusercontent.com/u/64911460?v=4?size=72" alt="n9lsjr" width="72">](https://github.com/n9lsjr)
+[<img src="https://avatars.githubusercontent.com/u/36674091?v=4?size=72" alt="Swepool" width="72">](https://github.com/Swepool)
+[<img src="https://avatars.githubusercontent.com/u/33717111?v=4?size=72" alt="mjovanc" width="72">](https://github.com/mjovanc)
+[<img src="https://avatars.githubusercontent.com/u/3246908?v=4?size=72" alt="f-r00t" width="72">](https://github.com/f-r00t)
+
+# License
+
+The license is GPL-3.0 License.
