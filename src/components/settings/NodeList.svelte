@@ -14,33 +14,14 @@ export let nodeAddress
 export let nodePort
 export let enableConnect
 
-const switchNode = (node, input=false) => {
-  console.log('node', node);
-  console.log('input', input);
-  //Switch between custom and node list
-  if (input) {
-      nodeAddress = nodeInput.split(':')[0]
-      nodePort = parseInt(nodeInput.split(':')[1])
-  } else {
-      nodeAddress = node.url
-      nodePort = node.port
-  }
+    function chooseNode(node) {
 
-  dispatch('changeNode', {
-      node: 'changed-node',
-  })
+        nodeAddress = node.url
+        nodePort = node.port
 
-  window.api.switchNode(nodeAddress + ':' +  nodePort)
+      enableConnect = true
 
-  user.update(oldData => {
-      return {
-          ...oldData,
-          node: nodeAddress + ':' +  nodePort
-      }
-  })
-}
-
-$ : console.log('nodeinput', nodeInput);
+    }
 
 
     $: {
@@ -54,12 +35,36 @@ $ : console.log('nodeinput', nodeInput);
     }
 
 
+
+    $ : { if (nodePort == undefined) {
+          enableConnect = false
+    } else  {
+      nodeInput = nodeAddress + ':' + nodePort
+    } }
+
+    $ : console.log('nodeinput', nodeInput);
+
+    function connectToNode(nodeInput) {
+
+      dispatch('changeNode')
+
+      user.update(oldData => {
+          return {
+              ...oldData,
+              node: nodeInput
+          }
+      })
+
+      window.api.switchNode(nodeInput)
+
+    }
+
 </script>
 
 <h3>Nodes</h3>
 <div class="nodelist">
 {#each $nodelist as node}
-<div class="nodes" on:click={()=> switchNode(node)}>
+<div class="nodes" on:click={()=> chooseNode(node)}>
    <h4 class="nodes">{node.name}</h4>
 </div>
 {/each}
@@ -67,7 +72,7 @@ $ : console.log('nodeinput', nodeInput);
 <br>
 <h4>Custom node</h4>
 <input placeholder="node:url" type="text" bind:value={nodeInput}>
-<GreenButton text="Connect" on:click={()=> switchNode(nodeInput, true)}/>
+<GreenButton text="Connect" enabled={enableConnect} on:click={()=> connectToNode(nodeInput)}/>
 <style lang="scss">
 
 h1,h2,h3,h4 {
