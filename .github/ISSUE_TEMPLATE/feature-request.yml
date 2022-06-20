@@ -1,0 +1,29 @@
+name: Feature Request
+description: Create a feature request
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of feature request
+      description: Please enter a thorough description on what the feature is about and try describe it as a user story.
+      render: shell
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why is this needed
+      description: Please enter a reason why this is needed.
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/kryptokrona/kryptokrona-sdk/blob/master/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
