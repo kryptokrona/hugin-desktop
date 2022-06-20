@@ -11,11 +11,12 @@
     import {boardMessages} from "$lib/stores/boardmsgs.js";
     let wallet
     let walletName
-    let myPassword
+    let myPassword = ''
     let data
     let thisWallet
     let loginStatus = true
     let errorMessage = 'Wrong password'
+    let enableLogin = false
     onMount(() => {
         window.api.send('app', true)
         window.api.receive('wallet-exist', async (data, walletName) => {
@@ -97,6 +98,17 @@
   			})
   		})
 
+      $: {
+          if (myPassword.length > 1) {
+              //Enable add button
+              enableLogin = true
+
+          } else {
+            enableLogin = false
+          }
+      }
+
+
 </script>
 
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
@@ -107,7 +119,7 @@
             <h3 class="title">Log in to wallet:</h3>
             <p class="wallets">{thisWallet}</p>
             <input type="password" placeholder="Something safe" bind:value={myPassword}>
-            <GreenButton text="Log in" on:click={handleLogin}/>
+            <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin}/>
             {:else}
                 <FillButton text="Create Account" url="/create-account" />
               {/if}
