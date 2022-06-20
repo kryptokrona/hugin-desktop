@@ -51,18 +51,38 @@
 
       <div class="inner">
 
-          <h3>Status</h3>
         <div class="nodestatus">
+          <h3>Status</h3>
+            <h4>Address</h4>
            <p>{$user.node}</p>
-            {#if synced}
+         <br>
+          <div class="status">
+                <h4>Status</h4>
 
-           <p class="syncstatus" class:sync={synced}>{status} {networkHeight}</p>
-             {:else}
-           <p class="syncstatus" class:sync={synced}>Syncing blocks {walletHeight} / {networkHeight}</p>
+              {#if synced}
+             <p class="syncstatus" class:sync={synced}>{status}</p>
+               {:else}
+             <p class="syncstatus" class:sync={synced}>Syncing blocks</p>
+               {/if}
 
-            {/if}
+           </div>
+         <br>
+
+          <div class="height">
+            <h4>Height</h4>
+
+              {#if synced}
+              <p> {networkHeight} </p>
+              {:else}
+              <p> {networkHeight} - {walletHeight} </p>
+
+               {/if}
+
+           </div>
+            <br>
+
        </div>
-        </div>
+    </div>
 
    </div>
 </main>
@@ -76,6 +96,12 @@
 
     h3 {
       font-size: 25px;
+      margin-bottom: 15px;
+      margin-left: -10px;
+    }
+
+    h4 {
+      font-size: 17px;
       margin-bottom: 15px;
       margin-left: -10px;
     }
