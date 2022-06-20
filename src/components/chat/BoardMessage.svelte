@@ -169,7 +169,6 @@
     }
 
     .replyer {
-      border-top: none;
     }
 
     .reply_button {
