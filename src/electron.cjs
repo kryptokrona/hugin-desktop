@@ -252,6 +252,9 @@ const knownTxs = new Low(adapterTxs)
 let js_wallet;
 let walletName
 let known_keys = [];
+let known_pooL_txs = []
+let myPassword;
+let my_boards = []
 
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
@@ -273,7 +276,8 @@ if (fs.existsSync(userDataDir + '/misc.db')) {
     let mynode = {node: node, port: ports}
     daemon = new WB.Daemon(node, ports);
     ipcMain.on('login', async (event, data) => {
-      await startWallet(data, mynode)
+
+      startWallet(data, mynode)
 
     })
 
@@ -376,7 +380,7 @@ function messagesTable() {
  function welcomeBoardMessage() {
    let sent = false
     const boardMessage =
-        `REPLACE INTO boards  (
+        `INSERT INTO boards  (
             m,
             k,
             s,
@@ -411,13 +415,13 @@ function messagesTable() {
  }
 
 function welcomeMessage() {
-   const huginMessage = `REPLACE INTO messages (msg, chat, sent, timestamp)
+   const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp)
                           VALUES (?, ?, ?, ?)`
    return new Promise((resolve, reject) => {
     database.run(huginMessage,
         [
             'Welcome to hugin',
-            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU',
+            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
             false,
             '1650919475320'
         ], (err) => {
@@ -430,12 +434,12 @@ function welcomeMessage() {
 }
 
 function firstContact() {
-   const firstContact = `REPLACE INTO contacts (address, key, name)
+   const firstContact = `INSERT INTO contacts (address, key, name)
                           VALUES (?, ?, ?)`
    return new Promise((resolve, reject) => {
     database.run(firstContact,
         [
-            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU',
+            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
             '133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f',
             'Hugin'
         ], (err) => {
@@ -447,8 +451,6 @@ function firstContact() {
      });
 }
 
-let myPassword;
-let my_boards = []
 
 ipcMain.on('create-account', async (e, accountData) => {
     //Create welcome message
@@ -484,13 +486,15 @@ async function loadKeys(start=false) {
 
 //Load known public keys from db and push them to known_keys
 let contacts = await getContacts()
+console.log('consacts loadkeys', contacts);
 if  (start) {
   for (keys in contacts) {
-
+    console.log('contacts keys push', contacts);
     let thiskey = contacts[keys].key
     known_keys.push(thiskey)
 
     }
+    console.log('knownkeys',known_keys);
 }
 
 return contacts
@@ -503,6 +507,7 @@ const knownTransactions = [];
 return new Promise((resolve, reject) => {
   const getAllknownTxs = `SELECT * FROM knownTxs`
   database.each(getAllknownTxs, (err, txs) => {
+    console.log('txs', txs);
     if (err) {
       console.log('Error', err);
     }
@@ -538,44 +543,54 @@ async function start_js_wallet(walletName, password, mynode) {
     //Load known pool txs from db.
     let knownTxsIds = await loadKnownTxs()
     let checkedTxs = []
-    for (n in knownTxsIds) {
-        let knownTxId = knownTxsIds[n].hash
-        checkedTxs.push(knownTxId)
-    }
-     //Load known public keys
-    let myContacts = await loadKeys(true)
-    my_boards = await getMyBoardList()
+    console.log('knownTxsIds', knownTxsIds);
 
-    console.log('myboads', my_boards);
+    if (knownTxsIds.length > 0) {
+
+      for (n in knownTxsIds) {
+          let knownTxId = knownTxsIds[n].hash
+           if (knownTxId != undefined) {
+            //Extra check
+            checkedTxs.push(knownTxId)
+           }
+      }
+    } else {
+      //Push one test hash to the array if this is a new account, this should be random
+      checkedTxs.push('f7d2b313296890bc21a53083a3aad8b1242960a4cf98eded86213cf11a79de31')
+    }
+
+    console.log('pushed checkted', checkedTxs);
+     //Load known public keys
+    let myContacts = await loadKeys(start=true)
+    my_boards = await getMyBoardList()
 
     mainWindow.webContents.send('sync', false)
 
     js_wallet.enableAutoOptimization(false);
+
+    //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
 
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
 
-        // if (!syncing) {
-
         console.log('transaction', transaction);
         mainWindow.webContents.send('new-message', transaction.toJSON());
-        // }
 
     });
 
-    let i = 1;
+    //Get primary address and fuse it with our message key to create our hugin address
     let myAddress
-    for (const address of js_wallet.getAddresses()) {
-        console.log(`Address [${i}]: ${address}`);
-        let msgKey = getMsgKey()
-        myAddress = address
-        console.log('HuginAddress',myAddress + msgKey)
+    let msgKey
+      myAddress = await js_wallet.getPrimaryAddress()
 
-        mainWindow.webContents.send('addr', myAddress + msgKey)
+      console.log('XKR Address',myAddress)
+      msgKey = getMsgKey()
+      console.log('Hugin Address',myAddress + msgKey)
 
-        i++;
-    }
+      mainWindow.webContents.send('addr', myAddress + msgKey)
 
+
+    //Wallet heightchange event with funtion that saves wallet only if we are synced
     js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
       let synced = networkBlockCount - walletBlockCount <= 2
       if (synced) {
@@ -589,6 +604,7 @@ async function start_js_wallet(walletName, password, mynode) {
       return
       }
     })
+
     mainWindow.webContents.send('wallet-started', myContacts, mynode)
     console.log('Started wallet');
     await sleep(2000)
@@ -625,32 +641,31 @@ async function start_js_wallet(walletName, password, mynode) {
 }
 
 
-let known_pooL_txs = []
+async function backgroundSyncMessages(checkedTxs=false) {
 
-async function backgroundSyncMessages(knownTxsIds) {
-
-    if (knownTxsIds) {
+    if (checkedTxs) {
     console.log('First start, push knownTxs db to known pool txs');
-    known_pool_txs = knownTxsIds
+    known_pool_txs = checkedTxs
+    console.log('known', known_pool_txs);
     }
 
     console.log('Background syncing...');
     let message_was_unknown;
     try {
-        const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
+        const resp = await fetch('http://' + 'pool.gamersnest.org:11898' + '/get_pool_changes_lite', {
             method: 'POST',
             body: JSON.stringify({knownTxsIds: known_pool_txs})
         })
 
         let json = await resp.json();
-
+        console.log('response?', json);
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
         json = JSON.parse(json);
 
         let transactions = json.addedTxs;
         let transaction;
-
+        console.log('transactions', transactions);
         //Try clearing known pool txs from checked
         known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
         if (transactions.length === 0) {
@@ -681,7 +696,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                       }
 
                       message.sent = false
-
+                      console.log('message type', message.type);
                       if (message.brd) {
                           message.type = "board"
                           if (my_boards.indexOf(message.brd) == -1) {
@@ -689,7 +704,7 @@ async function backgroundSyncMessages(knownTxsIds) {
                             continue
                           }
                           saveBoardMsg(message, thisHash)
-                      } else {
+                      } else if (message.type === 'sealedbox' || 'box') {
                         console.log('Saving Message');
                         // await saveMsg(message);
                         saveMessageSQL(message)
@@ -756,6 +771,11 @@ async function saveContact(hugin_address, nickname=false, first=false) {
 }
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
 async function saveHash(txHash) {
+
+  if (txHash == undefined) {
+    console.log('caught undefined hash');
+    return;
+  }
 
            database.run(
                `REPLACE INTO knownTxs (
@@ -1055,7 +1075,7 @@ async function saveMessageSQL(msg) {
 
    console.log('Saving key', key);
    let hugin = addr + key
-   saveContact(hugin)
+   await saveContact(hugin)
 
   }
 
@@ -1198,7 +1218,6 @@ async function sendMessage(message, receiver) {
     } else {
 
       has_history = false
-      saveContact(receiver);
 
     }
 
