@@ -18,6 +18,7 @@
     let contact
     let codec
     let stream
+    let box;
     //Get messages on mount
     onMount(async () => {
 
@@ -69,7 +70,6 @@
       //Update messages live if users keep chat mounted
     const printMessage = (data) =>  {
           savedMsg.push(data)
-          saveToStore(data)
           savedMsg = savedMsg
           scrollDown()
     }
@@ -83,11 +83,14 @@
     //Listen for new message private messages saved in DB
       window.api.receive('newMsg', data => {
       console.log('new message', data);
+      console.log('userchat', $user.activeChat.chat)
 
-      if (data.chat === chat) {
+      if (data.chat === $user.activeChat.chat) {
         printMessage(data)
       } else {
+
         saveToStore(data)
+        console.log('not this conversation');
       }
     })
 
@@ -113,8 +116,6 @@
 
     $ : savedMsg
 
-    let box;
-
 	function scrollDown() {
 	box.scrollIntoView({block: "end"});
 	}
@@ -126,15 +127,16 @@
 <main in:fade>
     <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
     <div class="rightside">
-
-
-    <div class="board_window" bind:this={box}>
+        <div class="chat_window" bind:this={box}>
         <ChatWindow>
+
             {#each savedMsg as message}
                 <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat} timestamp={message.t}/>
             {/each}
+
         </ChatWindow>
-      </div>
+
+        </div>
         <ChatInput on:message={sendMsg}/>
     </div>
 </main>
@@ -158,5 +160,8 @@
       margin-right: 85px;
     }
 
+    .chat_window {
+      display: grid;
+    }
 
 </style>
