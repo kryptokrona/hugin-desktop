@@ -10,7 +10,7 @@
     let status = 'Connecting'
 
     async function getHeight() {
-      console.log('GettingHeighttttt');
+
       let heightStatus = await window.api.getHeight()
       walletHeight = heightStatus.walletHeight
       networkHeight = heightStatus.networkHeight
@@ -22,6 +22,18 @@
 
     setInterval(getHeight, 10000)
 
+    //Change node defaults values and triggers getHeight
+    const changeNode = () => {
+
+      console.log('Changed');
+      networkHeight = ''
+      walletHeight = ''
+      status = 'Connecting'
+      getHeight()
+
+    }
+
+    //Reactive if statement
     $: { if (networkHeight - walletHeight < 2) {
       synced = true
       status = 'Connected'
@@ -29,14 +41,6 @@
       synced = false
       status = 'Connecting'
     }
-    }
-
-    const changeNode = () => {
-      console.log('Changed');
-      networkHeight = ''
-      walletHeight = ''
-      status = 'Connecting'
-      getHeight()
     }
 
 </script>
