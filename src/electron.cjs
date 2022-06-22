@@ -486,15 +486,12 @@ async function loadKeys(start=false) {
 
 //Load known public keys from db and push them to known_keys
 let contacts = await getContacts()
-console.log('consacts loadkeys', contacts);
 if  (start) {
-  for (keys in contacts) {
-    console.log('contacts keys push', contacts);
-    let thiskey = contacts[keys].key
-    known_keys.push(thiskey)
+  contacts.map(function(keys) {
+    known_keys.push(keys.key)
+  })
 
-    }
-    console.log('knownkeys',known_keys);
+  console.log('known keys', known_keys);
 }
 
 return contacts
@@ -507,7 +504,6 @@ const knownTransactions = [];
 return new Promise((resolve, reject) => {
   const getAllknownTxs = `SELECT * FROM knownTxs`
   database.each(getAllknownTxs, (err, txs) => {
-    console.log('txs', txs);
     if (err) {
       console.log('Error', err);
     }
@@ -541,22 +537,18 @@ async function start_js_wallet(walletName, password, mynode) {
     /* Start wallet sync process */
     await js_wallet.start();
     //Load known pool txs from db.
+    let checkedTxs
     let knownTxsIds = await loadKnownTxs()
-    let checkedTxs = []
-    console.log('knownTxsIds', knownTxsIds);
 
     if (knownTxsIds.length > 0) {
 
-      for (n in knownTxsIds) {
-          let knownTxId = knownTxsIds[n].hash
-           if (knownTxId != undefined) {
-            //Extra check
-            checkedTxs.push(knownTxId)
-           }
-      }
-    } else {
-      //Push one test hash to the array if this is a new account, this should be random
-      checkedTxs.push('f7d2b313296890bc21a53083a3aad8b1242960a4cf98eded86213cf11a79de31')
+       checkedTxs = knownTxsIds.map(function(knownTX) {
+        return knownTX.hash
+      })
+
+      } else {
+      //Push one test hash to the array if this is a new account, this should be empty?
+      checkedTxs = []
     }
 
     console.log('pushed checkted', checkedTxs);
@@ -646,7 +638,6 @@ async function backgroundSyncMessages(checkedTxs=false) {
     if (checkedTxs) {
     console.log('First start, push knownTxs db to known pool txs');
     known_pool_txs = checkedTxs
-    console.log('known', known_pool_txs);
     }
 
     console.log('Background syncing...');
@@ -658,14 +649,12 @@ async function backgroundSyncMessages(checkedTxs=false) {
         })
 
         let json = await resp.json();
-        console.log('response?', json);
         json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
 
         json = JSON.parse(json);
 
         let transactions = json.addedTxs;
         let transaction;
-        console.log('transactions', transactions);
         //Try clearing known pool txs from checked
         known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
         if (transactions.length === 0) {
@@ -678,6 +667,7 @@ async function backgroundSyncMessages(checkedTxs=false) {
             try {
                 let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
                 let thisHash = transactions[transaction].transactionPrefixInfotxHash;
+
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash);
                     message_was_unknown = true;
@@ -710,9 +700,10 @@ async function backgroundSyncMessages(checkedTxs=false) {
                         saveMessageSQL(message)
 
                       }
+
+                    console.log('Transaction checked');
+                    saveHash(thisHash)
                   }
-                  console.log('Transaction checked');
-                  saveHash(thisHash)
 
                 } catch (err) {
                   console.log(err)
@@ -920,15 +911,14 @@ async function getConversations() {
           if (err) {
             console.log('Error', err);
           }
-          for (c in contacts) {
-            if (contacts[c].address == row.chat) {
-              name = contacts[c].name
-              key = contacts[c].key
+          let filterContacts = contacts.filter(function(chat) {
+            console.log('filtering chat', chat);
+            if (chat.address == row.chat) {
+              console.log('found match');
+              name = chat.name
+              key = chat.key
             }
-             else {
-               continue
-             }
-          }
+          })
           newRow = {name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key}
           myConversations.push(newRow);
         }, () => {
