@@ -3,12 +3,15 @@
     import {nodelist} from "$lib/stores/nodes.js";
     import {user} from "$lib/stores/user.js";
     import NodeList from '/src/components/settings/NodeList.svelte';
+    import {onMount} from "svelte";
 
     let networkHeight = ''
     let walletHeight = ''
     let synced = false
     let status = 'Connecting'
-
+    onMount(async () => {
+      getHeight()
+    })
     async function getHeight() {
 
       let heightStatus = await window.api.getHeight()
@@ -59,7 +62,6 @@
           <h3>Status</h3>
             <h4>Address</h4>
            <p>{$user.node}</p>
-         <br>
           <div class="status">
                 <h4>Status</h4>
 
@@ -70,7 +72,6 @@
                {/if}
 
            </div>
-         <br>
 
           <div class="height">
             <h4>Height</h4>
@@ -124,6 +125,7 @@
     #settings {
       border-radius: 10px;
       display: grid;
+      margin-left: 60px;
       transition: .25s ease-in-out all;
       grid-template-columns: repeat(2,1fr);
     }
