@@ -11,7 +11,7 @@ export const user = writable({
     huginAddress: '',
     syncState: '',
     call: {},
-    thisBoard: 'All',
+    thisBoard: null,
     contacts: null,
     addBoard: false,
     addChat: false,

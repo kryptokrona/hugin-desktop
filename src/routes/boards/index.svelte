@@ -20,7 +20,10 @@
 
     onMount(async () => {
       console.log('mounting');
-      printBoard('Home')
+      if ($user.thisBoard == null) {
+        thisBoard = 'Home'
+      }
+      printBoard(thisBoard)
         //If we have no saved boardMessages, set empty to true. Displays WelcomeMsg
     })
 
@@ -28,7 +31,6 @@
 
           //*TODO*//Keep logs to experiment with toast popups
           console.log('boardMsg', data.brd)
-          console.log('thisboard', thisBoard);
           console.log('user', $user.thisBoard);
 
           if (data.brd === thisBoard) {
@@ -65,6 +67,8 @@
 
     //Reactive, updates thisBoard.
     $ : thisBoard = $user.thisBoard
+
+    $ : console.log('ThisBoard', thisBoard);
 
     //Exit reply mode
     const replyExit = () => {
@@ -149,7 +153,7 @@
         user.update(data => {
           return {
             ...data,
-            thisBoard: board,
+            thisBoard: board
           }
         })
     }
