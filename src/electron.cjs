@@ -912,9 +912,7 @@ async function getConversations() {
             console.log('Error', err);
           }
           let filterContacts = contacts.filter(function(chat) {
-            console.log('filtering chat', chat);
             if (chat.address == row.chat) {
-              console.log('found match');
               name = chat.name
               key = chat.key
             }

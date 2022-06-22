@@ -24,7 +24,6 @@
         thisBoard = 'Home'
       }
       printBoard(thisBoard)
-        //If we have no saved boardMessages, set empty to true. Displays WelcomeMsg
     })
 
         window.api.receive('boardMsg', data => {
