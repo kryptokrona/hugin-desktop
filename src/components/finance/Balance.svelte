@@ -41,10 +41,10 @@
             <p class="funds" in:fade>Syncing..</p>
         {/if}
         {#if (showFunds && sync)}
-            <p class="funds" in:fade>{unlockedAmount !== 0 ? `💰 ${unlockedAmount} XKR` : 'No unlocked funds 😭'}</p>
+            <p class="funds" in:fade>{unlockedAmount !== 0 ? `💰 ${unlockedAmount}` : 'No unlocked funds 😭'}</p>
         {/if}
         {#if (!showFunds && sync)}
-            <p class="funds" in:fade>{lockedAmount = 0 ? `🔐 ${lockedAmount} XKR` : 'No locked funds 🥳'}</p>
+            <p class="locked" in:fade>{lockedAmount = 0 ? `🔐 ${lockedAmount} XKR` : 'No locked funds 🥳'}</p>
         {/if}
     </div>
 </div>
@@ -71,6 +71,13 @@
 
     .funds {
       font-family: "Major Mono Display";
+      font-size: 16px;
+
+    }
+
+
+    .funds {
+      font-family: "Roboto Mono";
       font-size: 16px;
 
     }
