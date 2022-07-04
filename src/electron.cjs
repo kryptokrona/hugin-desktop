@@ -487,7 +487,7 @@ async function loadKeys(start=false) {
 //Load known public keys from db and push them to known_keys
 let contacts = await getContacts()
 if  (start) {
-  contacts.map(function(keys) {
+  contacts.forEach(function(keys) {
     known_keys.push(keys.key)
   })
 
