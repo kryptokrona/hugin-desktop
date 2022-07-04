@@ -4,8 +4,7 @@
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {createEventDispatcher, onMount} from "svelte";
     import {user} from '$lib/stores/user.js'
-    export let message
-    export let handleType
+    export let msg
     export let msgFrom
     export let board
     export let reply = ''
@@ -13,29 +12,52 @@
     export let signature
     export let timestamp
     export let nickname = "Anonymous"
-  	export let active
     export let hash
+    export let message
+    export let reply_to_this = false
+
+    let active
     let replyicon = '<'
     let thisreply = ''
-    export let reply_to_this = false
+    let has_reaction = false
+    let reactionslist = []
+    let hoverReactions = false
+    let reactions = []
+    let reactors = []
+    let react = false
+    let reactIcon = '😊'
 
     const dispatch = createEventDispatcher()
 
-    //Hover functions
-  	function enter() {
-  		active = true;
-  	}
+    onMount(async () => {
+      if(message.react) {
+        has_reaction = true
+        message.react.forEach(function (m) {
+          console.log('m', m);
+          reactors.push(m.n)
+          reactions.push(m.m)
+        })
+      } else {
+        console.log('no reaction');
+      }
+      console.log('mounting boardmessage');
+      })
 
-  	function leave() {
-  		active = false;
-  	}
+      //Hover functions
+    	function enter() {
+    		active = true;
+    	}
+
+    	function leave() {
+    		active = false;
+    	}
 
       async function checkreply(reply) {
 
-          thisreply = await window.api.getReply(reply)
-          //Add extra number to avoid collision for keys in Svelte each loop
-          thisreply.hash = thisreply.hash + '1337'
-          return thisreply
+        thisreply = await window.api.getReply(reply)
+        //Add extra number to avoid collision for keys in Svelte each loop
+        thisreply.hash = thisreply.hash + '1337'
+        return thisreply
       }
 
       const replyTo = () => {
@@ -52,59 +74,122 @@
         reply_to_this = true
       }
 
+      function reactionHover() {
+        console.log('hooooover');
+        react = true
+      }
+
+      function exitHover(){
+        console.log('exit reactiion hover');
+        react = false
+      }
+
+      const reactTo = () => {
+        console.log('wanna react');
+      }
+
+      $ : reactions
+
 
 </script>
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
   {#if reply.length === 64}
-  {#await checkreply(reply)}
-  {:then thisreply}
+    {#await checkreply(reply)}
+      {:then thisreply}
+
   <div in:fade="{{duration: 150}}" class="reply">     <img class="reply_avatar"
            src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
            <p class="reply_nickname">{thisreply.n}</p> <br>
       <p>{thisreply.m}</p>
       </div>
+
+
   {:catch error}
   <div  in:fade="{{duration: 150}}" class="reply">     <img class="reply_avatar"
   src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
   <p class="reply_nickname">Can't find reply</p> <br>
     	<p style="color: red">{error.message}</p>
       </div>
-  {/await}
+
+
+
   <div class="replyline"> </div>
 
 
-  <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" on:click class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
+  <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
 
       <img class="avatar"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
            <p class="nickname">{nickname}</p><br>
-      <p>{message}</p>
-
-        <div class="reply_button" on:mouseenter={enter} on:mouseleave={leave} class:active>
-        {#if active}
-          <p in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
-        {:else}
-          <p></p>
-        {/if}
+      <p>{msg}</p><br>
+        <div class="options" on:mouseenter={enter} on:mouseleave={leave} class:active>
+      {#if active}
+        <p class="reply_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
+        <p class="react_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={reactTo}>{reactIcon}</p>
+      {:else}
+        <p></p>
+      {/if}
         </div>
-  </div>
-  {:else}
+        <br>
+        <p class="time">{message.t}</p>
+        <br>
+</div>
 
-    <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" class:type={handleType} on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+      <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
+      {#if has_reaction}
+        {#each reactions as reaction}
+
+        <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction}
+        {#if react}
+          {#each reactors as reactor}
+            <p class="reactors" class:hoverReactions={react}>{reactor}</p>
+            {/each}
+          {/if}
+          </div>
+  {/each}
+{/if}
+
+  </div>
+
+
+    {/await}
+  {:else}
+    <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
              <p class="nickname">{nickname}</p><br>
-        <p>{message}</p><br>
-        <div class="reply_button" on:mouseenter={enter} on:mouseleave={leave} class:active>
+        <p>{msg}</p><br>
+          <div class="options" on:mouseenter={enter} on:mouseleave={leave} class:active>
         {#if active}
-          <p in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
+          <p class="reply_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
+          <p class="react_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={reactTo}>{reactIcon}</p>
         {:else}
           <p></p>
         {/if}
-        </div>
-    </div>
+          </div>
+          <br>
+          <p class="time">{message.t}</p>
+          <br>
+  </div>
+
+        <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
+        {#if has_reaction}
+          {#each reactions as reaction}
+
+          <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction}
+          {#if react}
+            {#each reactors as reactor}
+              <p class="reactors" class:hoverReactions={react}>{reactor}</p>
+              {/each}
+            {/if}
+            </div>
+    {/each}
   {/if}
+
+    </div>
+
+{/if}
 
 <style>
     .boardMessage {
@@ -171,7 +256,7 @@
     .replyer {
     }
 
-    .reply_button {
+    .options {
       font-family: 'Roboto Mono';
       color: white;
       opacity: 0.9;
@@ -204,4 +289,42 @@
     animation: border_rgb 10s ease infinite;
   }
 
+  .reactions {
+      font-family: 'Roboto Mono';
+      color: black;
+      opacity: 0.9;
+      justify-content: flex-start;
+      width: 25px;
+      display: block;
+      flex: auto;
+      border-radius: 5px;
+      height: 25px;
+      margin-left: 10%;
+      margin-top: -20px;
+  }
+    .reactions p {
+      position: relative;
+      color: black;
+      display: inline-block;
+    }
+
+    .reaction {
+      cursor: pointer;
+    }
+    .hoverReactions {
+        background: white !important;
+        color: black;
+    }
+
+    .time {
+      font-family: "Roboto Mono";
+    }
+
+    .react_button {
+      cursor: pointer;
+    }
+
+    .reply_button {
+    cursor: pointer;
+    }
 </style>
