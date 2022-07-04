@@ -17,7 +17,10 @@
     let replyColor
     let nickname
     let noMsgs = false
-
+    let reactions = {}
+    let filterBoards = []
+    let filterEmojis = []
+    let fixedBoards = []
     onMount(async () => {
       console.log('mounting');
       if ($user.thisBoard == null) {
@@ -59,6 +62,7 @@
 
     //Prints any single board message. Takes boardmessage and updates to store.
     const printBoardMessage = (boardmessage) => {
+      filterBoards.push(printBoardMessage)
       boardMessages.update(current => {
           return [boardmessage, ...current]
       })
@@ -119,9 +123,6 @@
       replyExit()
     }
 
-    //Reactive depending on user.addBoard boolean, displays AddBoard component.
-    $ : wantToAdd = $user.addBoard
-
     //Adds new board to boardArray and prints that board, its probably empty.
     const addNewBoard = (e) => {
 
@@ -143,19 +144,78 @@
       noMsgs = false
     }
 
+
+    async function fixEmojis() {
+      console.log('fixing emojis');
+      filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !containsOnlyEmojis(m.m))
+      console.log('filterd boards');
+      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 3 && containsOnlyEmojis(e.m))
+      console.log('Filter emojis test?', filterEmojis);
+      if (filterEmojis.length) {
+        await addEmoji()
+      } else {
+        fixedBoards = filterBoards
+      }
+    }
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     async function printBoard(board) {
-        console.log('printing board');
-
+        console.log('printing board', board);
+        fixedBoards = []
         noMsgs = false
-        boardMessages.set(await window.api.printBoard(board))
+        await boardMessages.set(await window.api.printBoard(board))
+        console.log('Messages set, fixin emojis');
+        await fixEmojis()
+        console.log('Emojis should be set, update store');
         user.update(data => {
           return {
             ...data,
             thisBoard: board
           }
         })
+        user.update(data => {
+          return {
+            ...data,
+            replyTo: {reply: false},
+          }
+        })
+        console.log('End of printBoard');
     }
+
+      const updateReactions = () => {
+
+        console.log('Reaction ');
+            console.log('Reaction ');
+                console.log('Reaction ');
+
+      }
+
+      async function addEmoji(message) {
+        console.log('Adding emojis');
+            filterBoards.forEach(async function (a) {
+                await filterEmojis.forEach(function (b) {
+                  if (b.r == a.hash) {
+                    a.react = []
+                    a.react.push(b)
+                    console.log();
+                  }
+                })
+                fixedBoards.push(a)
+                console.log('push message');
+              })
+            fixedBoards = fixedBoards
+            console.log('fixed', fixedBoards);
+        }
+
+
+      function containsOnlyEmojis(text) {
+        const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
+        const visibleChars = text.replace(new RegExp('[\n\r\s]+|( )+', 'g'), '')
+        return onlyEmojis.length === visibleChars.length
+      }
+
+      $ : fixedBoards
+      //Reactive depending on user.addBoard boolean, displays AddBoard component.
+      $ : wantToAdd = $user.addBoard
 
 </script>
 
@@ -174,8 +234,9 @@
         <!-- {#if noMsgs}
           <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
         {/if} -->
-                {#each $boardMessages as message (message.hash)}
-                <BoardMessage on:replyTo={(e)=> replyToMessage(message.hash, message.n)} reply={message.r} message={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k} timestamp={message.t} hash={message.hash}/>
+                {#each fixedBoards as message (message.hash)}
+                <BoardMessage on:reaction={(e)=> updateReactions(e)} on:replyTo={(e)=> replyToMessage(message.hash, message.n)} message={message} reply={message.r} msg={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}
+                  timestamp={message.t} hash={message.hash}/>
 
                 {/each}
         </BoardWindow>
@@ -186,6 +247,8 @@
           </div>
         </div>
       </div>
+
+      <RightMenu on:printBoard={(e) => printBoard(e.detail.brd)} />
 </main>
 
 <style>
