@@ -32,12 +32,9 @@
     onMount(async () => {
       if(message.react) {
         has_reaction = true
-        message.react.forEach(function (m) {
-          console.log('m', m);
-          reactors.push(m.n)
-          reactions.push(m.m)
-        })
+        reactions = message.react
       } else {
+        has_reaction = false
         console.log('no reaction');
       }
       console.log('mounting boardmessage');
@@ -139,10 +136,10 @@
       {#if has_reaction}
         {#each reactions as reaction}
 
-        <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction}
+        <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
         {#if react}
-          {#each reactors as reactor}
-            <p class="reactors" class:hoverReactions={react}>{reactor}</p>
+          {#each reactions as reactor}
+            <p class="reactors" class:hoverReactions={react}>{reactor.n}</p>
             {/each}
           {/if}
           </div>
@@ -177,10 +174,10 @@
         {#if has_reaction}
           {#each reactions as reaction}
 
-          <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction}
+          <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
           {#if react}
-            {#each reactors as reactor}
-              <p class="reactors" class:hoverReactions={react}>{reactor}</p>
+            {#each reactions as reactor}
+              <p class="reactors" class:hoverReactions={react}>{reactor.n}</p>
               {/each}
             {/if}
             </div>
