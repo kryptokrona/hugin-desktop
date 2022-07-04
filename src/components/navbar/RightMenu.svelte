@@ -31,18 +31,8 @@
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     const printBoard = async (board) => {
         console.log('Printing Board', board)
-        boardMessages.set(await window.api.printBoard(board))
-        user.update(data => {
-          return {
-            ...data,
-            thisBoard: board,
-          }
-        })
-        user.update(data => {
-          return {
-            ...data,
-            replyTo: {reply: false},
-          }
+        dispatch('printBoard', {
+            brd: board,
         })
     }
 
