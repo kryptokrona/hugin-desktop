@@ -17,7 +17,6 @@
     let replyColor
     let nickname
     let noMsgs = false
-    let reactions = {}
     let filterBoards = []
     let filterEmojis = []
     let fixedBoards = []
@@ -137,7 +136,7 @@
          printBoard(board)
          window.api.send('addBoard', board)
     }
-    //Svelte reactive. Sets noMsgs boolean for welcome message
+    //Svelte reactive. Sets noMsgs boolean for welcome message.
     $ : if ($boardMessages.length == 0) {
       noMsgs = true
     } else {
@@ -145,13 +144,13 @@
     }
 
 
-    async function fixEmojis() {
-      console.log('fixing emojis');
+    async function checkReactions() {
+      //All boardmessages all messages except reactions
       filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !containsOnlyEmojis(m.m))
-      console.log('filterd boards');
-      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 3 && containsOnlyEmojis(e.m))
-      console.log('Filter emojis test?', filterEmojis);
+      //Only reactions
+      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 2 && containsOnlyEmojis(e.m))
       if (filterEmojis.length) {
+         //Adding emojis to the correct message.
         await addEmoji()
       } else {
         fixedBoards = filterBoards
@@ -159,13 +158,14 @@
     }
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     async function printBoard(board) {
-        console.log('printing board', board);
+        console.log('Printing board', board);
         fixedBoards = []
         noMsgs = false
+        //Load boardMessages from db
         await boardMessages.set(await window.api.printBoard(board))
-        console.log('Messages set, fixin emojis');
-        await fixEmojis()
-        console.log('Emojis should be set, update store');
+        //Check for emojis and filter them
+        await checkReactions()
+        //Reactions should be set, update thisBoard in store and set reply to false.
         user.update(data => {
           return {
             ...data,
@@ -178,7 +178,6 @@
             replyTo: {reply: false},
           }
         })
-        console.log('End of printBoard');
     }
 
       const updateReactions = () => {
@@ -190,7 +189,7 @@
       }
 
       async function addEmoji(message) {
-        console.log('Adding emojis');
+        //Check for replies and message hash that match and then adds reactions to the messages.
             filterBoards.forEach(async function (a) {
                 await filterEmojis.forEach(function (b) {
                   if (b.r == a.hash) {
@@ -200,13 +199,12 @@
                   }
                 })
                 fixedBoards.push(a)
-                console.log('push message');
               })
             fixedBoards = fixedBoards
             console.log('fixed', fixedBoards);
         }
 
-
+      //Checks for messages that only coinatins emojis.
       function containsOnlyEmojis(text) {
         const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
         const visibleChars = text.replace(new RegExp('[\n\r\s]+|( )+', 'g'), '')
