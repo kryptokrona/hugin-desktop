@@ -18,7 +18,7 @@
     let contact
     let codec
     let stream
-    let box;
+    let box
     //Get messages on mount
     onMount(async () => {
 
@@ -38,7 +38,6 @@
     //Prints conversation from active contact
     const printConversation = (active) => {
 
-
       console.log('printing conversation', active);
         chat = active.chat
         key = active.k
@@ -52,6 +51,7 @@
         })
         savedMsg = $messages.filter(x => x.chat === chat)
         scrollDown()
+
     }
     //Chat to add
     const handleAddChat = e => {
@@ -85,8 +85,9 @@
       console.log('new message', data);
       console.log('userchat', $user.activeChat.chat)
 
+      saveToStore(data)
       if (data.chat === $user.activeChat.chat) {
-        printMessage(data)
+        printConversation(data)
       } else {
 
         saveToStore(data)
@@ -117,7 +118,7 @@
     $ : savedMsg
 
 	function scrollDown() {
-	box.scrollIntoView({block: "end"});
+	box.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"})
 	}
 </script>
 
@@ -126,17 +127,18 @@
 {/if}
 <main in:fade>
     <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
-    <div class="rightside">
-        <div class="chat_window" bind:this={box}>
+    <div class="rightside">'
+
+    <div class="chat_window" bind:this={box}>
         <ChatWindow>
+
 
             {#each savedMsg as message}
                 <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat} timestamp={message.t}/>
             {/each}
 
         </ChatWindow>
-
-        </div>
+    </div>
         <ChatInput on:message={sendMsg}/>
     </div>
 </main>
