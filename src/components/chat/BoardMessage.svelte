@@ -125,14 +125,20 @@
   <p class="time">{message.t}</p>
       <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
       {#if has_reaction}
-        {#each reactions as reaction}
+{#each reactions as reaction}
 
         <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
         {#if react}
-          {#each reactions as reactor}
-            <p class="reactors" class:hoverReactions={react}>{reactor.n}</p>
-            {/each}
-          {/if}
+
+         {#each reactions as reactors}
+           {#each Object.entries(reactors) as [key, value], index (key)}
+             {#if value == reaction.m}
+
+              <p class="reactors" class:hoverReactions={react}>{reactors.n}</p>
+            {/if}
+           {/each}
+         {/each}
+            {/if}
           </div>
   {/each}
 {/if}
@@ -159,23 +165,28 @@
           <br>
           <br>
   </div>
-    <p class="time">{message.t}</p>
+  <p class="time">{message.t}</p>
+      <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
+      {#if has_reaction}
+  {#each reactions as reaction}
 
-        <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
-        {#if has_reaction}
-          {#each reactions as reaction}
+        <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
 
-          <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
-          {#if react}
-            {#each reactions as reactor}
-              <p class="reactors" class:hoverReactions={react}>{reactor.n}</p>
-              {/each}
+      {#if react}
+         {#each reactions as reactors}
+           {#each Object.entries(reactors) as [key, value], index (key)}
+             {#if value == reaction.m}
+
+              <p class="reactors" class:hoverReactions={react}>{reactors.n}</p>
             {/if}
-            </div>
-    {/each}
-  {/if}
+           {/each}
+         {/each}
+            {/if}
+          </div>
+  {/each}
+{/if}
 
-    </div>
+  </div>
 
 {/if}
 
