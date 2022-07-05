@@ -188,17 +188,15 @@
         })
     }
 
-      async function updateReactions(msg) {
+    async function updateReactions(msg) {
 
       let reactionsFixed
       reactionsFixed = fixedBoards.map(function (r) {
         if (r.hash == msg.r && !r.react) {
           r.react = []
           r.react.push(msg)
-            return r
         } else if (r.hash == msg.r && r.react) {
           r.react.push(msg)
-            return r
         }
         return r
       })
