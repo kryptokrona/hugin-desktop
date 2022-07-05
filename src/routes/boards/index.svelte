@@ -60,10 +60,15 @@
     }
 
     //Prints any single board message. Takes boardmessage and updates to store.
-    const printBoardMessage = (boardmessage) => {
-      filterBoards.push(printBoardMessage)
+    const printBoardMessage = (boardMsg) => {
+
+      if (boardMsg.r.length === 64 && boardMsg.m.length < 4 && containsOnlyEmojis(boardMsg.m)) {
+        updateReactions(boardMsg)
+      } else {
+        fixedBoards.push(boardMsg)
+      }
       boardMessages.update(current => {
-          return [boardmessage, ...current]
+          return [boardMsg, ...current]
       })
     }
 
@@ -136,6 +141,7 @@
          printBoard(board)
          window.api.send('addBoard', board)
     }
+
     //Svelte reactive. Sets noMsgs boolean for welcome message.
     $ : if ($boardMessages.length == 0) {
       noMsgs = true
@@ -148,7 +154,7 @@
       //All boardmessages all messages except reactions
       filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !containsOnlyEmojis(m.m))
       //Only reactions
-      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 2 && containsOnlyEmojis(e.m))
+      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 4 && containsOnlyEmojis(e.m))
       if (filterEmojis.length) {
          //Adding emojis to the correct message.
         await addEmoji()
@@ -180,18 +186,29 @@
         })
     }
 
-      const updateReactions = () => {
+      async function updateReactions(msg) {
 
-        console.log('Reaction ');
-            console.log('Reaction ');
-                console.log('Reaction ');
+      let result
+      result = fixedBoards.map(function (el) {
+        if (el.hash == msg.r && !el.react) {
+          el.react = []
+          el.react.push(msg)
+            return el
+        } else if (el.hash == msg.r && el.react) {
+          el.react.push(msg)
+            return el
+        }
+        return el
+      })
+    fixedBoards = result
+    }
 
-      }
-
-      async function addEmoji(message) {
+      async function addEmoji() {
         //Check for replies and message hash that match and then adds reactions to the messages.
             filterBoards.forEach(async function (a) {
+              console.log('checking board message');
                 await filterEmojis.forEach(function (b) {
+                  console.log('checking for emoji in message');
                   if (b.r == a.hash) {
                     a.react = []
                     a.react.push(b)
