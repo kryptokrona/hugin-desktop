@@ -203,23 +203,23 @@
     fixedBoards = reactionsFixed
     }
 
-      async function addEmoji() {
-        //Check for replies and message hash that match and then adds reactions to the messages.
-            filterBoards.forEach(async function (a) {
-              console.log('checking board message');
-                await filterEmojis.forEach(function (b) {
-                  console.log('checking for emoji in message');
-                  if (b.r == a.hash) {
-                    a.react = []
-                    a.react.push(b)
-                    console.log();
-                  }
-                })
-                fixedBoards.push(a)
+    async function addEmoji() {
+      //Check for replies and message hash that match and then adds reactions to the messages.
+          filterBoards.forEach(async function (a) {
+            console.log('checking board message');
+              await filterEmojis.forEach(function (b) {
+                console.log('checking for emoji in message');
+                if (b.r == a.hash) {
+                  a.react = []
+                  a.react.push(b)
+                  console.log();
+                }
               })
-            fixedBoards = fixedBoards
-            console.log('fixed', fixedBoards);
-        }
+              fixedBoards.push(a)
+            })
+          fixedBoards = fixedBoards
+          console.log('fixed', fixedBoards);
+      }
 
       //Checks for messages that only coinatins emojis.
       function containsOnlyEmojis(text) {
