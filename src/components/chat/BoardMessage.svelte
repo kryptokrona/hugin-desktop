@@ -19,7 +19,7 @@
     let active
     let replyicon = '<'
     let thisreply = ''
-    let has_reaction = false
+    let has_reaction = true
     let reactionslist = []
     let hoverReactions = false
     let reactions = []
@@ -29,17 +29,9 @@
 
     const dispatch = createEventDispatcher()
 
-    onMount(async () => {
-      if(message.react) {
-        has_reaction = true
+      $ : if (message.react) {
         reactions = message.react
-      } else {
-        has_reaction = false
-        console.log('no reaction');
       }
-      console.log('mounting boardmessage');
-      })
-
       //Hover functions
     	function enter() {
     		active = true;
@@ -128,10 +120,9 @@
       {/if}
         </div>
         <br>
-        <p class="time">{message.t}</p>
         <br>
 </div>
-
+  <p class="time">{message.t}</p>
       <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
       {#if has_reaction}
         {#each reactions as reaction}
@@ -166,9 +157,9 @@
         {/if}
           </div>
           <br>
-          <p class="time">{message.t}</p>
           <br>
   </div>
+    <p class="time">{message.t}</p>
 
         <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
         {#if has_reaction}
@@ -314,7 +305,11 @@
     }
 
     .time {
-      font-family: "Roboto Mono";
+      color: white;
+      font-size: 9px;
+      display: inline-block;
+      margin-left: 40px;
+      font-family: "Roboto Mono" !important;
     }
 
     .react_button {
