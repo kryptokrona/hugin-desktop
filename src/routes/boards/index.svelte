@@ -10,6 +10,7 @@
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
     import RightMenu from "/src/components/navbar/RightMenu.svelte";
+
     let boardMsgs = [];
     let replyto = ''
     let reply_exit_icon = 'x'
@@ -20,6 +21,7 @@
     let filterBoards = []
     let filterEmojis = []
     let fixedBoards = []
+
     onMount(async () => {
       console.log('mounting');
       if ($user.thisBoard == null) {
@@ -27,7 +29,7 @@
       }
       printBoard(thisBoard)
     })
-
+      //Listens for new messages from backend
         window.api.receive('boardMsg', data => {
 
           //*TODO*//Keep logs to experiment with toast popups
@@ -149,7 +151,7 @@
       noMsgs = false
     }
 
-
+    //Checks messages for reactions in chosen board from printBoard() function
     async function checkReactions() {
       //All boardmessages all messages except reactions
       filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !containsOnlyEmojis(m.m))
@@ -188,19 +190,19 @@
 
       async function updateReactions(msg) {
 
-      let result
-      result = fixedBoards.map(function (el) {
-        if (el.hash == msg.r && !el.react) {
-          el.react = []
-          el.react.push(msg)
-            return el
-        } else if (el.hash == msg.r && el.react) {
-          el.react.push(msg)
-            return el
+      let reactionsFixed
+      reactionsFixed = fixedBoards.map(function (r) {
+        if (r.hash == msg.r && !r.react) {
+          r.react = []
+          r.react.push(msg)
+            return r
+        } else if (r.hash == msg.r && r.react) {
+          r.react.push(msg)
+            return r
         }
-        return el
+        return r
       })
-    fixedBoards = result
+    fixedBoards = reactionsFixed
     }
 
       async function addEmoji() {
