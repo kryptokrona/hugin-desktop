@@ -15,13 +15,11 @@ let hoverReaction = false
 
 $ : filterReactions = reacts.filter(a => a.m == thisReaction.m)
 
-$ : console.log('filterReactions', filterReactions);
-
 const sendReaction = () => {
   dispatch('sendReaction', {
-    reaction: reaction.m,
-    brd: reaction.brd,
-    reply: reaction.r
+    msg: thisReaction.m,
+    brd: thisReaction.brd,
+    reply: thisReaction.r,
   })
   console.log('sending reaction');
 }
@@ -42,13 +40,13 @@ function exitHover(){
 
 <div class="reaction" on:click={sendReaction} on:mouseenter={reactionHover} on:mouseleave={exitHover}>{thisReaction.m}
 
-<!-- {#if hoverReaction} -->
+{#if hoverReaction}
 <div class="reactors">
  {#each filterReactions as reactors}
       <p class="reactor">{reactors.n}</p>
  {/each}
  </div>
-<!-- {/if} -->
+{/if}
 
 </div>
 
@@ -64,14 +62,24 @@ function exitHover(){
     color: black;
 }
 .reactors {
-  background: white;
   color: black;
   border-radius: 5px;
   display: flex;
+  width: min-content;
 }
 
 .reactor {
   color: black;
   font-family: "Roboto Mono";
+  background: white;
+  color: black;
+  border-radius: 2px;
+  font-size: 11px;
+  display: inline-block;
+  margin-top: 5px;
+  width: fit-content;
+  display: block;
+  padding: 2px;
+  margin-right: 2px;
 }
 </style>
