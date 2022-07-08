@@ -4,6 +4,7 @@
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {createEventDispatcher, onMount} from "svelte";
     import {user} from '$lib/stores/user.js'
+    import Reaction from "/src/components/chat/Reaction.svelte";
     export let msg
     export let msgFrom
     export let board
@@ -19,7 +20,7 @@
     let active
     let replyicon = '<'
     let thisreply = ''
-    let has_reaction = true
+    let has_reaction = false
     let reactionslist = []
     let hoverReactions = false
     let reactions = []
@@ -31,6 +32,7 @@
 
       $ : if (message.react) {
         reactions = message.react
+        has_reaction = true
       }
       //Hover functions
     	function enter() {
@@ -57,24 +59,19 @@
             })
       }
 
-      $ : if ($user.replyTo.reply == false) {
-        reply_to_this = false
-      } else if ( $user.replyTo.to == hash) {
-        reply_to_this = true
-      }
-
-      function reactionHover() {
-        console.log('hooooover');
-        react = true
-      }
-
-      function exitHover(){
-        console.log('exit reactiion hover');
-        react = false
+      const sendReactMsg = () => {
+        console.log('wanna send', e);
+        //window.api.sendBoardMsg()
       }
 
       const reactTo = () => {
         console.log('wanna react');
+      }
+
+      $ : if ($user.replyTo.reply == false) {
+        reply_to_this = false
+      } else if ( $user.replyTo.to == hash) {
+        reply_to_this = true
       }
 
       $ : reactions
@@ -122,28 +119,16 @@
         <br>
         <br>
 </div>
-  <p class="time">{message.t}</p>
-      <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
-      {#if has_reaction}
-{#each reactions as reaction}
+<p class="time">{message.t}</p>
+    <div class="reactions">
+    {#if has_reaction}
+      {#each reactions as reaction}
 
-        <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
-        {#if react}
+      <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+      {/each}
+    {/if}
 
-         {#each reactions as reactors}
-           {#each Object.entries(reactors) as [key, value], index (key)}
-             {#if value == reaction.m}
-
-              <p class="reactors" class:hoverReactions={react}>{reactors.n}</p>
-            {/if}
-           {/each}
-         {/each}
-            {/if}
-          </div>
-  {/each}
-{/if}
-
-  </div>
+</div>
 
 
     {/await}
@@ -166,26 +151,12 @@
           <br>
   </div>
   <p class="time">{message.t}</p>
-      <div class="reactions" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>
+      <div class="reactions">
       {#if has_reaction}
-  {#each reactions as reaction}
-
-        <div class="reaction" on:mouseenter={() => reactionHover(message)} on:mouseleave={exitHover}>{reaction.m}
-
-      {#if react}
-         {#each reactions as reactors}
-           {#each Object.entries(reactors) as [key, value], index (key)}
-             {#if value == reaction.m}
-
-              <p class="reactors" class:hoverReactions={react}>{reactors.n}</p>
-            {/if}
-           {/each}
-         {/each}
-            {/if}
-          </div>
-  {/each}
-{/if}
-
+        {#each reactions as reaction}
+          <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+        {/each}
+      {/if}
   </div>
 
 {/if}
@@ -305,14 +276,6 @@
       position: relative;
       color: black;
       display: inline-block;
-    }
-
-    .reaction {
-      cursor: pointer;
-    }
-    .hoverReactions {
-        background: white !important;
-        color: black;
     }
 
     .time {
