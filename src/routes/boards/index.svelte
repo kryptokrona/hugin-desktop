@@ -53,7 +53,13 @@
         let myaddr = $user.huginAddress.substring(0,99)
         let time = Date.now()
         let myName = $user.username
-
+        let brd = thisBoard
+        //Reaction switch
+        if (e.detail.reply) {
+          replyto = e.detail.reply
+          brd = e.detail.brd
+          msg = e.detail.msg
+        }
         //Construct a new json object (myBoardMessage) to be able to print our message instant.
         let myBoardMessage = {m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time}
         window.api.sendBoardMsg(myBoardMessage)
@@ -250,7 +256,7 @@
           <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
         {/if} -->
                 {#each fixedBoards as message (message.hash)}
-                <BoardMessage on:replyTo={(e)=> replyToMessage(message.hash, message.n)} message={message} reply={message.r} msg={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}
+                <BoardMessage on:reactTo={sendboardMsg} on:replyTo={(e)=> replyToMessage(message.hash, message.n)} message={message} reply={message.r} msg={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}
                   timestamp={message.t} hash={message.hash}/>
 
                 {/each}
