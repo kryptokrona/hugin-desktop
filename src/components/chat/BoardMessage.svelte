@@ -60,7 +60,7 @@
       }
 
       const sendReactMsg = () => {
-        console.log('wanna send', e);
+        console.log('wanna send');
         //window.api.sendBoardMsg()
       }
 
@@ -124,7 +124,7 @@
     {#if has_reaction}
       {#each reactions as reaction}
 
-      <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+      <Reaction on:sendReaction={(e) => dispatch('reactTo', { msg: e.detail.msg, reply: e.detail.reply, brd: e.detail.brd })} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
       {/each}
     {/if}
 
@@ -154,7 +154,7 @@
       <div class="reactions">
       {#if has_reaction}
         {#each reactions as reaction}
-          <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+          <Reaction on:sendReaction={(e) => dispatch('reactTo', { msg: e.detail.msg, reply: e.detail.reply, brd: e.detail.brd })} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
         {/each}
       {/if}
   </div>
