@@ -27,14 +27,10 @@
     let reactors = []
     let react = false
     let reactIcon = '😊'
-
+    let replyMessage = false
+    let reactionCount
     const dispatch = createEventDispatcher()
 
-      $ : if (message.react) {
-        let thisemoji = {}
-        reactions = message.react.filter(a => !thisemoji[a.m] && (thisemoji[a.m] = true))
-        has_reaction = true
-      }
       //Hover functions
     	function enter() {
     		active = true;
@@ -80,12 +76,21 @@
         reply_to_this = true
       }
 
-      $ : reactions
+      $: reactions
 
+      $: if (reply.length === 64) {
+        replyMessage = true
+      }
+
+      $: if (message.react) {
+        let thisemoji = {}
+        reactions = message.react.filter(a => !thisemoji[a.m] && (thisemoji[a.m] = true))
+        has_reaction = true
+      }
 
 </script>
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
-  {#if reply.length === 64}
+  {#if replyMessage}
     {#await checkreply(reply)}
       {:then thisreply}
 
@@ -103,43 +108,11 @@
     	<p style="color: red">{error.message}</p>
       </div>
 
-
-
   <div class="replyline"> </div>
-
-
-  <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" on:mouseenter={enter} on:mouseleave={leave} class="boardMessage replyer">
-
-      <img class="avatar"
-           src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-           <p class="nickname">{nickname}</p><br>
-      <p>{msg}</p><br>
-        <div class="options" on:mouseenter={enter} on:mouseleave={leave} class:active>
-      {#if active}
-        <p class="reply_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
-        <p class="react_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={reactTo}>{reactIcon}</p>
-      {:else}
-        <p></p>
-      {/if}
-        </div>
-        <br>
-        <br>
-</div>
-<p class="time">{message.t}</p>
-    <div class="reactions">
-    {#if has_reaction}
-      {#each reactions as reaction}
-
-      <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
-      {/each}
-    {/if}
-
-</div>
-
-
     {/await}
-  {:else}
-    <div class:reply_active={reply_to_this} in:fade="{{duration: 150}}" on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
+
+  {/if}
+    <div class:reply_active={reply_to_this} class:replyline={replyMessage} in:fade="{{duration: 150}}" on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
@@ -165,7 +138,6 @@
       {/if}
   </div>
 
-{/if}
 
 <style>
     .boardMessage {
