@@ -72,12 +72,14 @@
 
       if (boardMsg.r.length === 64 && boardMsg.m.length < 4 && containsOnlyEmojis(boardMsg.m)) {
         updateReactions(boardMsg)
-      } else {
-        fixedBoards.push(boardMsg)
+      } else if (boardMsg.m.length > 0 && !containsOnlyEmojis(boardMsg.m)) {
+        console.log('pushin');
+        fixedBoards.unshift(boardMsg)
       }
       boardMessages.update(current => {
           return [boardMsg, ...current]
       })
+      fixedBoards = fixedBoards
     }
 
     //Reactive, updates thisBoard.
