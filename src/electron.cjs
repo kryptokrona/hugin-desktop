@@ -2064,16 +2064,19 @@ let decode_fingerprint = (fingerprint) => {
 let decode_ip = (ip, type) => {
   let decoded_ip = "";
 
-  for (letter in atob(ip).split('')) {
+  let letters =  atob(ip).split('')
+  letters.forEach(function (letter) {
+    if (letter.length > 1) return
+    let piece = letter.charCodeAt(0).toString(16);
 
-    let piece = atob(ip).split('')[letter].charCodeAt(0).toString(16);
-    if (piece.length == 1) {
-      piece = "0" + piece;
+    if (piece.length === 1) {
+        piece = "0" + piece;
     }
+
     decoded_ip += parseInt(piece, 16) + ".";
+  })
 
-
-  }
+  console.log('decoded ip', decoded_ip);
 
 
   return type+decoded_ip.slice(0,-1);
