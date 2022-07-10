@@ -5,15 +5,22 @@ import {createEventDispatcher, onMount} from "svelte";
 const dispatch = createEventDispatcher()
 
 export let reacts
-export let reactCount
+export let reactCount = 0
 export let thisReaction
 export let emoji
 export let react = false
-
+export let counter = false
 let filterReactions = []
 let hoverReaction = false
+let filterReactors = []
 
-$ : filterReactions = reacts.filter(a => a.m == thisReaction.m)
+$: filterReactions = reacts.filter(a => a.m == thisReaction.m)
+
+$: if (filterReactions.length > 0) {
+  let reactor = {}
+  filterReactors = filterReactions.filter(r => !reactor[r.k] && (reactor[r.k] = true))
+  reactCount = filterReactors.length
+}
 
 const sendReaction = () => {
   dispatch('sendReaction', {
@@ -24,7 +31,7 @@ const sendReaction = () => {
   console.log('sending reaction');
 }
 
-$ : reactCount
+$: reactCount
 
 function reactionHover() {
   console.log('hooooover');
@@ -40,9 +47,13 @@ function exitHover(){
 
 <div class="reaction" on:click={sendReaction} on:mouseenter={reactionHover} on:mouseleave={exitHover}>{thisReaction.m}
 
+{#if filterReactions.length > 1}
+  <p class="count">{reactCount}</p>
+{/if}
+
 {#if hoverReaction}
 <div class="reactors">
- {#each filterReactions as reactors}
+ {#each filterReactors as reactors}
       <p class="reactor">{reactors.n}</p>
  {/each}
  </div>
@@ -81,5 +92,12 @@ function exitHover(){
   display: block;
   padding: 2px;
   margin-right: 2px;
+}
+
+.count {
+  font-family: "Montserrat";
+  font-size: 10px;
+  display: table-row;
+  color: white;
 }
 </style>
