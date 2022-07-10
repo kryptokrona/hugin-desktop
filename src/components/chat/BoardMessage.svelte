@@ -31,7 +31,8 @@
     const dispatch = createEventDispatcher()
 
       $ : if (message.react) {
-        reactions = message.react
+        let thisemoji = {}
+        reactions = message.react.filter(a => !thisemoji[a.m] && (thisemoji[a.m] = true))
         has_reaction = true
       }
       //Hover functions
@@ -61,6 +62,11 @@
 
       const sendReactMsg = () => {
         console.log('wanna send');
+        dispatch('reactTo', {
+          msg: e.detail.msg,
+          reply: e.detail.reply,
+          brd: e.detail.brd }
+        )
         //window.api.sendBoardMsg()
       }
 
@@ -124,7 +130,7 @@
     {#if has_reaction}
       {#each reactions as reaction}
 
-      <Reaction on:sendReaction={(e) => dispatch('reactTo', { msg: e.detail.msg, reply: e.detail.reply, brd: e.detail.brd })} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+      <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
       {/each}
     {/if}
 
@@ -154,7 +160,7 @@
       <div class="reactions">
       {#if has_reaction}
         {#each reactions as reaction}
-          <Reaction on:sendReaction={(e) => dispatch('reactTo', { msg: e.detail.msg, reply: e.detail.reply, brd: e.detail.brd })} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+          <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
         {/each}
       {/if}
   </div>
