@@ -8,12 +8,12 @@
 	"scripts": {
 		"dev": "cross-env NODE_ENV=dev npm run dev:all",
 		"dev:all": "concurrently -n=svelte,electron -c='#ff3e00',blue \"npm run dev:svelte\" \"npm run dev:electron\"",
-		"dev:svelte": "svelte-kit dev",
+		"dev:svelte": "vite dev",
 		"dev:electron": "electron src/electron.cjs",
 		"build": "cross-env NODE_ENV=production npm run build:svelte && npm run build:electron",
-		"build:svelte": "svelte-kit build",
+		"build:svelte": "vite build",
 		"build:electron": "electron-builder -mwl --config build.config.json",
-		"start": "svelte-kit start"
+		"start": "vite start"
 	},
 	"browserslist": [
 		"Chrome 89"
@@ -21,7 +21,6 @@
 	"dependencies": {
 		"@commonify/lowdb": "^3.0.0",
 		"@koush/wrtc": "^0.5.3",
-		"better-sqlite3": "^7.5.0",
 		"electron-context-menu": "^2.5.2",
 		"electron-fetch": "^1.7.4",
 		"electron-reloader": "^1.2.3",
