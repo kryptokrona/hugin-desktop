@@ -1,10 +1,17 @@
 import sveltePreprocess from 'svelte-preprocess';
 import adapter from '@sveltejs/adapter-static';
+import path from "path";
 
 /** @type {import("@sveltejs/kit").Config} */
 const config = {
 	kit: {
 		adapter: adapter({}),
+	},
+	resolve: {
+		alias: {
+			$i18n: path.resolve('./src/i18n'),
+			$components: path.resolve('./src/components'),
+		},
 	},
 	preprocess: sveltePreprocess({
 		scss: {
