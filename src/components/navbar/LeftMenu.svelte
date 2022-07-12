@@ -63,7 +63,7 @@
         justify-content: space-between;
         align-items: center;
         position: fixed;
-        z-index: 100;
+        z-index: 99;
     }
 
     .nav {
@@ -117,5 +117,4 @@
     .avatar {
       height: 55px;
     }
-
 </style>

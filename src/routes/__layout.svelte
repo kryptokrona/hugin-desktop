@@ -5,6 +5,8 @@
 	import IncomingCall from "/src/components/webrtc/IncomingCall.svelte";
 	import Webrtc from "/src/routes/webrtc/index.svelte";
 	import { SvelteToast } from '@zerodevx/svelte-toast'
+	import TrafficLights from "$components/TrafficLights.svelte";
+
 	//Stores
 	import { user } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -93,9 +95,10 @@ window.api.receive('node', async (node) => {
 </div>
 {#if ready}
 
+<TrafficLights/>
+
 	{#if $user.loggedIn && incoming_call}
 		<IncomingCall on:click={closePopup} paused={!incoming_call}/>
-
 	{/if}
 
 	{#if $user.loggedIn}

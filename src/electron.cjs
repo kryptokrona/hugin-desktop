@@ -125,12 +125,8 @@ function createWindow() {
 
     const mainWindow = new BrowserWindow({
         backgroundColor: '#202020',
-        titleBarStyle: 'hidden',
+        frame: false,
         autoHideMenuBar: true,
-        trafficLightPosition: {
-            x: 17,
-            y: 12,
-        },
         minHeight: 600,
         minWidth: 800,
         webPreferences: {
@@ -203,6 +199,14 @@ app.on('activate', () => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
+
+ipcMain.on('close',  () => {
+  app.quit()
+})
+
+ipcMain.on('min',  () => {
+  mainWindow.minimize()
+})
 
 
 
