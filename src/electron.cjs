@@ -1141,15 +1141,16 @@ async function sendBoardMessage(message) {
   let to_board = message.brd
   let my_address = message.k
   let nickname = message.n
+  let msg = message.m
   try {
 
   let  timestamp = parseInt(Date.now()/1000);
   let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
   let xkr_private_key = privateSpendKey;
-  let signature = await xkrUtils.signMessage(message, xkr_private_key);
+  let signature = await xkrUtils.signMessage(msg, xkr_private_key);
 
   let payload_json = {
-      "m": message.m,
+      "m": msg,
       "k": my_address,
       "s": signature,
       "brd": to_board,
