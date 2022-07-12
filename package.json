@@ -1,8 +1,8 @@
 {
-	"name": "sveltekit-electron",
+	"name": "hugin-messenger",
 	"version": "0.0.1",
 	"private": true,
-	"description": "Minimal Sveltekit + Electron starter template.",
+	"description": "Hugin Messenger",
 	"main": "src/electron.cjs",
 	"type": "module",
 	"scripts": {
