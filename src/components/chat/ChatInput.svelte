@@ -4,12 +4,16 @@
     import EmojiSelector from 'svelte-emoji-selector';
     import {user} from "$lib/stores/user.js";
     const dispatch = createEventDispatcher();
-
+    let emojipick = false
     //This handles the emojis, lets fork the repo and make a darker theme.
     function onEmoji(event) {
+      console.log('event', event);
         if (messageInput) {
             messageInput += event.detail
         } else messageInput = event.detail
+        if (emojipick) {
+          sendMsg()
+        }
     }
 
     //Input data to dispatch
@@ -31,17 +35,40 @@
             text: messageInput
         });
         messageInput = ''
+        emojipick = false
     }
 
+    $: console.log('$user.replyTo.emoji', $user.replyTo.emoji);
 
+    $: if ($user.replyTo.emoji) {
+      console.log('emoji activated');
+      console.log('should click');
+      let emojipicker = document.getElementsByClassName('svelte-emoji-picker__trigger');
+      console.log('emojipicker', emojipicker);
+      emojipicker[0].click();
+      console.log('clicked');
+        clickEmoji()
+
+      }
+
+      const clickEmoji = async (e) => {
+        console.log('clicked activate', $user.replyTo);
+        user.update(data => {
+          return {
+            ...data,
+            replyTo: {to: $user.replyTo.to, nick: $user.replyTo.nick, reply: true, emoji: false},
+        }
+      })
+
+      }
     //Checks if input is empty
-    $ : {
+    $: {
         enableSend = !!messageInput;
     }
 </script>
 
 <div class="wrapper">
-    <input type="text" placeholder="Message.." bind:value={messageInput} class:reply={$user.replyTo.reply}>
+    <input type="text" placeholder="Message.." bind:value={messageInput}>
     <EmojiSelector on:emoji={onEmoji}/>
     <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px"
                                                                                          alt=""></button>
@@ -106,15 +133,6 @@
       &:hover {
         background-color: #63e79f;
       }
-    }
-
-    .reply {
-      border-color: #5f86f2;
-      border: 1px solid #5f86f2;
-      -webkit-animation: border_rgb 10s ease infinite;
-      -moz-animation: border_rgb 10s ease infinite;
-      animation: border_rgb 10s ease infinite;
-
     }
 
 </style>
