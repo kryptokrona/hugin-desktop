@@ -10,6 +10,7 @@
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
     import RightMenu from "/src/components/navbar/RightMenu.svelte";
+    import EmojiSelector from 'svelte-emoji-selector';
 
     let boardMsgs = [];
     let replyto = ''
@@ -21,6 +22,8 @@
     let filterBoards = []
     let filterEmojis = []
     let fixedBoards = []
+    let react = false
+    let unreadMsgs = []
 
     onMount(async () => {
       console.log('mounting');
@@ -43,6 +46,7 @@
             console.log('not this board');
             toast.push('New board message', {
               })
+              unreadMsgs.push(data)
             return
           }
         })
@@ -100,7 +104,7 @@
     }
 
     //Enter reply mode
-    async function replyToMessage(hash, nickname) {
+    async function replyToMessage(hash, nickname, emoji=false) {
       if (replyto != false) {
         await replyExit()
       }
@@ -108,7 +112,16 @@
       user.update(data => {
         return {
           ...data,
-          replyTo: {to: hash, nick: nickname, reply: true},
+          replyTo: {to: hash, nick: nickname, reply: true}
+        }
+      })
+
+      if (!emoji) return
+
+        user.update(data => {
+          return {
+            ...data,
+            replyTo: {to: hash, nick: nickname, reply: true, emoji: true},
         }
       })
     }
@@ -240,7 +253,10 @@
       $ : fixedBoards
       //Reactive depending on user.addBoard boolean, displays AddBoard component.
       $ : wantToAdd = $user.addBoard
-
+      //This handles the emojis, lets fork the repo and make a darker theme.
+      const reactMenu = (e) => {
+        replyToMessage(e.detail.hash, e.detail.name, true)
+      }
 </script>
 
 {#if wantToAdd}
@@ -252,14 +268,13 @@
  <div class="reply_to_exit" class:reply_to={$user.replyTo.reply} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$user.replyTo.nick}</div>
 {/if}
         <ChatInput on:message={sendboardMsg} reply_to={$user.replyTo.reply}/>
-
         <BoardWindow>
 
         <!-- {#if noMsgs}
           <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
         {/if} -->
                 {#each fixedBoards as message (message.hash)}
-                <BoardMessage on:reactTo={sendboardMsg} on:replyTo={(e)=> replyToMessage(message.hash, message.n)} message={message} reply={message.r} msg={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}
+                <BoardMessage on:reactMenu={reactMenu} on:reactTo={sendboardMsg} on:replyTo={(e)=> replyToMessage(message.hash, message.n)} message={message} reply={message.r} msg={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}
                   timestamp={message.t} hash={message.hash}/>
 
                 {/each}
