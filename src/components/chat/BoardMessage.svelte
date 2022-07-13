@@ -56,8 +56,8 @@
             })
       }
 
-      const sendReactMsg = () => {
-        console.log('wanna send');
+      const sendReactMsg = (e) => {
+        console.log('wanna send', e.detail);
         dispatch('reactTo', {
           msg: e.detail.msg,
           reply: e.detail.reply,
@@ -66,8 +66,14 @@
         //window.api.sendBoardMsg()
       }
 
-      const reactTo = () => {
-        console.log('wanna react');
+      const reactTo = (e) => {
+      reply_to_this = true
+        console.log('reactto');
+        dispatch('reactMenu', {
+          reply: message.hash,
+          name: message.n
+        })
+
       }
 
       $ : if ($user.replyTo.reply == false) {
