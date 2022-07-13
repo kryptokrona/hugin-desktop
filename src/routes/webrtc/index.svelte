@@ -384,6 +384,34 @@
         }
 
     })
+
+    //End call
+    function endCall (peer, stream) {
+
+        try {
+            peer.destroy();
+            stream.getTracks().forEach(function(track) {
+                track.stop();
+            });
+        } catch (e) {
+            console.log('TRACKS', e)
+        }
+
+        //var myvideo = document.getElementById('myvideo');
+
+        //myvideo.srcObject = stream;
+        //myvideo.pause();
+        //myvideo.srcObject = null;
+
+        console.log('Call ended')
+
+    }
+
+    window.api.receive('endCall', async (e, peer, stream) => {
+
+        return endCall(peer, stream)
+    })
+
 </script>
 
 <main>

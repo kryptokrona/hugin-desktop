@@ -165,6 +165,7 @@
       filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !containsOnlyEmojis(m.m))
       //Only reactions
       filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 4 && containsOnlyEmojis(e.m))
+      console.log('filter emoji ', filterEmojis);
       if (filterEmojis.length) {
          //Adding emojis to the correct message.
         await addEmoji()
@@ -213,18 +214,18 @@
 
     async function addEmoji() {
       //Check for replies and message hash that match and then adds reactions to the messages.
-          filterBoards.forEach(async function (a) {
-            console.log('checking board message');
-              await filterEmojis.forEach(function (b) {
-                console.log('checking for emoji in message');
-                if (b.r == a.hash) {
-                  a.react = []
-                  a.react.push(b)
-                  console.log();
-                }
-              })
-              fixedBoards.push(a)
-            })
+      filterBoards.forEach(async function (a) {
+          await filterEmojis.forEach(function (b) {
+            if (!a.react && b.r == a.hash) {
+              a.react = []
+              a.react.push(b)
+              console.log();
+            } else if (b.r == a.hash) {
+              a.react.push(b)
+            }
+          })
+          fixedBoards.push(a)
+        })
           fixedBoards = fixedBoards
           console.log('fixed', fixedBoards);
       }

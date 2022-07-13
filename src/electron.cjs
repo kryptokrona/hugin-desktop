@@ -829,6 +829,8 @@ async function saveBoardMsg(msg, hash) {
                msg.sent
            ]
        );
+
+       if (msg.sent) return
        //Send new board message to frontend.
       mainWindow.webContents.send('boardMsg', message)
 
@@ -1142,15 +1144,16 @@ async function sendBoardMessage(message) {
   let to_board = message.brd
   let my_address = message.k
   let nickname = message.n
+  let msg = message.m
   try {
 
   let  timestamp = parseInt(Date.now()/1000);
   let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
   let xkr_private_key = privateSpendKey;
-  let signature = await xkrUtils.signMessage(message, xkr_private_key);
+  let signature = await xkrUtils.signMessage(msg, xkr_private_key);
 
   let payload_json = {
-      "m": message.m,
+      "m": msg,
       "k": my_address,
       "s": signature,
       "brd": to_board,
@@ -1349,12 +1352,6 @@ ipcMain.on('startCall', async (e ,contact, calltype) => {
 
 
 
-ipcMain.on('endCall', async (e, peer, stream) => {
-    console.log('CALL STARTED')
-
-    return endCall(peer, stream)
-})
-
 let emitCall;
 let awaiting_callback;
 let active_calls = []
@@ -1532,27 +1529,6 @@ ipcMain.on('get-sdp', (e,data) => {
 
     }
 })
-
-
-function endCall (peer, stream) {
-    try {
-        peer.destroy();
-        stream.getTracks().forEach(function(track) {
-            track.stop();
-        });
-    } catch (e) {
-        console.log('TRACKS', e)
-    }
-
-    //var myvideo = document.getElementById('myvideo');
-
-    //myvideo.srcObject = stream;
-    //myvideo.pause();
-    //myvideo.srcObject = null;
-
-    awaiting_callback = false;
-
-}
 
 function expand_sdp_offer (compressed_string) {
 
