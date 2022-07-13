@@ -1,5 +1,5 @@
 <script>
-    import {onMount, onDestroy} from "svelte";
+    import {onMount} from "svelte";
     import {fade} from "svelte/transition";
     import {user} from "$lib/stores/user.js";
 
@@ -21,15 +21,26 @@
     //Get balance function
     async function getBalance() {
         let balance = await window.api.getBalance()
-        unlockedAmount = (balance[0] / 100000).toFixed(3)
-        lockedAmount = (balance[1] / 100000).toFixed(3)
+        user.update(current => {
+            return {
+                ...current,
+                balance: balance
+            }
+        })
     }
+
+    $: {
+        unlockedAmount = ($user.balance[0] / 100000).toFixed(3)
+        lockedAmount = ($user.balance[1] / 100000).toFixed(3)
+    }
+
+    $: console.log($user.balance);
 
     //If click we show opposite (locked/unlocked)
     const handleClick = () => {
-      console.log('logging interval');
         showFunds = !showFunds
     }
+
     //Auto "click" every X seconds
     setInterval(handleClick,6000)
 

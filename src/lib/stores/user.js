@@ -3,13 +3,17 @@ import {get_avatar} from "$lib/utils/hugin-utils.js";
 
 //Default values
 export const user = writable({
-    loggedIn: false,
-    username: 'nilsjr!',
+    loggedIn: true,
+    username: 'Anon',
+    balance: [0, 0],
     boardsArray: ['Home'],
     node: '',
     activeChat: null,
     huginAddress: '',
     syncState: '',
+    walletBlockCount: null,
+    localDaemonBlockCount: null,
+    networkBlockCount: null,
     call: {},
     thisBoard: null,
     contacts: null,

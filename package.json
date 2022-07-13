@@ -12,7 +12,7 @@
 		"dev:electron": "electron src/electron.cjs",
 		"build": "cross-env NODE_ENV=production npm run build:svelte && npm run build:electron",
 		"build:svelte": "vite build",
-		"build:electron": "electron-builder -mwl --config build.config.json",
+		"build:electron": "electron-builder --mac --arm64 --config build.config.json",
 		"start": "vite start"
 	},
 	"browserslist": [
@@ -52,8 +52,8 @@
 		"concurrently": "^6.5.1",
 		"cross-env": "^7.0.3",
 		"dotenv": "^8.6.0",
-		"electron": "^17.2.0",
-		"electron-builder": "^22.14.13",
+		"electron": "^19.0.8",
+		"electron-builder": "^23.1.0",
 		"electron-connect": "^0.6.3",
 		"electron-packager": "^15.4.0",
 		"electron-updater": "^4.6.5",

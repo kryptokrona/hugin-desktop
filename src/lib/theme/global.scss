@@ -1,8 +1,8 @@
 body {
-    background-color: #202020;
-    font-family: Montserratm, Arial, serif;
-    font-weight: 400;
-    margin: 0;
+  background-color: #202020;
+  font-family: Montserratm, Arial, serif;
+  font-weight: 400;
+  margin: 0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,6 +20,9 @@ body {
     --border-color: rgba(255, 255, 255, 0.1);
     --card-border: #252525;
     --card-background: #171717;
+    --input-border: rgba(255, 255, 255, 0.15);
+    --input-background: rgba(0, 0, 0, 0.4);
+    --input-placeholder: rgba(255, 255, 255, 0.6);
 
     --desktop-padding: 0 40px;
     --mobile-padding: 0 20px;
@@ -47,6 +50,9 @@ body {
     --border-color: rgba(0, 0, 0, 0.1);
     --card-border: #ced1d2;
     --card-background: #fff;
+    --input-border: rgba(255, 255, 255, 0.15);
+    --input-background: rgba(0, 0, 0, 0.4);
+    --input-placeholder: rgba(255, 255, 255, 0.6);
 
     --desktop-padding: 0 40px;
     --mobile-padding: 0 20px;
@@ -60,24 +66,23 @@ body {
 }
 
 @font-face {
-   font-family: 'Major Mono Display';
-   font-style: normal;
-   font-weight: 400;
-   src: url('../fonts/major-mono-display-v4-latin-regular.eot');
-   /* IE9 Compat Modes */
-   src: local('Major Mono Display Regular'), local('MajorMonoDisplay-Regular'),
-     url('../fonts/major-mono-display-v4-latin-regular.eot?#iefix') format('embedded-opentype'),
-     /* IE6-IE8 */
-     url('../fonts/major-mono-display-v4-latin-regular.woff2') format('woff2'),
-     /* Super Modern Browsers */
-     url('../fonts/major-mono-display-v4-latin-regular.woff') format('woff'),
-     /* Modern Browsers */
-     url('../fonts/major-mono-display-v4-latin-regular.ttf') format('truetype'),
-     /* Safari, Android, iOS */
-     url('../fonts/major-mono-display-v4-latin-regular.svg#MajorMonoDisplay') format('svg');
-   /* Legacy iOS */
- }
-
+  font-family: 'Major Mono Display';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/major-mono-display-v4-latin-regular.eot');
+  /* IE9 Compat Modes */
+  src: local('Major Mono Display Regular'), local('MajorMonoDisplay-Regular'),
+  url('../fonts/major-mono-display-v4-latin-regular.eot?#iefix') format('embedded-opentype'),
+    /* IE6-IE8 */
+  url('../fonts/major-mono-display-v4-latin-regular.woff2') format('woff2'),
+    /* Super Modern Browsers */
+  url('../fonts/major-mono-display-v4-latin-regular.woff') format('woff'),
+    /* Modern Browsers */
+  url('../fonts/major-mono-display-v4-latin-regular.ttf') format('truetype'),
+    /* Safari, Android, iOS */
+  url('../fonts/major-mono-display-v4-latin-regular.svg#MajorMonoDisplay') format('svg');
+  /* Legacy iOS */
+}
 
 
 @font-face {
@@ -99,12 +104,15 @@ body {
 }
 
 p {
-    font-family: "Roboto Mono", monospace;
+  font-family: "Roboto Mono", monospace;
+  color: white;
 }
 
-h1, h2, h3, h4 ,h5 ,h6 {
-    font-family: Montserrat, Arial, serif;
-    font-weight: normal;
+h1, h2, h3, h4, h5, h6 {
+  font-family: Montserrat, Arial, serif;
+  font-weight: normal;
+  color: white;
+  margin: 0;
 }
 
 code {
@@ -234,7 +242,7 @@ code {
 
 @keyframes border_rgb {
   0% {
-    border: 1px solid  #5f86f2;
+    border: 1px solid #5f86f2;
     box-shadow: 0 0 10px #5ff2f0;
   }
   20% {
@@ -270,39 +278,39 @@ code {
 
 
 .draggable {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-app-region: drag;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-app-region: drag;
 }
 
 .svelte-emoji-picker {
-    background-color: #1d1d1d!important;
-    border: none!important;
-    box-shadow: none!important;
-    color: white!important;
-    padding: 10px!important;
+  background-color: #1d1d1d !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: white !important;
+  padding: 10px !important;
 }
 
 .svelte-emoji-picker__search > input {
-    width: 90%!important;
+  width: 90% !important;
 }
 
 
 .svelte-emoji-picker__trigger {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 0;
-    border: none;
-    padding-right: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  border: none;
+  padding-right: 10px;
 }
 
 .svelte-emoji-picker__emoji-detail {
-    display: none;
+  display: none;
 }
 
 .svelte-emoji-picker__emoji-list {
-    height: 13.4rem!important;
+  height: 13.4rem !important;
 }
 
 .fa-svelte {
-    color: white;
+  color: white;
 }

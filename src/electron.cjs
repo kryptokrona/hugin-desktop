@@ -611,10 +611,11 @@ async function start_js_wallet(walletName, password, mynode) {
 
       try {
         //Start syncing
-        await sleep(1000 * 3);
+        await sleep(1000 * 10);
         backgroundSyncMessages()
         const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
             await js_wallet.getSyncStatus();
+        mainWindow.webContents.send('node-sync-data', {walletBlockCount, localDaemonBlockCount, networkBlockCount})
         if ((localDaemonBlockCount - walletBlockCount) < 2) {
             // Diff between wallet height and node height is 1 or 0, we are synced
             console.log('**********SYNCED**********');

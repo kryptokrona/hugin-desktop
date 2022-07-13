@@ -74,8 +74,20 @@ window.api.receive('node', async (node) => {
 				}
 		})
 	})
+
+		window.api.receive('node-sync-data', ({walletBlockCount, localDaemonBlockCount, networkBlockCount}) => {
+			user.update(current => {
+				return {
+					...current,
+					walletBlockCount,
+					localDaemonBlockCount,
+					networkBlockCount
+				}
+			})
+		})
 	
 	});
+
 
 
 

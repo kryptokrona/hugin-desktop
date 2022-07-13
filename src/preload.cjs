@@ -80,7 +80,7 @@ const WINDOW_API = {
 
   //HANDLE FINANCE
   getBalance: async () => {
-    return  await ipcRenderer.invoke('getBalance')
+    return await ipcRenderer.invoke('getBalance')
   },
 
   //HANDLE ADDRESS
