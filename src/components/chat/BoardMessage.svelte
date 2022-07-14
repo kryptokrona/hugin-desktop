@@ -31,6 +31,7 @@
     let reactIcon = '😊'
     let replyMessage = false
     let reactionCount
+    let time
     const dispatch = createEventDispatcher()
 
       //Hover functions
@@ -135,7 +136,7 @@
           <br>
           <br>
   </div>
-  <Time relative timestamp="{parseInt(message.t * 1000)}" />
+  <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
       <div class="reactions">
       {#if has_reaction}
         {#each reactions as reaction}
@@ -249,17 +250,16 @@
   }
 
   .reactions {
-      font-family: 'Roboto Mono';
-      color: black;
-      opacity: 0.9;
-      justify-content: flex-start;
-      width: 25px;
-      display: block;
-      flex: auto;
-      border-radius: 5px;
-      height: 25px;
-      margin-left: 10%;
-      margin-top: -20px;
+    font-family: 'Roboto Mono';
+    color: black;
+    opacity: 0.9;
+    width: 25px;
+    display: flex;
+    flex: auto;
+    border-radius: 5px;
+    height: 25px;
+    margin-left: 117px;
+    margin-top: -20px;
   }
     .reactions p {
       position: relative;
@@ -267,7 +267,7 @@
       display: inline-block;
     }
 
-    .time {
+    :global(time) {
       color: white;
       font-size: 9px;
       display: inline-block;
