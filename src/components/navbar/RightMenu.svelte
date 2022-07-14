@@ -1,7 +1,7 @@
 <script>
     import {fly} from 'svelte/transition'
     import {page} from "$app/stores";
-    import {user} from "$lib/stores/user.js";
+    import {user, boards, misc} from "$lib/stores/user.js";
     import callIcon from '/static/images/call.svg'
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -38,7 +38,7 @@
 
     const openAdd = () => {
 
-      user.update(data => {
+      boards.update(data => {
         return {
           ...data,
           addBoard: true,
@@ -52,7 +52,7 @@
 
     {#if $page.url.pathname === '/boards'}
         <div class="add" on:click={openAdd}></div>
-        {#each $user.boardsArray as board}
+        {#each $boards.boardsArray as board}
             <button class="boardicon" on:click={() => printBoard(board)}>{board}</button>
         {/each}
     {/if}

@@ -1,6 +1,6 @@
 <script>
     import {fly} from 'svelte/transition'
-    import {user, userAvatar} from "$lib/stores/user.js";
+    import {user, misc, userAvatar} from "$lib/stores/user.js";
     import msgIcon from '/static/images/msg.png'
     import brdIcon from '/static/images/brd.png'
     import settingsIcon from '/static/images/settings.png'
@@ -11,7 +11,7 @@
     let sync
     let avatar
 
-    $: sync = $user.syncState
+    $: sync = $misc.syncState
 
     userAvatar.subscribe(output => {
         avatar = output

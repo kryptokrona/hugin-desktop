@@ -1,7 +1,7 @@
 <script>
     import {onMount} from "svelte";
     import {fade} from "svelte/transition";
-    import {user} from "$lib/stores/user.js";
+    import {user, misc} from "$lib/stores/user.js";
 
     //Variables that holds the amounts
     let unlockedAmount
@@ -10,7 +10,7 @@
     //Handle state of sync and clicks
     let showFunds = true
     let sync = false
-    $: sync = $user.syncState
+    $: sync = $misc.syncState
 
     //Get balance and then look every 15 seconds
     onMount( () => {
@@ -21,7 +21,7 @@
     //Get balance function
     async function getBalance() {
         let balance = await window.api.getBalance()
-        user.update(current => {
+        misc.update(current => {
             return {
                 ...current,
                 balance: balance
@@ -30,11 +30,11 @@
     }
 
     $: {
-        unlockedAmount = ($user.balance[0] / 100000).toFixed(3)
-        lockedAmount = ($user.balance[1] / 100000).toFixed(3)
+        unlockedAmount = ($misc.balance[0] / 100000).toFixed(3)
+        lockedAmount = ($misc.balance[1] / 100000).toFixed(3)
     }
 
-    $: console.log($user.balance);
+    $: console.log($misc.balance);
 
     //If click we show opposite (locked/unlocked)
     const handleClick = () => {

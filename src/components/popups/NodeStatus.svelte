@@ -1,6 +1,6 @@
 <script>
     // Copyright (c) 2022, The Kryptokrona Developers
-    import {user} from "$lib/stores/user.js";
+    import {user, misc} from "$lib/stores/user.js";
     import {fade, fly} from "svelte/transition";
     import Close from "$components/buttons/Close.svelte";
     import Button from "$components/buttons/Button.svelte";
@@ -9,7 +9,7 @@
     let progress
 
     $: {
-        progress = (($user.walletBlockCount / $user.localDaemonBlockCount) * 100)
+        progress = (($misc.walletBlockCount / $misc.localDaemonBlockCount) * 100)
         progress > 99.99 ? progress = 100 : progress
     }
 
@@ -23,11 +23,11 @@
         </div>
         <div>
             <h5 style="margin: 0 0 5px 5px;">Node</h5>
-            <input disabled type="text" placeholder="Nickname" bind:value={$user.node}>
+            <input disabled type="text" placeholder="Nickname" bind:value={$misc.node}>
         </div>
         <div>
             <h5 style="margin: 0 0 5px 5px;">Status</h5>
-            <input disabled type="text" placeholder="Node Status" bind:value={$user.nodeStatus}>
+            <input disabled type="text" placeholder="Node Status" bind:value={$misc.nodeStatus}>
         </div>
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px">
