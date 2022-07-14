@@ -6,6 +6,7 @@
     import {user, boards} from '$lib/stores/user.js'
     import Reaction from "/src/components/chat/Reaction.svelte";
     import EmojiSelector from 'svelte-emoji-selector'
+    import Time, { svelteTime } from "svelte-time";
     export let msg
     export let msgFrom
     export let board
@@ -134,11 +135,16 @@
           <br>
           <br>
   </div>
-  <p class="time">{message.t}</p>
+  <Time relative timestamp="{parseInt(message.t * 1000)}" />
       <div class="reactions">
       {#if has_reaction}
         {#each reactions as reaction}
-          <Reaction on:sendReaction={(e) => sendReactMsg(e)} thisReaction={reaction} reacts={message.react} emoji={reaction.m} react={react}/>
+          <Reaction
+          on:sendReaction={(e) => sendReactMsg(e)}
+           thisReaction={reaction}
+           reacts={message.react}
+           emoji={reaction.m}
+           react={react}/>
         {/each}
       {/if}
   </div>
