@@ -3,18 +3,13 @@
     import sendIcon from '/static/images/send.png'
     import EmojiSelector from 'svelte-emoji-selector';
     import {user, boards} from "$lib/stores/user.js";
-    
     const dispatch = createEventDispatcher();
-    let emojipick = false;
     //This handles the emojis, lets fork the repo and make a darker theme.
     function onEmoji(event) {
       console.log('event', event);
         if (messageInput) {
             messageInput += event.detail
         } else messageInput = event.detail
-        if (emojipick) {
-          sendMsg()
-        }
     }
 
     //Input data to dispatch
@@ -44,19 +39,6 @@
         enableSend = !!messageInput;
     }
 
-    $: if ($boards.replyTo.emoji) {
-
-      console.log('subscribin', $boards.replyTo)
-          console.log('clicking')
-          clickEmoji()
-        }
-
-      async function clickEmoji() {
-          let emojipicker = document.getElementsByClassName('svelte-emoji-picker__trigger')
-          console.log('emojipicker', emojipicker)
-          emojipicker[0].click()
-          console.log('clicked')
-        }
 
 </script>
 
