@@ -61,7 +61,7 @@
         <div class="nodestatus">
           <h3>Status</h3>
             <h4>Address</h4>
-           <p>{$user.node}</p>
+           <p>{$misc.node}</p>
           <div class="status">
                 <h4>Status</h4>
 

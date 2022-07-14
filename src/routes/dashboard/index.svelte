@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import Balance from "/src/components/finance/Balance.svelte";
-  import { user, userAvatar } from "$lib/stores/user.js";
+  import { user, userAvatar, misc, boards } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import { capitalizeFirstLetter } from "$lib/utils/utils";
   import Globe from "$components/buttons/Globe.svelte";
@@ -27,7 +27,7 @@
     myBoards = await window.api.getMyBoards();
     console.log("respone?", myBoards);
 
-    user.update(data => {
+    boards.update(data => {
       return {
         ...data,
         boardsArray: myBoards
@@ -44,7 +44,7 @@
 
   $: {
     huginAddress = $user.huginAddress;
-    myBoards = $user.boardsArray;
+    myBoards = $boards.boardsArray;
     address = huginAddress.substring(0, 99);
     messageKey = huginAddress.substring(99, 163);
     avatar = $userAvatar;
@@ -63,15 +63,15 @@
     <Balance />
     <div style="display: flex; align-items: center; justify-content: center; gap: 15px">
       <Globe
-        yellow={$user.nodeStatus === 'Syncing 📡'}
-        red={$user.nodeStatus === 'Not Synced' || $user.nodeStatus === 'Disconnected 🚨' || $user.nodeStatus === 'Dead node 🚨'}
-        blink={$user.nodeStatus !== 'Synced ✅'}
+        yellow={$misc.nodeStatus === 'Syncing 📡'}
+        red={$misc.nodeStatus === 'Not Synced' || $misc.nodeStatus === 'Disconnected 🚨' || $misc.nodeStatus === 'Dead node 🚨'}
+        blink={$misc.nodeStatus !== 'Synced ✅'}
         on:click={() => nodePopup = !nodePopup}
       />
       <Warning
-        blink={($user.balance[1] !== 0)}
-        grey={($user.balance[1] === 0)}
-        yellow={($user.balance[1] !== 0)}
+        blink={($misc.balance[1] !== 0)}
+        grey={($misc.balance[1] === 0)}
+        yellow={($misc.balance[1] !== 0)}
         red={dc} on:click={() => fundsPopup = !fundsPopup}
       />
     </div>

@@ -8,7 +8,7 @@
 	import TrafficLights from "$components/TrafficLights.svelte";
 
 	//Stores
-	import { user } from "$lib/stores/user.js";
+	import { user, misc } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
@@ -45,7 +45,7 @@
 
 		//Handle sync status
 		window.api.receive('sync', res => {
-			user.update(user => {
+			misc.update(user => {
 				return{
 					...user,
 					syncState: res
@@ -67,7 +67,7 @@
 
 window.api.receive('node', async (node) => {
 
-		user.update(oldData => {
+		misc.update(oldData => {
 				return {
 						...oldData,
 						node: node
@@ -76,7 +76,7 @@ window.api.receive('node', async (node) => {
 	})
 
 		window.api.receive('node-sync-data', ({walletBlockCount, localDaemonBlockCount, networkBlockCount}) => {
-			user.update(current => {
+			misc.update(current => {
 				return {
 					...current,
 					walletBlockCount,
@@ -85,7 +85,7 @@ window.api.receive('node', async (node) => {
 				}
 			})
 		})
-	
+
 	});
 
 
