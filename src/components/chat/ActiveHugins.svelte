@@ -2,7 +2,7 @@
     import {createEventDispatcher, onMount} from 'svelte'
     import {fade} from "svelte/transition";
     import {boardMessages} from "$lib/stores/boardmsgs.js";
-    import {user} from "$lib/stores/user.js";
+    import {user, boards} from "$lib/stores/user.js";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
 
     const dispatch = createEventDispatcher();
@@ -31,7 +31,7 @@
 
 <div class="wrapper">
 <div class="top">
-    <h2>{$user.thisBoard}</h2>
+    <h2>{$boards.thisBoard}</h2>
     </div>
     <div class="active_hugins">
         <h4>Active Hugins</h4>
