@@ -5,6 +5,7 @@
     import {createEventDispatcher, onMount} from "svelte";
     import {user, boards} from '$lib/stores/user.js'
     import Reaction from "/src/components/chat/Reaction.svelte";
+    import EmojiSelector from 'svelte-emoji-selector'
     export let msg
     export let msgFrom
     export let board
@@ -59,17 +60,18 @@
       const sendReactMsg = (e) => {
         console.log('wanna send', e.detail);
         dispatch('reactTo', {
-          msg: e.detail.msg,
-          reply: e.detail.reply,
-          brd: e.detail.brd }
-        )
+          text: e.detail.msg,
+          reply: hash
+        })
         //window.api.sendBoardMsg()
       }
 
       const reactTo = (e) => {
-      reply_to_this = true
-        console.log('reactto');
-        dispatch('reactMenu')
+        console.log('reactto', e);
+        dispatch('reactTo', {
+          text: e.detail,
+          reply: hash
+        })
 
       }
 
@@ -124,7 +126,7 @@
           <div class="options" on:mouseenter={enter} on:mouseleave={leave} class:active>
         {#if active}
           <p class="reply_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
-          <p class="react_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={reactTo}>{reactIcon}</p>
+          <EmojiSelector on:emoji={reactTo}/>
         {:else}
           <p></p>
         {/if}
