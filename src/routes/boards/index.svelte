@@ -52,7 +52,8 @@
         })
 
     //Send message to store and DB
-    const sendboardMsg = e => {
+    function sendboardMsg(e) {
+      console.log('wanna send this', e);
         let msg = e.detail.text
         let myaddr = $user.huginAddress.substring(0,99)
         let time = Date.now()
@@ -61,8 +62,6 @@
         //Reaction switch
         if (e.detail.reply) {
           replyto = e.detail.reply
-          brd = e.detail.brd
-          msg = e.detail.msg
         }
         //Construct a new json object (myBoardMessage) to be able to print our message instant.
         let myBoardMessage = {m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time}
@@ -116,7 +115,6 @@
             replyTo: {to: hash, nick: nickname, reply: true, emoji: emoji},
         }
       })
-
 
     }
 
@@ -240,10 +238,6 @@
       $ : fixedBoards
       //Reactive depending on user.addBoard boolean, displays AddBoard component.
       $ : wantToAdd = boards.addBoard
-      //This handles the emojis, lets fork the repo and make a darker theme.
-      const reactMenu = (hash, name) => {
-        replyToMessage(hash, name, true)
-      }
 
       $: replyTrue = $boards.replyTo.reply
 
@@ -258,7 +252,7 @@
 {#if replyTrue}
  <div class="reply_to_exit" class:reply_to={replyTrue} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$boards.replyTo.nick}</div>
 {/if}
-        <ChatInput on:message={sendboardMsg}/>
+        <ChatInput on:message={(e) => sendboardMsg(e)}/>
         <BoardWindow>
 
         <!-- {#if noMsgs}
@@ -266,8 +260,7 @@
         {/if} -->
                 {#each fixedBoards as message (message.hash)}
                 <BoardMessage
-                 on:reactMenu={reactMenu(message.hash, message.n)}
-                 on:reactTo={sendboardMsg}
+                 on:reactTo={(e) => sendboardMsg(e)}
                  on:replyTo={(e)=> replyToMessage(message.hash, message.n)}
                   message={message}
                   reply={message.r}
