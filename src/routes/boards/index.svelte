@@ -5,12 +5,11 @@
     import {boardMessages} from '$lib/stores/boardmsgs.js';
     import BoardMessage from "/src/components/chat/BoardMessage.svelte";
     import ActiveHugins from "/src/components/chat/ActiveHugins.svelte";
-    import {user} from '$lib/stores/user.js'
+    import {user, boards} from '$lib/stores/user.js'
     import {onMount} from "svelte";
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
     import RightMenu from "/src/components/navbar/RightMenu.svelte";
-    import EmojiSelector from 'svelte-emoji-selector';
 
     let boardMsgs = [];
     let replyto = ''
@@ -24,10 +23,11 @@
     let fixedBoards = []
     let react = false
     let unreadMsgs = []
+    let replyTrue = false
 
     onMount(async () => {
       console.log('mounting');
-      if ($user.thisBoard == null) {
+      if ($boards.thisBoard == null) {
         thisBoard = 'Home'
       }
       printBoard(thisBoard)
@@ -37,7 +37,7 @@
 
           //*TODO*//Keep logs to experiment with toast popups
           console.log('boardMsg', data.brd)
-          console.log('user', $user.thisBoard);
+          console.log('user', $boards.thisBoard);
 
           if (data.brd === thisBoard) {
             //Push new message to store
@@ -87,15 +87,15 @@
     }
 
     //Reactive, updates thisBoard.
-    $ : thisBoard = $user.thisBoard
+    $ : thisBoard = $boards.thisBoard
 
     $ : console.log('ThisBoard', thisBoard);
 
     //Exit reply mode
     const replyExit = () => {
       console.log('reply exit');
-      replyto = ''
-      user.update(data => {
+      replyto = false
+      boards.update(data => {
         return {
           ...data,
           replyTo: {reply: false},
@@ -109,21 +109,15 @@
         await replyExit()
       }
       replyto = hash
-      user.update(data => {
-        return {
-          ...data,
-          replyTo: {to: hash, nick: nickname, reply: true}
-        }
-      })
 
-      if (!emoji) return
-
-        user.update(data => {
+        boards.update(data => {
           return {
             ...data,
-            replyTo: {to: hash, nick: nickname, reply: true, emoji: true},
+            replyTo: {to: hash, nick: nickname, reply: true, emoji: emoji},
         }
       })
+
+
     }
 
     //Default value should be false to hide the AddBoard form.
@@ -135,7 +129,7 @@
         wantToAdd = !wantToAdd
 
         if (!wantToAdd) {
-          user.update(data => {
+          boards.update(data => {
             return {
               ...data,
               addBoard: false,
@@ -143,18 +137,11 @@
         })
         }
     }
-
-    $ : if ($user.replyTo.reply) {
-      console.log('true');
-    } else {
-      replyExit()
-    }
-
     //Adds new board to boardArray and prints that board, its probably empty.
     const addNewBoard = (e) => {
 
       let board = e.detail.brd
-      user.update(current => {
+      boards.update(current => {
            return {
                ...current,
                boardsArray: [...current.boardsArray, board]
@@ -196,13 +183,13 @@
         //Check for emojis and filter them
         await checkReactions()
         //Reactions should be set, update thisBoard in store and set reply to false.
-        user.update(data => {
+        boards.update(data => {
           return {
             ...data,
             thisBoard: board
           }
         })
-        user.update(data => {
+        boards.update(data => {
           return {
             ...data,
             replyTo: {reply: false},
@@ -252,11 +239,15 @@
 
       $ : fixedBoards
       //Reactive depending on user.addBoard boolean, displays AddBoard component.
-      $ : wantToAdd = $user.addBoard
+      $ : wantToAdd = boards.addBoard
       //This handles the emojis, lets fork the repo and make a darker theme.
-      const reactMenu = (e) => {
-        replyToMessage(e.detail.hash, e.detail.name, true)
+      const reactMenu = (hash, name) => {
+        replyToMessage(hash, name, true)
       }
+
+      $: replyTrue = $boards.replyTo.reply
+
+
 </script>
 
 {#if wantToAdd}
@@ -264,17 +255,28 @@
 {/if}
 <main>
 
-{#if $user.replyTo.reply}
- <div class="reply_to_exit" class:reply_to={$user.replyTo.reply} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$user.replyTo.nick}</div>
+{#if replyTrue}
+ <div class="reply_to_exit" class:reply_to={replyTrue} on:click={()=> replyExit()}>{reply_exit_icon} Reply to {$boards.replyTo.nick}</div>
 {/if}
-        <ChatInput on:message={sendboardMsg} reply_to={$user.replyTo.reply}/>
+        <ChatInput on:message={sendboardMsg}/>
         <BoardWindow>
 
         <!-- {#if noMsgs}
           <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
         {/if} -->
                 {#each fixedBoards as message (message.hash)}
-                <BoardMessage on:reactMenu={reactMenu} on:reactTo={sendboardMsg} on:replyTo={(e)=> replyToMessage(message.hash, message.n)} message={message} reply={message.r} msg={message.m} myMsg={message.sent} signature={message.s} board={message.brd} nickname={message.n} msgFrom={message.k}
+                <BoardMessage
+                 on:reactMenu={reactMenu(message.hash, message.n)}
+                 on:reactTo={sendboardMsg}
+                 on:replyTo={(e)=> replyToMessage(message.hash, message.n)}
+                  message={message}
+                  reply={message.r}
+                  msg={message.m}
+                  myMsg={message.sent}
+                  signature={message.s}
+                  board={message.brd}
+                  nickname={message.n}
+                  msgFrom={message.k}
                   timestamp={message.t} hash={message.hash}/>
 
                 {/each}
