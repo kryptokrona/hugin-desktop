@@ -66,6 +66,7 @@ function exitHover(){
 
 .reaction {
   cursor: pointer;
+  margin-left: 7px;
 }
 
 .hoverReactions {
@@ -77,6 +78,7 @@ function exitHover(){
   border-radius: 5px;
   display: flex;
   width: min-content;
+  position: absolute;
 }
 
 .reactor {
