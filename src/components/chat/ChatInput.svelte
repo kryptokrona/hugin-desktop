@@ -2,9 +2,10 @@
     import {createEventDispatcher} from 'svelte'
     import sendIcon from '/static/images/send.png'
     import EmojiSelector from 'svelte-emoji-selector';
-    import {user} from "$lib/stores/user.js";
+    import {user, boards} from "$lib/stores/user.js";
+    
     const dispatch = createEventDispatcher();
-    let emojipick = false
+    let emojipick = false;
     //This handles the emojis, lets fork the repo and make a darker theme.
     function onEmoji(event) {
       console.log('event', event);
@@ -38,33 +39,25 @@
         emojipick = false
     }
 
-    $: console.log('$user.replyTo.emoji', $user.replyTo.emoji);
-
-    $: if ($user.replyTo.emoji) {
-      console.log('emoji activated');
-      console.log('should click');
-      let emojipicker = document.getElementsByClassName('svelte-emoji-picker__trigger');
-      console.log('emojipicker', emojipicker);
-      emojipicker[0].click();
-      console.log('clicked');
-        clickEmoji()
-
-      }
-
-      const clickEmoji = async (e) => {
-        console.log('clicked activate', $user.replyTo);
-        user.update(data => {
-          return {
-            ...data,
-            replyTo: {to: $user.replyTo.to, nick: $user.replyTo.nick, reply: true, emoji: false},
-        }
-      })
-
-      }
     //Checks if input is empty
     $: {
         enableSend = !!messageInput;
     }
+
+    $: if ($boards.replyTo.emoji) {
+
+      console.log('subscribin', $boards.replyTo)
+          console.log('clicking')
+          clickEmoji()
+        }
+
+      async function clickEmoji() {
+          let emojipicker = document.getElementsByClassName('svelte-emoji-picker__trigger')
+          console.log('emojipicker', emojipicker)
+          emojipicker[0].click()
+          console.log('clicked')
+        }
+
 </script>
 
 <div class="wrapper">

@@ -3,7 +3,7 @@
     import {fade} from 'svelte/transition'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {createEventDispatcher, onMount} from "svelte";
-    import {user} from '$lib/stores/user.js'
+    import {user, boards} from '$lib/stores/user.js'
     import Reaction from "/src/components/chat/Reaction.svelte";
     export let msg
     export let msgFrom
@@ -69,16 +69,13 @@
       const reactTo = (e) => {
       reply_to_this = true
         console.log('reactto');
-        dispatch('reactMenu', {
-          reply: message.hash,
-          name: message.n
-        })
+        dispatch('reactMenu')
 
       }
 
-      $ : if ($user.replyTo.reply == false) {
+      $ : if ($boards.replyTo.reply == false) {
         reply_to_this = false
-      } else if ( $user.replyTo.to == hash) {
+      } else if ( $boards.replyTo.to == hash) {
         reply_to_this = true
       }
 
