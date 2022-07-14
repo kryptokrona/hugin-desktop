@@ -5,21 +5,28 @@ import {get_avatar} from "$lib/utils/hugin-utils.js";
 export const user = writable({
     loggedIn: true,
     username: 'Anon',
-    balance: [0, 0],
-    boardsArray: ['Home'],
-    node: '',
     activeChat: null,
     huginAddress: '',
+    call: {},
+    contacts: null,
+    addChat: false,
+})
+
+export const boards = writable({
+    addBoard: false,
+    replyTo: {reply: false},
+    thisBoard: null,
+    boardsArray: ['Home'],
+})
+
+export const misc = writable({
     syncState: '',
     walletBlockCount: null,
     localDaemonBlockCount: null,
     networkBlockCount: null,
-    call: {},
-    thisBoard: null,
-    contacts: null,
-    addBoard: false,
-    addChat: false,
-    replyTo: {reply: false}
+    balance: [0, 0],
+    node: '',
+    nodeStatus: '',
 })
 
 export const userAvatar = derived(user, $user => {
