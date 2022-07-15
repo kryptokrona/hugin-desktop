@@ -56,7 +56,7 @@
       console.log('wanna send this', e);
         let msg = e.detail.text
         let myaddr = $user.huginAddress.substring(0,99)
-        let time = Date.now()
+        let time = Date.now() / 1000
         let myName = $user.username
         let brd = thisBoard
         //Reaction switch
@@ -75,7 +75,7 @@
 
       if (boardMsg.r.length === 64 && boardMsg.m.length < 4 && containsOnlyEmojis(boardMsg.m)) {
         updateReactions(boardMsg)
-      } else if (boardMsg.m.length > 0 && !containsOnlyEmojis(boardMsg.m)) {
+      } else if (boardMsg.m.length > 0) {
         console.log('pushin');
         fixedBoards.unshift(boardMsg)
       }
