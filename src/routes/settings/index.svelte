@@ -1,7 +1,7 @@
 <script>
     import { fade } from 'svelte/transition';
     import {nodelist} from "$lib/stores/nodes.js";
-    import {user} from "$lib/stores/user.js";
+    import {user, misc} from "$lib/stores/user.js";
     import NodeList from '/src/components/settings/NodeList.svelte';
     import {onMount} from "svelte";
 
@@ -9,21 +9,14 @@
     let walletHeight = ''
     let synced = false
     let status = 'Connecting'
-    onMount(async () => {
-      getHeight()
+
+    window.api.receive('node-sync-data', (e) => {
+      console.log('e', e);
+      walletHeight = e.walletBlockCount
+      networkHeight = e.networkBlockCount
+      console.log('status', walletHeight, networkHeight);
     })
-    async function getHeight() {
 
-      let heightStatus = await window.api.getHeight()
-      walletHeight = heightStatus.walletHeight
-      networkHeight = heightStatus.networkHeight
-
-    console.log('wallet', walletHeight);
-    console.log('network', networkHeight);
-
-    }
-
-    setInterval(getHeight, 10000)
 
     //Change node defaults values and triggers getHeight
     const changeNode = () => {
@@ -35,6 +28,9 @@
       getHeight()
 
     }
+
+    $: walletHeight
+    $: networkHeight
 
     //Reactive if statement
     $: { if (networkHeight - walletHeight < 2) {

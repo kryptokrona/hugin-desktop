@@ -2,7 +2,7 @@
 
 import { fade } from 'svelte/transition';
 import {nodelist} from "$lib/stores/nodes.js";
-import {user} from "$lib/stores/user.js";
+import {user, misc} from "$lib/stores/user.js";
 import GreenButton from "/src/components/buttons/GreenButton.svelte";
 import {createEventDispatcher} from "svelte";
 
@@ -48,7 +48,7 @@ export let enableConnect
 
       dispatch('changeNode')
 
-      user.update(oldData => {
+      misc.update(oldData => {
           return {
               ...oldData,
               node: nodeInput
