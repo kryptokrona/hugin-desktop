@@ -9,6 +9,16 @@
     let walletHeight = ''
     let synced = false
     let status = 'Connecting'
+    onMount(async () => {
+      getHeight()
+    })
+    async function getHeight() {
+
+      let heightStatus = await window.api.getHeight()
+      walletHeight = heightStatus.walletHeight
+      networkHeight = heightStatus.networkHeight
+
+    }
 
     window.api.receive('node-sync-data', (e) => {
       console.log('e', e);
@@ -16,7 +26,6 @@
       networkHeight = e.networkBlockCount
       console.log('status', walletHeight, networkHeight);
     })
-
 
     //Change node defaults values and triggers getHeight
     const changeNode = () => {
@@ -28,9 +37,6 @@
       getHeight()
 
     }
-
-    $: walletHeight
-    $: networkHeight
 
     //Reactive if statement
     $: { if (networkHeight - walletHeight < 2) {
