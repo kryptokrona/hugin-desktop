@@ -6,19 +6,31 @@
 	import Webrtc from "/src/routes/webrtc/index.svelte";
 	import { SvelteToast } from '@zerodevx/svelte-toast'
 	import TrafficLights from "$components/TrafficLights.svelte";
+	import CallerMenu from "/src/components/webrtc/CallerMenu.svelte";
 
 	//Stores
-	import { user, misc } from "$lib/stores/user.js";
+	import { user, misc, webRTC } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
 	import '/src/lib/theme/global.scss'
+		$: console.log('webrtc', $webRTC.peer);
 
 	let ready = false;
 
 	let incoming_call
+	let showCallerMenu = false
+
 	const closePopup = () => {
 		incoming_call = false
+	}
+
+	const endThisCall = () => {
+		showCallerMenu = false
+	}
+
+	const openCallerMenu = () => {
+		showCallerMenu = true
 	}
 
 	onMount( async () => {
@@ -88,7 +100,7 @@ window.api.receive('node', async (node) => {
 
 	});
 
-
+	$: console.log('$user.call.out', $user.call.out);
 
 
 	const options = {
@@ -110,13 +122,17 @@ window.api.receive('node', async (node) => {
 <TrafficLights/>
 
 	{#if $user.loggedIn && incoming_call}
-		<IncomingCall on:click={closePopup} paused={!incoming_call}/>
+		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
+	{/if}
+
+	{#if $user.loggedIn && showCallerMenu}
+		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu}/>
 	{/if}
 
 	{#if $user.loggedIn}
 		<LeftMenu />
 		<Webrtc />
-		<RightMenu/>
+		<RightMenu on:startCall={openCallerMenu}/>
 	{/if}
 
 	<slot />
