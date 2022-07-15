@@ -27,6 +27,14 @@
     const startCall = async (contact, calltype) => {
         console.log(contact, calltype)
         window.api.startCall(contact, calltype)
+        dispatch('startCall')
+        user.update(data => {
+          return {
+            ...data,
+            call: {sender: contact, type: calltype, out: true},
+            callerMenu: true,
+          }
+        })
     }
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     const printBoard = async (board) => {
