@@ -8,6 +8,7 @@ export const user = writable({
     activeChat: null,
     huginAddress: '',
     call: {},
+    callerMenu: false,
     contacts: null,
     addChat: false,
 })
@@ -27,6 +28,11 @@ export const misc = writable({
     balance: [0, 0],
     node: '',
     nodeStatus: '',
+})
+
+export const webRTC = writable({
+  stream: {},
+  peer: {},
 })
 
 export const userAvatar = derived(user, $user => {
