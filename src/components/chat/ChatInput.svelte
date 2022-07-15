@@ -31,7 +31,6 @@
             text: messageInput
         });
         messageInput = ''
-        emojipick = false
     }
 
     //Checks if input is empty
