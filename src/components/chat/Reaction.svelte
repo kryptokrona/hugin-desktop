@@ -103,7 +103,7 @@ function exitHover(){
 .count {
   font-family: "Montserrat";
   font-size: 10px;
-  display: table-row;
+  display: inline;
   color: white;
 }
 </style>
