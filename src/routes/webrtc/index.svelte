@@ -3,6 +3,7 @@
     import {fade} from "svelte/transition";
     import Peer from "simple-peer";
     import {onMount} from "svelte";
+    import {user, webRTC} from "$lib/stores/user.js";
 
     let stream;
     let myVideo;
@@ -126,7 +127,12 @@
                     // return recovered_data.sdp;
                 }
             })
-
+            webRTC.update(() => {
+              return {
+                peer: peer1,
+                stream: stream,
+              }
+            })
 
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
             console.log('video codecs', video_codecs);
@@ -149,7 +155,7 @@
 
             // select the desired transceiver
             //transceiverList[1].setCodecPreferences(custom_codecs)
-
+            console.log('webrtc', $user.webRTC);
             console.log('codec set');
 
 
