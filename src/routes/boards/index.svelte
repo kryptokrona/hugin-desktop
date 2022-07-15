@@ -225,7 +225,6 @@
           fixedBoards.push(a)
         })
           fixedBoards = fixedBoards
-          console.log('fixed', fixedBoards);
       }
 
       //Checks for messages that only coinatins emojis.
@@ -235,9 +234,9 @@
         return onlyEmojis.length === visibleChars.length
       }
 
-      $ : fixedBoards
+      $: fixedBoards
       //Reactive depending on user.addBoard boolean, displays AddBoard component.
-      $ : wantToAdd = boards.addBoard
+      $: wantToAdd = boards.addBoard
 
       $: replyTrue = $boards.replyTo.reply
 

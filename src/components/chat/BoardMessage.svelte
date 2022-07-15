@@ -40,6 +40,7 @@
     	}
 
     	function leave() {
+        if (active && reply_to_this) return
     		active = false;
     	}
 
@@ -58,6 +59,7 @@
                 reply: 'reply',
             })
       }
+
 
       const sendReactMsg = (e) => {
         console.log('wanna send', e.detail);
@@ -125,7 +127,7 @@
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
              <p class="nickname">{nickname}</p><br>
         <p>{msg}</p><br>
-          <div class="options" on:mouseenter={enter} on:mouseleave={leave} class:active>
+          <div class="options" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
         {#if active}
           <p class="reply_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
           <EmojiSelector on:emoji={reactTo}/>
