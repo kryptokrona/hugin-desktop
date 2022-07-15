@@ -4,7 +4,7 @@ import {createEventDispatcher, onMount} from "svelte";
 
 const dispatch = createEventDispatcher()
 
-export let reacts
+export let reacts = []
 export let reactCount = 0
 export let thisReaction
 export let emoji
