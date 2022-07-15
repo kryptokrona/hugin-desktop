@@ -51,13 +51,13 @@ function exitHover(){
   <p class="count">{reactCount}</p>
 {/if}
 
-{#if hoverReaction}
-<div class="reactors">
- {#each filterReactors as reactors}
-      <p class="reactor">{reactors.n}</p>
- {/each}
- </div>
-{/if}
+  {#if hoverReaction}
+  <div class="reactors">
+   {#each filterReactors as reactors}
+        <p class="reactor">{reactors.n}</p>
+   {/each}
+   </div>
+  {/if}
 
 </div>
 
@@ -66,7 +66,10 @@ function exitHover(){
 
 .reaction {
   cursor: pointer;
-  margin-left: 7px;
+  margin-left: 10px;
+  width: max-content;
+  display: contents;
+  position: relative;
 }
 
 .hoverReactions {
@@ -76,24 +79,25 @@ function exitHover(){
 .reactors {
   color: black;
   border-radius: 5px;
-  display: flex;
-  width: min-content;
+  width: max-content;
+  display: inline;
+  margin-top: 20px;
+  margin-left: -30px;
   position: absolute;
 }
 
 .reactor {
-  color: black;
   font-family: "Roboto Mono";
   background: white;
   color: black;
   border-radius: 2px;
+  padding: 3px;
+  margin-right: 2px;
   font-size: 11px;
   display: inline-block;
   margin-top: 5px;
-  width: fit-content;
-  display: block;
-  padding: 2px;
-  margin-right: 2px;
+  width: max-content;
+  position: relative;
 }
 
 .count {

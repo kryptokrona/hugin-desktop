@@ -256,11 +256,12 @@
     color: black;
     opacity: 0.9;
     width: 25px;
-    display: flex;
+    display: inline;
     flex: auto;
     border-radius: 5px;
+    position: relative;
     height: 25px;
-    margin-left: 117px;
+    margin-left: 25px;
     margin-top: -20px;
   }
     .reactions p {
