@@ -1062,9 +1062,11 @@ async function saveMessageSQL(msg) {
   let key = sanitizeHtml(msg.k)
   let sent = msg.sent
 
-  //Checking if private msg is a call
-  console.log('Checking if private msg is a call');
-  let message = parseCall(text, addr)
+  if (!sent) {
+    //Checking if private msg is a call
+    console.log('Checking if private msg is a call');
+    let message = parseCall(text, addr)
+  }
 
   if (msg.type === 'sealedbox') {
 
@@ -1295,7 +1297,6 @@ async function sendMessage(message, receiver) {
 
     let sentMsg = {msg: message, k: messageKey, from: address, sent: true, t: timestamp}
     if (result.success) {
-        saveMessageSQL(sentMsg)
         known_pool_txs.push(result.transactionHash)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         saveMessageSQL(sentMsg)
