@@ -404,7 +404,7 @@ function messagesTable() {
              'SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc',
              'lol',
              'Home',
-             '1650919475320',
+             '1650919475',
              'Hugin Messenger',
              '',
              'b80a4dc4fa60bf26dd31161702a165e43295adc1895f7333ad9eeeb819e20936',
@@ -761,7 +761,7 @@ async function saveContact(hugin_address, nickname=false, first=false) {
   );
 
   if (first) {
-    saveMessageSQL({msg: 'New friend added!', k: key, from: addr, sent: true, t: Date.now()})
+    saveMessageSQL({msg: 'New friend added!', k: key, from:addr, chat: addr, sent: true, t: Date.now()})
   }
 
 }
@@ -1061,6 +1061,9 @@ async function saveMessageSQL(msg) {
   let timestamp = escape(msg.t)
   let key = sanitizeHtml(msg.k)
   let sent = msg.sent
+  if (msg.chat) {
+    addr = msg.chat
+  }
 
   if (!sent) {
     //Checking if private msg is a call
@@ -1090,7 +1093,12 @@ async function saveMessageSQL(msg) {
              timestamp
          ]
      );
+
      let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
+     if (sent) {
+       mainWindow.webContents.send('sent', newMsg)
+       return
+     }
      console.log('sending newmessage');
      mainWindow.webContents.send('newMsg', newMsg)
  }
@@ -1139,6 +1147,10 @@ ipcMain.on('answerCall', (e, msg, contact) => {
     mainWindow.webContents.send('answer-call', msg, contact)
     }
 )
+
+ipcMain.on('endCall', async (e, peer, stream) => {
+  mainWindow.webContents.send('endCall', peer, stream)
+})
 
 async function sendBoardMessage(message) {
   console.log('sending board', message);
@@ -1295,12 +1307,11 @@ async function sendMessage(message, receiver) {
         Buffer.from(payload_hex, 'hex')
     );
 
-    let sentMsg = {msg: message, k: messageKey, from: address, sent: true, t: timestamp}
+    let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
     if (result.success) {
         known_pool_txs.push(result.transactionHash)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
         saveMessageSQL(sentMsg)
-        mainWindow.webContents.send('sent', sentMsg)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
