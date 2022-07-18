@@ -4,8 +4,10 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user} from "$lib/stores/user.js";
+    import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
+    import videoIcon from '/static/images/video.svg'
+
 
     const dispatch = createEventDispatcher();
 
@@ -16,24 +18,30 @@
     let hangUp = false
     let peer
     let stream
+    let calling = true
+    let toggle = false
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
         startTone.play()
+
     })
+
+    $: if ($webRTC.myStream) {
+      stream = $webRTC.myStream
+    }
 
     //When a user clicks answer
     const endCall = () => {
 
+        //We delay the answerCall for routing purposes
+        window.api.endCall($webRTC.peer, stream)
+
+        //We pause the ringtone and destroy the popup
+        endTone.play()
 
         dispatch('endCall')
         //Variable to activate visual feedback
         hangUp = true
-
-        //We delay the answerCall for routing purposes
-        window.api.endCall(peer, stream)
-
-        //We pause the ringtone and destroy the popup
-        endTone.play()
 
     }
 
@@ -42,8 +50,15 @@
         endTone.pause()
     })
 
+    const toggleWindow = () => {
+      toggle = !toggle
+      dispatch('toggleMyWindow')
+    }
+
 </script>
 
+
+<!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
 <div in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card" class:hangUp={hangUp} class:rgb={!hangUp}>
     <audio bind:paused src="/static/audio/startcall.mp3"></audio>
@@ -52,11 +67,12 @@
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
             <p>{$user.call.sender}</p>
         </div>
+        <audio bind:paused src="/static/audio/startcall.mp3"></audio>
         <div class="options">
-            <!-- <a class="answer hover" on:click={handleAnswer} href="/webrtc">
-                <img src="/static/images/call.svg" alt="">
-            </a> -->
-            <div class="decline hover" on:click={endCall} >
+            <a class="answer hover" on:click={toggleWindow} class:active={toggle}>
+                <img src={videoIcon} alt="toggleMyWindow">
+            </a>
+            <div class="decline hover" on:click={()=> endCall(peer, stream)} >
                 <img src="/static/images/call-slash.svg" alt="">
             </div>
         </div>
@@ -69,7 +85,7 @@
         display: flex;
         position: absolute;
         padding: 1px;
-        top: 20px;
+        bottom: 20px;
         right: 105px;
         height: 50px;
         width: 300px;
@@ -127,6 +143,10 @@
         cursor: pointer;
     }
 
+    .active {
+      background: rgba(0,0,0,0.5) !important;
+    }
+
     h3, p {
         margin: 0;
         color: rgba(255, 255, 255, 0.8);
@@ -135,4 +155,5 @@
         overflow: hidden;
         text-overflow: ellipsis
     }
+
 </style>
