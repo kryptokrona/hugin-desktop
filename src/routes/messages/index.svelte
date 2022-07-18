@@ -49,6 +49,7 @@
                activeChat: active_chat
             }
         })
+        savedMsg = []
         savedMsg = $messages.filter(x => x.chat === chat)
         scrollDown()
 
@@ -62,6 +63,7 @@
         console.log('event', e.detail)
         //Add input to message arr
         let newMessage = e.detail
+        saveToStore(newMessage)
         //Prepare send function and filter
         printConversation(newMessage)
         //Close popup
@@ -69,6 +71,7 @@
     }
       //Update messages live if users keep chat mounted
     const printMessage = (data) =>  {
+          saveToStore(data)
           savedMsg.push(data)
           savedMsg = savedMsg
           scrollDown()
@@ -80,19 +83,16 @@
           return [...current, data]
       })
     }
+
     //Listen for new message private messages saved in DB
-      window.api.receive('newMsg', data => {
+      window.api.receive('newMsg', async (data) => {
       console.log('new message', data);
       console.log('userchat', $user.activeChat.chat)
 
-      saveToStore(data)
       if (data.chat === $user.activeChat.chat) {
-        printConversation(data)
-      } else {
-
-        saveToStore(data)
-        console.log('not this conversation');
+        printMessage(data)
       }
+      saveToStore(data)
     })
 
 
@@ -118,7 +118,7 @@
     $ : savedMsg
 
 	function scrollDown() {
-	box.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"})
+	console.log('wanna scroll');
 	}
 </script>
 
