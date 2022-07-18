@@ -7,16 +7,21 @@
 	import { SvelteToast } from '@zerodevx/svelte-toast'
 	import TrafficLights from "$components/TrafficLights.svelte";
 	import CallerMenu from "/src/components/webrtc/CallerMenu.svelte";
-
+	import MyVideo from "/src/components/webrtc/MyVideo.svelte";
+	import PeerVideo from "/src/components/webrtc/PeerVideo.svelte";
 	//Stores
 	import { user, misc, webRTC } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
 	import '/src/lib/theme/global.scss'
-		$: console.log('webrtc', $webRTC.peer);
+
+		$: console.log('webrtc peer', $webRTC.peer);
+		$: console.log('stream', $webRTC.stream);
 
 	let ready = false;
+	let myVideo = false
+	let peerVideo = false
 
 	let incoming_call
 	let showCallerMenu = false
@@ -25,12 +30,27 @@
 		incoming_call = false
 	}
 
+	const toggleMyWindow = () => {
+		console.log('toggleee my window');
+		myVideo = !myVideo
+	}
+
 	const endThisCall = () => {
 		showCallerMenu = false
+		myVideo = false
 	}
 
 	const openCallerMenu = () => {
 		showCallerMenu = true
+		myVideo = true
+	}
+
+	const toggleCallMenu = () => {
+		showCallerMenu = !showCallerMenu
+	}
+
+	$: if ($webRTC.video) {
+		video = true
 	}
 
 	onMount( async () => {
@@ -113,10 +133,13 @@ window.api.receive('node', async (node) => {
 		intro: { x: 256 },    // toast intro fly animation settings
 		classes: []
 	}
+
 </script>
+
 <div class="wrap">
   <SvelteToast {options}/>
 </div>
+
 {#if ready}
 
 <TrafficLights/>
@@ -126,13 +149,24 @@ window.api.receive('node', async (node) => {
 	{/if}
 
 	{#if $user.loggedIn && showCallerMenu}
-		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu}/>
+		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
+
+	{#if myVideo && $webRTC.myStream}
+			<MyVideo />
+			<!-- <PeerVideo/> -->
+	{/if}
+
+	{#if peerVideo && $webRTC.peerStream}
+			<PeerVideo />
+			<!-- <PeerVideo/> -->
+	{/if}
+
 
 	{#if $user.loggedIn}
 		<LeftMenu />
 		<Webrtc />
-		<RightMenu on:startCall={openCallerMenu}/>
+		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
 	{/if}
 
 	<slot />
