@@ -13,11 +13,6 @@
     let calling
     onMount(() => {
 
-        myVideo = document.getElementById('myVideo')
-        peerVideo = document.getElementById('peerVideo')
-
-        console.log('peervidya', peerVideo);
-          console.log('MyVidya', myVideo);
 
         window.api.receive('start-call', (conatct, calltype) => {
             startCall(conatct, calltype)
@@ -88,7 +83,13 @@
             if ( video ) {
 
               calling = true;
-
+              webRTC.update((data) => {
+                return {
+                  ...data,
+                  myStream: stream,
+                  myVideo: true,
+                }
+              })
 
                 if (screen_stream) {
                     myVideo.srcObject = screen_stream;
@@ -97,12 +98,11 @@
                     stream = screen_stream;
                 } else {
 
-                    myVideo.srcObject = stream;
 
                     console.log('stream again', stream);
 
                 }
-                myVideo.play();
+                //myVideo.play();
                 //$('video').fadeIn();
             } else {
 
@@ -127,13 +127,13 @@
                     // return recovered_data.sdp;
                 }
             })
-            webRTC.update(() => {
+            webRTC.update((data) => {
               return {
+                ...data,
                 peer: peer1,
                 stream: stream,
               }
             })
-
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
             console.log('video codecs', video_codecs);
 
@@ -151,6 +151,7 @@
 
             let transceiverList = peer1._pc.getTransceivers();
             console.log('audio tracks', transceiverList);
+
 
 
             // select the desired transceiver
@@ -183,31 +184,29 @@
                 // got remote video stream, now let's show it in a video tag
 
                  //let extra_class = "";
-                 //if (video) {
-                     extra_class = " video"
-                 //}
-                // // SELECT AND SHOW VIDEO ELEMENT
-                // let video_element = ""
-                //
-                //
+                 if (video) {
+                      webRTC.update((data) => {
+                        return {
+                        ...data,
+                        peerVideo: true,
+                      }
+                 })
+               }
+
                 console.log('Got Stream Peer1', peerStream);
 
-                console.log('peerVideo', peerVideo);
-
-                 if ('srcObject' in peerVideo) {
-
-                   console.log('ppeeeer?');
-
-                     peerVideo.srcObject = peerStream
-                 } else {
-                     peerVideo.src = window.URL.createObjectURL(peerStream) // for older browsers
-                 }
                  call = true
                  let tracks = peerStream.getTracks()
                  console.log('tracks', tracks);
-                 peerVideo.play()
+                 webRTC.update((data) => {
+                   return {
+                     ...data,
+                     peerStream: peerStream,
+                   }
+                 })
 
-            })
+               })
+
 
             peer1.on('connect', () => {
                 // CONNECT SOUND
@@ -287,13 +286,6 @@
 
                 // select the desired transceiver
 
-                if (video) {
-                    myVideo = document.getElementById('myVideo')
-                    myVideo.srcObject = stream;
-
-                    myVideo.play();
-                }
-
                 let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
 
                 let custom_codecs = [];
@@ -315,6 +307,13 @@
                    //mainWindow.webContents.send('transceivers', data)
                    // console.log('transceivers in backend', data)
                 }
+
+                webRTC.update((data) => {
+                  return {
+                    ...data,
+                    peer: peer2,
+                  }
+                })
                 peer2.on('close', () => {
                     console.log('Connection closed..')
                     window.api.endCall(peer2, stream)
@@ -373,12 +372,13 @@
                 peer2.on('stream', peerStream => {
                     // got remote video stream, now let's show it in a video tag
                     console.log('peer2 stream', peerStream)
-                    if ('srcObject' in peerVideo) {
-                      peerVideo.srcObject = peerStream
-                    } else {
-                      peerVideo.src = window.URL.createObjectURL(peerStream) // for older browsers
-                    }
 
+                    webRTC.update((data) => {
+                      return {
+                        ...data,
+                        peerStream: peerStream,
+                      }
+                    })
                     call = true;
                     let tracks = peerStream.getTracks()
                     console.log('tracks', tracks);
@@ -403,6 +403,17 @@
             console.log('TRACKS', e)
         }
 
+        webRTC.update((data) => {
+          return {
+            ...data,
+            peer: {},
+            myVideo: false,
+            peerVideo: false,
+            peerStream: {},
+            myStream: {},
+          }
+        })
+
         //var myvideo = document.getElementById('myvideo');
 
         //myvideo.srcObject = stream;
@@ -414,16 +425,13 @@
     }
 
     window.api.receive('endCall', async (e, peer, stream) => {
-
+      console.log('ending call?');
         return endCall(peer, stream)
     })
 
 </script>
 
 <main>
-    <audio src={peerStream}></audio>
-    <video muted class:show={calling} in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
-    <video class:show={call} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
 
 </main>
 
@@ -455,13 +463,5 @@
       display: block;
     }
 
-    #myVideo {
-
-    }
-
-    #peerVideo {
-
-
-    }
 
 </style>
