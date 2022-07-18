@@ -392,7 +392,7 @@
 
                 })
 
-                window.api.receive('endCall', (message) => {
+                window.api.receive('endCall', () => {
                 endCall(peer2, stream)
                 })
             }
