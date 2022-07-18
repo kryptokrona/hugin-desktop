@@ -34,7 +34,7 @@
     const endCall = () => {
 
         //We delay the answerCall for routing purposes
-        window.api.endCall($webRTC.peer, stream)
+        window.api.endCall('peer', 'stream')
 
         //We pause the ringtone and destroy the popup
         endTone.play()
