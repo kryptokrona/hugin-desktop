@@ -166,7 +166,7 @@
                 console.log(e)
                 console.log('Connection lost..')
 
-                window.api.endCall(peer1, stream);
+              endCall(peer1, stream);
 
                 // ENDCALL AUDIO
             })
@@ -175,7 +175,7 @@
                 console.log(e)
                 console.log('Connection lost..')
 
-                window.api.endCall(peer1, stream);
+                endCall(peer1, stream);
                 // ENDCALL AUDIO
 
             })
@@ -256,6 +256,11 @@
 
             })
 
+            window.api.receive('endCall', async () => {
+              console.log('ending call');
+              endCall(peer1, stream)
+            })
+
         }
 
 
@@ -316,12 +321,12 @@
                 })
                 peer2.on('close', () => {
                     console.log('Connection closed..')
-                    window.api.endCall(peer2, stream)
+                    endCall(peer2, stream)
                 })
 
                 peer2.on('error', (e) => {
                     console.log('Connection lost..', e)
-                    window.api.endCall(peer2, stream)
+                    endCall(peer2, stream)
                 })
 
                 let first = true;
@@ -386,6 +391,10 @@
                     console.log('Setting up link..');
 
                 })
+
+                window.api.receive('endCall', (message) => {
+                endCall(peer2, stream)
+                })
             }
         }
 
@@ -423,11 +432,6 @@
         console.log('Call ended')
 
     }
-
-    window.api.receive('endCall', async (e, peer, stream) => {
-      console.log('ending call?');
-        return endCall(peer, stream)
-    })
 
 </script>
 
