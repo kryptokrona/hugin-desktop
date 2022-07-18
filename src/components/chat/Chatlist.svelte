@@ -13,17 +13,20 @@
     let nickname
     //Get message updates and trigger filter
     messages.subscribe(() => {
-
+      console.log('$messages', $messages);
             console.log('Printing conversations');
-
               printConversations()
     })
+
+    //Listen for sent message to update conversation list
+    window.api.receive('sent', data => {
+      printConversations()
+     })
 
     //Print our conversations from DB
     async function printConversations() {
         filterArr = await window.api.getConversations()
         console.log('Printing conversations');
-
         //If we have no active chat we take the latest known message and dispatch.
         if (!$user.activeChat) {
           console.log('no userchat', $user.activeChat);
@@ -34,7 +37,6 @@
     }
 
     $ : filterArr
-
     //Dispatches the clicked conversation to parent
     function sendConversation(message) {
 
@@ -42,20 +44,10 @@
       let msgkey = message.key
       let name = message.name
 
-      console.log('message', message);
-
       let active_chat = {chat: chat, k: msgkey, name: name}
-      console.log('dispatching', chat);
 
-        dispatch('conversation', active_chat);
-        //Saved clicked chat
-        user.update(user => {
-            return{
-                ...user,
-               activeChat: active_chat
-            }
-        })
-        printConversations()
+      dispatch('conversation', active_chat);
+      printConversations()
 }
 
 </script>
