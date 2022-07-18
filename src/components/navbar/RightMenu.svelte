@@ -1,19 +1,21 @@
 <script>
     import {fly} from 'svelte/transition'
     import {page} from "$app/stores";
-    import {user, boards, misc} from "$lib/stores/user.js";
+    import {user, boards, misc, webRTC} from "$lib/stores/user.js";
     import callIcon from '/static/images/call.svg'
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {boardMessages} from '$lib/stores/boardmsgs.js';
     import openAddBoard from '/src/routes/boards/index.svelte';
     import {createEventDispatcher} from "svelte";
+    import settingsIcon from '/static/images/settings.png'
 
     const dispatch = createEventDispatcher()
     let contact
     let active_contact
     let avatar
     let calltype
+    let call_active = false
 
     $: {
         if($user.activeChat) {
@@ -54,6 +56,17 @@
       })
     }
 
+    $: if ($webRTC.myVideo || $webRTC.peer) {
+      call_active = true
+    } else {
+      call_active = false
+    }
+
+    const toggleCallMenu = () => {
+      console.log('toggle callmenu dispatch');
+      dispatch('toggleCallMenu')
+    }
+
 </script>
 
 <div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
@@ -69,6 +82,10 @@
         <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
         <button class='button' on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call"></button>
         <button class='button' on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video"></button>
+    {/if}
+
+    {#if call_active}
+      <button class='caller_menu' on:click={toggleCallMenu}><img class="icon" src={settingsIcon} alt="callMenu"></button>
     {/if}
 
     {#if $page.url.pathname === '/webrtc'}
@@ -127,6 +144,12 @@
         word-break: break-word;
         font-family: 'Montserrat';
         cursor: pointer;
+    }
+
+    .caller_menu {
+      margin-top: 25%;
+      background: rgba(255, 255, 255, 0.4);
+      color: black;
     }
 
     .boardicon:hover {
