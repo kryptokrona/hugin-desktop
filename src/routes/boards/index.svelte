@@ -236,7 +236,7 @@
 
       $: fixedBoards
       //Reactive depending on user.addBoard boolean, displays AddBoard component.
-      $: wantToAdd = boards.addBoard
+      $: wantToAdd = $boards.addBoard
 
       $: replyTrue = $boards.replyTo.reply
 
