@@ -67,7 +67,7 @@
 		//Handle incoming call
 		window.api.receive('call-incoming', (msg, sender) => {
 			incoming_call = true
-			user.update(current => {
+			misc.update(current => {
 				return{
 					...current,
 					call: {msg, sender}
