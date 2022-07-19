@@ -38,15 +38,10 @@
 
     //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
-      myVideo.pause()
     })
 
     $: console.log('$webRTC.', $webRTC);
     console.log('mypeer',$webRTC.myPeer);
-
-    $: if ($webRTC.myStream && show) {
-
-      }
 
     $: video = $webRTC.myVideo
     $: console.log('$webRTC.', $webRTC);
@@ -73,10 +68,10 @@
         display: flex;
         position: absolute;
         padding: 1px;
-        top: 55px;
+        top: 30px;
+        height: 225px;
+        width: 300px;
         left: 33%;
-        height: 150px;
-        width: 200px;
         background-color: #5f86f2;
         border-radius: 5px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
@@ -140,8 +135,7 @@
 
 
         video {
-            width: 200px;
-            height: 200px;
+            width: 300px;
             z-index: 99999;
             position: absolute;
         }
