@@ -742,9 +742,10 @@ async function saveContact(hugin_address, nickname=false, first=false) {
   } else {
     name = nickname
   }
-
+  console.log('known_keys', known_keys);
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
+  
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
   // mainWindow.webContents.send('saved-addr', huginaddr)
@@ -762,6 +763,8 @@ async function saveContact(hugin_address, nickname=false, first=false) {
 
   if (first) {
     saveMessageSQL({msg: 'New friend added!', k: key, from:addr, chat: addr, sent: true, t: Date.now()})
+    known_keys.pop(key)
+    console.log('known_keys poped', known_keys);
   }
 
 }
@@ -1212,6 +1215,7 @@ console.log('Error', err);
 
 async function sendMessage(message, receiver) {
     console.log('Want to send')
+
     let has_history
     console.log('address', receiver.length);
     if (receiver.length !== 163) {
@@ -1226,7 +1230,7 @@ async function sendMessage(message, receiver) {
       has_history = true;
 
     } else {
-
+      known_keys.push(messageKey)
       has_history = false
 
     }
