@@ -117,6 +117,17 @@ window.api.receive('node', async (node) => {
 				}
 			})
 		})
+  window.api.receive('newMsg', async (data) => {
+		console.log('newmsg in layout', data);
+		saveToStore(data)
+	})
+
+		const saveToStore = (data) => {
+
+			messages.update(current => {
+					return [...current, data]
+			})
+		}
 
 	});
 
