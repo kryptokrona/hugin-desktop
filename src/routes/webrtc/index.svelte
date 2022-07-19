@@ -152,11 +152,14 @@
 
             let transceiverList = peer1._pc.getTransceivers();
             console.log('audio tracks', transceiverList);
+            if (video) {
+                // select the desired transceiver
+               transceiverList[1].setCodecPreferences(custom_codecs)
+
+            }
 
 
 
-            // select the desired transceiver
-            //transceiverList[1].setCodecPreferences(custom_codecs)
             console.log('webrtc', $user.webRTC);
             console.log('codec set');
 
@@ -308,18 +311,23 @@
 
                 let transceivers = peer2._pc.getTransceivers()
                 if (video) {
-                   console.log('trans', transceivers)
-                   window.RTCRtpTransceiver.setCodecPreferences(custom_codecs)
-                   //mainWindow.webContents.send('transceivers', data)
-                   // console.log('transceivers in backend', data)
+                   console.log('transceivers', transceivers)
+                     transceiverList[1].setCodecPreferences(custom_codecs)
                 }
+
+                console.log('codec set');
 
                 webRTC.update((data) => {
                   return {
                     ...data,
                     peer: peer2,
+                    myStream: stream,
+                    myVideo: true,
                   }
                 })
+
+                console.log('webrtc settomgs set', $webRTC);
+
                 peer2.on('close', () => {
                     console.log('Connection closed..')
                     endCall(peer2, stream)
