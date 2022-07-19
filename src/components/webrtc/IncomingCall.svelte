@@ -8,7 +8,7 @@
     import {createEventDispatcher} from "svelte";
 
     export let paused = false
-    let avatar = get_avatar($user.call.sender)
+    let avatar = get_avatar($misc.call.sender)
     let ringtone = new Audio("/static/audio/ringtone.mp3")
 
     let answered = false

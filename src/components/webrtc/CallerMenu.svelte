@@ -4,7 +4,7 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user, webRTC} from "$lib/stores/user.js";
+    import {user, webRTC, misc} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
     import videoIcon from '/static/images/video.svg'
 
@@ -12,7 +12,7 @@
     const dispatch = createEventDispatcher();
 
     export let paused = false
-    let avatar = get_avatar($user.call.sender)
+    let avatar = get_avatar($misc.call.sender)
     let startTone = new Audio("/static/audio/startcall.mp3")
     let endTone = new Audio("/static/audio/endcall.mp3")
     let hangUp = false
