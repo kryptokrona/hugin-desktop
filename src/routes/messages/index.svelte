@@ -75,6 +75,13 @@
           scrollDown()
     }
 
+    const saveToStore = (data) => {
+
+      messages.update(current => {
+          return [...current, data]
+      })
+    }
+
 
     //Listen for new message private messages saved in DB
       window.api.receive('newMsg', async (data) => {
@@ -85,8 +92,7 @@
         printMessage(data)
       }
     })
-
-
+    
     $: active_contact
 
     //Send message to store and DB
@@ -95,7 +101,7 @@
         let msg = e.detail.text
         let myaddr = $user.huginAddress.substring(0,99)
         let myMessage = {chat: chat, msg: msg, sent: true, t: Date.now()}
-
+        saveToStore(myMessage)
         window.api.sendMsg(msg, active_contact)
         printMessage(myMessage)
     }
