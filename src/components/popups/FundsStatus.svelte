@@ -1,6 +1,6 @@
 <script>
     // Copyright (c) 2022, The Kryptokrona Developers
-    import { user } from "$lib/stores/user.js";
+    import { user, misc } from "$lib/stores/user.js";
     import {fade, fly} from "svelte/transition";
     import Close from "$components/buttons/Close.svelte";
     import Button from "$components/buttons/Button.svelte";
@@ -11,9 +11,9 @@
     let total
 
     $: {
-        locked = prettyNumbers($user.balance[1])
-        unlocked = prettyNumbers($user.balance[0])
-        total = prettyNumbers($user.balance[0] + $user.balance[1])
+        locked = prettyNumbers($misc.balance[1])
+        unlocked = prettyNumbers($misc.balance[0])
+        total = prettyNumbers($misc.balance[0] + $misc.balance[1])
     }
 </script>
 
