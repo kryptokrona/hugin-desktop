@@ -312,7 +312,7 @@
                 let transceivers = peer2._pc.getTransceivers()
                 if (video) {
                    console.log('transceivers', transceivers)
-                     transceiverList[1].setCodecPreferences(custom_codecs)
+                     transceivers[1].setCodecPreferences(custom_codecs)
                 }
 
                 console.log('codec set');
