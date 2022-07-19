@@ -4,9 +4,9 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user} from "$lib/stores/user.js";
+    import {user, misc} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
-    
+
     export let paused = false
     let avatar = get_avatar($user.call.sender)
     let ringtone = new Audio("/static/audio/ringtone.mp3")
@@ -25,7 +25,7 @@
         answered = true
 
         //We delay the answerCall for routing purposes
-        window.api.answerCall($user.call.msg, $user.call.sender)
+        window.api.answerCall($misc.call.msg, $misc.call.sender)
 
         //We pause the ringtone and destroy the popup
         ringtone.pause()
@@ -48,7 +48,7 @@
             <p>{'SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT'}</p>
         </div>
         <div class="options">
-            <a class="answer hover" on:click={handleAnswer} href="/webrtc">
+            <a class="answer hover" on:click={handleAnswer} href="/messages">
                 <img src="/static/images/call.svg" alt="">
             </a>
             <div class="decline hover" on:click>
