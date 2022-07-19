@@ -43,6 +43,7 @@
 	const openCallerMenu = () => {
 		showCallerMenu = true
 		myVideo = true
+		incoming_call = false
 	}
 
 	const toggleCallMenu = () => {
