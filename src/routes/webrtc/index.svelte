@@ -11,6 +11,7 @@
     let peerStream;
     let call
     let calling
+
     onMount(() => {
 
 
@@ -415,11 +416,11 @@
         webRTC.update((data) => {
           return {
             ...data,
-            peer: {},
+            peer: false,
             myVideo: false,
             peerVideo: false,
-            peerStream: {},
-            myStream: {},
+            peerStream: false,
+            myStream: false,
           }
         })
 
