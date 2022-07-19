@@ -62,11 +62,10 @@
         display: flex;
         position: absolute;
         padding: 1px;
-        top: 20px;
-        right: 105px;
-        height: 300px;
-        width: 150px;
-        right: 40%;
+        top: 30px;
+        height: 225px;
+        width: 300px;
+        left: 70%;
         background-color: #5f86f2;
         border-radius: 5px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
@@ -126,10 +125,8 @@
 
 
         video {
-            height: 300px;
+            width: 300px;
             z-index: 99999;
-            right: 50px;
-            top: 25px;
             position: absolute;
         }
 
