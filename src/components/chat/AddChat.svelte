@@ -31,7 +31,8 @@
         dispatch('addChat', {
             name: nickname,
             chat: addr,
-            k: pubkey
+            k: pubkey,
+            msg: 'Friend Added'
         })
     }
 
