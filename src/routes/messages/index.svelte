@@ -63,7 +63,6 @@
         console.log('event', e.detail)
         //Add input to message arr
         let newMessage = e.detail
-        saveToStore(newMessage)
         //Prepare send function and filter
         printConversation(newMessage)
         //Close popup
@@ -71,18 +70,11 @@
     }
       //Update messages live if users keep chat mounted
     const printMessage = (data) =>  {
-          saveToStore(data)
           savedMsg.push(data)
           savedMsg = savedMsg
           scrollDown()
     }
 
-    const saveToStore = (data) => {
-
-      messages.update(current => {
-          return [...current, data]
-      })
-    }
 
     //Listen for new message private messages saved in DB
       window.api.receive('newMsg', async (data) => {
@@ -92,7 +84,6 @@
       if (data.chat === $user.activeChat.chat) {
         printMessage(data)
       }
-      saveToStore(data)
     })
 
 
@@ -131,7 +122,6 @@
 
     <div class="chat_window" bind:this={box}>
         <ChatWindow>
-
 
             {#each savedMsg as message}
                 <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat} timestamp={message.t}/>
