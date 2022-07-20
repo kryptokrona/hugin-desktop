@@ -1059,24 +1059,25 @@ async function getReply(reply=false) {
 //Saves private message
 async function saveMessageSQL(msg) {
 
+  let text
   let sent = msg.sent
-  let text = sanitizeHtml(msg.msg);
   let addr = sanitizeHtml(msg.from);
   let timestamp = escape(msg.t)
   let key = sanitizeHtml(msg.k)
 
-  let call = '0';
-
   if (!sent) {
     //Checking if private msg is a call
-    console.log('Checking if private msg is a call');
-    call = parseCall(msg.msg, addr)
+    text = parseCall(msg.msg, addr)
   }
 
+  let message = sanitizeHtml(msg.msg);
+
+  //If sent set chat to chat instead of from
   if (msg.chat) {
     addr = msg.chat
   }
 
+  //New message from unknown contact
   if (msg.type === 'sealedbox') {
 
    console.log('Saving key', key);
@@ -1085,32 +1086,42 @@ async function saveMessageSQL(msg) {
 
   }
 
-  if (call.substring(0,1) || text.substring(0,1) == "Δ" || "Λ") {
-    text = `${text.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
-  }
+  // Call offer message
+  switch (message.substring(0,1)) {
+      case "Δ":
+      // Fall through
+      case "Λ":
 
+      message = `${message.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
+      break;
+      default:
+      message = message
 
-            // Call offer
- console.log('Saving message', text, addr, sent, timestamp);
+    }
 
+ console.log('Saving message', message, addr, sent, timestamp);
+ //Save to DB
      database.run(
          `REPLACE INTO messages
             (msg, chat, sent, timestamp)
          VALUES
              (?, ?, ?, ?)`,
          [
-             text,
+             message,
              addr,
              sent,
              timestamp
          ]
      );
 
-     let newMsg = {msg: text, chat: addr, sent: sent, timestamp: timestamp}
+     //New message object
+     let newMsg = {msg: message, chat: addr, sent: sent, timestamp: timestamp}
      if (sent) {
+       //If sent, update conversation list
        mainWindow.webContents.send('sent', newMsg)
        return
      }
+     //Send message to front end
      console.log('sending newmessage');
      mainWindow.webContents.send('newMsg', newMsg)
  }
