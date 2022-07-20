@@ -7,7 +7,7 @@ export const user = writable({
     username: 'Anon',
     activeChat: null,
     huginAddress: '',
-    call: {},
+    call: false,
     callerMenu: false,
     contacts: null,
     addChat: false,

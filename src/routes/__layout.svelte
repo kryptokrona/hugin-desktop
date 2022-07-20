@@ -160,7 +160,7 @@ window.api.receive('node', async (node) => {
 		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
 	{/if}
 
-	{#if $user.loggedIn && showCallerMenu}
+	{#if $user.loggedIn && showCallerMenu && $misc.call }
 		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
 

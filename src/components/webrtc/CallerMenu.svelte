@@ -65,7 +65,7 @@
     <div class="inner-card">
         <div class="caller">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <p>{$user.call.sender}</p>
+            <p>{$misc.call.sender}</p>
         </div>
         <audio bind:paused src="/static/audio/startcall.mp3"></audio>
         <div class="options">

@@ -3,7 +3,7 @@
     import {fade} from "svelte/transition";
     import Peer from "simple-peer";
     import {onMount} from "svelte";
-    import {user, webRTC} from "$lib/stores/user.js";
+    import {user, webRTC, misc} from "$lib/stores/user.js";
 
     let stream;
     let myVideo;
@@ -84,16 +84,9 @@
             if ( video ) {
 
               calling = true;
-              webRTC.update((data) => {
-                return {
-                  ...data,
-                  myStream: stream,
-                  myVideo: true,
-                }
-              })
 
                 if (screen_stream) {
-                    myVideo.srcObject = screen_stream;
+
                     screen_stream.addTrack(stream.getAudioTracks()[0]);
 
                     stream = screen_stream;
@@ -108,6 +101,15 @@
             } else {
 
             }
+
+
+            misc.update((data) => {
+              return {
+                ...data,
+                call: {msg: 'outgoing' , out:true, sender: contact , video: video}
+              }
+            })
+
 
             let peer1 = new Peer({
                 initiator: true,
@@ -128,11 +130,13 @@
                     // return recovered_data.sdp;
                 }
             })
+
             webRTC.update((data) => {
               return {
                 ...data,
+                myStream: stream,
+                myVideo: true,
                 peer: peer1,
-                stream: stream,
               }
             })
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
@@ -160,7 +164,7 @@
 
 
 
-            console.log('webrtc', $user.webRTC);
+            console.log('webrtc', $webRTC);
             console.log('codec set');
 
 
