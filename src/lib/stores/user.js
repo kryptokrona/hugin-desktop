@@ -33,6 +33,11 @@ export const misc = writable({
 export const webRTC = writable({
   stream: false,
   peer: false,
+  myVideo: false,
+  peerVideo: false,
+  myStream: false,
+  peerStream: false,
+  screen: false,
 })
 
 export const userAvatar = derived(user, $user => {
