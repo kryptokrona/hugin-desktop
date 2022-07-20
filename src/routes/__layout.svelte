@@ -164,12 +164,12 @@ window.api.receive('node', async (node) => {
 		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
 
-	{#if myVideo && $webRTC.myStream}
+	{#if myVideo && $webRTC.myVideo && $webRTC.myStream}
 			<MyVideo />
 			<!-- <PeerVideo/> -->
 	{/if}
 
-	{#if peerVideo && $webRTC.peerStream}
+	{#if peerVideo && $webRTC.peerVideo && $webRTC.peerStream}
 			<PeerVideo />
 			<!-- <PeerVideo/> -->
 	{/if}
