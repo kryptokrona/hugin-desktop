@@ -745,7 +745,7 @@ async function saveContact(hugin_address, nickname=false, first=false) {
   console.log('known_keys', known_keys);
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
-  
+
   known_keys.push(key)
   console.log('Pushing this to known keys ', known_keys)
   // mainWindow.webContents.send('saved-addr', huginaddr)
@@ -1059,19 +1059,22 @@ async function getReply(reply=false) {
 //Saves private message
 async function saveMessageSQL(msg) {
 
+  let sent = msg.sent
   let text = sanitizeHtml(msg.msg);
   let addr = sanitizeHtml(msg.from);
   let timestamp = escape(msg.t)
   let key = sanitizeHtml(msg.k)
-  let sent = msg.sent
-  if (msg.chat) {
-    addr = msg.chat
-  }
+
+  let call = '0';
 
   if (!sent) {
     //Checking if private msg is a call
     console.log('Checking if private msg is a call');
-    let message = parseCall(text, addr)
+    call = parseCall(msg.msg, addr)
+  }
+
+  if (msg.chat) {
+    addr = msg.chat
   }
 
   if (msg.type === 'sealedbox') {
@@ -1082,6 +1085,12 @@ async function saveMessageSQL(msg) {
 
   }
 
+  if (call.substring(0,1) || text.substring(0,1) == "Δ" || "Λ") {
+    text = `${text.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
+  }
+
+
+            // Call offer
  console.log('Saving message', text, addr, sent, timestamp);
 
      database.run(
