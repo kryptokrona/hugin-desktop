@@ -32,7 +32,7 @@
                     video: isVideo,
                     audio: true
                 }).then(function (stream) {
-                    gotMedia(stream, contact)
+                    gotMedia(stream, contact, isVideo,)
                 }).catch(() => {
                   console.log('error', stream);
 
@@ -75,38 +75,52 @@
                 })
             }
         }
-        let video
 
-        async function gotMedia (stream, contact, screen_stream=false) {
-          console.log('contact', contact);
+      async function gotMedia (stream, contact, video, screen_stream=false) {
+        console.log('contact', contact);
+          console.log('video?', video);
             console.log('We want contact stream', stream)
-            video = true;
             if ( video ) {
 
               calling = true;
+              webRTC.update((data) => {
+                return {
+                  ...data,
+                  myVideo: true,
+                }
+              })
 
                 if (screen_stream) {
 
                     screen_stream.addTrack(stream.getAudioTracks()[0]);
+                    webRTC.update((data) => {
+                      return {
+                        ...data,
+                          screen: true,
+                      }
+                    })
 
                     stream = screen_stream;
-                } else {
-
-
-                    console.log('stream again', stream);
-
                 }
-                //myVideo.play();
-                //$('video').fadeIn();
-            } else {
+              } else {
 
+              console.log('Audio call');
             }
 
+
+
+
+            webRTC.update((data) => {
+              return {
+                ...data,
+                myStream: stream,
+              }
+            })
 
             misc.update((data) => {
               return {
                 ...data,
-                call: {msg: 'outgoing' , out:true, sender: contact , video: video}
+                call: {msg: 'outgoing', out:true, sender: contact, video: video}
               }
             })
 
@@ -134,11 +148,10 @@
             webRTC.update((data) => {
               return {
                 ...data,
-                myStream: stream,
-                myVideo: true,
                 peer: peer1,
               }
             })
+
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
             console.log('video codecs', video_codecs);
 
@@ -297,7 +310,16 @@
             function gotMedia(stream) {
                 console.log('FN getMedia', stream, video)
 
-                // select the desired transceiver
+                if (video) {
+
+                  webRTC.update((data) => {
+                    return {
+                      ...data,
+                      myVideo: true,
+                    }
+                  })
+
+                }
 
                 let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
 
@@ -313,6 +335,7 @@
                     console.log(custom_codecs)
                 }
 
+                // select the desired transceiver
                 let transceivers = peer2._pc.getTransceivers()
                 if (video) {
                    console.log('transceivers', transceivers)
@@ -324,13 +347,12 @@
                 webRTC.update((data) => {
                   return {
                     ...data,
-                    peer: peer2,
                     myStream: stream,
-                    myVideo: true,
+                    peer: peer2,
                   }
                 })
 
-                console.log('webrtc settomgs set', $webRTC);
+                console.log('webrtc store settings set', $webRTC);
 
                 peer2.on('close', () => {
                     console.log('Connection closed..')
@@ -410,11 +432,10 @@
                 })
             }
         }
+      })
 
-    })
-
-    //End call
-    function endCall (peer, stream) {
+  //End call
+  function endCall (peer, stream) {
 
         try {
             peer.destroy();
@@ -435,12 +456,6 @@
             myStream: false,
           }
         })
-
-        //var myvideo = document.getElementById('myvideo');
-
-        //myvideo.srcObject = stream;
-        //myvideo.pause();
-        //myvideo.srcObject = null;
 
         console.log('Call ended')
 
