@@ -11,11 +11,10 @@
     let nodeInput = ''
     let username = false
     let pass
-    let nodeAddress
+    let nodeAddress = ''
     let nodePort
     let enableNextButton = false
     let ready = false
-    let input
     let showNode = false
     let exitNode = "X"
     let defualtPick = true
@@ -28,9 +27,9 @@
         node: nodeAddress,
         port: nodePort
       }
-        window.api.send('create-account', accountData);
+       // window.api.send('create-account', accountData);
 
-        console.log('Creating user account')
+        console.log('Creating user account', accountData)
     }
 
     const next = (type) => {
@@ -46,28 +45,19 @@
         enableNextButton = false
     }
 
-    $ : console.log('chosen node', nodeAddress + ':' + nodePort);
+    $: nodeAddress
+    $: nodePort
 
     function chooseNode(node) {
-      console.log('thisnode', node);
-      if (input) {
           nodeAddress = nodeInput.split(':')[0]
           nodePort = parseInt(nodeInput.split(':')[1])
-      } else {
-          nodeAddress = node.url
-          nodePort = node.port
-      }
       enableNextButton = true
     }
 
-    $ : { if (nodePort == undefined) {
-          enableNextButton = false
-    } else {
-      nodeInput = nodeAddress + ':' + nodePort
-    } }
-
-    $ : console.log('nodeinput', nodeInput);
-
+    $ : if (nodeInput.length) {
+      nodeAddress = nodeInput.split(':')[0]
+      nodePort = parseInt(nodeInput.split(':')[1])
+    }
 
     $: {
         if (nodeInput.length > 0 || walletName.length > 0 || password.length > 0) {
