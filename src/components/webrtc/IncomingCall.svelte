@@ -24,9 +24,15 @@
         //Variable to activate visual feedback
         answered = true
 
-        //We delay the answerCall for routing purposes
-        window.api.answerCall($misc.call.msg, $misc.call.sender)
+        let caller = $user.contacts.filter(a => a.chat === $misc.call.sender)
+        console.log(
+            'caller', caller
+        );  
+        console.log('caller key', caller[0].key)
 
+         //We delay the answerCall for routing purposes
+         window.api.answerCall($misc.call.msg, $misc.call.sender, caller[0].key)
+        
         //We pause the ringtone and destroy the popup
         ringtone.pause()
 

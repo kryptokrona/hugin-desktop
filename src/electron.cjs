@@ -1166,8 +1166,8 @@ ipcMain.on('sendBoardMsg', (e, msg) => {
     }
 )
 
-ipcMain.on('answerCall', (e, msg, contact) => {
-    mainWindow.webContents.send('answer-call', msg, contact)
+ipcMain.on('answerCall', (e, msg, contact, key) => {
+    mainWindow.webContents.send('answer-call', msg, contact, key)
     }
 )
 
@@ -1552,7 +1552,6 @@ ipcMain.on('get-sdp', (e,data) => {
     console.log('Offer', data.data, data.type, data.contact, data.video)
         let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
         let recovered_data = expand_sdp_offer(parsed_data);
-        console.log('recovered offer data:', recovered_data);
         sendMessage(parsed_data, data.contact)
 
     } else if (data.type == 'answer') {
@@ -1560,7 +1559,6 @@ ipcMain.on('get-sdp', (e,data) => {
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data);
         console.log('parsed data really cool sheet:', parsed_data);
         let recovered_data = expand_sdp_answer(parsed_data);
-        console.log('recovered data:', recovered_data);
         sendMessage(parsed_data, data.contact)
 
     }

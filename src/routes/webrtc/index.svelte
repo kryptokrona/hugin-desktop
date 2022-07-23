@@ -285,12 +285,12 @@
         }
 
 
-        window.api.receive('answer-call', (msg, contact) => {
-            answerCall(msg, contact)
+        window.api.receive('answer-call', (msg, contact, key) => {
+            answerCall(msg, contact, key)
         })
 
-        async function answerCall (msg, contact) {
-            console.log('APPLE', msg, contact)
+        async function answerCall (msg, contact, msgkey) {
+            console.log('APPLE', msg, contact, msgkey)
 
             let video = false
             if (msg.substring(0, 1) === 'Δ') {
@@ -368,12 +368,12 @@
 
                 peer2.on('signal', data => {
 
-
+                  console.log('msgkey', msgkey)
                   console.log('initial offer data:', data);
                     let dataToSend = {
                         data: data,
                         type: 'answer',
-                        contact: contact,
+                        contact: contact + msgkey,
                         video: video,
                     }
                     console.log('sending sdp');
