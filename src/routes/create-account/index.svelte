@@ -27,7 +27,7 @@
         node: nodeAddress,
         port: nodePort
       }
-       // window.api.send('create-account', accountData);
+       window.api.send('create-account', accountData);
 
         console.log('Creating user account', accountData)
     }
