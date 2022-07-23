@@ -21,7 +21,7 @@
 
 	let ready = false;
 	let myVideo = false
-	let peerVideo = false
+	let peerVideo = true
 
 	let incoming_call
 	let showCallerMenu = false
@@ -169,7 +169,7 @@ window.api.receive('node', async (node) => {
 			<!-- <PeerVideo/> -->
 	{/if}
 
-	{#if peerVideo && $webRTC.peerVideo && $webRTC.peerStream}
+	{#if peerVideo && $webRTC.peerStream}
 			<PeerVideo />
 			<!-- <PeerVideo/> -->
 	{/if}
