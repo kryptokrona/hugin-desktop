@@ -26,6 +26,12 @@
     //Print our conversations from DB
     async function printConversations() {
         filterArr = await window.api.getConversations()
+        user.update(current => {
+            return {
+                ...current,
+                contacts: filterArr
+            }
+        })
         console.log('Printing conversations');
         //If we have no active chat we take the latest known message and dispatch.
         if (!$user.activeChat) {
