@@ -566,7 +566,7 @@ async function start_js_wallet(walletName, password, mynode) {
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
-
+      optimizeMessages()
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
 
         console.log('transaction', transaction);
@@ -648,7 +648,7 @@ async function backgroundSyncMessages(checkedTxs=false) {
     console.log('Background syncing...');
     let message_was_unknown;
     try {
-        const resp = await fetch('http://' + 'pool.gamersnest.org:11898' + '/get_pool_changes_lite', {
+        const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
             method: 'POST',
             body: JSON.stringify({knownTxsIds: known_pool_txs})
         })
@@ -1062,15 +1062,14 @@ async function saveMessageSQL(msg) {
   let text
   let sent = msg.sent
   let addr = sanitizeHtml(msg.from);
-  let timestamp = escape(msg.t)
+  let timestamp = sanitizeHtml(msg.t)
   let key = sanitizeHtml(msg.k)
 
-  if (!sent) {
     //Checking if private msg is a call
-    text = parseCall(msg.msg, addr)
-  }
+    text = parseCall(msg.msg, addr, sent)
+  
 
-  let message = sanitizeHtml(msg.msg);
+  let message = sanitizeHtml(text);
 
   //If sent set chat to chat instead of from
   if (msg.chat) {
@@ -1201,7 +1200,7 @@ async function sendBoardMessage(message) {
   if (reply) {
     payload_json.r = reply
   }
-
+  optimizeMessages()
   payload_hex = toHex(JSON.stringify(payload_json))
 
   let result = await js_wallet.sendTransactionAdvanced(
@@ -1319,6 +1318,8 @@ async function sendMessage(message, receiver) {
     // Convert json to hex
     let payload_hex = toHex(JSON.stringify(payload_box));
 
+    optimizeMessages()
+
     let result = await js_wallet.sendTransactionAdvanced(
         [[address, 1]], // destinations,
         3, // mixin
@@ -1335,10 +1336,59 @@ async function sendMessage(message, receiver) {
     if (result.success) {
         known_pool_txs.push(result.transactionHash)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+
+        console.log('resul', result);
         saveMessageSQL(sentMsg)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
+}
+
+async function optimizeMessages(nbrOfTxs) {
+
+  const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
+  let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
+  if (inputs.length > 8) {
+    return;
+  }
+
+  console.log('Optimize', inputs);
+  subWallets.forEach((value, name) => {
+    let txs = value.unconfirmedIncomingAmounts.length;
+
+    if (txs > 0) {
+      console.log('Already have incoming inputs, aborting..');
+      return;
+    }
+  })
+
+  let payments = [];
+  let i = 0;
+  /* User payment */
+  while (i < nbrOfTxs - 1 && i < 10) {
+    payments.push([
+      js_wallet.subWallets.getAddresses()[0],
+        10000
+    ]);
+
+    i += 1;
+
+  }
+
+  let result = await js_wallet.sendTransactionAdvanced(
+      payments, // destinations,
+      0, // mixin
+      {fixedFee: 10000, isFixedFee: true}, // fee
+      undefined, //paymentID
+      undefined, // subWalletsToTakeFrom
+      undefined, // changeAddress
+      true, // relayToNetwork
+      false, // sneedAll
+      undefined
+  );
+
+  return result;
+
 }
 
 ipcMain.handle('getMessages', async (data) => {
@@ -1504,10 +1554,11 @@ function parseCall (msg, sender, emitCall=true) {
             if (emitCall) {
 
                 // Start ringing sequence
-
+              
+               if (!sent) {
                 mainWindow.webContents.send('call-incoming', msg, sender)
                 // Handle answer/decline here
-
+               }
                 console.log('call incoming')
             }
             return `${msg.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
