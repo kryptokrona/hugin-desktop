@@ -25,10 +25,6 @@
         answered = true
 
         let caller = $user.contacts.filter(a => a.chat === $misc.call.sender)
-        console.log(
-            'caller', caller
-        );  
-        console.log('caller key', caller[0].key)
 
          //We delay the answerCall for routing purposes
          window.api.answerCall($misc.call.msg, $misc.call.sender, caller[0].key)
