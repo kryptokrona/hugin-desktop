@@ -1336,8 +1336,6 @@ async function sendMessage(message, receiver) {
     if (result.success) {
         known_pool_txs.push(result.transactionHash)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-
-        console.log('resul', result);
         saveMessageSQL(sentMsg)
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
@@ -1346,13 +1344,15 @@ async function sendMessage(message, receiver) {
 
 async function optimizeMessages(nbrOfTxs) {
 
+  try {
+
   const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
   let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
   if (inputs.length > 8) {
     return;
   }
+  let subWallets = js_wallet.subWallets.subWallets
 
-  console.log('Optimize', inputs);
   subWallets.forEach((value, name) => {
     let txs = value.unconfirmedIncomingAmounts.length;
 
@@ -1387,7 +1387,13 @@ async function optimizeMessages(nbrOfTxs) {
       undefined
   );
 
+
   return result;
+
+  
+} catch (err) {
+  console.log('error optimizer', err);
+}
 
 }
 
