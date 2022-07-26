@@ -24,38 +24,25 @@
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
 
-<img class="avatar sent"
+<img class="avatar sent" in:fade="{{duration: 150}}"
      src="data:image/png;base64,{get_avatar(address)}" alt="">
-<div class="bubble sent">
+<div class="bubble sent" in:fade="{{duration: 150}}">
 
         <p>{message}</p>
     </div>
     <br>
 {:else}
-<!--
-{#if !message.name}
-<img class="avatar from"
-         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-         {:else} -->
-         <h5 class="from">{$user.activeChat.name}</h5>
 
-         <!-- {/if} -->
-<div class="bubble from">
+<img class="avatar from" in:fade="{{duration: 150}}"
+         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+         <h5 class="from">{$user.activeChat.name}</h5>
+<div class="bubble from" in:fade="{{duration: 150}}">
 
         <p>{message}</p>
     </div>
     <br>
 {/if}
 
-<!-- {#if message.brd}
-
-<div class="bubble board">
-<img class="avatar"
-         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-
-        <p>{message}</p>
-    </div>
-{/if} -->
 <style>
 
     .bubble {
