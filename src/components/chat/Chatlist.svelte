@@ -148,6 +148,7 @@
         overflow: hidden;
         font-family: "Montserrat";
         text-overflow: ellipsis;
+        font-weight: bold;
 
     }
 
@@ -166,6 +167,7 @@
       font-size: 12px;
       margin-top: 5px;
       text-overflow: ellipsis;
+      font-family: "Montserrat";
     }
 
     .add-icon {
