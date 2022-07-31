@@ -131,7 +131,21 @@
         <p>{msg}</p>
         <br>
         <br>
+        {#if has_reaction}
+      
+        <div class="reactions">
+          {#each reactions as reaction}
+            <Reaction
+            on:sendReaction={(e) => sendReactMsg(e)}
+             thisReaction={reaction}
+             reacts={message.react}
+             emoji={reaction.m}
+             react={react}/>
+          {/each}
+        </div>
+        {/if}
         <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
+      
         {#if active}
           <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
 
@@ -143,19 +157,7 @@
           <p></p>
         {/if}
   </div>
-      {#if has_reaction}
-      
-      <div class="reactions">
-        {#each reactions as reaction}
-          <Reaction
-          on:sendReaction={(e) => sendReactMsg(e)}
-           thisReaction={reaction}
-           reacts={message.react}
-           emoji={reaction.m}
-           react={react}/>
-        {/each}
-      </div>
-      {/if}
+    
 
 
 <style>
@@ -228,16 +230,14 @@
 
     .options {
       font-family: 'Roboto Mono';
-      color: white;
       opacity: 0.9;
-      width: 15px;
-      align-items: unset;
       width: 50px;
-      position: absolute;
-      right: 0%;
-      top: 10%;
-      display: flex;
+      display: inherit;
+      justify-content: right;
+      flex-direction: row-reverse;
+      color: rgba(255, 255, 255, 0.8) !important;
       flex: auto;
+      align-content: flex-start;
     }
 
     .reply_button:hover {
@@ -266,14 +266,13 @@
     font-family: 'Roboto Mono';
     color: black;
     opacity: 0.9;
-    width: 25px;
-    display: inline;
+    width: 500px;
+    display: block;
     flex: auto;
     border-radius: 5px;
-    position: relative;
+    position: absolute;
     height: 25px;
-    margin-left: 25px;
-    margin-top: -20px;
+    margin-left: 20%;
   }
     .reactions p {
       position: relative;
