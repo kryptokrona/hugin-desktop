@@ -143,8 +143,9 @@
           <p></p>
         {/if}
   </div>
-      <div class="reactions">
       {#if has_reaction}
+      
+      <div class="reactions">
         {#each reactions as reaction}
           <Reaction
           on:sendReaction={(e) => sendReactMsg(e)}
@@ -153,8 +154,8 @@
            emoji={reaction.m}
            react={react}/>
         {/each}
+      </div>
       {/if}
-  </div>
 
 
 <style>
@@ -162,7 +163,7 @@
       display: flex;
       align-items: center;
       color: rgba(255, 255, 255, 0.8);
-      padding: 15px 25px 15px 15px;
+      padding: 10px;
       z-index: 3;
       font-size: 12px;
       margin-left: 2%;
@@ -179,6 +180,7 @@
       font-size: 13px;
       font-weight: bold;
       display: contents;
+      line-height: 20px;
     }
 
     .type {
