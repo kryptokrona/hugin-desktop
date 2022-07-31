@@ -125,20 +125,24 @@
 
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-             <p class="nickname">{nickname}</p><br>
-        <p>{msg}</p><br>
-          <div class="options" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
+             <br>
+             <p class="nickname">{nickname}</p>
+             <br>
+        <p>{msg}</p>
+        <br>
+        <br>
+        <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
         {#if active}
-          <p class="reply_button" in:fade="{{duration: 70}}" out:fade="{{duration: 70}}" on:click={replyTo}>{replyicon}</p>
+          <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
+
+          <p class="reply_button" on:click={replyTo}>{replyicon}</p>
           <EmojiSelector on:emoji={reactTo}/>
+
+          </div>
         {:else}
           <p></p>
         {/if}
-          </div>
-          <br>
-          <br>
   </div>
-  <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
       <div class="reactions">
       {#if has_reaction}
         {#each reactions as reaction}
@@ -168,11 +172,13 @@
       margin-bottom: 5px;
       border: 1px solid transparent;
       padding-right: 2%;
+      position: relative;
     }
 
     .nickname {
       font-size: 13px;
       font-weight: bold;
+      display: contents;
     }
 
     .type {
@@ -182,8 +188,8 @@
     p {
         margin: 0;
         word-break: break-word;
-        display: contents;
         font-family: "Montserrat" !important;
+        display: contents;
         font-size: 13px;
     }
 
@@ -223,9 +229,11 @@
       color: white;
       opacity: 0.9;
       width: 15px;
-      height: 15px;
-      justify-content: right;
+      align-items: unset;
       width: 50px;
+      position: absolute;
+      right: 0%;
+      top: 10%;
       display: flex;
       flex: auto;
     }
@@ -236,6 +244,7 @@
 
     .reply_button p {
       cursor: pointer;
+      display: contents;
 
     }
 
@@ -272,9 +281,11 @@
 
     :global(time) {
       color: white;
-      font-size: 9px;
-      display: inline-block;
-      margin-left: 40px;
+      font-size: 8px;
+      display: flex;
+      letter-spacing: 1px;
+      display: contents;
+      align-self: unset;
       font-family: "Roboto Mono" !important;
     }
 
@@ -285,4 +296,11 @@
     .reply_button {
     cursor: pointer;
     }
+
+    .avatar {
+      align-self: baseline;
+      margin-top: 7px;
+    }
+
+
 </style>
