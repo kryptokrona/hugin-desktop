@@ -5,12 +5,21 @@
     import {user} from "$lib/stores/user.js";
     import addIcon from '/static/images/add-circle.png'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
-
+    let new_message_sound = new Audio("/static/audio/message.mp3")
     const dispatch = createEventDispatcher();
     let filterArr = []
     let contacts = []
     let msgkey;
     let nickname
+    let newArray
+    onMount(async () => {
+      
+            newArray = await window.api.getConversations()
+            filterArr = newArray
+            if ($user.activeChat) return
+            sendConversation(newArray[0])
+
+    })
     //Get message updates and trigger filter
     messages.subscribe(() => {
       console.log('$messages', $messages);
@@ -23,23 +32,31 @@
       printConversations()
      })
 
-    //Print our conversations from DB
+    //Print our conversations from DBs
     async function printConversations() {
-        filterArr = await window.api.getConversations()
+     newArray = await window.api.getConversations()
+        if (newArray[0].timestamp != filterArr[0].timestamp && newArray[0].sent == 0 &&  $user.activeChat.chat != newArray[0].chat) {
+        
+            newArray[0].new = true
+            
+            new_message_sound.play()
+        }
+
         user.update(current => {
             return {
                 ...current,
-                contacts: filterArr
+                contacts: newArray
             }
         })
         console.log('Printing conversations');
         //If we have no active chat we take the latest known message and dispatch.
         if (!$user.activeChat) {
           console.log('no userchat', $user.activeChat);
-            console.log(filterArr);
+            console.log(newArray);
 
-            sendConversation(filterArr[0])
+            sendConversation(newArray[0])
         }
+        filterArr = newArray
     }
 
     $ : filterArr
@@ -49,11 +66,23 @@
       let chat = message.chat
       let msgkey = message.key
       let name = message.name
-
       let active_chat = {chat: chat, k: msgkey, name: name}
-
+        user.update(user => {
+            return{
+                ...user,
+               activeChat: active_chat
+            }
+        })
       dispatch('conversation', active_chat);
       printConversations()
+}
+
+const readMessage = (e) => {
+    console.log('read')
+   filterArr = filterArr.map(function (a) {
+        if (a => a.new && a.msg == e.msg) {
+            a.new = false
+        } } )
 }
 
 </script>
@@ -65,13 +94,16 @@
     </div>
     <div class="list-wrapper">
         {#each filterArr as message}
-            <div class="card" on:click={(e) => sendConversation(message)}>
+            <div class="card" class:active={message.chat == $user.activeChat.chat} on:click={(e) => sendConversation(message)}>
                 <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="">
                 <div class="content">
                     <h4>{message.name}</h4>
                     <p>{message.msg}</p>
                 </div>
             </div>
+            {#if message.new}
+            <div class:unread={message.new} on:click={()=> readMessage(message)}></div>
+            {/if}
         {/each}
     </div>
 </div>
@@ -124,10 +156,11 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.16);
         transition: 250ms ease-in-out;
         cursor: pointer;
+        opacity: 0.9;
     }
 
     .card:hover {
-        background-color: #333333;
+        opacity: 1.0;
     }
 
     .avatar {
@@ -182,6 +215,19 @@
     .add-icon:hover {
         opacity: 50%;
         padding: 5px;
+    }
+
+    .unread {
+        background-color: red;
+        height: 10px;
+        width: 10px;
+        border-radius: 25px;
+        left: 340px;
+        position: absolute;
+    }
+
+    .active {
+        background-color: royalblue;
     }
 
 </style>
