@@ -19,10 +19,9 @@
 		$: console.log('webrtc peer', $webRTC.peer);
 		$: console.log('stream', $webRTC.stream);
 
-	let ready = false;
+	let ready = false
 	let myVideo = false
 	let peerVideo = true
-
 	let incoming_call
 	let showCallerMenu = false
 
@@ -151,7 +150,6 @@ window.api.receive('node', async (node) => {
 <div class="wrap">
   <SvelteToast {options}/>
 </div>
-
 {#if ready}
 
 <TrafficLights/>
