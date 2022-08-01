@@ -8,6 +8,8 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
+  
+	import Loader from '/src/components/popups/Loader.svelte'
 
   let wallet;
   let walletName;
@@ -17,6 +19,7 @@
   let loginStatus = true;
   let errorMessage = "Wrong password";
   let enableLogin = false;
+  let loading = false
   onMount(() => {
     window.api.send("app", true);
 
@@ -82,6 +85,12 @@
     messages.set(await window.api.getMessages(res => {
     }));
 
+    misc.update(oldData => {
+				return {
+						...oldData,
+						loading: true
+				}
+		})
 
     //Go to dashboard if login was successful
     goto("/dashboard");
@@ -116,8 +125,11 @@
         }
     })
 
+    $: loading = $misc.loading
 </script>
-
+{#if loading}
+<Loader/>
+{/if}
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
   <div class="login-wrapper">
     <div class="login-wrapper">

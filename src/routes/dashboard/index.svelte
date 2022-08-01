@@ -34,6 +34,13 @@
       };
     });
 
+    misc.update(oldData => {
+				return {
+						...oldData,
+						loading: false,
+				}
+		})
+
     if (hrs < 12)
       greet = "Good Morning";
     else if (hrs >= 12 && hrs <= 17)
