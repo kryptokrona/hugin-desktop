@@ -84,6 +84,13 @@
       }
     }
 
+    window.addEventListener('keyup', e => {
+        if (enableNextButton && e.keyCode === 13) {
+            handleLogin()
+            enableNextButton = false
+        }
+    })
+
 </script>
 
 <main in:fade>

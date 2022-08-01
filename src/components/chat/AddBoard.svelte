@@ -28,6 +28,14 @@
               brd: board,
           })
     }
+    
+    window.addEventListener('keyup', e => {
+        if (enableAddBoardButton && e.keyCode === 13) {
+            addBoard(text)
+            enableAddBoardButton = false
+        }
+    })
+
 
 </script>
 

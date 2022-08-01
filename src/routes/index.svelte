@@ -85,7 +85,8 @@
 
     //Go to dashboard if login was successful
     goto("/dashboard");
-
+    myPassword = ""
+    enableLogin = false
   });
 
   //Sets our own address in svelte store
@@ -109,6 +110,12 @@
     }
   }
 
+  window.addEventListener('keyup', e => {
+        if (enableLogin && e.keyCode === 13) {
+            handleLogin()
+            enableLogin = false
+        }
+    })
 
 </script>
 
