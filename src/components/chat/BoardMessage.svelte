@@ -145,7 +145,6 @@
         </div>
         {/if}
         <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
-      
         {#if active}
           <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
 
@@ -175,7 +174,6 @@
       margin-bottom: 5px;
       border: 1px solid transparent;
       padding-right: 2%;
-      position: relative;
     }
 
     .nickname {
@@ -272,7 +270,7 @@
     border-radius: 5px;
     position: absolute;
     height: 25px;
-    margin-left: 20%;
+    margin-left: 140px;
   }
     .reactions p {
       position: relative;
