@@ -10,7 +10,7 @@
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
     import RightMenu from "/src/components/navbar/RightMenu.svelte";
-
+    let board_message_sound = new Audio("/static/audio/boardmessage.mp3")
     let boardMsgs = [];
     let replyto = ''
     let reply_exit_icon = 'x'
@@ -43,6 +43,7 @@
             //Push new message to store
             printBoardMessage(data)
           } else {
+            board_message_sound.play()
             console.log('not this board');
             toast.push('New board message', {
               })
