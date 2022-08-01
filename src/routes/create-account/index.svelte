@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition';
     import FillButton from "/src/components/buttons/FillButton.svelte";
-    import {user} from "$lib/stores/user.js";
+    import {user, misc} from "$lib/stores/user.js";
     import { goto } from '$app/navigation';
     import GreenButton from "/src/components/buttons/GreenButton.svelte";
     import {nodelist} from "$lib/stores/nodes.js";
@@ -27,6 +27,14 @@
         node: nodeAddress,
         port: nodePort
       }
+
+      misc.update(oldData => {
+				return {
+						...oldData,
+						loading: true
+				}
+		})
+
        window.api.send('create-account', accountData);
 
         console.log('Creating user account', accountData)
@@ -85,7 +93,7 @@
     }
 
     window.addEventListener('keyup', e => {
-        if (enableNextButton && e.keyCode === 13) {
+        if (enableNextButton && pass && e.keyCode === 13) {
             handleLogin()
             enableNextButton = false
         }
