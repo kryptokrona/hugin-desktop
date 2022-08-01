@@ -174,7 +174,7 @@
       font-size: 12px;
       margin-left: 2%;
       width: 92%;
-      background: rgba(0,0,0,0.2);
+      background: rgba(0,0,0,0.11);
       border-radius: 10px;
       margin-bottom: 7px;
       border: 1px solid transparent;
