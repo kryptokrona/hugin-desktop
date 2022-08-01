@@ -132,16 +132,19 @@
         <br>
         <br>
         <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
-        {#if active}
-          <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
+      
+  </div>
+  <div class="wrap wrap2">
+    {#if active}
+      <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
 
-          <p class="reply_button" on:click={replyTo}>{replyicon}</p>
-          <EmojiSelector on:emoji={reactTo}/>
+      <p class="reply_button" on:click={replyTo}>{replyicon}</p>
+      <EmojiSelector on:emoji={reactTo}/>
 
-          </div>
-        {:else}
-          <p></p>
-        {/if}
+      </div>
+    {:else}
+      <p></p>
+    {/if}
   </div>
   <div class="wrap">
     {#if has_reaction}
@@ -172,8 +175,8 @@
       margin-left: 2%;
       width: 92%;
       background: rgba(0,0,0,0.2);
-      border-radius: 15px;
-      margin-bottom: 5px;
+      border-radius: 10px;
+      margin-bottom: 7px;
       border: 1px solid transparent;
       padding-right: 2%;
     }
@@ -238,6 +241,7 @@
       color: rgba(255, 255, 255, 0.8) !important;
       flex: auto;
       align-content: flex-start;
+      position: absolute;
     }
 
     .reply_button:hover {
@@ -308,6 +312,13 @@
       
       position: relative;
       margin-left: 40px;
+    }
+
+    .wrap2 {
+      display: flex;
+      left: 540px;
+      bottom: 32px;
+      line-height: 14px;
     }
 
 
