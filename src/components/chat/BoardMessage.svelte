@@ -131,19 +131,6 @@
         <p>{msg}</p>
         <br>
         <br>
-        {#if has_reaction}
-      
-        <div class="reactions">
-          {#each reactions as reaction}
-            <Reaction
-            on:sendReaction={(e) => sendReactMsg(e)}
-             thisReaction={reaction}
-             reacts={message.react}
-             emoji={reaction.m}
-             react={react}/>
-          {/each}
-        </div>
-        {/if}
         <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
         {#if active}
           <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
@@ -156,7 +143,22 @@
           <p></p>
         {/if}
   </div>
-    
+  <div class="wrap">
+    {#if has_reaction}
+      
+    <div class="reactions">
+      {#each reactions as reaction}
+        <Reaction
+        on:sendReaction={(e) => sendReactMsg(e)}
+         thisReaction={reaction}
+         reacts={message.react}
+         emoji={reaction.m}
+         react={react}/>
+      {/each}
+    </div>
+    {/if}
+
+  </div>
 
 
 <style>
@@ -271,6 +273,7 @@
     position: absolute;
     height: 25px;
     margin-left: 140px;
+    margin-top: -35px;
   }
     .reactions p {
       position: relative;
@@ -299,6 +302,12 @@
     .avatar {
       align-self: baseline;
       margin-top: 7px;
+    }
+
+    .wrap {
+      
+      position: relative;
+      margin-left: 40px;
     }
 
 
