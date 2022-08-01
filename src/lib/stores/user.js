@@ -3,7 +3,7 @@ import {get_avatar} from "$lib/utils/hugin-utils.js";
 
 //Default values
 export const user = writable({
-    loggedIn: true,
+    loggedIn: false,
     username: 'Anon',
     activeChat: null,
     huginAddress: '',

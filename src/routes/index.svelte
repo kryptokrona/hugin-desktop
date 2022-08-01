@@ -3,7 +3,7 @@
   import { quadInOut } from "svelte/easing";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import FillButton from "/src/components/buttons/FillButton.svelte";
-  import { user } from "$lib/stores/user.js";
+  import { user, misc } from "$lib/stores/user.js";
   import { nodelist } from "$lib/stores/nodes.js";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
@@ -70,7 +70,7 @@
 
     });
     //Set chosen node from last startup in store
-    user.update(oldData => {
+    misc.update(oldData => {
       return {
         ...oldData,
         node: node.node + ":" + node.port
@@ -86,7 +86,6 @@
     //Go to dashboard if login was successful
     goto("/dashboard");
     myPassword = ""
-    enableLogin = false
   });
 
   //Sets our own address in svelte store
