@@ -7,6 +7,7 @@ import {user} from "$lib/stores/user.js";
 export let contact
 let hover = false
 let settings = false
+
 const dispatch = createEventDispatcher();
 
     //Hover functions
