@@ -20,6 +20,13 @@ export function get_avatar(hash, format='png') {
 
 }
 
+export async function get_board_icon(board) {
+    
+      return intToRGB(hashCode((board)))
+}
+
+
+
 
 const hashCode = (str) => {
     let hash = Math.abs(str.hash_code())*0.007812499538;
