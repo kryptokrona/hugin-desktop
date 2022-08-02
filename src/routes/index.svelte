@@ -33,6 +33,12 @@
   window.api.receive("login-failed", async () => {
     console.log("failed login");
     loginStatus = false;
+    misc.update(oldData => {
+				return {
+						...oldData,
+						loading: false
+				}
+		})
   });
 
   //Handle login, sets logeged in to true and gets user address
@@ -43,6 +49,13 @@
       myPassword: myPassword
     };
     console.log("data", accountData);
+
+    misc.update(oldData => {
+				return {
+						...oldData,
+						loading: true
+				}
+		})
 
     window.api.send("login", accountData);
 
@@ -63,6 +76,7 @@
   $ :  console.log("mypass", myPassword);
 
   window.api.receive("wallet-started", async (myContacts, node) => {
+
     //Set contacts to store
     user.update(data => {
       return {
@@ -85,12 +99,6 @@
     messages.set(await window.api.getMessages(res => {
     }));
 
-    misc.update(oldData => {
-				return {
-						...oldData,
-						loading: true
-				}
-		})
 
     //Go to dashboard if login was successful
     goto("/dashboard");
