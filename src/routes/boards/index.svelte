@@ -10,6 +10,8 @@
     import { toast } from '@zerodevx/svelte-toast'
     import AddBoard from '/src/components/chat/AddBoard.svelte'
     import RightMenu from "/src/components/navbar/RightMenu.svelte";
+    import {page} from '$app/stores'
+    
     let board_message_sound = new Audio("/static/audio/boardmessage.mp3")
     let boardMsgs = [];
     let replyto = ''
@@ -39,12 +41,14 @@
           console.log('boardMsg', data.brd)
           console.log('user', $boards.thisBoard);
 
-          if (data.brd === thisBoard) {
+          if (data.brd === thisBoard && $page.url.pathname === '/boards') {
             //Push new message to store
             printBoardMessage(data)
           } else {
             board_message_sound.play()
             console.log('not this board');
+
+            //Add new popup or style this? 
             toast.push('New board message', {
               })
               unreadMsgs.push(data)
@@ -90,7 +94,7 @@
     $ : thisBoard = $boards.thisBoard
 
     $ : console.log('ThisBoard', thisBoard);
-
+    
     //Exit reply mode
     const replyExit = () => {
       console.log('reply exit');
