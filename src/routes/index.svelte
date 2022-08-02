@@ -8,7 +8,6 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
-  
 	import Loader from '/src/components/popups/Loader.svelte'
 
   let wallet;
@@ -20,6 +19,7 @@
   let errorMessage = "Wrong password";
   let enableLogin = false;
   let loading = false
+
   onMount(() => {
     window.api.send("app", true);
 
