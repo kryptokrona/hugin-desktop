@@ -5,13 +5,17 @@
     import {user} from "$lib/stores/user.js";
     import addIcon from '/static/images/add-circle.png'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+
     let new_message_sound = new Audio("/static/audio/message.mp3")
+
     const dispatch = createEventDispatcher();
+
     let filterArr = []
     let contacts = []
     let msgkey;
     let nickname
     let newArray
+
     onMount(async () => {
       
             newArray = await window.api.getConversations()
@@ -32,22 +36,53 @@
       printConversations()
      })
 
+     async function checkNew() {
+        let filterNew = []
+         newArray.forEach(function (a) {
+
+            filterArr.some(function (b) {
+                console.log('checking?')
+                if (b.new && a.chat === b.chat) {
+                    console.log('old new, keep new', b)
+                     a.new = true
+                }
+            })
+            filterNew.push(a)
+            console.log('pushin')
+            })
+
+            console.log('conversations filtered and set', filterNew)
+
+        return filterNew
+     }
+
+
     //Print our conversations from DBs
     async function printConversations() {
-     newArray = await window.api.getConversations()
-        if (newArray[0].timestamp != filterArr[0].timestamp && newArray[0].sent == 0 &&  $user.activeChat.chat != newArray[0].chat) {
+
+        newArray = await window.api.getConversations()
+
+
+        //If it is not the same message and not our active chat, add unread boolean
+        if (newArray[0].timestamp != filterArr[0].timestamp && newArray[0].sent == 0 && $user.activeChat.chat != newArray[0].chat) {
         
             newArray[0].new = true
             
             new_message_sound.play()
         }
 
+        let conversations = await checkNew()
+        
+        console.log('conv', conversations)
+
+        //Remove this?
         user.update(current => {
             return {
                 ...current,
                 contacts: newArray
             }
         })
+
         console.log('Printing conversations');
         //If we have no active chat we take the latest known message and dispatch.
         if (!$user.activeChat) {
@@ -56,13 +91,13 @@
 
             sendConversation(newArray[0])
         }
-        filterArr = newArray
+
+        filterArr = conversations
     }
 
-    $ : filterArr
     //Dispatches the clicked conversation to parent
     function sendConversation(message) {
-
+     readMessage(message)
       let chat = message.chat
       let msgkey = message.key
       let name = message.name
@@ -75,15 +110,26 @@
         })
       dispatch('conversation', active_chat);
       printConversations()
-}
+    }
 
-const readMessage = (e) => {
-    console.log('read')
-   filterArr = filterArr.map(function (a) {
-        if (a => a.new && a.msg == e.msg) {
-            a.new = false
-        } } )
-}
+    function readMessage(e) {
+
+        console.log('reading this')
+
+        filterArr = filterArr.map(function (a) {
+
+            if ( e.new && a.chat == e.chat) {
+                console.log('reading this', a)
+                a.new = false
+            } 
+        return a
+
+        })
+
+        filterArr = filterArr
+    }
+    
+    $ : filterArr
 
 </script>
 
@@ -93,17 +139,17 @@ const readMessage = (e) => {
         <img class="add-icon" src={addIcon} on:click>
     </div>
     <div class="list-wrapper">
-        {#each filterArr as message}
+        {#each filterArr as message (message.timestamp)}
             <div class="card" class:active={message.chat == $user.activeChat.chat} on:click={(e) => sendConversation(message)}>
+                    {#if message.new}
+                    <div class:unread={message.new}></div>
+                    {/if}
                 <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="">
                 <div class="content">
                     <h4>{message.name}</h4>
                     <p>{message.msg}</p>
                 </div>
             </div>
-            {#if message.new}
-            <div class:unread={message.new} on:click={()=> readMessage(message)}></div>
-            {/if}
         {/each}
     </div>
 </div>
@@ -143,6 +189,7 @@ const readMessage = (e) => {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         z-index: 9;
     }
 
@@ -156,7 +203,7 @@ const readMessage = (e) => {
         transition: 250ms ease-in-out;
         cursor: pointer;
         opacity: 0.9;
-        border-top: 1px solid;
+        border-top: 1px solid transparent;
     }
 
     .card:hover {
@@ -218,16 +265,18 @@ const readMessage = (e) => {
     }
 
     .unread {
-        background-color: red;
-        height: 10px;
-        width: 10px;
-        border-radius: 25px;
+        animation: border_rgb 30s infinite;
+        background-color: white;
+        width: 5px;
+        height: 2px;
+        border-radius: 30%;
         left: 340px;
+        margin-top: 25px;
         position: absolute;
     }
 
     .active {
-        animation: border_rgb 10s ease infinite;;
+        animation: border_rgb 10s infinite;
     }
 
 </style>
