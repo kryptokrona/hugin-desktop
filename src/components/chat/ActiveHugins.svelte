@@ -149,9 +149,13 @@
     }
 
     h2 {
+   
         margin: 0;
         color: #fff;
-        font-size: 19px;
+        font-family: 'Roboto Mono';
+        font-weight: bold;
+        font-size: 22px;
+
 
     }
 
