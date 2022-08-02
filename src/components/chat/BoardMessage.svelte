@@ -67,7 +67,6 @@
           text: e.detail.msg,
           reply: hash
         })
-        //window.api.sendBoardMsg()
       }
 
       const reactTo = (e) => {
@@ -136,7 +135,7 @@
   </div>
   <div class="wrap wrap2">
     {#if active}
-      <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} on:mouseleave={leave} class:active>
+      <div class="options"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} class:active>
 
       <p class="reply_button" on:click={replyTo}>{replyicon}</p>
       <EmojiSelector on:emoji={reactTo}/>
@@ -270,7 +269,7 @@
     font-family: 'Roboto Mono';
     color: black;
     opacity: 0.9;
-    width: 500px;
+    width: max-content;
     display: block;
     flex: auto;
     border-radius: 5px;
