@@ -9,6 +9,7 @@
     import openAddBoard from '/src/routes/boards/index.svelte';
     import {createEventDispatcher} from "svelte";
     import settingsIcon from '/static/images/settings.png'
+    import { get_board_icon } from '$lib/utils/hugin-utils.js';
 
     const dispatch = createEventDispatcher()
     let contact
@@ -74,7 +75,14 @@
     {#if $page.url.pathname === '/boards'}
         <div class="add" on:click={openAdd}></div>
         {#each $boards.boardsArray as board}
-            <button class="boardicon" on:click={() => printBoard(board)}>{board}</button>
+          {#await  get_board_icon(board)}
+            {:then board_color}
+        <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
+            <button class="boardicon" on:click={() => printBoard(board)}>{board.substring(0,1).toUpperCase()}</button>
+        </div>
+            {:catch error}
+            <div>{error.message}</div>
+         {/await}
         {/each}
     {/if}
 
@@ -99,7 +107,7 @@
 </div>
 
 
-<style>
+<style lang="scss">
 
     .rightMenu {
         height: 100vh;
@@ -124,11 +132,14 @@
     }
 
     .add {
-        height: 50px;
-        width: 50px;
-        border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.22);
-        transition: 250ms ease-in-out;
+      height: 50px;
+      width: 50px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.22);
+      transition: 250ms ease-in-out;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+
     }
 
     .add:hover {
@@ -136,14 +147,23 @@
     }
 
     .boardicon {
-        border: none;
-        background: none;
-        color: white;
-        font-size: 12px;
-        opacity: 0.9;
-        word-break: break-word;
-        font-family: 'Montserrat';
-        cursor: pointer;
+      border: none;
+      background: none;
+      color: #f2f2f2;
+      font-size: 22px;
+      opacity: 0.9;
+      word-break: break-word;
+      font-family: 'Montserrat';
+      cursor: pointer;
+      border-radius: 15px;
+      width: 44px;
+      height: 44px;
+      opacity: 0.89
+    } 
+
+    .board_icon:hover {
+      opacity: 1;
+      color: white;
     }
 
     .caller_menu {
@@ -183,6 +203,16 @@
 
     .avatar {
       height: 70px;
+    }
+
+    .board {
+      border-radius: 11px;
+      opacity: 0.88;
+      margin-bottom: 5px;
+    }
+
+    .board:hover {
+      opacity: 1;
     }
 
 </style>
