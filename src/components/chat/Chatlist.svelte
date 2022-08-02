@@ -4,8 +4,7 @@
     import {messages} from "$lib/stores/messages.js";
     import {user} from "$lib/stores/user.js";
     import addIcon from '/static/images/add-circle.png'
-    import {get_avatar} from "$lib/utils/hugin-utils.js";
-
+    import Contact from '/src/components/chat/Contact.svelte'
     let new_message_sound = new Audio("/static/audio/message.mp3")
 
     const dispatch = createEventDispatcher();
@@ -35,6 +34,7 @@
     window.api.receive('sent', data => {
       printConversations()
      })
+
 
      async function checkNew() {
         let filterNew = []
@@ -128,6 +128,8 @@
 
         filterArr = filterArr
     }
+
+
     
     $ : filterArr
 
@@ -140,16 +142,7 @@
     </div>
     <div class="list-wrapper">
         {#each filterArr as message (message.timestamp)}
-            <div class="card" class:active={message.chat == $user.activeChat.chat} on:click={(e) => sendConversation(message)}>
-                    {#if message.new}
-                    <div class:unread={message.new}></div>
-                    {/if}
-                <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="">
-                <div class="content">
-                    <h4>{message.name}</h4>
-                    <p>{message.msg}</p>
-                </div>
-            </div>
+           <Contact contact={message} on:thisContact={(e)=> sendConversation(e.detail.contact)} />
         {/each}
     </div>
 </div>
@@ -193,61 +186,11 @@
         z-index: 9;
     }
 
-    .card {
-        box-sizing: border-box;
-        display: flex;
-        padding: 10px 20px 10px 10px;
-        width: 100%;
-        color: white;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-        transition: 250ms ease-in-out;
-        cursor: pointer;
-        opacity: 0.9;
-        border-top: 1px solid transparent;
-    }
-
-    .card:hover {
-        opacity: 1.0;
-    }
-
-    .avatar {
-        margin-bottom: 10px;
-    }
-
-    .content {
-        margin-left: 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    h4 {
-        margin: 0;
-        white-space: nowrap;
-        max-width: 180px;
-        overflow: hidden;
-        font-family: "Montserrat";
-        text-overflow: ellipsis;
-        font-weight: bold;
-
-    }
-
     h2 {
         margin: 0;
         color: #fff;
         font-size: 22px;
 
-    }
-
-    p {
-      margin: 0;
-      white-space: nowrap;
-      max-width: 200px;
-      overflow: hidden;
-      font-size: 12px;
-      margin-top: 5px;
-      text-overflow: ellipsis;
-      font-family: "Montserrat";
     }
 
     .add-icon {
@@ -262,21 +205,6 @@
     .add-icon:hover {
         opacity: 50%;
         padding: 5px;
-    }
-
-    .unread {
-        animation: border_rgb 30s infinite;
-        background-color: white;
-        width: 5px;
-        height: 2px;
-        border-radius: 30%;
-        left: 340px;
-        margin-top: 25px;
-        position: absolute;
-    }
-
-    .active {
-        animation: border_rgb 10s infinite;
     }
 
 </style>
