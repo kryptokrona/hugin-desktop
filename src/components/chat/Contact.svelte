@@ -2,7 +2,7 @@
 import {createEventDispatcher, onMount} from 'svelte'
 import {fade} from "svelte/transition";
 import {get_avatar} from "$lib/utils/hugin-utils.js";
-import {user} from "$lib/stores/user.js";
+import {user, webRTC} from "$lib/stores/user.js";
 
 export let contact
 
@@ -37,7 +37,7 @@ const dispatch = createEventDispatcher();
     }
 
     const rename = () => {
-        
+
         user.update(a => {
             return {
             ...a,
@@ -50,7 +50,13 @@ const dispatch = createEventDispatcher();
 
 </script>
     
-<div class="card"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:mouseenter={show} on:mouseleave={hide} class:active={contact.chat == $user.activeChat.chat} on:click={(e) => printThis(contact)}>
+<div class="card"  
+        in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" 
+        on:mouseenter={show} on:mouseleave={hide} 
+        class:rgb={contact.chat ===  $webRTC.call.sender}
+        class:active={contact.chat == $user.activeChat.chat}
+        on:click={(e) => printThis(contact)}>
+
     {#if contact.new}
     <div class:unread={contact.new}></div>
     {/if}
