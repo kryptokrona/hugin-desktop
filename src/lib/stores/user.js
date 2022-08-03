@@ -7,7 +7,6 @@ export const user = writable({
     username: 'Anon',
     activeChat: null,
     huginAddress: '',
-    call: false,
     callerMenu: false,
     contacts: null,
     addChat: false,
@@ -39,6 +38,13 @@ export const webRTC = writable({
   myStream: false,
   peerStream: false,
   screen: false,
+  call: [{ 
+    peer: false,
+    myVideo: false,
+    peerVideo: false,
+    peerStream: false,
+    myStream: false,
+  }]
 })
 
 export const userAvatar = derived(user, $user => {
