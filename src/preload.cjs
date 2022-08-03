@@ -14,8 +14,9 @@ const WINDOW_API = {
     ipcRenderer.on(channel, (event, ...args) => func(...args))
   },
 
-  addChat: (hugin, name) => {
-    ipcRenderer.send('addChat', hugin, name)
+  addChat: (hugin, name, first) => {
+    console.log('addchat first',first, name, hugin)
+    ipcRenderer.send('addChat', hugin, name, first)
   },
   // HANDLE MESSAGES
   sendMsg: (msg, address, key) => {
