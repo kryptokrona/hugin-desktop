@@ -5,8 +5,10 @@ import {get_avatar} from "$lib/utils/hugin-utils.js";
 import {user} from "$lib/stores/user.js";
 
 export let contact
+
 let hover = false
 let settings = false
+let nickname
 
 const dispatch = createEventDispatcher();
 
@@ -28,15 +30,26 @@ const dispatch = createEventDispatcher();
         settings = false;
     }
 
-    const printThis = () => {
+    const printThis = (contact) => {
         dispatch('thisContact', {
             contact: contact,
         })
     }
 
+    const rename = () => {
+        
+        user.update(a => {
+            return {
+            ...a,
+            rename: contact
+            }
+        })
+        dispatch('openRename')
+    }
+
 
 </script>
-
+    
 <div class="card"  in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:mouseenter={show} on:mouseleave={hide} class:active={contact.chat == $user.activeChat.chat} on:click={(e) => printThis(contact)}>
     {#if contact.new}
     <div class:unread={contact.new}></div>
@@ -44,7 +57,7 @@ const dispatch = createEventDispatcher();
       {#if hover}
         <div class="contact_settings" on:mouseenter={showSettings} on:mouseleave={hideSettings}>x
           {#if settings}
-              <div class="rename">Rename</div>
+              <div class="rename" on:click={rename(contact)}>Rename</div>
           {/if}
         </div>
     {/if}
@@ -135,6 +148,14 @@ const dispatch = createEventDispatcher();
     
     .active {
         animation: border_rgb 10s infinite;
+    }
+
+    .contact_settings {
+        position: relative;
+    }
+
+    .rename {
+        position: absolute;
     }
 
 </style>
