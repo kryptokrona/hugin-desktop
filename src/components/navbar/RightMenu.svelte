@@ -77,9 +77,9 @@
         {#each $boards.boardsArray as board}
           {#await  get_board_icon(board)}
             {:then board_color}
-        <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-            <button class="boardicon" on:click={() => printBoard(board)}>{board.substring(0,1).toUpperCase()}</button>
-        </div>
+               <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
+                  <button class="boardicon" on:click={() => printBoard(board)}>{board.substring(0,1).toUpperCase()}</button>
+               </div>
             {:catch error}
             <div>{error.message}</div>
          {/await}
