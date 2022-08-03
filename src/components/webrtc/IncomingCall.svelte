@@ -4,11 +4,11 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user, misc} from "$lib/stores/user.js";
+    import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
 
     export let paused = false
-    let avatar = get_avatar($misc.call.sender)
+    let avatar = get_avatar($webRTC.call[0])
     let ringtone = new Audio("/static/audio/ringtone.mp3")
 
     let answered = false
@@ -24,10 +24,10 @@
         //Variable to activate visual feedback
         answered = true
 
-        let caller = $user.contacts.filter(a => a.chat === $misc.call.sender)
+        let caller = $user.contacts.filter(a => a.chat === $webRTC.call[0].sender)
 
          //We delay the answerCall for routing purposes
-         window.api.answerCall($misc.call.msg, $misc.call.sender, caller[0].key)
+         window.api.answerCall($webRTC.call[0].msg, $webRTC.call[0].sender, caller[0].key)
         
         //We pause the ringtone and destroy the popup
         ringtone.pause()
