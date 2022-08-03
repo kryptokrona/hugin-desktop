@@ -6,9 +6,12 @@
     import {onDestroy, onMount} from "svelte";
     import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
+    import {page} from "$app/stores";
     let myVideo = document.getElementById('myVideo')
     let video = false
-    let show = true
+    let hide = true
+    let hover = true
+    let chatWindow = true
     const dispatch = createEventDispatcher();
 
     // When incoming call and this get mounted we play the ringtone
@@ -16,12 +19,22 @@
 
           myVideo.srcObject = $webRTC.myStream
           myVideo.play();
-          console.log('MyVidya', myVideo);
+          console.log('MyVidya',  $webRTC.myStream);
+          console.log('MyVidya call',  $webRTC.call);
 
     })
 
     onDestroy(() => {
     })
+
+    //Hover functions
+    function enter() {
+        hover = true;
+    }
+
+    function leave() {
+        hover = false;
+    }
 
 
     //When a user clicks answer
@@ -39,19 +52,31 @@
     //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
     })
+    
+    const toggleWindow = () => {
+        hide = !hide
+    }
 
-    $: console.log('$webRTC.', $webRTC);
-    console.log('mypeer',$webRTC.myPeer);
+    $: if ($page.url.pathname === '/messages' && $user.activeChat.chat === $webRTC.call[0].sender.substring(0,99)) {
+        chatWindow = true
+    } else {
+        chatWindow = false
+        hide = true
+    }
 
-    $: video = $webRTC.myVideo
+    $: video = $webRTC.call[0].myVideo
+
     $: console.log('$webRTC.', $webRTC);
 </script>
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card">
+<div on:mouseenter={enter} on:mouseleave={leave} class:toggle={!chatWindow} class:hide={hide} in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card">
   <div class="inner-card">
-  <video muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
+
+    
+  <video  class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
+ 
   <!-- <div class="options">
     <div class="answer hover" on:click={playVideo} >
         <img src="/static/images/call.svg" alt="">
@@ -60,18 +85,25 @@
           <img src="/static/images/call-slash.svg" alt="">
       </div>
     </div> -->
+    {#if hover}
+    <p  class="toggle_window" on:click={toggleWindow}>Hide</p>
+    {/if}
   </div>
-</div>
+  
 
+
+</div>
 <style lang="scss">
     .card {
         display: flex;
         position: absolute;
         padding: 1px;
+       
         top: 30px;
         height: 225px;
         width: 300px;
-        left: 33%;
+        left: 35%;
+        
         background-color: #5f86f2;
         border-radius: 5px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
@@ -134,14 +166,44 @@
     }
 
 
-        video {
-            width: 300px;
-            z-index: 99999;
-            position: absolute;
-        }
+    video {
+        z-index: 99999;
+        position: absolute;
+    }
 
-        #myVideo {
+    #myVideo {
+        width: 300px;
+        z-index: 2;
+    }
 
-        }
+    .hide {
+        width: 60px !important;
+        height: 50px;
+    }
+
+    .toggleVideo {
+        width: 60px !important;
+    }
+
+    .toggle_window {
+        color: white;
+        width: 50px;
+        height: 20px;
+        font-size: 12px;
+        font-family: "Montserrat";
+        background: royalblue;
+        position: absolute;
+        display: block;
+        z-index: 3;
+        bottom: -15px;
+        border-radius: 10px;
+    }
+
+    .toggle {
+        left: 1%;
+        top: 250px;
+        width: 50px;
+        height: 20px;
+    }
 
 </style>
