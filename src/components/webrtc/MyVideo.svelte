@@ -10,8 +10,9 @@
     let myVideo = document.getElementById('myVideo')
     let video = false
     let hide = true
-    let hover = true
+    let hover = false
     let chatWindow = true
+    let thisCall
     const dispatch = createEventDispatcher();
 
     // When incoming call and this get mounted we play the ringtone
@@ -57,8 +58,11 @@
         hide = !hide
     }
 
-    $: if ($page.url.pathname === '/messages' && $user.activeChat.chat === $webRTC.call[0].sender.substring(0,99)) {
+    $: if ($webRTC.myVideo) thisCall = $webRTC.call[0].sender
+
+    $: if ($page.url.pathname === '/messages' && $user.activeChat.chat == thisCall.substring(0,99)) {
         chatWindow = true
+        hide = false
     } else {
         chatWindow = false
         hide = true
@@ -71,7 +75,7 @@
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div on:mouseenter={enter} on:mouseleave={leave} class:toggle={!chatWindow} class:hide={hide} in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card">
+<div on:mouseenter={enter} on:mouseleave={leave} class:toggle={!chatWindow} class:hide={hide} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card">
   <div class="inner-card">
 
     
