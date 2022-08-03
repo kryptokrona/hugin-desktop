@@ -34,7 +34,11 @@
     window.api.receive('sent', data => {
       printConversations()
      })
-
+     
+    //Listen for sent message to update conversation list
+    window.api.receive('saved-addr', data => {
+      printConversations()
+     })
 
      async function checkNew() {
         let filterNew = []
@@ -128,8 +132,6 @@
 
         filterArr = filterArr
     }
-
-
     
     $ : filterArr
 
@@ -142,7 +144,7 @@
     </div>
     <div class="list-wrapper">
         {#each filterArr as message (message.timestamp)}
-           <Contact contact={message} on:thisContact={(e)=> sendConversation(e.detail.contact)} />
+           <Contact on:openRename={(e)=> dispatch('openRename')} on:rename={(a) => dispatch('rename', a)} contact={message} on:thisContact={(e)=> sendConversation(e.detail.contact)} />
         {/each}
     </div>
 </div>
