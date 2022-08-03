@@ -32,7 +32,8 @@
             name: nickname,
             chat: addr,
             k: pubkey,
-            msg: 'Friend Added'
+            msg: 'New friend added!',
+            sent: true,
         })
     }
 
