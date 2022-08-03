@@ -1,4 +1,5 @@
 <script>
+
     import {fade} from 'svelte/transition';
     import {onMount} from "svelte";
     import {messages} from "$lib/stores/messages.js";
@@ -8,6 +9,8 @@
     import ChatList from "/src/components/chat/ChatList.svelte";
     import AddChat from "/src/components/chat/AddChat.svelte";
     import {user} from "$lib/stores/user.js";
+    import Rename from '/src/components/chat/Rename.svelte'
+
     let video
     let audio
     let chat
@@ -19,6 +22,7 @@
     let codec
     let stream
     let box
+
     //Get messages on mount
     onMount(async () => {
 
@@ -59,7 +63,7 @@
 
       let addContact = e.detail.chat + e.detail.k
       //Send contact to backend and to saveContact()
-        window.api.addChat(addContact, e.detail.name)
+        window.api.addChat(addContact, e.detail.name, true)
         console.log('event', e.detail)
         //Add input to message arr
         let newMessage = e.detail
@@ -117,13 +121,35 @@
 	function scrollDown() {
 	console.log('wanna scroll');
 	}
-</script>
+  
+  function renameContact(e) {
+        console.log('contac', e)
+        console.log('USER RENAME',$user.rename)
+        let thisContact = $user.rename.chat + $user.rename.key
+      //Send contact to backend and overwrite our old contact
+      console.log(' want to add', thisContact)
+      window.api.addChat(thisContact, e.detail.text, false)
+      toggleRename = false
+    }
 
-{#if wantToAdd}
-    <AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)}/>
-{/if}
+    let toggleRename = false
+    const openRename = (a) => {
+      console.log('rename open!')
+        toggleRename = !toggleRename
+    } 
+
+    </script>
+
+    {#if toggleRename}
+    <Rename on:rename={(a) => renameContact(a)} this_contact={contact} on:click={openRename}/>
+    {/if}
+
+    {#if wantToAdd}
+        <AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)}/>
+    {/if}
+
 <main in:fade>
-    <ChatList on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
+    <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
     <div class="rightside">'
 
     <div class="chat_window" bind:this={box}>
