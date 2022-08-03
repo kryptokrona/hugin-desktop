@@ -8,7 +8,8 @@ export let contact
 
 let hover = false
 let settings = false
-let nickname
+
+$: thisCall = $webRTC.call.some(a=> a.sender === contact.chat)
 
 const dispatch = createEventDispatcher();
 
@@ -53,7 +54,7 @@ const dispatch = createEventDispatcher();
 <div class="card"  
         in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" 
         on:mouseenter={show} on:mouseleave={hide} 
-        class:rgb={contact.chat ===  $webRTC.call.sender}
+        class:rgb={thisCall}
         class:active={contact.chat == $user.activeChat.chat}
         on:click={(e) => printThis(contact)}>
 
