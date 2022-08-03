@@ -10,7 +10,7 @@
 	import MyVideo from "/src/components/webrtc/MyVideo.svelte";
 	import PeerVideo from "/src/components/webrtc/PeerVideo.svelte";
 	//Stores
-	import { user, misc, webRTC } from "$lib/stores/user.js";
+	import { user, webRTC, misc } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
@@ -67,12 +67,7 @@
 		//Handle incoming call
 		window.api.receive('call-incoming', (msg, sender) => {
 			incoming_call = true
-			misc.update(current => {
-				return{
-					...current,
-					call: {msg, sender}
-				}
-			})
+			$webRTC.call.push(msg, sender)
 		})
 
 		//Handle sync status
@@ -131,8 +126,6 @@ window.api.receive('node', async (node) => {
 
 	});
 
-	$: console.log('$user.call.out', $user.call.out);
-
 
 	const options = {
 		duration: 10000,       // duration of progress bar tween to the `next` value
@@ -158,7 +151,7 @@ window.api.receive('node', async (node) => {
 		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
 	{/if}
 
-	{#if $user.loggedIn && showCallerMenu && $misc.call }
+	{#if $user.loggedIn && showCallerMenu && $webRTC.call.msg }
 		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
 
