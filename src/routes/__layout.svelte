@@ -49,10 +49,6 @@
 		showCallerMenu = !showCallerMenu
 	}
 
-	$: if ($webRTC.video) {
-		video = true
-	}
-
 	onMount( async () => {
 		window.process = {
 			...window.process,
@@ -151,7 +147,7 @@ window.api.receive('node', async (node) => {
 		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
 	{/if}
 
-	{#if $user.loggedIn && showCallerMenu && $webRTC.call.msg }
+	{#if $user.loggedIn && showCallerMenu && $webRTC.call[0].sender }
 		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
 
