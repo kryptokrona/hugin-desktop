@@ -39,6 +39,7 @@ export const webRTC = writable({
   peerStream: false,
   screen: false,
   call: [{ 
+    sender: false,
     peer: false,
     myVideo: false,
     peerVideo: false,
