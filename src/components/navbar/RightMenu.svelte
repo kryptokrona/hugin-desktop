@@ -10,13 +10,14 @@
     import {createEventDispatcher} from "svelte";
     import settingsIcon from '/static/images/settings.png'
     import { get_board_icon } from '$lib/utils/hugin-utils.js';
-
+    
     const dispatch = createEventDispatcher()
     let contact
     let active_contact
     let avatar
     let calltype
     let call_active = false
+    let startTone = new Audio("/static/audio/startcall.mp3")
 
     $: {
         if($user.activeChat) {
@@ -29,15 +30,11 @@
     //Starts any call
     const startCall = async (contact, calltype) => {
         console.log(contact, calltype)
+        startTone.play()
         window.api.startCall(contact, calltype)
         dispatch('startCall')
-        user.update(data => {
-          return {
-            ...data,
-            call: {sender: contact, type: calltype, out: true},
-            callerMenu: true,
-          }
-        })
+
+       console.log('call active',$webRTC.call);
     }
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
     const printBoard = async (board) => {
