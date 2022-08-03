@@ -269,7 +269,7 @@
     font-family: 'Roboto Mono';
     color: black;
     opacity: 0.9;
-    width: max-content;
+    width: 400px;
     display: block;
     flex: auto;
     border-radius: 5px;
