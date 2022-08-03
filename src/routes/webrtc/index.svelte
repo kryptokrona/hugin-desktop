@@ -79,82 +79,51 @@
       async function gotMedia (stream, contact, video, screen_stream=false) {
         console.log('contact', contact);
           console.log('video?', video);
-            console.log('We want contact stream', stream)
-            if ( video ) {
-
+          console.log('We want contact stream', stream)
+          if ( video ) {
+            
               calling = true;
-              webRTC.update((data) => {
-                return {
-                  ...data,
-                  myVideo: true,
-                }
-              })
+            
+              if (screen_stream) {
 
-                if (screen_stream) {
+                  screen_stream.addTrack(stream.getAudioTracks()[0]);
 
-                    screen_stream.addTrack(stream.getAudioTracks()[0]);
-                    webRTC.update((data) => {
-                      return {
-                        ...data,
-                          screen: true,
-                      }
-                    })
+                  stream = screen_stream;
+              }
 
-                    stream = screen_stream;
-                }
-              } else {
+            } else {
 
               console.log('Audio call');
             }
-
-
-
-
-            webRTC.update((data) => {
-              return {
-                ...data,
-                myStream: stream,
-              }
-            })
-
-            misc.update((data) => {
-              return {
-                ...data,
-                call: {msg: 'outgoing', out:true, sender: contact, video: video}
-              }
-            })
-
-
+            
             let peer1 = new Peer({
                 initiator: true,
                 stream: stream,
                 trickle: false,
                 wrtc: wrtc,
-                offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
+                offerOptions: {offerToReceiveVideo: video, offerToReceiveAudio: true},
                 sdpTransform: (sdp) => {
                     return sdp;
-                    // console.log('lol, lmao', sdp);
-                    //
-                    // let sdp_object = {'sdp': sdp};
-                    //
-                    // let parsed_data = `${video ? "Δ" : "Λ"}` + parse_sdp(sdp_object);
-                    // console.log(parsed_data);
-                    // let recovered_data = sdp_parser.expand_sdp_offer(parsed_data);
-                    // console.log(recovered_data);
-                    // return recovered_data.sdp;
                 }
             })
 
-            webRTC.update((data) => {
-              return {
-                ...data,
-                peer: peer1,
-              }
-            })
+            let call =  {
+                        msg: 'outgoing',
+                        out:true, 
+                        sender: contact.substring(0, 99),
+                        video: video,
+                        peer: peer1,
+                        myStream: stream,
+                        myVideo: video, 
+                        screen: screen_stream
+                        }
 
+            $webRTC.call.unshift(call)
+            console.log('webrtclogggg', $webRTC.call[0])
+            $webRTC.myStream = stream
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
             console.log('video codecs', video_codecs);
-
+            $webRTC.myVideo = true
             let custom_codecs = [];
 
             let codec;
@@ -174,11 +143,6 @@
                transceiverList[1].setCodecPreferences(custom_codecs)
 
             }
-
-
-
-            console.log('webrtc', $webRTC);
-            console.log('codec set');
 
 
             let first = true;
@@ -206,25 +170,16 @@
 
                  //let extra_class = "";
                  if (video) {
-                      webRTC.update((data) => {
-                        return {
-                        ...data,
-                        peerVideo: true,
-                      }
-                 })
-               }
+                  $webRTC.call[0].peerVideo = true
+                 }
 
                 console.log('Got Stream Peer1', peerStream);
 
                  call = true
                  let tracks = peerStream.getTracks()
                  console.log('tracks', tracks);
-                 webRTC.update((data) => {
-                   return {
-                     ...data,
-                     peerStream: peerStream,
-                   }
-                 })
+
+                 $webRTC.call[0].peerStream = peerStream
 
                })
 
@@ -245,13 +200,10 @@
                         contact: contact,
                         video: video,
                     }
-                    //  console.log('real data:', data);
+
                     console.log('SDP', data);
-                    // console.log('parsed data:', parsed_data);
+
                     window.api.send('get-sdp', dataToSend)
-                    // console.log('recovered data:', recovered_data);
-                    // console.log('some other data:', {'type': 'offer', 'sdp': recovered_data});
-                    // peer1._pc.setLocalDescription(recovered_data);
                 } catch (err) {
                     console.log('error', err)
                 }
@@ -267,8 +219,7 @@
             })
             //Awaits msg answer with sdp from contact
             window.api.receive('got-callback', async (callerdata) => {
-                console.log('callback', callerdata);
-                console.log('from', callerdata.sender);
+
                 let callback = JSON.parse(callerdata.data)
                 console.log('callback parsed', callback);
 
@@ -296,8 +247,6 @@
             if (msg.substring(0, 1) === 'Δ') {
                 video = true
             }
-            // $('#messages_contacts').addClass('in-call');
-            // $('#settings').addClass('in-call');
 
             // get video/voice stream
             navigator.mediaDevices.getUserMedia({
@@ -309,17 +258,6 @@
 
             function gotMedia(stream) {
                 console.log('FN getMedia', stream, video)
-
-                if (video) {
-
-                  webRTC.update((data) => {
-                    return {
-                      ...data,
-                      myVideo: true,
-                    }
-                  })
-
-                }
 
                 let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
 
@@ -344,14 +282,13 @@
 
                 console.log('codec set');
 
-                webRTC.update((data) => {
-                  return {
-                    ...data,
-                    myStream: stream,
-                    peer: peer2,
-                  }
-                })
-
+                $webRTC.call[0].peer = peer2
+                console.log('peerset',$webRTC.call[0].peer)
+                $webRTC.call[0].myStream = stream
+               
+                if (video) {
+                  $webRTC.call[0].myVideo = true
+                }
                 console.log('webrtc store settings set', $webRTC);
 
                 peer2.on('close', () => {
@@ -412,13 +349,15 @@
                 peer2.on('stream', peerStream => {
                     // got remote video stream, now let's show it in a video tag
                     console.log('peer2 stream', peerStream)
+                    $webRTC.call[0].peerStream = peerStream
 
-                    webRTC.update((data) => {
-                      return {
-                        ...data,
-                        peerStream: peerStream,
-                      }
-                    })
+                    if (video) {
+                      $webRTC.peerVideo = true
+                    }
+
+                    console.log('peerstream object', $webRTC.call[0].peerStream)
+
+                
                     call = true;
                     let tracks = peerStream.getTracks()
                     console.log('tracks', tracks);
@@ -435,7 +374,7 @@
       })
 
   //End call
-  function endCall (peer, stream) {
+  function endCall (peer, stream, call) {
 
         try {
             peer.destroy();
