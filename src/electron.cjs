@@ -728,13 +728,14 @@ ipcMain.on('addBoard', async (e, board) => {
 })
 
 //Listens for event from frontend and saves contact and nickname.
-ipcMain.on('addChat', async (e, hugin_address, nickname) => {
-  let first = true
+ipcMain.on('addChat', async (e, hugin_address, nickname, first) => {
+  console.log('addchat first',first)
   saveContact(hugin_address, nickname, first)
 })
 //Saves contact and nickname to db.
-async function saveContact(hugin_address, nickname=false, first=false) {
+async function saveContact(hugin_address, nickname=false, first) {
   console.log('huginadress', hugin_address);
+  console.log(first)
   let name
   if (!nickname) {
     console.log('no nickname')
@@ -746,9 +747,12 @@ async function saveContact(hugin_address, nickname=false, first=false) {
   let addr = hugin_address.substring(0,99)
   let key = hugin_address.substring(99, 163)
 
-  known_keys.push(key)
+  if (known_keys.indexOf(key) == -1) {
+      
+      known_keys.push(key)
+  }
   console.log('Pushing this to known keys ', known_keys)
-  // mainWindow.webContents.send('saved-addr', huginaddr)
+  mainWindow.webContents.send('saved-addr', hugin_address)
   database.run(
       `REPLACE INTO contacts
          (address, key, name)
