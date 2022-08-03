@@ -15,7 +15,6 @@ const WINDOW_API = {
   },
 
   addChat: (hugin, name, first) => {
-    console.log('addchat first',first, name, hugin)
     ipcRenderer.send('addChat', hugin, name, first)
   },
   // HANDLE MESSAGES
