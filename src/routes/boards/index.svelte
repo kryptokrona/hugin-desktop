@@ -78,7 +78,7 @@
     //Prints any single board message. Takes boardmessage and updates to store.
     const printBoardMessage = (boardMsg) => {
 
-      if (boardMsg.r.length === 64 && boardMsg.m.length < 5 && containsOnlyEmojis(boardMsg.m)) {
+      if (boardMsg.r.length === 64 && boardMsg.m.length < 9 && containsOnlyEmojis(boardMsg.m)) {
         updateReactions(boardMsg)
       } else if (boardMsg.m.length > 0 && !(boardMsg.r.length === 64 && containsOnlyEmojis(boardMsg.m))) {
         console.log('pushin');
@@ -167,7 +167,7 @@
       //All boardmessages all messages except reactions
       filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !(m.r.length === 64 && containsOnlyEmojis(m.m)))
       //Only reactions
-      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 4 && containsOnlyEmojis(e.m))
+      filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 9 && containsOnlyEmojis(e.m))
       console.log('filter emoji ', filterEmojis);
       if (filterEmojis.length) {
          //Adding emojis to the correct message.
@@ -236,6 +236,7 @@
       function containsOnlyEmojis(text) {
         const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
         const visibleChars = text.replace(new RegExp('[\n\r\s]+|( )+', 'g'), '')
+        console.log(onlyEmojis.length === visibleChars.length)
         return onlyEmojis.length === visibleChars.length
       }
 
