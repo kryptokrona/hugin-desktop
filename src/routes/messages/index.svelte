@@ -67,6 +67,8 @@
         console.log('event', e.detail)
         //Add input to message arr
         let newMessage = e.detail
+        
+        saveToStore(newMessage)
         //Prepare send function and filter
         printConversation(newMessage)
         //Close popup
