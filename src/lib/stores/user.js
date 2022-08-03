@@ -11,6 +11,7 @@ export const user = writable({
     callerMenu: false,
     contacts: null,
     addChat: false,
+    rename: false,
 })
 
 export const boards = writable({
