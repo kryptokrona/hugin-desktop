@@ -58,9 +58,9 @@
         hide = !hide
     }
 
-    $: if ($webRTC.myVideo) thisCall = $webRTC.call[0].sender
+    $: if ($webRTC.myVideo) thisCall = $webRTC.call[0].chat
 
-    $: if ($page.url.pathname === '/messages' && $user.activeChat.chat == thisCall.substring(0,99)) {
+    $: if ($page.url.pathname === '/messages' && $user.activeChat.chat == thisCall) {
         chatWindow = true
         hide = false
     } else {
@@ -93,7 +93,7 @@
     <p  class="toggle_window" on:click={toggleWindow}>Hide</p>
     {/if}
   </div>
-  
+    
 
 
 </div>
