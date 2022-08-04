@@ -39,6 +39,7 @@ export const webRTC = writable({
   peerStream: false,
   screen: false,
   call: [{ 
+    msg: false,
     sender: false,
     peer: false,
     myVideo: false,
@@ -53,3 +54,6 @@ export const userAvatar = derived(user, $user => {
         return get_avatar($user.huginAddress.substring(0,99))
     }
 })
+
+
+webRTC.subscribe(a => console.log(a.call[0].peerStream))
