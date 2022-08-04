@@ -23,6 +23,7 @@
             // spilt input to addr and pubkey
             let contact_address = contact.substring(0, 99);
             console.log('contact address', contact_address)
+            console.log('Hugin Address', contact)
             let msg;
 
             console.log('Starting call..');
@@ -81,8 +82,9 @@
           console.log('video?', video);
           console.log('We want contact stream', stream)
           if ( video ) {
-            
-              calling = true;
+                
+            $webRTC.myVideo = true
+            calling = true;
             
               if (screen_stream) {
 
@@ -110,7 +112,7 @@
             let call =  {
                         msg: 'outgoing',
                         out:true, 
-                        sender: contact.substring(0, 99),
+                        chat: contact.substring(0, 99),
                         video: video,
                         peer: peer1,
                         myStream: stream,
@@ -118,12 +120,12 @@
                         screen: screen_stream
                         }
 
+            
             $webRTC.call.unshift(call)
-            console.log('webrtclogggg', $webRTC.call[0])
-            $webRTC.myStream = stream
+            console.log('This call', $webRTC.call[0])
+
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
             console.log('video codecs', video_codecs);
-            $webRTC.myVideo = true
             let custom_codecs = [];
 
             let codec;
@@ -144,6 +146,8 @@
 
             }
 
+            $webRTC.myStream = stream
+            $webRTC.active = true
 
             let first = true;
 
@@ -166,20 +170,17 @@
             })
 
             peer1.on('stream', peerStream => {
-                // got remote video stream, now let's show it in a video tag
 
-                 //let extra_class = "";
-                 if (video) {
-                  $webRTC.call[0].peerVideo = true
-                 }
+            
+             console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
 
-                console.log('Got Stream Peer1', peerStream);
+                if (video) {
+                      $webRTC.peerVideo = true
+                }  
 
-                 call = true
-                 let tracks = peerStream.getTracks()
-                 console.log('tracks', tracks);
-
-                 $webRTC.call[0].peerStream = peerStream
+                //Set peerStream to store
+                $webRTC.call[0].peerStream = peerStream
+                $webRTC.peerStream = peerStream
 
                })
 
@@ -224,7 +225,7 @@
                 console.log('callback parsed', callback);
 
                 peer1.signal(callback);
-                console.log('Connecting to ...',  callerdata.sender)
+                console.log('Connecting to ...',  callerdata.chat)
 
             })
 
@@ -240,8 +241,8 @@
             answerCall(msg, contact, key)
         })
 
-        async function answerCall (msg, contact, msgkey) {
-            console.log('APPLE', msg, contact, msgkey)
+        async function answerCall (msg, contact, key) {
+            console.log('APPLE', msg, contact, key)
 
             let video = false
             if (msg.substring(0, 1) === 'Δ') {
@@ -283,12 +284,14 @@
                 console.log('codec set');
 
                 $webRTC.call[0].peer = peer2
-                console.log('peerset',$webRTC.call[0].peer)
-                $webRTC.call[0].myStream = stream
-               
+                console.log('store peerset 2',$webRTC.call[0].peer)
+                $webRTC.myStream = stream
+                $webRTC.active = true
+
                 if (video) {
-                  $webRTC.call[0].myVideo = true
+                  $webRTC.myVideo = true
                 }
+
                 console.log('webrtc store settings set', $webRTC);
 
                 peer2.on('close', () => {
@@ -305,12 +308,11 @@
 
                 peer2.on('signal', data => {
 
-                  console.log('msgkey', msgkey)
                   console.log('initial offer data:', data);
                     let dataToSend = {
                         data: data,
                         type: 'answer',
-                        contact: contact + msgkey,
+                        contact: contact + key,
                         video: video,
                     }
                     console.log('sending sdp');
@@ -348,16 +350,17 @@
 
                 peer2.on('stream', peerStream => {
                     // got remote video stream, now let's show it in a video tag
-                    console.log('peer2 stream', peerStream)
-                    $webRTC.call[0].peerStream = peerStream
-
+                    
                     if (video) {
                       $webRTC.peerVideo = true
-                    }
+                    }  
 
-                    console.log('peerstream object', $webRTC.call[0].peerStream)
+                    console.log('peer2 stream', peerStream)
+                    $webRTC.call[0].peerStream = peerStream
+                    console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
 
-                
+                    $webRTC.peerStream = peerStream
+
                     call = true;
                     let tracks = peerStream.getTracks()
                     console.log('tracks', tracks);
@@ -374,7 +377,7 @@
       })
 
   //End call
-  function endCall (peer, stream, call) {
+  function endCall (peer, stream) {
 
         try {
             peer.destroy();
@@ -388,13 +391,23 @@
         webRTC.update((data) => {
           return {
             ...data,
+            active: false,
             peer: false,
             myVideo: false,
             peerVideo: false,
             peerStream: false,
             myStream: false,
+            call: [{chat: false, msg: false}]
           }
         })
+
+        // $webRTC.call[0] = {
+        //     peer: false,
+        //     myVideo: false,
+        //     peerVideo: false,
+        //     peerStream: false,
+        //     myStream: false,
+        // }
 
         console.log('Call ended')
 
