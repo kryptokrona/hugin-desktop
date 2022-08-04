@@ -8,7 +8,7 @@
     import {createEventDispatcher} from "svelte";
 
     export let paused = false
-    let avatar = get_avatar($webRTC.call[0])
+    let avatar
     let ringtone = new Audio("/static/audio/ringtone.mp3")
 
     let answered = false
@@ -16,6 +16,7 @@
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
         ringtone.play()
+         avatar = get_avatar($webRTC.call[0].chat)
     })
 
     //When a user clicks answer
@@ -24,10 +25,10 @@
         //Variable to activate visual feedback
         answered = true
 
-        let caller = $user.contacts.filter(a => a.chat === $webRTC.call[0].sender)
-
+        let caller = $user.contacts.filter(a => a.chat === $webRTC.call[0].chat)
+        console.log('caller', caller)
          //We delay the answerCall for routing purposes
-         window.api.answerCall($webRTC.call[0].msg, $webRTC.call[0].sender, caller[0].key)
+         window.api.answerCall($webRTC.call[0].msg, $webRTC.call[0].chat, caller[0].key)
         
         //We pause the ringtone and destroy the popup
         ringtone.pause()
@@ -38,6 +39,10 @@
     onDestroy(() => {
         ringtone.pause()
     })
+
+    const declineCall = () => {
+        $webRTC.call[0].pop()
+    }
 
 </script>
 
@@ -53,7 +58,7 @@
             <a class="answer hover" on:click={handleAnswer} href="/messages">
                 <img src="/static/images/call.svg" alt="">
             </a>
-            <div class="decline hover" on:click>
+            <div class="decline hover" on:click={declineCall}>
                 <img src="/static/images/call-slash.svg" alt="">
             </div>
         </div>
