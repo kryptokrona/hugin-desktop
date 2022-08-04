@@ -7,17 +7,19 @@
     import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
 
-    let peerVideo
+    let peerVideo = document.getElementById('peerVideo')
     let peerStream
     const dispatch = createEventDispatcher();
 
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
-        peerVideo = document.getElementById('peerVideo')
-        console.log('myvido');
-        peerVideo.srcObject = $webRTC.peerStream
-        peerVideo.play();
-          console.log('peerVideo', peerVideo);
+        console.log('before', $webRTC.call[0].peerStream)
+        peerVideo.srcObject = $webRTC.call[0].peerStream
+        console.log('peerVideo call', $webRTC.call[0]);
+
+        console.log('after', $webRTC.call[0].peerStream)
+        playVideo()
+
     })
 
     //When a user clicks answer
@@ -28,6 +30,7 @@
     }
 
     const playVideo = () => {
+        if (!$webRTC.call[0].peerStream) return
       console.log('play video');
       peerVideo.play()
     }
@@ -37,17 +40,17 @@
       peerVideo.pause()
     })
 
-    $: console.log('$webRTC.', $webRTC);
+    $: console.log('$webRTC active call', $webRTC.call);
 </script>
 
 <audio src={peerStream}></audio>
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card" >
+<div  on:click={playVideo} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card" >
   <div class="inner-card">
   <video muted in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
   <!-- <div class="options">
-    <div class="answer hover" on:click={playVideo} >
+   
         <img src="/static/images/call.svg" alt="">
     </div>
       <div class="decline hover" on:click={pauseVideo} >
@@ -58,6 +61,7 @@
 </div>
 
 <style lang="scss">
+
     .card {
         display: flex;
         position: absolute;
