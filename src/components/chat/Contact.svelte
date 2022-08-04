@@ -8,9 +8,13 @@ export let contact
 
 let hover = false
 let settings = false
+let thisCall = false
 
-$: thisCall = $webRTC.call.some(a=> a.sender === contact.chat)
-
+$: if ($webRTC.active) {
+    thisCall = $webRTC.call.some(a=> a.chat === contact.chat)
+} else {
+    thisCall = false
+}
 const dispatch = createEventDispatcher();
 
     //Hover functions
