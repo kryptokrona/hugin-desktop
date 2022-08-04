@@ -4,7 +4,7 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user, webRTC, misc} from "$lib/stores/user.js";
+    import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
     import videoIcon from '/static/images/video.svg'
 
@@ -12,23 +12,17 @@
     const dispatch = createEventDispatcher();
 
     export let paused = false
-    let avatar = get_avatar($misc.call.sender)
-    let startTone = new Audio("/static/audio/startcall.mp3")
     let endTone = new Audio("/static/audio/endcall.mp3")
     let hangUp = false
     let peer
     let stream
     let calling = true
     let toggle = false
+
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
-        startTone.play()
-
+        
     })
-
-    $: if ($webRTC.myStream) {
-      stream = $webRTC.myStream
-    }
 
     //When a user clicks answer
     const endCall = () => {
@@ -64,8 +58,8 @@
     <audio bind:paused src="/static/audio/startcall.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
-            <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <p>{$misc.call.sender}</p>
+            <img class="avatar" src="data:image/png;base64,{get_avatar($webRTC.call[0].chat)}" alt="">
+            <p>{$webRTC.call[0].chat}</p>
         </div>
         <audio bind:paused src="/static/audio/startcall.mp3"></audio>
         <div class="options">
@@ -78,7 +72,6 @@
         </div>
     </div>
 </div>
-
 
 <style lang="scss">
     .card {
