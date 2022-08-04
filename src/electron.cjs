@@ -748,7 +748,7 @@ async function saveContact(hugin_address, nickname=false, first) {
   let key = hugin_address.substring(99, 163)
 
   if (known_keys.indexOf(key) == -1) {
-      
+
       known_keys.push(key)
   }
   console.log('Pushing this to known keys ', known_keys)
@@ -1068,9 +1068,9 @@ async function saveMessageSQL(msg) {
   let addr = sanitizeHtml(msg.from);
   let timestamp = sanitizeHtml(msg.t)
   let key = sanitizeHtml(msg.k)
-
+  console.log('msg', msg)
     //Checking if private msg is a call
-    text = parseCall(msg.msg, addr, sent)
+    text = await parseCall(msg.msg, addr, sent)
   
 
   let message = sanitizeHtml(text);
@@ -1170,6 +1170,7 @@ ipcMain.on('sendBoardMsg', (e, msg) => {
 )
 
 ipcMain.on('answerCall', (e, msg, contact, key) => {
+  console.log('answr', msg, contact);
     mainWindow.webContents.send('answer-call', msg, contact, key)
     }
 )
@@ -1210,7 +1211,7 @@ async function sendBoardMessage(message) {
   let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
-      {fixedFee: 7500, isFixedFee: true}, // fee
+      {fixedFee: 8500, isFixedFee: true}, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -1327,7 +1328,7 @@ async function sendMessage(message, receiver) {
     let result = await js_wallet.sendTransactionAdvanced(
         [[address, 1]], // destinations,
         3, // mixin
-        {fixedFee: 7500, isFixedFee: true}, // fee
+        {fixedFee: 8500, isFixedFee: true}, // fee
         undefined, //paymentID
         undefined, // subWalletsToTakeFrom
         undefined, // changeAddress
@@ -1347,12 +1348,13 @@ async function sendMessage(message, receiver) {
 }
 
 async function optimizeMessages(nbrOfTxs) {
-
+  console.log('optimize');
   try {
 
   const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
   let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
   if (inputs.length > 8) {
+    console.log('enough inputs');
     return;
   }
   let subWallets = js_wallet.subWallets.subWallets
@@ -1391,7 +1393,7 @@ async function optimizeMessages(nbrOfTxs) {
       undefined
   );
 
-
+  console.log('optimize completed');
   return result;
 
   
@@ -1555,7 +1557,7 @@ function parse_sdp (sdp) {
 
 
 function parseCall (msg, sender, sent, emitCall=true) {
-    console.log('🤤🤤🤤🤤🤤🤤',sender)
+    console.log('🤤🤤🤤🤤🤤🤤', sender, msg)
     switch (msg.substring(0,1)) {
         case "Δ":
         // Fall through
@@ -1564,8 +1566,9 @@ function parseCall (msg, sender, sent, emitCall=true) {
             if (emitCall) {
 
                 // Start ringing sequence
-              
+              console.log('call incoming', sent)
                if (!sent) {
+                console.log('call  incoming')
                 mainWindow.webContents.send('call-incoming', msg, sender)
                 // Handle answer/decline here
                }
@@ -1586,7 +1589,7 @@ function parseCall (msg, sender, sent, emitCall=true) {
                 mainWindow.webContents.send('got-callback', callerdata)
                 console.log('got sdp', msg)
             }
-            return "";
+            return "Call answered";
 
             break;
         default:
