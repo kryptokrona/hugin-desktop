@@ -61,9 +61,11 @@
 		ready = true
 
 		//Handle incoming call
-		window.api.receive('call-incoming', (msg, sender) => {
+		window.api.receive('call-incoming', (msg, chat) => {
+			
+			console.log('INCMING');
+			$webRTC.call.unshift({msg, chat, type: 'incoming'})
 			incoming_call = true
-			$webRTC.call.push(msg, sender)
 		})
 
 		//Handle sync status
@@ -147,7 +149,7 @@ window.api.receive('node', async (node) => {
 		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
 	{/if}
 
-	{#if $user.loggedIn && showCallerMenu && $webRTC.call[0].sender }
+	{#if $user.loggedIn && showCallerMenu && $webRTC.call[0].chat }
 		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
 
@@ -156,7 +158,7 @@ window.api.receive('node', async (node) => {
 			<!-- <PeerVideo/> -->
 	{/if}
 
-	{#if peerVideo && $webRTC.peerStream}
+	{#if peerVideo && $webRTC.peerVideo && $webRTC.call[0].peerStream }
 			<PeerVideo />
 			<!-- <PeerVideo/> -->
 	{/if}
