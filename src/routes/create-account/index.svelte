@@ -28,6 +28,9 @@
         port: nodePort
       }
 
+      //Save username to localStorage
+      window.localStorage.setItem('userName', walletName)
+
       misc.update(oldData => {
 				return {
 						...oldData,
