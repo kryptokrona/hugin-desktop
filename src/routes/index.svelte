@@ -23,6 +23,8 @@
   onMount(() => {
     window.api.send("app", true);
 
+    $user.username = window.localStorage.getItem('userName')
+
     window.api.receive("wallet-exist", async (data, walletName) => {
       wallet = data;
       console.log("wallet exists", walletName);
