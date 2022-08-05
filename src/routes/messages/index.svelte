@@ -201,8 +201,6 @@
     display: flex;
     flex-direction: column-reverse;
     overflow: scroll;
-    height: 100%;
-    width: 100%;
 
     &::-webkit-scrollbar {
       display: none;
