@@ -25,6 +25,8 @@
 
     $user.username = window.localStorage.getItem('userName')
 
+    if (!$user.username) $user.username = 'Anon';
+
     window.api.receive("wallet-exist", async (data, walletName) => {
       wallet = data;
       console.log("wallet exists", walletName);
