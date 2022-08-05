@@ -242,6 +242,7 @@
         flex: auto;
         align-content: flex-start;
         position: absolute;
+      z-index: 10;
     }
 
     .reply_button:hover {
