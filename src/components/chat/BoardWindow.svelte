@@ -18,8 +18,9 @@
         padding: 1rem;
         box-sizing: border-box;
         background-color: #202020;
+        overflow-y: scroll;
+        overflow-x: hidden;
         width: 100%;
-        overflow: scroll;
         z-index: 3;
     }
 

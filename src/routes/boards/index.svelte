@@ -312,7 +312,6 @@
         margin-right: 85px;
         z-index: 3;
         height: 700px;
-        overflow-x: hidden;
     }
 
     #board_box {

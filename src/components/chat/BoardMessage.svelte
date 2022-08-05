@@ -168,7 +168,6 @@
       padding: 10px 20px 20px 10px;
       z-index: 3;
       font-size: 12px;
-      width: 100%;
       background: rgba(0,0,0,0.11);
       border-radius: 10px;
 
