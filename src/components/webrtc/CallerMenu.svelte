@@ -10,7 +10,7 @@
 
 
     const dispatch = createEventDispatcher();
-
+    
     export let paused = false
     let endTone = new Audio("/static/audio/endcall.mp3")
     let hangUp = false
@@ -18,7 +18,8 @@
     let stream
     let calling = true
     let toggle = false
-
+    export let this_call
+    let avatar = get_avatar(this_call.chat)
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
         
@@ -58,8 +59,8 @@
     <audio bind:paused src="/static/audio/startcall.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
-            <img class="avatar" src="data:image/png;base64,{get_avatar($webRTC.call[0].chat)}" alt="">
-            <p>{$webRTC.call[0].chat}</p>
+            <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+            <p>{this_call.chat}</p>
         </div>
         <audio bind:paused src="/static/audio/startcall.mp3"></audio>
         <div class="options">
