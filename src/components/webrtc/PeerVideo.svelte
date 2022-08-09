@@ -6,18 +6,23 @@
     import {onDestroy, onMount} from "svelte";
     import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
+    import {page} from "$app/stores";
 
     let peerVideo = document.getElementById('peerVideo')
     let peerStream
+    let thisCall
+    let move = false
+
+    export let call
+
     const dispatch = createEventDispatcher();
 
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
-        console.log('before', $webRTC.call[0].peerStream)
-        peerVideo.srcObject = $webRTC.call[0].peerStream
-        console.log('peerVideo call', $webRTC.call[0]);
-
-        console.log('after', $webRTC.call[0].peerStream)
+        console.log('peerVideo call', call);
+        console.log('before', call.peerStream)
+        peerVideo.srcObject = call.peerStream
+        console.log('peerVideo call', call);
         playVideo()
 
     })
@@ -30,7 +35,6 @@
     }
 
     const playVideo = () => {
-        if (!$webRTC.call[0].peerStream) return
       console.log('play video');
       peerVideo.play()
     }
@@ -40,15 +44,31 @@
       peerVideo.pause()
     })
 
-    $: console.log('$webRTC active call', $webRTC.call);
+     
+    const toggleWindow = () => {
+        hide = !hide
+    }
+
+    $: if ($webRTC.peerVideo) thisCall = call.chat
+
+    $: if ($page.url.pathname === '/messages' && $user.activeChat.chat == thisCall) {
+        
+        move = false
+    } else {
+        move = true
+    }
+
+
+
+    $: console.log('$webRTC active call', call);
 </script>
 
 <audio src={peerStream}></audio>
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div  on:click={playVideo} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card" >
+<div class:hide={move} on:click={playVideo} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card" >
   <div class="inner-card">
-  <video muted in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
+  <video class:toggleVideo={move} muted in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
   <!-- <div class="options">
    
         <img src="/static/images/call.svg" alt="">
@@ -69,7 +89,7 @@
         top: 30px;
         height: 225px;
         width: 300px;
-        left: 70%;
+        left: 72%;
         background-color: #5f86f2;
         border-radius: 5px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
@@ -128,15 +148,27 @@
     }
 
 
-        video {
-            width: 300px;
-            z-index: 99999;
-            position: absolute;
-        }
+    video {
+        width: 300px;
+        z-index: 99999;
+        position: absolute;
+    }
 
 
-        #peerVideo {
+    #peerVideo {
 
 
-        }
+    }
+
+    .hide {
+        width: 200px;
+        bottom: 150px;
+        right: 100px;
+    }
+
+    .toggleVideo {
+        width: 200px !important;
+    }
+
+
 </style>
