@@ -142,25 +142,39 @@ window.api.receive('node', async (node) => {
 
 <TrafficLights/>
 
-	{#if $user.loggedIn && incoming_call}
-		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
-	{/if}
 
-	{#if $user.loggedIn && showCallerMenu && $webRTC.call.length != 0 }
-		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
+
+	{#if $user.loggedIn && $webRTC.call.length != 0 }
+	
+		{#each $webRTC.call as thiscall}
+		{#if peerVideo && $webRTC.peerVideo}
+		
+		<PeerVideo call={thiscall}/>
+		
+		
+		{/if}
+			{#if incoming_call}
+				<IncomingCall
+				thisCall={thiscall}
+				on:click={closePopup}
+				on:answerCall={openCallerMenu}
+				paused={!incoming_call}/>
+			{/if}
+			{#if showCallerMenu}
+				<CallerMenu
+				this_call={thiscall} 
+				on:click={endThisCall}
+				on:endCall={endThisCall}
+				paused={!showCallerMenu}
+				on:toggleMyWindow={toggleMyWindow}/>
+			{/if}
+		{/each}
+		
 	{/if}
 
 	{#if myVideo && $webRTC.myVideo && $webRTC.myStream}
 			<MyVideo />
 			<!-- <PeerVideo/> -->
-	{/if}
-	{#if $webRTC.call.length != 0} 
-		{#if peerVideo && $webRTC.peerVideo}
-			{#each $webRTC.call as caller}
-			<PeerVideo call={caller}/>
-			
-			{/each}
-		{/if}
 	{/if}
 	{#if $user.loggedIn}
 		<LeftMenu />
