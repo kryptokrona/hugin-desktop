@@ -7,12 +7,14 @@
     import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
     import {page} from "$app/stores";
+    
     let myVideo = document.getElementById('myVideo')
     let video = false
     let hide = true
     let hover = false
     let chatWindow = true
     let thisCall
+
     const dispatch = createEventDispatcher();
 
     // When incoming call and this get mounted we play the ringtone
@@ -20,8 +22,6 @@
 
           myVideo.srcObject = $webRTC.myStream
           myVideo.play();
-          console.log('MyVidya',  $webRTC.myStream);
-          console.log('MyVidya call',  $webRTC.call);
 
     })
 
