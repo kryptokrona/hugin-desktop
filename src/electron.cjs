@@ -733,7 +733,7 @@ ipcMain.on('addChat', async (e, hugin_address, nickname, first) => {
   saveContact(hugin_address, nickname, first)
 })
 //Saves contact and nickname to db.
-async function saveContact(hugin_address, nickname=false, first) {
+async function saveContact(hugin_address, nickname=false, first=false) {
   console.log('huginadress', hugin_address);
   console.log(first)
   let name
@@ -1158,9 +1158,9 @@ ipcMain.on('switchNode', async (e, node) => {
 });
 
 
-ipcMain.on('sendMsg', (e, msg, receiver) => {
-        sendMessage(msg, receiver);
-        console.log(msg, receiver)
+ipcMain.on('sendMsg', (e, msg, receiver, off_chain) => {
+        sendMessage(msg, receiver, off_chain);
+        console.log(msg, receiver, off_chain)
     }
 )
 
@@ -1237,7 +1237,7 @@ console.log('Error', err);
 
 }
 
-async function sendMessage(message, receiver) {
+async function sendMessage(message, receiver, off_chain=false) {
     console.log('Want to send')
 
     let has_history
@@ -1325,6 +1325,8 @@ async function sendMessage(message, receiver) {
 
     optimizeMessages()
 
+    // if (!off_chain) {
+
     let result = await js_wallet.sendTransactionAdvanced(
         [[address, 1]], // destinations,
         3, // mixin
@@ -1345,6 +1347,14 @@ async function sendMessage(message, receiver) {
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
+
+    // } else if (off_chain) {
+    //   let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
+    //   console.log('sending rtc message');
+    //   mainWindow.webContents.send('rtc_message', sentMsg)
+    //   saveMessageSQL(sentMsg)
+    // }
+    
 }
 
 async function optimizeMessages(nbrOfTxs) {
