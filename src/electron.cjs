@@ -1347,14 +1347,12 @@ async function sendMessage(message, receiver, off_chain=false) {
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
-
     // } else if (off_chain) {
     //   let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
     //   console.log('sending rtc message');
     //   mainWindow.webContents.send('rtc_message', sentMsg)
     //   saveMessageSQL(sentMsg)
     // }
-    
 }
 
 async function optimizeMessages(nbrOfTxs) {
@@ -1640,61 +1638,42 @@ ipcMain.on('get-sdp', (e,data) => {
 
 function expand_sdp_offer (compressed_string) {
 
-    let type = compressed_string.substring(0,1);
+  let type = compressed_string.substring(0,1);
 
-    let split = compressed_string.split(",");
+  let split = compressed_string.split(",");
 
-    console.log('split', split);
+  let ice_ufrag = split[0].substring(1);
 
-    let ice_ufrag = split[0].substring(1);
+  let ice_pwd = split[1];
 
-    let ice_pwd = split[1];
+  let fingerprint = decode_fingerprint(split[2]);
 
-    let fingerprint = decode_fingerprint(split[2]);
+  let ips = split[3];
 
-    console.log('fingerprint', fingerprint);
+  let prts =  split[4];
 
-    let ipss = split[3];
+  let ssrc = split[5].split('&').map(function (h) {
+    return en.decode(h);
+  });
 
-    console.log('IPS', ipss);
+  let msid = split[6];
 
-    let prts =  split[4];
+  let external_ip = '';
 
-    let ssrc = split[5].split('&').map(function (h) {
-      return en.decode(h);
-    });
+  let external_ports = [];
 
-    console.log('src', ssrc);
+  let candidates = ['','','',''];
 
-    let msid = split[6];
+  ips = ips.split('&').map(function (h) {
+    return decode_ip(h.substring(1),h.substring(0,1));
+  })
 
-    console.log('msida ', msid);
+  prts = prts.split('&').map(function (h) {
+    return en.decode(h);
+  });
 
-    let external_ip = '';
+  console.log("Pörts:", prts);
 
-    let external_ports = [];
-
-    let candidates = ['','','',''];
-
-    console.log('IPS', ipss)
-
-    let ips = ipss.split('&').map(function (h) {
-        return decode_ip(h.substring(1),h.substring(0,1));
-    })
-
-    if (ips[0]  === undefined) {
-        ips.splice(0, 1);
-    }
-
-    if (ips[1]  === undefined) {
-        ips.splice(1, 2);
-    }
-
-    console.log('IPS SPLIT', ips);
-
-    let ports = prts.split('&').map(function (h) {
-        return en.decode(h);
-    });
 
     let prio = 2122260223;
 
@@ -1705,75 +1684,53 @@ function expand_sdp_offer (compressed_string) {
     let external_port_found = false;
 
     let current_internal = '';
-    let p;
-    for (p in ports) {
-        try {
-            console.log('port', parseInt(ports[p]));
-            let prt = parseInt(ports[p])
-            if (!prt) {
-                console.log('nanananananaa', prt);
-                continue;
-            }
-            let ip_index = ports[p].slice(-1);
-            console.log('ip_index', ip_index);
+    let port
+    prts.forEach(function (port) {
+      let ip_index = port.slice(-1);
+      if (i == 1 ) {
 
-            if (ips[ip_index] == undefined) {
-                continue;
-            }
+        current_internal = port.substring(0, port.length - 1);
 
-            if (i == 1 ) {
+      }
+      if (ips[ip_index].substring(0,1) == '!') {
+        external_ip = ips[ip_index].substring(1);
+        external_ports = external_ports.concat(port.substring(0, port.length - 1));
+        external_port_found = true;
+        candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + port.substring(0, port.length - 1) + " typ srflx raddr " + ips[0].replace('!','').replace('?','') + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n"
+      } else if (port.substring(0, port.length - 1) == "9") {
 
-                current_internal = ports[p].substring(0, ports[p].length - 1);
+        candidates[j] += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','') + " " + port.substring(0, port.length - 1) +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
+        tcp_prio = tcp_prio - 500;
 
-            }
-
-            if (ips[ip_index].substring(0,1) == '!') {
-                external_ip = ips[ip_index].substring(1);
-                external_ports = external_ports.concat(ports[p].substring(0, ports[p].length - 1));
-                console.log('external', external_ports);
-                external_port_found = true;
-                candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + ports[p].substring(0, ports[p].length - 1) + " typ srflx raddr " + ips[0].replace('!','').replace('?','') + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n"
-            } else if (ports[p].substring(0, ports[p].length - 1) == "9") {
-
-                candidates[j] += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1) +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
-                tcp_prio = tcp_prio - 500;
-
-            } else {
-                candidates[j] += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n"
-                prio = parseInt(prio*0.8);
-            }
+      } else {
+        candidates[j] += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + port.substring(0, port.length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n"
+        prio = parseInt(prio*0.8);
+      }
 
 
-            if ( i == (ports.length / 3) ) {
-                i = 0;
-                j += 1;
-                external_port_found = false;
-            }
-
-        } catch (err) {
-            console.log('err', err);
-
-            console.log('IPS', ips)
-            continue;
-        }
-
-        i += 1;
-
+    if ( i == (prts.length / 3) ) {
+      i = 0;
+      j += 1;
+      external_port_found = false;
     }
 
-    if (external_ip.length == 0) {
-        external_ip = ips[0].substring(1);
-    }
+    i += 1;
 
-    console.log(candidates);
-    console.log("ports:", external_ports);
+  })
 
-    console.log((external_ports.length / 3));
-    console.log(((external_ports.length / 3)*2));
+  if (external_ip.length == 0) {
+    external_id = ips[0].substring(1);
+  }
 
-    if (!external_ports[0]) {
-        external_ports[0] = "9";
-    }
+  console.log(candidates);
+  console.log("ports:",external_ports);
+
+  console.log((external_ports.length / 3));
+  console.log(((external_ports.length / 3)*2));
+
+if (!external_ports[0]) {
+  external_ports[0] = "9";
+}
 
 let sdp = `v=0
 o=- 5726742634414877819 2 IN IP4 127.0.0.1
@@ -1920,115 +1877,91 @@ a=max-message-size:262144
 
 function expand_sdp_answer (compressed_string) {
 
-    let split = compressed_string.split(",");
+  let split = compressed_string.split(",");
 
-    console.log("split:", split);
+  console.log("split:", split);
 
-    let type = compressed_string.substring(0,1);
+  let type = compressed_string.substring(0,1);
 
-    let ice_ufrag = split[0].substring(1);
+  let ice_ufrag = split[0].substring(1);
 
-    let ice_pwd = split[1];
+  let ice_pwd = split[1];
 
-    let fingerprint = decode_fingerprint(split[2]);
+  let fingerprint = decode_fingerprint(split[2]);
 
-    let ips = split[3];
+  let ips = split[3];
 
-    console.log('ips1', ips)
+  let prts =  split[4];
 
-    let prts =  split[4];
-
-    let ssrc = split[5].split('&').map(function (h) {
-      return en.decode(h);
-    });
+  let ssrc = split[5].split('&').map(function (h) {
+    return en.decode(h);
+  });
 
 
-   if (ssrc[1] == undefined) {
-     ssrc[1] = ssrc[0];
-     }
+  if (ssrc[1] == undefined) {
+    ssrc[1] = ssrc[0];
+  }
 
-    let msid = split[6];
+  let msid = split[6];
 
-    let candidates = '';
+  let candidates = '';
 
-    let external_ip = '';
+  let external_ip = '';
 
-    ips = ips.split('&').map(function (h) {
-        return decode_ip(h.substring(1),h.substring(0,1));
-    })
+  ips = ips.split('&').map(function (h) {
+    return decode_ip(h.substring(1),h.substring(0,1));
+  })
 
-    if (ips[0]  === undefined) {
-        ips.splice(0, 1);
-    }
+  prts = prts.split('&').map(function (h) {
+    return en.decode(h);
+  });;
 
-    if (ips[1]  === undefined) {
-        ips.splice(1, 2);
-    }
+  let external_port = '';
 
-    let ports = prts.split('&').map(function (h) {
-        return en.decode(h);
-    });;
+  console.log("ips:", ips);
+  console.log("ports:", ports);
 
-    let external_port = '';
+  let prio = 2122260223;
+  let tcp_prio = 1518280447;
 
-    console.log("ips:", ips);
-    console.log("ports:", ports);
+  if (prts.length > 1) {
 
-    let prio = 2122260223;
-    let tcp_prio = 1518280447;
-    if (ports.length > 1) {
+    console.log('More than 1 port!')
+    let port
+    prts.forEach(function (port) {
+        let ip_index = port.slice(-1);
+        if (ips[ip_index].substring(0,1) == '!') {
+          if (external_port.length == 0) {
+            external_port = port.substring(0, port.length - 1);
+          }
+          external_ip = ips[ip_index].substring(1);
+          candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + port.substring(0, port.length - 1)  + " typ srflx raddr " + ips[0].replace('?','') + " rport " + port.substring(0, port.length - 1)  + " generation 0 network-id 1 network-cost 50\r\n"
+        } else if (port.substring(0, port.length - 1)  == "9") {
 
-        console.log('More than 1 port!');
-        let p;
-        for (p in ports) {
-          try {
-              console.log('port', parseInt(ports[p]));
-              let prt = parseInt(ports[p])
-              if (!prt) {
-                  console.log('nanananananaa', prt);
-                  continue;
-              }
-              let ip_index = ports[p].slice(-1);
-              console.log('ip_index', ip_index);
+          candidates += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','').replace('!','') + " " + port.substring(0, port.length - 1)  +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
+          tcp_prio = tcp_prio - 500;
 
-              if (ips[ip_index] == undefined) {
-                  continue;
-              }
+        } else {
 
-                if (ips[ip_index].substring(0,1) == '!') {
-                    if (external_port.length == 0) {
-                        external_port = ports[p].substring(0, ports[p].length - 1);
-                    }
-                    external_ip = ips[ip_index].substring(1);
-                    candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + ports[p].substring(0, ports[p].length - 1)  + " typ srflx raddr " + ips[0].replace('?','') + " rport " + ports[0].substring(0, ports[p].length - 1)  + " generation 0 network-id 1 network-cost 50\r\n"
-                } else if (ports[p].substring(0, ports[p].length - 1)  == "9") {
-
-                    candidates += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','').replace('!','') + " " + ports[p].substring(0, ports[p].length - 1)  +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
-                    tcp_prio = tcp_prio - 500;
-
-                } else {
-
-                    candidates += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + ports[p].substring(0, ports[p].length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
-                    prio = parseInt(prio*0.8);
-                }
-
-            } catch (err) {
-                console.log('err', err);
-                continue;
-            }
-
+          candidates += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + port.substring(0, port.length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
+          prio = parseInt(prio*0.8);
         }
-    } else {
 
-        external_ip = ips[0].replace('!','').replace('?','');
 
-        external_port = ports[0].substring(0, ports[0].length - 1) ;
-        candidates = "a=candidate:1410536466 1 udp 2122260223 " + ips[0].replace('!','').replace('?','') + " " + ports[0].substring(0, ports[0].length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
-    }
+      })
 
-    if (external_port == "") {
-        external_port = "9";
-    }
+  } else {
+
+    external_ip = ips[0].replace('!','').replace('?','');
+
+    external_port = prts[0].substring(0, prts[0].length - 1) ;
+    candidates = "a=candidate:1410536466 1 udp 2122260223 " + ips[0].replace('!','').replace('?','') + " " + prts[0].substring(0, prts[0].length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
+  }
+
+  if (!external_port) {
+    external_port = "9";
+  }
+
 
 let sdp = `v=0
 o=- 8377786102162672707 2 IN IP4 127.0.0.1
