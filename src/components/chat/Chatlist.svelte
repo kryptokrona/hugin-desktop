@@ -25,13 +25,21 @@
     })
     //Get message updates and trigger filter
     messages.subscribe(() => {
-      console.log('$messages', $messages);
-            console.log('Printing conversations');
-              printConversations()
+        console.log(
+            ' messages subscribe logg?'
+        )
+    //   console.log('$messages', $messages);
+    //         console.log('Printing conversations');
+    //           printConversations()
     })
 
     //Listen for sent message to update conversation list
     window.api.receive('sent', data => {
+      printConversations()
+     })
+
+      //Listen for sent message to update conversation list
+    window.api.receive('newMsg', () => {
       printConversations()
      })
      

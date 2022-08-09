@@ -2,7 +2,8 @@
   import { createEventDispatcher } from "svelte";
   import sendIcon from "/static/images/send.png";
   import EmojiSelector from "svelte-emoji-selector";
-
+  import {webRTC} from "$lib/stores/user.js";
+  let off_chain
   const dispatch = createEventDispatcher();
 
   //This handles the emojis, lets fork the repo and make a darker theme.
@@ -29,7 +30,8 @@
   //Dispatches the input data to parent and resets input.
   const sendMsg = () => {
     dispatch("message", {
-      text: messageInput
+      text: messageInput,
+      offChain: off_chain,
     });
     //Reset input field
     messageInput = "";
@@ -38,6 +40,11 @@
   //Checks if input is empty
   $: {
     enableSend = !!messageInput;
+  }
+
+  $: {
+    off_chain = $webRTC.connected
+    console.log('offchain', off_chain)
   }
 </script>
 
