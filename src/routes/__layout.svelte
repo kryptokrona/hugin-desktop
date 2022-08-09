@@ -153,6 +153,12 @@ window.api.receive('node', async (node) => {
 		
 		
 		{/if}
+		{#if $webRTC.peerAudio}
+		
+		<PeerAudio audioCall={thiscall}/>
+		
+		
+		{/if}
 			{#if incoming_call}
 				<IncomingCall
 				thisCall={thiscall}
