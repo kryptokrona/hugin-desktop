@@ -16,9 +16,6 @@
 	//Global CSS
 	import '/src/lib/theme/global.scss'
 
-		$: console.log('webrtc peer', $webRTC.peer);
-		$: console.log('stream', $webRTC.stream);
-
 	let ready = false
 	let myVideo = false
 	let peerVideo = true
@@ -149,7 +146,7 @@ window.api.receive('node', async (node) => {
 		<IncomingCall on:click={closePopup} on:answerCall={openCallerMenu} paused={!incoming_call}/>
 	{/if}
 
-	{#if $user.loggedIn && showCallerMenu && $webRTC.call[0].chat }
+	{#if $user.loggedIn && showCallerMenu && $webRTC.call.length != 0 }
 		<CallerMenu on:click={endThisCall} on:endCall={endThisCall} paused={!showCallerMenu} on:toggleMyWindow={toggleMyWindow}/>
 	{/if}
 
@@ -157,13 +154,14 @@ window.api.receive('node', async (node) => {
 			<MyVideo />
 			<!-- <PeerVideo/> -->
 	{/if}
-
-	{#if peerVideo && $webRTC.peerVideo && $webRTC.call[0].peerStream }
-			<PeerVideo />
-			<!-- <PeerVideo/> -->
+	{#if $webRTC.call.length != 0} 
+		{#if peerVideo && $webRTC.peerVideo}
+			{#each $webRTC.call as caller}
+			<PeerVideo call={caller}/>
+			
+			{/each}
+		{/if}
 	{/if}
-
-
 	{#if $user.loggedIn}
 		<LeftMenu />
 		<Webrtc />
