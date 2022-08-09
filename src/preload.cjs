@@ -18,8 +18,8 @@ const WINDOW_API = {
     ipcRenderer.send('addChat', hugin, name, first)
   },
   // HANDLE MESSAGES
-  sendMsg: (msg, address, key) => {
-    ipcRenderer.send('sendMsg', msg, address, key )
+  sendMsg: (msg, address, offChain) => {
+    ipcRenderer.send('sendMsg', msg, address, offChain )
   },
   sendBoardMsg: (msg) => {
     ipcRenderer.send('sendBoardMsg', msg)
