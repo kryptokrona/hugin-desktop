@@ -68,8 +68,6 @@
         hide = true
     }
 
-    $: video = $webRTC.call[0].myVideo
-
     $: console.log('$webRTC.', $webRTC);
 </script>
 
@@ -113,6 +111,7 @@
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255,255,255, 0.1);
         z-index: 200;
+        transition: 0.3s;
     }
 
     .inner-card {
@@ -183,10 +182,12 @@
     .hide {
         width: 60px !important;
         height: 50px;
+        transition: 0.3s;
     }
 
     .toggleVideo {
         width: 60px !important;
+        transition: 0.3s;
     }
 
     .toggle_window {

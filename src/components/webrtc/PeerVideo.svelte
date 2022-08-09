@@ -12,7 +12,7 @@
     let peerStream
     let thisCall
     let move = false
-
+    let boards = false
     export let call
 
     const dispatch = createEventDispatcher();
@@ -52,9 +52,13 @@
     $: if ($webRTC.peerVideo) thisCall = call.chat
 
     $: if ($page.url.pathname === '/messages' && $user.activeChat.chat == thisCall) {
-        
+        boards = false
         move = false
+    } else if ($page.url.pathname === '/boards') {
+        move = true
+        boards = true
     } else {
+        boards = false
         move = true
     }
 
@@ -66,7 +70,7 @@
 <audio src={peerStream}></audio>
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class:hide={move} on:click={playVideo} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card" >
+<div class:hide={move} class:boards={boards} on:click={playVideo} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card" >
   <div class="inner-card">
   <video class:toggleVideo={move} muted in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
   <!-- <div class="options">
@@ -89,12 +93,13 @@
         top: 30px;
         height: 225px;
         width: 300px;
-        left: 72%;
+        left: 65%;
         background-color: #5f86f2;
         border-radius: 5px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255,255,255, 0.1);
         z-index: 200;
+        transition: 0.3s;
     }
     .inner-card {
         display: flex;
@@ -162,12 +167,19 @@
 
     .hide {
         width: 200px;
-        bottom: 150px;
-        right: 100px;
+        height: 150px;
+        top: 500px;
+        left: 120px;
+        transition: 0.3s;
     }
 
     .toggleVideo {
         width: 200px !important;
+        transition: 0.3s;
+    }
+
+    .boards {
+        left: 120px;
     }
 
 
