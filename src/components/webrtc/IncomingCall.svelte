@@ -8,6 +8,7 @@
     import {createEventDispatcher} from "svelte";
 
     export let paused = false
+    export let thisCall
     let avatar
     let ringtone = new Audio("/static/audio/ringtone.mp3")
 
@@ -16,7 +17,7 @@
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
         ringtone.play()
-         avatar = get_avatar($webRTC.call[0].chat)
+         avatar = get_avatar(thisCall.chat)
     })
 
     //When a user clicks answer
@@ -25,10 +26,10 @@
         //Variable to activate visual feedback
         answered = true
 
-        let caller = $user.contacts.filter(a => a.chat === $webRTC.call[0].chat)
+        let caller = $user.contacts.filter(a => a.chat === thisCall.chat)
         console.log('caller', caller)
          //We delay the answerCall for routing purposes
-         window.api.answerCall($webRTC.call[0].msg, $webRTC.call[0].chat, caller[0].key)
+         window.api.answerCall(thisCall.msg, thisCall.chat, caller[0].key)
         
         //We pause the ringtone and destroy the popup
         ringtone.pause()
