@@ -107,12 +107,15 @@
 
   //Send message to store and DB
   const sendMsg = e => {
-
+    let offChain = false
     let msg = e.detail.text;
     let myaddr = $user.huginAddress.substring(0, 99);
     let myMessage = { chat: chat, msg: msg, sent: true, t: Date.now() };
     saveToStore(myMessage);
-    window.api.sendMsg(msg, active_contact);
+    if (e.detail.offChain) {
+      offChain = true
+    }
+    window.api.sendMsg(msg, active_contact, offChain);
     printMessage(myMessage);
   };
 
