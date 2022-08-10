@@ -9,6 +9,7 @@
 	import CallerMenu from "/src/components/webrtc/CallerMenu.svelte";
 	import MyVideo from "/src/components/webrtc/MyVideo.svelte";
 	import PeerVideo from "/src/components/webrtc/PeerVideo.svelte";
+	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
 	//Stores
 	import { user, webRTC, misc } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
