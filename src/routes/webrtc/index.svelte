@@ -103,7 +103,7 @@
                 stream: stream,
                 trickle: false,
                 wrtc: wrtc,
-                offerOptions: {offerToReceiveVideo: video, offerToReceiveAudio: true},
+                offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
                 sdpTransform: (sdp) => {
                     return sdp;
                 }
@@ -155,7 +155,7 @@
                 console.log(e)
                 console.log('Connection lost..')
 
-              endCall(peer1, stream);
+                endCall(peer1, stream)
 
                 // ENDCALL AUDIO
             })
@@ -164,7 +164,7 @@
                 console.log(e)
                 console.log('Connection lost..')
 
-                endCall(peer1, stream);
+                endCall(peer1, stream)
                 // ENDCALL AUDIO
 
             })
@@ -236,15 +236,17 @@
               endCall(peer1, stream)
             })
 
-            // window.api.receive('rtc_message', async (msg) => { 
-            //     let sendMsg = JSON.stringify(msg)
-            //     peer1.send(sendMsg)
-            // })
+            window.api.receive('rtc_message', msg => { 
+                console.log('sending rtc')
+                let sendMsg = JSON.stringify(msg)
+                peer1.send(sendMsg)
+                console.log('sent')
+            })
 
-            // peer1.on('data', msg => {
-            //     let incMsg = JSON.parse(msg)
-            //     console.log('msg from peer2', incMsg)
-            // }) 
+            peer1.on('data', msg => {
+                let incMsg = JSON.parse(msg)
+                console.log('msg from peer2', incMsg)
+            }) 
 
         }
 
@@ -357,15 +359,13 @@
 
                 peer2.on('stream', peerStream => {
                     // got remote video stream, now let's show it in a video tag
-                    
-                 
 
                     console.log('peer2 stream', peerStream)
                     $webRTC.call[0].peerStream = peerStream
                     console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
 
                     if (video) {
-                      $webRTC.peerVideo = true
+                        $webRTC.peerVideo = true
                     } else {
                         $webRTC.peerAudio = true
                     }
@@ -380,25 +380,28 @@
                 })
 
                     
-                // window.api.receive('rtc_message', rtc => { 
-                //     console.log('sending rtc', rtc)
-                //     let sendMsg = JSON.stringify(rtc)
-                //     peer2.write('hejhej')
-                // })
+                window.api.receive('rtc_message', rtc => { 
+                    console.log('sending rtc', rtc)
+                    let sendMsg = JSON.stringify(rtc)
+                    console.log('sending rtc', sendMsg)
+                    peer2.send(sendMsg)
+                    console.log('sent');
+                })
 
-                // peer2.on('data', data => {
-                //     console.log('data from peer', data)
-                //     let incMsg = JSON.parse(data)
-                //     console.log('msg from peer2', incMsg)
+                peer2.on('data', data => {
+                    console.log('data from peer', data)
+                    let incMsg = JSON.parse(data)
+                    console.log('msg from peer2', incMsg)
                     
-                // }) 
+                }) 
 
             }
         }
       })
 
   //End call
-  function endCall (peer, stream) {
+  function endCall (peer, stream, contact) {
+    
 
         try {
             peer.destroy();
@@ -406,7 +409,6 @@
                 track.stop();
             });
         } catch (e) {
-            console.log('TRACKS', e)
         }
 
         webRTC.update((data) => {
