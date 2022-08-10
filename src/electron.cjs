@@ -728,7 +728,7 @@ ipcMain.on('addBoard', async (e, board) => {
 })
 
 //Listens for event from frontend and saves contact and nickname.
-ipcMain.on('addChat', async (e, hugin_address, nickname, first) => {
+ipcMain.on('addChat', async (e, hugin_address, nickname, first=false) => {
   console.log('addchat first',first)
   saveContact(hugin_address, nickname, first)
 })
@@ -1081,7 +1081,7 @@ async function saveMessageSQL(msg) {
   }
 
   //New message from unknown contact
-  if (msg.type === 'sealedbox') {
+  if (msg.type === 'sealedbox' && !sent) {
 
    console.log('Saving key', key);
    let hugin = addr + key
@@ -1751,7 +1751,6 @@ a=mid:0
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=sendrecv
 a=msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=rtcp-mux
@@ -1795,8 +1794,6 @@ a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
 a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
 a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${type == 'Δ' ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=recvonly" }
 a=rtcp-mux
 a=rtcp-rsize
@@ -2021,9 +2018,6 @@ a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
 a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
 a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
 a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
-a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-i
 ${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=inactive"}
 a=rtcp-mux
 a=rtcp-rsize
