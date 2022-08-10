@@ -29,7 +29,7 @@
     const endCall = () => {
 
         //We delay the answerCall for routing purposes
-        window.api.endCall('peer', 'stream')
+        window.api.endCall('peer', 'stream', this_call.chat)
 
         //We pause the ringtone and destroy the popup
         endTone.play()
