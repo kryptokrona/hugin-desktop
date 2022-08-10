@@ -1175,8 +1175,8 @@ ipcMain.on('answerCall', (e, msg, contact, key) => {
     }
 )
 
-ipcMain.on('endCall', async (e, peer, stream) => {
-  mainWindow.webContents.send('endCall', peer, stream)
+ipcMain.on('endCall', async (e, contact) => {
+  mainWindow.webContents.send('endCall', peer, stream, contact)
 })
 
 async function sendBoardMessage(message) {
@@ -1325,7 +1325,7 @@ async function sendMessage(message, receiver, off_chain=false) {
 
     optimizeMessages()
 
-    // if (!off_chain) {
+    if (!off_chain) {
 
     let result = await js_wallet.sendTransactionAdvanced(
         [[address, 1]], // destinations,
@@ -1347,12 +1347,12 @@ async function sendMessage(message, receiver, off_chain=false) {
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
-    // } else if (off_chain) {
-    //   let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
-    //   console.log('sending rtc message');
-    //   mainWindow.webContents.send('rtc_message', sentMsg)
-    //   saveMessageSQL(sentMsg)
-    // }
+    } else if (off_chain) {
+      let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
+      console.log('sending rtc message');
+      mainWindow.webContents.send('rtc_message', sentMsg)
+      saveMessageSQL(sentMsg)
+    }
 }
 
 async function optimizeMessages(nbrOfTxs) {
@@ -1469,7 +1469,7 @@ function parse_sdp (sdp) {
     let ice_pwd = '';
     let fingerprint = '';
     let ips = [];
-    let ports = [];
+    let prts = [];
     let ssrcs = [];
     let msid = "";
     let ip;
@@ -1534,7 +1534,7 @@ function parse_sdp (sdp) {
 
             let indexedport = port+ips.indexOf(ip_hex).toString();
 
-            ports = ports.concat(en.encode(parseInt(indexedport)));
+            prts = prts.concat(en.encode(parseInt(indexedport)));
 
 
         } else if (line.includes('a=ssrc:')) {
@@ -1559,7 +1559,7 @@ function parse_sdp (sdp) {
 
     })
 
-    return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + ports.join('&') + "," + ssrcs.join('&') + "," + msid;
+    return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + prts.join('&') + "," + ssrcs.join('&') + "," + msid;
 
 }
 
@@ -1776,7 +1776,7 @@ a=ssrc:` + ssrc[0] + ` cname:c2J8K3mNIXGEi9qt
 a=ssrc:` + ssrc[0] + ` msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=ssrc:` + ssrc[0] + ` mslabel:` + msid + `
 a=ssrc:` + ssrc[0] + ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video ` + external_ports[(external_ports.length / 3)] +  ` UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
+m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[2] +
