@@ -66,8 +66,8 @@ const WINDOW_API = {
     ipcRenderer.send('answerCall', msg, contact, key)
   },
 
-  endCall: async (contact) => {
-    ipcRenderer.send('endCall',contact)
+  endCall: async (peer, stream, contact) => {
+    ipcRenderer.send('endCall',peer, stream, contact)
   },
 
   //HANDLE NODES
