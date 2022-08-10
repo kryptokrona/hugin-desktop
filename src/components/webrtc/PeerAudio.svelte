@@ -11,7 +11,7 @@
     onMount(() => {
         console.log('peerVideo call', audioCall);
         console.log('before', audioCall.peerStream)
-        peerAudio = audioCall.peerStream
+        peerAudio.srcObject = audioCall.peerStream
         playAudio()
 
     })
