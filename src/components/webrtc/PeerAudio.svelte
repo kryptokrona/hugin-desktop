@@ -23,7 +23,7 @@
 
     }
 
-    const playVideo = () => {
+    const playAudio = () => {
       console.log('play video');
       peerVideo.play()
     }
