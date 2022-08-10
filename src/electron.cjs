@@ -1175,7 +1175,7 @@ ipcMain.on('answerCall', (e, msg, contact, key) => {
     }
 )
 
-ipcMain.on('endCall', async (e, contact) => {
+ipcMain.on('endCall', async (e, peer, stream, contact) => {
   mainWindow.webContents.send('endCall', peer, stream, contact)
 })
 
@@ -1739,7 +1739,7 @@ t=0 0
 a=group:BUNDLE 0 1 2
 a=extmap-allow-mixed
 a=msid-semantic: WMS ` + msid + `
-m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 63 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[1] +
@@ -1760,6 +1760,8 @@ a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
+a=rtpmap:63 red/48000/2
+a=fmtp:63 111/111
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
 a=rtpmap:9 G722/8000
@@ -1970,7 +1972,7 @@ t=0 0
 a=group:BUNDLE 0 1 2
 a=extmap-allow-mixed
 a=msid-semantic: WMS ` + msid + `
-m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 63 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates +
@@ -1996,6 +1998,8 @@ a=rtcp-mux
 a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
+a=rtpmap:63 red/48000/2
+a=fmtp:63 111/111
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
 a=rtpmap:9 G722/8000
