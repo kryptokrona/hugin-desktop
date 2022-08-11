@@ -315,6 +315,19 @@
                     endCall(peer2, stream)
                 })
 
+                window.api.send('expand-sdp', msg, contact)
+
+                console.log('sending offer!!!')
+
+                window.api.receive('got-expanded', (message, contact) => {
+                    if (activeCall.chat !== contact.substring(0,99)) return
+                    console.log('got expanded', message)
+                    // let signal = expand_sdp_offer(message);
+                    peer2.signal(message);
+
+                })
+
+
                 peer2.on('signal', data => {
 
                   console.log('initial offer data:', data);
@@ -331,18 +344,7 @@
 
                 })
 
-                window.api.send('expand-sdp', msg, contact)
-
-                console.log('sending offer!!!')
-
-                window.api.receive('got-expanded', (message, contact) => {
-                    if (activeCall.chat !== contact) return
-                    console.log('got expanded', message)
-                    // let signal = expand_sdp_offer(message);
-                    peer2.signal(message);
-
-                })
-
+            
                 peer2.on('track', (track, stream) => {
                     console.log('Setting up link..', track, stream)
                 })
