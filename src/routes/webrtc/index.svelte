@@ -5,26 +5,25 @@
     import {onMount} from "svelte";
     import {user, webRTC, misc} from "$lib/stores/user.js";
 
-    let stream;
-    let myVideo;
-    let peerVideo;
-    let peerStream;
-    let call
-    let calling
+    export let activeCall
 
     onMount(() => {
 
 
         window.api.receive('start-call', (conatct, calltype) => {
+           
             startCall(conatct, calltype)
         })
 
         function startCall (contact, isVideo, screenshare=false) {
             // spilt input to addr and pubkey
             let contact_address = contact.substring(0, 99);
+            
             console.log('contact address', contact_address)
             console.log('Hugin Address', contact)
-            let msg;
+            console.log('Thiscall Address', activeCall.chat)
+
+            if (contact_address !== activeCall.chat) return
 
             console.log('Starting call..');
             if (!screenshare) {
@@ -84,8 +83,7 @@
           if ( video ) {
                 
             $webRTC.myVideo = true
-            calling = true;
-            
+
               if (screen_stream) {
 
                   screen_stream.addTrack(stream.getAudioTracks()[0]);
@@ -105,27 +103,21 @@
                 wrtc: wrtc,
                 offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
                 sdpTransform: (sdp) => {
+                    console.log('sdp raw', sdp)
                     return sdp;
                 }
             })
 
-            let call =  {
-                        msg: 'outgoing',
-                        out:true, 
-                        chat: contact.substring(0, 99),
-                        video: video,
-                        peer: peer1,
-                        myStream: stream,
-                        myVideo: video, 
-                        screen: screen_stream
-                        }
-
+                     
+            activeCall.peer = peer1,
+            activeCall.myStream = stream,
+            activeCall.screen = screen_stream
             
-            $webRTC.call.unshift(call)
-            console.log('This call', $webRTC.call[0])
+            console.log('This call', activeCall)
 
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
-            console.log('video codecs', video_codecs);
+            let audio_codecs = window.RTCRtpSender.getCapabilities('audio');
+            console.log('audio calling codecs', audio_codecs);
             let custom_codecs = [];
 
             let codec;
@@ -146,6 +138,7 @@
 
             }
 
+            $webRTC.myVideo = video, 
             $webRTC.myStream = stream
             $webRTC.active = true
 
@@ -172,11 +165,11 @@
             peer1.on('stream', peerStream => {
 
             
-             console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
+             console.log(' Got peerstream object in store', activeCall.peerStream)
 
              
                 //Set peerStream to store
-                $webRTC.call[0].peerStream = peerStream
+                activeCall.peerStream = peerStream
                 if (video) {
                     $webRTC.peerVideo = true
                 } else {
@@ -196,6 +189,7 @@
 
 
             peer1.on('signal', data => {
+
                 try {
                     let dataToSend = {
                         data: data,
@@ -222,7 +216,7 @@
             })
             //Awaits msg answer with sdp from contact
             window.api.receive('got-callback', async (callerdata) => {
-
+                if (activeCall.chat !== callerdata.chat) return
                 let callback = JSON.parse(callerdata.data)
                 console.log('callback parsed', callback);
 
@@ -231,12 +225,14 @@
 
             })
 
-            window.api.receive('endCall', async () => {
+            window.api.receive('endCall', async (p, s, this_call) => {
+            if (activeCall.chat !== this_call) return
               console.log('ending call');
               endCall(peer1, stream)
             })
 
             window.api.receive('rtc_message', msg => { 
+                if (activeCall.chat !== msg.chat) return
                 console.log('sending rtc')
                 let sendMsg = JSON.stringify(msg)
                 peer1.send(sendMsg)
@@ -252,6 +248,7 @@
 
 
         window.api.receive('answer-call', (msg, contact, key) => {
+            if (!contact == activeCall.chat) return
             answerCall(msg, contact, key)
         })
 
@@ -297,16 +294,16 @@
 
                 console.log('codec set');
 
-                $webRTC.call[0].peer = peer2
-                console.log('store peerset 2',$webRTC.call[0].peer)
+                activeCall.peer = peer2
+                console.log('store peerset 2',activeCall.peer)
                 $webRTC.myStream = stream
                 $webRTC.active = true
 
                 if (video) {
-                  $webRTC.myVideo = true
+                    activeCall.myVideo = true
                 }
 
-                console.log('webrtc store settings set', $webRTC);
+                console.log('webrtc store settings set', activeCall);
 
                 peer2.on('close', () => {
                     console.log('Connection closed..')
@@ -334,12 +331,12 @@
 
                 })
 
-                window.api.send('expand-sdp', msg)
+                window.api.send('expand-sdp', msg, contact)
 
                 console.log('sending offer!!!')
 
-                window.api.receive('got-expanded', (message) => {
-
+                window.api.receive('got-expanded', (message, contact) => {
+                    if (activeCall.chat !== contact) return
                     console.log('got expanded', message)
                     // let signal = expand_sdp_offer(message);
                     peer2.signal(message);
@@ -361,13 +358,13 @@
                     // got remote video stream, now let's show it in a video tag
 
                     console.log('peer2 stream', peerStream)
-                    $webRTC.call[0].peerStream = peerStream
-                    console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
+                    activeCall.peerStream = peerStream
+                    console.log(' Got peerstream object in store', activeCall.peerStream)
 
                     if (video) {
-                        $webRTC.peerVideo = true
+                    $webRTC.peerVideo = true
                     } else {
-                        $webRTC.peerAudio = true
+                    $webRTC.peerAudio = true
                     }
                     call = true;
 
@@ -375,12 +372,14 @@
 
                 })
 
-                window.api.receive('endCall', () => {
+                window.api.receive('endCall', (s, p, this_call) => {
+                    if (activeCall.chat !== this_call) return
                 endCall(peer2, stream)
                 })
 
                     
                 window.api.receive('rtc_message', rtc => { 
+                    if (rtc.chat !== contact) return
                     console.log('sending rtc', rtc)
                     let sendMsg = JSON.stringify(rtc)
                     console.log('sending rtc', sendMsg)
