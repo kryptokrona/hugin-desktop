@@ -1592,7 +1592,7 @@ function parseCall (msg, sender, sent, emitCall=true) {
                 let callback = JSON.stringify(expand_sdp_answer(msg));
                 let callerdata = {
                     data: callback,
-                    sender: sender
+                    chat: sender
                 }
                 mainWindow.webContents.send('got-callback', callerdata)
                 console.log('got sdp', msg)
@@ -1609,11 +1609,11 @@ function parseCall (msg, sender, sent, emitCall=true) {
 
 let stream;
 
-ipcMain.on('expand-sdp', (e, data) => {
+ipcMain.on('expand-sdp', (e, data, contact) => {
     console.log('INCOMING EXPAND SDP', e, data)
         let recovered_data = expand_sdp_offer(data);
         console.log('TYPE EXPAND_O', recovered_data)
-        mainWindow.webContents.send('got-expanded',  recovered_data)
+        mainWindow.webContents.send('got-expanded',  recovered_data, contact)
 });
 
 
@@ -1686,6 +1686,7 @@ function expand_sdp_offer (compressed_string) {
     let current_internal = '';
     let port
     prts.forEach(function (port) {
+      console.log('checking in offer port', port)
       let ip_index = port.slice(-1);
       if (i == 1 ) {
 
@@ -1722,7 +1723,7 @@ function expand_sdp_offer (compressed_string) {
     external_id = ips[0].substring(1);
   }
 
-  console.log(candidates);
+  console.log('candidates',candidates);
   console.log("ports:",external_ports);
 
   console.log((external_ports.length / 3));
@@ -1739,7 +1740,7 @@ t=0 0
 a=group:BUNDLE 0 1 2
 a=extmap-allow-mixed
 a=msid-semantic: WMS ` + msid + `
-m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 103 104 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[1] +
@@ -1751,7 +1752,6 @@ a=mid:0
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=sendrecv
 a=msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=rtcp-mux
@@ -1760,12 +1760,6 @@ a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
-a=rtpmap:9 G722/8000
-a=rtpmap:0 PCMU/8000
-a=rtpmap:8 PCMA/8000
-a=rtpmap:106 CN/32000
-a=rtpmap:105 CN/16000
-a=rtpmap:13 CN/8000
 a=rtpmap:110 telephone-event/48000
 a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
@@ -1774,7 +1768,7 @@ a=ssrc:` + ssrc[0] + ` cname:c2J8K3mNIXGEi9qt
 a=ssrc:` + ssrc[0] + ` msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=ssrc:` + ssrc[0] + ` mslabel:` + msid + `
 a=ssrc:` + ssrc[0] + ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
+m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 127 125 108 124 123
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[2] +
@@ -1792,9 +1786,6 @@ a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
 a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
 a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
 a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
-a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${type == 'Δ' ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=recvonly" }
 a=rtcp-mux
 a=rtcp-rsize
@@ -1833,20 +1824,6 @@ a=rtcp-fb:123 ccm fir
 a=rtcp-fb:123 nack
 a=rtcp-fb:123 nack pli
 a=fmtp:123 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f
-a=rtpmap:35 H264/90000
-a=rtcp-fb:35 goog-remb
-a=rtcp-fb:35 transport-cc
-a=rtcp-fb:35 ccm fir
-a=rtcp-fb:35 nack
-a=rtcp-fb:35 nack pli
-a=fmtp:35 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f
-a=rtpmap:114 H264/90000
-a=rtcp-fb:114 goog-remb
-a=rtcp-fb:114 transport-cc
-a=rtcp-fb:114 ccm fir
-a=rtcp-fb:114 nack
-a=rtcp-fb:114 nack pli
-a=fmtp:114 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f
 ${type == "Δ" ?
 "a=ssrc:" + ssrc[1] + " cname:qwjy1Thr/obQUvqd\r\n" +
 "a=ssrc:" + ssrc[1] + " msid:" + msid + " 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
@@ -1868,7 +1845,7 @@ a=max-message-size:262144
     console.log('fingerprint', fingerprint)
     console.log('SRCS', ssrc)
     console.log('MSID', msid)
-    console.log('MSID', candidates)
+    console.log('candidates', candidates)
     return {type: "offer", sdp: sdp};
 
 }
@@ -1927,6 +1904,7 @@ function expand_sdp_answer (compressed_string) {
     console.log('More than 1 port!')
     let port
     prts.forEach(function (port) {
+      console.log('checking in answer port', port)
         let ip_index = port.slice(-1);
         if (ips[ip_index].substring(0,1) == '!') {
           if (external_port.length == 0) {
@@ -1968,7 +1946,7 @@ t=0 0
 a=group:BUNDLE 0 1 2
 a=extmap-allow-mixed
 a=msid-semantic: WMS ` + msid + `
-m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 103 104 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates +
@@ -1989,18 +1967,12 @@ a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
-a=rtpmap:9 G722/8000
-a=rtpmap:0 PCMU/8000
-a=rtpmap:8 PCMA/8000
-a=rtpmap:106 CN/32000
-a=rtpmap:105 CN/16000
-a=rtpmap:13 CN/8000
 a=rtpmap:110 telephone-event/48000
 a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
 a=rtpmap:126 telephone-event/8000
 a=ssrc:` + ssrc[0] +  ` cname:vhWDFlNcJ4vSUvs5
-m=video 9 UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
+m=video 9 UDP/TLS/RTP/SAVPF 127 125 108 124 123
 c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
 a=ice-ufrag:` + ice_ufrag + `
@@ -2017,9 +1989,6 @@ a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
 a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
 a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
 a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
-a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
-a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
-a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=inactive"}
 a=rtcp-mux
 a=rtcp-rsize
@@ -2058,20 +2027,6 @@ a=rtcp-fb:123 ccm fir
 a=rtcp-fb:123 nack
 a=rtcp-fb:123 nack pli
 a=fmtp:123 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f
-a=rtpmap:35 H264/90000
-a=rtcp-fb:35 goog-remb
-a=rtcp-fb:35 transport-cc
-a=rtcp-fb:35 ccm fir
-a=rtcp-fb:35 nack
-a=rtcp-fb:35 nack pli
-a=fmtp:35 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f
-a=rtpmap:114 H264/90000
-a=rtcp-fb:114 goog-remb
-a=rtcp-fb:114 transport-cc
-a=rtcp-fb:114 ccm fir
-a=rtcp-fb:114 nack
-a=rtcp-fb:114 nack pli
-a=fmtp:114 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f
 a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT
 m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
@@ -2085,8 +2040,14 @@ a=sctp-port:5000
 a=max-message-size:262144
 `
 
+console.log('ice', ice_ufrag)
+console.log('ice', ice_pwd)
+console.log('fingerprint', fingerprint)
+console.log('SRCS', ssrc)
+console.log('MSID', msid)
+console.log('candidates', candidates)
 
-    return {type: 'answer', sdp: sdp}
+  return {type: 'answer', sdp: sdp}
 }
 
 
