@@ -1,7 +1,7 @@
 <script>
     import {fly} from 'svelte/transition'
     import {page} from "$app/stores";
-    import {user, boards, misc, webRTC} from "$lib/stores/user.js";
+    import {user, boards, webRTC} from "$lib/stores/user.js";
     import callIcon from '/static/images/call.svg'
     import videoIcon from '/static/images/video.svg'
     import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -31,6 +31,15 @@
     const startCall = async (contact, calltype) => {
         console.log(contact, calltype)
         startTone.play()
+        let call =  {
+                      msg: 'outgoing',
+                      out:true, 
+                      chat: contact.substring(0, 99),
+                      video: calltype,
+                    }
+
+            
+        $webRTC.call.unshift(call)
         window.api.startCall(contact, calltype)
         dispatch('startCall')
 
