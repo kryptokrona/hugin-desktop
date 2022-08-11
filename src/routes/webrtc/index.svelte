@@ -248,7 +248,7 @@
 
 
         window.api.receive('answer-call', (msg, contact, key) => {
-            if (!contact == activeCall.chat) return
+            if (contact !== activeCall.chat) return
             answerCall(msg, contact, key)
         })
 
