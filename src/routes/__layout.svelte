@@ -148,6 +148,8 @@ window.api.receive('node', async (node) => {
 	{#if $user.loggedIn && $webRTC.call.length != 0 }
 	
 		{#each $webRTC.call as thiscall}
+			<Webrtc activeCall={thiscall}/>
+
 		{#if peerVideo && $webRTC.peerVideo}
 		
 		<PeerVideo call={thiscall}/>
@@ -185,7 +187,6 @@ window.api.receive('node', async (node) => {
 	{/if}
 	{#if $user.loggedIn}
 		<LeftMenu />
-		<Webrtc />
 		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
 	{/if}
 
