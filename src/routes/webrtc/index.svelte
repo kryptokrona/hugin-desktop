@@ -2,19 +2,25 @@
     import wrtc from '@koush/wrtc'
     import {fade} from "svelte/transition";
     import Peer from "simple-peer";
-    import {onMount} from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import {user, webRTC, misc} from "$lib/stores/user.js";
 
     export let activeCall
 
     onMount(() => {
+        console.log('mounting webrtc component')
+    })
+
+    onDestroy(() => {
+        console.log('exit webrtc component')
+    })
 
 
-        window.api.receive('start-call', (conatct, calltype) => {
-           
-            startCall(conatct, calltype)
-        })
-
+    window.api.receive('start-call', (conatct, calltype) => {
+        
+        startCall(conatct, calltype)
+    })
+       
         function startCall (contact, isVideo, screenshare=false) {
             // spilt input to addr and pubkey
             let contact_address = contact.substring(0, 99);
@@ -314,13 +320,13 @@
                     console.log('Connection lost..', e)
                     endCall(peer2, stream)
                 })
-
                 window.api.send('expand-sdp', msg, contact)
 
                 console.log('sending offer!!!')
 
-                window.api.receive('got-expanded', (message, contact) => {
-                    if (activeCall.chat !== contact.substring(0,99)) return
+                window.api.receive('got-expanded', (message, caller) => {
+                    console.log('caller expanded', caller)
+                    if (activeCall.chat !== caller) return
                     console.log('got expanded', message)
                     // let signal = expand_sdp_offer(message);
                     peer2.signal(message);
@@ -398,7 +404,7 @@
 
             }
         }
-      })
+   
 
   //End call
   function endCall (peer, stream, contact) {
