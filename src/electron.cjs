@@ -1609,11 +1609,12 @@ function parseCall (msg, sender, sent, emitCall=true) {
 
 let stream;
 
-ipcMain.on('expand-sdp', (e, data, contact) => {
-    console.log('INCOMING EXPAND SDP', e, data)
+ipcMain.on('expand-sdp', (e, data, addr) => {
+    console.log('INCOMING EXPAND SDP', data, )
+    console.log('INCOMING expand ADDDR', addr, )
         let recovered_data = expand_sdp_offer(data);
         console.log('TYPE EXPAND_O', recovered_data)
-        mainWindow.webContents.send('got-expanded',  recovered_data, contact)
+        mainWindow.webContents.send('got-expanded', recovered_data, addr)
 });
 
 
