@@ -5,7 +5,6 @@
     import {onDestroy, onMount} from "svelte";
     import {user, webRTC, misc} from "$lib/stores/user.js";
 
-    export let activeCall
 
     onMount(() => {
         console.log('mounting webrtc component')
@@ -27,9 +26,6 @@
             
             console.log('contact address', contact_address)
             console.log('Hugin Address', contact)
-            console.log('Thiscall Address', activeCall.chat)
-
-            if (contact_address !== activeCall.chat) return
 
             console.log('Starting call..');
             if (!screenshare) {
@@ -115,15 +111,16 @@
             })
 
                      
-            activeCall.peer = peer1,
-            activeCall.myStream = stream,
-            activeCall.screen = screen_stream
+            $webRTC.call[0].peer = peer1,
+            $webRTC.call[0].myStream = stream,
+            $webRTC.call[0].screen = screen_stream
             
-            console.log('This call', activeCall)
+            console.log('This call', $webRTC.call[0])
 
             let video_codecs = window.RTCRtpSender.getCapabilities('video');
             let audio_codecs = window.RTCRtpSender.getCapabilities('audio');
             console.log('audio calling codecs', audio_codecs);
+            console.log('audio calling codecs', video_codecs);
             let custom_codecs = [];
 
             let codec;
@@ -171,11 +168,11 @@
             peer1.on('stream', peerStream => {
 
             
-             console.log(' Got peerstream object in store', activeCall.peerStream)
+             console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
 
              
                 //Set peerStream to store
-                activeCall.peerStream = peerStream
+                $webRTC.call[0].peerStream = peerStream
                 if (video) {
                     $webRTC.peerVideo = true
                 } else {
@@ -222,7 +219,6 @@
             })
             //Awaits msg answer with sdp from contact
             window.api.receive('got-callback', async (callerdata) => {
-                if (activeCall.chat !== callerdata.chat) return
                 let callback = JSON.parse(callerdata.data)
                 console.log('callback parsed', callback);
 
@@ -232,13 +228,11 @@
             })
 
             window.api.receive('endCall', async (p, s, this_call) => {
-            if (activeCall.chat !== this_call) return
               console.log('ending call');
               endCall(peer1, stream)
             })
 
             window.api.receive('rtc_message', msg => { 
-                if (activeCall.chat !== msg.chat) return
                 console.log('sending rtc')
                 let sendMsg = JSON.stringify(msg)
                 peer1.send(sendMsg)
@@ -254,7 +248,6 @@
 
 
         window.api.receive('answer-call', (msg, contact, key) => {
-            if (contact !== activeCall.chat) return
             answerCall(msg, contact, key)
         })
 
@@ -281,7 +274,9 @@
 
                 let custom_codecs = [];
                 let video_codecs = window.RTCRtpSender.getCapabilities('video');
-
+                let audio_codecs = window.RTCRtpSender.getCapabilities('audio');
+                console.log('audio calling codecs', audio_codecs);
+                console.log('audio calling codecs', video_codecs);
                 let codec;
                 for (codec in video_codecs.codecs) {
                     let this_codec = video_codecs.codecs[codec];
@@ -300,16 +295,13 @@
 
                 console.log('codec set');
 
-                activeCall.peer = peer2
-                console.log('store peerset 2',activeCall.peer)
+                $webRTC.call[0].peer = peer2
                 $webRTC.myStream = stream
                 $webRTC.active = true
 
                 if (video) {
-                    activeCall.myVideo = true
+                    $webRTC.myVideo = true
                 }
-
-                console.log('webrtc store settings set', activeCall);
 
                 peer2.on('close', () => {
                     console.log('Connection closed..')
@@ -320,16 +312,15 @@
                     console.log('Connection lost..', e)
                     endCall(peer2, stream)
                 })
-                window.api.send('expand-sdp', msg, contact)
+
+                let sdpOffer = msg
+                window.api.expandSdp(sdpOffer)
 
                 console.log('sending offer!!!')
 
-                window.api.receive('got-expanded', (message, caller) => {
-                    console.log('caller expanded', caller)
-                    if (activeCall.chat !== caller) return
-                    console.log('got expanded', message)
-                    // let signal = expand_sdp_offer(message);
-                    peer2.signal(message);
+                window.api.receive('got-expanded', (callData) => {
+                    console.log('caller expanded', callData)
+                    peer2.signal(callData);
 
                 })
 
@@ -366,28 +357,24 @@
                     // got remote video stream, now let's show it in a video tag
 
                     console.log('peer2 stream', peerStream)
-                    activeCall.peerStream = peerStream
-                    console.log(' Got peerstream object in store', activeCall.peerStream)
+                    $webRTC.call[0].peerStream = peerStream
 
                     if (video) {
                     $webRTC.peerVideo = true
                     } else {
                     $webRTC.peerAudio = true
                     }
-                    call = true;
 
                     console.log('Setting up link..');
 
                 })
 
                 window.api.receive('endCall', (s, p, this_call) => {
-                    if (activeCall.chat !== this_call) return
                 endCall(peer2, stream)
                 })
 
                     
                 window.api.receive('rtc_message', rtc => { 
-                    if (rtc.chat !== contact) return
                     console.log('sending rtc', rtc)
                     let sendMsg = JSON.stringify(rtc)
                     console.log('sending rtc', sendMsg)

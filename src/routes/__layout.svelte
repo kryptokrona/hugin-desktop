@@ -3,7 +3,7 @@
 	import LeftMenu from "../components/navbar/LeftMenu.svelte";
 	import RightMenu from "/src/components/navbar/RightMenu.svelte";
 	import IncomingCall from "/src/components/webrtc/IncomingCall.svelte";
-	import Webrtc from "/src/routes/webrtc/index.svelte";
+	import Webrtc from "/src/components/webrtc/Calls.svelte";
 	import { SvelteToast } from '@zerodevx/svelte-toast'
 	import TrafficLights from "$components/TrafficLights.svelte";
 	import CallerMenu from "/src/components/webrtc/CallerMenu.svelte";
@@ -146,9 +146,12 @@ window.api.receive('node', async (node) => {
 
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 }
-	
+
+	{#if $webRTC.active && $webRTC.myStream}
+		<MyVideo />
+	{/if}
+
 		{#each $webRTC.call as thiscall}
-			<Webrtc activeCall={thiscall}/>
 
 		{#if peerVideo && $webRTC.peerVideo}
 		
@@ -181,13 +184,11 @@ window.api.receive('node', async (node) => {
 		
 	{/if}
 
-	{#if myVideo && $webRTC.myVideo && $webRTC.myStream}
-			<MyVideo />
-			<!-- <PeerVideo/> -->
-	{/if}
+
 	{#if $user.loggedIn}
 		<LeftMenu />
 		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
+		<Webrtc/>
 	{/if}
 
 	<slot />
