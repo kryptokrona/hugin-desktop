@@ -2017,10 +2017,13 @@ a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:13 urn:3gpp:video-orientation
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
-a=extmap:11 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
+a=extmap:5 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
 a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
-a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
+a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=inactive"}
 a=rtcp-mux
 a=rtcp-rsize
