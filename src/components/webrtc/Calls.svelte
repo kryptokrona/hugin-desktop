@@ -1,6 +1,5 @@
 <script>
     import wrtc from '@koush/wrtc'
-    import {fade} from "svelte/transition";
     import Peer from "simple-peer";
     import {onDestroy, onMount} from "svelte";
     import {user, webRTC, misc} from "$lib/stores/user.js";
