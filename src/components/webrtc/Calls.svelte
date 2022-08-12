@@ -7,11 +7,6 @@
 
     onMount(() => {
         console.log('mounting webrtc component')
-    })
-
-    onDestroy(() => {
-        console.log('exit webrtc component')
-    })
 
 
     window.api.receive('start-call', (conatct, calltype) => {
@@ -226,11 +221,6 @@
 
             })
 
-            window.api.receive('endCall', async (p, s, this_call) => {
-              console.log('ending call');
-              endCall(peer1, stream)
-            })
-
             window.api.receive('rtc_message', msg => { 
                 console.log('sending rtc')
                 let sendMsg = JSON.stringify(msg)
@@ -368,10 +358,6 @@
 
                 })
 
-                window.api.receive('endCall', (s, p, this_call) => {
-                endCall(peer2, stream)
-                })
-
                     
                 window.api.receive('rtc_message', rtc => { 
                     console.log('sending rtc', rtc)
@@ -390,15 +376,21 @@
 
             }
         }
-   
+    })
+
+    
+    window.api.receive('endCall', (s, p, this_call) => {
+                endCall('peer', 'stream')
+                })
 
   //End call
   function endCall (peer, stream, contact) {
-    
 
+    console.log('webrtc peers',)
+    
         try {
-            peer.destroy();
-            stream.getTracks().forEach(function(track) {
+            $webRTC.call[0].peer.destroy();
+            $webRTC.myStream.getTracks().forEach(function(track) {
                 track.stop();
             });
         } catch (e) {
