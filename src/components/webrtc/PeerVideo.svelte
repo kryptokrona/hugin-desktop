@@ -72,7 +72,7 @@
 
 <div class:hide={move} class:boards={boards} on:click={playVideo} in:fly="{{y: -100, duration:200, easing: cubicOut}}" out:fly="{{y: -100, duration: 200, easing: cubicIn}}" class="card" >
   <div class="inner-card">
-  <video class:toggleVideo={move} muted in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
+  <video class:toggleVideo={move} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
   <!-- <div class="options">
    
         <img src="/static/images/call.svg" alt="">
