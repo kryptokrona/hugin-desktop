@@ -97,7 +97,7 @@
                 stream: stream,
                 trickle: false,
                 wrtc: wrtc,
-                offerOptions: {offerToReceiveVideo: video, offerToReceiveAudio: true},
+                offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
                 sdpTransform: (sdp) => {
                     console.log('sdp raw', sdp)
                     return sdp;
