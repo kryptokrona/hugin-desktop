@@ -1389,6 +1389,8 @@ async function optimizeMessages(nbrOfTxs) {
 
   }
 
+  console.log('addresses', payments)
+
   let result = await js_wallet.sendTransactionAdvanced(
       payments, // destinations,
       3, // mixin
@@ -2076,8 +2078,8 @@ a=rtcp-fb:114 ccm fir
 a=rtcp-fb:114 nack
 a=rtcp-fb:114 nack pli
 a=fmtp:114 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f
-${type == 'δ' ? `a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT"` : "a=ssrc: 9 cname:0v7phLz3L82cIhVT"}
-m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+${type == 'δ' ?
+ `a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
 b=AS:30
 a=ice-ufrag:` + ice_ufrag + `
