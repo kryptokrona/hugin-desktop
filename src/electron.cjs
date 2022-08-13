@@ -1797,7 +1797,7 @@ a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-${type == 'Δ' ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=recvonly" }
+${type == 'Δ' ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=inactive" }
 a=rtcp-mux
 a=rtcp-rsize
 a=rtpmap:127 H264/90000
@@ -2024,7 +2024,7 @@ a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=sendrecv"}
+${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=recvonly"}
 a=rtcp-mux
 a=rtcp-rsize
 a=rtpmap:127 H264/90000
@@ -2076,7 +2076,7 @@ a=rtcp-fb:114 ccm fir
 a=rtcp-fb:114 nack
 a=rtcp-fb:114 nack pli
 a=fmtp:114 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f
-a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT
+${type == 'δ' ? `a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT"` : "a=ssrc: 9 cname:0v7phLz3L82cIhVT"}
 m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
 b=AS:30
