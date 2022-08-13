@@ -146,7 +146,7 @@
                 console.log('Connection lost..')
 
                 endCall(peer1, stream)
-
+                return
                 // ENDCALL AUDIO
             })
 
@@ -156,7 +156,7 @@
 
                 endCall(peer1, stream)
                 // ENDCALL AUDIO
-
+                return
             })
 
             peer1.on('stream', peerStream => {
@@ -295,11 +295,13 @@
                 peer2.on('close', () => {
                     console.log('Connection closed..')
                     endCall(peer2, stream)
+                    return
                 })
 
                 peer2.on('error', (e) => {
                     console.log('Connection lost..', e)
                     endCall(peer2, stream)
+                    return
                 })
 
                 let sdpOffer = msg
@@ -307,7 +309,7 @@
 
                 console.log('sending offer!!!')
 
-                window.api.receive('got-expanded', (callData) => {
+                window.api.receive('got-expanded', async (callData) => {
                     console.log('caller expanded', callData)
                     peer2.signal(callData);
 
