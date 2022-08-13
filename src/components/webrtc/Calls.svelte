@@ -211,15 +211,6 @@
                 first = false;
 
             })
-            //Awaits msg answer with sdp from contact
-            window.api.receive('got-callback', async (callerdata) => {
-                let callback = JSON.parse(callerdata.data)
-                console.log('callback parsed', callback);
-
-                peer1.signal(callback);
-                console.log('Connecting to ...',  callerdata.chat)
-
-            })
 
             window.api.receive('rtc_message', msg => { 
                 console.log('sending rtc')
@@ -234,6 +225,16 @@
             }) 
 
         }
+
+        //Awaits msg answer with sdp from contact
+        window.api.receive('got-callback', async (callerdata) => {
+            let callback = JSON.parse(callerdata.data)
+            console.log('callback parsed', callback);
+
+            $webRTC.call[0].peer.signal(callback);
+            console.log('Connecting to ...',  callerdata.chat)
+
+        })
 
 
         window.api.receive('answer-call', (msg, contact, key) => {
@@ -309,12 +310,6 @@
 
                 console.log('sending offer!!!')
 
-                window.api.receive('got-expanded', async (callData) => {
-                    console.log('caller expanded', callData)
-                    peer2.signal(callData);
-
-                })
-
 
                 peer2.on('signal', data => {
 
@@ -379,6 +374,15 @@
             }
         }
     })
+
+    
+    window.api.receive('got-expanded', async (callData) => {
+                    console.log('caller expanded', callData)
+                    
+                     $webRTC.call[0].peer.signal(callData);
+
+                })
+
 
     
     window.api.receive('endCall', (s, p, this_call) => {
