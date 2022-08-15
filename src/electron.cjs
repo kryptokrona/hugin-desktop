@@ -1590,6 +1590,7 @@ function parseCall (msg, sender, sent, emitCall=true) {
         // Fall through
         case "λ":
             // Answer
+            if (sent) return "Call answered"
             if (emitCall) {
                 let callback = JSON.stringify(expand_sdp_answer(msg));
                 let callerdata = {
@@ -1599,6 +1600,7 @@ function parseCall (msg, sender, sent, emitCall=true) {
                 mainWindow.webContents.send('got-callback', callerdata)
                 console.log('got sdp', msg)
             }
+            
             return "Call answered";
 
             break;
@@ -1611,11 +1613,15 @@ function parseCall (msg, sender, sent, emitCall=true) {
 
 let stream;
 
-ipcMain.on('expand-sdp', (e, data) => {
+ipcMain.on('expand-sdp', (e, data, address) => {
     console.log('INCOMING EXPAND SDP', data )
+    console.log('INCOMING EXPAND SDP', address )
         let recovered_data = expand_sdp_offer(data);
         console.log('TYPE EXPAND_O', recovered_data)
-        mainWindow.webContents.send('got-expanded', recovered_data)
+        let expanded_data = []
+        expanded_data.push(recovered_data)
+        expanded_data.push(address)
+        mainWindow.webContents.send('got-expanded', expanded_data)
 });
 
 
