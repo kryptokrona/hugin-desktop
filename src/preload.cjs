@@ -70,8 +70,8 @@ const WINDOW_API = {
     ipcRenderer.send('endCall', peer, stream, contact)
   },
 
-  expandSdp: async (data) => {
-    ipcRenderer.send('expand-sdp', data)
+  expandSdp: async (data, address) => {
+    ipcRenderer.send('expand-sdp', data, address)
   },
 
   //HANDLE NODES
