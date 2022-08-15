@@ -5,16 +5,16 @@
     import {user, webRTC, misc} from "$lib/stores/user.js";
 
 
-    onMount(() => {
-        console.log('mounting webrtc component')
-
+    window.api.receive('answer-call', (msg, contact, key) => {
+            answerCall(msg, contact, key)
+    })
 
     window.api.receive('start-call', (conatct, calltype) => {
         
         startCall(conatct, calltype)
     })
        
-        function startCall (contact, isVideo, screenshare=false) {
+        const startCall =  (contact, isVideo, screenshare=false) => {
             // spilt input to addr and pubkey
             let contact_address = contact.substring(0, 99);
             
@@ -91,18 +91,8 @@
 
               console.log('Audio call');
             }
-            
-            let peer1 = new Peer({
-                initiator: true,
-                stream: stream,
-                trickle: false,
-                wrtc: wrtc,
-                offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
-                sdpTransform: (sdp) => {
-                    console.log('sdp raw', sdp)
-                    return sdp;
-                }
-            })
+
+           let peer1 = await startPeer1(stream, video, contact)
 
                      
             $webRTC.call[0].peer = peer1,
@@ -140,24 +130,9 @@
             $webRTC.active = true
 
             let first = true;
+            let call = true
 
-            peer1.on('close', (e) => {
-                console.log(e)
-                console.log('Connection lost..')
 
-                endCall(peer1, stream)
-                return
-                // ENDCALL AUDIO
-            })
-
-            peer1.on('error', (e) => {
-                console.log(e)
-                console.log('Connection lost..')
-
-                endCall(peer1, stream)
-                // ENDCALL AUDIO
-                return
-            })
 
             peer1.on('stream', peerStream => {
 
@@ -173,43 +148,39 @@
                     $webRTC.peerAudio = true
                 }
 
-               })
+            })
 
+            
 
-            peer1.on('connect', () => {
-                // CONNECT SOUND
-                // SEND WEBCONTENTS " CONNECTED "
-                console.log('Connection established; with', contact)
-                $webRTC.connected = true
+        }
 
-            });
+        function startPeer1(stream, video, contact) {
 
-
-            peer1.on('signal', data => {
-
-                try {
-                    let dataToSend = {
-                        data: data,
-                        type: 'offer',
-                        contact: contact,
-                        video: video,
-                    }
-
-                    console.log('SDP', data);
-
-                    window.api.send('get-sdp', dataToSend)
-                } catch (err) {
-                    console.log('error', err)
+            let peer1 = new Peer({
+                initiator: true,
+                stream: stream,
+                trickle: false,
+                wrtc: wrtc,
+                offerOptions: {offerToReceiveVideo: true, offerToReceiveAudio: true},
+                sdpTransform: (sdp) => {
+                    return sdp;
                 }
+            })
 
-                if (!first) {
-                    return
-                }
+            peer1.on('close', (e) => {
+                console.log(e)
+                console.log('Connection lost..')
 
-                //awaiting_callback = true;
+                endCall(peer1, stream)
+                // ENDCALL AUDIO
+            })
 
-                first = false;
+            peer1.on('error', (e) => {
+                console.log(e)
+                console.log('Connection lost..')
 
+                endCall(peer1, stream)
+                // ENDCALL AUDIO
             })
 
             window.api.receive('rtc_message', msg => { 
@@ -222,26 +193,50 @@
             peer1.on('data', msg => {
                 let incMsg = JSON.parse(msg)
                 console.log('msg from peer2', incMsg)
-            }) 
+            })
 
+            
+            peer1.on('signal', data => {
+
+            let dataToSend = {
+                data: data,
+                type: 'offer',
+                contact: contact,
+                video: video,
+            }
+
+            console.log('SDP', data);
+
+            window.api.send('get-sdp', dataToSend)
+
+
+            })
+
+
+            return peer1
         }
 
-        //Awaits msg answer with sdp from contact
-        window.api.receive('got-callback', async (callerdata) => {
+                   
+        window.api.receive('got-expanded', async (callData) => {
+            console.log('caller expanded', callData)
+            let contact = $webRTC.call.filter(a => a.chat == callData[1])
+            console.log(contact);
+            contact[0].peer.signal(callData[0]);
+        
+            })
+
+            //Awaits msg answer with sdp from contact
+        window.api.receive('got-callback', (callerdata) => {
             let callback = JSON.parse(callerdata.data)
             console.log('callback parsed', callback);
-
-            $webRTC.call[0].peer.signal(callback);
+            let contact = $webRTC.call.filter(a => a.chat === callerdata.chat)
+            console.log('contact filter', contact);
+            contact[0].peer.signal(callback);
             console.log('Connecting to ...',  callerdata.chat)
 
-        })
+            })
 
-
-        window.api.receive('answer-call', (msg, contact, key) => {
-            answerCall(msg, contact, key)
-        })
-
-        async function answerCall (msg, contact, key) {
+        const answerCall = (msg, contact, key) => {
             console.log('APPLE', msg, contact, key)
 
             let video = false
@@ -259,8 +254,8 @@
 
             function gotMedia(stream) {
                 console.log('FN getMedia', stream, video)
-
-                let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
+               
+                let peer2 = startPeer2(stream, video)
 
                 let custom_codecs = [];
                 let video_codecs = window.RTCRtpSender.getCapabilities('video');
@@ -293,41 +288,38 @@
                     $webRTC.myVideo = true
                 }
 
-                peer2.on('close', () => {
+                sendAnswer(msg, contact, peer2, key, video)
+
+                console.log('answrcall done')
+
+            }
+        }
+
+        function startPeer2(stream, video) {
+
+          let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
+
+          peer2.on('close', () => {
                     console.log('Connection closed..')
                     endCall(peer2, stream)
-                    return
+                    call = false
                 })
 
                 peer2.on('error', (e) => {
                     console.log('Connection lost..', e)
                     endCall(peer2, stream)
-                    return
+                    call = false
                 })
-
-                let sdpOffer = msg
-                window.api.expandSdp(sdpOffer)
+                    
+                peer2.on('data', data => {
+                    console.log('data from peer', data)
+                    let incMsg = JSON.parse(data)
+                    console.log('msg from peer2', incMsg)
+                    
+                })
 
                 console.log('sending offer!!!')
 
-
-                peer2.on('signal', data => {
-
-                  console.log('initial offer data:', data);
-                    let dataToSend = {
-                        data: data,
-                        type: 'answer',
-                        contact: contact + key,
-                        video: video,
-                    }
-                    console.log('sending sdp');
-
-                    window.api.send('get-sdp', dataToSend)
-                   
-
-                })
-
-            
                 peer2.on('track', (track, stream) => {
                     console.log('Setting up link..', track, stream)
                 })
@@ -355,34 +347,31 @@
 
                 })
 
-                    
-                window.api.receive('rtc_message', rtc => { 
-                    console.log('sending rtc', rtc)
-                    let sendMsg = JSON.stringify(rtc)
-                    console.log('sending rtc', sendMsg)
-                    peer2.send(sendMsg)
-                    console.log('sent');
-                })
+                return peer2
 
-                peer2.on('data', data => {
-                    console.log('data from peer', data)
-                    let incMsg = JSON.parse(data)
-                    console.log('msg from peer2', incMsg)
-                    
-                }) 
-
-            }
         }
-    })
 
-    
-    window.api.receive('got-expanded', async (callData) => {
-                    console.log('caller expanded', callData)
-                    
-                     $webRTC.call[0].peer.signal(callData);
+      function sendAnswer(sdpOffer, address, peer, key, video) {
+        
+        
+        window.api.expandSdp(sdpOffer, address)
 
-                })
+        peer.on('signal', data => {
 
+        console.log('initial offer data:', data);
+        let dataToSend = {
+            data: data,
+            type: 'answer',
+            contact: address + key,
+            video: video,
+        }
+        console.log('sending sdp');
+
+        window.api.send('get-sdp', dataToSend)
+        
+
+        })
+    }
 
     
     window.api.receive('endCall', (s, p, this_call) => {
