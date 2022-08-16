@@ -13,6 +13,7 @@
   let thisCall;
   let move = false;
   let boards = false;
+  let hide = false
   export let call;
 
   const dispatch = createEventDispatcher();
@@ -72,30 +73,52 @@
   $: console.log("$webRTC active call", call);
 </script>
 
-<audio src={peerStream}></audio>
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
-
+<div class="card" class:hide={hide} use:draggable={{bounds: "parent"}} on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
+>
 <video class:toggleVideo={move} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}
-       class:hide={move} class:boards={boards}
-       use:draggable={{bounds: "parent"}}>
-  <!-- <div class="options">
-      <img src="/static/images/call.svg" alt="">
-  </div>
-    <div class="decline hover" on:click={pauseVideo} >
-        <img src="/static/images/call-slash.svg" alt="">
-    </div>
-</div> -->
+       class:hide={move} class:boards={boards}>
 </video>
+<div class="toggles">
 
+</div>
+</div>
 <style lang="scss">
 
-  video {
+  .card {
+    position: relative;
+    display: flex;
     background-color: #171717;
-    border-radius: 5px;
+    border-radius: 10px;
     box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
     z-index: 500;
-    height: 225px;
-    width: 300px;
+    height: 203px;
+    width: 360px;
+    pointer-events: all;
+    .toggles {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 100px;
+      z-index: 501;
+      opacity: 0%;
+      transition: 200ms ease-in-out;
+    }
+
+    &:hover {
+      .toggles {
+        opacity: 100%;
+        background-image: linear-gradient(180deg, #00000000, #000000);
+      }
+    }
+
+    video {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
   }
 
   .caller {
@@ -117,6 +140,7 @@
     transition: 250ms ease-in-out;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
   }
+
 
   .decline {
     display: flex;
@@ -142,6 +166,38 @@
   }
 
   .hide {
+    width: 60px !important;
+    height: 50px;
+    transition: 0.3s;
+  }
+
+  .toggleVideo {
+    width: 60px !important;
+    transition: 0.3s;
+  }
+
+  .toggle_window {
+    color: white;
+    width: 50px;
+    height: 20px;
+    font-size: 12px;
+    font-family: "Montserrat";
+    background: royalblue;
+    position: absolute;
+    display: block;
+    z-index: 3;
+    bottom: -15px;
+    border-radius: 10px;
+  }
+
+  .toggle {
+    left: 1%;
+    top: 250px;
+    width: 50px;
+    height: 20px;
+  }
+
+  .hide {
     width: 200px;
     height: 150px;
     top: 500px;
@@ -149,14 +205,6 @@
     transition: 0.3s;
   }
 
-  .toggleVideo {
-    width: 200px !important;
-    transition: 0.3s;
-  }
-
-  .boards {
-    left: 120px;
-  }
 
 
 </style>
