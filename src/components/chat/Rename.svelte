@@ -40,7 +40,7 @@
     }
     
     window.addEventListener('keyup', e => {
-        if (enableAddButton && e.keyCode === 13) {
+        if (enableAddButton && rename && e.keyCode === 13) {
             renameContact(text)
             enableAddButton = false
         }
