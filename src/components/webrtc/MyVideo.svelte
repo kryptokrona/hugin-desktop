@@ -6,7 +6,7 @@
   import { user, webRTC } from "$lib/stores/user.js";
   import { page } from "$app/stores";
   import { draggable } from "@neodrag/svelte";
-
+  import { createEventDispatcher } from "svelte";
   let myVideo = document.getElementById("myVideo");
   let video = false;
   let hide = true;
@@ -14,6 +14,8 @@
   let chatWindow = true;
   let thisCall;
   export let call;
+
+  const dispatch = createEventDispatcher();
 
   // When incoming call and this get mounted we play the ringtone
   onMount(async () => {
@@ -74,10 +76,11 @@
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
 <div class="card" class:toggle={!chatWindow} class:hide={hide}
-     use:draggable={{bounds: 'parent'}}
+     use:draggable={{bounds: 'parent'}}  on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
 >
-  <video class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
-  <div class="toggles">
+  <video class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
+  ></video>
+  <div class="toggles" on:click={(a)=> dispatch('nodrag')}>
 
   </div>
 </div>
@@ -93,7 +96,7 @@
     z-index: 500;
     height: 203px;
     width: 360px;
-
+    pointer-events: all;
     .toggles {
       position: absolute;
       bottom: 0;
@@ -108,6 +111,7 @@
       .toggles {
         opacity: 100%;
         background-image: linear-gradient(180deg, #00000000, #000000);
+        pointer-events: visible;
       }
     }
 
@@ -177,8 +181,8 @@
 
   .toggle_window {
     color: white;
-    width: 50px;
-    height: 20px;
+    width: 60px;
+    height: 50px;
     font-size: 12px;
     font-family: "Montserrat";
     background: royalblue;
@@ -190,7 +194,7 @@
   }
 
   .toggle {
-    left: 1%;
+    left: 5%;
     top: 250px;
     width: 50px;
     height: 20px;
