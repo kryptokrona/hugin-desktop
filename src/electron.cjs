@@ -1348,7 +1348,7 @@ async function sendMessage(message, receiver, off_chain=false) {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
     } else if (off_chain) {
-      let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
+      let sentMsg = {msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address}
       console.log('sending rtc message');
       mainWindow.webContents.send('rtc_message', sentMsg)
       saveMessageSQL(sentMsg)
