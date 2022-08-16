@@ -73,7 +73,6 @@
   $: console.log("$webRTC active call", call);
 </script>
 
-<!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 <div class="card" class:hide={hide} use:draggable={{bounds: "parent"}} on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
 >
 <video class:toggleVideo={move} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}
