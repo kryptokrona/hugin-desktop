@@ -80,7 +80,7 @@
 >
   <video class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
   ></video>
-  <div class="toggles" on:click={(a)=> dispatch('nodrag')}>
+  <div class="toggles">
 
   </div>
 </div>
