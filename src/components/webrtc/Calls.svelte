@@ -27,6 +27,15 @@
 
     })
 
+    window.api.receive('rtc_message', msg => { 
+        let to = $webRTC.call.filter(a => a.chat == msg.chat)
+        console.log('sending rtc')
+        let sendMsg = JSON.stringify(msg)
+        to[0].peer.send(sendMsg)
+        console.log('sent')
+        })
+
+
     //Awaits msg answer with sdp from contact
     window.api.receive('got-callback', (callerdata) => {
         let callback = JSON.parse(callerdata.data)
@@ -154,9 +163,7 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
 
     peer1.on('stream', peerStream => {
 
-    
         console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
-
         
         //Set peerStream to store
         $webRTC.call[0].peerStream = peerStream
@@ -188,7 +195,6 @@ function startPeer1(stream, video, contact) {
         peer1.on('close', (e) => {
             console.log(e)
             console.log('Connection lost..')
-
             endCall(peer1, stream)
             // ENDCALL AUDIO
         })
@@ -201,39 +207,23 @@ function startPeer1(stream, video, contact) {
             // ENDCALL AUDIO
         })
 
-        window.api.receive('rtc_message', msg => { 
-            console.log('sending rtc')
-            let sendMsg = JSON.stringify(msg)
-            peer1.send(sendMsg)
-            console.log('sent')
-        })
+        
+        peer1.on('connect', () => {
+            // SOUND EFFECT
+            console.log('Connection established')
+            $webRTC.connected = true
+
+        });
 
         peer1.on('data', msg => {
             let incMsg = JSON.parse(msg)
             console.log('msg from peer2', incMsg)
         })
 
-        
-        peer1.on('signal', data => {
-
-        let dataToSend = {
-            data: data,
-            type: 'offer',
-            contact: contact,
-            video: video,
-        }
-
-        console.log('SDP', data);
-
-        window.api.send('get-sdp', dataToSend)
-
-
-        })
-
+        sendOffer(peer1, contact, video)
 
     return peer1
 }
-
 
 
 const answerCall = (msg, contact, key) => {
@@ -348,6 +338,27 @@ function startPeer2(stream, video) {
     return peer2   
 }
 
+function sendOffer(peer, contact, video) {
+
+    peer.on('signal', data => {
+
+    let dataToSend = {
+        data: data,
+        type: 'offer',
+        contact: contact,
+        video: video,
+    }
+
+    console.log('SDP', data);
+
+    window.api.send('get-sdp', dataToSend)
+
+
+    })
+
+
+}
+
 function sendAnswer(sdpOffer, address, peer, key, video) {
         
         
@@ -368,7 +379,7 @@ function sendAnswer(sdpOffer, address, peer, key, video) {
         
 
         })
-    }
+}
 
 
   //End call
