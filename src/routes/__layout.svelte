@@ -155,12 +155,6 @@ window.api.receive('node', async (node) => {
 
 		{#each $webRTC.call as thiscall}
 
-		{#if peerVideo && $webRTC.peerVideo}
-		
-		<PeerVideo call={thiscall}/>
-		
-		
-		{/if}
 		{#if $webRTC.peerAudio}
 		
 		<PeerAudio audioCall={thiscall}/>
