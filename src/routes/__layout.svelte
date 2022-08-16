@@ -10,6 +10,8 @@
 	import MyVideo from "/src/components/webrtc/MyVideo.svelte";
 	import PeerVideo from "/src/components/webrtc/PeerVideo.svelte";
 	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
+	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
+
 	//Stores
 	import { user, webRTC, misc } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -148,7 +150,7 @@ window.api.receive('node', async (node) => {
 	{#if $user.loggedIn && $webRTC.call.length != 0 }
 
 	{#if $webRTC.active && $webRTC.myStream}
-		<MyVideo />
+		<VideoGrid />
 	{/if}
 
 		{#each $webRTC.call as thiscall}

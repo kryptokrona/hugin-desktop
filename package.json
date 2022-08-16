@@ -21,6 +21,7 @@
 	"dependencies": {
 		"@commonify/lowdb": "^3.0.0",
 		"@koush/wrtc": "^0.5.3",
+		"@neodrag/svelte": "^1.2.3",
 		"electron-context-menu": "^2.5.2",
 		"electron-fetch": "^1.7.4",
 		"electron-reloader": "^1.2.3",

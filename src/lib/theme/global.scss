@@ -3,6 +3,17 @@ body {
   font-family: Montserratm, Arial, serif;
   font-weight: 400;
   margin: 0;
+  box-sizing: border-box;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @media (prefers-color-scheme: dark) {
