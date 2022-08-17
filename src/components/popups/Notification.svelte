@@ -31,9 +31,9 @@
     <div class="inner-card">
         <div class="header">
             <img class="avatar" src="data:image/png;base64,{get_avatar(message.k)}" alt="">
-            <h4 class="name">{message.n}</h4>
+            <h4 class="name">{message.n}</h4><p>in {message.brd}</p>
         </div>
-            <p>{message.m}</p>
+            <p class="message">{message.m}</p>
          <br>
     </div>
 </div>
@@ -42,7 +42,7 @@
       .card {
         display: flex;
         padding: 1px;
-        height: 60px;
+        height: 68px;
         width: 300px;
         flex-direction: column;
         box-sizing: border-box;
@@ -66,16 +66,17 @@
     }
 
     .name {
-        font-size: 12px;
+        font-size: 16px;
+        display: flex;
         font-weight: bold;
+        padding-right: 10px;
     }
 
     
     p {
-        font-size: 12px;
-        display: inline-flex;
-        margin-left: 44px;
         margin-top: 0px;
+    font-size: 12px;
+    display: contents;
     }
 
     h4 {
@@ -94,6 +95,13 @@
         display: flex;
         align-items: center;
         gap: 0.25rem;
+    }
+
+    .message {
+        font-family: "Montserrat";
+        font-size: 12px;
+        display: inline-flex;
+        margin-left: 44px;
     }
 
 
