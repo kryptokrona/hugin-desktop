@@ -11,17 +11,18 @@
 	//Stores
 	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
-
+	
 	//Global CSS
 	import '/src/lib/theme/global.scss'
 	import Notification from '/src/components/popups/Notification.svelte';
-
+	
 	let ready = false
 	let myVideo = false
 	let peerVideo = true
 	let incoming_call
 	let showCallerMenu = false
 	let new_messages = false
+	let board_message_sound
 	const closePopup = () => {
 		incoming_call = false
 	}
@@ -54,7 +55,7 @@
 				return null;
 			}
 		};
-
+		board_message_sound = new Audio("/static/audio/boardmessage.mp3");
 		ready = true
 
 		//Handle incoming call
@@ -77,7 +78,8 @@
 
 		window.api.receive("boardMsg", data => {
 			new_messages = true
-			if (data.brd === $boards.thisBoard) return
+			if (data.brd !== $boards.thisBoard) return
+			board_message_sound.play();
 			$notify.new.push(data)
 			console.log('notif', $notify.new)
 			$notify.new = $notify.new
@@ -115,7 +117,6 @@ window.api.receive('node', async (node) => {
 		})
   window.api.receive('newMsg', async (data) => {
 		console.log('newmsg in layout', data);
-
 		saveToStore(data)
 	})
 
@@ -128,20 +129,9 @@ window.api.receive('node', async (node) => {
 
 	});
 
-
-	const options = {
-		duration: 1000000,       // duration of progress bar tween to the `next` value
-		initial: 1,           // initial progress bar value
-		next: 0,              // next progress value
-		pausable: false,      // pause progress bar tween on mouse hover
-		dismissable: true,    // allow dismiss with close button
-		reversed: false,      // insert new toast to bottom of stack
-		intro: { x: 256 },    // toast intro fly animation settings
-		classes: []
-	}
-
 		function removeNotification(e) {
-		let filterArr = $notify.new.filter(a =>  a.h !== e.detail.hash )
+		let filterArr = $notify.new.filter(a => a.h !== e.detail.hash)
+		console.log('filtered', filterArr)
 		$notify.new = filterArr
 		}
 
@@ -192,7 +182,7 @@ window.api.receive('node', async (node) => {
 
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
 	<div class="notifs">
-	{#each $notify.new as notif (notif.t)}
+	{#each $notify.new as notif (notif.h)}
 		<Notification on:hide={removeNotification} message={notif}/>
 		
 	{/each}
