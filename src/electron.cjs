@@ -839,8 +839,7 @@ async function saveBoardMsg(msg, hash) {
 
        if (msg.sent) return
        //Send new board message to frontend.
-      mainWindow.webContents.send('boardMsg', message)
-
+       mainWindow.webContents.send('boardMsg', message)
 }
 
 //Get all messages from db
@@ -849,7 +848,6 @@ async function getMessages() {
    return new Promise((resolve, reject) => {
      const getAllMessages = `SELECT * FROM messages`
      database.each(getAllMessages, (err, row) => {
-         console.log(row);
        if (err) {
          console.log('Error', err);
        }
@@ -1238,7 +1236,6 @@ console.log('Error', err);
 }
 
 async function sendMessage(message, receiver, off_chain=false) {
-    console.log('Want to send')
 
     let has_history
     console.log('address', receiver.length);
