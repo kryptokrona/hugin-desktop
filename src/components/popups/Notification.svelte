@@ -1,0 +1,101 @@
+<script>
+    import { onMount, onDestroy } from 'svelte';   
+    import { notify } from "$lib/stores/user.js";
+    import {fade, fly} from "svelte/transition";
+    import {cubicOut , cubicIn} from "svelte/easing"
+    import { createEventDispatcher } from 'svelte';
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
+
+	const dispatch = createEventDispatcher();
+    let timer
+	export let message;
+    onMount(()=> 
+    
+	timer = setTimeout(function() {
+        hideNotification(message.h)
+   }, 500000)
+)
+    onDestroy(()=> clearTimeout(timer))
+
+	function hideNotification(id) {
+		dispatch('hide', {
+			hash: message.h
+		});
+	}
+	
+    $: console.log('notifications', $notify)
+
+  </script>
+
+<div on:click={hideNotification} in:fly="{{x: 200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card">
+    <div class="inner-card">
+        <div class="header">
+            <img class="avatar" src="data:image/png;base64,{get_avatar(message.k)}" alt="">
+            <h4 class="name">{message.n}</h4>
+        </div>
+            <p>{message.m}</p>
+         <br>
+    </div>
+</div>
+
+  <style>
+      .card {
+        display: flex;
+        padding: 1px;
+        height: 60px;
+        width: 300px;
+        flex-direction: column;
+        box-sizing: border-box;
+        border-radius: 5px;
+        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255,255,255, 0.1);
+        z-index: 500;
+    }
+
+    .inner-card {
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        border-radius: 3px;
+        background-color: #202020;
+    }
+
+    .avatar {
+        height: 30px;
+        width: 30px;
+    }
+
+    .name {
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    
+    p {
+        font-size: 12px;
+        display: inline-flex;
+        margin-left: 44px;
+        margin-top: 0px;
+    }
+
+    h4 {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: normal;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .header {
+        margin-left: 10px;
+        padding-top: 5px;
+        align-items: center;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+
+    
+  </style>
