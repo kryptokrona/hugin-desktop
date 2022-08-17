@@ -9,7 +9,7 @@
 	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
 	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
 	//Stores
-	import { user, webRTC, misc, notify } from "$lib/stores/user.js";
+	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
@@ -77,6 +77,7 @@
 
 		window.api.receive("boardMsg", data => {
 			new_messages = true
+			if (data.brd === $boards.thisBoard) return
 			$notify.new.push(data)
 			console.log('notif', $notify.new)
 			$notify.new = $notify.new
