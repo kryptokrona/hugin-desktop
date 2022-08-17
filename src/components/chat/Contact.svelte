@@ -72,7 +72,7 @@ const dispatch = createEventDispatcher();
     </div>
     <div class="wrap">
         {#if thisCall}
-            <p class="icon">X</p>
+            <img class="icon" src="/static/images/call-slash.svg" alt="">
         {/if}
     </div>
  
