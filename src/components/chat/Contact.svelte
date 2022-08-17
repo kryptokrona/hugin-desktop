@@ -65,18 +65,17 @@ const dispatch = createEventDispatcher();
     {#if contact.new}
     <div class:unread={contact.new}></div>
     {/if}
-      {#if hover}
-        <div class="contact_settings" on:mouseenter={showSettings} on:mouseleave={hideSettings}>x
-          {#if settings}
-              <div class="rename" on:click={rename(contact)}>Rename</div>
-          {/if}
-        </div>
-    {/if}
-<img class="avatar" src="data:image/png;base64,{get_avatar(contact.chat)}" alt="">
+<img class="avatar" classs:hover={hover} on:click={rename(contact)} src="data:image/png;base64,{get_avatar(contact.chat)}" alt="">
     <div class="content">
         <h4>{contact.name}</h4>
         <p>{contact.msg}</p>
     </div>
+    <div class="wrap">
+        {#if thisCall}
+            <p class="icon">X</p>
+        {/if}
+    </div>
+ 
 </div>
 
 <style>
@@ -86,7 +85,7 @@ const dispatch = createEventDispatcher();
         display: flex;
         padding: 10px 20px 10px 10px;
         width: 100%;
-        color: white;
+        color: #dbcdcd;
         border-bottom: 1px solid rgba(255, 255, 255, 0.16);
         transition: 250ms ease-in-out;
         cursor: pointer;
@@ -95,11 +94,20 @@ const dispatch = createEventDispatcher();
     }
 
     .card:hover {
+        color: white;
         opacity: 1.0;
+        border-color: aliceblue;
     }
 
     .avatar {
         margin-bottom: 10px;
+        opacity: 0.92;
+        cursor: pointer;
+
+    }
+
+    .hover {
+        opacity: 1;
     }
 
     .content {
@@ -166,6 +174,15 @@ const dispatch = createEventDispatcher();
     }
 
     .rename {
+        position: absolute;
+    }
+    .wrap {
+
+    position: relative;
+    margin-left: 40px;
+    }
+
+    .icon {
         position: absolute;
     }
 
