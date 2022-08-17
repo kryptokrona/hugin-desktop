@@ -13,7 +13,7 @@
     
 	timer = setTimeout(function() {
         hideNotification(message.h)
-   }, 500000)
+   }, 5000)
 )
     onDestroy(()=> clearTimeout(timer))
 
@@ -27,7 +27,7 @@
 
   </script>
 
-<div on:click={hideNotification} in:fly="{{x: 200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card">
+<div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
     <div class="inner-card">
         <div class="header">
             <img class="avatar" src="data:image/png;base64,{get_avatar(message.k)}" alt="">
@@ -66,7 +66,7 @@
     }
 
     .name {
-        font-size: 16px;
+        font-size: 15px;
         display: flex;
         font-weight: bold;
         padding-right: 10px;
