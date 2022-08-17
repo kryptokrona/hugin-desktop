@@ -11,7 +11,6 @@
   import RightMenu from "/src/components/navbar/RightMenu.svelte";
   import { page } from "$app/stores";
 
-  let board_message_sound = new Audio("/static/audio/boardmessage.mp3");
   let boardMsgs = [];
   let replyto = "";
   let reply_exit_icon = "x";
@@ -44,7 +43,6 @@
       //Push new message to store
       printBoardMessage(data);
     } else {
-      board_message_sound.play();
       console.log("not this board");
       unreadMsgs.push(data);
       return;
