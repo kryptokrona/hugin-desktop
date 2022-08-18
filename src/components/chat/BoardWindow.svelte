@@ -17,7 +17,7 @@
         gap: 0.25rem;
         padding: 1rem;
         box-sizing: border-box;
-        background-color: #202020;
+        background-color: #181818;
         overflow-y: scroll;
         overflow-x: hidden;
         width: 100%;

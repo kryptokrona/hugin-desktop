@@ -124,7 +124,7 @@ function createWindow() {
     });
 
     const mainWindow = new BrowserWindow({
-        backgroundColor: '#202020',
+        backgroundColor: '#181818',
         frame: false,
         autoHideMenuBar: true,
         minHeight: 600,

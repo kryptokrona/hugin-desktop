@@ -61,7 +61,7 @@
         height: 360px;
         width: 320px;
         padding: 30px;
-        background-color: #202020;
+        background-color: #181818;
         border-radius: 8px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255,255,255, 0.1);
