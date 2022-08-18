@@ -12,8 +12,6 @@
     const dispatch = createEventDispatcher();
     
     export let paused = false
-    let endTone = new Audio("/static/audio/endcall.mp3")
-    let hangUp = false
     let peer
     let stream
     let calling = true
@@ -31,18 +29,13 @@
         //We delay the answerCall for routing purposes
         window.api.endCall('peer', 'stream', this_call.chat)
 
-        //We pause the ringtone and destroy the popup
-        endTone.play()
-
         dispatch('endCall')
         //Variable to activate visual feedback
-        hangUp = true
 
     }
 
     //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
-        endTone.pause()
     })
 
     const toggleWindow = () => {
@@ -55,7 +48,7 @@
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card" class:hangUp={hangUp} class:rgb={!hangUp}>
+<div in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card">
     <audio bind:paused src="/static/audio/startcall.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
@@ -97,10 +90,6 @@
         width: 100%;
         border-radius: 3px;
         background-color: #202020;
-    }
-
-    .hangUp {
-      background-color: #5ff281;
     }
 
     .caller {
