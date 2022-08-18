@@ -127,6 +127,12 @@ window.api.receive('node', async (node) => {
 			})
 		}
 
+		window.api.receive('endCall', async (data) => {
+		console.log('endcall in layout', data);
+		endThisCall()
+	})
+
+
 	});
 
 		function removeNotification(e) {
