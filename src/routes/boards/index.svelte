@@ -7,12 +7,10 @@
   import ActiveHugins from "/src/components/chat/ActiveHugins.svelte";
   import { user, boards } from "$lib/stores/user.js";
   import { onMount } from "svelte";
-  import { toast } from "@zerodevx/svelte-toast";
   import AddBoard from "/src/components/chat/AddBoard.svelte";
   import RightMenu from "/src/components/navbar/RightMenu.svelte";
   import { page } from "$app/stores";
 
-  let board_message_sound = new Audio("/static/audio/boardmessage.mp3");
   let boardMsgs = [];
   let replyto = "";
   let reply_exit_icon = "x";
@@ -45,11 +43,7 @@
       //Push new message to store
       printBoardMessage(data);
     } else {
-      board_message_sound.play();
       console.log("not this board");
-
-      //Add new popup or style this?
-      toast.push("New board message", {});
       unreadMsgs.push(data);
       return;
     }

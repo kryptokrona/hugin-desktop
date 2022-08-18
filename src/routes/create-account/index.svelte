@@ -98,6 +98,7 @@
     window.addEventListener('keyup', e => {
         if (enableNextButton && pass && e.keyCode === 13) {
             handleLogin()
+            pass = false
             enableNextButton = false
         }
     })

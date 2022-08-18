@@ -4,27 +4,25 @@
 	import RightMenu from "/src/components/navbar/RightMenu.svelte";
 	import IncomingCall from "/src/components/webrtc/IncomingCall.svelte";
 	import Webrtc from "/src/components/webrtc/Calls.svelte";
-	import { SvelteToast } from '@zerodevx/svelte-toast'
 	import TrafficLights from "$components/TrafficLights.svelte";
 	import CallerMenu from "/src/components/webrtc/CallerMenu.svelte";
-	import MyVideo from "/src/components/webrtc/MyVideo.svelte";
-	import PeerVideo from "/src/components/webrtc/PeerVideo.svelte";
 	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
 	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
-
 	//Stores
-	import { user, webRTC, misc } from "$lib/stores/user.js";
+	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
-
+	
 	//Global CSS
 	import '/src/lib/theme/global.scss'
-
+	import Notification from '/src/components/popups/Notification.svelte';
+	
 	let ready = false
 	let myVideo = false
 	let peerVideo = true
 	let incoming_call
 	let showCallerMenu = false
-
+	let new_messages = false
+	let board_message_sound
 	const closePopup = () => {
 		incoming_call = false
 	}
@@ -57,7 +55,7 @@
 				return null;
 			}
 		};
-
+		board_message_sound = new Audio("/static/audio/boardmessage.mp3");
 		ready = true
 
 		//Handle incoming call
@@ -78,7 +76,14 @@
 			})
 		})
 
-
+		window.api.receive("boardMsg", data => {
+			new_messages = true
+			if (data.brd !== $boards.thisBoard) return
+			board_message_sound.play();
+			$notify.new.push(data)
+			console.log('notif', $notify.new)
+			$notify.new = $notify.new
+		})
 
 		window.api.receive('addr', async (huginAddr) => {
 			console.log('Addr incoming')
@@ -124,27 +129,22 @@ window.api.receive('node', async (node) => {
 
 	});
 
-
-	const options = {
-		duration: 10000,       // duration of progress bar tween to the `next` value
-		initial: 1,           // initial progress bar value
-		next: 0,              // next progress value
-		pausable: false,      // pause progress bar tween on mouse hover
-		dismissable: true,    // allow dismiss with close button
-		reversed: false,      // insert new toast to bottom of stack
-		intro: { x: 256 },    // toast intro fly animation settings
-		classes: []
-	}
+		function removeNotification(e) {
+		let filterArr = $notify.new.filter(a => a.h !== e.detail.hash)
+		console.log('filtered', filterArr)
+		$notify.new = filterArr
+		}
 
 </script>
 
-<div class="wrap">
-  <SvelteToast {options}/>
-</div>
-{#if ready}
+
 
 <TrafficLights/>
 
+
+
+
+{#if ready}
 
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 }
@@ -180,8 +180,17 @@ window.api.receive('node', async (node) => {
 		
 	{/if}
 
+	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
+	<div class="notifs">
+	{#each $notify.new as notif (notif.h)}
+		<Notification on:hide={removeNotification} message={notif}/>
+		
+	{/each}
+	</div>
+{/if}
 
 	{#if $user.loggedIn}
+
 		<LeftMenu />
 		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
 		<Webrtc/>
@@ -192,12 +201,21 @@ window.api.receive('node', async (node) => {
 
 <style>
 
-    .wrap {
-      display: contents;
-      font-family: Roboto, sans-serif;
-      font-size: 0.875rem;
+    .close {
+      pointer-events: visible;
     }
+
     .wrap :global(strong) {
       font-weight: 600;
     }
+
+	.notifs {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		position: absolute;
+		top: 20px;
+		right: 20px;
+		height: 100%;
+	}
 </style>

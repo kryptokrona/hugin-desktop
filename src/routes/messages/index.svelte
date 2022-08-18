@@ -155,7 +155,7 @@
 
 <main in:fade>
   <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
-  <div class="right_side">'
+  <div class="right_side">
 
     <div class="outer" id="chat_window" bind:this={box}>
 
