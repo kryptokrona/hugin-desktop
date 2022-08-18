@@ -18,7 +18,9 @@
     let calltype
     let call_active = false
     let startTone = new Audio("/static/audio/startcall.mp3")
-
+    let endTone = new Audio("/static/audio/endcall.mp3")
+    let thisCall = false
+    let video = false
     $: {
         if($user.activeChat) {
             active_contact = $user.activeChat
@@ -30,6 +32,9 @@
     //Starts any call
     const startCall = async (contact, calltype) => {
         console.log(contact, calltype)
+        if (calltype) {
+          video = true
+        }
         startTone.play()
         let call =  {
                       msg: 'outgoing',
@@ -74,6 +79,30 @@
       dispatch('toggleCallMenu')
     }
 
+    const endCall = () => {
+         //We delay the answerCall for routing purposes
+         window.api.endCall('peer', 'stream', active_contact.chat)
+           //We pause the ringtone and destroy the popup
+        endTone.play()
+
+    }
+
+    $: if ($webRTC.active) {
+    thisCall = $webRTC.call.some(a=> a.chat === active_contact.chat)
+    } else {
+        thisCall = false
+    }
+
+    $: if (thisCall) {
+      let active_vdeo = $webRTC.call.filter(a => a.chat === active_contact.chat) 
+      if (active_vdeo[0].video) {
+        video = true
+      } else {
+        video = false
+      }
+    }
+
+
 </script>
 
 <div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
@@ -94,12 +123,16 @@
 
     {#if $page.url.pathname === '/messages' && active_contact}
         <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+        {#if thisCall && !video}
+        <button class='button' on:click={() => endCall()}><img class="icon" src="/static/images/call-slash.svg" alt="endcall"></button>
+        {:else}
         <button class='button' on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call"></button>
+        {/if}
+        {#if thisCall && video}
+        <button class='button' on:click={() => endCall()}><img class="icon" src="/static/images/video-slash.svg" alt="video"></button>
+        {:else}
         <button class='button' on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video"></button>
-    {/if}
-
-    {#if call_active}
-      <button class='caller_menu' on:click={toggleCallMenu}><img class="icon" src={settingsIcon} alt="callMenu"></button>
+        {/if}
     {/if}
 
     {#if $page.url.pathname === '/webrtc'}
