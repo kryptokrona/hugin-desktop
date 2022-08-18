@@ -137,7 +137,7 @@
       border-radius: 0.4rem;
       height: 220px;
       transition: 0.25s ease-in-out all;
-      width: 80%;
+      width: 90%;
       height: 700px;
     }
 
