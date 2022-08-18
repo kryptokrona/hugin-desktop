@@ -327,19 +327,18 @@
     }
 
     .reply_to {
-        display: inline-flex;
-        font-size: 11px;
-        font-family: 'Roboto Mono';
-        font-weight: 100;
-        position: absolute;
-        left: 10%;
-        top: 1%;
-        justify-content: center;
-        color: white;
-        padding: 4px;
-        width: fit-content;
-        z-index: 9;
-        cursor: pointer;
+      display: inline-flex;
+      font-size: 11px;
+      font-family: 'Roboto Mono';
+      font-weight: 100;
+      position: absolute;
+      left: 10%;
+      justify-content: center;
+      color: white;
+      padding: 4px;
+      width: fit-content;
+      z-index: 9;
+      cursor: pointer;
     }
 
 
