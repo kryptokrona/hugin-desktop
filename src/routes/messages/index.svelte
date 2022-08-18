@@ -7,7 +7,7 @@
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   import ChatList from "/src/components/chat/ChatList.svelte";
   import AddChat from "/src/components/chat/AddChat.svelte";
-  import { user } from "$lib/stores/user.js";
+  import { user, boards } from "$lib/stores/user.js";
   import Rename from "/src/components/chat/Rename.svelte";
 
   let video;
