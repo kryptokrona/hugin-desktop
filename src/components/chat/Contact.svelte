@@ -71,9 +71,6 @@ const dispatch = createEventDispatcher();
         <p>{contact.msg}</p>
     </div>
     <div class="wrap">
-        {#if thisCall}
-            <img class="icon" src="/static/images/call-slash.svg" alt="">
-        {/if}
     </div>
  
 </div>
