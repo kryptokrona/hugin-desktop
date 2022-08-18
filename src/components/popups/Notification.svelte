@@ -15,7 +15,10 @@
         hideNotification(message.h)
    }, 5000)
 )
-    onDestroy(()=> clearTimeout(timer))
+    onDestroy(()=> {
+        clearTimeout(timer)
+        hideNotification()
+    })
 
 	function hideNotification(id) {
 		dispatch('hide', {
