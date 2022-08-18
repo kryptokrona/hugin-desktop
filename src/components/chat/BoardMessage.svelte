@@ -122,10 +122,11 @@
   <div class="header">
     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
     <p class="nickname">{nickname}</p>
+    <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
   </div>
   <div class="text">
     <p>{msg}</p>
-    <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
+   
   </div>
 
 </div>
@@ -182,7 +183,9 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        margin-left: 10px;
+        margin-left: 44px;
+        margin-top: -5px;
+        margin-right: 40px;
       }
     }
 
@@ -232,17 +235,18 @@
     }
 
     .options {
-        font-family: 'Roboto Mono';
-        opacity: 0.9;
-        width: 50px;
-        display: inherit;
-        justify-content: right;
-        flex-direction: row-reverse;
-        color: rgba(255, 255, 255, 0.8) !important;
-        flex: auto;
-        align-content: flex-start;
-        position: absolute;
+      font-family: "Roboto Mono";
+      opacity: 0.9;
+      width: 50px;
+      display: inherit;
+      justify-content: right;
+      flex-direction: row-reverse;
+      color: rgba(255, 255, 255, 0.8) !important;
+      flex: auto;
+      align-content: flex-start;
+      position: absolute;
       z-index: 10;
+      align-self: end;
     }
 
     .reply_button:hover {
@@ -292,9 +296,10 @@
         font-size: 8px;
         display: flex;
         letter-spacing: 1px;
-        display: contents;
+        display: inline-block;
         align-self: unset;
         font-family: "Roboto Mono" !important;
+        margin-left: 15px;
     }
 
     .react_button {
