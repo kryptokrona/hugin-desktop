@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="22px" height="22px" viewBox="0 0 22 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>vuesax/linear/video-slash</title>
+    <g id="Linear" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Video,-Audio,-Image" transform="translate(-173.000000, -255.000000)">
+            <g id="video-slash" transform="translate(172.000000, 254.000000)">
+                <path d="M16.6299992,7.58007812 C16.6299992,7.58007812 16.6599992,6.63007838 16.6299992,6.32007837 C16.4599992,4.28007841 15.1300004,3.58007812 12.5200005,3.58007812 L6.21000004,3.58007812 C3.04999995,3.58007812 2,4.63007808 2,7.79007816 L2,16.2100773 C2,17.4700773 2.37999988,18.7400774 3.36999989,19.5500774 L4,20.0000782" id="Vector" stroke="#FF325B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0" fill-rule="nonzero"></path>
+                <path d="M16.7400093,10.9499512 L16.7400093,16.2099504 C16.7400093,19.3699505 15.6900094,20.4199514 12.5300093,20.4199514 L7.26000977,20.4199514" id="Vector" stroke="#FF325B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0" fill-rule="nonzero"></path>
+                <path d="M21.9999905,6.73999023 L21.9999905,15.8099909 C21.9999905,17.4799908 20.8799909,18.0599908 19.5199909,17.0999908 L16.7399902,15.1499901" id="Vector" stroke="#FF325B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0" fill-rule="nonzero"></path>
+                <line x1="22.0200195" y1="2.18994141" x2="2.02001953" y2="22.1899414" id="Vector" stroke="#FF325B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0,0"></line>
+                <path d="M24,0 L24,24 L0,24 L0,0 L24,0 Z" id="Vector" opacity="0"></path>
+            </g>
+        </g>
+    </g>
+</svg>
