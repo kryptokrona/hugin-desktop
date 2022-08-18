@@ -283,6 +283,7 @@
         height: 25px;
         margin-left: 140px;
         margin-top: -35px;
+        z-index: 5;
     }
 
     .reactions p {
