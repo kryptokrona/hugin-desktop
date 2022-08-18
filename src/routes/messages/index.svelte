@@ -27,7 +27,7 @@
   onMount(async () => {
     chatWindow = document.getElementById('chat_window');
 
-    user.update(data => {
+    boards.update(data => {
       return {
         ...data,
         replyTo: { reply: false }
