@@ -129,6 +129,7 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
     $webRTC.call[0].peer = peer1,
     $webRTC.call[0].myStream = stream,
     $webRTC.call[0].screen = screen_stream
+    $webRTC.call[0].video = video
     
     console.log('This call', $webRTC.call[0])
 
@@ -164,7 +165,7 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
     peer1.on('stream', peerStream => {
 
         console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
-        
+
         //Set peerStream to store
         $webRTC.call[0].peerStream = peerStream
         if (video) {
@@ -273,6 +274,7 @@ const answerCall = (msg, contact, key) => {
         $webRTC.call[0].peer = peer2
         $webRTC.myStream = stream
         $webRTC.active = true
+        $webRTC.call[0].video = video
 
         if (video) {
             $webRTC.myVideo = true
