@@ -153,9 +153,9 @@
   <AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)} />
 {/if}
 
-<main in:fade>
+<main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
   <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
-  <div class="right_side">
+  <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
 
     <div class="outer" id="chat_window" bind:this={box}>
 

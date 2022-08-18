@@ -3,6 +3,7 @@
   import sendIcon from "/static/images/send.png";
   import EmojiSelector from "svelte-emoji-selector";
   import {webRTC} from "$lib/stores/user.js";
+  import {fade} from 'svelte/transition'
   let off_chain
   const dispatch = createEventDispatcher();
 
@@ -48,7 +49,7 @@
   }
 </script>
 
-<div class="wrapper">
+<div class="wrapper" in:fade="{{duration: 400}}" out:fade="{{duration: 100}}">
   <input type="text" placeholder="Message.." bind:value={messageInput}>
   <EmojiSelector on:emoji={onEmoji} />
   <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px"

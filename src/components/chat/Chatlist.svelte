@@ -145,7 +145,7 @@
 
 </script>
 
-<div class="wrapper">
+<div class="wrapper" in:fade="{{duration: 250}}" out:fade="{{duration: 100}}">
     <div class="top">
         <h2>Messages</h2>
         <img class="add-icon" src={addIcon} on:click>
