@@ -133,18 +133,25 @@
   {#if wallet} 
   <div id="settings" in:fade>
     <div class="inner">
+      <div class="button">
       <Button disabled={node} text="Show private keys" on:click={getPrivateKeys}/>
+     </div>
+      <br>
 
-      <h4>Spend Key</h4>
+      <h6>Spend Key</h6>
       <p type="text">{privateSpendKey}</p>
 
-      <h4>View key</h4>
+      <h6>View key</h6>
       <p type="text">{privateViewKey}</p>
 
     </div>
 
     <div class="inner">
-      <Button disabled={node} text="Show Mnemonic Seed" on:click={getMnemonic}/>
+      <div class="button">
+      <Button disabled={node} text="Show mnemonic seed" on:click={getMnemonic}/>
+      </div>
+      <br>
+      <h6>Mnemonic seed</h6>
       <p type="text">{seedPhrase}</p>
     </div>
 
@@ -154,7 +161,7 @@
 </main>
 
 <style lang="scss">
-    h1,h2,h3,h4 {
+    h1,h2,h3,h4,h6 {
         color: white;
         margin: 0;
         font-family: "Montserrat";
@@ -179,6 +186,10 @@
       font-family: 'Montserrat';
       margin-right: 10px;
       cursor: pointer;
+    }
+
+    h6 {
+      font-size: 14px;
     }
 
     h5:hover {
@@ -228,6 +239,11 @@
     .nodeinfo {
       font-size: 17px !important;
 
+    }
+
+    .button {
+      margin-left: -15px;
+      margin-bottom: 10px;
     }
 
 
