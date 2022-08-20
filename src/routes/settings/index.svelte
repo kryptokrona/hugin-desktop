@@ -4,11 +4,17 @@
     import {user, misc} from "$lib/stores/user.js";
     import NodeList from '/src/components/settings/NodeList.svelte';
     import {onMount} from "svelte";
+    import Button from "/src/components/buttons/Button.svelte";
 
     let networkHeight = ''
     let walletHeight = ''
     let synced = false
     let status = 'Connecting'
+    let seedPhrase = ''
+    let node = true
+    let wallet = false
+    let privateSpendKey = ''
+    let privateViewKey = ''
     onMount(async () => {
       getHeight()
     })
@@ -48,10 +54,42 @@
     }
     }
 
+    const getMnemonic = async () => {
+      let mnemonic = await window.api.getMnemonic()
+      seedPhrase = mnemonic[0]
+    }
+
+    const getPrivateKeys = async () => {
+      let  keys = await window.api.getPrivateKeys()
+      privateSpendKey = keys[0]
+      privateViewKey = keys[1]
+    }
+
+    const toWallet = () => {
+      wallet = true
+      node = false
+    }
+
+    const toNode = () => {
+      wallet = false
+      node = true
+    }
+
+    $: seedPhrase
+    $: status
+    $: networkHeight
+    $: walletHeight
+    $: privateSpendKey
+    $: privateViewKey
+    
 </script>
 
 <main in:fade>
-<h1>Settings</h1>
+  <h1>Settings</h1>
+    <h5 on:click={toNode}>NODE</h5> <h5 on:click={toWallet}>WALLET</h5>
+  {#if node}
+
+
   <div id="settings">
        <div class="inner">
 
@@ -63,14 +101,14 @@
         <div class="nodestatus">
           <h3>Status</h3>
             <h4>Address</h4>
-           <p>{$misc.node}</p>
+           <p class="nodeinfo">{$misc.node}</p>
           <div class="status">
                 <h4>Status</h4>
 
               {#if synced}
-             <p class="syncstatus" class:sync={synced}>{status}</p>
+             <p class="syncstatus nodeinfo" class:sync={synced}>{status}</p>
                {:else}
-             <p class="syncstatus" class:sync={synced}>Syncing blocks</p>
+             <p class="syncstatus nodeinfo" class:sync={synced}>Syncing blocks</p>
                {/if}
 
            </div>
@@ -79,9 +117,9 @@
             <h4>Height</h4>
 
               {#if synced}
-              <p> {networkHeight} </p>
+              <p class="nodeinfo"> {networkHeight} </p>
               {:else}
-              <p> {networkHeight} - {walletHeight} </p>
+              <p class="nodeinfo"> {networkHeight} - {walletHeight} </p>
 
                {/if}
 
@@ -92,13 +130,36 @@
     </div>
 
    </div>
+   {/if}
+
+   {#if wallet} 
+   <div id="settings">
+    <div class="inner">
+      <Button disabled={node} text="Show private keys" on:click={getPrivateKeys}/>
+      <h4>Spend Key</h4>
+      <p type="text">{privateSpendKey}</p>
+      <h4>View key</h4>
+      <p type="text">{privateViewKey}</p>
+
+    </div>
+
+    <div class="inner">
+      <Button disabled={node} text="Show private keys" on:click={getMnemonic}/>
+      <p type="text">{seedPhrase}</p>
+      <!-- <input disabled type="text" bind:value={privateSpendKey}>
+      <input disabled type="text" bind:value={privateViewKey}> -->
+    </div>
+
+    
+   </div>
+   {/if}
 </main>
 
 <style lang="scss">
     h1,h2,h3,h4 {
         color: white;
         margin: 0;
-        font-family: "Montserrat"
+        font-family: "Montserrat";
     }
 
     h3 {
@@ -108,9 +169,24 @@
     }
 
     h4 {
-      font-size: 17px;
+      font-size: 16px;
       margin-bottom: 15px;
-      margin-left: -10px;
+      font-weight: bold;
+    }
+
+    h5 {
+      display: inline;
+      font-size: 16px;
+      color: #f5f5f5;
+      font-family: 'Montserrat';
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    h5:hover {
+      color: white;
+      text-decoration: underline;
+      transition: 0.4s;
     }
 
     main {
@@ -122,12 +198,14 @@
     p {
       font-family: "Roboto Mono";
       color: white;
+      width: 100%;
+      overflow-wrap: break-word;
+      padding-right: 10px;
     }
 
     #settings {
       border-radius: 10px;
       display: grid;
-      margin-left: 60px;
       transition: .25s ease-in-out all;
       grid-template-columns: repeat(2,1fr);
     }
@@ -137,8 +215,8 @@
       border-radius: 0.4rem;
       height: 220px;
       transition: 0.25s ease-in-out all;
-      width: 90%;
       height: 700px;
+      overflow: hidden;
     }
 
     .sync {
@@ -147,6 +225,11 @@
 
     .syncstatus {
       color: red;
+    }
+
+    .nodeinfo {
+      font-size: 17px !important;
+
     }
 
 
