@@ -15,6 +15,7 @@
     let wallet = false
     let privateSpendKey = ''
     let privateViewKey = ''
+
     onMount(async () => {
       getHeight()
     })
@@ -90,20 +91,20 @@
   {#if node}
 
 
-  <div id="settings">
-       <div class="inner">
+<div id="settings">
+  <div class="inner">
+    <NodeList on:changeNode={changeNode}/>
+  </div>
 
-  <NodeList on:changeNode={changeNode}/>
-     </div>
-
-      <div class="inner">
+    <div class="inner">
 
         <div class="nodestatus">
           <h3>Status</h3>
             <h4>Address</h4>
-           <p class="nodeinfo">{$misc.node}</p>
+             <p class="nodeinfo">{$misc.node}</p>
+
           <div class="status">
-                <h4>Status</h4>
+            <h4>Status</h4>
 
               {#if synced}
              <p class="syncstatus nodeinfo" class:sync={synced}>{status}</p>
@@ -111,7 +112,7 @@
              <p class="syncstatus nodeinfo" class:sync={synced}>Syncing blocks</p>
                {/if}
 
-           </div>
+          </div>
 
           <div class="height">
             <h4>Height</h4>
@@ -121,12 +122,12 @@
               {:else}
               <p class="nodeinfo"> {networkHeight} - {walletHeight} </p>
 
-               {/if}
+              {/if}
 
-           </div>
-            <br>
+          </div>
+          <br>
 
-       </div>
+        </div>
     </div>
 
    </div>
@@ -146,8 +147,6 @@
     <div class="inner">
       <Button disabled={node} text="Show Mnemonic Seed" on:click={getMnemonic}/>
       <p type="text">{seedPhrase}</p>
-      <!-- <input disabled type="text" bind:value={privateSpendKey}>
-      <input disabled type="text" bind:value={privateViewKey}> -->
     </div>
 
     
