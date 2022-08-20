@@ -1146,6 +1146,15 @@ async function saveMessageSQL(msg) {
 
  }
 
+ ipcMain.handle('getPrivateKeys', async () => {
+ const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys();
+ return [spendKey, viewKey]
+ })
+
+ ipcMain.handle('getMnemonic', async () => {
+  return await js_wallet.getMnemonicSeed();
+  })
+
 
 //SWITCH NODE
 ipcMain.on('switchNode', async (e, node) => {
