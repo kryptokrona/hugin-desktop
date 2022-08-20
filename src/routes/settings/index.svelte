@@ -91,7 +91,7 @@
 {#if node}
 
 
-<div id="settings">
+<div id="settings" in:fade>
   <div class="inner">
     <NodeList on:changeNode={changeNode}/>
   </div>
@@ -131,7 +131,7 @@
   {/if}
 
   {#if wallet} 
-  <div id="settings">
+  <div id="settings" in:fade>
     <div class="inner">
       <Button disabled={node} text="Show private keys" on:click={getPrivateKeys}/>
 
