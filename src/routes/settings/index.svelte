@@ -144,7 +144,7 @@
     </div>
 
     <div class="inner">
-      <Button disabled={node} text="Show private keys" on:click={getMnemonic}/>
+      <Button disabled={node} text="Show Mnemonic Seed" on:click={getMnemonic}/>
       <p type="text">{seedPhrase}</p>
       <!-- <input disabled type="text" bind:value={privateSpendKey}>
       <input disabled type="text" bind:value={privateViewKey}> -->
