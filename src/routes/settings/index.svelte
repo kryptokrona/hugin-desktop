@@ -88,7 +88,7 @@
 <main in:fade>
   <h1>Settings</h1>
     <h5 on:click={toNode}>NODE</h5> <h5 on:click={toWallet}>WALLET</h5>
-  {#if node}
+{#if node}
 
 
 <div id="settings">
@@ -97,8 +97,7 @@
   </div>
 
     <div class="inner">
-
-        <div class="nodestatus">
+      <div class="nodestatus">
           <h3>Status</h3>
             <h4>Address</h4>
              <p class="nodeinfo">{$misc.node}</p>
@@ -107,9 +106,9 @@
             <h4>Status</h4>
 
               {#if synced}
-             <p class="syncstatus nodeinfo" class:sync={synced}>{status}</p>
+                <p class="syncstatus nodeinfo" class:sync={synced}>{status}</p>
                {:else}
-             <p class="syncstatus nodeinfo" class:sync={synced}>Syncing blocks</p>
+                <p class="syncstatus nodeinfo" class:sync={synced}>Syncing blocks</p>
                {/if}
 
           </div>
@@ -118,27 +117,27 @@
             <h4>Height</h4>
 
               {#if synced}
-              <p class="nodeinfo"> {networkHeight} </p>
+                <p class="nodeinfo"> {networkHeight} </p>
               {:else}
-              <p class="nodeinfo"> {networkHeight} - {walletHeight} </p>
+                <p class="nodeinfo"> {networkHeight} - {walletHeight} </p>
 
               {/if}
 
-          </div>
-          <br>
-
-        </div>
+          </div><br>
+      </div>
     </div>
 
-   </div>
-   {/if}
+  </div>
+  {/if}
 
-   {#if wallet} 
-   <div id="settings">
+  {#if wallet} 
+  <div id="settings">
     <div class="inner">
       <Button disabled={node} text="Show private keys" on:click={getPrivateKeys}/>
+
       <h4>Spend Key</h4>
       <p type="text">{privateSpendKey}</p>
+
       <h4>View key</h4>
       <p type="text">{privateViewKey}</p>
 
@@ -149,9 +148,9 @@
       <p type="text">{seedPhrase}</p>
     </div>
 
-    
-   </div>
-   {/if}
+   
+  </div>
+  {/if}
 </main>
 
 <style lang="scss">
