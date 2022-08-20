@@ -57,6 +57,16 @@ const WINDOW_API = {
     ipcRenderer.send('got-media')
   },
 
+  getPrivateKeys: async (data) => {
+    let resp = await ipcRenderer.invoke('getPrivateKeys')
+    return resp
+  },
+
+  getMnemonic: async (data) => {
+    let resp = await ipcRenderer.invoke('getMnemonic')
+    return resp
+  },
+
   //HANDLE CALLS
   startCall: async (contact, calltype) => {
     ipcRenderer.send('startCall', contact, calltype)
