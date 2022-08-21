@@ -272,18 +272,19 @@
     }
 
     .reactions {
-        font-family: 'Roboto Mono';
-        color: black;
-        opacity: 0.9;
-        width: 400px;
-        display: block;
-        flex: auto;
-        border-radius: 5px;
-        position: absolute;
-        height: 25px;
-        margin-left: 140px;
-        margin-top: -35px;
-        z-index: 5;
+      font-family: "Roboto Mono";
+      color: black;
+      opacity: 0.9;
+      width: 400px;
+      display: block;
+      font-size: 15px;
+      flex: auto;
+      border-radius: 5px;
+      position: absolute;
+      height: 20px;
+      margin-left: 140px;
+      margin-top: -30px;
+      z-index: 5;
     }
 
     .reactions p {
