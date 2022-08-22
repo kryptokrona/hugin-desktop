@@ -9,7 +9,7 @@
   import AddChat from "/src/components/chat/AddChat.svelte";
   import { user, boards } from "$lib/stores/user.js";
   import Rename from "/src/components/chat/Rename.svelte";
-
+  
   let video;
   let audio;
   let chat;
@@ -143,6 +143,13 @@
     toggleRename = !toggleRename;
   };
 
+    
+  const download = (link) => {
+    console.log('downloading link', link)
+    window.api.send('download', link)
+  }
+  
+
 </script>
 
 {#if toggleRename}
@@ -161,7 +168,7 @@
 
       <div class="inner">
         {#each savedMsg as message}
-          <ChatBubble handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
+          <ChatBubble on:download={() => download(message.msg)} torrent={message.magnet} handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
                       timestamp={message.t} />
         {/each}
       </div>

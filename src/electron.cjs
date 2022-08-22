@@ -16,6 +16,7 @@ const sanitizeHtml = require('sanitize-html')
 const en = require ('int-encoder');
 const sqlite3 = require('sqlite3').verbose();
 const Peer = require('simple-peer');
+const WebTorrent = require('webtorrent')
 
 const { Address,
     AddressPrefix,
@@ -62,8 +63,6 @@ function toHex(str,hex){
     }
     return hex
 }
-
-
 
 function nonceFromTimestamp(tmstmp) {
 
@@ -216,6 +215,8 @@ function sleep(ms) {
 
 
 const userDataDir = app.getPath('userData');
+
+const downloadDir = app.getPath('downloads')
 
 const dbPath = userDataDir + "/SQLmessages.db"
 const database = new sqlite3.Database(dbPath, (err) => {
@@ -1069,7 +1070,6 @@ async function saveMessageSQL(msg) {
   console.log('msg', msg)
     //Checking if private msg is a call
     text = await parseCall(msg.msg, addr, sent)
-  
 
   let message = sanitizeHtml(text);
 
@@ -1078,6 +1078,12 @@ async function saveMessageSQL(msg) {
     addr = msg.chat
   }
 
+  let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(message);
+  console.log('magnet', magnetLinks)
+  if (magnetLinks) {
+    message = 'Torrent'
+    //message = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz'
+  }
   //New message from unknown contact
   if (msg.type === 'sealedbox' && !sent) {
 
@@ -1116,7 +1122,7 @@ async function saveMessageSQL(msg) {
      );
 
      //New message object
-     let newMsg = {msg: message, chat: addr, sent: sent, timestamp: timestamp}
+     let newMsg = {msg: message, chat: addr, sent: sent, timestamp: timestamp, magnet: magnetLinks}
      if (sent) {
        //If sent, update conversation list
        mainWindow.webContents.send('sent', newMsg)
@@ -1184,6 +1190,12 @@ ipcMain.on('answerCall', (e, msg, contact, key) => {
 
 ipcMain.on('endCall', async (e, peer, stream, contact) => {
   mainWindow.webContents.send('endCall', peer, stream, contact)
+})
+
+
+ipcMain.on('download', async (e ,link) => {
+  console.log('ipcmain downloading')
+  //download(link)
 })
 
 async function sendBoardMessage(message) {
@@ -1413,9 +1425,9 @@ async function optimizeMessages(nbrOfTxs) {
   return result;
 
   
-} catch (err) {
-  console.log('error optimizer', err);
-}
+  } catch (err) {
+    console.log('error optimizer', err);
+  }
 
 }
 

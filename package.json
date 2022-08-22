@@ -41,7 +41,8 @@
 		"svelte-emoji-selector": "^1.0.1",
 		"tweetnacl": "^1.0.3",
 		"tweetnacl-sealed-box": "^1.0.5",
-		"tweetnacl-util": "^0.15.1"
+		"tweetnacl-util": "^0.15.1",
+		"webtorrent": "^1.8.26"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^1.0.0-next.28",
