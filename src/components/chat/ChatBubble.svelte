@@ -2,13 +2,17 @@
   import { fade } from "svelte/transition";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { user } from "$lib/stores/user.js";
-
+  import Button from "/src/components/buttons/Button.svelte";
+  import {createEventDispatcher, onMount} from "svelte";
   export let message;
   export let handleType;
   export let msgFrom;
   export let ownMsg;
-
+  export let torrent
+  
+  const dispatch = createEventDispatcher()
   let address = $user.huginAddress.substring(0, 99);
+  
   $: {
     switch (message.substring(0, 1)) {
       case "Δ":
@@ -20,8 +24,28 @@
     }
   }
 
+  const downloadTorrent = () => {
+    console.log('downloading torrent')
+    dispatch('download')
+  }
+
 </script>
 
+{#if torrent}
+<div class="peer">
+  <div class="header peer">
+    <img class="avatar " in:fade="{{duration: 150}}"
+         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+    <h5>{$user.activeChat.name}</h5>
+  </div>
+  <div class="bubble from" in:fade="{{duration: 150}}">
+    <Button text="Download" disabled={!torrent} on:click={downloadTorrent}/>
+  </div>
+</div>
+
+
+
+{:else}
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
 
@@ -47,6 +71,8 @@
       <p>{message}</p>
     </div>
   </div>
+
+{/if}
 
 {/if}
 
