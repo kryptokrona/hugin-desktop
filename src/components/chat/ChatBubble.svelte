@@ -4,6 +4,7 @@
   import { user } from "$lib/stores/user.js";
   import Button from "/src/components/buttons/Button.svelte";
   import {createEventDispatcher, onMount} from "svelte";
+  
   export let message;
   export let handleType;
   export let msgFrom;
@@ -39,7 +40,7 @@
     <h5>{$user.activeChat.name}</h5>
   </div>
   <div class="bubble from" in:fade="{{duration: 150}}">
-    <Button text="Download" disabled={!torrent} on:click={downloadTorrent}/>
+    <Button text="Download" disabled={false} on:click={downloadTorrent}/>
   </div>
 </div>
 
