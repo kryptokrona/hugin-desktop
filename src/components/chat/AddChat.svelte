@@ -77,7 +77,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(24, 25, 27, 0.8);
+        background-color: rgba(18, 18, 18, 0.8);
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
         margin-right: 85px;
