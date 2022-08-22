@@ -250,23 +250,24 @@ ipcMain.on('download', async (e ,link) => {
 })
 
 
-ipcMain.on('upload', async (e ,filename, path) => {
+ipcMain.on('upload', async (e ,filename, path, address) => {
   console.log('ipcmain uploading')
-  upload(filename, path)
+  upload(filename, path, address)
 })
 
 
-function upload(filename, path) {
+function upload(filename, path, address) {
+  
   let client = new WebTorrent()
   console.log('uploading', filename)
   console.log('from ', path)
   client.seed(path, function (torrent) {
     console.log('upload this', torrent)
     console.log('Client is seeding ' + torrent.magnetURI)
+    
+  sendMessage(torrent.magnetURI.split('&tr')[0], address)
   })
-
 }
-
 
 
 function sleep(ms) {
