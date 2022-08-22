@@ -1139,11 +1139,7 @@ async function saveMessageSQL(msg) {
     addr = msg.chat
   }
 
-  let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(text);
-  console.log('magnet', magnetLinks)
-  if (magnetLinks) {
-   message = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
-  }
+
   //New message from unknown contact
   if (msg.type === 'sealedbox' && !sent) {
 
@@ -1165,6 +1161,12 @@ async function saveMessageSQL(msg) {
       message = message
 
     }
+    let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(message);
+    console.log('magnet', magnetLinks)
+    if (magnetLinks) {
+      message = 'File uploaded'
+     let torrent = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
+    }
 
  console.log('Saving message', message, addr, sent, timestamp);
  //Save to DB
@@ -1182,6 +1184,9 @@ async function saveMessageSQL(msg) {
      );
 
      //New message object
+     if (magnetLinks && !sent) {
+      message = torrent
+     }
      let newMsg = {msg: message, chat: addr, sent: sent, timestamp: timestamp, magnet: magnetLinks}
      if (sent) {
        //If sent, update conversation list
