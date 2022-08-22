@@ -154,15 +154,16 @@
 
   function dropFile(e) {
     dragover = false
-   
-   
+    
     const { acceptedFiles, fileRejections } = e.detail;
     let filename = acceptedFiles[0].name
     let path = acceptedFiles[0].path
     if (fileRejections.length) {
       console.log('rejected file')
     }
-    window.api.upload(filename, path)
+
+    let address = $user.activeChat.chat + $user.activeChat.k
+    window.api.upload(filename, path, address)
   }
 
   function test() {
