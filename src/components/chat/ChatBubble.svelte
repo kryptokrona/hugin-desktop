@@ -10,7 +10,8 @@
   export let msgFrom;
   export let ownMsg;
   export let torrent
-  
+  export let file
+
   const dispatch = createEventDispatcher()
   let address = $user.huginAddress.substring(0, 99);
   
@@ -30,6 +31,10 @@
     dispatch('download')
   }
 
+  $: console.log(
+    'file', message.file
+  )
+
 </script>
 
 {#if torrent}
@@ -47,19 +52,32 @@
 
 
 {:else}
+
+
 <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
 {#if ownMsg}
+
 
   <div class="own">
     <div class="header own">
       <img class="avatar" in:fade="{{duration: 150}}"
            src="data:image/png;base64,{get_avatar(address)}" alt="">
     </div>
+  {#if file}
+
+  <div class="bubble own file" in:fade="{{duration: 150}}">
+    <p>{file.name}</p>
+  </div>
+ 
+
+  {:else}
     <div class="bubble sent" in:fade="{{duration: 150}}">
       <p>{message}</p>
     </div>
-  </div>
+ 
 
+  {/if} 
+</div>
 {:else}
 
   <div class="peer">
@@ -68,11 +86,19 @@
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
       <h5>{$user.activeChat.name}</h5>
     </div>
+    {#if file}
+
+    <div class="bubble from file" in:fade="{{duration: 150}}">
+      <p>{file.name}</p>
+    </div>
+    
+    {:else}
     <div class="bubble from" in:fade="{{duration: 150}}">
       <p>{message}</p>
     </div>
-  </div>
-
+  
+  {/if}
+</div>
 {/if}
 
 {/if}
@@ -122,6 +148,10 @@
 
     .board p {
         font-size: 17px;
+    }
+
+    .file {
+      background: none !important;
     }
 
 </style>
