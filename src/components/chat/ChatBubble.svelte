@@ -10,11 +10,17 @@
   export let msgFrom;
   export let ownMsg;
   export let torrent
-  export let file
+  export let files
+  let file
 
   const dispatch = createEventDispatcher()
   let address = $user.huginAddress.substring(0, 99);
-  
+
+  $: if (files) {
+
+  file = files[0]
+  }
+
   $: {
     switch (message.substring(0, 1)) {
       case "Δ":
@@ -30,10 +36,6 @@
     console.log('downloading torrent')
     dispatch('download')
   }
-
-  $: console.log(
-    'file', message.file
-  )
 
 </script>
 
@@ -63,10 +65,12 @@
       <img class="avatar" in:fade="{{duration: 150}}"
            src="data:image/png;base64,{get_avatar(address)}" alt="">
     </div>
-  {#if file}
+  {#if files}
 
   <div class="bubble own file" in:fade="{{duration: 150}}">
     <p>{file.name}</p>
+      {#each files as image}
+       {/each}
   </div>
  
 
@@ -86,10 +90,12 @@
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
       <h5>{$user.activeChat.name}</h5>
     </div>
-    {#if file}
+    {#if files}
 
     <div class="bubble from file" in:fade="{{duration: 150}}">
       <p>{file.name}</p>
+        {#each files as image}
+        {/each}
     </div>
     
     {:else}
