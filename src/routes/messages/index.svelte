@@ -152,7 +152,7 @@
   }
   
 
-  function dropFile(e) {
+  async function dropFile(e) {
     dragover = false
     
     const { acceptedFiles, fileRejections } = e.detail;
@@ -161,12 +161,17 @@
     if (fileRejections.length) {
       console.log('rejected file')
     }
-    let message = { chat: $user.activeChat.chat, msg: '', sent: true, t: Date.now(), file: acceptedFiles[0]};
+    let address = $user.activeChat.chat + $user.activeChat.k
+    console.log(acceptedFiles);
+    
+    let message = { chat: $user.activeChat.chat, msg: '', sent: true, t: Date.now(), file: acceptedFiles};
     printMessage(message)
     saveToStore(message)
-    let address = $user.activeChat.chat + $user.activeChat.k
     window.api.upload(filename, path, address)
+  
   }
+
+
 
   function test() {
     dragover = true
@@ -198,7 +203,7 @@
       <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()} on:drop={dropFile}>
       <div class="inner">
         {#each savedMsg as message}
-          <ChatBubble  on:download={() => download(message.msg)} file={message.file} torrent={message.magnet} handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
+          <ChatBubble  on:download={() => download(message.msg)} files={message.file} torrent={message.magnet} handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
                       timestamp={message.t} />
         {/each}
       </div>
