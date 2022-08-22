@@ -9,7 +9,8 @@
   import AddChat from "/src/components/chat/AddChat.svelte";
   import { user, boards } from "$lib/stores/user.js";
   import Rename from "/src/components/chat/Rename.svelte";
-  
+  import Dropzone from "svelte-file-dropzone";
+  import BackDrop from "/src/components/popups/BackDrop.svelte";
   let video;
   let audio;
   let chat;
@@ -22,6 +23,7 @@
   let stream;
   let box;
   let chatWindow
+  let dragover = false
 
   //Get messages on mount
   onMount(async () => {
@@ -146,10 +148,30 @@
     
   const download = (link) => {
     console.log('downloading link', link)
-    window.api.send('download', link)
+    window.api.download(link)
   }
   
 
+  function dropFile(e) {
+    dragover = false
+   
+   
+    const { acceptedFiles, fileRejections } = e.detail;
+    let filename = acceptedFiles[0].name
+    let path = acceptedFiles[0].path
+    if (fileRejections.length) {
+      console.log('rejected file')
+    }
+    window.api.upload(filename, path)
+  }
+
+  function test() {
+    dragover = true
+  }
+
+  function fest() {
+  dragover = false
+  }
 </script>
 
 {#if toggleRename}
@@ -160,19 +182,24 @@
   <AddChat on:click={openAdd} on:addChat={e =>handleAddChat(e)} />
 {/if}
 
+{#if dragover}
+  <BackDrop />
+{/if}
+
 <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
+
   <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
 
     <div class="outer" id="chat_window" bind:this={box}>
-
+      <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()} on:drop={dropFile}>
       <div class="inner">
         {#each savedMsg as message}
           <ChatBubble on:download={() => download(message.msg)} torrent={message.magnet} handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
                       timestamp={message.t} />
         {/each}
       </div>
-
+      </Dropzone>
     </div>
 
     <ChatInput on:message={sendMsg}/>
