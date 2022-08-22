@@ -207,6 +207,66 @@ ipcMain.on('min',  () => {
   mainWindow.minimize()
 })
 
+async function download(link) {
+
+  let client = new WebTorrent()
+
+  console.log('download');
+   console.log('downloaddir', downloadDir)
+    client.add(link,{path: downloadDir, private: true} ,function (torrent) {
+      console.log('torrent', torrent)
+      // Got torrent metadata!
+      torrent.on('download', function (bytes) {
+        console.log('just downloaded: ' + bytes)
+        console.log('total downloaded: ' + torrent.downloaded)
+        console.log('download speed: ' + torrent.downloadSpeed)
+        console.log('progress: ' + torrent.progress)
+      })
+
+      console.log('log log')
+      torrent.on('done', function (bytes) {
+      console.log('torrent finished downloading')
+
+      torrent.files.forEach(function(file){
+        // do something with file
+      })
+      setTimeout(function() {
+
+      client.destroy();
+
+    }, 60000);
+
+    })
+
+  })
+
+  console.log('log log')
+
+}
+
+ipcMain.on('download', async (e ,link) => {
+  console.log('ipcmain downloading')
+  download(link)
+})
+
+
+ipcMain.on('upload', async (e ,filename, path) => {
+  console.log('ipcmain uploading')
+  upload(filename, path)
+})
+
+
+function upload(filename, path) {
+  let client = new WebTorrent()
+  console.log('uploading', filename)
+  console.log('from ', path)
+  client.seed(path, function (torrent) {
+    console.log('upload this', torrent)
+    console.log('Client is seeding ' + torrent.magnetURI)
+  })
+
+}
+
 
 
 function sleep(ms) {
@@ -1078,11 +1138,10 @@ async function saveMessageSQL(msg) {
     addr = msg.chat
   }
 
-  let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(message);
+  let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(text);
   console.log('magnet', magnetLinks)
   if (magnetLinks) {
-    message = 'Torrent'
-    //message = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.fastcast.nz'
+   message = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
   }
   //New message from unknown contact
   if (msg.type === 'sealedbox' && !sent) {
@@ -1192,11 +1251,6 @@ ipcMain.on('endCall', async (e, peer, stream, contact) => {
   mainWindow.webContents.send('endCall', peer, stream, contact)
 })
 
-
-ipcMain.on('download', async (e ,link) => {
-  console.log('ipcmain downloading')
-  //download(link)
-})
 
 async function sendBoardMessage(message) {
   console.log('sending board', message);
