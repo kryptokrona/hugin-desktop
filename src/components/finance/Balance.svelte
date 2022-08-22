@@ -1,5 +1,5 @@
 <script>
-    import {onMount} from "svelte";
+    import {onMount, onDestroy} from "svelte";
     import {fade} from "svelte/transition";
     import {user, misc} from "$lib/stores/user.js";
 
@@ -10,12 +10,17 @@
     //Handle state of sync and clicks
     let showFunds = true
     let sync = false
+    let interval
     $: sync = $misc.syncState
 
     //Get balance and then look every 15 seconds
     onMount( () => {
         getBalance()
-        setInterval(getBalance, 1000*15)
+        interval = setInterval(getBalance, 1000*15)
+    })
+
+    onDestroy( () => {
+        clearInterval(interval)
     })
 
     //Get balance function
