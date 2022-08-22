@@ -228,7 +228,7 @@ async function download(link) {
       console.log('torrent finished downloading')
 
       torrent.files.forEach(function(file){
-        // do something with file
+        console.log('file', file)
       })
       setTimeout(function() {
 
@@ -264,7 +264,9 @@ function upload(filename, path, address) {
   client.seed(path, function (torrent) {
     console.log('upload this', torrent)
     console.log('Client is seeding ' + torrent.magnetURI)
-    
+    torrent.files.forEach(function(file){
+      console.log('file', file)
+    })
   sendMessage(torrent.magnetURI.split('&tr')[0], address)
   })
 }
