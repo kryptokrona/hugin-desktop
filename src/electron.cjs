@@ -213,7 +213,7 @@ async function download(link) {
 
   console.log('download', link);
    console.log('downloaddir', downloadDir)
-    client.add(link, {path: downloadDir, private: true}, function (torrent) {
+    client.add(link, {path: downloadDir} ,function (torrent) {
       console.log('torrent', torrent)
       // Got torrent metadata!
       torrent.on('download', function (bytes) {
@@ -1163,7 +1163,7 @@ async function saveMessageSQL(msg) {
       message = message
 
     }
-    let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(message);
+    let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(text);
     console.log('magnet', magnetLinks)
     if (magnetLinks) {
       message = 'File uploaded'
