@@ -211,9 +211,9 @@ async function download(link) {
 
   let client = new WebTorrent()
 
-  console.log('download');
+  console.log('download', link);
    console.log('downloaddir', downloadDir)
-    client.add(link,{path: downloadDir, private: true} ,function (torrent) {
+    client.add(link, {path: downloadDir, private: true}, function (torrent) {
       console.log('torrent', torrent)
       // Got torrent metadata!
       torrent.on('download', function (bytes) {
@@ -1124,7 +1124,7 @@ async function getReply(reply=false) {
 
 //Saves private message
 async function saveMessageSQL(msg) {
-
+  let torrent
   let text
   let sent = msg.sent
   let addr = sanitizeHtml(msg.from);
@@ -1167,7 +1167,7 @@ async function saveMessageSQL(msg) {
     console.log('magnet', magnetLinks)
     if (magnetLinks) {
       message = 'File uploaded'
-     let torrent = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
+      torrent = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
     }
 
  console.log('Saving message', message, addr, sent, timestamp);
