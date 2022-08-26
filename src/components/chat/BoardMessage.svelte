@@ -100,8 +100,11 @@
 {#if replyMessage}
   {#await checkreply(reply)}
   {:then thisreply}
-
-    <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar" src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
+      
+    <div in:fade="{{duration: 150}}" class="reply">
+      <div class="header">
+      <img class="reply_avatar" src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
+      </div>
       <p class="reply_nickname">{thisreply.n}</p> <br>
       <p>{thisreply.m}</p>
     </div>
@@ -229,6 +232,7 @@
 
     .reply p {
         font-size: 11px;
+        display: contents;
     }
 
     .replyer {
