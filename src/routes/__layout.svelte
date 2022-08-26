@@ -23,6 +23,8 @@
 	let showCallerMenu = false
 	let new_messages = false
 	let board_message_sound
+	let errors = []
+
 	const closePopup = () => {
 		incoming_call = false
 	}
@@ -132,14 +134,27 @@ window.api.receive('node', async (node) => {
 		endThisCall()
 	})
 
+	window.api.receive('error_msg', async (error) => {
+		console.log('Error', error)
+		errors.push(error)
+		console.log(errors)
+		errors = errors
+	})
+
 
 	});
 
-		function removeNotification(e) {
+	function removeErrors(e) {
+		let filterArr = errors.filter(a => a.h !== e.detail.hash)
+		console.log('filtered', filterArr)
+		errors = filterArr
+	}
+
+	function removeNotification(e) {
 		let filterArr = $notify.new.filter(a => a.h !== e.detail.hash)
 		console.log('filtered', filterArr)
 		$notify.new = filterArr
-		}
+	}
 
 </script>
 
@@ -189,11 +204,24 @@ window.api.receive('node', async (node) => {
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
 	<div class="notifs">
 	{#each $notify.new as notif (notif.h)}
-		<Notification on:hide={removeNotification} message={notif}/>
+		<Notification on:hide={removeNotification} message={notif} error={false}/>
 		
 	{/each}
+
+
+
 	</div>
-{/if}
+	{/if}
+		
+	{#if errors.length > 0 && $user.loggedIn}
+	<div class="notifs">
+	{#each errors as error (error.h)}
+
+		<Notification message={error} error={true}  on:hide={removeErrors} />
+
+	{/each}
+	</div>
+	{/if}
 
 	{#if $user.loggedIn}
 
