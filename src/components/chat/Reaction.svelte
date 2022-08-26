@@ -14,7 +14,7 @@ let filterReactions = []
 let hoverReaction = false
 let filterReactors = []
 
-$: filterReactions = reacts.filter(a => a.m == thisReaction.m)
+$: if (reacts.length) filterReactions = reacts.filter(a => a.m == thisReaction.m)
 
 $: if (filterReactions.length > 0) {
   let reactor = {}
