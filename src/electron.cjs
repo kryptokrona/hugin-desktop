@@ -1572,8 +1572,6 @@ function parse_sdp (sdp) {
     let ip;
     let port;
 
-
-
     let lines = sdp.sdp.split('\n')
         .map(l => l.trim()); // split and remove trailing CR
     lines.forEach(function(line) {
