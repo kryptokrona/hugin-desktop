@@ -137,7 +137,6 @@ window.api.receive('node', async (node) => {
 	window.api.receive('error_msg', async (error) => {
 		console.log('Error', error)
 		errors.push(error)
-		console.log(errors)
 		errors = errors
 	})
 
@@ -202,25 +201,19 @@ window.api.receive('node', async (node) => {
 	{/if}
 
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
-	<div class="notifs">
-	{#each $notify.new as notif (notif.h)}
+		<div class="notifs">
+		{#each $notify.new as notif (notif.h)}
 		<Notification on:hide={removeNotification} message={notif} error={false}/>
-		
-	{/each}
-
-
-
-	</div>
+		{/each}
+		</div>
 	{/if}
 		
 	{#if errors.length > 0 && $user.loggedIn}
-	<div class="notifs">
-	{#each errors as error (error.h)}
-
+		<div class="notifs">
+		{#each errors as error (error.h)}
 		<Notification message={error} error={true}  on:hide={removeErrors} />
-
-	{/each}
-	</div>
+		{/each}
+		</div>
 	{/if}
 
 	{#if $user.loggedIn}
