@@ -229,14 +229,15 @@ async function download(link) {
 
       torrent.files.forEach(function(file){
         console.log('file', file)
+        setTimeout(function() {
+
+          client.destroy();
+    
+        }, 60000);
+    
+        })
       })
-      setTimeout(function() {
-
-      client.destroy();
-
-    }, 60000);
-
-    })
+    
 
   })
 
@@ -1167,7 +1168,7 @@ async function saveMessageSQL(msg) {
     console.log('magnet', magnetLinks)
     if (magnetLinks) {
       message = 'File uploaded'
-      torrent = magnetLinks[0]+'&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
+      torrent = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
     }
 
  console.log('Saving message', message, addr, sent, timestamp);
@@ -1286,7 +1287,7 @@ async function sendBoardMessage(message) {
   if (reply) {
     payload_json.r = reply
   }
-  optimizeMessages()
+ 
   payload_hex = toHex(JSON.stringify(payload_json))
 
   let result = await js_wallet.sendTransactionAdvanced(
@@ -1309,12 +1310,20 @@ async function sendBoardMessage(message) {
       sentMsg.type = "board"
       saveBoardMsg(sentMsg, result.transactionHash)
   } else {
+      let error = {
+        m: 'Failed to send',
+        n: 'Error',
+        h: Date.now()
+      }
+      mainWindow.webContents.send('error_msg', error)
       console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
 
   } catch(err) {
+mainWindow.webContents.send('error_msg')
 console.log('Error', err);
 }
+optimizeMessages()
 
 }
 
@@ -1419,14 +1428,20 @@ async function sendMessage(message, receiver, off_chain=false) {
         Buffer.from(payload_hex, 'hex')
     );
 
-    let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
-    if (result.success) {
-        known_pool_txs.push(result.transactionHash)
-        console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-        saveMessageSQL(sentMsg)
-    } else {
-        console.log(`Failed to send transaction: ${result.error.toString()}`);
-    }
+      let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
+      if (result.success) {
+          known_pool_txs.push(result.transactionHash)
+          console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+          saveMessageSQL(sentMsg)
+      } else {
+        let error = {
+          m: 'Failed to send',
+          n: 'Error',
+          h: Date.now()
+        }
+          console.log(`Failed to send transaction: ${result.error.toString()}`);
+          mainWindow.webContents.send('error_msg', error)
+      }
     } else if (off_chain) {
       let sentMsg = {msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address}
       console.log('sending rtc message');
