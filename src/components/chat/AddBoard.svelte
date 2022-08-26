@@ -27,12 +27,12 @@
           dispatch('addBoard', {
               brd: board,
           })
+          enableAddBoardButton = false
     }
     
     window.addEventListener('keyup', e => {
         if (enableAddBoardButton && e.keyCode === 13) {
             addBoard(text)
-            enableAddBoardButton = false
         }
     })
 
