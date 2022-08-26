@@ -8,6 +8,7 @@
 
 	const dispatch = createEventDispatcher();
     let timer
+    export let error
 	export let message;
     onMount(()=> 
     
@@ -25,11 +26,10 @@
 			hash: message.h
 		});
 	}
-	
     $: console.log('notifications', $notify)
 
   </script>
-
+{#if !error}
 <div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
     <div class="inner-card">
         <div class="header">
@@ -40,6 +40,18 @@
          <br>
     </div>
 </div>
+{:else if error}
+<div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
+    <div class="inner-card">
+        <div class="header">
+            <img class="avatar" src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
+            <h4 class="name">{message.n}</h4>
+        </div>
+            <p class="message">{message.m}</p>
+         <br>
+    </div>
+</div>
+{/if}
 
   <style>
       .card {
