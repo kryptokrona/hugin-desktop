@@ -174,6 +174,7 @@
       font-size: 12px;
       background: rgba(0,0,0,0.11);
       border-radius: 10px;
+      border: 1px solid transparent;
 
       .header {
         display: flex;
