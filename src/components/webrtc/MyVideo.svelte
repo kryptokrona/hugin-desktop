@@ -7,12 +7,14 @@
   import { page } from "$app/stores";
   import { draggable } from "@neodrag/svelte";
   import { createEventDispatcher } from "svelte";
+  import videoIcon from '/static/images/video.svg'
   let myVideo = document.getElementById("myVideo");
   let video = false;
   let hide = true;
   let hover = false;
   let chatWindow = true;
   let thisCall;
+  let sources = []
   export let call;
 
   const dispatch = createEventDispatcher();
@@ -69,7 +71,21 @@
     hide = true;
   }
 
+  let source = false
+
   $: console.log("$webRTC.", $webRTC);
+  const showSrcs = () => {
+    source = !source
+    console.log('show srcs')
+    sources = $webRTC.videoSources
+    console.log('show srcs', sources)
+  }
+
+  const switchStream = (src) => {
+    console.log('switch to this', src)
+    let stream = $webRTC.myStream
+    $webRTC.call[0].peer.replaceTrack(src, src, stream)
+  }
 
 </script>
 
@@ -81,7 +97,13 @@
   <video class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
   ></video>
   <div class="toggles">
-
+    <img src={videoIcon} on:click={showSrcs} alt="switchVideoSource">
+    {#if source}
+    {#each sources as src}
+    <div on:click={() => switchStream(src)}>lol source??</div>
+      <!-- <div class="srcs">{src}</div> -->
+    {/each}
+    {/if}
   </div>
 </div>
 
