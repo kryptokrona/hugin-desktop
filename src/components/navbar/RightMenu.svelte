@@ -106,6 +106,7 @@
 <div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
 
   {#if $page.url.pathname === '/boards'}
+    <div class="nav">
     <div class="add" on:click={openAdd}>
       <SimpleAdd />
     </div>
@@ -119,24 +120,27 @@
         <div>{error.message}</div>
       {/await}
     {/each}
+    </div>
   {/if}
 
   {#if $page.url.pathname === '/messages' && active_contact}
-    <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-    {#if thisCall && !video}
-      <button class="button" on:click={() => endCall()}><img class="icon" src="/static/images/call-slash.svg"
-                                                             alt="endcall"></button>
-    {:else}
-      <button class="button" on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call">
-      </button>
-    {/if}
-    {#if thisCall && video}
-      <button class="button" on:click={() => endCall()}><img class="icon" src="/static/images/video-slash.svg"
-                                                             alt="video"></button>
-    {:else}
-      <button class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
-      </button>
-    {/if}
+    <div class="nav">
+      <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+      {#if thisCall && !video}
+        <button class="button" on:click={() => endCall()}><img class="icon" src="/static/images/call-slash.svg"
+                                                               alt="endcall"></button>
+      {:else}
+        <button class="button" on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call">
+        </button>
+      {/if}
+      {#if thisCall && video}
+        <button class="button" on:click={() => endCall()}><img class="icon" src="/static/images/video-slash.svg"
+                                                               alt="video"></button>
+      {:else}
+        <button class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
+        </button>
+      {/if}
+    </div>
   {/if}
 
   {#if $page.url.pathname === '/webrtc'}
@@ -144,8 +148,8 @@
     <p>Sound</p>
     <p>Mute</p>
     <p>Mute</p>
-
   {/if}
+
   <div class="draggable hitbox"></div>
 </div>
 
@@ -154,9 +158,8 @@
 
   .rightMenu {
     width: 85px;
-    background-color: #181818;
+    height: 100%;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
-    box-sizing: border-box;
     padding-bottom: 1.5em;
     padding-top: 1em;
     display: flex;
@@ -165,12 +168,19 @@
     position: fixed;
     right: 0;
     z-index: 100;
-    gap: 10px;
   }
 
   .hitbox {
     height: 100%;
     width: 85px;
+  }
+
+  .nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .add {
