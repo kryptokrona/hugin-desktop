@@ -39,30 +39,15 @@
     <div class="list-wrapper">
         {#each activeHugins as user}
             <div class="card" on:click={(e) => sendPM(user)}>
-              <div class="boardUser">
                   <img class="avatar"
                        src="data:image/png;base64,{get_avatar(user.k)}" alt="">
                        <p class="nickname">{user.n}</p><br>
-              </div>
             </div>
         {/each}
     </div>
 </div>
 
-<style>
-
-    .boardUser {
-      display: flex;
-      align-items: center;
-      color: rgba(255, 255, 255, 0.8);
-      padding: 0px 5px 0px 10px;
-      z-index: 3;
-      font-size: 12px;
-      margin-left: 2%;
-      width: 92%;
-      border-radius: 15px;
-      margin-bottom: 0px;
-    }
+<style lang="scss">
 
     .nickname {
       margin: 0;
@@ -77,7 +62,6 @@
     .wrapper {
         width: 100%;
         max-width: 280px;
-        box-sizing: border-box;
         background-color: #181818;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         z-index: 3;
@@ -85,12 +69,11 @@
     }
 
     .list-wrapper {
-        box-sizing: border-box;
         display: flex;
         flex-direction: column;
         align-items: center;
         width: 100%;
-        height: 100vh;
+        height: 100%;
         overflow: scroll;
     }
 
@@ -100,7 +83,6 @@
 
     .top {
         top: 0;
-        box-sizing: border-box;
         width: 100%;
         max-width: 280px;
         padding: 20px;
@@ -113,29 +95,22 @@
     }
 
     .card {
-        box-sizing: border-box;
         display: flex;
-        padding: 10px 20px 10px 10px;
+      align-items: center;
+        padding: 0.5rem;
         width: 100%;
         color: white;
         border-bottom: 1px solid rgba(255, 255, 255, 0.16);
         transition: 177ms ease-in-out;
         cursor: pointer;
-    }
 
-    .card:hover {
-        background-color: #333333;
+        &:hover {
+             background-color: #333333;
+        }
     }
 
     .avatar {
         height: 30px;
-    }
-
-    .content {
-        margin-left: 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
     }
 
     h4 {
@@ -145,18 +120,14 @@
         overflow: hidden;
         font-family: "Montserrat";
         text-overflow: ellipsis;
-
     }
 
     h2 {
-   
         margin: 0;
         color: #fff;
         font-family: 'Roboto Mono';
         font-weight: bold;
         font-size: 22px;
-
-
     }
 
     p {
@@ -169,25 +140,10 @@
       text-overflow: ellipsis;
     }
 
-    .add-icon {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 5px;
-        border-radius: 5px;
-        transition: 250ms ease-in-out;
-    }
-
-    .add-icon:hover {
-        opacity: 50%;
-        padding: 5px;
-    }
-
     .active_hugins {
-      height: 30px;
-      padding-left: 10px;
+      padding: 1rem;
       color: white;
-      padding-top: 10px;
+        border-bottom: 1px solid var(--border-color);
     }
 
 </style>
