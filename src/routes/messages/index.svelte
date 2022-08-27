@@ -11,6 +11,7 @@
   import Rename from "/src/components/chat/Rename.svelte";
   import Dropzone from "svelte-file-dropzone";
   import BackDrop from "/src/components/popups/BackDrop.svelte";
+
   let video;
   let audio;
   let chat;
@@ -22,12 +23,12 @@
   let codec;
   let stream;
   let box;
-  let chatWindow
-  let dragover = false
+  let chatWindow;
+  let dragover = false;
 
   //Get messages on mount
   onMount(async () => {
-    chatWindow = document.getElementById('chat_window');
+    chatWindow = document.getElementById("chat_window");
 
     boards.update(data => {
       return {
@@ -86,7 +87,7 @@
 
   const scrollDown = () => {
     chatWindow.scrollTop = chatWindow.scrollHeight;
-  }
+  };
 
   const saveToStore = (data) => {
     messages.update(current => {
@@ -109,13 +110,13 @@
 
   //Send message to store and DB
   const sendMsg = e => {
-    let offChain = false
+    let offChain = false;
     let msg = e.detail.text;
     let myaddr = $user.huginAddress.substring(0, 99);
     let myMessage = { chat: chat, msg: msg, sent: true, t: Date.now() };
     saveToStore(myMessage);
     if (e.detail.offChain) {
-      offChain = true
+      offChain = true;
     }
     window.api.sendMsg(msg, active_contact, offChain);
     printMessage(myMessage);
@@ -145,40 +146,39 @@
     toggleRename = !toggleRename;
   };
 
-    
+
   const download = (link) => {
-    console.log('downloading link', link)
-    window.api.download(link)
-  }
-  
+    console.log("downloading link", link);
+    window.api.download(link);
+  };
+
 
   async function dropFile(e) {
-    dragover = false
-    
-    const { acceptedFiles, fileRejections } = e.detail;
-    let filename = acceptedFiles[0].name
-    let path = acceptedFiles[0].path
-    if (fileRejections.length) {
-      console.log('rejected file')
-    }
-    let address = $user.activeChat.chat + $user.activeChat.k
-    console.log(acceptedFiles);
-    
-    let message = { chat: $user.activeChat.chat, msg: '', sent: true, t: Date.now(), file: acceptedFiles};
-    printMessage(message)
-    saveToStore(message)
-    window.api.upload(filename, path, address)
-  
-  }
+    dragover = false;
 
+    const { acceptedFiles, fileRejections } = e.detail;
+    let filename = acceptedFiles[0].name;
+    let path = acceptedFiles[0].path;
+    if (fileRejections.length) {
+      console.log("rejected file");
+    }
+    let address = $user.activeChat.chat + $user.activeChat.k;
+    console.log(acceptedFiles);
+
+    let message = { chat: $user.activeChat.chat, msg: "", sent: true, t: Date.now(), file: acceptedFiles };
+    printMessage(message);
+    saveToStore(message);
+    window.api.upload(filename, path, address);
+
+  }
 
 
   function test() {
-    dragover = true
+    dragover = true;
   }
 
   function fest() {
-  dragover = false
+    dragover = false;
   }
 </script>
 
@@ -196,22 +196,25 @@
 
 <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
 
-  <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
+  <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)}
+            on:click={openAdd} />
 
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
 
     <div class="outer" id="chat_window" bind:this={box}>
-      <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()} on:drop={dropFile}>
-      <div class="inner">
-        {#each savedMsg as message}
-          <ChatBubble  on:download={() => download(message.msg)} files={message.file} torrent={message.magnet} handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
-                      timestamp={message.t} />
-        {/each}
-      </div>
+      <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
+                on:drop={dropFile}>
+        <div class="inner">
+          {#each savedMsg as message}
+            <ChatBubble on:download={() => download(message.msg)} files={message.file} torrent={message.magnet}
+                        handleType={message.sent} message={message.msg} ownMsg={message.sent} msgFrom={message.chat}
+                        timestamp={message.timestamp} />
+          {/each}
+        </div>
       </Dropzone>
     </div>
 
-    <ChatInput on:message={sendMsg}/>
+    <ChatInput on:message={sendMsg} />
   </div>
 </main>
 
