@@ -40,6 +40,7 @@
 		"sqlite3": "^5.0.8",
 		"svelte-emoji-selector": "^1.0.1",
 		"svelte-file-dropzone": "^1.0.0",
+		"svelte-loading-spinners": "^0.1.7",
 		"tweetnacl": "^1.0.3",
 		"tweetnacl-sealed-box": "^1.0.5",
 		"tweetnacl-util": "^0.15.1",
@@ -69,7 +70,7 @@
 		"svelte": "^3.46.4",
 		"svelte-check": "^1.6.0",
 		"svelte-preprocess": "^4.10.4",
-		"svelte-time": "^0.7.1",
+		"svelte-time": "0.7.0",
 		"typescript": "^4.6.2",
 		"vite": "^2.8.6"
 	}
