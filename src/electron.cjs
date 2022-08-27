@@ -1481,26 +1481,24 @@ async function optimizeMessages(nbrOfTxs) {
 
     const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
+    console.log("inputs", inputs.length)
     if (inputs.length > 8) {
-      console.log("enough inputs", inputs.length)
-      console.log("inputs", inputs);
+     
       return;
     }
     let subWallets = js_wallet.subWallets.subWallets;
-
+    let txs
     subWallets.forEach((value, name) => {
-      let txs = value.unconfirmedIncomingAmounts.length;
-
-      if (txs > 0) {
-        console.log("Already have incoming inputs, aborting..");
-        return;
-      }
+      txs = value.unconfirmedIncomingAmounts.length;
     });
-
+    if (txs > 0) {
+      console.log("Already have incoming inputs, aborting..");
+      return;
+    }
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i < 10) {
+    while (i > inputs && i < 11) {
       payments.push([
         js_wallet.getPrimaryAddress(),
         10000
