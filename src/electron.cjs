@@ -119,7 +119,7 @@ let mainWindow;
 
 function createWindow() {
   let windowState = windowStateManager({
-    defaultWidth: 1100,
+    defaultWidth: 1000,
     defaultHeight: 700
   });
 
@@ -127,8 +127,8 @@ function createWindow() {
     backgroundColor: "#181818",
     frame: false,
     autoHideMenuBar: true,
-    minHeight: 600,
-    minWidth: 800,
+    minHeight: 700,
+    minWidth: 1000,
     webPreferences: {
       enableRemoteModule: true,
       contextIsolation: true,
