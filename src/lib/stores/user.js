@@ -27,7 +27,6 @@ export const misc = writable({
     networkBlockCount: null,
     balance: [0, 0],
     node: '',
-    nodeStatus: '',
 })
 
 export const webRTC = writable({

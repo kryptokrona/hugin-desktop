@@ -1,110 +1,120 @@
 <script>
     // Copyright (c) 2022, The Kryptokrona Developers
-    import {user, misc} from "$lib/stores/user.js";
     import {fade, fly} from "svelte/transition";
-    import Close from "$components/buttons/Close.svelte";
-    import Button from "$components/buttons/Button.svelte";
-    import {goto} from "$app/navigation";
+    import Close from "/src/components/buttons/Close.svelte";
+    import { misc } from "$lib/stores/user.js";
 
     let progress
 
     $: {
-        progress = (($misc.walletBlockCount / $misc.localDaemonBlockCount) * 100)
-        progress > 99.99 ? progress = 100 : progress
+        progress = (($misc.walletBlockCount / $misc.networkBlockCount) * 100)
     }
-
 </script>
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="popup">
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="popup-card">
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="popup-card layered-shadow">
         <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
-            <h3 style="color: var(--title-color)">Vault Status</h3>
+            <h3 style="color: var(--title-color)">Wallet status</h3>
             <Close on:click/>
         </div>
         <div>
-            <h5 style="margin: 0 0 5px 5px;">Node</h5>
+            <h5 style="margin-bottom: 10px">Node</h5>
             <input disabled type="text" placeholder="Nickname" bind:value={$misc.node}>
         </div>
         <div>
-            <h5 style="margin: 0 0 5px 5px;">Status</h5>
-            <input disabled type="text" placeholder="Node Status" bind:value={$misc.nodeStatus}>
+            <h5 style="margin-bottom: 10px">Status</h5>
+            <input disabled type="text" bind:value={$misc.syncState}>
         </div>
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px">
-                <h5 style="margin: 0">Sync</h5>
-                <p style="margin: 0">{progress = 100 ? progress.toFixed() : progress.toFixed(2)}%</p>
+                <h5 style="margin-bottom: 10px">Sync</h5>
             </div>
             <div class="goal">
-                <div class="progress"
-                     style="background-color: var(--success-color); width: {progress}%; height: 22px; border-radius: 3px;">
-                </div>
+                <h4>{progress === 100 ? progress.toFixed(0) : progress.toFixed(2)}%</h4>
+                <div class="progress" class:stripes={progress !== 100} class:synced={(progress === 100)}
+                     style="width: {progress}%;"></div>
             </div>
         </div>
-        <Button disabled={false} on:click={() => {goto('/settings')}} text="Settings"/>
     </div>
 </div>
 
 <style lang="scss">
-  .popup {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(18, 18, 18, 0.80);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 103;
-
-    .popup-card {
+    .popup {
+        position: fixed;
         display: flex;
-        box-sizing: border-box;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 360px;
-        width: 320px;
-        padding: 30px;
-        background-color: #181818;
-        border-radius: 8px;
-        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255,255,255, 0.1);
+        justify-content: center;
+        align-items: center;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(10, 10, 10, 0.90);
+        z-index: 103;
+
+        .popup-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background-color: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 0.4rem;
+            box-sizing: border-box;
+            padding: 30px 30px 40px 30px;
+            width: 300px;
+        }
     }
-  }
 
-  .goal {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 30px;
-    padding: 0 3px;
-    background-color: var(--input-background);
-    border: 1px solid var(--input-border);
-    border-radius: 0.4rem;
-    margin: 5px 0;
-  }
+    .goal {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 40px;
+        background-color: var(--input-background);
+        border: 1px solid var(--input-border);
+        border-radius: 0.4rem;
+        margin: 5px 0;
 
-  input {
-      box-sizing: border-box;
-      background-color: var(--input-background);
-      border: 1px solid var(--input-border);
-      padding: 10px;
-      border-radius: 5px;
-      color: var(--title-color);
-      transition: 200ms ease-in-out;
-      width: 100%;
+        h4 {
+            color: white;
+            position: absolute;
+            align-self: center;
+            z-index: 9999;
+        }
+    }
 
-      &::placeholder, ::-ms-input-placeholder, ::-webkit-input-placeholder {
-          color: var(--input-placeholder);
-          font-family: "Roboto Mono", monospace;
-      }
+    .progress {
+        background-color: var(--border-color);
+        height: 40px;
+        margin-right: auto;
+        border-radius: 0.4rem;
+        transition: 200ms ease-in-out;
+    }
 
-      &:focus {
-          outline: none;
-          border: 1px solid var(--primary-color);
-      }
-  }
+    .synced {
+        background-color: var(--border-color);
+    }
+
+    input {
+        height: 40px;
+        box-sizing: border-box;
+        background-color: var(--input-background);
+        border: 1px solid var(--input-border);
+        padding: 10px;
+        border-radius: var(--border-radius);
+        color: var(--title-color);
+        transition: 200ms ease-in-out;
+        width: 100%;
+
+        &::placeholder {
+            color: var(--input-placeholder);
+            font-family: "Roboto Mono", monospace;
+        }
+
+        &:focus {
+            outline: none;
+            border: 1px solid var(--primary-color);
+        }
+    }
 </style>

@@ -70,9 +70,9 @@
     <Balance />
     <div style="display: flex; align-items: center; justify-content: center; gap: 15px">
       <Globe
-        yellow={$misc.nodeStatus === 'Syncing 📡'}
-        red={$misc.nodeStatus === 'Not Synced' || $misc.nodeStatus === 'Disconnected 🚨' || $misc.nodeStatus === 'Dead node 🚨'}
-        blink={$misc.nodeStatus !== 'Synced ✅'}
+        yellow={$misc.syncState === 'Syncing'}
+        red={$misc.syncState === 'Not Synced' || $misc.syncState === 'Disconnected' || $misc.syncState === 'Dead node'}
+        blink={$misc.syncState !== 'Synced'}
         on:click={() => nodePopup = !nodePopup}
       />
       <Warning

@@ -61,6 +61,7 @@ html {
     --border-color: rgba(0, 0, 0, 0.1);
     --card-border: #ced1d2;
     --card-background: #fff;
+    --border-radius: 5px;
     --input-border: rgba(255, 255, 255, 0.15);
     --input-background: rgba(0, 0, 0, 0.4);
     --input-placeholder: rgba(255, 255, 255, 0.6);
@@ -275,6 +276,27 @@ code {
   100% {
     border: 1px solid #5f86f2;
     box-shadow: 0 0 10px #5ff2f0;
+  }
+}
+
+.stripes {
+  background-size: 30px 30px;
+  background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 25%,
+          transparent 25%,
+          transparent 50%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.3) 75%,
+          transparent 75%, transparent);
+  animation: animate-stripes 3s linear infinite;
+  -webkit-animation: animate-stripes 2s linear infinite;
+  -moz-animation: animate-stripes 2s linear infinite;
+  -ms-animation: animate-stripes 2s linear infinite;
+}
+
+@keyframes animate-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 60px 0;
   }
 }
 
