@@ -259,7 +259,6 @@
     display: flex;
     height: 100vh;
     color: #fff;
-    background-color: #181818;
     z-index: 3;
   }
 

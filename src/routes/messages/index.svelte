@@ -197,6 +197,7 @@
 <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
 
   <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)} on:click={openAdd} />
+
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
 
     <div class="outer" id="chat_window" bind:this={box}>
@@ -236,9 +237,7 @@
   .inner {
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
-    gap: 1rem;
-    padding: 20px 20px 0 20px;
+    padding-top: 20px;
     width: 100%;
   }
 

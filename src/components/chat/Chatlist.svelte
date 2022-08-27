@@ -163,7 +163,6 @@
         width: 100%;
         max-width: 280px;
         box-sizing: border-box;
-        background-color: #181818;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
         z-index: 3;
     }

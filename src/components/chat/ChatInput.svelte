@@ -66,6 +66,7 @@
     z-index: 3;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
+    border: 1px solid var(--card-border);
   }
 
 
@@ -89,9 +90,8 @@
     align-items: center;
     width: 40px;
     box-sizing: border-box;
-    background-color: rgb(225, 18, 80);
+    background-color: rgba(255, 255, 255, 0.1);
     border: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0 9px 9px 0;
     padding: 10px 15px 10px 10px;
     color: white;

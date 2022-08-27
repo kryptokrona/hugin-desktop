@@ -1,5 +1,5 @@
 body {
-  background-color: #181818;
+  background-color: #121212;
   font-family: Montserratm, Arial, serif;
   font-weight: 400;
   margin: 0;
@@ -20,8 +20,8 @@ html {
   :root {
     --logo-color: #ffffff;
     --backgound-color: #121212;
-    --title-color: rgba(255, 255, 255, 0.8);
-    --text-color: rgba(255, 255, 255, 0.6);
+    --title-color: rgba(255, 255, 255, 1);
+    --text-color: rgba(255, 255, 255, 0.9);
 
     --hamburger: rgba(255, 255, 255, 0.5);
     --nav-backgound-color: rgba(32, 32, 32, 0.9);
@@ -330,7 +330,7 @@ code {
 
 
 .svelte-emoji-picker__trigger {
-  background-color: rgba(255, 255, 255, 0);
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 0;
   border: none;
   padding-right: 10px;

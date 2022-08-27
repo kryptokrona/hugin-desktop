@@ -3,22 +3,26 @@
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { user } from "$lib/stores/user.js";
   import Button from "/src/components/buttons/Button.svelte";
-  import {createEventDispatcher, onMount} from "svelte";
-  
+  import { createEventDispatcher } from "svelte";
+  import Time from "svelte-time";
+
   export let message;
   export let handleType;
   export let msgFrom;
   export let ownMsg;
-  export let torrent
-  export let files
-  let file
+  export let torrent;
+  export let files;
+  export let timestamp
+  let file;
 
-  const dispatch = createEventDispatcher()
+  console.log('TIMESTAMP', timestamp);
+
+  const dispatch = createEventDispatcher();
   let address = $user.huginAddress.substring(0, 99);
 
   $: if (files) {
 
-  file = files[0]
+    file = files[0];
   }
 
   $: {
@@ -33,131 +37,129 @@
   }
 
   const downloadTorrent = () => {
-    console.log('downloading torrent')
-    dispatch('download')
-  }
+    console.log("downloading torrent");
+    dispatch("download");
+  };
 
 </script>
 
 {#if torrent}
-<div class="peer">
-  <div class="header peer">
-    <img class="avatar " in:fade="{{duration: 150}}"
-         src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-    <h5>{$user.activeChat.name}</h5>
-  </div>
-  <div class="bubble from" in:fade="{{duration: 150}}">
-    <Button text="Download" disabled={false} on:click={downloadTorrent}/>
-  </div>
-</div>
-
-
-
-{:else}
-
-
-<!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
-{#if ownMsg}
-
-
-  <div class="own">
-    <div class="header own">
-      <img class="avatar" in:fade="{{duration: 150}}"
-           src="data:image/png;base64,{get_avatar(address)}" alt="">
-    </div>
-  {#if files}
-
-  <div class="bubble own file" in:fade="{{duration: 150}}">
-    <p>{file.name}</p>
-      {#each files as image}
-       {/each}
-  </div>
- 
-
-  {:else}
-    <div class="bubble sent" in:fade="{{duration: 150}}">
-      <p>{message}</p>
-    </div>
- 
-
-  {/if} 
-</div>
-{:else}
-
   <div class="peer">
     <div class="header peer">
       <img class="avatar " in:fade="{{duration: 150}}"
            src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
       <h5>{$user.activeChat.name}</h5>
     </div>
-    {#if files}
-
-    <div class="bubble from file" in:fade="{{duration: 150}}">
-      <p>{file.name}</p>
-        {#each files as image}
-        {/each}
-    </div>
-    
-    {:else}
     <div class="bubble from" in:fade="{{duration: 150}}">
-      <p>{message}</p>
+      <Button text="Download" disabled={false} on:click={downloadTorrent} />
     </div>
-  
+  </div>
+
+
+{:else}
+
+
+  <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
+  {#if ownMsg}
+
+
+    <div class="wrapper">
+      <div class="avatar-box">
+        <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(address)}" alt="">
+      </div>
+      <div class="content">
+        <p class="nickname">{$user.username}</p>
+        {#if files}
+          <div class="file" in:fade="{{duration: 150}}">
+            <p>{file.name}</p>
+            {#each files as image}
+            {/each}
+          </div>
+        {:else}
+            <p class="message">{message}</p>
+        {/if}
+      </div>
+    </div>
+
+  {:else}
+
+    <div class="wrapper">
+      <div class="avatar-box">
+        <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+      </div>
+      <div class="content">
+        <div>
+          <p class="nickname">{$user.activeChat.name}</p>
+        </div>
+        {#if files}
+          <div class="file" in:fade="{{duration: 150}}">
+            <p>{file.name}</p>
+            {#each files as image}
+            {/each}
+          </div>
+        {:else}
+            <p class="message">{message}</p>
+        {/if}
+      </div>
+    </div>
   {/if}
-</div>
-{/if}
 
 {/if}
 
-<style>
+<style lang="scss">
 
-    .header {
-        display: flex;
-        align-items: center;
+  .wrapper {
+    padding: 10px 20px;
+    display: flex;
+    width: 100%;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--card-background);
+    }
+  }
+
+  .avatar-box {
+    height: 48px;
+    width: 48px;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img {
+      height: 48px;
+      width: 48px;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1rem;
+    justify-content: center;
+    gap: 0.25rem;
+
+    .nickname {
+      margin: 0;
+      word-break: break-word;
+      font-family: "Montserrat", sans-serif;
+      font-weight: 600;
     }
 
-    .own {
-        align-self: flex-end;
-        justify-content: end;
+    .message {
+      margin: 0;
+      word-break: break-word;
+      font-family: "Montserrat", sans-serif;
+      font-weight: 400;
+      color: var(--text-color);
     }
+  }
 
-    .peer {
-        align-self: flex-start;
-        justify-content: start;
-    }
-
-    .avatar {
-        height: 25px;
-        width: 25px;
-    }
-
-    .bubble {
-        color: rgba(255, 255, 255, 0.8);
-        padding: 15px;
-        z-index: 3;
-        border-radius: 5px;
-    }
-
-    .sent {
-        background: cornflowerblue;
-    }
-
-    .from {
-        background: grey;
-    }
-
-    p {
-        margin: 0;
-        word-break: break-word;
-        font-family: "Montserrat", sans-serif;
-    }
-
-    .board p {
-        font-size: 17px;
-    }
-
-    .file {
-      background: none !important;
-    }
+  .file {
+    background: none !important;
+  }
 
 </style>
