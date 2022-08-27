@@ -21,6 +21,9 @@
     window.api.receive('screen-share', (id) => {
         shareScreen(id)
     })
+    window.api.receive('set-camera', (id) => {
+        setCamera()
+    })
 
 
                        
@@ -97,9 +100,23 @@ async function shareScreen(id) {
        
 }
 
+function setCamera() {
+    
+    let screen = $webRTC.myStream
+    let video =  $webRTC.oldStream
+    console.log(video.getVideoTracks()[0])
+    console.log('tracks', screen.getVideoTracks()[0])
+    let peer = $webRTC.call[0].peer
+    peer.replaceTrack(screen.getVideoTracks()[0], video.getVideoTracks()[0], video)
+    $webRTC.screen_stream = false
+    $webRTC.myStream = video
+    $webRTC.video = true
+}
+
 function setMedia(screen_stream) {
 
     let stream = $webRTC.myStream
+    $webRTC.oldStream = stream
     let src = screen_stream.getVideoTracks()
     //Set microphone audio to screen_share track
     screen_stream.addTrack(stream.getAudioTracks()[0]);
@@ -109,6 +126,7 @@ function setMedia(screen_stream) {
     $webRTC.myStream = screen_stream
     console.log('stream set', $webRTC.myStream)
     $webRTC.screen_stream = true
+    $webRTC.video = false
 }
 
 
