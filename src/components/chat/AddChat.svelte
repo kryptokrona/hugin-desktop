@@ -52,7 +52,6 @@
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-        <div class="wrapper">
             <h4>Nickname</h4>
             <div class="nickname-wrapper">
                 <input type="text" bind:value={nickname}>
@@ -60,16 +59,16 @@
                     <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
                 {/if}
             </div>
-            <h4>Address*</h4>
+            <h4>Address</h4>
             <input type="text" bind:value={text}>
             <h4>Message key</h4>
             <input disabled="true" class="key" type="text" bind:value={pubkey}>
-        </div>
         <button disabled={!enableButton} class:rgb={enableButton} on:click={handleAdd}>Add</button>
     </div>
 </div>
 
-<style>
+<style lang="scss">
+
     .backdrop {
         display: flex;
         justify-content: center;
@@ -98,26 +97,16 @@
         border: 1px solid rgba(255,255,255, 0.1);
     }
 
-    .wrapper {
-        width: 100%;
-    }
-
     .nickname-wrapper {
         display: flex;
         justify-content: center;
         align-items: center;
-    }
 
-    .avatar {
-        margin-bottom: 9px;
-        width: 50px;
-        height: 50px;
-    }
-
-    h4 {
-        color: rgba(255, 255, 255, 0.8);
-        margin: 0;
-        margin-left: 4px;
+        img {
+            margin-bottom: 9px;
+            width: 50px;
+            height: 50px;
+        }
     }
 
     input {
@@ -132,12 +121,11 @@
         margin-bottom: 20px;
         color: white;
         transition: 250ms ease-in-out;
-    }
 
-    input:focus {
+      &:focus {
         outline: none;
-        border: 1px solid rgba(255, 255, 255, 0.6);
-
+        border-color: rgba(255, 255, 255, 0.6);
+      }
     }
 
     .key {
@@ -153,9 +141,9 @@
         background-color: rgb(225, 18, 80);
         color: white;
         cursor: pointer;
-    }
 
-    button:hover {
+      &:hover {
         opacity: 80%;
+      }
     }
 </style>
