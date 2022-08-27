@@ -62,8 +62,7 @@
     .wrapper {
         width: 100%;
         max-width: 280px;
-        background-color: #181818;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 1px solid var(--border-color);
         z-index: 3;
         overflow: hidden
     }
@@ -90,7 +89,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid var(--border-color);
         z-index: 9;
     }
 
@@ -100,7 +99,7 @@
         padding: 0.5rem;
         width: 100%;
         color: white;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        border-bottom: 1px solid var(--border-color);
         transition: 177ms ease-in-out;
         cursor: pointer;
 
