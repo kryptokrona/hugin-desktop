@@ -115,6 +115,7 @@
     height: 203px;
     width: 360px;
     pointer-events: all;
+
     .toggles {
       position: absolute;
       bottom: 0;
@@ -123,6 +124,7 @@
       z-index: 501;
       opacity: 0%;
       transition: 200ms ease-in-out;
+      border-radius: 0 0 10px 10px;
     }
 
     &:hover {
