@@ -17,7 +17,7 @@ const en = require("int-encoder");
 const sqlite3 = require("sqlite3").verbose();
 const Peer = require("simple-peer");
 const WebTorrent = require("webtorrent");
-
+const desktopCapturer = require('electron')
 const {
   Address,
   AddressPrefix,
@@ -1577,6 +1577,24 @@ ipcMain.on("startCall", async (e, contact, calltype) => {
   console.log("contact", contact + calltype);
   mainWindow.webContents.send("start-call", contact, calltype);
 
+});
+
+ipcMain.handle("shareScreen", async (e, start) => { 
+  desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async sources => {
+    for (const source of sources) {
+
+     if (source.name === 'Entire Screen') {
+      
+      }
+      if (!start) {
+        mainWindow.webContents.send('screen-share', source.id)
+      }
+      return source.id
+      
+    } 
+    console.log('sources', sources)
+  })
+  
 });
 
 
