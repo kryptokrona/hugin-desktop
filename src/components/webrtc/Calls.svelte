@@ -127,10 +127,14 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
 
                 
     $webRTC.call[0].peer = peer1,
+    console.log('peer1', peer1)
     $webRTC.call[0].myStream = stream,
     $webRTC.call[0].screen = screen_stream
     $webRTC.call[0].video = video
+
+    let videoTracks = stream.getVideoTracks()
     
+    $webRTC.videoSources = videoTracks
     console.log('This call', $webRTC.call[0])
 
     let video_codecs = window.RTCRtpSender.getCapabilities('video');
@@ -323,7 +327,7 @@ function startPeer2(stream, video) {
 
         peer2.on('stream', peerStream => {
             // got remote video stream, now let's show it in a video tag
-
+            
             console.log('peer2 stream', peerStream)
             $webRTC.call[0].peerStream = peerStream
 
