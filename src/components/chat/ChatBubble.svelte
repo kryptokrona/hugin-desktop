@@ -68,7 +68,9 @@
         <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(address)}" alt="">
       </div>
       <div class="content">
-        <p class="nickname">{$user.username}</p>
+        <div style="display: flex; gap: 1rem">
+          <p class="nickname">{$user.username} <span class="time"> | <Time relative timestamp="{parseInt(timestamp)}" /></span></p>
+        </div>
         {#if files}
           <div class="file" in:fade="{{duration: 150}}">
             <p>{file.name}</p>
@@ -88,8 +90,8 @@
         <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
       </div>
       <div class="content">
-        <div>
-          <p class="nickname">{$user.activeChat.name}</p>
+        <div style="display: flex; gap: 1rem">
+          <p class="nickname">{$user.activeChat.name} <span class="time"> | <Time relative timestamp="{parseInt(timestamp)}" /></span></p>
         </div>
         {#if files}
           <div class="file" in:fade="{{duration: 150}}">
@@ -113,6 +115,7 @@
     display: flex;
     width: 100%;
     cursor: pointer;
+
 
     &:hover {
       background-color: var(--card-background);
@@ -160,6 +163,13 @@
 
   .file {
     background: none !important;
+  }
+
+  .time {
+    color: var(--text-color);
+    opacity: 80%;
+    font-weight: 400;
+    font-size: 0.75rem;
   }
 
 </style>
