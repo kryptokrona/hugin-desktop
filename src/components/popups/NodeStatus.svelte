@@ -18,12 +18,12 @@
             <Close on:click/>
         </div>
         <div>
-            <h5 style="margin-bottom: 10px">Node</h5>
-            <input disabled type="text" placeholder="Nickname" bind:value={$misc.node}>
+            <h5 style="margin-bottom: 10px">Connected to</h5>
+            <input disabled type="text" placeholder="No node" bind:value={$misc.node}>
         </div>
         <div>
             <h5 style="margin-bottom: 10px">Status</h5>
-            <input disabled type="text" bind:value={$misc.syncState}>
+            <input disabled type="text" placeholder="No status" bind:value={$misc.syncState}>
         </div>
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px">
