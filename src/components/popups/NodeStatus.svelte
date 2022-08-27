@@ -14,7 +14,7 @@
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="popup">
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="popup-card layered-shadow">
         <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
-            <h3 style="color: var(--title-color)">Wallet status</h3>
+            <h3 style="color: var(--title-color)">Node status</h3>
             <Close on:click/>
         </div>
         <div>
