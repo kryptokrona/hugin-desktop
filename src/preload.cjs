@@ -98,6 +98,10 @@ const WINDOW_API = {
     ipcRenderer.send('switchNode', node)
   },
 
+  shareScreen: async () => {
+    ipcRenderer.invoke('shareScreen')
+  },
+
   //HANDLE FINANCE
   getBalance: async () => {
     return await ipcRenderer.invoke('getBalance')
