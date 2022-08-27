@@ -103,7 +103,7 @@
 
 </script>
 
-<div class="rightMenu" in:fly="{{x: 100}}" out:fly="{{x: 100}}">
+<div class="rightMenu">
 
   {#if $page.url.pathname === '/boards'}
     <div class="nav">
@@ -249,7 +249,8 @@
   }
 
   .avatar {
-    height: 70px;
+    margin-top: -10px;
+    height: 64px;
   }
 
   .board {
