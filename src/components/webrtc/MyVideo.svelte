@@ -14,7 +14,7 @@
   let hover = false;
   let chatWindow = true;
   let thisCall;
-  let sources = []
+  let sources = [{label: "screen"}, {label: "tjo"}]
   export let call;
 
   const dispatch = createEventDispatcher();
@@ -22,8 +22,8 @@
   // When incoming call and this get mounted we play the ringtone
   onMount(async () => {
 
-    myVideo.srcObject = $webRTC.myStream;
-    myVideo.play();
+    
+    playVideo();
 
   });
 
@@ -49,6 +49,7 @@
   };
 
   const playVideo = () => {
+    myVideo.srcObject = $webRTC.myStream;
     console.log("play video");
     myVideo.play();
   };
@@ -71,20 +72,15 @@
     hide = true;
   }
 
-  let source = false
+ $: if ($webRTC.screen_stream) {
+  playVideo() 
+ }
 
-  $: console.log("$webRTC.", $webRTC);
-  const showSrcs = () => {
-    source = !source
-    console.log('show srcs')
-    sources = $webRTC.videoSources
-    console.log('show srcs', sources)
-  }
+  let source = true
 
-  const switchStream = (src) => {
-    console.log('switch to this', src)
-    let stream = $webRTC.myStream
-    $webRTC.call[0].peer.replaceTrack(src, src, stream)
+  const switchStream = async () => {
+   await window.api.shareScreen(false)
+   
   }
 
 </script>
@@ -94,14 +90,14 @@
 <div class="card" class:toggle={!chatWindow} class:hide={hide}
      use:draggable={{bounds: 'parent'}}  on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
 >
-  <video class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
+  <video on:click={playVideo} class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
   ></video>
   <div class="toggles">
-    <img src={videoIcon} on:click={showSrcs} alt="switchVideoSource">
+    <img src={videoIcon} on:click={switchStream} alt="switchVideoSource">
     {#if source}
     {#each sources as src}
-    <div on:click={() => switchStream(src)}>lol source??</div>
-      <!-- <div class="srcs">{src}</div> -->
+    <!-- <div on:click={() => switchStream}>{src.label}</div> -->
+   
     {/each}
     {/if}
   </div>
