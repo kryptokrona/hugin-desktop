@@ -111,6 +111,7 @@
     background-color: #171717;
     border-radius: 10px;
     box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--card-border);
     z-index: 500;
     height: 203px;
     width: 360px;
