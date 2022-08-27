@@ -1,409 +1,411 @@
-const windowStateManager = require('electron-window-state');
-const contextMenu = require('electron-context-menu');
-const {app, BrowserWindow, ipcMain, ipcRenderer} = require('electron');
-const serve = require('electron-serve');
-const path = require('path');
-const {join} = require('path')
-const {JSONFile, Low} = require("@commonify/lowdb");
-const fs = require('fs')
+const windowStateManager = require("electron-window-state");
+const contextMenu = require("electron-context-menu");
+const { app, BrowserWindow, ipcMain, ipcRenderer } = require("electron");
+const serve = require("electron-serve");
+const path = require("path");
+const { join } = require("path");
+const { JSONFile, Low } = require("@commonify/lowdb");
+const fs = require("fs");
 const WB = require("kryptokrona-wallet-backend-js");
-const {default: fetch} = require("electron-fetch");
-const nacl = require('tweetnacl')
-const naclUtil = require('tweetnacl-util')
-const naclSealed = require('tweetnacl-sealed-box')
-const {extraDataToMessage} = require('hugin-crypto')
-const sanitizeHtml = require('sanitize-html')
-const en = require ('int-encoder');
-const sqlite3 = require('sqlite3').verbose();
-const Peer = require('simple-peer');
-const WebTorrent = require('webtorrent')
+const { default: fetch } = require("electron-fetch");
+const nacl = require("tweetnacl");
+const naclUtil = require("tweetnacl-util");
+const naclSealed = require("tweetnacl-sealed-box");
+const { extraDataToMessage } = require("hugin-crypto");
+const sanitizeHtml = require("sanitize-html");
+const en = require("int-encoder");
+const sqlite3 = require("sqlite3").verbose();
+const Peer = require("simple-peer");
+const WebTorrent = require("webtorrent");
 
-const { Address,
-    AddressPrefix,
-    Block,
-    BlockTemplate,
-    Crypto,
-    CryptoNote,
-    LevinPacket,
-    Transaction} = require('kryptokrona-utils')
+const {
+  Address,
+  AddressPrefix,
+  Block,
+  BlockTemplate,
+  Crypto,
+  CryptoNote,
+  LevinPacket,
+  Transaction
+} = require("kryptokrona-utils");
 
 
-const xkrUtils = new CryptoNote()
+const xkrUtils = new CryptoNote();
 const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
 function getXKRKeypair() {
-    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
-    return {privateSpendKey: privateSpendKey, privateViewKey: privateViewKey};
+  const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+  return { privateSpendKey: privateSpendKey, privateViewKey: privateViewKey };
 }
 
 function getKeyPair() {
-    // return new Promise((resolve) => setTimeout(resolve, ms));
-    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
-    let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
-    let keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
-    return keyPair;
+  // return new Promise((resolve) => setTimeout(resolve, ms));
+  const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+  let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33));
+  let keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
+  return keyPair;
 }
 
 function getMsgKey() {
 
-    const naclPubKey = getKeyPair().publicKey
-    return  Buffer.from(naclPubKey).toString('hex');
+  const naclPubKey = getKeyPair().publicKey;
+  return Buffer.from(naclPubKey).toString("hex");
 }
 
-function toHex(str,hex){
-    try{
-        hex = unescape(encodeURIComponent(str))
-            .split('').map(function(v){
-                return v.charCodeAt(0).toString(16)
-            }).join('')
-    }
-    catch(e){
-        hex = str
-        //console.log('invalid text input: ' + str)
-    }
-    return hex
+function toHex(str, hex) {
+  try {
+    hex = unescape(encodeURIComponent(str))
+      .split("").map(function(v) {
+        return v.charCodeAt(0).toString(16);
+      }).join("");
+  } catch (e) {
+    hex = str;
+    //console.log('invalid text input: ' + str)
+  }
+  return hex;
 }
 
 function nonceFromTimestamp(tmstmp) {
 
-    let nonce = hexToUint(String(tmstmp));
+  let nonce = hexToUint(String(tmstmp));
 
-    while ( nonce.length < nacl.box.nonceLength ) {
+  while (nonce.length < nacl.box.nonceLength) {
 
-        let tmp_nonce = Array.from(nonce);
+    let tmp_nonce = Array.from(nonce);
 
-        tmp_nonce.push(0);
+    tmp_nonce.push(0);
 
-        nonce = Uint8Array.from(tmp_nonce);
+    nonce = Uint8Array.from(tmp_nonce);
 
-    }
+  }
 
-    return nonce;
+  return nonce;
 }
 
 
 function fromHex(hex, str) {
-    try {
-        str = decodeURIComponent(hex.replace(/(..)/g, '%$1'))
-    } catch (e) {
-        str = hex
-        // console.log('invalid hex input: ' + hex)
-    }
-    return str
+  try {
+    str = decodeURIComponent(hex.replace(/(..)/g, "%$1"));
+  } catch (e) {
+    str = hex;
+    // console.log('invalid hex input: ' + hex)
+  }
+  return str;
 }
 
 
 function trimExtra(extra) {
 
-    try {
-        let payload = fromHex(extra.substring(66));
+  try {
+    let payload = fromHex(extra.substring(66));
 
-        let payload_json = JSON.parse(payload);
-        return fromHex(extra.substring(66))
-    } catch (e) {
-        return fromHex(Buffer.from(extra.substring(78)).toString())
-    }
+    let payload_json = JSON.parse(payload);
+    return fromHex(extra.substring(66));
+  } catch (e) {
+    return fromHex(Buffer.from(extra.substring(78)).toString());
+  }
 }
 
 try {
-    require('electron-reloader')(module);
+  require("electron-reloader")(module);
 } catch (e) {
-    console.error(e);
+  console.error(e);
 }
 
-const serveURL = serve({directory: "."});
+const serveURL = serve({ directory: "." });
 const port = process.env.PORT || 3000;
 const dev = !app.isPackaged;
 let mainWindow;
 
 function createWindow() {
-    let windowState = windowStateManager({
-        defaultWidth: 1100,
-        defaultHeight: 700,
-    });
+  let windowState = windowStateManager({
+    defaultWidth: 1100,
+    defaultHeight: 700
+  });
 
-    const mainWindow = new BrowserWindow({
-        backgroundColor: '#181818',
-        frame: false,
-        autoHideMenuBar: true,
-        minHeight: 600,
-        minWidth: 800,
-        webPreferences: {
-            enableRemoteModule: true,
-            contextIsolation: true,
-            nodeIntegration: true,
-            spellcheck: false,
-            devTools: dev,
-            preload: path.join(__dirname, "preload.cjs")
-        },
-        x: windowState.x,
-        y: windowState.y,
-        width: windowState.width,
-        height: windowState.height,
-    });
+  const mainWindow = new BrowserWindow({
+    backgroundColor: "#181818",
+    frame: false,
+    autoHideMenuBar: true,
+    minHeight: 600,
+    minWidth: 800,
+    webPreferences: {
+      enableRemoteModule: true,
+      contextIsolation: true,
+      nodeIntegration: true,
+      spellcheck: false,
+      devTools: dev,
+      preload: path.join(__dirname, "preload.cjs")
+    },
+    x: windowState.x,
+    y: windowState.y,
+    width: windowState.width,
+    height: windowState.height
+  });
 
-    windowState.manage(mainWindow);
+  windowState.manage(mainWindow);
 
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-        mainWindow.focus();
-        mainWindow.webContents.openDevTools()
-    });
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.openDevTools();
+  });
 
-    mainWindow.on('close', () => {
-        windowState.saveState(mainWindow);
-    });
+  mainWindow.on("close", () => {
+    windowState.saveState(mainWindow);
+  });
 
-    return mainWindow;
+  return mainWindow;
 }
 
 contextMenu({
-    showLookUpSelection: false,
-    showSearchWithGoogle: false,
-    showCopyImage: false,
-    prepend: (defaultActions, params, browserWindow) => [
-        {
-            label: 'Make App 💻',
-        },
-    ],
+  showLookUpSelection: false,
+  showSearchWithGoogle: false,
+  showCopyImage: false,
+  prepend: (defaultActions, params, browserWindow) => [
+    {
+      label: "Make App 💻"
+    }
+  ]
 });
 
 function loadVite(port) {
-    mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
-        console.log('Error loading URL, retrying', e);
-        setTimeout(() => {
-            loadVite(port);
-        }, 200);
-    });
+  mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
+    console.log("Error loading URL, retrying", e);
+    setTimeout(() => {
+      loadVite(port);
+    }, 200);
+  });
 }
 
 function createMainWindow() {
-    mainWindow = createWindow();
-    mainWindow.once('close', () => {
-        mainWindow = null
-    });
+  mainWindow = createWindow();
+  mainWindow.once("close", () => {
+    mainWindow = null;
+  });
 
-    if (dev) loadVite(port);
-    else serveURL(mainWindow);
+  if (dev) loadVite(port);
+  else serveURL(mainWindow);
 }
 
 
-app.on('ready', createMainWindow)
-app.on('activate', () => {
-    if (!mainWindow) {
-        createMainWindow();
-    }
+app.on("ready", createMainWindow);
+app.on("activate", () => {
+  if (!mainWindow) {
+    createMainWindow();
+  }
 });
 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
 });
 
-ipcMain.on('close',  () => {
-  app.quit()
-})
+ipcMain.on("close", () => {
+  app.quit();
+});
 
-ipcMain.on('min',  () => {
-  mainWindow.minimize()
-})
+ipcMain.on("min", () => {
+  mainWindow.minimize();
+});
 
 async function download(link) {
 
-  let client = new WebTorrent()
+  let client = new WebTorrent();
 
-  console.log('download', link);
-   console.log('downloaddir', downloadDir)
-    client.add(link, {path: downloadDir} ,function (torrent) {
-      console.log('torrent', torrent)
-      // Got torrent metadata!
-      torrent.on('download', function (bytes) {
-        console.log('just downloaded: ' + bytes)
-        console.log('total downloaded: ' + torrent.downloaded)
-        console.log('download speed: ' + torrent.downloadSpeed)
-        console.log('progress: ' + torrent.progress)
-      })
+  console.log("download", link);
+  console.log("downloaddir", downloadDir);
+  client.add(link, { path: downloadDir }, function(torrent) {
+    console.log("torrent", torrent);
+    // Got torrent metadata!
+    torrent.on("download", function(bytes) {
+      console.log("just downloaded: " + bytes);
+      console.log("total downloaded: " + torrent.downloaded);
+      console.log("download speed: " + torrent.downloadSpeed);
+      console.log("progress: " + torrent.progress);
+    });
 
-      console.log('log log')
-      torrent.on('done', function (bytes) {
-      console.log('torrent finished downloading')
+    console.log("log log");
+    torrent.on("done", function(bytes) {
+      console.log("torrent finished downloading");
 
-      torrent.files.forEach(function(file){
-        console.log('file', file)
+      torrent.files.forEach(function(file) {
+        console.log("file", file);
         setTimeout(function() {
 
           client.destroy();
-    
+
         }, 60000);
-    
-        })
-      })
-    
 
-  })
+      });
+    });
 
-  console.log('log log')
+
+  });
+
+  console.log("log log");
 
 }
 
-ipcMain.on('download', async (e ,link) => {
-  console.log('ipcmain downloading')
-  download(link)
-})
+ipcMain.on("download", async (e, link) => {
+  console.log("ipcmain downloading");
+  download(link);
+});
 
 
-ipcMain.on('upload', async (e ,filename, path, address) => {
-  console.log('ipcmain uploading')
-  upload(filename, path, address)
-})
+ipcMain.on("upload", async (e, filename, path, address) => {
+  console.log("ipcmain uploading");
+  upload(filename, path, address);
+});
 
 
 function upload(filename, path, address) {
-  
-  let client = new WebTorrent()
-  console.log('uploading', filename)
-  console.log('from ', path)
-  client.seed(path, function (torrent) {
-    console.log('upload this', torrent)
-    console.log('Client is seeding ' + torrent.magnetURI)
-    torrent.files.forEach(function(file){
-      console.log('file', file)
-    })
-  sendMessage(torrent.magnetURI.split('&tr')[0], address)
-  })
+
+  let client = new WebTorrent();
+  console.log("uploading", filename);
+  console.log("from ", path);
+  client.seed(path, function(torrent) {
+    console.log("upload this", torrent);
+    console.log("Client is seeding " + torrent.magnetURI);
+    torrent.files.forEach(function(file) {
+      console.log("file", file);
+    });
+    sendMessage(torrent.magnetURI.split("&tr")[0], address);
+  });
 }
 
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 
-const userDataDir = app.getPath('userData');
+const userDataDir = app.getPath("userData");
 
-const downloadDir = app.getPath('downloads')
+const downloadDir = app.getPath("downloads");
 
-const dbPath = userDataDir + "/SQLmessages.db"
+const dbPath = userDataDir + "/SQLmessages.db";
 const database = new sqlite3.Database(dbPath, (err) => {
-  if ( err) { console.log('Err', err); }
+  if (err) {
+    console.log("Err", err);
+  }
 });
 
-let daemon
-let node
-let ports
+let daemon;
+let node;
+let ports;
 
 //Create misc.db
-const file = join(userDataDir, 'misc.db')
-const adapter = new JSONFile(file)
-const db = new Low(adapter)
+const file = join(userDataDir, "misc.db");
+const adapter = new JSONFile(file);
+const db = new Low(adapter);
 
 //Create boards.db
-const fileBoards = join(userDataDir, 'boards.db')
-const adapterBoards = new JSONFile(fileBoards)
-const dbBoards = new Low(adapterBoards)
+const fileBoards = join(userDataDir, "boards.db");
+const adapterBoards = new JSONFile(fileBoards);
+const dbBoards = new Low(adapterBoards);
 
 //Create messages.db
-const fileMessages = join(userDataDir, 'messages.db')
-const adapterMessages= new JSONFile(fileMessages)
-const dbMessages = new Low(adapterMessages)
+const fileMessages = join(userDataDir, "messages.db");
+const adapterMessages = new JSONFile(fileMessages);
+const dbMessages = new Low(adapterMessages);
 
 //Create keychain.db
-const fileKeys = join(userDataDir, 'keychain.db')
-const adapterChain = new JSONFile(fileKeys)
-const keychain = new Low(adapterChain)
+const fileKeys = join(userDataDir, "keychain.db");
+const adapterChain = new JSONFile(fileKeys);
+const keychain = new Low(adapterChain);
 
 //Create knownTxs.db
-const fileTxs = join(userDataDir, 'knowntxs.db')
-const adapterTxs = new JSONFile(fileTxs)
-const knownTxs = new Low(adapterTxs)
-
+const fileTxs = join(userDataDir, "knowntxs.db");
+const adapterTxs = new JSONFile(fileTxs);
+const knownTxs = new Low(adapterTxs);
 
 
 let js_wallet;
-let walletName
+let walletName;
 let known_keys = [];
-let known_pooL_txs = []
+let known_pooL_txs = [];
 let myPassword;
-let my_boards = []
+let my_boards = [];
 
-ipcMain.on('app', (data) => {
-    mainWindow.webContents.send('getPath', userDataDir)
-    startCheck()
-})
+ipcMain.on("app", (data) => {
+  mainWindow.webContents.send("getPath", userDataDir);
+  startCheck();
+});
 
 
 async function startCheck() {
 
 
-if (fs.existsSync(userDataDir + '/misc.db')) {
+  if (fs.existsSync(userDataDir + "/misc.db")) {
 
-    await db.read()
-    let walletName = db.data.walletNames
-    console.log('walletname', walletName)
-    mainWindow.webContents.send('wallet-exist', true, walletName)
-    node = db.data.node.node
-    ports = db.data.node.port
-    let mynode = {node: node, port: ports}
+    await db.read();
+    let walletName = db.data.walletNames;
+    console.log("walletname", walletName);
+    mainWindow.webContents.send("wallet-exist", true, walletName);
+    node = db.data.node.node;
+    ports = db.data.node.port;
+    let mynode = { node: node, port: ports };
     daemon = new WB.Daemon(node, ports);
-    ipcMain.on('login', async (event, data) => {
+    ipcMain.on("login", async (event, data) => {
 
-      startWallet(data, mynode)
+      startWallet(data, mynode);
 
-    })
+    });
 
-    } else {
+  } else {
     //No wallet found, probably first start
-    console.log('wallet not found')
-    boardMessageTable()
-    messagesTable()
-    knownTxsTable()
-    contactsTable()
-    mainWindow.webContents.send('wallet-exist', false)
-    }
-
+    console.log("wallet not found");
+    boardMessageTable();
+    messagesTable();
+    knownTxsTable();
+    contactsTable();
+    mainWindow.webContents.send("wallet-exist", false);
   }
 
-  async function startWallet(data, mynode) {
-    let walletName = data.thisWallet
-    let password = data.myPassword
-    console.log('Starting this wallet', walletName);
-    console.log('password', password);
-    start_js_wallet(walletName, password, mynode);
-  }
+}
 
-  function contactsTable() {
-      const contactsTable = `
+async function startWallet(data, mynode) {
+  let walletName = data.thisWallet;
+  let password = data.myPassword;
+  console.log("Starting this wallet", walletName);
+  console.log("password", password);
+  start_js_wallet(walletName, password, mynode);
+}
+
+function contactsTable() {
+  const contactsTable = `
                     CREATE TABLE contacts (
                        address TEXT,
                        key TEXT,
                        name TEXT,
                        UNIQUE (key)
-                   )`
-     return new Promise((resolve, reject) => {
-      database.run(contactsTable, (err) => {
-        })
-        console.log('created contacts Table');
+                   )`;
+  return new Promise((resolve, reject) => {
+    database.run(contactsTable, (err) => {
+    });
+    console.log("created contacts Table");
 
-       }, () => {
-         resolve();
-       });
-     }
+  }, () => {
+    resolve();
+  });
+}
 
 
 function knownTxsTable() {
-    const knownTxTable = `
+  const knownTxTable = `
                   CREATE TABLE knownTxs (
                      hash TEXT,
                      UNIQUE (hash)
-                 )`
-   return new Promise((resolve, reject) => {
+                 )`;
+  return new Promise((resolve, reject) => {
     database.run(knownTxTable, (err) => {
-      })
-      console.log('created Known TX Table');
+    });
+    console.log("created Known TX Table");
 
-     }, () => {
-       resolve();
-     });
-   }
+  }, () => {
+    resolve();
+  });
+}
 
 
 function boardMessageTable() {
@@ -418,15 +420,15 @@ function boardMessageTable() {
                      r TEXT,
                      hash TEXT UNIQUE,
                      sent BOOLEAN
-                    )`
- return new Promise((resolve, reject) => {
-  database.run(boardTable, (err) => {
-    })
-    console.log('created Board Table');
-   }, () => {
-     resolve();
-   });
- }
+                    )`;
+  return new Promise((resolve, reject) => {
+    database.run(boardTable, (err) => {
+    });
+    console.log("created Board Table");
+  }, () => {
+    resolve();
+  });
+}
 
 function messagesTable() {
   const messageTable = `
@@ -436,20 +438,20 @@ function messagesTable() {
                    sent BOOLEAN,
                    timestamp TEXT,
                    UNIQUE (timestamp)
-               )`
- return new Promise((resolve, reject) => {
-  database.run(messageTable, (err) => {
-    })
-    console.log('created Table');
-   }, () => {
-     resolve();
-   });
- }
+               )`;
+  return new Promise((resolve, reject) => {
+    database.run(messageTable, (err) => {
+    });
+    console.log("created Table");
+  }, () => {
+    resolve();
+  });
+}
 
- function welcomeBoardMessage() {
-   let sent = false
-    const boardMessage =
-        `INSERT INTO boards  (
+function welcomeBoardMessage() {
+  let sent = false;
+  const boardMessage =
+    `INSERT INTO boards  (
             m,
             k,
             s,
@@ -461,401 +463,413 @@ function messagesTable() {
             sent
            )
         VALUES
-            (? ,?, ?, ?, ?, ?, ?, ?, ?)`
-    return new Promise((resolve, reject) => {
-     database.run(boardMessage,
-         [
-             'Welcome to Hugin',
-             'SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc',
-             'lol',
-             'Home',
-             '1650919475',
-             'Hugin Messenger',
-             '',
-             'b80a4dc4fa60bf26dd31161702a165e43295adc1895f7333ad9eeeb819e20936',
-             sent
-         ], (err) => {
-           console.log('Error creating msg', err);
-       })
-       console.log('created board msg');
-      }, () => {
-        resolve();
+            (? ,?, ?, ?, ?, ?, ?, ?, ?)`;
+  return new Promise((resolve, reject) => {
+    database.run(boardMessage,
+      [
+        "Welcome to Hugin",
+        "SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc",
+        "lol",
+        "Home",
+        "1650919475",
+        "Hugin Messenger",
+        "",
+        "b80a4dc4fa60bf26dd31161702a165e43295adc1895f7333ad9eeeb819e20936",
+        sent
+      ], (err) => {
+        console.log("Error creating msg", err);
       });
- }
+    console.log("created board msg");
+  }, () => {
+    resolve();
+  });
+}
 
 function welcomeMessage() {
-   const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp)
-                          VALUES (?, ?, ?, ?)`
-   return new Promise((resolve, reject) => {
+  const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp)
+                          VALUES (?, ?, ?, ?)`;
+  return new Promise((resolve, reject) => {
     database.run(huginMessage,
-        [
-            'Welcome to hugin',
-            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
-            false,
-            '1650919475320'
-        ], (err) => {
-          console.log('Error creating msg', err);
-      })
-      console.log('created welcome msg');
-     }, () => {
-       resolve();
-     });
+      [
+        "Welcome to hugin",
+        "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
+        false,
+        "1650919475320"
+      ], (err) => {
+        console.log("Error creating msg", err);
+      });
+    console.log("created welcome msg");
+  }, () => {
+    resolve();
+  });
 }
 
 function firstContact() {
-   const firstContact = `INSERT INTO contacts (address, key, name)
-                          VALUES (?, ?, ?)`
-   return new Promise((resolve, reject) => {
+  const firstContact = `INSERT INTO contacts (address, key, name)
+                          VALUES (?, ?, ?)`;
+  return new Promise((resolve, reject) => {
     database.run(firstContact,
-        [
-            'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
-            '133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f',
-            'Hugin'
-        ], (err) => {
-          console.log('Error creating contact msg', err);
-      })
-      console.log('created first contact msg');
-     }, () => {
-       resolve();
-     });
+      [
+        "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
+        "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f",
+        "Hugin"
+      ], (err) => {
+        console.log("Error creating contact msg", err);
+      });
+    console.log("created first contact msg");
+  }, () => {
+    resolve();
+  });
 }
 
 
-ipcMain.on('create-account', async (e, accountData) => {
-    //Create welcome message
-    welcomeMessage()
-    console.log('accdata', accountData);
-    let walletName = accountData.walletName
-    let myPassword = accountData.password
-    node = accountData.node
-    ports = accountData.port
-    daemon = new WB.Daemon(node, ports);
-    console.log('creating', walletName);
-    const js_wallet = await WB.WalletBackend.createWallet(daemon);
-    console.log(myPassword)
-    //Create Hugin welcome contact
-    firstContact()
-    //Create Boards welcome message
-    welcomeBoardMessage()
-    //Create misc DB template on first start
-    db.data = {walletNames:[],
-              node:{node:'', port:''},}
-    //Saving node
-    let mynode = {node: node, port: ports}
-    db.data.node = mynode
-    //Saving wallet name
-    db.data.walletNames.push(walletName)
-    await db.write()
-    console.log('creating dbs...');
-    await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', myPassword)
-    start_js_wallet(walletName, myPassword, mynode);
-  })
+ipcMain.on("create-account", async (e, accountData) => {
+  //Create welcome message
+  welcomeMessage();
+  console.log("accdata", accountData);
+  let walletName = accountData.walletName;
+  let myPassword = accountData.password;
+  node = accountData.node;
+  ports = accountData.port;
+  daemon = new WB.Daemon(node, ports);
+  console.log("creating", walletName);
+  const js_wallet = await WB.WalletBackend.createWallet(daemon);
+  console.log(myPassword);
+  //Create Hugin welcome contact
+  firstContact();
+  //Create Boards welcome message
+  welcomeBoardMessage();
+  //Create misc DB template on first start
+  db.data = {
+    walletNames: [],
+    node: { node: "", port: "" }
+  };
+  //Saving node
+  let mynode = { node: node, port: ports };
+  db.data.node = mynode;
+  //Saving wallet name
+  db.data.walletNames.push(walletName);
+  await db.write();
+  console.log("creating dbs...");
+  await js_wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", myPassword);
+  start_js_wallet(walletName, myPassword, mynode);
+});
 
-async function loadKeys(start=false) {
+async function loadKeys(start = false) {
 
 //Load known public keys from db and push them to known_keys
-let contacts = await getContacts()
-if  (start) {
-  contacts.forEach(function(keys) {
-    known_keys.push(keys.key)
-  })
+  let contacts = await getContacts();
+  if (start) {
+    contacts.forEach(function(keys) {
+      known_keys.push(keys.key);
+    });
 
-  console.log('known keys', known_keys);
-}
+    console.log("known keys", known_keys);
+  }
 
-return contacts
+  return contacts;
 }
 
 async function loadKnownTxs() {
 
 //Load known txs from db and then load them in to known_pool_txs
-const knownTransactions = [];
-return new Promise((resolve, reject) => {
-  const getAllknownTxs = `SELECT * FROM knownTxs`
-  database.each(getAllknownTxs, (err, txs) => {
-    if (err) {
-      console.log('Error', err);
-    }
-    knownTransactions.push(txs);
-  }, () => {
-    resolve(knownTransactions);
+  const knownTransactions = [];
+  return new Promise((resolve, reject) => {
+    const getAllknownTxs = `SELECT * FROM knownTxs`;
+    database.each(getAllknownTxs, (err, txs) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      knownTransactions.push(txs);
+    }, () => {
+      resolve(knownTransactions);
+    });
   });
-})
 }
 
 async function logIntoWallet(walletName, password) {
 
-    const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + '/' + walletName + '.wallet', password);
-    if (error) {
-        console.log('Failed to open wallet: ' + error.toString());
-        mainWindow.webContents.send('login-failed')
-        return 'Wrong password'
-        }
+  const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + "/" + walletName + ".wallet", password);
+  if (error) {
+    console.log("Failed to open wallet: " + error.toString());
+    mainWindow.webContents.send("login-failed");
+    return "Wrong password";
+  }
 
-  return js_wallet
+  return js_wallet;
 }
 
 async function start_js_wallet(walletName, password, mynode) {
 
-    js_wallet = await logIntoWallet(walletName, password)
+  js_wallet = await logIntoWallet(walletName, password);
 
-    if (js_wallet === 'Wrong password') {
-      console.log('A', js_wallet);
-      return;
-    }
-    /* Start wallet sync process */
-    await js_wallet.start();
-    //Load known pool txs from db.
-    let checkedTxs
-    let knownTxsIds = await loadKnownTxs()
+  if (js_wallet === "Wrong password") {
+    console.log("A", js_wallet);
+    return;
+  }
+  /* Start wallet sync process */
+  await js_wallet.start();
+  //Load known pool txs from db.
+  let checkedTxs;
+  let knownTxsIds = await loadKnownTxs();
 
-    if (knownTxsIds.length > 0) {
+  if (knownTxsIds.length > 0) {
 
-       checkedTxs = knownTxsIds.map(function(knownTX) {
-        return knownTX.hash
-      })
-
-      } else {
-      //Push one test hash to the array if this is a new account, this should be empty?
-      checkedTxs = []
-    }
-
-    console.log('pushed checkted', checkedTxs);
-     //Load known public keys
-    let myContacts = await loadKeys(start=true)
-    my_boards = await getMyBoardList()
-
-    mainWindow.webContents.send('sync', false)
-
-    js_wallet.enableAutoOptimization(false);
-
-    //Incoming transaction event
-    js_wallet.on('incomingtx', (transaction) => {
-      optimizeMessages()
-        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
-
-        console.log('transaction', transaction);
-        mainWindow.webContents.send('new-message', transaction.toJSON());
-
+    checkedTxs = knownTxsIds.map(function(knownTX) {
+      return knownTX.hash;
     });
 
-    //Get primary address and fuse it with our message key to create our hugin address
-    let myAddress
-    let msgKey
-      myAddress = await js_wallet.getPrimaryAddress()
+  } else {
+    //Push one test hash to the array if this is a new account, this should be empty?
+    checkedTxs = [];
+  }
 
-      console.log('XKR Address',myAddress)
-      msgKey = getMsgKey()
-      console.log('Hugin Address',myAddress + msgKey)
+  console.log("pushed checkted", checkedTxs);
+  //Load known public keys
+  let myContacts = await loadKeys(start = true);
+  my_boards = await getMyBoardList();
 
-      mainWindow.webContents.send('addr', myAddress + msgKey)
+  const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus();
+  mainWindow.webContents.send("sync", "Not syncing");
+  mainWindow.webContents.send("node-sync-data", { walletBlockCount, localDaemonBlockCount, networkBlockCount });
+
+  js_wallet.enableAutoOptimization(false);
+
+  //Incoming transaction event
+  js_wallet.on("incomingtx", (transaction) => {
+    optimizeMessages();
+    console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
+
+    console.log("transaction", transaction);
+    mainWindow.webContents.send("new-message", transaction.toJSON());
+
+  });
+
+  //Get primary address and fuse it with our message key to create our hugin address
+  let myAddress;
+  let msgKey;
+  myAddress = await js_wallet.getPrimaryAddress();
+
+  console.log("XKR Address", myAddress);
+  msgKey = getMsgKey();
+  console.log("Hugin Address", myAddress + msgKey);
+
+  mainWindow.webContents.send("addr", myAddress + msgKey);
 
 
-    //Wallet heightchange event with funtion that saves wallet only if we are synced
-    js_wallet.on('heightchange', async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
-      let synced = networkBlockCount - walletBlockCount <= 2
-      if (synced) {
+  //Wallet heightchange event with funtion that saves wallet only if we are synced
+  js_wallet.on("heightchange", async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
+    let synced = networkBlockCount - walletBlockCount <= 2;
+    if (synced) {
       //Send synced event to frontend
-      mainWindow.webContents.send('sync', true)
+      mainWindow.webContents.send("sync", "Synced");
 
       // Save js wallet to file
-      console.log('///////******** SAVING WALLET *****\\\\\\\\');
-      await js_wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
+      console.log("///////******** SAVING WALLET *****\\\\\\\\");
+      await js_wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", password);
     } else if (!synced) {
-      return
+      return;
+    }
+  });
+
+  mainWindow.webContents.send("wallet-started", myContacts, mynode);
+  console.log("Started wallet");
+  await sleep(2000);
+  console.log("Loading Sync");
+  //Load knownTxsIds to backgroundSyncMessages on startup
+  backgroundSyncMessages(checkedTxs);
+  while (true) {
+
+    try {
+      //Start syncing
+      await sleep(1000 * 10);
+
+      backgroundSyncMessages();
+
+      const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus();
+      mainWindow.webContents.send("node-sync-data", { walletBlockCount, localDaemonBlockCount, networkBlockCount });
+
+      if ((localDaemonBlockCount - walletBlockCount) < 2) {
+        // Diff between wallet height and node height is 1 or 0, we are synced
+        console.log("**********SYNCED**********");
+        console.log("My Wallet ", walletBlockCount);
+        console.log("The Network", networkBlockCount);
+        mainWindow.webContents.send("sync", "Synced");
+      } else {
+        //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
+        if (walletBlockCount === 0) {
+          await js_wallet.reset(networkBlockCount - 100);
+        }
+        console.log("*.[~~~].SYNCING BLOCKS.[~~~].*");
+        console.log("My Wallet ", walletBlockCount);
+        console.log("The Network", networkBlockCount);
+        mainWindow.webContents.send("sync", "Syncing");
       }
-    })
 
-    mainWindow.webContents.send('wallet-started', myContacts, mynode)
-    console.log('Started wallet');
-    await sleep(2000)
-    console.log('Loading Sync');
-    //Load knownTxsIds to backgroundSyncMessages on startup
-    backgroundSyncMessages(checkedTxs)
-    while (true) {
+    } catch (err) {
+      console.log(err);
+    }
+  }
+}
 
+
+async function backgroundSyncMessages(checkedTxs = false) {
+
+  if (checkedTxs) {
+    console.log("First start, push knownTxs db to known pool txs");
+    known_pool_txs = checkedTxs;
+  }
+
+  console.log("Background syncing...");
+  mainWindow.webContents.send("sync", "Syncing");
+  let message_was_unknown;
+  try {
+    const resp = await fetch("http://" + "blocksum.org:11898" + "/get_pool_changes_lite", {
+      method: "POST",
+      body: JSON.stringify({ knownTxsIds: known_pool_txs })
+    });
+
+    let json = await resp.json();
+    json = JSON.stringify(json).replaceAll(".txPrefix", "").replaceAll("transactionPrefixInfo.txHash", "transactionPrefixInfotxHash");
+
+    json = JSON.parse(json);
+
+    let transactions = json.addedTxs;
+    let transaction;
+    //Try clearing known pool txs from checked
+    known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n));
+    if (transactions.length === 0) {
+      console.log("Empty array...");
+      console.log("No incoming messages...");
+      return;
+    }
+
+    for (transaction in transactions) {
       try {
-        //Start syncing
-        await sleep(1000 * 10);
-        backgroundSyncMessages()
-        const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
-            await js_wallet.getSyncStatus();
-        mainWindow.webContents.send('node-sync-data', {walletBlockCount, localDaemonBlockCount, networkBlockCount})
-        if ((localDaemonBlockCount - walletBlockCount) < 2) {
-            // Diff between wallet height and node height is 1 or 0, we are synced
-            console.log('**********SYNCED**********');
-            console.log('My Wallet ', walletBlockCount);
-            console.log('The Network', networkBlockCount);
+        let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
+        let thisHash = transactions[transaction].transactionPrefixInfotxHash;
+
+        if (known_pool_txs.indexOf(thisHash) === -1) {
+          known_pool_txs.push(thisHash);
+          message_was_unknown = true;
+
         } else {
-            //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
-            if (walletBlockCount === 0) {
-              await js_wallet.reset(networkBlockCount - 100)
+          message_was_unknown = false;
+          console.log("This transaction is already known", thisHash);
+          continue;
+        }
+        let message;
+        if (thisExtra !== undefined && thisExtra.length > 200) {
+          message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
+          if (!message || message === undefined) {
+            console.log("Caught undefined null message, continue");
+            continue;
+          }
+
+          message.sent = false;
+          console.log("message type", message.type);
+          if (message.brd) {
+            message.type = "board";
+            if (my_boards.indexOf(message.brd) == -1) {
+              console.log("Not my board");
+              continue;
             }
-            console.log('*.[~~~].SYNCING BLOCKS.[~~~].*');
-            console.log('My Wallet ', walletBlockCount);
-            console.log('The Network', networkBlockCount);
+            saveBoardMsg(message, thisHash);
+          } else if (message.type === "sealedbox" || "box") {
+            console.log("Saving Message");
+            // await saveMsg(message);
+            saveMessageSQL(message);
+
+          }
+
+          console.log("Transaction checked");
+          saveHash(thisHash);
         }
 
       } catch (err) {
-      console.log(err);
-      }
-    }
-}
-
-
-async function backgroundSyncMessages(checkedTxs=false) {
-
-    if (checkedTxs) {
-    console.log('First start, push knownTxs db to known pool txs');
-    known_pool_txs = checkedTxs
-    }
-
-    console.log('Background syncing...');
-    let message_was_unknown;
-    try {
-        const resp = await fetch('http://' + 'blocksum.org:11898' + '/get_pool_changes_lite', {
-            method: 'POST',
-            body: JSON.stringify({knownTxsIds: known_pool_txs})
-        })
-
-        let json = await resp.json();
-        json = JSON.stringify(json).replaceAll('.txPrefix', '').replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash');
-
-        json = JSON.parse(json);
-
-        let transactions = json.addedTxs;
-        let transaction;
-        //Try clearing known pool txs from checked
-        known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n))
-        if (transactions.length === 0) {
-            console.log('Empty array...')
-            console.log('No incoming messages...');
-            return;
-        }
-
-        for (transaction in transactions) {
-            try {
-                let thisExtra = transactions[transaction].transactionPrefixInfo.extra;
-                let thisHash = transactions[transaction].transactionPrefixInfotxHash;
-
-                if (known_pool_txs.indexOf(thisHash) === -1) {
-                    known_pool_txs.push(thisHash);
-                    message_was_unknown = true;
-
-                } else {
-                    message_was_unknown = false;
-                    console.log("This transaction is already known", thisHash);
-                    continue;
-                }
-                  let message
-                  if (thisExtra !== undefined && thisExtra.length > 200) {
-                      message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
-                      if (!message || message === undefined) {
-                        console.log('Caught undefined null message, continue');
-                        continue;
-                      }
-
-                      message.sent = false
-                      console.log('message type', message.type);
-                      if (message.brd) {
-                          message.type = "board"
-                          if (my_boards.indexOf(message.brd) == -1) {
-                            console.log('Not my board');
-                            continue
-                          }
-                          saveBoardMsg(message, thisHash)
-                      } else if (message.type === 'sealedbox' || 'box') {
-                        console.log('Saving Message');
-                        // await saveMsg(message);
-                        saveMessageSQL(message)
-
-                      }
-
-                    console.log('Transaction checked');
-                    saveHash(thisHash)
-                  }
-
-                } catch (err) {
-                  console.log(err)
-                }
-
-            }
-
-
-        } catch (err) {
         console.log(err);
-        console.log('Sync error')
-        }
+      }
+
+    }
+
+
+  } catch (err) {
+    console.log(err);
+    console.log("Sync error");
+  }
 }
+
 //Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
-ipcMain.on('addBoard', async (e, board) => {
-  my_boards.push(board)
-})
+ipcMain.on("addBoard", async (e, board) => {
+  my_boards.push(board);
+});
 
 //Listens for event from frontend and saves contact and nickname.
-ipcMain.on('addChat', async (e, hugin_address, nickname, first=false) => {
-  console.log('addchat first',first)
-  saveContact(hugin_address, nickname, first)
-})
+ipcMain.on("addChat", async (e, hugin_address, nickname, first = false) => {
+  console.log("addchat first", first);
+  saveContact(hugin_address, nickname, first);
+});
+
 //Saves contact and nickname to db.
-async function saveContact(hugin_address, nickname=false, first=false) {
-  console.log('huginadress', hugin_address);
-  console.log(first)
-  let name
+async function saveContact(hugin_address, nickname = false, first = false) {
+  console.log("huginadress", hugin_address);
+  console.log(first);
+  let name;
   if (!nickname) {
-    console.log('no nickname')
-    name = 'Anon'
+    console.log("no nickname");
+    name = "Anon";
   } else {
-    name = nickname
+    name = nickname;
   }
-  console.log('known_keys', known_keys);
-  let addr = hugin_address.substring(0,99)
-  let key = hugin_address.substring(99, 163)
+  console.log("known_keys", known_keys);
+  let addr = hugin_address.substring(0, 99);
+  let key = hugin_address.substring(99, 163);
 
   if (known_keys.indexOf(key) == -1) {
 
-      known_keys.push(key)
+    known_keys.push(key);
   }
-  console.log('Pushing this to known keys ', known_keys)
-  mainWindow.webContents.send('saved-addr', hugin_address)
+  console.log("Pushing this to known keys ", known_keys);
+  mainWindow.webContents.send("saved-addr", hugin_address);
   database.run(
-      `REPLACE INTO contacts
+    `REPLACE INTO contacts
          (address, key, name)
       VALUES
           (?, ?, ?)`,
-      [
-          addr,
-          key,
-          name
-      ]
+    [
+      addr,
+      key,
+      name
+    ]
   );
 
   if (first) {
-    saveMessageSQL({msg: 'New friend added!', k: key, from:addr, chat: addr, sent: true, t: Date.now()})
-    known_keys.pop(key)
-    console.log('known_keys poped', known_keys);
+    saveMessageSQL({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: Date.now() });
+    known_keys.pop(key);
+    console.log("known_keys poped", known_keys);
   }
 
 }
+
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
 async function saveHash(txHash) {
 
   if (txHash == undefined) {
-    console.log('caught undefined hash');
+    console.log("caught undefined hash");
     return;
   }
 
-           database.run(
-               `REPLACE INTO knownTxs (
+  database.run(
+    `REPLACE INTO knownTxs (
                  hash
                )
                VALUES
                    ( ? )`,
-               [
-                   txHash
-               ]
-           );
-  console.log('saved hash');
+    [
+      txHash
+    ]
+  );
+  console.log("saved hash");
 }
 
 //Saves board message.
@@ -865,18 +879,28 @@ async function saveBoardMsg(msg, hash) {
   let text = sanitizeHtml(msg.m);
   let addr = sanitizeHtml(msg.k);
   let reply = sanitizeHtml(msg.r);
-  let sig = sanitizeHtml(msg.s)
-  let timestamp = sanitizeHtml(msg.t)
-  let nick = sanitizeHtml(msg.n)
-  let txHash = hash
-  if (nick === '') {
-    nick = 'Anonymous'
+  let sig = sanitizeHtml(msg.s);
+  let timestamp = sanitizeHtml(msg.t);
+  let nick = sanitizeHtml(msg.n);
+  let txHash = hash;
+  if (nick === "") {
+    nick = "Anonymous";
   }
 
-   let message = {m: text, k: addr, s: sig, brd: to_board, t: timestamp, n: nick, r: reply, hash: txHash, sent: msg.sent}
+  let message = {
+    m: text,
+    k: addr,
+    s: sig,
+    brd: to_board,
+    t: timestamp,
+    n: nick,
+    r: reply,
+    hash: txHash,
+    sent: msg.sent
+  };
 
-       database.run(
-           `REPLACE INTO boards  (
+  database.run(
+    `REPLACE INTO boards  (
                m,
                k,
                s,
@@ -889,153 +913,153 @@ async function saveBoardMsg(msg, hash) {
               )
            VALUES
                (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
-           [
-               text,
-               addr,
-               sig,
-               to_board,
-               timestamp,
-               nick,
-               reply,
-               txHash,
-               msg.sent
-           ]
-       );
+    [
+      text,
+      addr,
+      sig,
+      to_board,
+      timestamp,
+      nick,
+      reply,
+      txHash,
+      msg.sent
+    ]
+  );
 
-       if (msg.sent) return
-       //Send new board message to frontend.
-       mainWindow.webContents.send('boardMsg', message)
+  if (msg.sent) return;
+  //Send new board message to frontend.
+  mainWindow.webContents.send("boardMsg", message);
 }
 
 //Get all messages from db
 async function getMessages() {
-   const rows = [];
-   return new Promise((resolve, reject) => {
-     const getAllMessages = `SELECT * FROM messages`
-     database.each(getAllMessages, (err, row) => {
-       if (err) {
-         console.log('Error', err);
-       }
-       rows.push(row);
-     }, () => {
-       resolve(rows);
-     });
-   })
+  const rows = [];
+  return new Promise((resolve, reject) => {
+    const getAllMessages = `SELECT * FROM messages`;
+    database.each(getAllMessages, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      rows.push(row);
+    }, () => {
+      resolve(rows);
+    });
+  });
 
 }
 
 //Get all boardmessages from db.
 async function getBoardMsgs() {
-   const allBoards = [];
-   return new Promise((resolve, reject) => {
-     const getAllBrds = `SELECT * FROM boards`
-     database.each(getAllBrds, (err, row) => {
-         console.log(row);
-       if (err) {
-         console.log('Error', err);
-       }
-       allBoards.push(row);
-     }, () => {
-       resolve(allBoards);
-     });
-   })
+  const allBoards = [];
+  return new Promise((resolve, reject) => {
+    const getAllBrds = `SELECT * FROM boards`;
+    database.each(getAllBrds, (err, row) => {
+      console.log(row);
+      if (err) {
+        console.log("Error", err);
+      }
+      allBoards.push(row);
+    }, () => {
+      resolve(allBoards);
+    });
+  });
 
 }
 
 //Get one message from every unique board sorted by latest timestmap.
 async function getMyBoardList() {
 
-   const myBoards = [];
-      return new Promise((resolve, reject) => {
-        const getMyBoards =   `
+  const myBoards = [];
+  return new Promise((resolve, reject) => {
+    const getMyBoards = `
           SELECT *
           FROM boards D
           WHERE t = (SELECT MAX(t) FROM boards WHERE brd = D.brd)
           ORDER BY
               t
           ASC
-          `
-        database.each(getMyBoards, (err, row) => {
-          if (err) {
-            console.log('Error', err);
-          }
-          myBoards.push(row.brd);
-        }, () => {
-          resolve(myBoards);
-        });
-      })
+          `;
+    database.each(getMyBoards, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      myBoards.push(row.brd);
+    }, () => {
+      resolve(myBoards);
+    });
+  });
 
- }
+}
 
- //Get one message from every unique user sorted by latest timestmap.
+//Get one message from every unique user sorted by latest timestmap.
 async function getConversations() {
-  let contacts = await getContacts()
-  let name
-  let newRow
-  let key
-   const myConversations = [];
-      return new Promise((resolve, reject) => {
-        const getMyConversations =   `
+  let contacts = await getContacts();
+  let name;
+  let newRow;
+  let key;
+  const myConversations = [];
+  return new Promise((resolve, reject) => {
+    const getMyConversations = `
           SELECT *
           FROM messages D
           WHERE timestamp = (SELECT MAX(timestamp) FROM messages WHERE chat = D.chat)
           ORDER BY
               timestamp
           ASC
-          `
-        database.each(getMyConversations, (err, row) => {
+          `;
+    database.each(getMyConversations, (err, row) => {
 
-          if (err) {
-            console.log('Error', err);
-          }
-          let filterContacts = contacts.filter(function(chat) {
-            if (chat.address == row.chat) {
-              name = chat.name
-              key = chat.key
-            }
-          })
-          newRow = {name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key}
-          myConversations.push(newRow);
-        }, () => {
-          resolve(myConversations);
-        });
-      })
+      if (err) {
+        console.log("Error", err);
+      }
+      let filterContacts = contacts.filter(function(chat) {
+        if (chat.address == row.chat) {
+          name = chat.name;
+          key = chat.key;
+        }
+      });
+      newRow = { name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key };
+      myConversations.push(newRow);
+    }, () => {
+      resolve(myConversations);
+    });
+  });
 
-     }
+}
 
- //Get a chosen conversation from the reciepients xkr address.
- async function getConversation(chat=false) {
+//Get a chosen conversation from the reciepients xkr address.
+async function getConversation(chat = false) {
 
-      const thisConversation = [];
-      return new Promise((resolve, reject) => {
-        const getChat = `SELECT
+  const thisConversation = [];
+  return new Promise((resolve, reject) => {
+    const getChat = `SELECT
             msg,
             chat,
             sent,
             timestamp
         FROM
             messages
-        ${chat ? 'WHERE chat = "' + chat + '"' : ''}
+        ${chat ? "WHERE chat = \"" + chat + "\"" : ""}
         ORDER BY
             timestamp
-        ASC`
-        database.each(getChat, (err, row) => {
-            console.log(row);
-          if (err) {
-            console.log('Error', err);
-          }
-          thisConversation.push(row);
-        }, () => {
-          resolve(thisConversation);
-        });
-      })
- }
+        ASC`;
+    database.each(getChat, (err, row) => {
+      console.log(row);
+      if (err) {
+        console.log("Error", err);
+      }
+      thisConversation.push(row);
+    }, () => {
+      resolve(thisConversation);
+    });
+  });
+}
 
 //Get all messages from a specific board from db
-async function printBoard(board=false) {
-      const boardArray = [];
-      return new Promise((resolve, reject) => {
-        const getBoard = `SELECT
+async function printBoard(board = false) {
+  const boardArray = [];
+  return new Promise((resolve, reject) => {
+    const getBoard = `SELECT
                m,
                k,
                s,
@@ -1046,27 +1070,28 @@ async function printBoard(board=false) {
                hash,
                sent
         FROM boards
-        ${board ? 'WHERE brd = "' + board + '"' : ''}
+        ${board ? "WHERE brd = \"" + board + "\"" : ""}
         ORDER BY
             t
-        ASC`
-        database.each(getBoard, (err, row) => {
-          if (err) {
-            console.log('Error', err);
-          }
-          boardArray.push(row);
-        }, () => {
-          boardArray.reverse()
-          resolve(boardArray);
-        });
-      })
- }
+        ASC`;
+    database.each(getBoard, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      boardArray.push(row);
+    }, () => {
+      boardArray.reverse();
+      resolve(boardArray);
+    });
+  });
+}
+
 //Get original messsage from a chosen reply hash
-async function getReply(reply=false) {
-  console.log('Get reply', reply);
-    let thisReply
-    return new Promise((resolve, reject) => {
-      let sql = `SELECT
+async function getReply(reply = false) {
+  console.log("Get reply", reply);
+  let thisReply;
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT
              m,
              k,
              s,
@@ -1077,26 +1102,27 @@ async function getReply(reply=false) {
              hash,
              sent
       FROM boards
-      ${reply ? 'WHERE hash = "' + reply + '"' : ''}
+      ${reply ? "WHERE hash = \"" + reply + "\"" : ""}
       ORDER BY
           t
-      ASC`
-      database.each(sql, (err, row) => {
+      ASC`;
+    database.each(sql, (err, row) => {
 
-          thisReply = row
-        if (err) {
-          console.log('Error', err);
-        }
-      }, () => {
-        resolve(thisReply);
-      });
-    })
+      thisReply = row;
+      if (err) {
+        console.log("Error", err);
+      }
+    }, () => {
+      resolve(thisReply);
+    });
+  });
 }
+
 //Get all replies to a specific post
- async function getReplies(hash=false) {
-      const replies = [];
-      return new Promise((resolve, reject) => {
-        let sql = `SELECT
+async function getReplies(hash = false) {
+  const replies = [];
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT
                m,
                k,
                s,
@@ -1107,639 +1133,635 @@ async function getReply(reply=false) {
                hash,
                sent
         FROM boards
-        ${hash ? 'WHERE r = "' + hash + '"' : ''}
+        ${hash ? "WHERE r = \"" + hash + "\"" : ""}
         ORDER BY
             t
-        ASC`
-        database.each(sql, (err, row) => {
-            console.log(row);
-          if (err) {
-            console.log('Error', err);
-          }
-          replies.push(row);
-        }, () => {
-          resolve(replies);
-        });
-      })
- }
+        ASC`;
+    database.each(sql, (err, row) => {
+      console.log(row);
+      if (err) {
+        console.log("Error", err);
+      }
+      replies.push(row);
+    }, () => {
+      resolve(replies);
+    });
+  });
+}
 
 //Saves private message
 async function saveMessageSQL(msg) {
-  let torrent
-  let text
-  let sent = msg.sent
+  let torrent;
+  let text;
+  let sent = msg.sent;
   let addr = sanitizeHtml(msg.from);
-  let timestamp = sanitizeHtml(msg.t)
-  let key = sanitizeHtml(msg.k)
-  console.log('msg', msg)
-    //Checking if private msg is a call
-    text = await parseCall(msg.msg, addr, sent)
+  let timestamp = sanitizeHtml(msg.t);
+  let key = sanitizeHtml(msg.k);
+  console.log("msg", msg);
+  //Checking if private msg is a call
+  text = await parseCall(msg.msg, addr, sent);
 
   let message = sanitizeHtml(text);
 
   //If sent set chat to chat instead of from
   if (msg.chat) {
-    addr = msg.chat
+    addr = msg.chat;
   }
 
 
   //New message from unknown contact
-  if (msg.type === 'sealedbox' && !sent) {
+  if (msg.type === "sealedbox" && !sent) {
 
-   console.log('Saving key', key);
-   let hugin = addr + key
-   await saveContact(hugin)
+    console.log("Saving key", key);
+    let hugin = addr + key;
+    await saveContact(hugin);
 
   }
 
   // Call offer message
-  switch (message.substring(0,1)) {
-      case "Δ":
-      // Fall through
-      case "Λ":
+  switch (message.substring(0, 1)) {
+    case "Δ":
+    // Fall through
+    case "Λ":
 
-      message = `${message.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
+      message = `${message.substring(0, 1) == "Δ" ? "Video" : "Audio"} call started`;
       break;
-      default:
-      message = message
+    default:
+      message = message;
 
-    }
-    let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(text);
-    console.log('magnet', magnetLinks)
-    if (magnetLinks) {
-      message = 'File uploaded'
-      torrent = magnetLinks[0]+'&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com'
-    }
+  }
+  let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(text);
+  console.log("magnet", magnetLinks);
+  if (magnetLinks) {
+    message = "File uploaded";
+    torrent = magnetLinks[0] + "&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com";
+  }
 
- console.log('Saving message', message, addr, sent, timestamp);
- //Save to DB
-     database.run(
-         `REPLACE INTO messages
+  console.log("Saving message", message, addr, sent, timestamp);
+  //Save to DB
+  database.run(
+    `REPLACE INTO messages
             (msg, chat, sent, timestamp)
          VALUES
              (?, ?, ?, ?)`,
-         [
-             message,
-             addr,
-             sent,
-             timestamp
-         ]
-     );
+    [
+      message,
+      addr,
+      sent,
+      timestamp
+    ]
+  );
 
-     //New message object
-     if (magnetLinks && !sent) {
-      message = torrent
-     }
-     let newMsg = {msg: message, chat: addr, sent: sent, timestamp: timestamp, magnet: magnetLinks}
-     if (sent) {
-       //If sent, update conversation list
-       mainWindow.webContents.send('sent', newMsg)
-       return
-     }
-     //Send message to front end
-     console.log('sending newmessage');
-     mainWindow.webContents.send('newMsg', newMsg)
- }
+  //New message object
+  if (magnetLinks && !sent) {
+    message = torrent;
+  }
+  let newMsg = { msg: message, chat: addr, sent: sent, timestamp: timestamp, magnet: magnetLinks };
+  if (sent) {
+    //If sent, update conversation list
+    mainWindow.webContents.send("sent", newMsg);
+    return;
+  }
+  //Send message to front end
+  console.log("sending newmessage");
+  mainWindow.webContents.send("newMsg", newMsg);
+}
 
 
- //Get all contacts from db
- async function getContacts() {
+//Get all contacts from db
+async function getContacts() {
 
-    const myContactList = [];
-    return new Promise((resolve, reject) => {
-      const getMyContacts = `SELECT * FROM contacts`
-      database.each(getMyContacts, (err, row) => {
-        if (err) {
-          console.log('Error', err);
-        }
-        myContactList.push(row);
-      }, () => {
-        resolve(myContactList);
-      });
-    })
+  const myContactList = [];
+  return new Promise((resolve, reject) => {
+    const getMyContacts = `SELECT * FROM contacts`;
+    database.each(getMyContacts, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      myContactList.push(row);
+    }, () => {
+      resolve(myContactList);
+    });
+  });
 
- }
+}
 
- ipcMain.handle('getPrivateKeys', async () => {
- const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys();
- return [spendKey, viewKey]
- })
+ipcMain.handle("getPrivateKeys", async () => {
+  const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys();
+  return [spendKey, viewKey];
+});
 
- ipcMain.handle('getMnemonic', async () => {
+ipcMain.handle("getMnemonic", async () => {
   return await js_wallet.getMnemonicSeed();
-  })
-
-
-//SWITCH NODE
-ipcMain.on('switchNode', async (e, node) => {
-    console.log(`Switching node to ${node}`)
-    const daemon = new WB.Daemon(node.split(':')[0], parseInt(node.split(':')[1]));
-    await js_wallet.swapNode(daemon);
-    db.write()
 });
 
 
-ipcMain.on('sendMsg', (e, msg, receiver, off_chain) => {
-        sendMessage(msg, receiver, off_chain);
-        console.log(msg, receiver, off_chain)
-    }
-)
+//SWITCH NODE
+ipcMain.on("switchNode", async (e, node) => {
+  console.log(`Switching node to ${node}`);
+  const daemon = new WB.Daemon(node.split(":")[0], parseInt(node.split(":")[1]));
+  await js_wallet.swapNode(daemon);
+  db.write();
+});
 
-ipcMain.on('sendBoardMsg', (e, msg) => {
-        sendBoardMessage(msg);
-    }
-)
 
-ipcMain.on('answerCall', (e, msg, contact, key) => {
-  console.log('answr', msg, contact);
-    mainWindow.webContents.send('answer-call', msg, contact, key)
-    }
-)
+ipcMain.on("sendMsg", (e, msg, receiver, off_chain) => {
+    sendMessage(msg, receiver, off_chain);
+    console.log(msg, receiver, off_chain);
+  }
+);
 
-ipcMain.on('endCall', async (e, peer, stream, contact) => {
-  mainWindow.webContents.send('endCall', peer, stream, contact)
-})
+ipcMain.on("sendBoardMsg", (e, msg) => {
+    sendBoardMessage(msg);
+  }
+);
+
+ipcMain.on("answerCall", (e, msg, contact, key) => {
+    console.log("answr", msg, contact);
+    mainWindow.webContents.send("answer-call", msg, contact, key);
+  }
+);
+
+ipcMain.on("endCall", async (e, peer, stream, contact) => {
+  mainWindow.webContents.send("endCall", peer, stream, contact);
+});
 
 
 async function sendBoardMessage(message) {
-  console.log('sending board', message);
-  let reply = message.r
-  let to_board = message.brd
-  let my_address = message.k
-  let nickname = message.n
-  let msg = message.m
+  console.log("sending board", message);
+  let reply = message.r;
+  let to_board = message.brd;
+  let my_address = message.k;
+  let nickname = message.n;
+  let msg = message.m;
   try {
 
-  let  timestamp = parseInt(Date.now()/1000);
-  let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
-  let xkr_private_key = privateSpendKey;
-  let signature = await xkrUtils.signMessage(msg, xkr_private_key);
+    let timestamp = parseInt(Date.now() / 1000);
+    let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+    let xkr_private_key = privateSpendKey;
+    let signature = await xkrUtils.signMessage(msg, xkr_private_key);
 
-  let payload_json = {
+    let payload_json = {
       "m": msg,
       "k": my_address,
       "s": signature,
       "brd": to_board,
       "t": timestamp,
       "n": nickname
-  };
+    };
 
-  if (reply) {
-    payload_json.r = reply
-  }
- 
-  payload_hex = toHex(JSON.stringify(payload_json))
+    if (reply) {
+      payload_json.r = reply;
+    }
 
-  let result = await js_wallet.sendTransactionAdvanced(
+    payload_hex = toHex(JSON.stringify(payload_json));
+
+    let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
-      {fixedFee: 8500, isFixedFee: true}, // fee
+      { fixedFee: 8500, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
       true, // relayToNetwork
       false, // sneedAll
-      Buffer.from(payload_hex, 'hex')
-  );
-
-  if (result.success) {
-      console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-      known_pool_txs.push(result.transactionHash)
-      const sentMsg = payload_json
-      sentMsg.sent = true
-      sentMsg.type = "board"
-      saveBoardMsg(sentMsg, result.transactionHash)
-  } else {
-      let error = {
-        m: 'Failed to send',
-        n: 'Error',
-        h: Date.now()
-      }
-      mainWindow.webContents.send('error_msg', error)
-      console.log(`Failed to send transaction: ${result.error.toString()}`);
-  }
-
-  } catch(err) {
-mainWindow.webContents.send('error_msg')
-console.log('Error', err);
-}
-optimizeMessages()
-
-}
-
-async function sendMessage(message, receiver, off_chain=false) {
-
-    let has_history
-    console.log('address', receiver.length);
-    if (receiver.length !== 163) {
-      return
-    }
-    let address = receiver.substring(0,99);
-    let messageKey =  receiver.substring(99,163);
-        //receiver.substring(99,163);
-    if (known_keys.indexOf(messageKey) > -1) {
-
-      console.log('I know this contact?');
-      has_history = true;
-
-    } else {
-      known_keys.push(messageKey)
-      has_history = false
-
-    }
-
-    if (message.length == 0) {
-        return;
-    }
-
-
-    let my_address = await js_wallet.getPrimaryAddress();
-
-    let my_addresses = await js_wallet.getAddresses();
-
-    try {
-
-        let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance();
-        //console.log('bal', munlockedBalance, mlockedBalance);
-
-        if (munlockedBalance < 11 && mlockedBalance > 0) {
-
-            log
-            return;
-
-        }
-    } catch (err) {
-        return;
-    }
-
-    let timestamp = Date.now();
-
-
-    // History has been asserted, continue sending message
-
-    let box;
-
-    if (!has_history) {
-        //console.log('No history found..');
-        // payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp};
-        const addr = await Address.fromAddress(my_address);
-        const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
-        let xkr_private_key = privateSpendKey;
-        let signature = await xkrUtils.signMessage(message, xkr_private_key);
-        let payload_json = {
-            "from": my_address,
-            "k": Buffer.from(getKeyPair().publicKey).toString('hex'),
-            "msg": message,
-            "s": signature
-        };
-        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-        box = new naclSealed.sealedbox(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(messageKey));
-    } else {
-        //console.log('Has history, not using sealedbox');
-        // Convert message data to json
-        let payload_json = {"from": my_address, "msg": message};
-
-        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-
-
-        box = nacl.box(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(messageKey), getKeyPair().secretKey);
-
-    }
-
-    let payload_box = {"box": Buffer.from(box).toString('hex'), "t": timestamp};
-
-    // let payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp, "key":Buffer.from(getKeyPair().publicKey).toString('hex')};
-    // Convert json to hex
-    let payload_hex = toHex(JSON.stringify(payload_box));
-
-    optimizeMessages()
-
-    if (!off_chain) {
-
-    let result = await js_wallet.sendTransactionAdvanced(
-        [[address, 1]], // destinations,
-        3, // mixin
-        {fixedFee: 8500, isFixedFee: true}, // fee
-        undefined, //paymentID
-        undefined, // subWalletsToTakeFrom
-        undefined, // changeAddress
-        true, // relayToNetwork
-        false, // sneedAll
-        Buffer.from(payload_hex, 'hex')
+      Buffer.from(payload_hex, "hex")
     );
 
-      let sentMsg = {msg: message, k: messageKey, sent: true, t: timestamp, chat: address}
-      if (result.success) {
-          known_pool_txs.push(result.transactionHash)
-          console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-          saveMessageSQL(sentMsg)
-      } else {
-        let error = {
-          m: 'Failed to send',
-          n: 'Error',
-          h: Date.now()
-        }
-          console.log(`Failed to send transaction: ${result.error.toString()}`);
-          mainWindow.webContents.send('error_msg', error)
-      }
-    } else if (off_chain) {
-      let sentMsg = {msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address}
-      console.log('sending rtc message');
-      mainWindow.webContents.send('rtc_message', sentMsg)
-      saveMessageSQL(sentMsg)
+    if (result.success) {
+      console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+      known_pool_txs.push(result.transactionHash);
+      const sentMsg = payload_json;
+      sentMsg.sent = true;
+      sentMsg.type = "board";
+      saveBoardMsg(sentMsg, result.transactionHash);
+    } else {
+      let error = {
+        m: "Failed to send",
+        n: "Error",
+        h: Date.now()
+      };
+      mainWindow.webContents.send("error_msg", error);
+      console.log(`Failed to send transaction: ${result.error.toString()}`);
     }
+
+  } catch (err) {
+    mainWindow.webContents.send("error_msg");
+    console.log("Error", err);
+  }
+  optimizeMessages();
+
+}
+
+async function sendMessage(message, receiver, off_chain = false) {
+
+  let has_history;
+  console.log("address", receiver.length);
+  if (receiver.length !== 163) {
+    return;
+  }
+  let address = receiver.substring(0, 99);
+  let messageKey = receiver.substring(99, 163);
+  //receiver.substring(99,163);
+  if (known_keys.indexOf(messageKey) > -1) {
+
+    console.log("I know this contact?");
+    has_history = true;
+
+  } else {
+    known_keys.push(messageKey);
+    has_history = false;
+
+  }
+
+  if (message.length == 0) {
+    return;
+  }
+
+
+  let my_address = await js_wallet.getPrimaryAddress();
+
+  let my_addresses = await js_wallet.getAddresses();
+
+  try {
+
+    let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance();
+    //console.log('bal', munlockedBalance, mlockedBalance);
+
+    if (munlockedBalance < 11 && mlockedBalance > 0) {
+
+      log;
+      return;
+
+    }
+  } catch (err) {
+    return;
+  }
+
+  let timestamp = Date.now();
+
+
+  // History has been asserted, continue sending message
+
+  let box;
+
+  if (!has_history) {
+    //console.log('No history found..');
+    // payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp};
+    const addr = await Address.fromAddress(my_address);
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+    let xkr_private_key = privateSpendKey;
+    let signature = await xkrUtils.signMessage(message, xkr_private_key);
+    let payload_json = {
+      "from": my_address,
+      "k": Buffer.from(getKeyPair().publicKey).toString("hex"),
+      "msg": message,
+      "s": signature
+    };
+    let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
+    box = new naclSealed.sealedbox(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(messageKey));
+  } else {
+    //console.log('Has history, not using sealedbox');
+    // Convert message data to json
+    let payload_json = { "from": my_address, "msg": message };
+
+    let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
+
+
+    box = nacl.box(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(messageKey), getKeyPair().secretKey);
+
+  }
+
+  let payload_box = { "box": Buffer.from(box).toString("hex"), "t": timestamp };
+
+  // let payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp, "key":Buffer.from(getKeyPair().publicKey).toString('hex')};
+  // Convert json to hex
+  let payload_hex = toHex(JSON.stringify(payload_box));
+
+  optimizeMessages();
+
+  if (!off_chain) {
+
+    let result = await js_wallet.sendTransactionAdvanced(
+      [[address, 1]], // destinations,
+      3, // mixin
+      { fixedFee: 8500, isFixedFee: true }, // fee
+      undefined, //paymentID
+      undefined, // subWalletsToTakeFrom
+      undefined, // changeAddress
+      true, // relayToNetwork
+      false, // sneedAll
+      Buffer.from(payload_hex, "hex")
+    );
+
+    let sentMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
+    if (result.success) {
+      known_pool_txs.push(result.transactionHash);
+      console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+      saveMessageSQL(sentMsg);
+    } else {
+      let error = {
+        m: "Failed to send",
+        n: "Error",
+        h: Date.now()
+      };
+      console.log(`Failed to send transaction: ${result.error.toString()}`);
+      mainWindow.webContents.send("error_msg", error);
+    }
+  } else if (off_chain) {
+    let sentMsg = { msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address };
+    console.log("sending rtc message");
+    mainWindow.webContents.send("rtc_message", sentMsg);
+    saveMessageSQL(sentMsg);
+  }
 }
 
 async function optimizeMessages(nbrOfTxs) {
-  console.log('optimize');
+  console.log("optimize");
   try {
 
-  const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
-  let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
-  if (inputs.length > 8) {
-    console.log('enough inputs');
-    return;
-  }
-  let subWallets = js_wallet.subWallets.subWallets
-
-  subWallets.forEach((value, name) => {
-    let txs = value.unconfirmedIncomingAmounts.length;
-
-    if (txs > 0) {
-      console.log('Already have incoming inputs, aborting..');
+    const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
+    let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
+    if (inputs.length > 8) {
+      console.log("enough inputs");
       return;
     }
-  })
+    let subWallets = js_wallet.subWallets.subWallets;
 
-  let payments = [];
-  let i = 0;
-  /* User payment */
-  while (i < nbrOfTxs - 1 && i < 10) {
-    payments.push([
-      js_wallet.subWallets.getAddresses()[0],
+    subWallets.forEach((value, name) => {
+      let txs = value.unconfirmedIncomingAmounts.length;
+
+      if (txs > 0) {
+        console.log("Already have incoming inputs, aborting..");
+        return;
+      }
+    });
+
+    let payments = [];
+    let i = 0;
+    /* User payment */
+    while (i < nbrOfTxs - 1 && i < 10) {
+      payments.push([
+        js_wallet.subWallets.getAddresses()[0],
         10000
-    ]);
+      ]);
 
-    i += 1;
+      i += 1;
 
-  }
+    }
 
-  console.log('addresses', payments)
+    console.log("addresses", payments);
 
-  let result = await js_wallet.sendTransactionAdvanced(
+    let result = await js_wallet.sendTransactionAdvanced(
       payments, // destinations,
       3, // mixin
-      {fixedFee: 10000, isFixedFee: true}, // fee
+      { fixedFee: 10000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
       true, // relayToNetwork
       false, // sneedAll
       undefined
-  );
+    );
 
-  console.log('optimize completed');
-  return result;
+    console.log("optimize completed");
+    return result;
 
-  
+
   } catch (err) {
-    console.log('error optimizer', err);
+    console.log("error optimizer", err);
   }
 
 }
 
-ipcMain.handle('getMessages', async (data) => {
-    return await getMessages()
-})
+ipcMain.handle("getMessages", async (data) => {
+  return await getMessages();
+});
 
-ipcMain.handle('getReply', async (e, data) => {
-    return await getReply(data)
-})
+ipcMain.handle("getReply", async (e, data) => {
+  return await getReply(data);
+});
 
-ipcMain.handle('getConversations', async (e) => {
-  console.log('Event');
+ipcMain.handle("getConversations", async (e) => {
+  console.log("Event");
   let contacts = await getConversations();
-  return contacts.reverse()
-})
+  return contacts.reverse();
+});
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
-ipcMain.handle('printBoard', async (e, board) => {
-  return await printBoard(board)
-})
+ipcMain.handle("printBoard", async (e, board) => {
+  return await printBoard(board);
+});
 
-ipcMain.handle('getMyBoards', async () => {
-  return await getMyBoardList()
-})
+ipcMain.handle("getMyBoards", async () => {
+  return await getMyBoardList();
+});
 
-ipcMain.handle('getBalance', async () => {
-    return await js_wallet.getBalance()
-})
+ipcMain.handle("getBalance", async () => {
+  return await js_wallet.getBalance();
+});
 
-ipcMain.handle('getAddress',  async () => {
-    return js_wallet.getAddresses()
+ipcMain.handle("getAddress", async () => {
+  return js_wallet.getAddresses();
 
-})
+});
 
-ipcMain.handle('getHeight',  async () => {
+ipcMain.handle("getHeight", async () => {
   let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus();
-  return {walletHeight, networkHeight}
-})
+  return { walletHeight, networkHeight };
+});
 
-ipcMain.on('startCall', async (e ,contact, calltype) => {
-    console.log('CALL STARTEeeeeeeeeeeeeD')
+ipcMain.on("startCall", async (e, contact, calltype) => {
+  console.log("CALL STARTEeeeeeeeeeeeeD");
 
-    console.log('contact', contact + calltype);
-    mainWindow.webContents.send('start-call', contact, calltype)
+  console.log("contact", contact + calltype);
+  mainWindow.webContents.send("start-call", contact, calltype);
 
-})
-
+});
 
 
 let emitCall;
 let awaiting_callback;
-let active_calls = []
+let active_calls = [];
 let callback;
 
-function parse_sdp (sdp) {
+function parse_sdp(sdp) {
 
-    let ice_ufrag = '';
-    let ice_pwd = '';
-    let fingerprint = '';
-    let ips = [];
-    let prts = [];
-    let ssrcs = [];
-    let msid = "";
-    let ip;
-    let port;
+  let ice_ufrag = "";
+  let ice_pwd = "";
+  let fingerprint = "";
+  let ips = [];
+  let prts = [];
+  let ssrcs = [];
+  let msid = "";
+  let ip;
+  let port;
 
-    let lines = sdp.sdp.split('\n')
-        .map(l => l.trim()); // split and remove trailing CR
-    lines.forEach(function(line) {
+  let lines = sdp.sdp.split("\n")
+    .map(l => l.trim()); // split and remove trailing CR
+  lines.forEach(function(line) {
 
-        if (line.includes('a=fingerprint:') && fingerprint == '') {
+    if (line.includes("a=fingerprint:") && fingerprint == "") {
 
-            let parts = line.substr(14).split(' ');
-            let hex = line.substr(22).split(':').map(function (h) {
-                return parseInt(h, 16);
-            });
+      let parts = line.substr(14).split(" ");
+      let hex = line.substr(22).split(":").map(function(h) {
+        return parseInt(h, 16);
+      });
 
-            fingerprint = btoa(String.fromCharCode.apply(String, hex))
-
-
-
-            console.log('BASED64', fingerprint);
+      fingerprint = btoa(String.fromCharCode.apply(String, hex));
 
 
-        } else if (line.includes('a=ice-ufrag:') && ice_ufrag == '') {
-
-            ice_ufrag = line.substr(12);
+      console.log("BASED64", fingerprint);
 
 
-        } else if (line.includes('a=ice-pwd:') && ice_pwd == '') {
+    } else if (line.includes("a=ice-ufrag:") && ice_ufrag == "") {
 
-            ice_pwd = line.substr(10);
-
-        } else if (line.includes('a=candidate:')) {
-
-            let candidate = line.substr(12).split(" ");
-
-            ip = candidate[4]
-            port = candidate[5]
-            type = candidate[7]
+      ice_ufrag = line.substr(12);
 
 
+    } else if (line.includes("a=ice-pwd:") && ice_pwd == "") {
 
-            let hexa = ip.split('.').map(function (h) {
-                return h.toString(16);
-            });
+      ice_pwd = line.substr(10);
 
-            let ip_hex = btoa(String.fromCharCode.apply(String, hexa))
-            console.log('IP CODED', ip_hex);
+    } else if (line.includes("a=candidate:")) {
 
-            if (type == "srflx") {
-                ip_hex = "!" + ip_hex
-            } else {
-                ip_hex = "?" + ip_hex
-            }
+      let candidate = line.substr(12).split(" ");
 
-            if (!ips.includes(ip_hex)) {
-                ips = ips.concat(ip_hex)
-
-            }
-
-            let indexedport = port+ips.indexOf(ip_hex).toString();
-
-            prts = prts.concat(en.encode(parseInt(indexedport)));
+      ip = candidate[4];
+      port = candidate[5];
+      type = candidate[7];
 
 
-        } else if (line.includes('a=ssrc:')) {
+      let hexa = ip.split(".").map(function(h) {
+        return h.toString(16);
+      });
 
-              let ssrc = en.encode(line.substr(7).split(" ")[0]);
+      let ip_hex = btoa(String.fromCharCode.apply(String, hexa));
+      console.log("IP CODED", ip_hex);
 
-             if (!ssrcs.includes(ssrc)) {
+      if (type == "srflx") {
+        ip_hex = "!" + ip_hex;
+      } else {
+        ip_hex = "?" + ip_hex;
+      }
 
-               ssrcs = ssrcs.concat(ssrc)
+      if (!ips.includes(ip_hex)) {
+        ips = ips.concat(ip_hex);
 
-             }
+      }
 
+      let indexedport = port + ips.indexOf(ip_hex).toString();
 
-        } else if (line.includes('a=msid-semantic:')) {
-
-             msid = line.substr(16).split(" ")[2];
-             console.log('msid', msid);
-
-        }
+      prts = prts.concat(en.encode(parseInt(indexedport)));
 
 
+    } else if (line.includes("a=ssrc:")) {
 
-    })
+      let ssrc = en.encode(line.substr(7).split(" ")[0]);
 
-    return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + prts.join('&') + "," + ssrcs.join('&') + "," + msid;
+      if (!ssrcs.includes(ssrc)) {
+
+        ssrcs = ssrcs.concat(ssrc);
+
+      }
+
+
+    } else if (line.includes("a=msid-semantic:")) {
+
+      msid = line.substr(16).split(" ")[2];
+      console.log("msid", msid);
+
+    }
+
+
+  });
+
+  return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join("&") + "," + prts.join("&") + "," + ssrcs.join("&") + "," + msid;
 
 }
 
 
-function parseCall (msg, sender, sent, emitCall=true) {
-    console.log('🤤🤤🤤🤤🤤🤤', sender, msg)
-    switch (msg.substring(0,1)) {
-        case "Δ":
-        // Fall through
-        case "Λ":
-            // Call offer
-            if (emitCall) {
+function parseCall(msg, sender, sent, emitCall = true) {
+  console.log("🤤🤤🤤🤤🤤🤤", sender, msg);
+  switch (msg.substring(0, 1)) {
+    case "Δ":
+    // Fall through
+    case "Λ":
+      // Call offer
+      if (emitCall) {
 
-                // Start ringing sequence
-              console.log('call incoming', sent)
-               if (!sent) {
-                console.log('call  incoming')
-                mainWindow.webContents.send('call-incoming', msg, sender)
-                // Handle answer/decline here
-               }
-                console.log('call incoming')
-            }
-            return `${msg.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
-            break;
-        case "δ":
-        // Fall through
-        case "λ":
-            // Answer
-            if (sent) return "Call answered"
-            if (emitCall) {
-                let callback = JSON.stringify(expand_sdp_answer(msg));
-                let callerdata = {
-                    data: callback,
-                    chat: sender
-                }
-                mainWindow.webContents.send('got-callback', callerdata)
-                console.log('got sdp', msg)
-            }
-            
-            return "Call answered";
+        // Start ringing sequence
+        console.log("call incoming", sent);
+        if (!sent) {
+          console.log("call  incoming");
+          mainWindow.webContents.send("call-incoming", msg, sender);
+          // Handle answer/decline here
+        }
+        console.log("call incoming");
+      }
+      return `${msg.substring(0, 1) == "Δ" ? "Video" : "Audio"} call started`;
+      break;
+    case "δ":
+    // Fall through
+    case "λ":
+      // Answer
+      if (sent) return "Call answered";
+      if (emitCall) {
+        let callback = JSON.stringify(expand_sdp_answer(msg));
+        let callerdata = {
+          data: callback,
+          chat: sender
+        };
+        mainWindow.webContents.send("got-callback", callerdata);
+        console.log("got sdp", msg);
+      }
 
-            break;
-        default:
-            return msg;
+      return "Call answered";
 
-    }
+      break;
+    default:
+      return msg;
+
+  }
 
 }
 
 let stream;
 
-ipcMain.on('expand-sdp', (e, data, address) => {
-    console.log('INCOMING EXPAND SDP', data )
-    console.log('INCOMING EXPAND SDP', address )
-        let recovered_data = expand_sdp_offer(data);
-        console.log('TYPE EXPAND_O', recovered_data)
-        let expanded_data = []
-        expanded_data.push(recovered_data)
-        expanded_data.push(address)
-        mainWindow.webContents.send('got-expanded', expanded_data)
+ipcMain.on("expand-sdp", (e, data, address) => {
+  console.log("INCOMING EXPAND SDP", data);
+  console.log("INCOMING EXPAND SDP", address);
+  let recovered_data = expand_sdp_offer(data);
+  console.log("TYPE EXPAND_O", recovered_data);
+  let expanded_data = [];
+  expanded_data.push(recovered_data);
+  expanded_data.push(address);
+  mainWindow.webContents.send("got-expanded", expanded_data);
 });
 
 
-ipcMain.on('get-sdp', (e,data) => {
-    console.log('get-sdp', data.data, data.type, data.contact, data.video)
+ipcMain.on("get-sdp", (e, data) => {
+  console.log("get-sdp", data.data, data.type, data.contact, data.video);
 
-    if(data.type == 'offer') {
-    console.log('Offer', data.data, data.type, data.contact, data.video)
-        let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
-        let recovered_data = expand_sdp_offer(parsed_data);
-        sendMessage(parsed_data, data.contact)
+  if (data.type == "offer") {
+    console.log("Offer", data.data, data.type, data.contact, data.video);
+    let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
+    let recovered_data = expand_sdp_offer(parsed_data);
+    sendMessage(parsed_data, data.contact);
 
-    } else if (data.type == 'answer') {
-    console.log('Answerrrrrrrr',data.data, data.type, data.contact, data.video)
-        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data);
-        console.log('parsed data really cool sheet:', parsed_data);
-        let recovered_data = expand_sdp_answer(parsed_data);
-        sendMessage(parsed_data, data.contact)
+  } else if (data.type == "answer") {
+    console.log("Answerrrrrrrr", data.data, data.type, data.contact, data.video);
+    let parsed_data = `${data.video ? "δ" : "λ"}` + parse_sdp(data.data);
+    console.log("parsed data really cool sheet:", parsed_data);
+    let recovered_data = expand_sdp_answer(parsed_data);
+    sendMessage(parsed_data, data.contact);
 
-    }
-})
+  }
+});
 
-function expand_sdp_offer (compressed_string) {
+function expand_sdp_offer(compressed_string) {
 
-  let type = compressed_string.substring(0,1);
+  let type = compressed_string.substring(0, 1);
 
   let split = compressed_string.split(",");
 
@@ -1751,66 +1773,66 @@ function expand_sdp_offer (compressed_string) {
 
   let ips = split[3];
 
-  let prts =  split[4];
+  let prts = split[4];
 
-  let ssrc = split[5].split('&').map(function (h) {
+  let ssrc = split[5].split("&").map(function(h) {
     return en.decode(h);
   });
 
   let msid = split[6];
 
-  let external_ip = '';
+  let external_ip = "";
 
   let external_ports = [];
 
-  let candidates = ['','','',''];
+  let candidates = ["", "", "", ""];
 
-  ips = ips.split('&').map(function (h) {
-    return decode_ip(h.substring(1),h.substring(0,1));
-  })
+  ips = ips.split("&").map(function(h) {
+    return decode_ip(h.substring(1), h.substring(0, 1));
+  });
 
-  prts = prts.split('&').map(function (h) {
+  prts = prts.split("&").map(function(h) {
     return en.decode(h);
   });
 
   console.log("Pörts:", prts);
 
 
-    let prio = 2122260223;
+  let prio = 2122260223;
 
-    let tcp_prio = 1518280447;
+  let tcp_prio = 1518280447;
 
-    let i = 1;
-    let j = 1;
-    let external_port_found = false;
+  let i = 1;
+  let j = 1;
+  let external_port_found = false;
 
-    let current_internal = '';
-    let port
-    prts.forEach(function (port) {
-      console.log('checking in offer port', port)
-      let ip_index = port.slice(-1);
-      if (i == 1 ) {
+  let current_internal = "";
+  let port;
+  prts.forEach(function(port) {
+    console.log("checking in offer port", port);
+    let ip_index = port.slice(-1);
+    if (i == 1) {
 
-        current_internal = port.substring(0, port.length - 1);
+      current_internal = port.substring(0, port.length - 1);
 
-      }
-      if (ips[ip_index].substring(0,1) == '!') {
-        external_ip = ips[ip_index].substring(1);
-        external_ports = external_ports.concat(port.substring(0, port.length - 1));
-        external_port_found = true;
-        candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + port.substring(0, port.length - 1) + " typ srflx raddr " + ips[0].replace('!','').replace('?','') + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n"
-      } else if (port.substring(0, port.length - 1) == "9") {
+    }
+    if (ips[ip_index].substring(0, 1) == "!") {
+      external_ip = ips[ip_index].substring(1);
+      external_ports = external_ports.concat(port.substring(0, port.length - 1));
+      external_port_found = true;
+      candidates[j] += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace("!", "") + " " + port.substring(0, port.length - 1) + " typ srflx raddr " + ips[0].replace("!", "").replace("?", "") + " rport " + current_internal + " generation 0 network-id 1 network-cost 50\r\n";
+    } else if (port.substring(0, port.length - 1) == "9") {
 
-        candidates[j] += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','') + " " + port.substring(0, port.length - 1) +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
-        tcp_prio = tcp_prio - 500;
+      candidates[j] += "a=candidate:3377426864 1 tcp " + tcp_prio + " " + ips[ip_index].replace("?", "") + " " + port.substring(0, port.length - 1) + " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n";
+      tcp_prio = tcp_prio - 500;
 
-      } else {
-        candidates[j] += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + port.substring(0, port.length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n"
-        prio = parseInt(prio*0.8);
-      }
+    } else {
+      candidates[j] += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace("?", "") + " " + port.substring(0, port.length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n";
+      prio = parseInt(prio * 0.8);
+    }
 
 
-    if ( i == (prts.length / 3) ) {
+    if (i == (prts.length / 3)) {
       i = 0;
       j += 1;
       external_port_found = false;
@@ -1818,23 +1840,23 @@ function expand_sdp_offer (compressed_string) {
 
     i += 1;
 
-  })
+  });
 
   if (external_ip.length == 0) {
     external_id = ips[0].substring(1);
   }
 
-  console.log('candidates',candidates);
-  console.log("ports:",external_ports);
+  console.log("candidates", candidates);
+  console.log("ports:", external_ports);
 
   console.log((external_ports.length / 3));
-  console.log(((external_ports.length / 3)*2));
+  console.log(((external_ports.length / 3) * 2));
 
-if (!external_ports[0]) {
-  external_ports[0] = "9";
-}
+  if (!external_ports[0]) {
+    external_ports[0] = "9";
+  }
 
-let sdp = `v=0
+  let sdp = `v=0
 o=- 5726742634414877819 2 IN IP4 127.0.0.1
 s=-
 t=0 0
@@ -1845,9 +1867,9 @@ m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 63 103 104 9 0 8 106 105
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[1] +
-`a=ice-ufrag:` + ice_ufrag + `
+    `a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
-a=fingerprint:sha-256 ` + fingerprint +  `
+a=fingerprint:sha-256 ` + fingerprint + `
 a=setup:actpass
 a=mid:0
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
@@ -1878,13 +1900,13 @@ a=ssrc:` + ssrc[0] + ` cname:c2J8K3mNIXGEi9qt
 a=ssrc:` + ssrc[0] + ` msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=ssrc:` + ssrc[0] + ` mslabel:` + msid + `
 a=ssrc:` + ssrc[0] + ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video ` + external_ports[(external_ports.length / 3)] +  ` UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
+m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[2] +
-`a=ice-ufrag:` + ice_ufrag + `
+    `a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
-a=fingerprint:sha-256 ` + fingerprint +  `
+a=fingerprint:sha-256 ` + fingerprint + `
 a=setup:actpass
 a=mid:1
 a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
@@ -1898,7 +1920,7 @@ a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-${type == 'Δ' ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=inactive" }
+${type == "Δ" ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=inactive"}
 a=rtcp-mux
 a=rtcp-rsize
 a=rtpmap:127 H264/90000
@@ -1951,38 +1973,38 @@ a=rtcp-fb:114 nack
 a=rtcp-fb:114 nack pli
 a=fmtp:114 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f
 ${type == "Δ" ?
-"a=ssrc:" + ssrc[1] + " cname:qwjy1Thr/obQUvqd\r\n" +
-"a=ssrc:" + ssrc[1] + " msid:" + msid + " 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
-"a=ssrc:" + ssrc[1] + " mslabel:" + msid + "\r\n" +
-"a=ssrc:" + ssrc[1] + " label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" : "" }m=application ` + external_ports[((external_ports.length / 3)*2)] + ` UDP/DTLS/SCTP webrtc-datachannel
-c=IN IP4 ` + external_ip +  `
+      "a=ssrc:" + ssrc[1] + " cname:qwjy1Thr/obQUvqd\r\n" +
+      "a=ssrc:" + ssrc[1] + " msid:" + msid + " 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
+      "a=ssrc:" + ssrc[1] + " mslabel:" + msid + "\r\n" +
+      "a=ssrc:" + ssrc[1] + " label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" : ""}m=application ` + external_ports[((external_ports.length / 3) * 2)] + ` UDP/DTLS/SCTP webrtc-datachannel
+c=IN IP4 ` + external_ip + `
 ` + candidates[3] +
-`a=ice-ufrag:` + ice_ufrag + `
+    `a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
-a=fingerprint:sha-256 ` + fingerprint +  `
+a=fingerprint:sha-256 ` + fingerprint + `
 a=setup:actpass
 a=mid:2
 a=sctp-port:5000
 a=max-message-size:262144
-`
+`;
 
-    console.log('ice', ice_ufrag)
-    console.log('ice', ice_pwd)
-    console.log('fingerprint', fingerprint)
-    console.log('SRCS', ssrc)
-    console.log('MSID', msid)
-    console.log('candidates', candidates)
-    return {type: "offer", sdp: sdp};
+  console.log("ice", ice_ufrag);
+  console.log("ice", ice_pwd);
+  console.log("fingerprint", fingerprint);
+  console.log("SRCS", ssrc);
+  console.log("MSID", msid);
+  console.log("candidates", candidates);
+  return { type: "offer", sdp: sdp };
 
 }
 
-function expand_sdp_answer (compressed_string) {
+function expand_sdp_answer(compressed_string) {
 
   let split = compressed_string.split(",");
 
   console.log("split:", split);
 
-  let type = compressed_string.substring(0,1);
+  let type = compressed_string.substring(0, 1);
 
   let ice_ufrag = split[0].substring(1);
 
@@ -1992,9 +2014,9 @@ function expand_sdp_answer (compressed_string) {
 
   let ips = split[3];
 
-  let prts =  split[4];
+  let prts = split[4];
 
-  let ssrc = split[5].split('&').map(function (h) {
+  let ssrc = split[5].split("&").map(function(h) {
     return en.decode(h);
   });
 
@@ -2005,19 +2027,20 @@ function expand_sdp_answer (compressed_string) {
 
   let msid = split[6];
 
-  let candidates = '';
+  let candidates = "";
 
-  let external_ip = '';
+  let external_ip = "";
 
-  ips = ips.split('&').map(function (h) {
-    return decode_ip(h.substring(1),h.substring(0,1));
-  })
+  ips = ips.split("&").map(function(h) {
+    return decode_ip(h.substring(1), h.substring(0, 1));
+  });
 
-  prts = prts.split('&').map(function (h) {
+  prts = prts.split("&").map(function(h) {
     return en.decode(h);
-  });;
+  });
+  ;
 
-  let external_port = '';
+  let external_port = "";
 
   console.log("ips:", ips);
   console.log("ports:", ports);
@@ -2027,37 +2050,37 @@ function expand_sdp_answer (compressed_string) {
 
   if (prts.length > 1) {
 
-    console.log('More than 1 port!')
-    let port
-    prts.forEach(function (port) {
-      console.log('checking in answer port', port)
-        let ip_index = port.slice(-1);
-        if (ips[ip_index].substring(0,1) == '!') {
-          if (external_port.length == 0) {
-            external_port = port.substring(0, port.length - 1);
-          }
-          external_ip = ips[ip_index].substring(1);
-          candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace('!','') + " " + port.substring(0, port.length - 1)  + " typ srflx raddr " + ips[0].replace('?','') + " rport " + port.substring(0, port.length - 1)  + " generation 0 network-id 1 network-cost 50\r\n"
-        } else if (port.substring(0, port.length - 1)  == "9") {
-
-          candidates += "a=candidate:3377426864 1 tcp "  + tcp_prio + " " + ips[ip_index].replace('?','').replace('!','') + " " + port.substring(0, port.length - 1)  +  " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n"
-          tcp_prio = tcp_prio - 500;
-
-        } else {
-
-          candidates += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace('?','') + " " + port.substring(0, port.length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
-          prio = parseInt(prio*0.8);
+    console.log("More than 1 port!");
+    let port;
+    prts.forEach(function(port) {
+      console.log("checking in answer port", port);
+      let ip_index = port.slice(-1);
+      if (ips[ip_index].substring(0, 1) == "!") {
+        if (external_port.length == 0) {
+          external_port = port.substring(0, port.length - 1);
         }
+        external_ip = ips[ip_index].substring(1);
+        candidates += "a=candidate:3098175849 1 udp 1686052607 " + ips[ip_index].replace("!", "") + " " + port.substring(0, port.length - 1) + " typ srflx raddr " + ips[0].replace("?", "") + " rport " + port.substring(0, port.length - 1) + " generation 0 network-id 1 network-cost 50\r\n";
+      } else if (port.substring(0, port.length - 1) == "9") {
+
+        candidates += "a=candidate:3377426864 1 tcp " + tcp_prio + " " + ips[ip_index].replace("?", "").replace("!", "") + " " + port.substring(0, port.length - 1) + " typ host tcptype active generation 0 network-id 1 network-cost 50\r\n";
+        tcp_prio = tcp_prio - 500;
+
+      } else {
+
+        candidates += "a=candidate:1410536466 1 udp " + prio + " " + ips[ip_index].replace("?", "") + " " + port.substring(0, port.length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n";
+        prio = parseInt(prio * 0.8);
+      }
 
 
-      })
+    });
 
   } else {
 
-    external_ip = ips[0].replace('!','').replace('?','');
+    external_ip = ips[0].replace("!", "").replace("?", "");
 
-    external_port = prts[0].substring(0, prts[0].length - 1) ;
-    candidates = "a=candidate:1410536466 1 udp 2122260223 " + ips[0].replace('!','').replace('?','') + " " + prts[0].substring(0, prts[0].length - 1)  + " typ host generation 0 network-id 1 network-cost 10\r\n"
+    external_port = prts[0].substring(0, prts[0].length - 1);
+    candidates = "a=candidate:1410536466 1 udp 2122260223 " + ips[0].replace("!", "").replace("?", "") + " " + prts[0].substring(0, prts[0].length - 1) + " typ host generation 0 network-id 1 network-cost 10\r\n";
   }
 
   if (!external_port) {
@@ -2065,7 +2088,7 @@ function expand_sdp_answer (compressed_string) {
   }
 
 
-let sdp = `v=0
+  let sdp = `v=0
 o=- 8377786102162672707 2 IN IP4 127.0.0.1
 s=-
 t=0 0
@@ -2076,9 +2099,9 @@ m=audio ` + external_port + ` UDP/TLS/RTP/SAVPF 111 63 103 104 9 0 8 106 105 13 
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates +
-`a=ice-ufrag:` + ice_ufrag + `
+    `a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
-a=fingerprint:sha-256 ` + fingerprint +  `
+a=fingerprint:sha-256 ` + fingerprint + `
 a=setup:active
 a=mid:0
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
@@ -2105,13 +2128,13 @@ a=rtpmap:110 telephone-event/48000
 a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
 a=rtpmap:126 telephone-event/8000
-a=ssrc:` + ssrc[0] +  ` cname:vhWDFlNcJ4vSUvs5
+a=ssrc:` + ssrc[0] + ` cname:vhWDFlNcJ4vSUvs5
 m=video 9 UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
 c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
 a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
-a=fingerprint:sha-256 ` + fingerprint +  `
+a=fingerprint:sha-256 ` + fingerprint + `
 a=setup:active
 a=mid:1
 a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
@@ -2125,7 +2148,7 @@ a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
 a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
 a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
-${type == 'δ' ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=recvonly"}
+${type == "δ" ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=recvonly"}
 a=rtcp-mux
 a=rtcp-rsize
 a=rtpmap:127 H264/90000
@@ -2177,80 +2200,79 @@ a=rtcp-fb:114 ccm fir
 a=rtcp-fb:114 nack
 a=rtcp-fb:114 nack pli
 a=fmtp:114 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f
-${type == 'δ' ?
- `a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+${type == "δ" ?
+      `a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
 b=AS:30
 a=ice-ufrag:` + ice_ufrag + `
 a=ice-pwd:` + ice_pwd + `
-a=fingerprint:sha-256 ` + fingerprint +  `
+a=fingerprint:sha-256 ` + fingerprint + `
 a=setup:active
 a=mid:2
 a=sctp-port:5000
 a=max-message-size:262144
-`
+`;
 
-console.log('ice', ice_ufrag)
-console.log('ice', ice_pwd)
-console.log('fingerprint', fingerprint)
-console.log('SRCS', ssrc)
-console.log('MSID', msid)
-console.log('candidates', candidates)
+  console.log("ice", ice_ufrag);
+  console.log("ice", ice_pwd);
+  console.log("fingerprint", fingerprint);
+  console.log("SRCS", ssrc);
+  console.log("MSID", msid);
+  console.log("candidates", candidates);
 
-  return {type: 'answer', sdp: sdp}
+  return { type: "answer", sdp: sdp };
 }
 
 
 let decode_fingerprint = (fingerprint) => {
-    console.log('fingerprint', fingerprint);
-    let decoded_fingerprint = "";
-    let piece;
-    let letters = atob(fingerprint).split('')
-    for (letter in letters) {
-        try {
+  console.log("fingerprint", fingerprint);
+  let decoded_fingerprint = "";
+  let piece;
+  let letters = atob(fingerprint).split("");
+  for (letter in letters) {
+    try {
 
-            let piece = letters[letter].charCodeAt(0).toString(16);
-            console.log('del', piece);
-            if (piece.length == 1) {
-                piece = "0" + piece;
-            }
-            decoded_fingerprint += piece;
+      let piece = letters[letter].charCodeAt(0).toString(16);
+      console.log("del", piece);
+      if (piece.length == 1) {
+        piece = "0" + piece;
+      }
+      decoded_fingerprint += piece;
 
 
+    } catch (err) {
+      console.log("error", piece);
+      console.log("error", letter);
 
-        } catch (err) {
-            console.log('error', piece)
-            console.log('error', letter)
-
-            continue;
-        }
+      continue;
     }
-    console.log('almost', decoded_fingerprint) ;
+  }
+  console.log("almost", decoded_fingerprint);
 
-    decoded_fingerprint = decoded_fingerprint.toUpperCase().replace(/(.{2})/g,"$1:").slice(0,-1);
+  decoded_fingerprint = decoded_fingerprint.toUpperCase().replace(/(.{2})/g, "$1:").slice(0, -1);
 
-    console.log('There', decoded_fingerprint) ;
+  console.log("There", decoded_fingerprint);
 
-    return decoded_fingerprint;
-}
+  return decoded_fingerprint;
+};
 
 let decode_ip = (ip, type) => {
   let decoded_ip = "";
 
-  let letters =  atob(ip).split('')
-  letters.forEach(function (letter) {
-    if (letter.length > 1) return
+  let letters = atob(ip).split("");
+  letters.forEach(function(letter) {
+    if (letter.length > 1) return;
     let piece = letter.charCodeAt(0).toString(16);
 
     if (piece.length === 1) {
-        piece = "0" + piece;
+      piece = "0" + piece;
     }
 
     decoded_ip += parseInt(piece, 16) + ".";
-  })
+  });
 
-  console.log('decoded ip', decoded_ip);
+  console.log("decoded ip", decoded_ip);
 
 
-  return type+decoded_ip.slice(0,-1);
-}
+  return type + decoded_ip.slice(0, -1);
+};

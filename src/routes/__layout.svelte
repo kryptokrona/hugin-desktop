@@ -11,11 +11,11 @@
 	//Stores
 	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
-	
+
 	//Global CSS
 	import '/src/lib/theme/global.scss'
 	import Notification from '/src/components/popups/Notification.svelte';
-	
+
 	let ready = false
 	let myVideo = false
 	let peerVideo = true
@@ -62,18 +62,18 @@
 
 		//Handle incoming call
 		window.api.receive('call-incoming', (msg, chat) => {
-			
+
 			console.log('INCMING');
 			$webRTC.call.unshift({msg, chat, type: 'incoming'})
 			incoming_call = true
 		})
 
 		//Handle sync status
-		window.api.receive('sync', res => {
-			misc.update(user => {
+		window.api.receive('sync', data => {
+			misc.update(current => {
 				return{
-					...user,
-					syncState: res
+					...current,
+					syncState: data
 				}
 			})
 		})
@@ -99,21 +99,22 @@
 
 window.api.receive('node', async (node) => {
 
-		misc.update(oldData => {
+		misc.update(current => {
 				return {
-						...oldData,
+						...current,
 						node: node
 				}
 		})
 	})
 
-		window.api.receive('node-sync-data', ({walletBlockCount, localDaemonBlockCount, networkBlockCount}) => {
+		window.api.receive('node-sync-data', data => {
 			misc.update(current => {
 				return {
 					...current,
-					walletBlockCount,
-					localDaemonBlockCount,
-					networkBlockCount
+					walletBlockCount: data.walletBlockCount,
+					networkBlockCount: data.networkBlockCount,
+					localDaemonBlockCount: data.localDaemonBlockCount,
+
 				}
 			})
 		})
@@ -176,10 +177,10 @@ window.api.receive('node', async (node) => {
 		{#each $webRTC.call as thiscall}
 
 		{#if $webRTC.peerAudio}
-		
+
 		<PeerAudio audioCall={thiscall}/>
-		
-		
+
+
 		{/if}
 			{#if incoming_call}
 				<IncomingCall
@@ -190,14 +191,14 @@ window.api.receive('node', async (node) => {
 			{/if}
 			{#if showCallerMenu}
 				<CallerMenu
-				this_call={thiscall} 
+				this_call={thiscall}
 				on:click={endThisCall}
 				on:endCall={endThisCall}
 				paused={!showCallerMenu}
 				on:toggleMyWindow={toggleMyWindow}/>
 			{/if}
 		{/each}
-		
+
 	{/if}
 
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
@@ -207,7 +208,7 @@ window.api.receive('node', async (node) => {
 		{/each}
 		</div>
 	{/if}
-		
+
 	{#if errors.length > 0 && $user.loggedIn}
 		<div class="notifs">
 		{#each errors as error (error.h)}
