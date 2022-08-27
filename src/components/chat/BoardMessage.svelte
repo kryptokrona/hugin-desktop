@@ -172,9 +172,9 @@
       padding: 10px 20px 20px 10px;
       z-index: 3;
       font-size: 12px;
-      background: rgba(0,0,0,0.11);
-      border-radius: 10px;
-      border: 1px solid transparent;
+      background: var(--card-background);
+      border-radius: 5px;
+      border: 1px solid var(--card-border);
 
       .header {
         display: flex;
