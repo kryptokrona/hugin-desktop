@@ -74,12 +74,19 @@
 
  $: if ($webRTC.screen_stream) {
   playVideo() 
+ } else if ($webRTC.video) {
+  playVideo()
  }
 
   let source = true
 
   const switchStream = async () => {
-   await window.api.shareScreen(false)
+    if (!$webRTC.screen_stream) {
+      await window.api.shareScreen(false)
+    } else {
+      window.api.setCamera()
+    }
+  
    
   }
 
