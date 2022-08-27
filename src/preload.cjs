@@ -102,6 +102,10 @@ const WINDOW_API = {
     ipcRenderer.invoke('shareScreen')
   },
 
+  setCamera: async () => {
+    ipcRenderer.send('setCamera')
+  },
+
   //HANDLE FINANCE
   getBalance: async () => {
     return await ipcRenderer.invoke('getBalance')

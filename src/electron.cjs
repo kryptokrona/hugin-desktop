@@ -925,7 +925,7 @@ async function saveBoardMsg(msg, hash) {
       msg.sent
     ]
   );
-
+    saveHash(hash)
   if (msg.sent) return;
   //Send new board message to frontend.
   mainWindow.webContents.send("boardMsg", message);
@@ -1150,7 +1150,7 @@ async function getReplies(hash = false) {
 }
 
 //Saves private message
-async function saveMessageSQL(msg) {
+async function saveMessageSQL(msg, hash) {
   let torrent;
   let text;
   let sent = msg.sent;
@@ -1211,7 +1211,7 @@ async function saveMessageSQL(msg) {
       timestamp
     ]
   );
-
+  saveHash(hash)
   //New message object
   if (magnetLinks && !sent) {
     message = torrent;
@@ -1458,7 +1458,7 @@ async function sendMessage(message, receiver, off_chain = false) {
     if (result.success) {
       known_pool_txs.push(result.transactionHash);
       console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-      saveMessageSQL(sentMsg);
+      saveMessageSQL(sentMsg, result.transactionHash);
     } else {
       let error = {
         m: "Failed to send",
@@ -1478,12 +1478,12 @@ async function sendMessage(message, receiver, off_chain = false) {
 
 async function optimizeMessages(nbrOfTxs) {
   console.log("optimize");
-  try {
 
     const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
     if (inputs.length > 8) {
-      console.log("enough inputs");
+      console.log("enough inputs", inputs.length)
+      console.log("inputs", inputs);
       return;
     }
     let subWallets = js_wallet.subWallets.subWallets;
@@ -1500,9 +1500,9 @@ async function optimizeMessages(nbrOfTxs) {
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i < nbrOfTxs - 1 && i < 10) {
+    while (i < 10) {
       payments.push([
-        js_wallet.subWallets.getAddresses()[0],
+        js_wallet.getPrimaryAddress(),
         10000
       ]);
 
@@ -1527,10 +1527,6 @@ async function optimizeMessages(nbrOfTxs) {
     console.log("optimize completed");
     return result;
 
-
-  } catch (err) {
-    console.log("error optimizer", err);
-  }
 
 }
 
@@ -1596,6 +1592,10 @@ ipcMain.handle("shareScreen", async (e, start) => {
   })
   
 });
+
+ipcMain.on("setCamera", async (e, contact, calltype) => {
+  mainWindow.webContents.send('set-camera')
+})
 
 
 let emitCall;
