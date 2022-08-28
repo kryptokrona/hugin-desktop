@@ -40,18 +40,16 @@
 
 <style lang="scss">
   .popup {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(18, 18, 18, 0.80);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 103;
+      position: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--backdrop-color);
+      z-index: 103;
 
     .popup-card {
         display: flex;
@@ -61,7 +59,7 @@
         height: 360px;
         width: 320px;
         padding: 30px;
-        background-color: #181818;
+        background-color: var(--backgound-color);
         border-radius: 8px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255,255,255, 0.1);
