@@ -124,8 +124,8 @@
 
   <div class="header">
     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-    <p class="nickname">{nickname}</p>
-    <Time class="time" relative timestamp="{parseInt(message.t * 1000)}" />
+    <p class="nickname">{nickname} <span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /></span></p>
+
   </div>
   <div class="text">
     <p>{msg}</p>
@@ -298,15 +298,11 @@
         display: inline-block;
     }
 
-    :global(time) {
-        color: white;
-        font-size: 8px;
-        display: flex;
-        letter-spacing: 1px;
-        display: inline-block;
-        align-self: unset;
-        font-family: "Roboto Mono" !important;
-        margin-left: 15px;
+    .time {
+      color: var(--text-color);
+      opacity: 80%;
+      font-weight: 400;
+      font-size: 0.75rem;
     }
 
     .react_button {
