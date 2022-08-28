@@ -205,7 +205,7 @@
     }
 
     p {
-      font-family: "Roboto Mono";
+      font-family: "Montserrat";
       color: white;
       width: 100%;
       overflow-wrap: break-word;

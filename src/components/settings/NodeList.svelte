@@ -100,7 +100,7 @@ h4 {
 
 .nodes {
   color: #f1f2f3;
-  font-family: 'Roboto Mono';
+  font-family: "Montserrat";
   font-size: 17px;
   padding: 3px;
   cursor: pointer;
