@@ -38,9 +38,9 @@
     onDestroy(() => {
     })
 
-    const toggleWindow = () => {
-      toggle = !toggle
-      dispatch('toggleMyWindow')
+    const toggleAudio = () => {
+        toggle = !toggle
+        $webRTC.myStream.getAudioTracks()[0].enabled = !($webRTC.myStream.getAudioTracks()[0].enabled);
     }
 
 </script>
@@ -57,7 +57,7 @@
         </div>
         <audio bind:paused src="/static/audio/startcall.mp3"></audio>
         <div class="options">
-            <a class="answer hover" on:click={toggleWindow} class:active={toggle}>
+            <a class="answer hover" on:click={toggleAudio} class:active={toggle}>
                 <img src={videoIcon} alt="toggleMyWindow">
             </a>
             <div class="decline hover" on:click={()=> endCall(peer, stream)} >
