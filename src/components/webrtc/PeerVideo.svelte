@@ -12,8 +12,8 @@
   let peerStream;
   let thisCall;
   let move = false;
-  let boards = false;
-  let hide = false
+  let window_max = false
+  let window_medium = false
   export let call;
 
   const dispatch = createEventDispatcher();
@@ -51,35 +51,41 @@
     peerVideo.pause();
   });
 
-
-  const toggleWindow = () => {
-    hide = !hide;
-  };
-
   $: if ($webRTC.peerVideo) thisCall = call.chat;
 
-  $: if ($page.url.pathname === "/messages" && $user.activeChat.chat == thisCall) {
-    boards = false;
-    move = false;
-  } else if ($page.url.pathname === "/boards") {
-    move = true;
-    boards = true;
-  } else {
-    boards = false;
-    move = true;
+  const resize = (size) => {
+    switch (size) {
+      case 'min':
+      window_max = false
+      window_medium = false
+      break;
+      case 'medium':
+      window_max = false
+      window_medium = true
+      break;
+      case 'max':
+      window_max = true
+      window_medium = false
+    }
   }
+
+  $: window_medium
+  $: window_max
 
 
   $: console.log("$webRTC active call", call);
 </script>
 
-<div class="card" class:hide={hide} use:draggable={{bounds: "parent"}} on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
+<div class="card" use:draggable={{bounds: "parent"}} class:max_window={window_max} class:medium_window={window_medium}
+on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
 >
 <video class:toggleVideo={move} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}
-       class:hide={move} class:boards={boards}>
+       class:hide={move}>
 </video>
 <div class="toggles">
-
+  <div class="resize" on:click={()=> resize('min')}>x</div>
+  <div class="resize" on:click={()=> resize('medium')}>xx</div>
+  <div class="resize" on:click={()=> resize('max')}>xxx</div>
 </div>
 </div>
 <style lang="scss">
@@ -95,7 +101,8 @@
     height: 203px;
     width: 360px;
     pointer-events: all;
-
+    transition: 0.35s;
+    cursor: pointer;
     .toggles {
       position: absolute;
       bottom: 0;
@@ -192,21 +199,24 @@
     border-radius: 10px;
   }
 
-  .toggle {
-    left: 1%;
-    top: 250px;
-    width: 50px;
-    height: 20px;
+  .max_window {
+    width: 1000px;
+    height: 800px;
+    transition: 0.35s;
   }
+ 
+ .medium_window {
+    width: 650px;
+    height: 400px;
+    transition: 0.35s;
+ }
 
-  .hide {
-    width: 200px;
-    height: 150px;
-    top: 500px;
-    left: 120px;
-    transition: 0.3s;
-  }
-
+ .resize {
+    color: white;
+    font-size: 30px;
+    position: relative;
+    display: inline-block;
+}
 
 
 </style>

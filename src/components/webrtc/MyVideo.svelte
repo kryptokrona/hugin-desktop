@@ -10,11 +10,12 @@
   import videoIcon from '/static/images/video.svg'
   let myVideo = document.getElementById("myVideo");
   let video = false;
-  let hide = true;
   let hover = false;
   let chatWindow = true;
   let thisCall;
   let sources = [{label: "screen"}, {label: "tjo"}]
+  let window_max = false
+  let window_medium = false
   export let call;
 
   const dispatch = createEventDispatcher();
@@ -58,19 +59,8 @@
   onDestroy(() => {
   });
 
-  const toggleWindow = () => {
-    hide = !hide;
-  };
 
   $: if ($webRTC.myVideo) thisCall = $webRTC.call[0].chat;
-
-  $: if ($page.url.pathname === "/messages" && $user.activeChat.chat == thisCall) {
-    chatWindow = true;
-    hide = false;
-  } else {
-    chatWindow = false;
-    hide = true;
-  }
 
  $: if ($webRTC.screen_stream) {
   playVideo() 
@@ -87,20 +77,32 @@
       window.api.setCamera()
     }
   
-   
   }
 
+  const resize = (size) => {
+    switch (size) {
+      case 'min':
+      window_medium = false
+      break;
+      case 'medium':
+      window_medium = true
+    }
+  }
+
+  $: window_medium
 </script>
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:toggle={!chatWindow} class:hide={hide}
+<div class="card" class:medium_window={window_medium}
      use:draggable={{bounds: 'parent'}}  on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
 >
-  <video on:click={playVideo} class:toggleVideo={hide} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
+  <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
   ></video>
   <div class="toggles">
     <img src={videoIcon} on:click={switchStream} alt="switchVideoSource">
+    <div class="resize" on:click={()=> resize('min')}>x</div>
+    <div class="resize" on:click={()=> resize('medium')}>xx</div>
     {#if source}
     {#each sources as src}
     <!-- <div on:click={() => switchStream}>{src.label}</div> -->
@@ -123,7 +125,8 @@
     height: 203px;
     width: 360px;
     pointer-events: all;
-
+    transition: 0.35s;
+    cursor: pointer;
     .toggles {
       position: absolute;
       bottom: 0;
@@ -227,5 +230,26 @@
     width: 50px;
     height: 50px;
   }
+
+  
+ .max_window {
+  width: 1000px;
+  height: 800px;
+  transition: 0.35s;
+ }
+ 
+ .medium_window {
+  width: 650px;
+  height: 400px;
+  transition: 0.35s;
+ }
+
+ .resize {
+  color: white;
+    font-size: 30px;
+    position: relative;
+    display: inline-block;
+ }
+ 
 
 </style>
