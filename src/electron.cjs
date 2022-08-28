@@ -724,7 +724,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
   mainWindow.webContents.send("sync", "Syncing");
   let message_was_unknown;
   try {
-    const resp = await fetch("http://" + "blocksum.org:11898" + "/get_pool_changes_lite", {
+    const resp = await fetch("http://" + node + ":" + ports.toString() + "/get_pool_changes_lite", {
       method: "POST",
       body: JSON.stringify({ knownTxsIds: known_pool_txs })
     });
@@ -1257,10 +1257,16 @@ ipcMain.handle("getMnemonic", async () => {
 
 
 //SWITCH NODE
-ipcMain.on("switchNode", async (e, node) => {
-  console.log(`Switching node to ${node}`);
-  const daemon = new WB.Daemon(node.split(":")[0], parseInt(node.split(":")[1]));
+ipcMain.on("switchNode", async (e, newNode) => {
+  console.log(`Switching node to ${newNode}`);
+  node = newNode.split(":")[0]
+  ports = parseInt(newNode.split(":")[1])
+
+  const daemon = new WB.Daemon(node, ports);
   await js_wallet.swapNode(daemon);
+
+  let mynode = { node: node, port: ports };
+  db.data.node = mynode;
   db.write();
 });
 
