@@ -18,7 +18,7 @@
 <style lang="scss">
   .card {
     box-sizing: border-box;
-    background-color: var(--card-background);
+    background-color: var(--backgound-color);
     border: 1px solid var(--card-border);
     padding: 20px;
     border-radius: 0.4rem;
@@ -39,17 +39,16 @@
   }
 
   .backdrop {
+    position: fixed;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    height: 100%;
-    background-color: rgba(10, 10, 10, 0.8);
-    -webkit-backdrop-filter: blur(9px);
-    backdrop-filter: blur(9px);
-    margin-right: 85px;
-    z-index: 101;
+    background-color: rgba(10, 10, 10, 0.90);
+    z-index: 103;
   }
 
   .wrapper {
