@@ -102,7 +102,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(10, 10, 10, 0.8);
+        background-color: var(--backdrop-color);
         -webkit-backdrop-filter: blur(9px);
         backdrop-filter: blur(9px);
         margin-right: 85px;
@@ -126,9 +126,8 @@
     }
 
     h4 {
-        color: rgba(255, 255, 255, 0.8);
+        color: var(--title-color);
         margin: 0;
-        margin-left: 4px;
     }
 
     input {
