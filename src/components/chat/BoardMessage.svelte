@@ -203,7 +203,7 @@
     p {
         margin: 0;
         word-break: break-word;
-        font-family: "Montserrat" !important;
+        font-family: "Montserrat", sans-serif !important;
         font-size: 13px;
     }
 
@@ -240,7 +240,7 @@
     }
 
     .options {
-      font-family: "Roboto Mono";
+      font-family: "Roboto Mono", monospace;
       opacity: 0.9;
       width: 50px;
       display: inherit;
@@ -269,7 +269,6 @@
     }
 
     .reply_active {
-        border-color: #5f86f2;
         border: 1px solid #5f86f2;
         -webkit-animation: border_rgb 10s ease infinite;
         -moz-animation: border_rgb 10s ease infinite;
@@ -277,7 +276,7 @@
     }
 
     .reactions {
-      font-family: "Roboto Mono";
+      font-family: "Roboto Mono", monospace;
       color: black;
       opacity: 0.9;
       width: 400px;

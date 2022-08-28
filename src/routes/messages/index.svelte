@@ -113,7 +113,7 @@
     let offChain = false;
     let msg = e.detail.text;
     let myaddr = $user.huginAddress.substring(0, 99);
-    let myMessage = { chat: chat, msg: msg, sent: true, t: Date.now() };
+    let myMessage = { chat: chat, msg: msg, sent: true, timestamp: Date.now() };
     saveToStore(myMessage);
     if (e.detail.offChain) {
       offChain = true;
