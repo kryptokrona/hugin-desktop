@@ -42,7 +42,8 @@
     })
 
     const declineCall = () => {
-        $webRTC.call[0].pop()
+    let filterArr = $webRTC.call.filter(a => a.chat !== thisCall.chat)
+    $webRTC.call = filterArr
     }
 
 </script>
