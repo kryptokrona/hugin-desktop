@@ -28,7 +28,7 @@
   // When incoming call and this get mounted we play the ringtone
   onMount(async () => {
 
-    
+
     playVideo();
 
   });
@@ -68,7 +68,7 @@
   $: if ($webRTC.myVideo) thisCall = $webRTC.call[0].chat;
 
  $: if ($webRTC.screen_stream) {
-  playVideo() 
+  playVideo()
  } else if ($webRTC.video) {
   playVideo()
  }
@@ -81,7 +81,7 @@
     } else {
       window.api.setCamera()
     }
-  
+
   }
 
   const resize = (size) => {
@@ -99,21 +99,20 @@
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:medium_window={window_medium}
-     use:draggable={{bounds: 'parent'}}  on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
->
-  <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
-  ></video>
-  <div class="toggles">
-    <Screen on:click={switchStream} />
-    <div class="resize" on:click={()=> resize('min')}><Minus/></div>
-    <div class="resize" on:click={()=> resize('medium')}><Plus/></div>
-    {#if source}
-    {#each sources as src}
-    <!-- <div on:click={() => switchStream}>{src.label}</div> -->
-   
-    {/each}
-    {/if}
+<div class="card" class:medium_window={window_medium} use:draggable={{bounds: 'parent'}}  on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}>
+  <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
+  <div class="fade">
+    <div class="toggles">
+      <Screen on:click={switchStream}/>
+      <Minus on:click={()=> resize('min')}/>
+      <Plus on:click={()=> resize('medium')}/>
+      {#if source}
+        {#each sources as src}
+          <!-- <div on:click={() => switchStream}>{src.label}</div> -->
+
+        {/each}
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -132,8 +131,12 @@
     pointer-events: all;
     transition: 0.35s;
     cursor: pointer;
-    .toggles {
+
+    .fade {
       position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       bottom: 0;
       width: 100%;
       height: 100px;
@@ -144,11 +147,18 @@
     }
 
     &:hover {
-      .toggles {
+      .fade {
         opacity: 100%;
         background-image: linear-gradient(180deg, #00000000, #000000);
         pointer-events: visible;
       }
+    }
+
+    .toggles {
+      display: flex;
+      width: 100%;
+      justify-content: space-evenly;
+      align-items: center;
     }
 
     video {
@@ -236,13 +246,13 @@
     height: 50px;
   }
 
-  
+
  .max_window {
   width: 1000px;
   height: 800px;
   transition: 0.35s;
  }
- 
+
  .medium_window {
   width: 650px;
   height: 400px;
@@ -255,6 +265,6 @@
     position: relative;
     display: inline-block;
  }
- 
+
 
 </style>

@@ -90,9 +90,11 @@ on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
 <video class:toggleVideo={move} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}
        class:hide={move}>
 </video>
-<div class="toggles">
-  <div class="resize" on:click={()=> resize('min')}><Minus/></div>
-  <div class="resize" on:click={()=> resize('medium')}><Plus/></div>
+<div class="fade">
+  <div class="toggles">
+    <Minus on:click={()=> resize('min')}/>
+    <Plus on:click={()=> resize('medium')}/>
+  </div>
 </div>
 </div>
 <style lang="scss">
@@ -110,22 +112,34 @@ on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
     pointer-events: all;
     transition: 0.35s;
     cursor: pointer;
-    .toggles {
+
+    .fade {
       position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       bottom: 0;
       width: 100%;
       height: 100px;
       z-index: 501;
       opacity: 0%;
       transition: 200ms ease-in-out;
-      padding: 0 0 10px 10px;
+      border-radius: 0 0 10px 10px;
     }
 
     &:hover {
-      .toggles {
+      .fade {
         opacity: 100%;
         background-image: linear-gradient(180deg, #00000000, #000000);
+        pointer-events: visible;
       }
+    }
+
+    .toggles {
+      display: flex;
+      width: 100%;
+      justify-content: space-evenly;
+      align-items: center;
     }
 
     video {
