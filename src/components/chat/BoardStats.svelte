@@ -3,8 +3,13 @@
   import { fade } from "svelte/transition";
   import { boards } from "$lib/stores/user.js";
   import { get_board_icon } from "$lib/utils/hugin-utils.js";
+  import ActiveBoard from "./ActiveBoard.svelte";
   const dispatch = createEventDispatcher();
   let active_boards = [];
+
+  onMount(()=> {
+    filterActiveBoards($boards.newBoards);
+  })
 
   //Get message updates and trigger filter
 	window.api.receive('newBoard', async (data) => {
@@ -21,11 +26,6 @@
 
   $ : active_boards
 
-  function printBoard() {
-    console.log(
-      'lol print'
-    )
-  }
 </script>
 
 <div class="wrapper">
@@ -37,30 +37,12 @@
   </div>
   <div class="list-wrapper">
     {#each active_boards as board}
-      <div class="card">
-        {#await get_board_icon(board.brd)}
-        {:then board_color}
-        <div class="brd" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-          <button class="board-icon" on:click={() => printBoard(board)}>{board.brd.substring(0, 1).toUpperCase()}</button>
-        </div>
-        {/await}
-        <p class="board">{board.brd}</p><br>
-      </div>
+       <ActiveBoard board={board}/>
     {/each}
   </div>
 </div>
 
 <style lang="scss">
-
-  .board {
-    margin: 0;
-    word-break: break-word;
-    display: contents;
-    font-family: "Montserrat" !important;
-    font-size: 13px;
-    font-weight: bold;
-  }
-
 
   .wrapper {
     width: 100%;
@@ -145,33 +127,6 @@
     padding: 1rem;
     color: white;
     border-bottom: 1px solid var(--border-color);
-  }
-
-  .brd {
-    border-radius: 11px;
-    opacity: 0.88;
-    margin-bottom: 5px;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-
-  .board-icon {
-    border: none;
-    background: none;
-    color: #f2f2f2;
-    font-size: 22px;
-    font-family: 'Montserrat', sans-serif;
-    cursor: pointer;
-    border-radius: 15px;
-    width: 30px;
-    height: 30px;
-
-    &:hover {
-      opacity: 1;
-      color: white;
-    }
   }
 
 
