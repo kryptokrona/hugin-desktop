@@ -200,7 +200,7 @@
             on:click={openAdd} />
 
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
-
+    <div class="fade"></div>
     <div class="outer" id="chat_window" bind:this={box}>
       <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
                 on:drop={dropFile}>
@@ -252,6 +252,15 @@
     &::-webkit-scrollbar {
       display: none;
     }
+  }
+
+  .fade {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(180deg, #121212, #12121200);
+    z-index: 100;
   }
 
 </style>
