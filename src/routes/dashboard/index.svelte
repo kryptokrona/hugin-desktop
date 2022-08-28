@@ -121,7 +121,7 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
     padding: 15px 20px 15px 20px;
     box-sizing: border-box;
   }
@@ -147,10 +147,10 @@
   }
 
   button {
-    font-family: 'Roboto Mono';
+    font-family: 'Roboto Mono', sans-serif;
     background: #181818;
     padding: 10px;
-    color: white;
+    color: var(--title-color);
     cursor: pointer;
     box-shadow: none;
     border-radius: 5px;
