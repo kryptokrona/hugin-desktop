@@ -70,17 +70,16 @@
 <style lang="scss">
 
     .backdrop {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(18, 18, 18, 0.8);
-        -webkit-backdrop-filter: blur(8px);
-        backdrop-filter: blur(8px);
-        margin-right: 85px;
-        z-index: 101;
+      position: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--backdrop-color);
+      z-index: 103;
     }
 
     .card {
@@ -90,7 +89,7 @@
         height: 360px;
         width: 320px;
         padding: 30px;
-        background-color: #181818;
+        background-color: var(--backgound-color);
         border-radius: 8px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
         border: 1px solid var(--border-color);
