@@ -80,7 +80,7 @@
   }
 
   .top {
-    height: 77px;
+    height: 73px;
     top: 0;
     width: 100%;
     max-width: 280px;

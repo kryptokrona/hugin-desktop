@@ -62,7 +62,7 @@
 <style lang="scss">
 
   .wrapper {
-    height: 77px;
+    height: 73px;
     padding: 1rem;
     width: 100%;
     display: flex;
@@ -70,11 +70,13 @@
   }
 
   .border-top {
+    border-bottom: 1px solid transparent;
     border-top: 1px solid var(--border-color);
   }
 
   .border-bottom {
     border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid transparent;
   }
 
   input {
