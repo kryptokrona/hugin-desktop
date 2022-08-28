@@ -174,7 +174,7 @@
   }
 
   p {
-    margin: 0;
+    margin: 0 0 0 30px;
     word-break: break-word;
     font-family: "Montserrat", sans-serif !important;
   }
@@ -219,7 +219,7 @@
   }
 
   .reactions {
-    margin-top: 0.5rem;
+    margin: 0.5rem 0 0 30px;
     display: flex;
     gap: 10px;
     font-size: 15px;
