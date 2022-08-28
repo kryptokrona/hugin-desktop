@@ -53,7 +53,7 @@
     .leftMenu {
         height: 100vh;
         width: 85px;
-        border-right: 1px solid rgba(255,255,255, 0.1);
+        border-right: 1px solid var(--border-color);
         box-sizing: border-box;
         padding-bottom: 2em;
         padding-top: 3em;

@@ -59,6 +59,7 @@
 <style lang="scss">
 
   .wrapper {
+    height: 77px;
     box-sizing: border-box;
     padding: 20px 20px 20px 20px;
     width: 100%;
@@ -66,7 +67,8 @@
     z-index: 3;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
-    border: 1px solid var(--card-border);
+    border-top: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--card-border);
   }
 
 

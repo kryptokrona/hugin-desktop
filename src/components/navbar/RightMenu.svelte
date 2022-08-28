@@ -159,7 +159,7 @@
   .rightMenu {
     width: 85px;
     height: 100%;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 1px solid var(--border-color);
     padding-bottom: 1.5em;
     padding-top: 1em;
     display: flex;

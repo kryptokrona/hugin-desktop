@@ -163,7 +163,7 @@
         width: 100%;
         max-width: 280px;
         box-sizing: border-box;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 1px solid var(--border-color);
         z-index: 3;
     }
 
@@ -191,7 +191,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid var(--border-color);
         z-index: 9;
     }
 
