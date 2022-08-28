@@ -232,7 +232,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    box-sizing: border-box;
+    position: relative;
     width: 100%;
     margin-right: 85px;
   }
