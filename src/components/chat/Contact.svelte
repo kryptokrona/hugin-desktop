@@ -1,186 +1,122 @@
 <script>
-import {createEventDispatcher, onMount} from 'svelte'
-import {fade} from "svelte/transition";
-import {get_avatar} from "$lib/utils/hugin-utils.js";
-import {user, webRTC} from "$lib/stores/user.js";
+  import { createEventDispatcher } from "svelte";
+  import { fade } from "svelte/transition";
+  import { get_avatar } from "$lib/utils/hugin-utils.js";
+  import { user, webRTC } from "$lib/stores/user.js";
 
-export let contact
+  export let contact;
+  let thisCall = false;
 
-let hover = false
-let settings = false
-let thisCall = false
+  $: if ($webRTC.active) {
+    thisCall = $webRTC.call.some(a => a.chat === contact.chat);
+  } else {
+    thisCall = false;
+  }
+  const dispatch = createEventDispatcher();
 
-$: if ($webRTC.active) {
-    thisCall = $webRTC.call.some(a=> a.chat === contact.chat)
-} else {
-    thisCall = false
-}
-const dispatch = createEventDispatcher();
+  const printThis = (contact) => {
+    dispatch("thisContact", {
+      contact: contact
+    });
+  };
 
-    //Hover functions
-    function show() {
-        hover = true;
-    }
-
-    function hide() {
-        hover = false;
-    }
-
-    //Contacts settings hover functions
-    function showSettings() {
-        settings = true;
-    }
-
-    function hideSettings() {
-        settings = false;
-    }
-
-    const printThis = (contact) => {
-        dispatch('thisContact', {
-            contact: contact,
-        })
-    }
-
-    const rename = () => {
-
-        user.update(a => {
-            return {
-            ...a,
-            rename: contact
-            }
-        })
-        dispatch('openRename')
-    }
+  const rename = () => {
+    user.update(a => {
+      return {
+        ...a,
+        rename: contact
+      };
+    });
+    dispatch("openRename");
+  };
 
 
 </script>
-    
-<div class="card"  
-        in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" 
-        on:mouseenter={show} on:mouseleave={hide} 
-        class:rgb={thisCall}
-        class:active={contact.chat == $user.activeChat.chat}
-        on:click={(e) => printThis(contact)}>
 
-    {#if contact.new}
+<div class="card"
+     in:fade="{{duration: 100}}" out:fade="{{duration: 100}}"
+     class:rgb={thisCall}
+     class:active={contact.chat === $user.activeChat.chat}
+     on:click={(e) => printThis(contact)}>
+
+  {#if contact.new}
     <div class:unread={contact.new}></div>
-    {/if}
-<img class="avatar" classs:hover={hover} on:click={rename(contact)} src="data:image/png;base64,{get_avatar(contact.chat)}" alt="">
-    <div class="content">
-        <h4>{contact.name}</h4>
-        <p>{contact.msg}</p>
-    </div>
-    <div class="wrap">
-    </div>
- 
+  {/if}
+
+  <img class="avatar" on:click={() => rename(contact)}
+       src="data:image/png;base64,{get_avatar(contact.chat)}" alt="">
+  <div class="content">
+    <h4>{contact.name}</h4>
+    <p>{contact.msg}</p>
+  </div>
+
 </div>
 
-<style>
+<style lang="scss">
 
-.card {
-        box-sizing: border-box;
-        display: flex;
-        padding: 10px 20px 10px 10px;
-        width: 100%;
-        color: #dbcdcd;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-        transition: 250ms ease-in-out;
-        cursor: pointer;
-        opacity: 0.9;
-        border-top: 1px solid transparent;
+  .card {
+    display: flex;
+    height: 80px;
+    padding: 1rem;
+    width: 100%;
+    color: var(--title-color);
+    border-bottom: 1px solid var(--border-color);
+    transition: 200ms ease-in-out;
+    cursor: pointer;
+    opacity: 0.9;
+
+    &:hover {
+      color: white;
+      opacity: 1.0;
+      background-color: var(--card-border);
     }
+  }
 
-    .card:hover {
-        color: white;
-        opacity: 1.0;
-        border-color: aliceblue;
-    }
+  .avatar {
+    margin-bottom: 10px;
+    opacity: 0.92;
+    cursor: pointer;
+  }
 
-    .avatar {
-        margin-bottom: 10px;
-        opacity: 0.92;
-        cursor: pointer;
+  .content {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 
-    }
+  h4 {
+    margin: 0;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    font-family: "Montserrat", sans-serif;
+    text-overflow: ellipsis;
+    font-weight: bold;
+  }
 
-    .hover {
-        opacity: 1;
-    }
+  p {
+    margin: 5px 0 0 0;
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    font-family: "Montserrat", sans-serif;
+  }
 
-    .content {
-        margin-left: 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
+  .unread {
+    animation: border_rgb 30s infinite;
+    background-color: white;
+    width: 5px;
+    height: 2px;
+    border-radius: 30%;
+    left: 340px;
+    margin-top: 25px;
+    position: absolute;
+  }
 
-    h4 {
-        margin: 0;
-        white-space: nowrap;
-        max-width: 180px;
-        overflow: hidden;
-        font-family: "Montserrat";
-        text-overflow: ellipsis;
-        font-weight: bold;
-
-    }
-
-    p {
-      margin: 0;
-      white-space: nowrap;
-      max-width: 200px;
-      overflow: hidden;
-      font-size: 12px;
-      margin-top: 5px;
-      text-overflow: ellipsis;
-      font-family: "Montserrat";
-    }
-
-    .add-icon {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 5px;
-        border-radius: 5px;
-        transition: 250ms ease-in-out;
-    }
-
-    .add-icon:hover {
-        opacity: 50%;
-        padding: 5px;
-    }
-
-    .unread {
-        animation: border_rgb 30s infinite;
-        background-color: white;
-        width: 5px;
-        height: 2px;
-        border-radius: 30%;
-        left: 340px;
-        margin-top: 25px;
-        position: absolute;
-    }
-
-    
-    .active {
-        animation: border_rgb 10s infinite;
-    }
-
-    .contact_settings {
-        position: relative;
-    }
-
-    .rename {
-        position: absolute;
-    }
-    .wrap {
-
-    position: relative;
-    margin-left: 40px;
-    }
-
-    .icon {
-        position: absolute;
-    }
-
+  .active {
+    animation: border_rgb 10s infinite;
+  }
 </style>
