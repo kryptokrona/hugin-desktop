@@ -5,7 +5,9 @@
   import { user, boards } from "$lib/stores/user.js";
   import Reaction from "/src/components/chat/Reaction.svelte";
   import EmojiSelector from "svelte-emoji-selector";
-  import Time, { svelteTime } from "svelte-time";
+  import Time from "svelte-time";
+  import ReplyArrow from "/src/components/buttons/ReplyArrow.svelte";
+  import RepliedArrom from "/src/components/buttons/RepliedArrom.svelte";
 
   export let msg;
   export let msgFrom;
@@ -32,17 +34,8 @@
   let replyMessage = false;
   let reactionCount;
   let time;
+
   const dispatch = createEventDispatcher();
-
-  //Hover functions
-  function enter() {
-    active = true;
-  }
-
-  function leave() {
-    if (active && reply_to_this) return;
-    active = false;
-  }
 
   async function checkreply(reply) {
     thisreply = await window.api.getReply(reply);
@@ -58,7 +51,6 @@
       reply: "reply"
     });
   };
-
 
   const sendReactMsg = (e) => {
     console.log("wanna send", e.detail);
@@ -96,234 +88,150 @@
   }
 
 </script>
+
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
-{#if replyMessage}
-  {#await checkreply(reply)}
-  {:then thisreply}
-      
-    <div in:fade="{{duration: 150}}" class="reply">
+
+<div class="message" class:reply_active={reply_to_this} in:fade="{{duration: 150}}">
+  <div>
+    {#if replyMessage}
+      {#await checkreply(reply)}
+      {:then thisreply}
+        <div class="reply">
+          <div style="display: flex; gap: 10px; align-items: center">
+            <RepliedArrom/>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <p class="reply_nickname">{thisreply.n}</p>
+              <p>{thisreply.m}</p>
+            </div>
+          </div>
+        </div>
+      {:catch error}
+        <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar" src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
+          <p class="reply_nickname">Can't find reply</p> <br>
+          <p style="color: red">{error.message}</p>
+        </div>
+      {/await}
+    {/if}
+  </div>
+  <div>
+    <div>
       <div class="header">
-      <img class="reply_avatar" src="data:image/png;base64,{get_avatar(thisreply.k)}" alt="">
+        <div style="display: flex; align-items: center; margin-left: -10px">
+          <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+          <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /></span></h5>
+        </div>
+        <div class="actions">
+          <EmojiSelector on:emoji={reactTo}/>
+          <ReplyArrow on:click={replyTo} />
+        </div>
       </div>
-      <p class="reply_nickname">{thisreply.n}</p> <br>
-      <p>{thisreply.m}</p>
+      <p>{msg}</p>
     </div>
 
-
-  {:catch error}
-    <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar" src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
-      <p class="reply_nickname">Can't find reply</p> <br>
-      <p style="color: red">{error.message}</p>
-    </div>
-
-    <div class="replyline"></div>
-  {/await}
-
-{/if}
-<div class:reply_active={reply_to_this} class:replyline={replyMessage} in:fade="{{duration: 150}}" on:mouseenter={enter} on:mouseleave={leave} class="boardMessage">
-
-  <div class="header">
-    <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-    <p class="nickname">{nickname} <span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /></span></p>
-
+      <div class="reactions">
+        {#if has_reaction}
+        {#each reactions as reaction}
+          <Reaction
+            on:sendReaction={(e) => sendReactMsg(e)}
+            thisReaction={reaction}
+            reacts={message.react}
+            emoji={reaction.m}
+            react={react} />
+        {/each}
+        {/if}
+      </div>
   </div>
-  <div class="text">
-    <p>{msg}</p>
-   
-  </div>
-
-</div>
-<div class="wrap wrap2">
-  {#if active}
-    <div class="options" in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" on:click={replyTo} on:mouseenter={enter} class:active>
-
-      <p class="reply_button" on:click={replyTo}>{replyicon}</p>
-      <EmojiSelector on:emoji={reactTo} />
-
-    </div>
-  {:else}
-    <p></p>
-  {/if}
-</div>
-<div class="wrap">
-  {#if has_reaction}
-
-    <div class="reactions">
-      {#each reactions as reaction}
-        <Reaction
-          on:sendReaction={(e) => sendReactMsg(e)}
-          thisReaction={reaction}
-          reacts={message.react}
-          emoji={reaction.m}
-          react={react} />
-      {/each}
-    </div>
-  {/if}
-
 </div>
 
 
 <style lang="scss">
-    .boardMessage {
+  .message {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px 10px 20px;
+
+    .header {
       display: flex;
-      flex-direction: column;
-      box-sizing: border-box;
-      color: rgba(255, 255, 255, 0.8);
-      padding: 10px 20px 20px 10px;
-      z-index: 3;
-      font-size: 12px;
-      background: var(--card-background);
-      border-radius: 5px;
-      border: 1px solid var(--card-border);
-
-      .header {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-      }
-
-      .text {
-        margin-top: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-left: 44px;
-        margin-top: -5px;
-        margin-right: 40px;
-      }
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .nickname {
-        font-size: 13px;
-        font-weight: bold;
-        display: contents;
-        line-height: 20px;
+    &:hover {
+      background-color: var(--card-background);
+      .actions {
+        opacity: 100%;
+      }
     }
+  }
+
+  .nickname {
+    font-size: 13px;
+    font-weight: bold;
+    display: contents;
+    line-height: 20px;
+  }
+
+  p {
+    margin: 0;
+    word-break: break-word;
+    font-family: "Montserrat", sans-serif !important;
+  }
+
+  .actions {
+    display: flex; gap: 0.5rem;
+    transition: 100ms ease-in-out;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .reply_avatar {
+    height: 30px;
+    width: 30px;
+  }
+
+  .reply_nickname {
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .reply {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    width: fit-content;
+    opacity: 0.85;
+    border-radius: 10px;
 
     p {
-        margin: 0;
-        word-break: break-word;
-        font-family: "Montserrat", sans-serif !important;
-        font-size: 13px;
+      font-size: 11px;
+      display: contents;
     }
+  }
 
-    .reply_avatar {
-        height: 30px;
-        width: 30px;
-    }
+  .reply_active {
+    border: 1px solid #5f86f2;
+    -webkit-animation: border_rgb 10s ease infinite;
+    -moz-animation: border_rgb 10s ease infinite;
+    animation: border_rgb 10s ease infinite;
+  }
 
-    .reply_nickname {
-        font-size: 12px;
-        font-weight: bold;
-    }
+  .reactions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 10px;
+    font-size: 15px;
+    flex: auto;
+  }
 
-    .reply {
-        display: flex;
-        align-items: center;
-        color: rgba(255, 255, 255, 0.8);
-        padding: 5px 12px 5px 5px;
-        z-index: 3;
-        font-size: 12px;
-        width: fit-content;
-        opacity: 0.85;
-        border-radius: 10px;
-        margin-left: 4%;
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-    .reply p {
-        font-size: 11px;
-        display: contents;
-    }
-
-    .replyer {
-    }
-
-    .options {
-      font-family: "Roboto Mono", monospace;
-      opacity: 0.9;
-      width: 50px;
-      display: inherit;
-      justify-content: right;
-      flex-direction: row-reverse;
-      color: rgba(255, 255, 255, 0.8) !important;
-      flex: auto;
-      align-content: flex-start;
-      position: absolute;
-      z-index: 10;
-      align-self: end;
-    }
-
-    .reply_button:hover {
-        opacity: 1
-    }
-
-    .reply_button p {
-        cursor: pointer;
-        display: contents;
-
-    }
-
-    .active {
-        color: white;
-    }
-
-    .reply_active {
-        border: 1px solid #5f86f2;
-        -webkit-animation: border_rgb 10s ease infinite;
-        -moz-animation: border_rgb 10s ease infinite;
-        animation: border_rgb 10s ease infinite;
-    }
-
-    .reactions {
-      font-family: "Roboto Mono", monospace;
-      color: black;
-      opacity: 0.9;
-      width: 400px;
-      display: block;
-      font-size: 15px;
-      flex: auto;
-      border-radius: 5px;
-      position: absolute;
-      height: 20px;
-      margin-left: 140px;
-      margin-top: -30px;
-      z-index: 5;
-    }
-
-    .reactions p {
-        position: relative;
-        color: black;
-        display: inline-block;
-    }
-
-    .time {
-      color: var(--text-color);
-      opacity: 80%;
-      font-weight: 400;
-      font-size: 0.75rem;
-    }
-
-    .react_button {
-        cursor: pointer;
-    }
-
-    .reply_button {
-        cursor: pointer;
-    }
-
-    .wrap {
-
-        position: relative;
-        margin-left: 40px;
-    }
-
-    .wrap2 {
-        display: flex;
-        left: 540px;
-        bottom: 32px;
-        line-height: 14px;
-    }
-
+  .time {
+    color: var(--text-color);
+    opacity: 80%;
+    margin-left: 8px;
+    font-weight: 400;
+    font-size: 0.75rem;
+  }
 
 </style>
