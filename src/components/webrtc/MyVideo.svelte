@@ -8,6 +8,10 @@
   import { draggable } from "@neodrag/svelte";
   import { createEventDispatcher } from "svelte";
   import videoIcon from '/static/images/video.svg'
+  import Minus from '/src/components/buttons/Minus.svelte'
+  import Plus from '/src/components/buttons/Plus.svelte'
+  import Screen from '/src/components/buttons/Screenshare.svelte'
+
   let myVideo = document.getElementById("myVideo");
   let video = false;
   let hover = false;
@@ -16,6 +20,7 @@
   let sources = [{label: "screen"}, {label: "tjo"}]
   let window_max = false
   let window_medium = false
+
   export let call;
 
   const dispatch = createEventDispatcher();
@@ -100,9 +105,9 @@
   <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}
   ></video>
   <div class="toggles">
-    <img src={videoIcon} on:click={switchStream} alt="switchVideoSource">
-    <div class="resize" on:click={()=> resize('min')}>x</div>
-    <div class="resize" on:click={()=> resize('medium')}>xx</div>
+    <Screen on:click={switchStream} />
+    <div class="resize" on:click={()=> resize('min')}><Minus/></div>
+    <div class="resize" on:click={()=> resize('medium')}><Plus/></div>
     {#if source}
     {#each sources as src}
     <!-- <div on:click={() => switchStream}>{src.label}</div> -->

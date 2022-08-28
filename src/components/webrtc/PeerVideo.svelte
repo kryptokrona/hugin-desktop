@@ -7,7 +7,9 @@
   import { createEventDispatcher } from "svelte";
   import { page } from "$app/stores";
   import { draggable } from "@neodrag/svelte";
-
+  import Minus from '/src/components/buttons/Minus.svelte'
+  import Plus from '/src/components/buttons/Plus.svelte'
+  
   let peerVideo = document.getElementById("peerVideo");
   let peerStream;
   let thisCall;
@@ -54,6 +56,12 @@
   $: if ($webRTC.peerVideo) thisCall = call.chat;
 
   const resize = (size) => {
+    if (window_medium  && size == 'medium') {
+      size = 'max'
+    }
+    if (window_max && size == 'min') {
+      size = 'medium'
+    }
     switch (size) {
       case 'min':
       window_max = false
@@ -83,9 +91,8 @@ on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}
        class:hide={move}>
 </video>
 <div class="toggles">
-  <div class="resize" on:click={()=> resize('min')}>x</div>
-  <div class="resize" on:click={()=> resize('medium')}>xx</div>
-  <div class="resize" on:click={()=> resize('max')}>xxx</div>
+  <div class="resize" on:click={()=> resize('min')}><Minus/></div>
+  <div class="resize" on:click={()=> resize('medium')}><Plus/></div>
 </div>
 </div>
 <style lang="scss">
