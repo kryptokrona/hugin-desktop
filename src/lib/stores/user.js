@@ -18,6 +18,7 @@ export const boards = writable({
     replyTo: {reply: false},
     thisBoard: null,
     boardsArray: ['Home'],
+    newBoards: [],
 })
 
 export const misc = writable({

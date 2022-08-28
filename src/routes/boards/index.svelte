@@ -4,7 +4,7 @@
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   import { boardMessages } from "$lib/stores/boardmsgs.js";
   import BoardMessage from "/src/components/chat/BoardMessage.svelte";
-  import ActiveHugins from "/src/components/chat/ActiveHugins.svelte";
+  import BoardStats from "/src/components/chat/BoardStats.svelte";
   import { user, boards } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import AddBoard from "/src/components/chat/AddBoard.svelte";
@@ -280,7 +280,7 @@
   <div id="board_box">
     <div id="active_hugins">
       <div class="list">
-        <ActiveHugins />
+        <BoardStats />
       </div>
     </div>
   </div>
