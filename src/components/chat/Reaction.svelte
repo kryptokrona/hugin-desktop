@@ -1,109 +1,91 @@
 <script>
-import {fade} from 'svelte/transition'
-import {createEventDispatcher, onMount} from "svelte";
+  import { fade } from "svelte/transition";
+  import { createEventDispatcher, onMount } from "svelte";
 
-const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher();
 
-export let reacts = []
-export let reactCount = 0
-export let thisReaction
-export let emoji
-export let react = false
-export let counter = false
-let filterReactions = []
-let hoverReaction = false
-let filterReactors = []
+  export let reacts = [];
+  export let reactCount = 0;
+  export let thisReaction;
+  export let emoji;
+  export let react = false;
+  export let counter = false;
+  let filterReactions = [];
+  let hoverReaction = false;
+  let filterReactors = [];
 
-$: if (reacts.length) filterReactions = reacts.filter(a => a.m == thisReaction.m)
+  $: if (reacts.length) filterReactions = reacts.filter(a => a.m == thisReaction.m);
 
-$: if (filterReactions.length > 0) {
-  let reactor = {}
-  filterReactors = filterReactions.filter(r => !reactor[r.k] && (reactor[r.k] = true))
-  reactCount = filterReactors.length
-}
+  $: if (filterReactions.length > 0) {
+    let reactor = {};
+    filterReactors = filterReactions.filter(r => !reactor[r.k] && (reactor[r.k] = true));
+    reactCount = filterReactors.length;
+  }
 
-const sendReaction = () => {
-  dispatch('sendReaction', {
-    msg: thisReaction.m,
-    brd: thisReaction.brd,
-    reply: thisReaction.r,
-  })
-  console.log('sending reaction');
-}
+  const sendReaction = () => {
+    dispatch("sendReaction", {
+      msg: thisReaction.m,
+      brd: thisReaction.brd,
+      reply: thisReaction.r
+    });
+    console.log("sending reaction");
+  };
 
-$: reactCount
-
-function reactionHover() {
-  console.log('hooooover');
-  hoverReaction = true
-}
-
-function exitHover(){
-  console.log('exit reactiion hover');
-  hoverReaction = false
-}
+  $: reactCount;
 
 </script>
 
-<div class="reaction" on:click={sendReaction} on:mouseenter={reactionHover} on:mouseleave={exitHover}>{thisReaction.m}
-
-{#if filterReactions.length > 1}
-  <p class="count">{reactCount}</p>
-{/if}
-
-  {#if hoverReaction}
-  <div class="reactors">
-   {#each filterReactors as reactors}
-        <p class="reactor">{reactors.n}</p>
-   {/each}
-   </div>
+<div class="reaction" on:click={sendReaction}>{thisReaction.m}
+  {#if filterReactions.length >= 1}
+    <p class="count">{reactCount}</p>
   {/if}
+
+  <!--
+  <div class="reactors">
+    {#each filterReactors as reactors}
+      <p class="reactor">{reactors.n}</p>
+    {/each}
+  </div>
+  -->
 
 </div>
 
 
-<style>
+<style lang="scss">
 
-.reaction {
-  cursor: pointer;
-  margin-left: 10px;
-  width: max-content;
-  display: contents;
-  position: relative;
-}
+  .reaction {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    gap: 8px;
+    padding: 0 10px 0 5px;
+    cursor: pointer;
+    background-color: var(--card-border);
+    border-radius: 20px;
 
-.hoverReactions {
-    background: white !important;
-    color: black;
-}
-.reactors {
-  color: black;
-  border-radius: 5px;
-  width: max-content;
-  display: inline;
-  margin-top: 20px;
-  margin-left: -30px;
-  position: absolute;
-}
+/*    .reactors {
+      display: none;
+    }
 
-.reactor {
-  font-family: "Roboto Mono";
-  background: white;
-  color: black;
-  border-radius: 2px;
-  padding: 3px;
-  margin-right: 2px;
-  font-size: 11px;
-  display: inline-block;
-  margin-top: 5px;
-  width: max-content;
-  position: relative;
-}
+    &:hover {
+      .reactors {
+        display: block;
+      }
+    }*/
+  }
 
-.count {
-  font-family: "Montserrat";
-  font-size: 10px;
-  display: inline;
-  color: white;
-}
+  .reactor {
+    font-family: "Roboto Mono", monospace;
+    color: white;
+    border-radius: 2px;
+    font-size: 11px;
+    display: inline-block;
+  }
+
+  .count {
+    font-family: "Montserrat";
+    font-size: 10px;
+    display: inline;
+    color: white;
+  }
 </style>
