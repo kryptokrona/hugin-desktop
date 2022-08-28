@@ -299,26 +299,6 @@ const file = join(userDataDir, "misc.db");
 const adapter = new JSONFile(file);
 const db = new Low(adapter);
 
-//Create boards.db
-const fileBoards = join(userDataDir, "boards.db");
-const adapterBoards = new JSONFile(fileBoards);
-const dbBoards = new Low(adapterBoards);
-
-//Create messages.db
-const fileMessages = join(userDataDir, "messages.db");
-const adapterMessages = new JSONFile(fileMessages);
-const dbMessages = new Low(adapterMessages);
-
-//Create keychain.db
-const fileKeys = join(userDataDir, "keychain.db");
-const adapterChain = new JSONFile(fileKeys);
-const keychain = new Low(adapterChain);
-
-//Create knownTxs.db
-const fileTxs = join(userDataDir, "knowntxs.db");
-const adapterTxs = new JSONFile(fileTxs);
-const knownTxs = new Low(adapterTxs);
-
 
 let js_wallet;
 let walletName;
