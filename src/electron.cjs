@@ -772,6 +772,10 @@ async function backgroundSyncMessages(checkedTxs = false) {
             message.type = "board";
             if (my_boards.indexOf(message.brd) == -1) {
               console.log("Not my board");
+              sanitizeHtml(message.brd)
+              sanitizeHtml(message.k)
+              let newBoard = {brd: message.brd, address: message.k}
+              mainWindow.webContents.send('newBoard', newBoard)
               continue;
             }
             saveBoardMsg(message, thisHash);
