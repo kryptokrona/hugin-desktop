@@ -7,7 +7,7 @@
   import EmojiSelector from "svelte-emoji-selector";
   import Time from "svelte-time";
   import ReplyArrow from "/src/components/buttons/ReplyArrow.svelte";
-  import RepliedArrom from "/src/components/buttons/RepliedArrom.svelte";
+  import RepliedArrom from "/src/components/buttons/RepliedArrow.svelte";
 
   export let msg;
   export let msgFrom;
