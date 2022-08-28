@@ -48,14 +48,14 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        background-color: rgba(10, 10, 10, 0.90);
+        background-color: var(--backdrop-color);
         z-index: 103;
 
         .popup-card {
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            background-color: #121212;
+            background-color: var(--backgound-color);
             border: 1px solid var(--border-color);
             border-radius: 0.4rem;
             box-sizing: border-box;
