@@ -40,7 +40,7 @@
 
     const toggleAudio = () => {
         toggle = !toggle
-        $webRTC.myStream.getAudioTracks()[0].enabled = !($webRTC.myStream.getAudioTracks()[0].enabled);
+        $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
     }
 
 </script>
