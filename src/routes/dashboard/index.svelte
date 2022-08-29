@@ -8,7 +8,7 @@
   import Warning from "$components/buttons/Warning.svelte";
   import NodeStatus from "$components/popups/NodeStatus.svelte";
   import FundsStatus from "$components/popups/FundsStatus.svelte";
-
+  import {prettyNumbers} from "$lib/utils/utils.js";
   let huginAddress;
   let address;
   let messageKey;
@@ -62,6 +62,17 @@
     navigator.clipboard.writeText(copy);
   }
 
+  
+  let locked
+    let unlocked
+    let total
+
+    $: {
+        locked = prettyNumbers($misc.balance[1])
+        unlocked = prettyNumbers($misc.balance[0])
+        total = prettyNumbers($misc.balance[0] + $misc.balance[1])
+    }
+
 </script>
 
 <main in:fade>
@@ -90,23 +101,57 @@
     <FundsStatus on:click={() => fundsPopup = !fundsPopup}/>
   {/if}
 
-  <div class="dashboard">
+<div class="dashboard">
 
     <h2>{greet}, {capitalizeFirstLetter($user.username)}!</h2>
-
+    
+  <div id="profile" in:fade>
+    <div class="inner">
+    <h3>Profile</h3>
+    <button on:click={() => copyThis(huginAddress)}> Copy Hugin Address</button>
     <div class="user">
       <div>
         <h4>Payment address</h4>
         <p class="address" on:click={() => copyThis(address)}>{address.substring(0, 10) + "..." + address.substring(89, address.length)}</p>
         <h4>Message key</h4>
-        <p class="myMsgKey" on:click={() => copyThis(messageKey)}>{messageKey.substring(0, 10) + "..." + address.substring(54, messageKey.length)}</p>
-        <button on:click={() => copyThis(huginAddress)}> Copy Both</button>
+        <p class="myMsgKey" on:click={() => copyThis(messageKey)}>{messageKey.substring(0, 10) + "..." + messageKey.substring(54, messageKey.length)}</p>
+      
       </div>
     </div>
 
-    <!-- End of dashboard window -->
+
+
   </div>
 
+    <div class="inner">
+      <div class="nodestatus">
+          <h3>Balance</h3>
+          <div class="popup-card">
+            <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
+            </div>
+            <div style="margin-bottom: 10px">
+                <h5 style="color: var(--warn-color); margin: 0 0 5px 5px;">Locked funds</h5>
+                <p>{locked}</p>
+            </div>
+            <div style="margin-bottom: 10px">
+                <h5 style="color: var(--alert-color); margin: 0 0 5px 5px;">Unlocked funds</h5>
+                <p>{unlocked}</p>
+            </div>
+            <div style="margin-bottom: 10px">
+                <h5 style="color: var(--success-color); margin: 0 0 5px 5px;">Total Funds</h5>
+                <p>{total}</p>
+            </div>
+        </div>
+
+      
+      </div>
+    </div>
+
+
+
+    <!-- End of dashboard window -->
+  </div>
+</div>
 
 </main>
 
@@ -135,14 +180,18 @@
     display: grid;
     gap: 3rem;
     grid-template-columns: repeat(12, minmax(0, 1fr));
+    margin-top: 10px;
 
     div {
       column-span: spam 6/ span 6;
     }
 
     h4 {
-      opacity: 60%;
-      letter-spacing: 5px;
+      opacity: 80%;
+      font-family: "Montserrat";
+      font-size: 15px;
+      font-weight: bold;
+      width: 250px;
     }
   }
 
@@ -154,6 +203,8 @@
     cursor: pointer;
     box-shadow: none;
     border-radius: 5px;
+    margin: 10px;
+    margin-left: -5px;
     border: 1px solid transparent;
 
     &:hover {
@@ -161,4 +212,31 @@
       border: 1px solid var(--title-color);
     }
   }
+
+  
+  #profile .inner {
+      padding: 3rem;
+      border-radius: 0.4rem;
+      height: 220px;
+      transition: 0.25s ease-in-out all;
+      height: 700px;
+      overflow: hidden;
+    }
+
+    #profile {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    p {
+      font-size: 15px;
+    margin-top: 0px;
+    }
+
+    button {
+          margin: 10px;
+    margin-left: -5px;
+    border: 1px solid transparent;
+    }
+
 </style>
