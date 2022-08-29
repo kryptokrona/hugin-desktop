@@ -260,7 +260,7 @@ ipcMain.on("upload", async (e, filename, path, address) => {
 
 function upload(filename, path, address) {
 
-  let client = new WebTorrent();
+  let client = new WebTorrent({maxConns: 1});
   console.log("uploading", filename);
   console.log("from ", path);
   client.seed(path, function(torrent) {
@@ -1430,7 +1430,7 @@ async function sendMessage(message, receiver, off_chain = false) {
 
   optimizeMessages();
 
-  if (!off_chain) {
+  // if (!off_chain) {
 
     let result = await js_wallet.sendTransactionAdvanced(
       [[address, 1]], // destinations,
@@ -1458,12 +1458,12 @@ async function sendMessage(message, receiver, off_chain = false) {
       console.log(`Failed to send transaction: ${result.error.toString()}`);
       mainWindow.webContents.send("error_msg", error);
     }
-  } else if (off_chain) {
-    let sentMsg = { msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address };
-    console.log("sending rtc message");
-    mainWindow.webContents.send("rtc_message", sentMsg);
-    saveMessageSQL(sentMsg);
-  }
+  // } else if (off_chain) {
+  //   let sentMsg = { msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address };
+  //   console.log("sending rtc message");
+  //   mainWindow.webContents.send("rtc_message", sentMsg);
+  //   saveMessageSQL(sentMsg);
+  // }
 }
 
 async function optimizeMessages(nbrOfTxs) {
