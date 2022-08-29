@@ -1,7 +1,7 @@
 <script>
 import { boards } from "$lib/stores/user.js";
 import { get_board_icon } from "$lib/utils/hugin-utils.js";
-
+import {fade, fly} from "svelte/transition";
 export let board
 let board_post_count
 let poster_count
@@ -30,36 +30,53 @@ function printBoard() {
   
 </script>
 
-<div class="card">
+<div class="card" in:fade="{{duration: 150}}">
     {#await get_board_icon(board.brd)}
     {:then board_color}
     <div class="brd" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
       <button class="board-icon" on:click={() => printBoard(board)}>{board.brd.substring(0, 1).toUpperCase()}</button>
     </div>
     {/await}
-    <p class="board">{board.brd}</p><p class="count">{board_post_count}</p><br>
-    <p>{poster_count} People are talking here</p>
+    <p class="board">{board.brd}</p><br>
+    {#if poster_count > 1}
+    <p in:fade="{{duration: 250}}">{poster_count} people are talking here</p>
+    {:else}
+    <p in:fade="{{duration: 250}}">{poster_count} new message</p>
+    {/if}
   </div>
 
 <style lang="scss">
-
+.card {
+    display: block;
+    width: 100%;
+    padding: 15px;
+}
 .board {
     margin: 0;
     word-break: break-word;
-    display: contents;
+    display: inline-block;
     font-family: "Montserrat" !important;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: bold;
+    margin-left: 5px;
   }
 
   .brd {
-    border-radius: 11px;
+    border-radius: 5px;
     opacity: 0.88;
     margin-bottom: 5px;
+    padding: 0px;
+    font-size: 3px;
+    display: inline-block;
 
     &:hover {
       opacity: 1;
     }
+  }
+
+  p {
+    font-family: "Montserrat";
+    font-size: 15px;;
   }
 
   .board-icon {
