@@ -9,6 +9,8 @@
   import NodeStatus from "$components/popups/NodeStatus.svelte";
   import FundsStatus from "$components/popups/FundsStatus.svelte";
   import {prettyNumbers} from "$lib/utils/utils.js";
+  import Transactions from "$components/finance/Transactions.svelte";
+
   let huginAddress;
   let address;
   let messageKey;
@@ -142,15 +144,14 @@
                 <p>{total}</p>
             </div>
         </div>
-
-      
       </div>
     </div>
 
-
-
-    <!-- End of dashboard window -->
+    <div class="transactions">
+      <Transactions/>
+    </div>
   </div>
+ <!-- End of dashboard window -->
 </div>
 
 </main>
@@ -160,6 +161,10 @@
   main {
     margin: 0 85px;
     z-index: 3;
+  }
+
+  .popup-card {
+    margin-top: 10px;
   }
 
   .status {
@@ -189,7 +194,7 @@
     h4 {
       opacity: 80%;
       font-family: "Montserrat";
-      font-size: 15px;
+      font-size: 12px;
       font-weight: bold;
       width: 250px;
     }
@@ -219,7 +224,7 @@
       border-radius: 0.4rem;
       height: 220px;
       transition: 0.25s ease-in-out all;
-      height: 700px;
+      height: 250px;
       overflow: hidden;
     }
 
@@ -237,6 +242,10 @@
           margin: 10px;
     margin-left: -5px;
     border: 1px solid transparent;
+    }
+
+    .transactions {
+      width: 200%;
     }
 
 </style>
