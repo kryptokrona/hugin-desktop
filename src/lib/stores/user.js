@@ -11,6 +11,7 @@ export const user = writable({
     contacts: null,
     addChat: false,
     rename: false,
+    transactions: []
 })
 
 export const boards = writable({
