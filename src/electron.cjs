@@ -124,7 +124,7 @@ function createWindow() {
   });
 
   const mainWindow = new BrowserWindow({
-    backgroundColor: "#181818",
+    backgroundColor: "#121212",
     frame: false,
     autoHideMenuBar: true,
     minHeight: 700,
@@ -1238,6 +1238,20 @@ ipcMain.handle("getPrivateKeys", async () => {
 ipcMain.handle("getMnemonic", async () => {
   return await js_wallet.getMnemonicSeed();
 });
+
+//Gets n transactions per page to view in frontend
+ipcMain.handle('getTransactions', async (e, startIndex) => {
+  let startFrom = startIndex
+  const showPerPage = 10
+  const allTx = await js_wallet.getTransactions()
+  const pages = Math.ceil(allTx.length / showPerPage)
+  const pageTx = []
+  for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
+      pageTx.push({hash: tx.hash, amount: WB.prettyPrintAmount(tx.totalAmount()), time: tx.timestamp})
+  }
+
+  return {pageTx, pages}
+})
 
 
 //SWITCH NODE

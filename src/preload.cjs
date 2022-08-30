@@ -120,6 +120,10 @@ const WINDOW_API = {
   getHeight: async () => {
     return await ipcRenderer.invoke('getHeight')
   },
+
+  getTransactions: async (data) => {
+    return await ipcRenderer.invoke('getTransactions', data)
+  }
 }
 
 
