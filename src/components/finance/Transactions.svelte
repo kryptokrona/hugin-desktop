@@ -55,7 +55,7 @@ $: page = pageNum + 1
         {#each txList as tx}
             <div class="tx">
                 <p>{tx.hash.substring(0, 8) + "..." + tx.hash.substring(56, tx.hash.length)}</p>
-                <p class="tx" class:sent={tx.amount.substring(0,1) != "-"}>{tx.amount}</p>
+                <p class="tx" style="background: none" class:sent={tx.amount.substring(0,1) != "-"}>{tx.amount}</p>
             </div>
         {/each}
     </div>
@@ -121,7 +121,6 @@ height: 75.5%;
   }
 
   &:active {
-    background-color: var(--primary-color);
     color: #121212;
   }
 }
@@ -136,11 +135,11 @@ align-items: center;
 }
 
 .sent {
-  color: green !important;
+  color: var(--success-color) !important;
 }
 
 .tx {
-  color: red;
+  color: var(--warn-color);
   display: flex;
 }
 </style>
