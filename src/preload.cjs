@@ -123,6 +123,10 @@ const WINDOW_API = {
 
   getTransactions: async (data) => {
     return await ipcRenderer.invoke('getTransactions', data)
+  },
+
+  sendTransaction: async (tx) => {
+    ipcRenderer.send('sendTx', tx)
   }
 }
 
