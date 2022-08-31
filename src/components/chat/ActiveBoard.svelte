@@ -76,7 +76,7 @@ function printBoard() {
 
   p {
     font-family: "Montserrat";
-    font-size: 15px;;
+    font-size: 12px;
   }
 
   .board-icon {
