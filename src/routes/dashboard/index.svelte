@@ -99,19 +99,19 @@
         blink={$misc.syncState !== 'Synced'}
         on:click={() => nodePopup = !nodePopup}
       />
-      <Warning
+      <!-- <Warning
         blink={($misc.balance[1] !== 0)}
         grey={($misc.balance[1] === 0)}
         yellow={($misc.balance[1] !== 0)}
         red={dc} on:click={() => fundsPopup = !fundsPopup}
-      />
+      /> -->
     </div>
   </div>
 
   {#if nodePopup}
     <NodeStatus on:click={() => nodePopup = !nodePopup}/>
-  {:else if fundsPopup}
-    <FundsStatus on:click={() => fundsPopup = !fundsPopup}/>
+  <!-- {:else if fundsPopup}
+    <FundsStatus on:click={() => fundsPopup = !fundsPopup}/> -->
   {/if}
 
 <div class="dashboard">
