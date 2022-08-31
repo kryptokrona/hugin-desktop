@@ -1242,10 +1242,6 @@ ipcMain.handle("getMnemonic", async () => {
 //Gets n transactions per page to view in frontend
 ipcMain.handle('getTransactions', async (e, startIndex) => {
 
-
-
-
-
   const allTx = await js_wallet.getTransactions()
 
   const filtered_transactions = allTx.filter(tx => {
@@ -1256,7 +1252,6 @@ ipcMain.handle('getTransactions', async (e, startIndex) => {
   const pages = Math.ceil(filtered_transactions.length / showPerPage)
   const pageTx = []
   for (const tx of filtered_transactions) {
-    console.log('tx', tx.transfers)
    
       pageTx.push({hash: tx.hash, amount: WB.prettyPrintAmount(tx.totalAmount()), time: tx.timestamp})
   }
@@ -1265,7 +1260,6 @@ ipcMain.handle('getTransactions', async (e, startIndex) => {
 })
 
 ipcMain.on("openLink", (e,url) => {
- console.log('link', url)
  shell.openExternal(url)
 });
 
@@ -1285,9 +1279,6 @@ ipcMain.on("switchNode", async (e, newNode) => {
 });
 
 ipcMain.on("sendTx", (e, tx) => {
-  console.log(
-    'sendtx', tx
-  )
   sendTx(tx);
 }
 );
