@@ -10,6 +10,7 @@
   export let emoji;
   export let react = false;
   export let counter = false;
+  let hover = true
   let filterReactions = [];
   let hoverReaction = false;
   let filterReactors = [];
@@ -28,10 +29,9 @@
       brd: thisReaction.brd,
       reply: thisReaction.r
     });
-    console.log("sending reaction");
   };
 
-  $: reactCount;
+  $: reactCount
 
 </script>
 
@@ -40,13 +40,11 @@
     <p class="count">{reactCount}</p>
   {/if}
 
-  <!--
   <div class="reactors">
     {#each filterReactors as reactors}
       <p class="reactor">{reactors.n}</p>
     {/each}
   </div>
-  -->
 
 </div>
 
@@ -62,16 +60,18 @@
     cursor: pointer;
     background-color: var(--card-border);
     border-radius: 20px;
-
-/*    .reactors {
+    position: relative;
+   .reactors {
       display: none;
     }
 
     &:hover {
       .reactors {
         display: block;
+        margin-top: 40px;
+        position: absolute;
       }
-    }*/
+    }
   }
 
   .reactor {
@@ -88,4 +88,5 @@
     display: inline;
     color: white;
   }
+
 </style>
