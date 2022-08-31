@@ -22,6 +22,7 @@
   let nodePopup;
   let fundsPopup;
   let dc;
+  let buttonText = 'Copy'
 
   onMount(async () => {
 
@@ -62,6 +63,16 @@
   //Copy address, msgkey or both
   function copyThis(copy) {
     navigator.clipboard.writeText(copy);
+    buttonGlow()
+  }
+  let glow = false
+  const buttonGlow = () =>  {
+    glow = true
+    buttonText = 'Copied'
+    let timer = setTimeout(function() {
+        glow = false
+        buttonText = 'Copy'
+   }, 900)
   }
 
   
@@ -110,14 +121,14 @@
   <div id="profile" in:fade>
     <div class="inner">
     <h3>Profile</h3>
-    <button on:click={() => copyThis(huginAddress)}> Copy Hugin Address</button>
     <div class="user">
       <div>
         <h4>Payment address</h4>
         <p class="address" on:click={() => copyThis(address)}>{address.substring(0, 10) + "..." + address.substring(89, address.length)}</p>
         <h4>Message key</h4>
         <p class="myMsgKey" on:click={() => copyThis(messageKey)}>{messageKey.substring(0, 10) + "..." + messageKey.substring(54, messageKey.length)}</p>
-      
+            
+        <button class:border_rgb={glow} on:click={() => copyThis(huginAddress)}>{buttonText}</button>
       </div>
     </div>
 
@@ -186,7 +197,8 @@
     gap: 3rem;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     margin-top: 10px;
-
+    padding: 10px;
+    border-radius: 10px;
     div {
       column-span: spam 6/ span 6;
     }
@@ -201,7 +213,7 @@
   }
 
   button {
-    font-family: 'Roboto Mono', sans-serif;
+    font-family: "Montserrat";
     background: #181818;
     padding: 10px;
     color: var(--title-color);
@@ -247,5 +259,7 @@
     .transactions {
       width: 200%;
     }
+
+    
 
 </style>
