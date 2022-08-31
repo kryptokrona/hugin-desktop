@@ -9,7 +9,6 @@
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
 	import Loader from '/src/components/popups/Loader.svelte'
-
   let wallet;
   let walletName;
   let myPassword = "";
@@ -138,6 +137,12 @@
     })
 
     $: loading = $misc.loading
+
+const openURL = (url) => {
+  console.log(url)
+  let link = url.target.attributes[0].nodeValue
+  window.api.send('openLink', link)
+}
 </script>
 {#if loading}
 <Loader/>
@@ -158,12 +163,12 @@
         <p class="error">{errorMessage}</p>
       {/if}
     </div>
-    <select bind:value={node}>
+    <!-- <select bind:value={node}>
       {#each $nodelist as node}
         <option value={`${node.url}:${node.port}`}>{node.name}</option>
       {/each}
     </select>
-    <button on:click={switchNode}>Connect</button>
+    <button on:click={switchNode}>Connect</button> -->
   </div>
   <div in:fade class="hero">
     <div></div>
@@ -246,9 +251,9 @@
       </svg>
     </div>
     <div in:fly="{{y: 100}}" class="socials">
-      <p>Github</p>
-      <p>Support</p>
-      <p>Website</p>
+      <a link="https://github.com/kryptokrona/hugin-svelte" on:click={(e)=> openURL(e)}>Github</a>
+      <a link="https://github.com/kryptokrona/hugin-svelte/issues" on:click={(e)=> openURL(e)}>Support</a>
+      <a link="https://hugin.chat"  on:click={(e)=> openURL(e)}>Website</a>
     </div>
   </div>
 </div>
@@ -323,6 +328,12 @@
 
   .error {
     color: red
+  }
+
+  a {
+    cursor: pointer;
+    font-family: "Roboto Mono";
+    color: white;
   }
 
 </style>
