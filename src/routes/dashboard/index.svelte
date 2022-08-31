@@ -76,7 +76,7 @@
   }
 
   
-  let locked
+    let locked
     let unlocked
     let total
 
@@ -137,23 +137,25 @@
   </div>
 
     <div class="inner">
-      <div class="nodestatus">
+      <div class="funds">
           <h3>Balance</h3>
           <div class="popup-card">
             <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
             </div>
             <div style="margin-bottom: 10px">
-                <h5 style="color: var(--warn-color); margin: 0 0 5px 5px;">Locked funds</h5>
+                <h5 style="color: var(--warn-color); margin: 0 0 5px 5px;">Locked</h5>
                 <p>{locked}</p>
             </div>
             <div style="margin-bottom: 10px">
-                <h5 style="color: var(--alert-color); margin: 0 0 5px 5px;">Unlocked funds</h5>
-                <p>{unlocked}</p>
-            </div>
-            <div style="margin-bottom: 10px">
-                <h5 style="color: var(--success-color); margin: 0 0 5px 5px;">Total Funds</h5>
+                <h5 style="color: var(--success-color); margin: 0 0 5px 5px;">Total</h5>
                 <p>{total}</p>
             </div>
+            {#if $misc.balance[1] !== 0}
+            <div style="margin-bottom: 10px">
+                <h5 style="color: var(--alert-color); margin: 0 0 5px 5px;">Unlocked</h5>
+                <p>{unlocked}</p>
+            </div>
+            {/if}
         </div>
       </div>
     </div>
@@ -259,7 +261,9 @@
     .transactions {
       width: 200%;
     }
-
+    .funds {
+      margin-left: 80px;
+    }
     
 
 </style>
