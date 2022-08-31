@@ -19,7 +19,7 @@
     let showNode = false
     let exitNode = "X"
     let defualtPick = true
-
+    let userName = ''
     const handleLogin = () => {
 
       let accountData = {
@@ -30,9 +30,9 @@
       }
 
       //Save username to localStorage
-      window.localStorage.setItem('userName', walletName)
+      window.localStorage.setItem('userName', userName)
 
-      misc.update(oldData => {
+      user.update(oldData => {
 				return {
 						...oldData,
 						loading: true
@@ -68,7 +68,7 @@
     }
 
     $: {
-        if (nodeInput.length > 0 || walletName.length > 0 || password.length > 0) {
+        if (nodeInput.length > 0 || userName.length > 0 || password.length > 0) {
             //Enable add button
             enableNextButton = true
         } else {
@@ -126,10 +126,14 @@
 
       {#if username && !pass}
         <label>Username</label>
-        <input type="text" placeholder="Satoshi" bind:value={walletName}>
+        <input type="text" placeholder="Satoshi" bind:value={userName}>
         <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('wallet')}/>
       {/if}
       {#if pass}
+      
+        <label>Wallet name</label>
+        <input type="text" placeholder="Wallet" bind:value={walletName}>
+
         <label>Password</label>
         <input type="password" placeholder="Something safe" bind:value={password}>
         <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={handleLogin}/>
@@ -201,5 +205,30 @@
     h4 {
       font-size: 20px;
     }
+
+    input {
+      box-sizing: border-box;
+      background-color: var(--backgound-color);
+      border: 1px solid var(--card-border);
+      border-radius: 0.4rem;
+      color: var(--title-color);
+      padding: 0 10px;
+      margin-bottom: 20px;
+      position: fixed;
+      font-size: 17px !important;
+      width: 100%;
+      font-size: 16px;
+      height: 40px;
+      display: inline-flex;
+      position: relative;
+      font-family: 'Roboto Mono';
+      padding-left: 15px;
+      margin-top: 10px;
+      margin-left: -10px;
+      &:focus {
+        outline: none;
+        border: 1px solid var(--title-color);
+        }
+      }
 
 </style>
