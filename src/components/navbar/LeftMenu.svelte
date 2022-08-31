@@ -7,6 +7,9 @@
     import logoutIcon from '/static/images/logout.png'
     import financeIcon from '/static/images/finance.png'
     import { goto } from "$app/navigation";
+    import BoardIcon from '/src/components/buttons/BoardIcon.svelte'
+    import MessageIcon from '/src/components/buttons/MessageIcon.svelte'
+    import SettingsIcon from '/src/components/buttons/SettingsIcon.svelte'
 
     let sync
     let avatar
@@ -32,12 +35,12 @@
 <div class="leftMenu draggable" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
         <a class='button myavatar' href="/dashboard"><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></a>
-        <a class='button' href="/messages"><img class="icon" src={msgIcon} alt="msgs"></a>
-        <a class='button' href="/boards"><img class="icon" src={brdIcon} alt="brds"></a>
+        <MessageIcon on:click={() => goto("/messages")} />
+        <BoardIcon on:click={() => goto("/boards")}/>
         <!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
     </div>
     <div class="nav">
-        <a class='button' href="/settings"><img class="icon" src={settingsIcon} alt="settings"></a>
+        <SettingsIcon on:click={() => goto("/settings")}/>
         <!-- <a class='button' href="/" on:click={handleLogout}><img class="icon" src={logoutIcon} alt="logout"></a> -->
         <svg on:click={() => goto('/settings')} width="45px" height="13px" viewBox="0 0 176 54" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
             <g id="Page-1" stroke="#fff" stroke-width="1" fill="none" fill-rule="evenodd">
