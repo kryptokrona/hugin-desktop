@@ -18,6 +18,8 @@
     let privateViewKey = ''
     let enableConnect = false
     let nodeInput = ""
+    let showKeys = false
+    let showMnemonic = false
     onMount(async () => {
       getHeight()
     })
@@ -62,12 +64,14 @@
     const getMnemonic = async () => {
       let mnemonic = await window.api.getMnemonic()
       seedPhrase = mnemonic[0]
+      showMnemonic = true
     }
 
     const getPrivateKeys = async () => {
       let  keys = await window.api.getPrivateKeys()
       privateSpendKey = keys[0]
       privateViewKey = keys[1]
+      showKeys = true
     }
 
     const toWallet = () => {
@@ -151,27 +155,29 @@
 
   {#if wallet} 
   <div id="settings" in:fade>
-    <div class="inner">
+    <div class="inner keys">
       <div class="button">
       <Button disabled={node} text="Show private keys" on:click={getPrivateKeys}/>
      </div>
       <br>
+     {#if showKeys}
+      <h6 >Spend Key</h6>
+      <p in:fade type="text">{privateSpendKey}</p>
 
-      <h6>Spend Key</h6>
-      <p type="text">{privateSpendKey}</p>
-
-      <h6>View key</h6>
-      <p type="text">{privateViewKey}</p>
-
+      <h6 >View key</h6>
+      <p in:fade type="text">{privateViewKey}</p>
+      {/if}
     </div>
 
-    <div class="inner">
+    <div class="inner mnemonic">
       <div class="button">
       <Button disabled={node} text="Show mnemonic seed" on:click={getMnemonic}/>
       </div>
       <br>
+      {#if showMnemonic}
       <h6>Mnemonic seed</h6>
-      <p type="text">{seedPhrase}</p>
+      <p in:fade type="text">{seedPhrase}</p>
+      {/if}
     </div>
 
    
@@ -229,6 +235,36 @@
       width: 100%;
       overflow-wrap: break-word;
       padding-right: 10px;
+    }
+
+    .keys p {
+      font-family: "Montserrat";
+    color: white;
+    width: 100%;
+    overflow-wrap: break-word;
+    padding-right: 10px;
+    height: 90px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 7px;
+    overflow: hidden;
+    padding: 10px;
+    width: 250px;
+    text-overflow: ellipsis;
+    margin-left: -9px;
+    border: 1px solid white;
+    }
+
+    .mnemonic p {
+      height: 190px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 7px;
+      overflow: hidden;
+      padding: 10px;
+      width: 250px;
+      padding-right: 10px;
+      margin-left: -9px;
+      border: 1px solid white;
+
     }
 
     #settings {
