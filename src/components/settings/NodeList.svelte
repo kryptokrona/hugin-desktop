@@ -3,7 +3,6 @@
 import { fade } from 'svelte/transition';
 import {nodelist} from "$lib/stores/nodes.js";
 import {user, misc} from "$lib/stores/user.js";
-import GreenButton from "/src/components/buttons/GreenButton.svelte";
 import {createEventDispatcher} from "svelte";
 
 const dispatch = createEventDispatcher()
@@ -21,6 +20,11 @@ export let enableConnect
 
       enableConnect = true
 
+      dispatch('node', {
+        node:  nodeAddress + ':' + nodePort
+      } )
+      
+
     }
 
 
@@ -28,9 +32,11 @@ export let enableConnect
         if (nodeInput.length > 1) {
             //Enable add button
             enableConnect = true
+            dispatch('enable')
 
         } else {
           enableConnect = false
+          dispatch('disable')
         }
     }
 
@@ -46,18 +52,9 @@ export let enableConnect
 
     function connectToNode(nodeInput) {
 
-      dispatch('changeNode')
-
-      misc.update(oldData => {
-          return {
-              ...oldData,
-              node: nodeInput
-          }
-      })
-
-      window.api.switchNode(nodeInput)
-
+  
     }
+
 
 </script>
 
@@ -72,7 +69,6 @@ export let enableConnect
 <br>
 <h4>Custom node</h4>
 <input placeholder="node:url" type="text" bind:value={nodeInput}>
-<GreenButton text="Connect" enabled={enableConnect} on:click={()=> connectToNode(nodeInput)}/>
 <style lang="scss">
 
 h1,h2,h3,h4 {
