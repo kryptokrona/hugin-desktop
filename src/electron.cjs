@@ -1273,6 +1273,13 @@ ipcMain.on("switchNode", async (e, newNode) => {
   db.write();
 });
 
+ipcMain.on("sendTx", (e, tx) => {
+  console.log(
+    'sendtx', tx
+  )
+  sendTx(tx);
+}
+);
 
 ipcMain.on("sendMsg", (e, msg, receiver, off_chain) => {
     sendMessage(msg, receiver, off_chain);
@@ -1534,6 +1541,27 @@ async function optimizeMessages(nbrOfTxs) {
     console.log("optimize completed");
     return result;
 
+
+}
+
+
+async function sendTx(tx) {
+
+  console.log('transactions', tx)
+  console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
+    const result = await js_wallet.sendTransactionBasic(tx.to, tx.amount, tx.paymentID)
+    if (result.success) {
+        mainWindow.webContents.send('sent_tx')
+        console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+    } else {
+        console.log(`Failed to send transaction: ${result.error.toString()}`);
+        let error = {
+          m: "Failed to send",
+          n: "Transaction error",
+          h: Date.now()
+        };
+        mainWindow.webContents.send("error_msg", error);
+    }
 
 }
 
