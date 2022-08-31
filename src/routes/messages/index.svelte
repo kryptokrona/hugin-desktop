@@ -7,10 +7,11 @@
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   import ChatList from "/src/components/chat/ChatList.svelte";
   import AddChat from "/src/components/chat/AddChat.svelte";
-  import { user, boards } from "$lib/stores/user.js";
+  import { user, boards, transactions } from "$lib/stores/user.js";
   import Rename from "/src/components/chat/Rename.svelte";
   import Dropzone from "svelte-file-dropzone";
   import BackDrop from "/src/components/popups/BackDrop.svelte";
+import SendTransaction from "/src/components/finance/SendTransaction.svelte";
 
   let video;
   let audio;
@@ -172,7 +173,6 @@
 
   }
 
-
   function test() {
     dragover = true;
   }
@@ -180,6 +180,19 @@
   function fest() {
     dragover = false;
   }
+
+  const sendTransaction = (e) => {
+    $transactions.tip = false
+    $transactions.send = false
+    let tx = e.detail
+    window.api.sendTransaction(tx)
+  }
+
+  const hideModal = () => {
+    $transactions.tip = false
+    $transactions.send = {name: Anon}
+  }
+
 </script>
 
 {#if toggleRename}
@@ -192,6 +205,10 @@
 
 {#if dragover}
   <BackDrop />
+{/if}
+
+{#if  $transactions.tip}
+<SendTransaction on:click={hideModal} on:send={(e)=> sendTransaction(e)}/>
 {/if}
 
 <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
