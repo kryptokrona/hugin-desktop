@@ -13,7 +13,6 @@ onMount(() => {
 })
 
 async function getTransactions() {
-    console.log('pagenumber', pageNum)
 
     let startIndex = pageNum * 10
 
@@ -31,21 +30,25 @@ async function getTransactions() {
 }
 $: pageNum
 $: txList
-
+$: page = pageNum + 1
 
 </script>
 
 <div in:fade class="wrapper">
 <div class="header">
     <h3>Transactions</h3>
+  
     <div>
         {#if (pageNum > 0)}
             <Backward on:click={() => getTransactions(pageNum--)}/>
         {/if}
-        {#if (pages >= pageNum)}
+        {#if (pages >= page + 1)}
             <Forward on:click={() => getTransactions(pageNum++)}/>
         {/if}
+      
     </div>
+    
+    <p>{page}/{pages}</p>
 </div>
 {#if $user.transactions.length > 0}
     <div class="transactions">
