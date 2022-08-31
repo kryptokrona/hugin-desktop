@@ -5,6 +5,7 @@
     import NodeList from '/src/components/settings/NodeList.svelte';
     import {onMount} from "svelte";
     import Button from "/src/components/buttons/Button.svelte";
+    import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
     let networkHeight = ''
     let walletHeight = ''
@@ -15,7 +16,8 @@
     let wallet = false
     let privateSpendKey = ''
     let privateViewKey = ''
-
+    let enableConnect = false
+    let nodeInput = ""
     onMount(async () => {
       getHeight()
     })
@@ -44,6 +46,8 @@
       getHeight()
 
     }
+
+    $: enableConnect
 
     //Reactive if statement
     $: { if (networkHeight - walletHeight < 2) {
@@ -76,6 +80,20 @@
       node = true
     }
 
+    const connectToNode = () => {
+
+      misc.update(oldData => {
+          return {
+              ...oldData,
+              node: nodeInput
+          }
+      })
+      changeNode()
+      window.api.switchNode(nodeInput)
+    }
+  
+
+    $: nodeInput
     $: seedPhrase
     $: status
     $: networkHeight
@@ -93,7 +111,8 @@
 
 <div id="settings" in:fade>
   <div class="inner">
-    <NodeList on:changeNode={changeNode}/>
+    <NodeList  on:node={(e)=> nodeInput = e.detail.node} on:enable={()=> enableConnect = true} on:disable={()=> enableConnect = false}/>
+    <GreenButton text="Connect" enabled={enableConnect} on:click={()=> connectToNode()}/>
   </div>
 
     <div class="inner">
