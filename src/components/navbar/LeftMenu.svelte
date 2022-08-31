@@ -32,13 +32,14 @@
 
 </script>
 
-<div class="leftMenu draggable" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
+<div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
         <a class='button myavatar' href="/dashboard"><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></a>
         <MessageIcon on:click={() => goto("/messages")} />
         <BoardIcon on:click={() => goto("/boards")}/>
         <!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
     </div>
+    <div class="draggable"></div>
     <div class="nav">
         <SettingsIcon on:click={() => goto("/settings")}/>
         <!-- <a class='button' href="/" on:click={handleLogout}><img class="icon" src={logoutIcon} alt="logout"></a> -->
@@ -105,7 +106,7 @@
 
     .myavatar {
       margin-bottom: 10px;
-      margin-top: -25px;
+      margin-top: -15px;
     }
 
     .avatar {

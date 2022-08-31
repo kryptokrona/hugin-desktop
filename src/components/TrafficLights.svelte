@@ -19,6 +19,7 @@
     border-radius: 20px;
     background-color: #454545;
     transition: 200ms ease-in-out;
+    cursor: pointer;
 
     &:first-child {
       &:hover {
