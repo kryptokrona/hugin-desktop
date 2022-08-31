@@ -23,7 +23,7 @@
     const sendTransaction = () => {
         dispatch('send', {
             to: addr,
-            amount: parseInt(amount),
+            amount: parseInt(amount) * 100000,
             paymentId: undefined
         })
     }
