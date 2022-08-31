@@ -108,7 +108,7 @@
       {:catch error}
         <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar" src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
           <p class="reply_nickname">Can't find reply</p> <br>
-          <p style="color: red">{error.message}</p>
+          <p style="color: red">This reply is not in the mempool</p>
         </div>
       {/await}
     {/if}
