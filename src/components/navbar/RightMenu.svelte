@@ -1,13 +1,14 @@
 <script>
   import { fly } from "svelte/transition";
   import { page } from "$app/stores";
-  import { user, boards, webRTC } from "$lib/stores/user.js";
+  import { user, boards, webRTC, transactions } from "$lib/stores/user.js";
   import callIcon from "/static/images/call.svg";
   import videoIcon from "/static/images/video.svg";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher } from "svelte";
   import { get_board_icon } from "$lib/utils/hugin-utils.js";
   import SimpleAdd from "/src/components/buttons/SimpleAdd.svelte";
+  import PayIcon from "/src/components/buttons/PayIcon.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -100,6 +101,12 @@
     }
   }
 
+  const sendMoney = () => {
+   $transactions.tip = true
+   $transactions.send = {to: $user.activeChat.chat, name: $user.activeChat.name}
+  }
+
+
 
 </script>
 
@@ -140,14 +147,8 @@
         <button class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
         </button>
       {/if}
+      <PayIcon on:click={()=> sendMoney(contact)}/>
     </div>
-  {/if}
-
-  {#if $page.url.pathname === '/webrtc'}
-    <p>Mute</p>
-    <p>Sound</p>
-    <p>Mute</p>
-    <p>Mute</p>
   {/if}
 
   <div class="draggable hitbox"></div>
