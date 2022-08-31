@@ -5,7 +5,8 @@
     import { goto } from '$app/navigation';
     import GreenButton from "/src/components/buttons/GreenButton.svelte";
     import {nodelist} from "$lib/stores/nodes.js";
-
+    
+    import NodeList from '/src/components/settings/NodeList.svelte';
     let password = ''
     let walletName = ''
     let nodeInput = ''
@@ -58,16 +59,12 @@
 
     $: nodeAddress
     $: nodePort
+    $: enableNextButton
 
-    function chooseNode(node) {
+    function chooseNode(nodeInput) {
           nodeAddress = nodeInput.split(':')[0]
           nodePort = parseInt(nodeInput.split(':')[1])
-      enableNextButton = true
-    }
-
-    $ : if (nodeInput.length) {
-      nodeAddress = nodeInput.split(':')[0]
-      nodePort = parseInt(nodeInput.split(':')[1])
+          enableNextButton = true
     }
 
     $: {
@@ -120,20 +117,7 @@
         {/if}
       </div>
               {#if showNode}
-                <div class="nodeBox">
-                  <div on:click={showNodes}>{exitNode}</div>
-                  <h4>Node</h4>
-                    <div class="nodelist">
-                      {#each $nodelist as node}
-                          <div class="nodes" on:click={()=> chooseNode(node)}>
-                             <h4 class="nodes">{node.name}</h4>
-                          </div>
-                      {/each}
-                    </div>
-                  <br>
-                  <h4>Custom node</h4>
-                  <input placeholder="node:url" type="text" bind:value={nodeInput}>
-                </div>
+                <NodeList on:node={(e)=> chooseNode(e.detail.node)} on:enable={() => enableNextButton = true} on:disable={() => enableNextButton = false}/>
               {/if}
           <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('node') }/>
       {/if}
@@ -171,7 +155,7 @@
 
       padding: 3rem;
       border-radius: 10px;
-      display: grid;
+      height: 800px;
       transition: .25s ease-in-out all;
     }
 
@@ -216,73 +200,6 @@
 
     h4 {
       font-size: 20px;
-    }
-
-
-    .nodelist {
-      height: 50%;
-      overflow-x: hidden;
-      overflow-y: scroll;
-    }
-
-    .nodes {
-      color: #f1f2f3;
-      font-family: 'Roboto Mono';
-      font-size: 17px;
-      padding: 7px;
-      cursor: pointer;
-    }
-
-    .nodes:hover {
-      background: rgba(0,0,0,0.1);
-      color: white;
-    }
-
-    input {
-      box-sizing: border-box;
-      background-color: var(--backgound-color);
-      border: 1px solid var(--card-border);
-      border-radius: 0.4rem;
-      color: var(--title-color);
-      padding: 0 10px;
-      margin-bottom: 20px;
-      position: fixed;
-      font-size: 17px !important;
-      width: 100%;
-      font-size: 16px;
-      height: 40px;
-      display: inline-flex;
-      position: relative;
-      font-family: 'Roboto Mono';
-      padding-left: 15px;
-      margin-top: 10px;
-      margin-left: -10px;
-      &:focus {
-        outline: none;
-        border: 1px solid var(--title-color);
-        }
-      }
-
-    .nodelist {
-    --scrollbarBG: transparent;
-    --thumbBG: #3337;
-    overflow: auto;
-
-    }
-     .nodelist::-webkit-scrollbar {
-      width: 8px;
-    }
-      .nodelist {
-      scrollbar-width: thin;
-      scrollbar-color: var(--thumbBG) var(--scrollbarBG);
-    }
-    .nodelist::-webkit-scrollbar-track {
-      background: var(--scrollbarBG);
-    }
-    .nodelist::-webkit-scrollbar-thumb {
-      background-color: var(--thumbBG) ;
-      border-radius: 3px;
-      border: 3px solid var(--scrollbarBG);
     }
 
 </style>
