@@ -11,7 +11,7 @@
   import Rename from "/src/components/chat/Rename.svelte";
   import Dropzone from "svelte-file-dropzone";
   import BackDrop from "/src/components/popups/BackDrop.svelte";
-import SendTransaction from "/src/components/finance/SendTransaction.svelte";
+  import SendTransaction from "/src/components/finance/SendTransaction.svelte";
 
   let video;
   let audio;
@@ -207,7 +207,7 @@ import SendTransaction from "/src/components/finance/SendTransaction.svelte";
   <BackDrop />
 {/if}
 
-{#if  $transactions.tip}
+{#if $transactions.tip}
 <SendTransaction on:click={hideModal} on:send={(e)=> sendTransaction(e)}/>
 {/if}
 
