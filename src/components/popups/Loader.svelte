@@ -36,6 +36,8 @@
   p {
     margin: 0;
     color: var(--title-color);
+    font-family: "Montserrat";
+    font-size: 17px;
   }
 
   .backdrop {
