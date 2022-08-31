@@ -29,7 +29,6 @@ async function getTransactions() {
 
 
 }
-$: console.log('pageNum', pageNum)
 $: pageNum
 $: txList
 
