@@ -310,9 +310,12 @@ code {
 
 
 .draggable {
+  height: 100%;
+  width: 100%;
   -webkit-user-select: none;
   user-select: none;
   -webkit-app-region: drag;
+  display: flex;
 }
 
 .svelte-emoji-picker {
