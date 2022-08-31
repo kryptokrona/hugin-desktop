@@ -151,7 +151,7 @@
     box-sizing: border-box;
     color: rgba(255, 255, 255, 0.8);
     padding: 10px 20px 10px 20px;
-
+    border: 1px solid transparent;
     .header {
       display: flex;
       align-items: center;
