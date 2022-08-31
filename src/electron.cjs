@@ -17,7 +17,7 @@ const en = require("int-encoder");
 const sqlite3 = require("sqlite3").verbose();
 const Peer = require("simple-peer");
 const WebTorrent = require("webtorrent");
-const { desktopCapturer } = require('electron')
+const { desktopCapturer, shell } = require('electron')
 const {
   Address,
   AddressPrefix,
@@ -1252,6 +1252,11 @@ ipcMain.handle('getTransactions', async (e, startIndex) => {
 
   return {pageTx, pages}
 })
+
+ipcMain.on("openLink", (e,url) => {
+ console.log('link', url)
+ shell.openExternal(url)
+});
 
 
 //SWITCH NODE
