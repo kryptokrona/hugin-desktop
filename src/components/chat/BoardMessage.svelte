@@ -150,7 +150,7 @@
     flex-direction: column;
     box-sizing: border-box;
     color: rgba(255, 255, 255, 0.8);
-    padding: 10px 20px 10px 20px;
+    padding: 10px 30px 10px 30px;
     border: 1px solid transparent;
     .header {
       display: flex;
