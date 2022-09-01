@@ -261,9 +261,13 @@
     .transactions {
       width: 200%;
     }
+
     .funds {
       margin-left: 80px;
     }
     
+    h3 {
+      font-size: 20px;
+    }
 
 </style>

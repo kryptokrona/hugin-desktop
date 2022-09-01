@@ -121,4 +121,12 @@
         opacity: 80%;
       }
     }
+
+    p {
+    font-family: "Montserrat";
+    }
+
+    h4 {
+    align-self: center;
+    }
 </style>

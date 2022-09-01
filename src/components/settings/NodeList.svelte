@@ -78,7 +78,7 @@ h1,h2,h3,h4 {
 }
 
 h3 {
-  font-size: 25px;
+  font-size: 20px;
   margin-bottom: 15px;
   margin-left: -10px;
 }
