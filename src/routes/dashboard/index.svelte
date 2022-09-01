@@ -199,7 +199,7 @@
     gap: 3rem;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     margin-top: 10px;
-    padding: 10px;
+    padding-top: 15px;
     border-radius: 10px;
     div {
       column-span: spam 6/ span 6;

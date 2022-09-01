@@ -328,7 +328,7 @@
 
     .reply_to {
       display: inline-flex;
-      font-size: 11px;
+      font-size: 10px;
       font-family: 'Roboto Mono';
       font-weight: 100;
       position: absolute;

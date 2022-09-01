@@ -190,7 +190,7 @@
 
   const hideModal = () => {
     $transactions.tip = false
-    $transactions.send = {name: Anon}
+    $transactions.send = {name: ''}
   }
 
 </script>
