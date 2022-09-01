@@ -10,7 +10,6 @@
   export let emoji;
   export let react = false;
   export let counter = false;
-  let hover = true
   let filterReactions = [];
   let hoverReaction = false;
   let filterReactors = [];
@@ -40,7 +39,7 @@
     <p class="count">{reactCount}</p>
   {/if}
 
-  <div class="reactors">
+  <div in:fade class="reactors">
     {#each filterReactors as reactors}
       <p class="reactor">{reactors.n}</p>
     {/each}
@@ -67,15 +66,18 @@
 
     &:hover {
       .reactors {
-        display: block;
+        display: flex;
         margin-top: 40px;
         position: absolute;
+        gap: 5px;
+        width: max-content;
       }
     }
   }
 
   .reactor {
-    font-family: "Roboto Mono", monospace;
+    font-family: "Montserrat";
+    font-weight: bold;
     color: white;
     border-radius: 2px;
     font-size: 11px;
