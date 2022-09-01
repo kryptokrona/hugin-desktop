@@ -188,13 +188,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 44px;
-    width: 44px;
+    height: 38px;
+    width: 38px;
     border-radius: 100%;
     background-color: rgba(255, 255, 255, 0.22);
     transition: 250ms ease-in-out;
     cursor: pointer;
     margin-bottom: 10px;
+    margin-top: 5px;
 
     &:hover {
       background-color: rgba(255, 255, 255, 0.4);
@@ -251,8 +252,9 @@
   }
 
   .avatar {
-    margin-top: -10px;
-    height: 64px;
+    margin-top: 0px;
+    height: 55px;
+    margin-bottom: 5px;
   }
 
   .board {
