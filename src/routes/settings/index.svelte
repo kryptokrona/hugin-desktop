@@ -156,6 +156,7 @@
   {#if wallet} 
   <div id="settings" in:fade>
     <div class="inner keys">
+      <h3>Private keys</h3>
       <div class="button">
       <Button disabled={node} text="Show private keys" on:click={getPrivateKeys}/>
      </div>
@@ -170,6 +171,7 @@
     </div>
 
     <div class="inner mnemonic">
+      <h3>Mnemonic seed</h3>
       <div class="button">
       <Button disabled={node} text="Show mnemonic seed" on:click={getMnemonic}/>
       </div>
@@ -193,7 +195,7 @@
     }
 
     h3 {
-      font-size: 25px;
+      font-size: 20px;
       margin-bottom: 15px;
       margin-left: -10px;
     }
