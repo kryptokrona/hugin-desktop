@@ -544,7 +544,6 @@ async function loadKeys(start = false) {
       known_keys.push(keys.key);
     });
 
-    console.log("known keys", known_keys);
   }
 
   return contacts;
@@ -603,8 +602,6 @@ async function start_js_wallet(walletName, password, mynode) {
     //Push one test hash to the array if this is a new account, this should be empty?
     checkedTxs = [];
   }
-
-  console.log("pushed checkted", checkedTxs);
   //Load known public keys
   let myContacts = await loadKeys(start = true);
   my_boards = await getMyBoardList();
@@ -1576,7 +1573,6 @@ ipcMain.handle("getReply", async (e, data) => {
 });
 
 ipcMain.handle("getConversations", async (e) => {
-  console.log("Event");
   let contacts = await getConversations();
   return contacts.reverse();
 });
