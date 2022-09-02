@@ -17,7 +17,8 @@ const en = require("int-encoder");
 const sqlite3 = require("sqlite3").verbose();
 const Peer = require("simple-peer");
 const WebTorrent = require("webtorrent");
-const { desktopCapturer, shell } = require('electron')
+const { desktopCapturer, shell } = require('electron');
+const {autoUpdater} = require("electron-updater");
 const {
   Address,
   AddressPrefix,
@@ -135,7 +136,7 @@ function createWindow() {
       nodeIntegration: true,
       spellcheck: false,
       devTools: dev,
-      preload: path.join(__dirname, "preload.cjs")
+      preload: appPath+"/preload.cjs"
     },
     x: windowState.x,
     y: windowState.y,
@@ -148,7 +149,6 @@ function createWindow() {
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
     mainWindow.focus();
-    mainWindow.webContents.openDevTools();
   });
 
   mainWindow.on("close", () => {
@@ -280,7 +280,7 @@ function sleep(ms) {
 
 
 const userDataDir = app.getPath("userData");
-
+const appPath = app.getAppPath();
 const downloadDir = app.getPath("downloads");
 
 const dbPath = userDataDir + "/SQLmessages.db";
@@ -310,9 +310,80 @@ let my_boards = [];
 ipcMain.on("app", (data) => {
   mainWindow.webContents.send("getPath", userDataDir);
   startCheck();
+
+  if (dev) {
+    console.log('Running in development');
+     mainWindow.openDevTools();
+  } else {
+    console.log('Running in production');
+    autoUpdater.checkForUpdates();
+
+    var AutoLaunch = require('auto-launch');
+    var autoLauncher = new AutoLaunch({
+        name: "Hugin Messenger",
+        isHidden: true
+    });
+
+    // Checking if autoLaunch is enabled, if not then enabling it.
+    autoLauncher.isEnabled().then(function(isEnabled) {
+      if (isEnabled) return;
+       autoLauncher.enable();
+    }).catch(function (err) {
+      throw err;
+    });
+  }
 });
 
 
+if (process.platform !== 'darwin') {
+  autoUpdater.on('update-downloaded', () => {
+ 
+    notifier.notify({
+      title: "Hugin Update",
+      appID: "Hugin Messenger",
+      message: "A new update is available, would you like to install it now?",
+      wait: true, // Wait with callback, until user action is taken against notification,
+      actions: ['Yes', 'Later']
+    },function (err, response, metadata) {
+      // Response is response from notification
+      // Metadata contains activationType, activationAt, deliveredAt
+      console.log(response, metadata.activationValue, err);
+ 
+      if(metadata.activationValue != "Later" || metadata.button != "Later" ) {
+            autoUpdater.quitAndInstall();
+            app.exit();
+        }
+      });
+ 
+    });
+ 
+  } else {
+ 
+    autoUpdater.on('update-available', () => {
+      notifier.notify({
+        title: "Hugin Messenger",
+        appID: "Hugin Messenger",
+        message: "A new update is available, would you like to install it now?",
+        wait: true, // Wait with callback, until user action is taken against notification,
+        actions: ['Yes', 'Later']
+      },function (err, response, metadata) {
+        // Response is response from notification
+        // Metadata contains activationType, activationAt, deliveredAt
+        console.log(response, metadata.activationValue, err);
+ 
+        if(metadata.activationValue == "Yes" || metadata.button == "Yes" ) {
+ 
+ 
+         shell.openExternal('https://github.com/kryptokrona/hugin-svelte/releases/latest');
+ 
+ 
+          }
+        });
+ 
+  });
+ 
+ }
+ 
 async function startCheck() {
 
 
