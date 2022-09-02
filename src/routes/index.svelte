@@ -8,7 +8,6 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
-	import Loader from '/src/components/popups/Loader.svelte'
   let wallet;
   let walletName;
   let myPassword = "";
@@ -17,7 +16,6 @@
   let loginStatus = true;
   let errorMessage = "Wrong password";
   let enableLogin = false;
-  let loading = false
 
   onMount(() => {
     window.api.send("app", true);
@@ -137,17 +135,13 @@
         }
     })
 
-    $: loading = $misc.loading
-
 const openURL = (url) => {
   console.log(url)
   let link = url.target.attributes[0].nodeValue
   window.api.send('openLink', link)
 }
+
 </script>
-{#if loading}
-<Loader/>
-{/if}
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
   <div class="login-wrapper">
     <div class="login-wrapper">
