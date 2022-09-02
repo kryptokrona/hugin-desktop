@@ -123,6 +123,7 @@
                 <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('node') }/>
               </div>
               {/if}
+          <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('node') }/>
       {/if}
 
     <div class="wrapper">
