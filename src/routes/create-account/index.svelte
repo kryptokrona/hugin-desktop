@@ -22,11 +22,13 @@
     let userName = ''
     const handleLogin = () => {
 
+      $misc.loading = true
+      
       let accountData = {
         walletName: walletName,
         password: password,
-        node: nodeAddress,
-        port: nodePort
+        node: nodeInput.split(':')[0],
+        port: parseInt(nodeInput.split(':')[1])
       }
 
       //Save username to localStorage
@@ -61,9 +63,8 @@
     $: nodePort
     $: enableNextButton
 
-    function chooseNode(nodeInput) {
-          nodeAddress = nodeInput.split(':')[0]
-          nodePort = parseInt(nodeInput.split(':')[1])
+    function chooseNode(node) {
+          nodeInput = node
           enableNextButton = true
     }
 

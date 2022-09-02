@@ -8,6 +8,7 @@
 	import CallerMenu from "/src/components/webrtc/CallerMenu.svelte";
 	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
 	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
+	import Loader from '/src/components/popups/Loader.svelte';
 	//Stores
 	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -24,6 +25,7 @@
 	let new_messages = false
 	let board_message_sound
 	let errors = []
+	let loading = false
 
 	const closePopup = () => {
 		incoming_call = false
@@ -156,6 +158,8 @@ window.api.receive('node', async (node) => {
 		$notify.new = filterArr
 	}
 
+    $: loading = $misc.loading
+
 </script>
 
 
@@ -166,7 +170,9 @@ window.api.receive('node', async (node) => {
 
 
 {#if ready}
-
+	{#if loading}
+	<Loader/>
+	{/if}
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 }
 
