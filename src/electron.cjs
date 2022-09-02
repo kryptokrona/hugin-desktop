@@ -204,7 +204,8 @@ app.on("window-all-closed", () => {
 });
 
 ipcMain.on("close", () => {
-  app.quit();
+  mainWindow.hide()
+  app.dock.hide()
 });
 
 ipcMain.on("min", () => {
