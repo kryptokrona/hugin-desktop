@@ -145,7 +145,7 @@
     });
     openAddBoard();
     printBoard(board);
-    window.api.send("addBoard", board);
+    window.api.addBoard(board);
   };
 
   //Svelte reactive. Sets noMsgs boolean for welcome message.
