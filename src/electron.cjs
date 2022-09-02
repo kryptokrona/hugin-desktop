@@ -29,7 +29,7 @@ const {
   LevinPacket,
   Transaction
 } = require("kryptokrona-utils");
-const isDark = nativeTheme.shouldUseDarkColors;
+
 const appRoot = require('app-root-dir').get().replace('app.asar', '');
 const appBin = appRoot + '/bin/';
 
