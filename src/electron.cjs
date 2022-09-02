@@ -1,6 +1,6 @@
 const windowStateManager = require("electron-window-state");
 const contextMenu = require("electron-context-menu");
-const { app, BrowserWindow, ipcMain, ipcRenderer } = require("electron");
+const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme } = require("electron");
 const serve = require("electron-serve");
 const path = require("path");
 const { join } = require("path");
@@ -29,6 +29,9 @@ const {
   LevinPacket,
   Transaction
 } = require("kryptokrona-utils");
+
+const appRoot = require('app-root-dir').get().replace('app.asar', '');
+const appBin = appRoot + '/bin/';
 
 
 const xkrUtils = new CryptoNote();
@@ -201,12 +204,42 @@ app.on("window-all-closed", () => {
 });
 
 ipcMain.on("close", () => {
-  app.quit();
+  mainWindow.hide()
+  app.dock.hide()
 });
 
 ipcMain.on("min", () => {
   mainWindow.minimize();
 });
+
+let tray
+app.whenReady().then(() => {
+  console.log(appBin);
+  let isDark = nativeTheme.shouldUseDarkColors;
+  tray = new Tray(appBin + `tray${isDark ? "-dark" : ""}@2x.png`)
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show', click: function () {
+        mainWindow.show()
+        app.dock.show()
+      }
+    },
+    {
+      label: 'Hide', click: function () {
+        mainWindow.hide()
+        app.dock.hide()
+      }
+    },
+    {
+      label: 'Quit', click: function () {
+        app.quit()
+      }
+    },
+  ])
+  tray.setToolTip('This is my application.')
+  tray.setContextMenu(contextMenu)
+  tray.setIgnoreDoubleClickEvents(true)
+})
 
 async function download(link) {
 
