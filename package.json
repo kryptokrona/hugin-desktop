@@ -15,6 +15,7 @@
 		"build": "cross-env NODE_ENV=production npm run build:svelte && npm run build:electron",
 		"build:svelte": "vite build",
 		"build:electron": "electron-builder --x64 --win --config build.config.json ",
+		"build:mac": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --config build.config.json",
 		"start": "vite start"
 	},
 	"build": {
@@ -36,12 +37,13 @@
 		"@commonify/lowdb": "^3.0.0",
 		"@koush/wrtc": "^0.5.3",
 		"@neodrag/svelte": "^1.2.3",
+		"app-root-dir": "^1.0.2",
 		"auto-launch": "^5.0.5",
 		"electron-context-menu": "^2.5.2",
 		"electron-fetch": "^1.7.4",
 		"electron-reloader": "^1.2.3",
 		"electron-serve": "^1.1.0",
-		"electron-updater": "5.2.1",
+		"electron-updater": "4.6.5",
 		"electron-window-state": "^5.0.3",
 		"hugin-crypto": "^0.0.2",
 		"identicon.js": "^2.3.3",
