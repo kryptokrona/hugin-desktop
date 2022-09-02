@@ -39,8 +39,8 @@
             </div>
             <h4>Amount</h4>
             <input placeholder="1" type="text" bind:value={amount}>
-            <h4>Payment ID</h4>
-            <input disabled="true" class="key" type="text" bind:value={paymentId}>
+            <!-- <h4>Payment ID</h4>
+            <input disabled="true" class="key" type="text" bind:value={paymentId}> -->
         <button disabled={!enableButton} class:rgb={enableButton} on:click={sendTransaction}>Send</button>
     </div>
 </div>
