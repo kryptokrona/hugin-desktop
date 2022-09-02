@@ -117,9 +117,12 @@
         {/if}
       </div>
               {#if showNode}
+              <div class="node">
                 <NodeList on:node={(e)=> chooseNode(e.detail.node)} on:enable={() => enableNextButton = true} on:disable={() => enableNextButton = false}/>
+                  
+                <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('node') }/>
+              </div>
               {/if}
-          <GreenButton  disabled={!enableNextButton} enabled={enableNextButton} text="Next" on:click={()=> next('node') }/>
       {/if}
 
     <div class="wrapper">
@@ -159,7 +162,7 @@
 
       padding: 3rem;
       border-radius: 10px;
-      height: 800px;
+      display: grid;
       transition: .25s ease-in-out all;
     }
 
@@ -229,6 +232,11 @@
         outline: none;
         border: 1px solid var(--title-color);
         }
+      }
+
+      .node {
+        display: block;
+        height: 700px;
       }
 
 </style>
