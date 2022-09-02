@@ -86,8 +86,7 @@
     function defualtPicker() {
       console.log('picked');
       if (defualtPick) {
-        nodeAddress = 'blocksum.org'
-        nodePort = 11898
+        nodeInput = 'blocksum.org:11898'
         enableNextButton = true
       }
     }
