@@ -127,6 +127,13 @@ const WINDOW_API = {
 
   sendTransaction: async (tx) => {
     ipcRenderer.send('sendTx', tx)
+  },
+
+  addBoard: async (board) => {
+    ipcRenderer.send('addBoard', board)
+  },
+  removeBoard: async (board) => {
+    ipcRenderer.send('removeBoard', board)
   }
 }
 
