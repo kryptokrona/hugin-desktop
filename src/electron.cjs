@@ -310,7 +310,6 @@ let my_boards = [];
 ipcMain.on("app", (data) => {
   mainWindow.webContents.send("getPath", userDataDir);
   startCheck();
-
   if (dev) {
     console.log('Running in development');
      mainWindow.openDevTools();
@@ -388,7 +387,6 @@ async function startCheck() {
 
 
   if (fs.existsSync(userDataDir + "/misc.db")) {
-
     await db.read();
     let walletName = db.data.walletNames;
     console.log("walletname", walletName);
@@ -410,6 +408,7 @@ async function startCheck() {
     messagesTable();
     knownTxsTable();
     contactsTable();
+    boardsSubscriptionsTable();
     mainWindow.webContents.send("wallet-exist", false);
   }
 
@@ -494,6 +493,21 @@ function messagesTable() {
     database.run(messageTable, (err) => {
     });
     console.log("created Table");
+  }, () => {
+    resolve();
+  });
+}
+
+function boardsSubscriptionsTable() {
+  const subscriptionTable = `
+            CREATE TABLE subscription (
+              board TEXT,
+              UNIQUE (board)
+          )`;
+  return new Promise((resolve, reject) => {
+    database.run(subscriptionTable, (err) => {
+    });
+    console.log("created subscription Table");
   }, () => {
     resolve();
   });
@@ -591,6 +605,8 @@ ipcMain.on("create-account", async (e, accountData) => {
   //Create Boards welcome message
   welcomeBoardMessage();
   //Create misc DB template on first start
+
+  addBoard('Home')
   db.data = {
     walletNames: [],
     node: { node: "", port: "" }
@@ -854,6 +870,12 @@ async function backgroundSyncMessages(checkedTxs = false) {
 //Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
 ipcMain.on("addBoard", async (e, board) => {
   my_boards.push(board);
+  addBoard(board)
+});
+
+ipcMain.on("removeBoard", async (e, board) => {
+  my_boards.pop(board);
+  removeBoard(board)
 });
 
 //Listens for event from frontend and saves contact and nickname.
@@ -861,6 +883,36 @@ ipcMain.on("addChat", async (e, hugin_address, nickname, first = false) => {
   console.log("addchat first", first);
   saveContact(hugin_address, nickname, first);
 });
+
+async function addBoard(brd) {
+
+  database.run(
+    `REPLACE INTO subscription
+      (board)
+        VALUES
+          (?)`,
+    [
+      brd,
+    ]
+  );
+
+  console.log('saved board', brd)
+}
+
+async function removeBoard(brd) {
+
+  database.run(
+    `DELETE FROM
+        subscription
+      WHERE
+        board = ?`,
+    [ brd ]
+  );
+
+console.log('removed brd', brd)
+}
+
+
 
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname = false, first = false) {
@@ -1025,17 +1077,13 @@ async function getMyBoardList() {
   return new Promise((resolve, reject) => {
     const getMyBoards = `
           SELECT *
-          FROM boards D
-          WHERE t = (SELECT MAX(t) FROM boards WHERE brd = D.brd)
-          ORDER BY
-              t
-          ASC
+          FROM subscription
           `;
     database.each(getMyBoards, (err, row) => {
       if (err) {
         console.log("Error", err);
       }
-      myBoards.push(row.brd);
+      myBoards.push(row.board);
     }, () => {
       resolve(myBoards);
     });
