@@ -136,7 +136,7 @@ function createWindow() {
       nodeIntegration: true,
       spellcheck: false,
       devTools: dev,
-      preload: appPath+"/preload.cjs"
+      preload: path.join(__dirname, "preload.cjs")
     },
     x: windowState.x,
     y: windowState.y,
