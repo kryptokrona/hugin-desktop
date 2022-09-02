@@ -28,8 +28,9 @@
 
     window.api.receive("wallet-exist", async (data, walletName) => {
       wallet = data;
+      if (walletName === undefined) return 
       console.log("wallet exists", walletName);
-      $ : thisWallet = walletName[0];
+      thisWallet = walletName[0];
     });
   });
 
