@@ -205,7 +205,9 @@ app.on("window-all-closed", () => {
 
 ipcMain.on("close", () => {
   mainWindow.hide()
-  app.dock.hide()
+  if (process.platform === "darwin") {
+    app.dock.hide()
+  }
 });
 
 ipcMain.on("min", () => {
@@ -221,13 +223,17 @@ app.whenReady().then(() => {
     {
       label: 'Show', click: function () {
         mainWindow.show()
-        app.dock.show()
+        if (process.platform === "darwin") {
+          app.dock.show()
+        }
       }
     },
     {
       label: 'Hide', click: function () {
         mainWindow.hide()
-        app.dock.hide()
+        if (process.platform === "darwin") {
+          app.dock.hide()
+        }
       }
     },
     {
