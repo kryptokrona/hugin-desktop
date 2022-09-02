@@ -29,6 +29,12 @@
     removeBoard = !removeBoard
   }
 
+  const removeThisBoard = () => {
+    window.api.removeBoard($boards.thisBoard)
+    let filter = $boards.boardsArray.filter(a => a !== $boards.thisBoard)
+    $boards.boardsArray = filter
+  }
+
   $ : active_boards
 
 </script>
@@ -37,7 +43,7 @@
   <div class="top" on:click={toggleBoardSettings}>
     <h2>{$boards.thisBoard}</h2><br>
     {#if removeBoard}
-    <p style="color: var(--warn-color)" on:click={() => window.api.removeBoard($boards.thisBoard)}>Remove</p>
+    <p style="color: var(--warn-color)" on:click={removeThisBoard}>Remove</p>
     {/if}
   </div>
   <div class="active_hugins">
