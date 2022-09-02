@@ -1,6 +1,6 @@
 {
-	"appId": "com.example.app",
-	"productName": "Svelte Electron",
+	"appId": "com.electron.hugin",
+	"productName": "Hugin Messenger",
 	"directories": {
 		"output": "dist"
 	},
@@ -11,5 +11,5 @@
 			"from": "build",
 			"to": ""
 		}
-	]
+	],
 }
