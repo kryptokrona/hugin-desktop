@@ -6,7 +6,7 @@
   import ActiveBoard from "./ActiveBoard.svelte";
   const dispatch = createEventDispatcher();
   let active_boards = [];
-
+  let removeBoard = false
   onMount(()=> {
     filterActiveBoards($boards.newBoards);
   })
@@ -24,13 +24,21 @@
     active_boards = arr.filter(obj => !uniq[obj.brd] && (uniq[obj.brd] = true));
   }
 
+  const toggleBoardSettings = () => {
+    console.log(removeBoard)
+    removeBoard = !removeBoard
+  }
+
   $ : active_boards
 
 </script>
 
 <div class="wrapper">
-  <div class="top">
-    <h2>{$boards.thisBoard}</h2>
+  <div class="top" on:click={toggleBoardSettings}>
+    <h2>{$boards.thisBoard}</h2><br>
+    {#if removeBoard}
+    <p style="color: var(--warn-color)" on:click={() => window.api.removeBoard($boards.thisBoard)}>Remove</p>
+    {/if}
   </div>
   <div class="active_hugins">
     <h4>Active Boards</h4>
@@ -111,6 +119,7 @@
     font-family: 'Roboto Mono';
     font-weight: bold;
     font-size: 22px;
+    cursor: pointer;
   }
 
   p {
