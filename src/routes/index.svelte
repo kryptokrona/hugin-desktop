@@ -146,7 +146,7 @@ const openURL = (url) => {
   <div class="login-wrapper">
     <div class="login-wrapper">
       {#if wallet}
-        <h1 class="title">Welcome back {$user.username} 👋</h1>
+        <!-- <h1 class="title">Welcome back {$user.username} 👋</h1> -->
         <h3 class="title">Log in to wallet:</h3>
         <p class="wallets">{thisWallet}</p>
         <input type="password" placeholder="Something safe" bind:value={myPassword}>
@@ -275,6 +275,7 @@ const openURL = (url) => {
     width: 270px;
     margin-top: 0;
     margin-bottom: 30px;
+    display: contents;
   }
 
   .hero {
