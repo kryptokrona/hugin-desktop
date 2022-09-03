@@ -111,7 +111,7 @@
 
         {#if !showNode}
           <div class="pickNode">
-          <GreenButton text="Pick custom node" on:click={showNodes}/>
+          <GreenButton text="Custom node" on:click={showNodes}/>
           <GreenButton text="Defualt node" enabled={defualtPick} on:click={()=> defualtPicker()}/>
           </div>
         {/if}
