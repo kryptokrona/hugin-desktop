@@ -43,7 +43,9 @@
   <div class="top" on:click={toggleBoardSettings}>
     <h2>{$boards.thisBoard}</h2><br>
     {#if removeBoard}
+    <div in:fade class="remove">
     <p style="color: var(--warn-color)" on:click={removeThisBoard}>Remove</p>
+    </div>
     {/if}
   </div>
   <div class="active_hugins">
@@ -144,5 +146,11 @@
     border-bottom: 1px solid var(--border-color);
   }
 
+  .remove {
+    position: absolute;
+    right: 100px;
+    top: 0px;
+    cursor: pointer;
+  }
 
 </style>
