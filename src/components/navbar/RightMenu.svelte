@@ -9,6 +9,8 @@
   import { get_board_icon } from "$lib/utils/hugin-utils.js";
   import SimpleAdd from "/src/components/buttons/SimpleAdd.svelte";
   import PayIcon from "/src/components/buttons/PayIcon.svelte";
+  import MicIcon from "/src/components/buttons/MicIcon.svelte";
+  import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -105,8 +107,13 @@
    $transactions.tip = true
    $transactions.send = {to: $user.activeChat.chat, name: $user.activeChat.name}
   }
+  
+  let muted = false
 
-
+    const toggleAudio = () => {
+        muted = !muted
+        $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
+    }
 
 </script>
 
@@ -147,13 +154,23 @@
         <button class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
         </button>
       {/if}
-      <div on:click={()=> sendMoney(contact)} class="button">
-        <PayIcon/>
+      
+      {#if thisCall}
+      <div>
+        {#if !muted}
+        <MicIcon on:click={toggleAudio}/>
+        {:else}
+        <MuteIcon on:click={toggleAudio}/>
+        {/if}
       </div>
+      {/if}
     </div>
   {/if}
 
   <div class="draggable hitbox"></div>
+  <div on:click={()=> sendMoney(contact)} class="button">
+    <PayIcon/>
+  </div>
 </div>
 
 
