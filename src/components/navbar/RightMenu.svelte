@@ -131,14 +131,16 @@
         {#each $boards.boardsArray as board}
           {#await get_board_icon(board)}
           {:then board_color}
-            <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-              {#if board === "Home"}
-                <button class="board-icon"
-                        on:click={() => printBoard(board)}><HomeIcon/></button>
+            <div style="display: flex; align-items: center; position: relative;">
+              <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
+                {#if board === "Home"}
+                  <button class="board-icon"
+                          on:click={() => printBoard(board)}><HomeIcon/></button>
                 {:else}
-                <button class="board-icon"
-                        on:click={() => printBoard(board)}>{board.substring(0, 1).toUpperCase()}</button>
-              {/if}
+                  <button class="board-icon"
+                          on:click={() => printBoard(board)}>{board.substring(0, 1).toUpperCase()}</button>
+                {/if}
+              </div>
               {#if board === $boards.thisBoard}
                 <div class="dot" in:fade></div>
               {/if}
@@ -210,7 +212,7 @@
     position: fixed;
     right: 0;
     z-index: 100;
-    overflow: scroll;
+    overflow: hidden;
   }
 
   .rightMenu::-webkit-scrollbar {
@@ -231,8 +233,11 @@
   }
 
   .boards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
     height: 100%;
-    overflow: scroll;
+    overflow-y: scroll;
 
     &::-webkit-scrollbar {
       display: none;
@@ -314,9 +319,9 @@
   }
 
   .board {
+    position: relative;
     border-radius: 11px;
     opacity: 0.88;
-    margin-bottom: 15px;
 
     &:hover {
       opacity: 1;
@@ -324,14 +329,13 @@
   }
 
   .dot {
+    position: absolute;
     background-color: white;
     border-radius: 2px;
     height: 16px;
     width: 10px;
-    margin-top: 15px;
-    margin-left: 17px;
-    position: absolute;
-    display: inline-flex;
+    right: -7px;
+    box-shadow: 0 0 10px white
   }
 
 
