@@ -236,7 +236,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    height: 100%;
+    height: calc(100% - 35px);
     overflow-y: scroll;
 
     &::-webkit-scrollbar {
