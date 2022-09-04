@@ -223,7 +223,7 @@
     background-color: rgba(255, 255, 255, 0.22);
     transition: 250ms ease-in-out;
     cursor: pointer;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     margin-top: 5px;
     margin-left: 3px;
 
@@ -290,7 +290,7 @@
   .board {
     border-radius: 11px;
     opacity: 0.88;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 
     &:hover {
       opacity: 1;
