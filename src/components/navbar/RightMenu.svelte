@@ -11,6 +11,7 @@
   import PayIcon from "/src/components/buttons/PayIcon.svelte";
   import MicIcon from "/src/components/buttons/MicIcon.svelte";
   import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
+  import HomeIcon from "/src/components/buttons/HomeIcon.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -104,16 +105,18 @@
   }
 
   const sendMoney = () => {
-   $transactions.tip = true
-   $transactions.send = {to: $user.activeChat.chat, name: $user.activeChat.name}
-  }
-  
-  let muted = false
+    $transactions.tip = true;
+    $transactions.send = { to: $user.activeChat.chat, name: $user.activeChat.name };
+  };
 
-    const toggleAudio = () => {
-        muted = !muted
-        $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
-    }
+  let muted = false;
+
+  const toggleAudio = () => {
+    muted = !muted;
+    $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
+  };
+
+  console.log('HERE L', $boards.boardsArray);
 
 </script>
 
@@ -121,22 +124,30 @@
 
   {#if $page.url.pathname === '/boards'}
     <div class="nav" style="display:block !important;">
-    <div class="add" on:click={openAdd}>
-      <SimpleAdd />
-    </div>
-    {#each $boards.boardsArray as board}
-      {#await get_board_icon(board)}
-      {:then board_color}
-        <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-          <button class="board-icon" on:click={() => printBoard(board)}>{board.substring(0, 1).toUpperCase()}</button>
-          {#if board == $boards.thisBoard}
-          <div class="dot" in:fade></div>
-          {/if}
-        </div>
-      {:catch error}
-        <div>{error.message}</div>
-      {/await}
-    {/each}
+      <div class="add" on:click={openAdd}>
+        <SimpleAdd />
+      </div>
+      <div class="boards">
+        {#each $boards.boardsArray as board}
+          {#await get_board_icon(board)}
+          {:then board_color}
+            <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
+              {#if board === "Home"}
+                <button class="board-icon"
+                        on:click={() => printBoard(board)}><HomeIcon/></button>
+                {:else}
+                <button class="board-icon"
+                        on:click={() => printBoard(board)}>{board.substring(0, 1).toUpperCase()}</button>
+              {/if}
+              {#if board === $boards.thisBoard}
+                <div class="dot" in:fade></div>
+              {/if}
+            </div>
+          {:catch error}
+            <div>{error.message}</div>
+          {/await}
+        {/each}
+      </div>
     </div>
   {/if}
 
@@ -144,37 +155,43 @@
     <div class="nav">
       <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
       {#if thisCall && !video}
-        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon" src="/static/images/call-slash.svg"
-                                                               alt="endcall"></button>
+        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon"
+                                                                                src="/static/images/call-slash.svg"
+                                                                                alt="endcall"></button>
       {:else}
-        <button in:fade out:fade class="button" on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call">
+        <button in:fade out:fade class="button" on:click={() => startCall(contact, false)}><img class="icon"
+                                                                                                src={callIcon}
+                                                                                                alt="call">
         </button>
       {/if}
       {#if thisCall && video}
-        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon" src="/static/images/video-slash.svg"
-                                                               alt="video"></button>
+        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon"
+                                                                                src="/static/images/video-slash.svg"
+                                                                                alt="video"></button>
       {:else}
-        <button in:fade out:fade class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
+        <button in:fade out:fade class="button" on:click={() => startCall(contact, true)}><img class="icon"
+                                                                                               src={videoIcon}
+                                                                                               alt="video">
         </button>
       {/if}
-      
+
       {#if thisCall}
-      <div in:fade out:fade class="button">
-        {#if !muted}
-        <MicIcon on:click={toggleAudio}/>
-        {:else}
-        <MuteIcon on:click={toggleAudio}/>
-        {/if}
-      </div>
+        <div in:fade out:fade class="button">
+          {#if !muted}
+            <MicIcon on:click={toggleAudio} />
+          {:else}
+            <MuteIcon on:click={toggleAudio} />
+          {/if}
+        </div>
       {/if}
     </div>
   {/if}
 
   <div class="draggable hitbox"></div>
   {#if $page.url.pathname === '/messages'}
-  <div on:click={()=> sendMoney(contact)} class="button">
-    <PayIcon/>
-  </div>
+    <div on:click={()=> sendMoney(contact)} class="button">
+      <PayIcon />
+    </div>
   {/if}
 </div>
 
@@ -206,11 +223,20 @@
   }
 
   .nav {
-    height: auto;
+    height: 100%;
     display: flex;
     align-items: center;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .boards {
+    height: 100%;
+    overflow: scroll;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .add {
