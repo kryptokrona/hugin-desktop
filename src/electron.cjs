@@ -242,7 +242,6 @@ app.whenReady().then(() => {
       }
     },
   ])
-  tray.setToolTip('This is my application.')
   tray.setContextMenu(contextMenu)
   tray.setIgnoreDoubleClickEvents(true)
 })
