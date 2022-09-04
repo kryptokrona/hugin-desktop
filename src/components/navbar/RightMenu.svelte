@@ -129,6 +129,9 @@
       {:then board_color}
         <div class="board" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
           <button class="board-icon" on:click={() => printBoard(board)}>{board.substring(0, 1).toUpperCase()}</button>
+          {#if board == $boards.thisBoard}
+          <div class="dot" in:fade></div>
+          {/if}
         </div>
       {:catch error}
         <div>{error.message}</div>
@@ -168,9 +171,11 @@
   {/if}
 
   <div class="draggable hitbox"></div>
+  {#if $page.url.pathname === '/messages'}
   <div on:click={()=> sendMoney(contact)} class="button">
     <PayIcon/>
   </div>
+  {/if}
 </div>
 
 
@@ -285,5 +290,17 @@
       opacity: 1;
     }
   }
+
+  .dot {
+    background-color: white;
+    border-radius: 2px;
+    height: 16px;
+    width: 10px;
+    margin-top: 15px;
+    margin-left: 17px;
+    position: absolute;
+    display: inline-flex;
+  }
+
 
 </style>
