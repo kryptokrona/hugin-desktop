@@ -53,11 +53,13 @@
       nodeInput = "blocksum.org:11898";
   }
 
+  <!--
   window.addEventListener("keyup", e => {
     if (e.keyCode === 13) {
       handleLogin();
     }
   });
+  -->
 
 </script>
 
