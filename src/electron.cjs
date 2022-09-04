@@ -165,11 +165,11 @@ contextMenu({
   showLookUpSelection: false,
   showSearchWithGoogle: false,
   showCopyImage: false,
-  prepend: (defaultActions, params, browserWindow) => [
-    {
-      label: "Make App 💻"
-    }
-  ]
+  // prepend: (defaultActions, params, browserWindow) => [
+  //   {
+  //     label: "Make App 💻"
+  //   }
+  // ]
 });
 
 function loadVite(port) {
@@ -878,9 +878,10 @@ async function backgroundSyncMessages(checkedTxs = false) {
               sanitizeHtml(message.k)
               let newBoard = {brd: message.brd, address: message.k}
               mainWindow.webContents.send('newBoard', newBoard)
+              saveBoardMsg(message, thisHash, false)
               continue;
             }
-            saveBoardMsg(message, thisHash);
+            saveBoardMsg(message, thisHash, true);
           } else if (message.type === "sealedbox" || "box") {
             console.log("Saving Message");
             // await saveMsg(message);
@@ -1015,7 +1016,7 @@ async function saveHash(txHash) {
 }
 
 //Saves board message.
-async function saveBoardMsg(msg, hash) {
+async function saveBoardMsg(msg, hash, follow=false) {
 
   let to_board = sanitizeHtml(msg.brd);
   let text = sanitizeHtml(msg.m);
@@ -1068,7 +1069,7 @@ async function saveBoardMsg(msg, hash) {
     ]
   );
     saveHash(hash)
-  if (msg.sent) return;
+  if (msg.sent || !follow) return;
   //Send new board message to frontend.
   mainWindow.webContents.send("boardMsg", message);
 }
@@ -1526,7 +1527,6 @@ async function sendBoardMessage(message) {
 }
 
 async function sendMessage(message, receiver, off_chain = false) {
-
   let has_history;
   console.log("address", receiver.length);
   if (receiver.length !== 163) {
