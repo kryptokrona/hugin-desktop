@@ -225,7 +225,8 @@
 
   .socials {
     display: flex;
-    gap: 20px
+    gap: 55px;
+    cursor: pointer;
   }
 
   .show {
