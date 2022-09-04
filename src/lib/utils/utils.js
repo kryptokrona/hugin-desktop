@@ -1,3 +1,5 @@
+import { browser } from "$app/env";
+
 export function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -15,4 +17,10 @@ export function prettyNumbers(amount) {
   /* Makes our numbers thousand separated. https://stackoverflow.com/a/2901298/8737306 */
   const formatted = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return formatted + '.' + cents + ' ' + 'XKR';
+}
+
+export const openURL = (link) => {
+  if(browser) {
+    window.api.send('openLink', link)
+  }
 }

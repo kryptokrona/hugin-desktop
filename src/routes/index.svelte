@@ -8,6 +8,7 @@
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
   import HuginArt from "/src/components/HuginArt.svelte";
+  import { openURL } from "$lib/utils/utils.js";
   let wallet;
   let walletName;
   let myPassword = "";
@@ -135,10 +136,6 @@
         }
     })
 
-const openURL = (link) => {
-  window.api.send('openLink', link)
-}
-
 </script>
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
   <div class="login-wrapper">
@@ -168,7 +165,7 @@ const openURL = (link) => {
       <HuginArt/>
       <div in:fly="{{y: 100}}" class="socials">
         <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
-        <p on:click={()=> openURL('"https://github.com/kryptokrona/hugin-svelte/issues"')}>Support</p>
+        <p on:click={()=> openURL("https://github.com/kryptokrona/hugin-svelte/issues")}>Support</p>
         <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
       </div>
     </div>
