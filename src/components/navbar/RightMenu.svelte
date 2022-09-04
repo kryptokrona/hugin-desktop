@@ -120,7 +120,7 @@
 <div class="rightMenu">
 
   {#if $page.url.pathname === '/boards'}
-    <div class="nav">
+    <div class="nav" style="display:block !important;">
     <div class="add" on:click={openAdd}>
       <SimpleAdd />
     </div>
@@ -193,6 +193,11 @@
     position: fixed;
     right: 0;
     z-index: 100;
+    overflow: scroll;
+  }
+
+  .rightMenu::-webkit-scrollbar {
+    display: none;
   }
 
   .hitbox {
@@ -220,6 +225,7 @@
     cursor: pointer;
     margin-bottom: 10px;
     margin-top: 5px;
+    margin-left: 3px;
 
     &:hover {
       background-color: rgba(255, 255, 255, 0.4);
@@ -284,7 +290,7 @@
   .board {
     border-radius: 11px;
     opacity: 0.88;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 
     &:hover {
       opacity: 1;
