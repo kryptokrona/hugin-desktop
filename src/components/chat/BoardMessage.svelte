@@ -98,7 +98,7 @@
       {:then thisreply}
         <div class="reply">
           <div style="display: flex; gap: 10px; align-items: center">
-            <RepliedArrom/>
+            <RepliedArrom />
             <div style="display: flex; align-items: center; gap: 10px;">
               <p class="reply_nickname">{thisreply.n}</p>
               <p>{thisreply.m}</p>
@@ -106,7 +106,9 @@
           </div>
         </div>
       {:catch error}
-        <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar" src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}" alt="">
+        <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar"
+                                                            src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}"
+                                                            alt="">
           <p class="reply_nickname">Can't find reply</p> <br>
           <p style="color: red">This reply is not in the mempool</p>
         </div>
@@ -118,19 +120,18 @@
       <div class="header">
         <div style="display: flex; align-items: center; margin-left: -10px">
           <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-          <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /></span></h5>
-          {#if $boards.thisBoard == "Home"}<p class="to_board">in {board}</p>{/if}
+          <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /> | {#if $boards.thisBoard === "Home"}@{board}{/if}</span></h5>
         </div>
         <div class="actions">
-          <EmojiSelector on:emoji={reactTo}/>
+          <EmojiSelector on:emoji={reactTo} />
           <ReplyArrow on:click={replyTo} />
         </div>
       </div>
       <p style="user-select: text;">{msg}</p>
     </div>
 
-      <div class="reactions">
-        {#if has_reaction}
+    <div class="reactions">
+      {#if has_reaction}
         {#each reactions as reaction}
           <Reaction
             on:sendReaction={(e) => sendReactMsg(e)}
@@ -139,8 +140,8 @@
             emoji={reaction.m}
             react={react} />
         {/each}
-        {/if}
-      </div>
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -153,6 +154,7 @@
     color: rgba(255, 255, 255, 0.8);
     padding: 10px 30px 10px 30px;
     border: 1px solid transparent;
+
     .header {
       display: flex;
       align-items: center;
@@ -161,6 +163,7 @@
 
     &:hover {
       background-color: var(--card-background);
+
       .actions {
         opacity: 100%;
       }
@@ -181,7 +184,8 @@
   }
 
   .actions {
-    display: flex; gap: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
     transition: 100ms ease-in-out;
     cursor: pointer;
     opacity: 0;
