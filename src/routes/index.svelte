@@ -135,9 +135,7 @@
         }
     })
 
-const openURL = (url) => {
-  console.log(url)
-  let link = url.target.attributes[0].nodeValue
+const openURL = (link) => {
   window.api.send('openLink', link)
 }
 
@@ -171,9 +169,9 @@ const openURL = (url) => {
       <HuginArt/>
     </div>
     <div in:fly="{{y: 100}}" class="socials">
-      <a link="https://github.com/kryptokrona/hugin-svelte" on:click={(e)=> openURL(e)}>Github</a>
-      <a link="https://github.com/kryptokrona/hugin-svelte/issues" on:click={(e)=> openURL(e)}>Support</a>
-      <a link="https://hugin.chat"  on:click={(e)=> openURL(e)}>Website</a>
+      <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
+      <p on:click={()=> openURL('"https://github.com/kryptokrona/hugin-svelte/issues"')}>Support</p>
+      <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
     </div>
   </div>
 </div>
