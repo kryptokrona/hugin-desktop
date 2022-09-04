@@ -22,7 +22,8 @@
      color: var(--text-color);
      border-radius: 0.4rem;
      padding: 9px 10px;
-     width: 100px;
+     width: 100%;
+     max-width: 200px;
      cursor: pointer;
      font-weight: 600;
      transition: 250ms ease-in-out;

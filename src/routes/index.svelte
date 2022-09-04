@@ -144,10 +144,9 @@ const openURL = (link) => {
   <div class="login-wrapper">
     <div class="login-wrapper">
       {#if wallet}
-        <!-- <h1 class="title">Welcome back {$user.username} 👋</h1> -->
-        <h3 class="title">Log in to wallet:</h3>
-        <p class="wallets">{thisWallet}</p>
-        <input type="password" placeholder="Something safe" bind:value={myPassword}>
+        <h2 class="title">Sign into your account</h2>
+        <!--<p class="wallets">{thisWallet}</p>-->
+        <input type="password" placeholder="Password" bind:value={myPassword}>
         <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
       {:else}
         <FillButton text="Create Account" url="/create-account" />
@@ -167,12 +166,13 @@ const openURL = (link) => {
     <div></div>
     <div>
       <HuginArt/>
+      <div in:fly="{{y: 100}}" class="socials">
+        <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
+        <p on:click={()=> openURL('"https://github.com/kryptokrona/hugin-svelte/issues"')}>Support</p>
+        <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
+      </div>
     </div>
-    <div in:fly="{{y: 100}}" class="socials">
-      <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
-      <p on:click={()=> openURL('"https://github.com/kryptokrona/hugin-svelte/issues"')}>Support</p>
-      <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
-    </div>
+    <div></div>
   </div>
 </div>
 
@@ -195,10 +195,9 @@ const openURL = (link) => {
   }
 
   .title {
-    width: 270px;
+    width: 200px;
     margin-top: 0;
     margin-bottom: 30px;
-    display: contents;
   }
 
   .hero {
@@ -222,22 +221,17 @@ const openURL = (link) => {
   }
 
   input {
-    box-sizing: border-box;
     background-color: var(--backgound-color);
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--border-color);
     border-radius: 0.4rem;
     color: var(--title-color);
     padding: 0 10px;
     margin-bottom: 20px;
-    position: fixed;
-    font-size: 15px !important;
-    width: 85%;
-    font-size: 16px;
+    width: 100%;
+    max-width: 200px;
+    font-size: 1rem;
     height: 40px;
-    display: inline-flex;
-    position: relative;
-    font-family: "Roboto Mono";
-    padding-left: 15px;
+    font-family: "Roboto Mono", monospace;
 
     &:focus {
       outline: none;
