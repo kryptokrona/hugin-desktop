@@ -1,9 +1,7 @@
 <script>
   import { fade, fly } from "svelte/transition";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
-  import FillButton from "/src/components/buttons/FillButton.svelte";
   import { user, misc } from "$lib/stores/user.js";
-  import { nodelist } from "$lib/stores/nodes.js";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
@@ -143,7 +141,6 @@
     <div class="login-wrapper">
       <div>
         <h2 class="title">Sign into your account</h2>
-        <!--<p class="wallets">{thisWallet}</p>-->
         <input type="password" placeholder="Password" bind:value={myPassword}>
         <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
       </div>
