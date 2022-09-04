@@ -44,6 +44,10 @@ const WINDOW_API = {
     let resp = await ipcRenderer.invoke('getMyBoards')
     return resp
   },
+  getAllBoards: async () => {
+    let resp = await ipcRenderer.invoke('getAllBoards')
+    return resp
+  },
   getConversations: async () => {
     let resp = await ipcRenderer.invoke('getConversations')
     return resp

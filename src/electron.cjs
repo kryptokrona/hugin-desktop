@@ -1105,7 +1105,7 @@ async function getBoardMsgs() {
       if (err) {
         console.log("Error", err);
       }
-      allBoards.push(row);
+      allBoards.unshift(row);
     }, () => {
       resolve(allBoards);
     });
@@ -1741,6 +1741,10 @@ ipcMain.handle("getConversations", async (e) => {
 //Listens for ipc call from RightMenu board picker and prints any board chosen
 ipcMain.handle("printBoard", async (e, board) => {
   return await printBoard(board);
+});
+
+ipcMain.handle("getAllBoards", async () => {
+  return await getBoardMsgs();
 });
 
 ipcMain.handle("getMyBoards", async () => {

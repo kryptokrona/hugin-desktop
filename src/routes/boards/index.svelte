@@ -179,7 +179,11 @@
     fixedBoards = [];
     noMsgs = false;
     //Load boardMessages from db
-    await boardMessages.set(await window.api.printBoard(board));
+    if (board == "Home") {
+      boardMessages.set(await window.api.getAllBoards(board))
+    } else {
+      await boardMessages.set(await window.api.printBoard(board));
+    }
     //Check for emojis and filter them
     await checkReactions();
     //Reactions should be set, update thisBoard in store and set reply to false.
