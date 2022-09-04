@@ -9,6 +9,7 @@
 	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
 	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
 	import Loader from '/src/components/popups/Loader.svelte';
+	import { page } from "$app/stores";
 	//Stores
 	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -226,7 +227,9 @@ window.api.receive('node', async (node) => {
 	{#if $user.loggedIn}
 
 		<LeftMenu />
+		{#if $page.url.pathname !== '/boards'}
 		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
+		{/if}
 		<Webrtc/>
 	{/if}
 
