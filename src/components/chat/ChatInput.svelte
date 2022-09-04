@@ -51,7 +51,7 @@
   }
 </script>
 
-<div class="wrapper" class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home"}
+<div class="wrapper" class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home" && $page.url.pathname === '/boards'}
      class:border-top={$page.url.pathname === '/messages'} in:fade="{{duration: 400}}" out:fade="{{duration: 100}}">
   <input type="text" placeholder="Message.." bind:value={messageInput}>
   <EmojiSelector on:emoji={onEmoji} />
