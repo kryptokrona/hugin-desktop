@@ -280,7 +280,7 @@
   <div id="board_box">
     <div id="active_hugins">
       <div class="list">
-        <BoardStats />
+        <BoardStats on:printBoard={(e) => printBoard(e.detail)}/>
       </div>
     </div>
   </div>
