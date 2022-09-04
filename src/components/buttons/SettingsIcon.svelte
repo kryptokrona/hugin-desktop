@@ -1,4 +1,4 @@
-<svg on:click width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+<svg on:click width="22px" height="22px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
     <g id="vuesaxlinearcandle-2">
       <g id="vuesaxlinearcandle-2">
         <g id="candle-2">
@@ -18,7 +18,6 @@
   svg {
     transition: 200ms ease-in-out;
     cursor: pointer;
-    margin: 10px;
 
     &:hover {
       opacity: 80%;

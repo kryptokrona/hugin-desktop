@@ -147,7 +147,9 @@
         <button class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
         </button>
       {/if}
-      <PayIcon on:click={()=> sendMoney(contact)}/>
+      <div on:click={()=> sendMoney(contact)} class="button">
+        <PayIcon/>
+      </div>
     </div>
   {/if}
 

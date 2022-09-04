@@ -19,7 +19,7 @@
     svg {
     transition: 200ms ease-in-out;
     cursor: pointer;
-    margin: 10px;
+
     &:hover {
       opacity: 80%;
     }
