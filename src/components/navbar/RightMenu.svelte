@@ -238,6 +238,7 @@
     gap: 1rem;
     height: calc(100% - 35px);
     overflow-y: scroll;
+    padding-bottom: 1rem;
 
     &::-webkit-scrollbar {
       display: none;
