@@ -170,11 +170,14 @@ const openURL = (url) => {
     <div>
       <HuginArt/>
     </div>
+    <!--
     <div in:fly="{{y: 100}}" class="socials">
       <a link="https://github.com/kryptokrona/hugin-svelte" on:click={(e)=> openURL(e)}>Github</a>
       <a link="https://github.com/kryptokrona/hugin-svelte/issues" on:click={(e)=> openURL(e)}>Support</a>
       <a link="https://hugin.chat"  on:click={(e)=> openURL(e)}>Website</a>
     </div>
+    -->
+    <div></div>
   </div>
 </div>
 
