@@ -206,7 +206,7 @@
   }
 
   .nav {
-    height: 100%;
+    height: auto;
     display: flex;
     align-items: center;
     flex-direction: column;
