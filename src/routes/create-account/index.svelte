@@ -66,22 +66,23 @@
   {#if step === 1}
 
     <div in:fade class="wrapper">
-      <label>Select you username</label>
-      <input type="text" spellcheck="false" placeholder="Satoshi" bind:value={username}>
+      <h2>Select you username</h2>
+      <input type="text" spellcheck="false" placeholder="Username" bind:value={username}>
       <GreenButton disabled={username.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
     </div>
 
   {:else if step === 2}
 
     <div in:fade class="wrapper">
-      <label>Wallet name</label>
-      <input type="text" placeholder="Wallet" bind:value={walletName}>
-      <label>Password</label>
+      <h1>Create wallet</h1>
+      <input type="text" placeholder="Wallet name" bind:value={walletName}>
       <input type="password" placeholder="Password" bind:value={password}>
 
-      <GreenButton disabled={false} text="Back" on:click={() => step = 1} />
-      <GreenButton disabled={!(walletName.length > 0 && password.length > 0)} text="Next"
-                   enabled={(walletName.length > 0 && password.length > 0)} on:click={() => step = 3} />
+      <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
+        <GreenButton disabled={false} text="Back" on:click={() => step = 1} />
+        <GreenButton disabled={!(walletName.length > 0 && password.length > 0)} text="Next"
+                     enabled={(walletName.length > 0 && password.length > 0)} on:click={() => step = 3} />
+      </div>
     </div>
 
   {:else if step === 3}
