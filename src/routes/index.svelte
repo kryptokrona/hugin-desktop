@@ -141,10 +141,12 @@
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
   {#if wallet}
     <div class="login-wrapper">
-      <h2 class="title">Sign into your account</h2>
-      <!--<p class="wallets">{thisWallet}</p>-->
-      <input type="password" placeholder="Password" bind:value={myPassword}>
-      <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
+      <div>
+        <h2 class="title">Sign into your account</h2>
+        <!--<p class="wallets">{thisWallet}</p>-->
+        <input type="password" placeholder="Password" bind:value={myPassword}>
+        <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
+      </div>
     </div>
     <div in:fade class="hero">
       <div></div>
@@ -189,6 +191,13 @@
     align-items: center;
     width: 100%;
     height: 100vh;
+
+    div {
+      max-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
   }
 
   .title {
@@ -227,21 +236,20 @@
   }
 
   input {
-    background-color: var(--backgound-color);
-    border: 1px solid var(--border-color);
-    border-radius: 0.4rem;
-    color: var(--title-color);
-    padding: 0 10px;
-    margin-bottom: 20px;
+    margin: 0 auto;
+    max-width: 700px;
     width: 100%;
-    max-width: 200px;
-    font-size: 1rem;
-    height: 40px;
-    font-family: "Roboto Mono", monospace;
+    height: 48px;
+    padding: 0 15px;
+    border-radius: 0.5rem;
+    transition: 200ms ease-in-out;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    color: var(--text-color);
+    font-size: 1.1rem;
 
     &:focus {
       outline: none;
-      border: 1px solid var(--title-color);
     }
   }
 
