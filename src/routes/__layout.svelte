@@ -195,14 +195,14 @@ window.api.receive('node', async (node) => {
 				on:answerCall={openCallerMenu}
 				paused={!incoming_call}/>
 			{/if}
-			{#if showCallerMenu}
+			<!-- {#if showCallerMenu}
 				<CallerMenu
 				this_call={thiscall}
 				on:click={endThisCall}
 				on:endCall={endThisCall}
 				paused={!showCallerMenu}
 				on:toggleMyWindow={toggleMyWindow}/>
-			{/if}
+			{/if} -->
 		{/each}
 
 	{/if}
