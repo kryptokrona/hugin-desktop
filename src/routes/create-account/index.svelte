@@ -98,7 +98,7 @@
         {/each}
       </div>
       <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
-        <GreenButton text="Back" disabled={false} on:click={() => step = 1} />
+        <GreenButton text="Back" disabled={false} on:click={() => step = 2} />
         <GreenButton text="Auto" disabled={false} on:click={()=> {defaultPicker(); selectedNode = null}} />
         <GreenButton text="Next" disabled={!(nodeInput.length > 0)} enabled={nodeInput.length > 0} on:click={handleLogin} />
       </div>
