@@ -137,8 +137,9 @@
   };
   //Adds new board to boardArray and prints that board, its probably empty.
   const addNewBoard = (e) => {
-
+    
     let board = e.detail.brd;
+    if (board === "Home") return
     boards.update(current => {
       return {
         ...current,

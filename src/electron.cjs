@@ -873,6 +873,10 @@ async function backgroundSyncMessages(checkedTxs = false) {
           if (message.brd) {
             message.type = "board";
             if (my_boards.indexOf(message.brd) == -1) {
+              if (message.brd == "Home") {
+                saveHash(thisHash)
+                continue;
+              }
               console.log("Not my board");
               sanitizeHtml(message.brd)
               sanitizeHtml(message.k)
