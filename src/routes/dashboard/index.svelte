@@ -28,10 +28,14 @@
 
     //Set boardsarray to store
     myBoards = await window.api.getMyBoards();
+    let filterBoards = myBoards.filter(a => a !== 'Home')
+    console.log(filterBoards)
+    filterBoards.unshift('Home')
+
     boards.update(data => {
       return {
         ...data,
-        boardsArray: myBoards
+        boardsArray: filterBoards
       };
     });
 

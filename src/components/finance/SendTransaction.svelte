@@ -32,12 +32,10 @@
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-            <h4>Send to</h4>
             <div class="nickname-wrapper">
                 <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
                 <p>{$transactions.send.name}</p>
             </div>
-            <h4>Amount</h4>
             <input placeholder="1" type="text" bind:value={amount}>
             <!-- <h4>Payment ID</h4>
             <input disabled="true" class="key" type="text" bind:value={paymentId}> -->
@@ -63,10 +61,9 @@
     .card {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        height: 360px;
+        height: 220px;
         width: 320px;
-        padding: 30px;
+        padding: 10px;
         background-color: var(--backgound-color);
         border-radius: 8px;
         box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
@@ -90,12 +87,16 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 8px;
         padding-left: 8px;
-        height: 35px;
-        width: 100%;
+        height: 60px;
+        display: flex;
+        margin-left: 25%;
+        font-size: 22px;
+        width: 50%;
         margin-top: 10px;
         margin-bottom: 20px;
         color: white;
         transition: 250ms ease-in-out;
+        font-family: "Roboto Mono";
 
       &:focus {
         outline: none;
