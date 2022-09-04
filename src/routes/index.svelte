@@ -9,6 +9,7 @@
   import { messages } from "$lib/stores/messages.js";
   import HuginArt from "/src/components/HuginArt.svelte";
   import { openURL } from "$lib/utils/utils.js";
+
   let wallet;
   let walletName;
   let myPassword = "";
@@ -21,13 +22,13 @@
   onMount(() => {
     window.api.send("app", true);
 
-    $user.username = window.localStorage.getItem('userName')
+    $user.username = window.localStorage.getItem("userName");
 
-    if (!$user.username) $user.username = 'Anon';
+    if (!$user.username) $user.username = "Anon";
 
     window.api.receive("wallet-exist", async (data, walletName) => {
       wallet = data;
-      if (walletName === undefined) return 
+      if (walletName === undefined) return;
       console.log("wallet exists", walletName);
       thisWallet = walletName[0];
     });
@@ -37,11 +38,11 @@
     console.log("failed login");
     loginStatus = false;
     misc.update(oldData => {
-				return {
-						...oldData,
-						loading: false
-				}
-		})
+      return {
+        ...oldData,
+        loading: false
+      };
+    });
   });
 
   //Handle login, sets logeged in to true and gets user address
@@ -54,11 +55,11 @@
     console.log("data", accountData);
 
     misc.update(oldData => {
-				return {
-						...oldData,
-						loading: true
-				}
-		})
+      return {
+        ...oldData,
+        loading: true
+      };
+    });
 
     window.api.send("login", accountData);
 
@@ -105,7 +106,7 @@
 
     //Go to dashboard if login was successful
     goto("/dashboard");
-    myPassword = ""
+    myPassword = "";
   });
 
   //Sets our own address in svelte store
@@ -129,48 +130,47 @@
     }
   }
 
-  window.addEventListener('keyup', e => {
-        if (enableLogin && e.keyCode === 13) {
-            handleLogin()
-            enableLogin = false
-        }
-    })
+  window.addEventListener("keyup", e => {
+    if (enableLogin && e.keyCode === 13) {
+      handleLogin();
+      enableLogin = false;
+    }
+  });
 
 </script>
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
-  <div class="login-wrapper">
+  {#if wallet}
     <div class="login-wrapper">
-      {#if wallet}
-        <h2 class="title">Sign into your account</h2>
-        <!--<p class="wallets">{thisWallet}</p>-->
-        <input type="password" placeholder="Password" bind:value={myPassword}>
-        <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
-      {:else}
-        <FillButton text="Create Account" url="/create-account" />
-      {/if}
-      {#if !loginStatus}
-        <p class="error">{errorMessage}</p>
-      {/if}
+      <h2 class="title">Sign into your account</h2>
+      <!--<p class="wallets">{thisWallet}</p>-->
+      <input type="password" placeholder="Password" bind:value={myPassword}>
+      <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
     </div>
-    <!-- <select bind:value={node}>
-      {#each $nodelist as node}
-        <option value={`${node.url}:${node.port}`}>{node.name}</option>
-      {/each}
-    </select>
-    <button on:click={switchNode}>Connect</button> -->
-  </div>
-  <div in:fade class="hero">
-    <div></div>
-    <div>
-      <HuginArt/>
-      <div in:fly="{{y: 100}}" class="socials">
-        <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
-        <p on:click={()=> openURL("https://github.com/kryptokrona/hugin-svelte/issues")}>Support</p>
-        <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
+    <div in:fade class="hero">
+      <div></div>
+      <div>
+        <HuginArt />
+        <div in:fly="{{y: 100}}" class="socials">
+          <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
+          <p on:click={()=> openURL("https://github.com/kryptokrona/hugin-svelte/issues")}>Support</p>
+          <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
+        </div>
       </div>
+      <div></div>
     </div>
-    <div></div>
-  </div>
+  {:else}
+    <div in:fade class="hero">
+      <div></div>
+      <div class="center">
+        <HuginArt />
+        <GreenButton disabled={false} text="Create Account" on:click={() => goto('/create-account')} />
+      </div>
+      <div></div>
+    </div>
+  {/if}
+  {#if !loginStatus}
+    <p class="error">{errorMessage}</p>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -187,7 +187,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 50%;
+    width: 100%;
     height: 100vh;
   }
 
@@ -195,6 +195,7 @@
     width: 200px;
     margin-top: 0;
     margin-bottom: 30px;
+    text-align: center;
   }
 
   .hero {
@@ -202,10 +203,18 @@
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    width: 50%;
+    width: 100%;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     height: 100vh;
     z-index: 3;
+
+    .center {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2rem;
+      align-items: center;
+    }
   }
 
   .socials {
