@@ -42,10 +42,12 @@
     if (data.brd === thisBoard && $page.url.pathname === "/boards") {
       //Push new message to store
       printBoardMessage(data);
-    } else {
-      console.log("not this board");
-      unreadMsgs.push(data);
+    } else if (thisBoard == "Home" && $boards.boardsArray.some(a => a === data.brd) && $page.url.pathname === "/boards") {
+      console.log("One of my boards");
+      printBoardMessage(data);
       return;
+    } else {
+      console.log('board msg', data)
     }
   });
 

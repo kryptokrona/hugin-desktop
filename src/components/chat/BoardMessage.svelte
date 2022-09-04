@@ -119,6 +119,7 @@
         <div style="display: flex; align-items: center; margin-left: -10px">
           <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
           <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /></span></h5>
+          {#if $boards.thisBoard == "Home"}<p class="to_board">in {board}</p>{/if}
         </div>
         <div class="actions">
           <EmojiSelector on:emoji={reactTo}/>

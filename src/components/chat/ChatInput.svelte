@@ -2,7 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import sendIcon from "/static/images/send.png";
   import EmojiSelector from "svelte-emoji-selector";
-  import { webRTC } from "$lib/stores/user.js";
+  import { webRTC, boards } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
 
@@ -51,7 +51,7 @@
   }
 </script>
 
-<div class="wrapper" class:border-bottom={$page.url.pathname === '/boards'}
+<div class="wrapper" class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home"}
      class:border-top={$page.url.pathname === '/messages'} in:fade="{{duration: 400}}" out:fade="{{duration: 100}}">
   <input type="text" placeholder="Message.." bind:value={messageInput}>
   <EmojiSelector on:emoji={onEmoji} />
@@ -115,6 +115,10 @@
     background-color: var(--success-color);
     color: #fff;
     font-weight: 600;
+  }
+
+  .hide {
+    display: none;
   }
 
 </style>
