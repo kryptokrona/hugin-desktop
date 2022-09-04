@@ -22,22 +22,16 @@ $: board_post_count
 
 $: poster_count
 
-function printBoard() {
-    console.log(
-      'lol print'
-    )
-  }
-  
 </script>
 
 <div class="card" in:fade="{{duration: 150}}">
     {#await get_board_icon(board.brd)}
     {:then board_color}
     <div class="brd" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-      <button class="board-icon" on:click={() => printBoard(board)}>{board.brd.substring(0, 1).toUpperCase()}</button>
+      <button class="board-icon">{board.brd.substring(0, 1).toUpperCase()}</button>
     </div>
     {/await}
-    <p class="board">{board.brd}</p><br>
+    <p class="board" on:click>{board.brd}</p><br>
     {#if poster_count > 1}
     <p in:fade="{{duration: 250}}">{poster_count} people are talking here</p>
     {:else}
@@ -59,6 +53,7 @@ function printBoard() {
     font-size: 15px;
     font-weight: bold;
     margin-left: 5px;
+    cursor: pointer;
   }
 
   .brd {
@@ -68,6 +63,7 @@ function printBoard() {
     padding: 0px;
     font-size: 3px;
     display: inline-block;
+    cursor: pointer;
 
     &:hover {
       opacity: 1;

@@ -53,7 +53,7 @@
   </div>
   <div class="list-wrapper">
     {#each active_boards as board}
-       <ActiveBoard board={board}/>
+       <ActiveBoard board={board} on:click={()=> dispatch('printBoard', board.brd)}/>
     {/each}
   </div>
 </div>
