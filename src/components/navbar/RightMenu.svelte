@@ -1,5 +1,5 @@
 <script>
-  import { fly } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import { page } from "$app/stores";
   import { user, boards, webRTC, transactions } from "$lib/stores/user.js";
   import callIcon from "/static/images/call.svg";
@@ -141,22 +141,22 @@
     <div class="nav">
       <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
       {#if thisCall && !video}
-        <button class="button" on:click={() => endCall()}><img class="icon" src="/static/images/call-slash.svg"
+        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon" src="/static/images/call-slash.svg"
                                                                alt="endcall"></button>
       {:else}
-        <button class="button" on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call">
+        <button in:fade out:fade class="button" on:click={() => startCall(contact, false)}><img class="icon" src={callIcon} alt="call">
         </button>
       {/if}
       {#if thisCall && video}
-        <button class="button" on:click={() => endCall()}><img class="icon" src="/static/images/video-slash.svg"
+        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon" src="/static/images/video-slash.svg"
                                                                alt="video"></button>
       {:else}
-        <button class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
+        <button in:fade out:fade class="button" on:click={() => startCall(contact, true)}><img class="icon" src={videoIcon} alt="video">
         </button>
       {/if}
       
       {#if thisCall}
-      <div>
+      <div in:fade out:fade class="button">
         {#if !muted}
         <MicIcon on:click={toggleAudio}/>
         {:else}
