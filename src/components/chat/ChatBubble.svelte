@@ -100,7 +100,7 @@
             {/each}
           </div>
         {:else}
-            <p class="message">{message}</p>
+            <p class="message" style="user-select: text;">{message}</p>
         {/if}
       </div>
     </div>
@@ -114,7 +114,6 @@
     padding: 10px 20px;
     display: flex;
     width: 100%;
-    cursor: pointer;
 
 
     &:hover {

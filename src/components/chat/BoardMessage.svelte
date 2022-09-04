@@ -125,7 +125,7 @@
           <ReplyArrow on:click={replyTo} />
         </div>
       </div>
-      <p>{msg}</p>
+      <p style="user-select: text;">{msg}</p>
     </div>
 
       <div class="reactions">
