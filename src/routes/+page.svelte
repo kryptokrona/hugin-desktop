@@ -144,6 +144,15 @@
     }
   }
 
+  function goTo(restore) {
+    if (restore) {
+      $user.restore = true;
+    } else {
+      $user.restore = false;
+    }
+    goto('/create-account')
+  }
+
 </script>
 <svelte:window on:keyup|preventDefault={enter} />
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
@@ -172,7 +181,8 @@
       <div></div>
       <div class="center">
         <HuginArt />
-        <GreenButton disabled={false} text="Create Account" on:click={() => goto('/create-account')} />
+        <GreenButton disabled={false} text="Create Account" on:click={() => goTo(false)} />
+        <GreenButton disabled={false} text="Restore Account" on:click={() => goTo(true)} />
       </div>
       <div></div>
     </div>
