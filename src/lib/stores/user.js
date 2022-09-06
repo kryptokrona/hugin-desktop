@@ -22,6 +22,13 @@ export const boards = writable({
     newBoards: [],
 })
 
+export const groups = writable({
+    addGroup: false,
+    replyTo: {reply: false},
+    thisGroup: {name: "Private groups", chat: "verysecretkeyinchat", key: "verysecretkeyinchat", msg: "Click the add icon"},
+    groupArray: [],
+})
+
 export const misc = writable({
     syncState: '',
     walletBlockCount: null,
