@@ -247,6 +247,11 @@
 
   $: replyTrue = $boards.replyTo.reply;
 
+  function findMessage(e) {
+    console.log('find this!', e)
+    printBoard(e.board)
+    
+  }
 
 </script>
 
@@ -279,7 +284,8 @@
           board={message.brd}
           nickname={message.n}
           msgFrom={message.k}
-          timestamp={message.t} hash={message.hash} />
+          timestamp={message.t} hash={message.hash} 
+          on:findMsg={(e)=> findMessage(e.detail)}/>
 
       {/each}
     </BoardWindow>
