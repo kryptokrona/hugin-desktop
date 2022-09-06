@@ -83,7 +83,7 @@
 
 		window.api.receive("boardMsg", data => {
 			new_messages = true
-			if (data.brd === $boards.thisBoard) return
+			if (data.brd === $boards.thisBoard || $boards.thisBoard === "Home" && $page.url.pathname !== '/boards') return
 			board_message_sound.play();
 			$notify.new.push(data)
 			console.log('notif', $notify.new)
