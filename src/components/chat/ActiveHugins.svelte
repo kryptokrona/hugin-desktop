@@ -1,50 +1,185 @@
 <script>
   import { createEventDispatcher, onMount } from "svelte";
   import { fade } from "svelte/transition";
-  import { boardMessages } from "$lib/stores/boardmsgs.js";
-  import { user, boards } from "$lib/stores/user.js";
+  import { groupMessages } from "$lib/stores/groupmsgs.js";
+  import { groups } from "$lib/stores/user.js";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
 
   const dispatch = createEventDispatcher();
   let activeHugins = [];
   let contacts = [];
   let msgkey;
+  let newArray = []
+  let groupArray = []
+  let showActive = false
   //Get message updates and trigger filter
-  boardMessages.subscribe(() => {
-    filterActiveHugins($boardMessages);
+  let group = ""
+  onMount(()=> {
+    printGroups()
+  })
+  $: if ($groups.thisGroup.key) {
+    group = $groups.thisGroup.key
+  }
+  groupMessages.subscribe(() => {
+    
+    filterActiveHugins($groupMessages);
+  });
+
+  
+  //Listen for sent message to update conversation list
+  window.api.receive("groupMsg", () => {
+    printGroups()
   });
 
   const sendPM = (user) => {
     console.log("User", user);
+    console.log
   };
+
+  const printGroup = (grp) => {
+    console.log('print group!', grp)
+    dispatch("printGroup", grp)
+  };
+
 
   //Function to filer array of active users on board.
   function filterActiveHugins(arr) {
     let uniq = {};
-    activeHugins = arr.filter(obj => !uniq[obj.k] && (uniq[obj.k] = true));
+    activeHugins = arr.filter(obj => !uniq[obj.key] && (uniq[obj.key] = true));
+    console.log('active hugins',activeHugins)
   }
 
-  $ : activeHugins;
+  $: activeHugins;
+  $: groupArray = $groups.groupArray
+  
 
+  //Print our conversations from DBs
+  async function printGroups() {
+
+    newArray = await window.api.getGroups();
+    // if (newArray.length === 0) {
+    //   newArray = [{name: "Private groups", key: "key"}]
+    // }
+    console.log('newArray', newArray)
+    let my_groups = await checkNew();
+
+    console.log("conv", my_groups);
+
+    groups.update(current => {
+      return {
+        ...current,
+        groupArray: newArray
+      };
+      
+    });
+
+
+  console.log("Printing conversations", newArray);
+}
+
+const removeGroup = async () => {
+  console.log($groups.thisGroup.key)
+  window.api.removeGroup($groups.thisGroup.key)
+  let filter = $groups.groupArray.filter(a => a.key !== $groups.thisGroup.key)
+  $groups.groupArray = filter
+  console.log('array', $groups.groupArray)
+  await printGroups()
+  if ($groups.groupArray.length) {
+
+    $groups.thisGroup = $groups.groupArray[0]
+  } else {
+    $groups.groupArray = []
+    let nogroup = {name: "Private groups", chat: "verysecretkeyinchat", key: "verysecretkeyinchat", msg: "Click the add icon"}
+    $groups.groupArray.push(nogroup)
+    $groups.thisGroup = nogroup
+  }
+  console.log('want to print', $groups.thisGroup)
+  dispatch("removeGroup")
+}
+
+function readMessage(e) {
+
+console.log("reading this");
+
+groupArray = groupArray.map(function(a) {
+
+  if (e.new && a.chat == e.chat) {
+    console.log("reading this", a);
+    a.new = false;
+  }
+  return a;
+
+});
+
+groupArray = groupArray;
+}
+
+$ : groupArray;
+
+async function checkNew() {
+    let filterNew = [];
+    newArray.forEach(function(a) {
+
+      groupArray.some(function(b) {
+        console.log("checking?");
+        if (b.new && a.chat === b.chat) {
+          console.log("old new, keep new", b);
+          a.new = true;
+        }
+      });
+      filterNew.push(a);
+      console.log("pushin");
+    });
+
+    console.log("conversations filtered and set", filterNew);
+
+    return filterNew;
+  }
 
 </script>
 
 <div class="wrapper">
+  
+  <p class="add">{$groups.thisGroup.name}</p>
   <div class="top">
-    <h2>{$boards.thisBoard}</h2>
+    <h2 on:click={()=> showActive = !showActive}>Groups</h2><br>
   </div>
+  <div>
+    <p class="remove" on:click={removeGroup}>Remove group</p>
+  </div>
+  {#if showActive}
   <div class="active_hugins">
     <h4>Active Hugins</h4>
   </div>
   <div class="list-wrapper">
+   
     {#each activeHugins as user}
       <div class="card" on:click={(e) => sendPM(user)}>
         <img class="avatar"
-             src="data:image/png;base64,{get_avatar(user.k)}" alt="">
-        <p class="nickname">{user.n}</p><br>
+             src="data:image/png;base64,{get_avatar(user.address)}" alt="">
+        <p class="nickname">{user.name}</p><br>
       </div>
     {/each}
   </div>
+    {:else}
+    <div class="active_hugins">
+      <h4>Groups</h4>
+    </div>
+    <div class="list-wrapper">
+      {#each $groups.groupArray as group}
+        <div class="card" on:click={() => printGroup(group)}>
+          <img class="avatar"
+               src="data:image/png;base64,{get_avatar(group.chat)}" alt="">
+              <div class="content">
+              <h4>{group.name}</h4>
+              <p class="nickname">{group.msg}</p><br>
+            </div>
+        
+        </div>
+      {/each}
+    </div>
+    {/if}
+
 </div>
 
 <style lang="scss">
@@ -85,7 +220,7 @@
     width: 100%;
     max-width: 280px;
     padding: 20px;
-    display: flex;
+    display: block;
     justify-content: center;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
@@ -142,6 +277,22 @@
     padding: 1rem;
     color: white;
     border-bottom: 1px solid var(--border-color);
+  }
+
+  .add {
+    font-size: 15px;
+    color: white;
+  }
+
+  .remove {
+    color: red;
+  }
+
+  .content {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
 </style>
