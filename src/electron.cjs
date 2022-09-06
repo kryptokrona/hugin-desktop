@@ -341,7 +341,7 @@ const db = new Low(adapter);
 let js_wallet;
 let walletName;
 let known_keys = [];
-let known_pooL_txs = [];
+let known_pool_txs = [];
 let myPassword;
 let my_boards = [];
 
@@ -447,6 +447,8 @@ async function startCheck() {
     knownTxsTable();
     contactsTable();
     boardsSubscriptionsTable();
+    groupMessageTable()
+    groupsTable()
     mainWindow.webContents.send("wallet-exist", false);
   }
 
@@ -546,6 +548,46 @@ function boardsSubscriptionsTable() {
     database.run(subscriptionTable, (err) => {
     });
     console.log("created subscription Table");
+  }, () => {
+    resolve();
+  });
+}
+
+function groupsTable() {
+  const groupsTable = `
+            CREATE TABLE pgroups (
+              key TEXT,
+              name TEXT,
+              UNIQUE (key)
+          )`;
+  return new Promise((resolve, reject) => {
+    database.run(groupsTable, (err) => {
+    });
+    console.log("created groups Table");
+  }, () => {
+    resolve();
+  });
+}
+
+
+function groupMessageTable() {
+  const groupTable = `
+            CREATE TABLE groupmessages (
+              message TEXT,
+              address TEXT,
+              signature TEXT,
+              grp TEXT,
+              time TEXT,
+              name TEXT,
+              reply TEXT,
+              hash TEXT UNIQUE,
+              sent BOOLEAN
+            )`;
+  return new Promise((resolve, reject) => {
+    database.run(groupTable, (err) => {
+    });
+    console.log("created group Table");
+
   }, () => {
     resolve();
   });
@@ -660,6 +702,22 @@ ipcMain.on("create-account", async (e, accountData) => {
   start_js_wallet(walletName, myPassword, mynode);
 });
 
+async function loadGroups() {
+
+  const rows = [];
+  return new Promise((resolve, reject) => {
+    const getAllGroups = `SELECT * FROM pgroups`;
+    database.each(getAllGroups, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      rows.push(row);
+    }, () => {
+      resolve(rows);
+    });
+  });
+}
+
 async function loadKeys(start = false) {
 
 //Load known public keys from db and push them to known_keys
@@ -716,7 +774,8 @@ async function start_js_wallet(walletName, password, mynode) {
   //Load known pool txs from db.
   let checkedTxs;
   let knownTxsIds = await loadKnownTxs();
-
+  let my_groups = await getGroups()
+  console.log('my', my_groups)
   if (knownTxsIds.length > 0) {
 
     checkedTxs = knownTxsIds.map(function(knownTX) {
@@ -774,7 +833,7 @@ async function start_js_wallet(walletName, password, mynode) {
     }
   });
 
-  mainWindow.webContents.send("wallet-started", myContacts, mynode);
+  mainWindow.webContents.send("wallet-started", myContacts, mynode, my_groups);
   console.log("Started wallet");
   await sleep(2000);
   console.log("Loading Sync");
@@ -814,7 +873,6 @@ async function start_js_wallet(walletName, password, mynode) {
   }
 }
 
-
 async function backgroundSyncMessages(checkedTxs = false) {
 
   if (checkedTxs) {
@@ -839,7 +897,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
     let transactions = json.addedTxs;
     let transaction;
     //Try clearing known pool txs from checked
-    known_pooL_txs = known_pooL_txs.filter(n => !json.deletedTxsIds.includes(n));
+    known_pool_txs = known_pool_txs.filter(n => !json.deletedTxsIds.includes(n));
     if (transactions.length === 0) {
       console.log("Empty array...");
       console.log("No incoming messages...");
@@ -853,10 +911,8 @@ async function backgroundSyncMessages(checkedTxs = false) {
 
         if (known_pool_txs.indexOf(thisHash) === -1) {
           known_pool_txs.push(thisHash);
-          message_was_unknown = true;
 
         } else {
-          message_was_unknown = false;
           console.log("This transaction is already known", thisHash);
           continue;
         }
@@ -864,6 +920,16 @@ async function backgroundSyncMessages(checkedTxs = false) {
         if (thisExtra !== undefined && thisExtra.length > 200) {
           message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
           if (!message || message === undefined) {
+            let group = trimExtra(thisExtra) 
+            console.log('group', group)
+            message = JSON.parse(group)
+            if (message.sb.length > 100)
+            {
+              let msg = await decryptGroupMessage(message, thisHash)
+              console.log('found group message?', msg)
+              if (msg) continue
+            }
+            saveHash(thisHash)
             console.log("Caught undefined null message, continue");
             continue;
           }
@@ -921,6 +987,17 @@ ipcMain.on("removeBoard", async (e, board) => {
   removeBoard(board)
 });
 
+//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
+ipcMain.on("addGroup", async (e, grp) => {
+  addGroup(grp)
+  saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
+});
+
+ipcMain.on("removeGroup", async (e, grp) => {
+  removeGroup(grp)
+});
+
+
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on("addChat", async (e, hugin_address, nickname, first = false) => {
   console.log("addchat first", first);
@@ -954,6 +1031,37 @@ async function removeBoard(brd) {
 
 console.log('removed brd', brd)
 }
+
+
+async function addGroup(group) {
+  console.log('adding', group)
+  database.run(
+    `REPLACE INTO pgroups
+      (key, name)
+        VALUES
+          (?, ?)`,
+    [
+      group.k,
+      group.n
+    ]
+  );
+
+  console.log('saved group', group)
+}
+
+async function removeGroup(group) {
+
+  database.run(
+    `DELETE FROM
+        pgroups
+      WHERE
+        key = ?`,
+    [ group ]
+  );
+
+console.log('removed brd', group)
+}
+
 
 
 
@@ -1001,7 +1109,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
 async function saveHash(txHash) {
 
-  if (txHash == undefined) {
+  if (txHash == undefined || txHash.length < 64) {
     console.log("caught undefined hash");
     return;
   }
@@ -1013,7 +1121,7 @@ async function saveHash(txHash) {
                VALUES
                    ( ? )`,
     [
-      txHash
+      hash
     ]
   );
   console.log("saved hash");
@@ -1078,6 +1186,63 @@ async function saveBoardMsg(msg, hash, follow=false) {
   mainWindow.webContents.send("boardMsg", message);
 }
 
+async function saveGroupMessage(msg, hash, time) {
+
+  let group = sanitizeHtml(msg.g);
+  let text = sanitizeHtml(msg.m);
+  let addr = sanitizeHtml(msg.k);
+  let reply = sanitizeHtml(msg.r);
+  let sig = sanitizeHtml(msg.s);
+  let timestamp = sanitizeHtml(time);
+  let nick = sanitizeHtml(msg.n);
+  let txHash = hash;
+  if (nick === "") {
+    nick = "Anonymous";
+  }
+
+  let message = {
+    message: text,
+    address: addr,
+    signature: sig,
+    group: group,
+    time: timestamp,
+    name: nick,
+    reply: reply,
+    hash: txHash,
+    sent: msg.sent
+  };
+
+  database.run(
+    `REPLACE INTO groupmessages  (
+        message,
+        address,
+        signature,
+        grp,
+        time,
+        name,
+        reply,
+        hash,
+        sent
+              )
+           VALUES
+               (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      text,
+      addr,
+      sig,
+      group,
+      timestamp,
+      nick,
+      reply,
+      txHash,
+      msg.sent
+    ]
+  );
+    saveHash(hash)
+  //Send new board message to frontend.
+  mainWindow.webContents.send("groupMsg", message);
+}
+
 //Get all messages from db
 async function getMessages() {
   const rows = [];
@@ -1101,7 +1266,6 @@ async function getBoardMsgs() {
   return new Promise((resolve, reject) => {
     const getAllBrds = `SELECT * FROM boards`;
     database.each(getAllBrds, (err, row) => {
-      console.log(row);
       if (err) {
         console.log("Error", err);
       }
@@ -1129,6 +1293,44 @@ async function getMyBoardList() {
       myBoards.push(row.board);
     }, () => {
       resolve(myBoards);
+    });
+  });
+
+}
+
+//Get one message from every unique user sorted by latest timestmap.
+async function getGroups() {
+  let my_groups = await loadGroups();
+  console.log('maj',my_groups)
+  let name;
+  let newRow;
+  let key;
+  const myGroups = [];
+  return new Promise((resolve, reject) => {
+    const getMyGroups = `
+          SELECT *
+          FROM groupmessages D
+          WHERE time = (SELECT MAX(time) FROM groupmessages WHERE grp = D.grp)
+          ORDER BY
+              time
+          ASC
+          `;
+    database.each(getMyGroups, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      my_groups.filter(function(chat) {
+        if (chat.key === row.grp) {
+          name = chat.name;
+          key = chat.key;
+          newRow = { name: name, msg: row.message, chat: row.grp, timestamp: row.time, sent: row.sent, key: key, hash: row.hash };
+          myGroups.push(newRow);
+        }
+      });
+      
+    }, () => {
+      console.log('my Gs', myGroups)
+      resolve(myGroups);
     });
   });
 
@@ -1187,13 +1389,45 @@ async function getConversation(chat = false) {
             timestamp
         ASC`;
     database.each(getChat, (err, row) => {
-      console.log(row);
       if (err) {
         console.log("Error", err);
       }
       thisConversation.push(row);
     }, () => {
       resolve(thisConversation);
+    });
+  });
+}
+
+
+//Print a chosen group from the shared key.
+async function printGroup(group = false) {
+
+  const thisGroup = [];
+  return new Promise((resolve, reject) => {
+    const getGroup = `SELECT
+          message,
+          address,
+          signature,
+          grp,
+          time,
+          name,
+          reply,
+          hash,
+          sent
+        FROM
+            groupmessages
+        ${group ? "WHERE grp = \"" + group + "\"" : ""}
+        ORDER BY
+            time
+        ASC`;
+    database.each(getGroup, (err, row) => {
+      if (err) {
+        console.log("Error", err);
+      }
+      thisGroup.push(row);
+    }, () => {
+      resolve(thisGroup);
     });
   });
 }
@@ -1245,6 +1479,38 @@ async function getReply(reply = false) {
              hash,
              sent
       FROM boards
+      ${reply ? "WHERE hash = \"" + reply + "\"" : ""}
+      ORDER BY
+          t
+      ASC`;
+    database.each(sql, (err, row) => {
+
+      thisReply = row;
+      if (err) {
+        console.log("Error", err);
+      }
+    }, () => {
+      resolve(thisReply);
+    });
+  });
+}
+
+//Get original messsage from a chosen reply hash
+async function getGroupReply(reply = false) {
+  console.log("Get reply", reply);
+  let thisReply;
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT
+             message,
+             from,
+             signature,
+             grp,
+             time,
+             name,
+             reply,
+             hash,
+             sent
+      FROM groups
       ${reply ? "WHERE hash = \"" + reply + "\"" : ""}
       ORDER BY
           t
@@ -1453,6 +1719,12 @@ ipcMain.on("sendBoardMsg", (e, msg) => {
   }
 );
 
+ipcMain.on("sendGroupsMessage", (e, msg) => {
+  sendGroupsMessage(msg);
+}
+);
+
+
 ipcMain.on("answerCall", (e, msg, contact, key) => {
     console.log("answr", msg, contact);
     mainWindow.webContents.send("answer-call", msg, contact, key);
@@ -1463,6 +1735,132 @@ ipcMain.on("endCall", async (e, peer, stream, contact) => {
   mainWindow.webContents.send("endCall", peer, stream, contact);
 });
 
+async function sendGroupsMessage(message) {
+
+  const my_address = message.address
+
+  const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
+
+  const signature = await xkrUtils.signMessage(message.message, privateSpendKey);
+
+  const timestamp = parseInt(Date.now());
+
+  const nonce = nonceFromTimestamp(timestamp);
+  //msg.grp
+  const group = "653e1e97b4697b912b843fd9669b5703975b1885da7ce7025b23a9b8fc3cd33c"
+
+  let message_json = {
+    "m": message.message,
+    "k": my_address,
+    "s": signature,
+    "g": group,
+    "n": message.name,
+  }
+
+  if (message.reply.length > 63) {
+    message_json.r = message.reply
+  }
+
+  const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json));
+
+  const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group));
+
+  const payload_encrypted = {"sb":Buffer.from(secretbox).toString('hex'), "t":timestamp};
+
+  const payload_encrypted_hex = toHex(JSON.stringify(payload_encrypted));
+
+  const result = await js_wallet.sendTransactionAdvanced(
+      [[my_address, 1]], // destinations,
+      3, // mixin
+      {fixedFee: 8500, isFixedFee: true}, // fee
+      undefined, //paymentID
+      undefined, // subWalletsToTakeFrom
+      undefined, // changeAddress
+      true, // relayToNetwork
+      false, // sneedAll
+      Buffer.from(payload_encrypted_hex, 'hex')
+  );
+
+  if (result.sucess) {
+    message_json.sent = true
+    saveGroupMessage(message_json, result.transactionHash, timestamp)
+    mainWindow.webContents.send("sent_group_msg");
+  } else {
+    let error = {
+      m: "Failed to send",
+      n: "Error",
+      h: parseInt(Date.now() / 1000)
+    };
+    mainWindow.webContents.send("error_msg", error);
+    console.log(`Failed to send transaction: ${result.error.toString()}`);
+  }
+
+
+}
+
+async function decryptGroupMessage(tx, hash) {
+
+  console.log(tx);
+
+  let decryptBox = false;
+
+  let groups = await loadGroups()
+
+  let key;
+
+  let i = 0;
+
+  while (!decryptBox && i < groups.length) {
+
+    let possibleKey = groups[i].key;
+
+    i += 1;
+
+    console.log('Trying key: ' + possibleKey);
+
+    try {
+
+     decryptBox = nacl.secretbox.open(
+       hexToUint(tx.sb),
+       nonceFromTimestamp(tx.t),
+       hexToUint(possibleKey)
+     );
+
+     key = possibleKey;
+    } catch (err) {
+      console.log(err);
+     continue;
+    }
+
+
+
+  }
+
+  if (!decryptBox) {
+    return false;
+  }
+
+
+  const message_dec = naclUtil.encodeUTF8(decryptBox);
+
+  const payload_json = JSON.parse(message_dec);
+
+  console.log(key);
+  console.log(payload_json);
+
+  const from = payload_json.k;
+
+  const this_addr = await Address.fromAddress(from);
+  
+  const verified = await xkrUtils.verifyMessageSignature(payload_json.m, this_addr.spend.publicKey, payload_json.s);
+
+  payload_json.sent = false
+  saveGroupMessage(payload_json, hash, tx.t);
+
+  return payload_json;
+
+
+}
 
 async function sendBoardMessage(message) {
   console.log("sending board", message);
@@ -1733,9 +2131,22 @@ ipcMain.handle("getReply", async (e, data) => {
   return await getReply(data);
 });
 
+ipcMain.handle("getGroupReply", async (e, data) => {
+  return await getGroupReply(data);
+});
+
 ipcMain.handle("getConversations", async (e) => {
   let contacts = await getConversations();
   return contacts.reverse();
+});
+
+ipcMain.handle("getGroups", async (e) => {
+  let groups = await getGroups();
+  return groups.reverse();
+});
+
+ipcMain.handle("printGroup", async (e, grp) => {
+  return await printGroup(grp);
 });
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
