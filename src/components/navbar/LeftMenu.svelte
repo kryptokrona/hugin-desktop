@@ -8,6 +8,7 @@
     import XkrLogo from "/src/components/buttons/XkrLogo.svelte";
     import Warning from "/src/components/buttons/Warning.svelte";
     import { openURL } from "$lib/utils/utils.js";
+    import BoardIcon2 from '/src/components/buttons/BoardIcon2.svelte'
 
     let sync
     let avatar
@@ -36,8 +37,11 @@
         <div on:click={() => goto("/messages")} class="button">
             <MessageIcon />
         </div>
-        <div on:click={() => goto("/boards")} class="button">
+        <div on:click={() => goto("/groups")} class="button">
             <BoardIcon/>
+        </div>
+        <div on:click={() => goto("/boards")} class="button">
+            <BoardIcon2/>
         </div>
         <!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
     </div>
