@@ -24,6 +24,11 @@ const WINDOW_API = {
   sendBoardMsg: (msg) => {
     ipcRenderer.send('sendBoardMsg', msg)
   },
+
+  sendGroupMessage: (msg) => {
+    ipcRenderer.send('sendGroupsMessage', msg)
+  },
+
   getMessages: async (data) => {
     const res = await ipcRenderer.invoke('getMessages')
     return res
@@ -40,6 +45,10 @@ const WINDOW_API = {
     let resp = await ipcRenderer.invoke('getReply', hash)
     return resp
   },
+  getGroupReply: async (hash) => {
+    let resp = await ipcRenderer.invoke('getGroupReply', hash)
+    return resp
+  },
   getMyBoards: async (board) => {
     let resp = await ipcRenderer.invoke('getMyBoards')
     return resp
@@ -52,6 +61,15 @@ const WINDOW_API = {
     let resp = await ipcRenderer.invoke('getConversations')
     return resp
   },
+  getGroups: async () => {
+    let resp = await ipcRenderer.invoke('getGroups')
+    return resp
+  },
+  printGroup: async (grp) => {
+    let resp = await ipcRenderer.invoke('printGroup', grp)
+    return resp
+  },
+
   printConversation: async (chat) => {
     let resp = await ipcRenderer.invoke('printConversation', chat)
     return resp
@@ -138,7 +156,13 @@ const WINDOW_API = {
   },
   removeBoard: async (board) => {
     ipcRenderer.send('removeBoard', board)
-  }
+  },
+  addGroup: async (grp) => {
+    ipcRenderer.send('addGroup', grp)
+  },
+  removeGroup: async (grp) => {
+    ipcRenderer.send('removeGroup', grp)
+  },
 }
 
 
