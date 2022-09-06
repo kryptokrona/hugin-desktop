@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
-  import { user, boards, webRTC, transactions } from "$lib/stores/user.js";
+  import { user, boards, webRTC, transactions, groups } from "$lib/stores/user.js";
   import callIcon from "/static/images/call.svg";
   import videoIcon from "/static/images/video.svg";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
@@ -12,6 +12,7 @@
   import MicIcon from "/src/components/buttons/MicIcon.svelte";
   import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
   import HomeIcon from "/src/components/buttons/HomeIcon.svelte";
+import { get } from "svelte/store";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -116,6 +117,11 @@
     $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
   };
 
+  const addGroup = () => {
+    $groups.addGroup = true
+  }
+  
+
   console.log('HERE L', $boards.boardsArray);
 
 </script>
@@ -189,6 +195,14 @@
     </div>
   {/if}
 
+  {#if $page.url.pathname === '/groups'}
+  <div class="nav">
+    <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="">
+    <button class="button">
+      <p class="add" on:click={addGroup}>Add group</p><br>
+    </button>
+  </div>
+  {/if}
   <div class="draggable hitbox"></div>
   {#if $page.url.pathname === '/messages'}
     <div on:click={()=> sendMoney(contact)} class="button">
