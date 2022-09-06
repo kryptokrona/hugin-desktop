@@ -1,7 +1,7 @@
 <script>
   import { fade, fly } from "svelte/transition";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
-  import { user, misc } from "$lib/stores/user.js";
+  import { user, misc, groups } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
@@ -77,7 +77,7 @@
   $ :  myPassword;
   $ :  console.log("mypass", myPassword);
 
-  window.api.receive("wallet-started", async (myContacts, node) => {
+  window.api.receive("wallet-started", async (myContacts, node, my_groups) => {
 
     //Set contacts to store
     user.update(data => {
@@ -95,6 +95,15 @@
         node: node.node + ":" + node.port
       };
     });
+    
+    console.log('adding groups', my_groups)
+    groups.update(oldData => {
+      return {
+        ...oldData,
+        groupArray: my_groups
+      };
+    });
+
 
 
     //Get messages and save to a svelte store variable.
