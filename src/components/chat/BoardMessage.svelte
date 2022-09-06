@@ -91,7 +91,7 @@
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div class="message" class:reply_active={reply_to_this} in:fade="{{duration: 150}}">
+<div class="message" id={hash} class:reply_active={reply_to_this} in:fade="{{duration: 150}}">
   <div>
     {#if replyMessage}
       {#await checkreply(reply)}
@@ -99,6 +99,7 @@
         <div class="reply">
           <div style="display: flex; gap: 10px; align-items: center">
             <RepliedArrom />
+            <div>Länk</div>
             <div style="display: flex; align-items: center; gap: 10px;">
               <p class="reply_nickname">{thisreply.n}</p>
               <p>{thisreply.m}</p>
@@ -107,7 +108,7 @@
         </div>
       {:catch error}
         <div in:fade="{{duration: 150}}" class="reply"><img class="reply_avatar"
-                                                            src="data:image/png;base64,{get_avatar('SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4')}"
+                                                            src="data:image/png;base64,{get_avatar('SEKReSkhdWVASJVLoSwNgkGuNbE6W52jJeBNuWjE3ZYNYuAPaF9pWT9DK4z3dfUWLNfY7CXGbXAadW46Cd2Wfdf4eaJK3cb9faq')}"
                                                             alt="">
           <p class="reply_nickname">Can't find reply</p> <br>
           <p style="color: red">This reply is not in the mempool</p>
@@ -123,6 +124,9 @@
           <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /> | {#if $boards.thisBoard === "Home"}@{board}{/if}</span></h5>
         </div>
         <div class="actions">
+          {#if $boards.thisBoard == "Home"}
+          <p on:click={()=> dispatch('findMsg', {hash: hash, board: board})}>Länk</p>
+          {/if}
           <EmojiSelector on:emoji={reactTo} />
           <ReplyArrow on:click={replyTo} />
         </div>
