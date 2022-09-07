@@ -56,6 +56,11 @@ function getMsgKey() {
   return Buffer.from(naclPubKey).toString("hex");
 }
 
+async function createGroup() {
+  return await Buffer.from(nacl.randomBytes(32)).toString('hex');
+}
+
+
 function toHex(str, hex) {
   try {
     hex = unescape(encodeURIComponent(str))
@@ -1654,6 +1659,10 @@ async function getContacts() {
   });
 
 }
+
+ipcMain.handle("createGroup", async () => {
+  return await createGroup();
+});
 
 ipcMain.handle("getPrivateKeys", async () => {
   const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys();
