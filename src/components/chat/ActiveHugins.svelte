@@ -4,6 +4,7 @@
   import { groupMessages } from "$lib/stores/groupmsgs.js";
   import { groups } from "$lib/stores/user.js";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
+  import Exit from "/src/components/buttons/Exit.svelte";
 
   const dispatch = createEventDispatcher();
   let activeHugins = [];
@@ -14,6 +15,7 @@
   let showActive = false
   //Get message updates and trigger filter
   let group = ""
+  let groupName
   onMount(()=> {
     printGroups()
   })
@@ -136,16 +138,24 @@ async function checkNew() {
     return filterNew;
   }
 
+  function copyThis(copy) {
+    navigator.clipboard.writeText(copy);
+  }
+
+  $: groupName = $groups.thisGroup.name
+
 </script>
 
 <div class="wrapper">
   
-  <p class="add">{$groups.thisGroup.name}</p>
+  <p class="add" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</p>
   <div class="top">
     <h2 on:click={()=> showActive = !showActive}>Groups</h2><br>
   </div>
   <div>
-    <p class="remove" on:click={removeGroup}>Remove group</p>
+    {#if $groups.groupArray.length}
+    <Exit on:remove={removeGroup}/>
+    {/if}
   </div>
   {#if showActive}
   <div class="active_hugins">
