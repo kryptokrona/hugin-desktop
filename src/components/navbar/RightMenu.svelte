@@ -12,8 +12,9 @@
   import MicIcon from "/src/components/buttons/MicIcon.svelte";
   import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
   import HomeIcon from "/src/components/buttons/HomeIcon.svelte";
-import { get } from "svelte/store";
-
+  import Plus from "../buttons/Plus.svelte";
+  import Lock from "../buttons/Lock.svelte";
+  
   const dispatch = createEventDispatcher();
   let contact;
   let active_contact;
@@ -120,6 +121,11 @@ import { get } from "svelte/store";
   const addGroup = () => {
     $groups.addGroup = true
   }
+
+  
+  function copyThis(copy) {
+    navigator.clipboard.writeText(copy);
+  }
   
 
   console.log('HERE L', $boards.boardsArray);
@@ -199,7 +205,10 @@ import { get } from "svelte/store";
   <div class="nav">
     <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="">
     <button class="button">
-      <p class="add" on:click={addGroup}>Add group</p><br>
+      <Plus on:click={addGroup}/><br>
+    </button>
+    <button class="button">
+      <Lock on:copy={() => copyThis($groups.thisGroup.key)}/>
     </button>
   </div>
   {/if}
