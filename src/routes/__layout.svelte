@@ -140,17 +140,19 @@ window.api.receive('node', async (node) => {
 
 	window.api.receive('error_msg', async (error) => {
 		console.log('Error', error)
-		errors.push(error)
-		errors = errors
+		$notify.errors.push(error)
+		$notify.errors = $notify.errors
 	})
 
 
 	});
 
 	function removeErrors(e) {
-		let filterArr = errors.filter(a => a.h !== e.detail.hash)
+		console.log(' remove this', e)
+		console.log('errs', $notify.errors)
+		let filterArr = $notify.errors.filter(a => a.h !== e.detail.hash)
 		console.log('filtered', filterArr)
-		errors = filterArr
+		$notify.errors = filterArr
 	}
 
 	function removeNotification(e) {
@@ -160,6 +162,8 @@ window.api.receive('node', async (node) => {
 	}
 
     $: loading = $misc.loading
+
+	$: errors = $notify.errors
 
 </script>
 
@@ -216,7 +220,7 @@ window.api.receive('node', async (node) => {
 		</div>
 	{/if}
 
-	{#if errors.length > 0 && $user.loggedIn}
+	{#if $notify.errors.length > 0 && $user.loggedIn}
 		<div class="notifs">
 		{#each errors as error (error.h)}
 		<Notification message={error} error={true}  on:hide={removeErrors} />
