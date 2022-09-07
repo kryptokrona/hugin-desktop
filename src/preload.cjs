@@ -163,6 +163,9 @@ const WINDOW_API = {
   removeGroup: async (grp) => {
     ipcRenderer.send('removeGroup', grp)
   },
+  createGroup: async () => {
+    return await ipcRenderer.invoke('createGroup')
+  },
 }
 
 
