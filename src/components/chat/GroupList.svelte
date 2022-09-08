@@ -8,7 +8,7 @@
   import Group from "/src/components/chat/Group.svelte";
   import Plus from "/src/components/buttons/Plus.svelte";
   import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
-
+  import ListButton from "/src/components/buttons/ListButton.svelte";
   const dispatch = createEventDispatcher();
   let activeHugins = [];
   let contacts = [];
@@ -45,6 +45,10 @@
     console.log('print group!', grp)
     dispatch("printGroup", grp)
   };
+
+  const showList = () => {
+    showActive = !showActive
+  }
 
 
   //Function to filer array of active users on board.
@@ -169,10 +173,9 @@ async function checkNew() {
   <div class="top">
     <h2>Groups</h2><br>
     <div class="buttons">
-      <Plus on:click={addGroup}/><br>
-      {#if $groups.groupArray.length}
       <Exit on:remove={openRemove}/>
-      {/if}
+      <ListButton on:click={showList}/>
+      <Plus on:click={addGroup}/>
     </div>
   </div>
   {#if showActive}
@@ -317,6 +320,7 @@ async function checkNew() {
     display: flex;
     gap: 10px;
     cursor: pointer;
+    justify-content: space-between;
   }
 
 </style>
