@@ -1452,7 +1452,7 @@ async function printBoard(board = false) {
         FROM boards
         ${board ? "WHERE brd = \"" + board + "\"" : ""}
         ORDER BY
-            t
+            time
         ASC`;
     database.each(getBoard, (err, row) => {
       if (err) {
@@ -1484,7 +1484,7 @@ async function getReply(reply = false) {
       FROM boards
       ${reply ? "WHERE hash = \"" + reply + "\"" : ""}
       ORDER BY
-          t
+          time
       ASC`;
     database.each(sql, (err, row) => {
 
@@ -1516,7 +1516,7 @@ async function getGroupReply(reply) {
       FROM groupmessages
       ${reply ? "WHERE hash = \"" + reply + "\"" : ""}
       ORDER BY
-          t
+          time
       ASC`;
     database.each(sql, (err, row) => {
 
@@ -1548,7 +1548,7 @@ async function getReplies(hash = false) {
         FROM boards
         ${hash ? "WHERE r = \"" + hash + "\"" : ""}
         ORDER BY
-            t
+            time
         ASC`;
     database.each(sql, (err, row) => {
       console.log(row);
