@@ -445,10 +445,6 @@ function endCall (peer, stream, contact) {
 
 </script>
 
-<main>
-
-</main>
-
 <style lang="scss">
 
     main {
