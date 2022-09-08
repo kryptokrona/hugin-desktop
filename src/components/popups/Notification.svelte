@@ -10,11 +10,13 @@
     let timer
     export let error
 	export let message;
+    export let success
+
     onMount(()=> 
     
 	timer = setTimeout(function() {
         hideNotification(message.h)
-   }, 5000)
+   }, 2000)
 )
     onDestroy(()=> {
         clearTimeout(timer)
@@ -29,7 +31,7 @@
     $: console.log('notifications', $notify)
 
   </script>
-{#if !error}
+{#if !error && !success}
 <div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
     <div class="inner-card">
         <div class="header">
@@ -48,6 +50,18 @@
             <h4 class="name">{message.n}</h4>
         </div>
             <p class="message">{message.m}</p>
+         <br>
+    </div>
+</div>
+
+{:else if success}
+<div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
+    <div class="inner-card">
+        <div class="header">
+            <img class="avatar" src="data:image/png;base64,{get_avatar(message.k)}" alt="">
+            <h4 >{message.n}</h4>
+        </div>
+            <p class="message success">{message.m}</p>
          <br>
     </div>
 </div>
@@ -117,6 +131,10 @@
         font-size: 12px;
         display: inline-flex;
         margin-left: 44px;
+    }
+
+    .success {
+        color: var(--success-color)
     }
 
 
