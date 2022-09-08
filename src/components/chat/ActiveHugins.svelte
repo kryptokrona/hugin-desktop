@@ -147,15 +147,14 @@ async function checkNew() {
 </script>
 
 <div class="wrapper">
-  
-  <p class="add" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</p>
-  <div class="top">
-    <h2 on:click={()=> showActive = !showActive}>Groups</h2><br>
-  </div>
   <div>
     {#if $groups.groupArray.length}
     <Exit on:remove={removeGroup}/>
     {/if}
+  </div>
+  <p class="add" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</p>
+  <div class="top">
+    <h2 on:click={()=> showActive = !showActive}>Groups</h2><br>
   </div>
   {#if showActive}
   <div class="active_hugins">

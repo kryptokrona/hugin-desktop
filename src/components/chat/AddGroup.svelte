@@ -1,7 +1,7 @@
 <script>
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher, onMount, onDestroy } from "svelte";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import Button from "/src/components/buttons/Button.svelte";
   import { groups, notify } from "$lib/stores/user";
@@ -12,10 +12,13 @@
   let create_group = "Create";
   let name = ""
   let key = ""
+  let test
+  let avatar
   $: {
     if (key.length === 64 && name.length > 0) {
       //Enable add button
       enableAddGroupButton = true;
+      avatar = get_avatar(key)
 
     } else {
       enableAddGroupButton = false;
@@ -24,39 +27,52 @@
 
   // Dispatch the inputted data
   const addGroup = (g) => {
+    let error = false
     if ($groups.groupArray.some(g => g.name === name)) {
       $notify.errors.push({
       m: "Group name already exists",
       n: "Error",
       h: parseInt(Date.now())
     })
-
-    $notify.errors = $notify.errors
-    console.log($notify.errors);
-    return
-  }
-
+    error = true
+    }
     if ($groups.groupArray.some(g => g.key === key)) {
       $notify.errors.push({
       m: "This group key already exists",
       n: "Error",
-      h: parseInt(Date.now())
+      h: Date.now()
     })
-
-    $notify.errors = $notify.errors
-    return;
-  }
+    error = true
+    }
+    if (error) {
+      $notify.errors = $notify.errors
+      console.log($notify.errors);
+      return
+    }
     // Dispatch the inputted data
     dispatch("addGroup", {
       key: key,
       name: name
     });
-    enableAddBoardButton = false;
+
+    $notify.success.push({
+      m: "Joined group",
+      n: name,
+      h: Date.now(),
+      k: key,
+      type: "success",
+    })
+
+    $notify.success = $notify.success
+
+    key = ""
+    enableAddGroupButton = false;
     $groups.addGroup = false;
+
   };
 
-  window.addEventListener("keyup", e => {
-    if (enableAddGroupButton && e.keyCode === 13) {
+    window.addEventListener("keyup", e => {
+    if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
       addGroup();
     }
   });
@@ -67,6 +83,7 @@
   }
 
   $: key
+  $: avatar
 
 </script>
 
@@ -79,7 +96,7 @@
     <div class="key-wrapper" in:fade>
     <input placeholder="Input group key" type="text" bind:value={key}>
     {#if key.length}
-    <img in:fade class="avatar" src="data:image/png;base64,{get_avatar(key)}" alt="">
+    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
     {/if}
     </div>
       <GreenButton text={create_group} disabled={!enableAddGroupButton} enabled={enableAddGroupButton}
