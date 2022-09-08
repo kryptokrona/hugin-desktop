@@ -1756,7 +1756,7 @@ async function sendGroupsMessage(message) {
 
   const nonce = nonceFromTimestamp(timestamp);
 
-  const group = message.grp
+  const group = message.g
 
   let message_json = {
     "m": message.m,
