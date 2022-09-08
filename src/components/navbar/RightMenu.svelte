@@ -118,11 +118,6 @@
     $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
   };
 
-  const addGroup = () => {
-    $groups.addGroup = true
-  }
-
-  
   function copyThis(copy) {
     $notify.success.push({
       message: "You copied a key",
@@ -211,9 +206,6 @@
   {#if $page.url.pathname === '/groups'}
   <div class="nav">
     <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="">
-    <button class="button">
-      <Plus on:click={addGroup}/><br>
-    </button>
     <button class="button">
       <Lock on:copy={() => copyThis($groups.thisGroup.key)}/>
     </button>
