@@ -25,7 +25,7 @@
 
 	function hideNotification(id) {
 		dispatch('hide', {
-			hash: message.h
+			hash: message.hash
 		});
 	}
     $: console.log('notifications', $notify)
@@ -35,10 +35,10 @@
 <div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
     <div class="inner-card">
         <div class="header">
-            <img class="avatar" src="data:image/png;base64,{get_avatar(message.k)}" alt="">
-            <h4 class="name">{message.n}</h4><p>in {message.brd}</p>
+            <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="">
+            <h4 class="name">{message.name}</h4><p>in {message.board}</p>
         </div>
-            <p class="message">{message.m}</p>
+            <p class="message">{message.message}</p>
          <br>
     </div>
 </div>
@@ -47,9 +47,9 @@
     <div class="inner-card">
         <div class="header">
             <img class="avatar" src="data:image/png;base64,{get_avatar('SEKReSkhdWVASJVLoSwNgkGuNbE6W52jJeBNuWjE3ZYNYuAPaF9pWT9DK4z3dfUWLNfY7CXGbXAadW46Cd2Wfdf4eaJK3cb9faq')}" alt="">
-            <h4 class="name">{message.n}</h4>
+            <h4 class="name">{message.name}</h4>
         </div>
-            <p class="message">{message.m}</p>
+            <p class="message">{message.message}</p>
          <br>
     </div>
 </div>
@@ -58,10 +58,10 @@
 <div on:click={hideNotification} in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
     <div class="inner-card">
         <div class="header">
-            <img class="avatar" src="data:image/png;base64,{get_avatar(message.k)}" alt="">
-            <h4 >{message.n}</h4>
+            <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="">
+            <h4 >{message.name}</h4>
         </div>
-            <p class="message success">{message.m}</p>
+            <p class="message success">{message.message}</p>
          <br>
     </div>
 </div>
