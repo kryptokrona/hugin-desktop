@@ -27,7 +27,9 @@
        src="data:image/png;base64,{get_avatar(group.key)}" alt="">
   <div class="content">
     <h4>{group.name}</h4>
-    <p>{group.msg}</p>
+    <div class="text">
+    <p class="from">{group.nick}:</p><p>{group.msg}</p>
+  </div>
   </div>
 
 </div>
@@ -98,5 +100,15 @@
 
   .active {
     animation: border_rgb 10s infinite;
+  }
+
+  .from {
+    font-weight: bold;
+  }
+
+  .text {
+    display: flex;
+    gap: 4px;
+    
   }
 </style>
