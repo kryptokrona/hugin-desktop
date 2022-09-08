@@ -247,19 +247,14 @@
   {#if wantToAdd}
     <AddGroup on:click={openAddGroup} on:addGroup={e =>addNewGroup(e)} />
   {/if}
-  <main in:fade="{{duration: 300}}" out:fade="{{duration: 100}}">
   
-    {#if replyTrue}
-      <div class="reply_to_exit" class:reply_to={replyTrue} on:click={()=> replyExit()}>{reply_exit_icon} Reply
-        to {$groups.replyTo.nick}</div>
-    {/if}
+  <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
+
+    <ActiveHugins on:printGroup={(e)=> printGroup(e.detail)} on:removeGroup={() => printGroup($groups.groupArray[0])}/>
   
-    <div class="left_side">
-      <BoardWindow>
-  
-        <!-- {#if noMsgs}
-          <BoardMessage message={WelcomeMsg.m} msgFrom={WelcomeMsg.k} board={WelcomeMsg.brd} nickname={WelcomeMsg.n} timestamp={WelcomeMsg.t} hash={WelcomeMsg.hash}/>
-        {/if} -->
+    <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
+      <div class="fade"></div>
+      <div class="outer" id="chat_window">
         {#each fixedGroups as message (message.hash)}
           <GroupMessage
             on:reactTo={(e) => sendGroupMsg(e)}
@@ -275,21 +270,16 @@
             timestamp={message.time} hash={message.hash}/>
   
         {/each}
-        
-      </BoardWindow>
-      
-      <ChatInput on:message={(e) => sendGroupMsg(e)} />
-    </div>
-    <div id="board_box">
-      <div id="active_hugins">
-        <div class="list">
-          <ActiveHugins on:printGroup={(e)=> printGroup(e.detail)} on:removeGroup={() => printGroup($groups.groupArray[0])}/>
-        </div>
+          </div>
+          {#if replyTrue}
+          <div class="reply_to_exit" class:reply_to={replyTrue} on:click={()=> replyExit()}>{reply_exit_icon} Reply
+            to {$groups.replyTo.nick}</div>
+        {/if}
+        <ChatInput on:message={(e) => sendGroupMsg(e)} />
       </div>
-    </div>
   </main>
   
-  <style>
+  <style lang="scss">
   
       h3 {
           font-size: 16px;
@@ -348,5 +338,40 @@
           flex-direction: column;
           width: 100%;
       }
+
+      .right_side {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        position: relative;
+        width: 100%;
+     }
+
+      .inner {
+        display: flex;
+        flex-direction: column;
+        padding-top: 20px;
+        width: 100%;
+      }
+
+    .outer {
+        display: flex;
+        flex-direction: column-reverse;
+        overflow: scroll;
+
+          &::-webkit-scrollbar {
+            display: none;
+          }
+     }
+
+      .fade {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 40px;
+        background: linear-gradient(180deg, #121212, #12121200);
+        z-index: 100;
+      }
+
   </style>
   
