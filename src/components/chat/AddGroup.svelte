@@ -30,17 +30,17 @@
     let error = false
     if ($groups.groupArray.some(g => g.name === name)) {
       $notify.errors.push({
-      m: "Group name already exists",
-      n: "Error",
-      h: parseInt(Date.now())
+      message: "Group name already exists",
+      name: "Error",
+      hash: parseInt(Date.now())
     })
     error = true
     }
     if ($groups.groupArray.some(g => g.key === key)) {
       $notify.errors.push({
-      m: "This group key already exists",
-      n: "Error",
-      h: Date.now()
+      message: "This group key already exists",
+      name: "Error",
+      hash: Date.now()
     })
     error = true
     }
@@ -56,10 +56,10 @@
     });
 
     $notify.success.push({
-      m: "Joined group",
-      n: name,
-      h: Date.now(),
-      k: key,
+      message: "Joined group",
+      name: name,
+      hash: Date.now(),
+      key: key,
       type: "success",
     })
 

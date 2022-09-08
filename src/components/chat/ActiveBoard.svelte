@@ -8,7 +8,7 @@ let poster_count
 let this_board = []
 
 $: if($boards.newBoards.length) {
-    this_board = $boards.newBoards.filter(a => a.brd === board.brd)
+    this_board = $boards.newBoards.filter(a => a.board === board.board)
     board_post_count = this_board.length
 }
 
@@ -25,13 +25,13 @@ $: poster_count
 </script>
 
 <div class="card" in:fade="{{duration: 150}}">
-    {#await get_board_icon(board.brd)}
+    {#await get_board_icon(board.board)}
     {:then board_color}
     <div class="brd" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-      <button class="board-icon">{board.brd.substring(0, 1).toUpperCase()}</button>
+      <button class="board-icon">{board.board.substring(0, 1).toUpperCase()}</button>
     </div>
     {/await}
-    <p class="board" on:click>{board.brd}</p><br>
+    <p class="board" on:click>{board.board}</p><br>
     {#if poster_count > 1}
     <p in:fade="{{duration: 250}}">{poster_count} people are talking here</p>
     {:else}
