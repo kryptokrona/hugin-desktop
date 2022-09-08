@@ -58,7 +58,7 @@
   const printBoard = async (board) => {
     console.log("Printing Board", board);
     dispatch("printBoard", {
-      brd: board
+      board: board
     });
   };
 

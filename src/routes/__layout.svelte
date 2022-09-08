@@ -153,7 +153,7 @@ window.api.receive('node', async (node) => {
 		console.log(' remove this', e)
 		console.log('errs', $notify.errors)
 
-		if ($notify.success.some(a => a.h === e.detail.hash)) {
+		if ($notify.success.some(a => a.hash === e.detail.hash)) {
 			let filterArr = $notify.success.filter(a => a.hash !== e.detail.hash)
 			console.log('filtered', filterArr)
 			$notify.success = filterArr

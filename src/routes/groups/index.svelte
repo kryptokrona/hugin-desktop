@@ -62,10 +62,11 @@
         replyto = e.detail.reply;
       }
       //Construct a new json object (myBoardMessage) to be able to print our message instant.
-      let myBoardMessage = { message: msg, grp: group, reply: replyto, address: myaddr, time: time, name: myName, hash: time };
-      window.api.sendGroupMessage(myBoardMessage);
-      console.log("wanna send this", myBoardMessage);
-      printBoardMessage(myBoardMessage);
+      let myGroupMessage = { message: msg, grp: group, reply: replyto, address: myaddr, time: time, name: myName, hash: time };
+      let sendMsg = { m: msg, g: group, r: replyto, k: myaddr, t: time, n: myName, hash: time };
+      window.api.sendGroupMessage(sendMsg);
+      console.log("wanna send this", sendMsg);
+      printBoardMessage(myGroupMessage);
       replyExit();
     }
   

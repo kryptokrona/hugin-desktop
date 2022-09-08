@@ -15,7 +15,7 @@
     onMount(()=> 
     
 	timer = setTimeout(function() {
-        hideNotification(message.h)
+        hideNotification(message.hash)
    }, 2000)
 )
     onDestroy(()=> {
