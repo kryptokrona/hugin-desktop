@@ -1306,7 +1306,6 @@ async function getMyBoardList() {
 //Get one message from every unique user sorted by latest timestmap.
 async function getGroups() {
   let my_groups = await loadGroups();
-  console.log('maj',my_groups)
   let name;
   let newRow;
   let key;
@@ -1328,13 +1327,12 @@ async function getGroups() {
         if (chat.key === row.grp) {
           name = chat.name;
           key = chat.key;
-          newRow = { name: name, msg: row.message, chat: row.grp, timestamp: row.time, sent: row.sent, key: key, hash: row.hash };
+          newRow = { name: name, msg: row.message, chat: row.grp, timestamp: row.time, sent: row.sent, key: key, hash: row.hash, nick: row.name };
           myGroups.push(newRow);
         }
       });
       
     }, () => {
-      console.log('my Gs', myGroups)
       resolve(myGroups);
     });
   });
@@ -1368,7 +1366,7 @@ async function getConversations() {
           key = chat.key;
         }
       });
-      newRow = { name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key };
+      newRow = { name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key};
       myConversations.push(newRow);
     }, () => {
       resolve(myConversations);
@@ -1783,7 +1781,7 @@ async function sendGroupsMessage(message) {
 
   const payload_encrypted_hex = toHex(JSON.stringify(payload_encrypted));
 
-  const result = await js_wallet.sendTransactionAdvanced(
+  let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
       {fixedFee: 8500, isFixedFee: true}, // fee
@@ -1795,10 +1793,11 @@ async function sendGroupsMessage(message) {
       Buffer.from(payload_encrypted_hex, 'hex')
   );
 
-  if (result.sucess) {
+  if (result.success) {
     message_json.sent = true
     saveGroupMessage(message_json, result.transactionHash, timestamp)
     mainWindow.webContents.send("sent_group_msg");
+    known_pool_txs.push(result.transactionHash);
   } else {
     let error = {
       message: "Failed to send",
@@ -2160,7 +2159,8 @@ ipcMain.handle("getGroups", async (e) => {
 });
 
 ipcMain.handle("printGroup", async (e, grp) => {
-  return await printGroup(grp);
+  let resp = await printGroup(grp);
+  return resp.reverse();
 });
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
