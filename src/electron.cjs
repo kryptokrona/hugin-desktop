@@ -1126,7 +1126,7 @@ async function saveHash(txHash) {
                VALUES
                    ( ? )`,
     [
-      hash
+      txHash
     ]
   );
   console.log("saved hash");
@@ -1499,13 +1499,13 @@ async function getReply(reply = false) {
 }
 
 //Get original messsage from a chosen reply hash
-async function getGroupReply(reply = false) {
+async function getGroupReply(reply) {
   console.log("Get reply", reply);
   let thisReply;
   return new Promise((resolve, reject) => {
     let sql = `SELECT
              message,
-             from,
+             address,
              signature,
              grp,
              time,
@@ -1513,7 +1513,7 @@ async function getGroupReply(reply = false) {
              reply,
              hash,
              sent
-      FROM groups
+      FROM groupmessages
       ${reply ? "WHERE hash = \"" + reply + "\"" : ""}
       ORDER BY
           t
@@ -1521,6 +1521,7 @@ async function getGroupReply(reply = false) {
     database.each(sql, (err, row) => {
 
       thisReply = row;
+      console.log(thisReply)
       if (err) {
         console.log("Error", err);
       }
@@ -1794,6 +1795,7 @@ async function sendGroupsMessage(message) {
   );
 
   if (result.success) {
+    console.log(result)
     message_json.sent = true
     saveGroupMessage(message_json, result.transactionHash, timestamp)
     mainWindow.webContents.send("sent_group_msg");
