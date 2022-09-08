@@ -65,7 +65,8 @@
     }
     //Construct a new json object (myBoardMessage) to be able to print our message instant.
     let myBoardMessage = { message: msg, board: thisBoard, reply: replyto, key: myaddr, time: time, name: myName, hash: time };
-    window.api.sendBoardMsg(myBoardMessage);
+    let sendMsg = { m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time };
+    window.api.sendBoardMsg(sendMsg);
     printBoardMessage(myBoardMessage);
     replyExit();
   }

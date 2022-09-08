@@ -1798,7 +1798,7 @@ async function sendGroupsMessage(message) {
     let error = {
       message: "Failed to send",
       name: "Error",
-      hash: parseInt(Date.now() / 1000)
+      hash: Date.now()
     };
     mainWindow.webContents.send("error_msg", error);
     console.log(`Failed to send transaction: ${result.error.toString()}`);
