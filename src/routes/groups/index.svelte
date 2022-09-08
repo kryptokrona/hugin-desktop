@@ -4,7 +4,7 @@
     import ChatInput from "/src/components/chat/ChatInput.svelte";
     import { groupMessages } from "$lib/stores/groupmsgs.js";
     import GroupMessage from "/src/components/chat/GroupMessage.svelte";
-    import ActiveHugins from "/src/components/chat/ActiveHugins.svelte";
+    import GroupList from "/src/components/chat/GroupList.svelte";
     import { user, groups } from "$lib/stores/user.js";
     import { onMount } from "svelte";
     import AddGroup from "/src/components/chat/AddGroup.svelte";
@@ -251,7 +251,7 @@
   
   <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
 
-    <ActiveHugins on:printGroup={(e)=> printGroup(e.detail)} on:removeGroup={() => printGroup($groups.groupArray[0])}/>
+    <GroupList on:printGroup={(e)=> printGroup(e.detail)} on:removeGroup={() => printGroup($groups.groupArray[0])}/>
   
     <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
       <div class="fade"></div>
