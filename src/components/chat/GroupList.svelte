@@ -75,7 +75,6 @@
 
         new_message_sound.play();
         }
-
       }
     
 
@@ -90,7 +89,7 @@
         groupArray: my_groups
       };
       
-      
+      filterActiveHugins($groupMessages);
     });
 
 
