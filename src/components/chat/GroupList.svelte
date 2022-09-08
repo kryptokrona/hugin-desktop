@@ -45,6 +45,7 @@
 
   const printGroup = (grp) => {
     console.log('print group!', grp)
+    readMessage(grp)
     dispatch("printGroup", grp)
   };
 

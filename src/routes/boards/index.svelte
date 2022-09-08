@@ -138,9 +138,8 @@
   };
   //Adds new board to boardArray and prints that board, its probably empty.
   const addNewBoard = (e) => {
-    
+
     let board = e.detail.board;
-    console.log('board', board)
     if (board === "Home") return
     if ($boards.boardsArray.indexOf(board)) {
       printBoard(board)
