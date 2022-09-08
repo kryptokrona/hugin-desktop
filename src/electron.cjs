@@ -1746,28 +1746,28 @@ ipcMain.on("endCall", async (e, peer, stream, contact) => {
 
 async function sendGroupsMessage(message) {
 
-  const my_address = message.address
+  const my_address = message.k
 
   const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
 
-  const signature = await xkrUtils.signMessage(message.message, privateSpendKey);
+  const signature = await xkrUtils.signMessage(message.m, privateSpendKey);
 
   const timestamp = parseInt(Date.now());
 
   const nonce = nonceFromTimestamp(timestamp);
 
-  const group = message.group
+  const group = message.grp
 
   let message_json = {
-    "m": message.message,
+    "m": message.m,
     "k": my_address,
     "s": signature,
     "g": group,
-    "n": message.name,
+    "n": message.n,
   }
 
-  if (message.reply.length > 63) {
-    message_json.r = message.reply
+  if (message.r.length > 63) {
+    message_json.r = message.r
   }
 
   const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json));
