@@ -1758,6 +1758,11 @@ async function sendGroupsMessage(message) {
 
   const group = message.g
 
+  if (group.length !== 64) {
+    console.log('wrong key size', group)
+    return
+  }
+
   let message_json = {
     "m": message.m,
     "k": my_address,
