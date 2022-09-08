@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher, onMount } from "svelte";
-  import { user, boards } from "$lib/stores/user.js";
+  import { user, boards, groups } from "$lib/stores/user.js";
   import Reaction from "/src/components/chat/Reaction.svelte";
   import EmojiSelector from "svelte-emoji-selector";
   import Time from "svelte-time";
@@ -69,9 +69,9 @@
 
   };
 
-  $ : if ($boards.replyTo.reply == false) {
+  $ : if ($groups.replyTo.reply == false) {
     reply_to_this = false;
-  } else if ($boards.replyTo.to == hash) {
+  } else if ($groups.replyTo.to == hash) {
     reply_to_this = true;
   }
 
