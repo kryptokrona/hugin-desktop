@@ -147,7 +147,7 @@ async function checkNew() {
 </script>
 
 <div class="wrapper">
-  <div>
+  <div class="remove">
     {#if $groups.groupArray.length}
     <Exit on:remove={removeGroup}/>
     {/if}
@@ -171,9 +171,6 @@ async function checkNew() {
     {/each}
   </div>
     {:else}
-    <div class="active_hugins">
-      <h4>Groups</h4>
-    </div>
     <div class="list-wrapper">
       {#each $groups.groupArray as group}
         <div class="card" on:click={() => printGroup(group)}>
@@ -207,7 +204,8 @@ async function checkNew() {
     width: 100%;
     max-width: 280px;
     z-index: 3;
-    overflow: hidden
+    overflow: hidden;
+    border-right: 1px solid var(--border-color);
   }
 
   .list-wrapper {
@@ -218,10 +216,10 @@ async function checkNew() {
     height: 100%;
     overflow: scroll;
   }
-
+  
   .wrapper::-webkit-scrollbar, .list-wrapper::-webkit-scrollbar {
-    display: none;
-  }
+      display: none;
+    }
 
   .top {
     height: 73px;
@@ -292,16 +290,16 @@ async function checkNew() {
     font-size: 15px;
     color: white;
   }
-
-  .remove {
-    color: red;
-  }
-
+  
   .content {
     margin-left: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+  }
+
+  .remove {
+    display: inline-block;
   }
 
 </style>
