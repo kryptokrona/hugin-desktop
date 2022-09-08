@@ -25,7 +25,7 @@
   const addBoard = (board) => {
     // Dispatch the inputted data
     dispatch("addBoard", {
-      brd: board
+      board: board
     });
     enableAddBoardButton = false;
   };
