@@ -54,6 +54,7 @@ export const webRTC = writable({
 export const notify = writable({
     new: [],
     errors: [],
+    success: []
 })
 
 
