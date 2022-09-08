@@ -89,6 +89,7 @@
 			console.log('notif', $notify.new)
 			$notify.new = $notify.new
 		})
+		
 
 		window.api.receive('addr', async (huginAddr) => {
 			console.log('Addr incoming')
@@ -148,8 +149,17 @@ window.api.receive('node', async (node) => {
 	});
 
 	function removeErrors(e) {
+
 		console.log(' remove this', e)
 		console.log('errs', $notify.errors)
+
+		if ($notify.success.some(a => a.h === e.detail.hash)) {
+			let filterArr = $notify.success.filter(a => a.h !== e.detail.hash)
+			console.log('filtered', filterArr)
+			$notify.success = filterArr
+			return
+		}
+
 		let filterArr = $notify.errors.filter(a => a.h !== e.detail.hash)
 		console.log('filtered', filterArr)
 		$notify.errors = filterArr
@@ -224,6 +234,22 @@ window.api.receive('node', async (node) => {
 		<div class="notifs">
 		{#each errors as error (error.h)}
 		<Notification message={error} error={true}  on:hide={removeErrors} />
+		{/each}
+		</div>
+	{/if}
+
+	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
+		<div class="notifs">
+		{#each $notify.new as notif (notif.h)}
+		<Notification on:hide={removeNotification} message={notif} error={false}/>
+		{/each}
+		</div>
+	{/if}
+
+	{#if $notify.success.length > 0 && $user.loggedIn}
+		<div class="notifs">
+		{#each $notify.success as success (success.h)}
+		<Notification message={success} success={true}  on:hide={removeErrors} />
 		{/each}
 		</div>
 	{/if}
