@@ -121,12 +121,9 @@
       <div class="header">
         <div style="display: flex; align-items: center; margin-left: -10px">
           <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-          <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.t * 1000)}" /> | {#if $boards.thisBoard === "Home"}@{board}{/if}</span></h5>
+          <h5 class="nickname">{nickname}<span class="time" on:click={()=> dispatch('findMsg', {hash: hash, board: board})}>| <Time relative timestamp="{parseInt(message.t * 1000)}" /> | {#if $boards.thisBoard === "Home"}@{board}{/if}</span></h5>
         </div>
         <div class="actions">
-          {#if $boards.thisBoard == "Home"}
-          <p on:click={()=> dispatch('findMsg', {hash: hash, board: board})}>Länk</p>
-          {/if}
           <EmojiSelector on:emoji={reactTo} />
           <ReplyArrow on:click={replyTo} />
         </div>
@@ -241,6 +238,7 @@
     margin-left: 8px;
     font-weight: 400;
     font-size: 0.75rem;
+    cursor: pointer;
   }
 
 </style>
