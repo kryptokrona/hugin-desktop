@@ -21,7 +21,7 @@
   //Function to filer array of active users on board.
   function filterActiveBoards(arr) {
     let uniq = {};
-    active_boards = arr.filter(obj => !uniq[obj.brd] && (uniq[obj.brd] = true));
+    active_boards = arr.filter(obj => !uniq[obj.board] && (uniq[obj.board] = true));
   }
 
   const toggleBoardSettings = () => {
@@ -53,7 +53,7 @@
   </div>
   <div class="list-wrapper">
     {#each active_boards as board}
-       <ActiveBoard board={board} on:click={()=> dispatch('printBoard', board.brd)}/>
+       <ActiveBoard board={board} on:click={()=> dispatch('printBoard', board.board)}/>
     {/each}
   </div>
 </div>

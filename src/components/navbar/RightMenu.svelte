@@ -125,10 +125,10 @@
   
   function copyThis(copy) {
     $notify.success.push({
-      m: "You copied a key",
-      n: "Copy",
-      h: Date.now(),
-      k: copy,
+      message: "You copied a key",
+      name: "Copy",
+      hash: Date.now(),
+      key: copy,
     })
     $notify.success = $notify.success
     navigator.clipboard.writeText(copy);

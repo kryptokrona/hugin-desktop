@@ -951,7 +951,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
               console.log("Not my board");
               sanitizeHtml(message.brd)
               sanitizeHtml(message.k)
-              let newBoard = {brd: message.brd, address: message.k}
+              let newBoard = {board: message.brd, address: message.k}
               mainWindow.webContents.send('newBoard', newBoard)
               saveBoardMsg(message, thisHash, false)
               continue;
@@ -1755,8 +1755,8 @@ async function sendGroupsMessage(message) {
   const timestamp = parseInt(Date.now());
 
   const nonce = nonceFromTimestamp(timestamp);
-  //msg.grp
-  const group = "653e1e97b4697b912b843fd9669b5703975b1885da7ce7025b23a9b8fc3cd33c"
+
+  const group = message.group
 
   let message_json = {
     "m": message.message,
@@ -1796,9 +1796,9 @@ async function sendGroupsMessage(message) {
     mainWindow.webContents.send("sent_group_msg");
   } else {
     let error = {
-      m: "Failed to send",
-      n: "Error",
-      h: parseInt(Date.now() / 1000)
+      message: "Failed to send",
+      name: "Error",
+      hash: parseInt(Date.now() / 1000)
     };
     mainWindow.webContents.send("error_msg", error);
     console.log(`Failed to send transaction: ${result.error.toString()}`);
@@ -1921,9 +1921,9 @@ async function sendBoardMessage(message) {
       saveBoardMsg(sentMsg, result.transactionHash);
     } else {
       let error = {
-        m: "Failed to send",
-        n: "Error",
-        h: Date.now()
+        message: "Failed to send",
+        name: "Error",
+        hash: Date.now()
       };
       mainWindow.webContents.send("error_msg", error);
       console.log(`Failed to send transaction: ${result.error.toString()}`);
@@ -2044,9 +2044,9 @@ async function sendMessage(message, receiver, off_chain = false) {
       saveMessageSQL(sentMsg, result.transactionHash);
     } else {
       let error = {
-        m: "Failed to send",
-        n: "Error",
-        h: Date.now()
+        message: "Failed to send",
+        name: "Error",
+        hash: Date.now()
       };
       console.log(`Failed to send transaction: ${result.error.toString()}`);
       mainWindow.webContents.send("error_msg", error);
@@ -2123,9 +2123,9 @@ async function sendTx(tx) {
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
         let error = {
-          m: "Failed to send",
-          n: "Transaction error",
-          h: Date.now()
+          message: "Failed to send",
+          name: "Transaction error",
+          hash: Date.now()
         };
         mainWindow.webContents.send("error_msg", error);
     }

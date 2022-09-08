@@ -54,7 +54,7 @@
       console.log("wanna send this", e);
       let msg = e.detail.text;
       let myaddr = $user.huginAddress.substring(0, 99);
-      let time = Date.now() / 1000;
+      let time = Date.now();
       let myName = $user.username;
       let group = thisGroup;
       //Reaction switch

@@ -14,19 +14,19 @@
   let hoverReaction = false;
   let filterReactors = [];
 
-  $: if (reacts.length) filterReactions = reacts.filter(a => a.m == thisReaction.m);
+  $: if (reacts.length) filterReactions = reacts.filter(a => a.message == thisReaction.message);
 
   $: if (filterReactions.length > 0) {
     let reactor = {};
-    filterReactors = filterReactions.filter(r => !reactor[r.k] && (reactor[r.k] = true));
+    filterReactors = filterReactions.filter(r => !reactor[r.key] && (reactor[r.key] = true));
     reactCount = filterReactors.length;
   }
 
   const sendReaction = () => {
     dispatch("sendReaction", {
-      msg: thisReaction.m,
-      brd: thisReaction.brd,
-      reply: thisReaction.r
+      msg: thisReaction.message,
+      brd: thisReaction.board,
+      reply: thisReaction.reply
     });
   };
 
@@ -34,14 +34,14 @@
 
 </script>
 
-<div class="reaction" on:click={sendReaction}>{thisReaction.m}
+<div class="reaction" on:click={sendReaction}>{thisReaction.message}
   {#if filterReactions.length >= 1}
     <p class="count">{reactCount}</p>
   {/if}
 
   <div in:fade class="reactors">
     {#each filterReactors as reactors}
-      <p class="reactor">{reactors.n}</p>
+      <p class="reactor">{reactors.name}</p>
     {/each}
   </div>
 
