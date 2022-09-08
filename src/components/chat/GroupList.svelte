@@ -56,7 +56,7 @@
   //Function to filer array of active users on board.
   function filterActiveHugins(arr) {
     let uniq = {};
-    activeHugins = arr.filter(obj => !uniq[obj.key] && (uniq[obj.key] = true));
+    activeHugins = arr.filter(obj => !uniq[obj.address] && (uniq[obj.address] = true));
     console.log('active hugins',activeHugins)
   }
 
