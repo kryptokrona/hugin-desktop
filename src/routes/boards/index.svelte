@@ -140,7 +140,13 @@
   const addNewBoard = (e) => {
     
     let board = e.detail.board;
+    console.log('board', board)
     if (board === "Home") return
+    if ($boards.boardsArray.indexOf(board)) {
+      printBoard(board)
+      openAddBoard()
+      return;
+    }
     boards.update(current => {
       return {
         ...current,
