@@ -137,7 +137,7 @@
             on:sendReaction={(e) => sendReactMsg(e)}
             thisReaction={reaction}
             reacts={message.react}
-            emoji={reaction.m}
+            emoji={reaction.message}
             react={react} />
         {/each}
       {/if}
