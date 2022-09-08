@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
-  import { user, boards, webRTC, transactions, groups } from "$lib/stores/user.js";
+  import { user, boards, webRTC, transactions, groups, notify } from "$lib/stores/user.js";
   import callIcon from "/static/images/call.svg";
   import videoIcon from "/static/images/video.svg";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
@@ -124,6 +124,13 @@
 
   
   function copyThis(copy) {
+    $notify.success.push({
+      m: "You copied a key",
+      n: "Copy",
+      h: Date.now(),
+      k: copy,
+    })
+    $notify.success = $notify.success
     navigator.clipboard.writeText(copy);
   }
   
