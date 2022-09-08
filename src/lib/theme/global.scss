@@ -325,6 +325,7 @@ code {
   box-shadow: none !important;
   color: white !important;
   padding: 10px !important;
+  z-index: 99999;
 }
 
 .svelte-emoji-picker__search > input {
