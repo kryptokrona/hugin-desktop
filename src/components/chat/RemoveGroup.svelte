@@ -55,10 +55,11 @@
     padding: 20px;
     border-radius: 8px;
     width: 250px;
-    height: 100px;
+    height: 125px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: center;
   }
 
   input {
