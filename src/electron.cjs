@@ -506,13 +506,13 @@ function knownTxsTable() {
 function boardMessageTable() {
   const boardTable = `
                 CREATE TABLE boards (
-                     m TEXT,
-                     k TEXT,
-                     s TEXT,
-                     brd TEXT,
-                     t TEXT,
-                     n TEXT,
-                     r TEXT,
+                     message TEXT,
+                     key TEXT,
+                     signature TEXT,
+                     board TEXT,
+                     time TEXT,
+                     name TEXT,
+                     reply TEXT,
                      hash TEXT UNIQUE,
                      sent BOOLEAN
                     )`;
@@ -602,13 +602,13 @@ function welcomeBoardMessage() {
   let sent = false;
   const boardMessage =
     `INSERT INTO boards  (
-            m,
-            k,
-            s,
-            brd,
-            t,
-            n,
-            r,
+            message,
+            key,
+            signature,
+            board,
+            time,
+            name,
+            reply,
             hash,
             sent
            )
@@ -1148,26 +1148,26 @@ async function saveBoardMsg(msg, hash, follow=false) {
   }
 
   let message = {
-    m: text,
-    k: addr,
-    s: sig,
-    brd: to_board,
-    t: timestamp,
-    n: nick,
-    r: reply,
+    message: text,
+    key: addr,
+    signature: sig,
+    board: to_board,
+    time: timestamp,
+    name: nick,
+    reply: reply,
     hash: txHash,
     sent: msg.sent
   };
 
   database.run(
     `REPLACE INTO boards  (
-               m,
-               k,
-               s,
-               brd,
-               t,
-               n,
-               r,
+               message,
+               key,
+               signature,
+               board,
+               time,
+               name,
+               reply,
                hash,
                sent
               )
@@ -1442,13 +1442,13 @@ async function printBoard(board = false) {
   const boardArray = [];
   return new Promise((resolve, reject) => {
     const getBoard = `SELECT
-               m,
-               k,
-               s,
-               brd,
-               t,
-               n,
-               r,
+               message,
+               key,
+               signature,
+               board,
+               time,
+               name,
+               reply,
                hash,
                sent
         FROM boards
@@ -1474,13 +1474,13 @@ async function getReply(reply = false) {
   let thisReply;
   return new Promise((resolve, reject) => {
     let sql = `SELECT
-             m,
-             k,
-             s,
+             message,
+             key,
+             signature,
              brd,
-             t,
-             n,
-             r,
+             time,
+             name,
+             reply,
              hash,
              sent
       FROM boards
@@ -1537,13 +1537,13 @@ async function getReplies(hash = false) {
   const replies = [];
   return new Promise((resolve, reject) => {
     let sql = `SELECT
-               m,
-               k,
-               s,
-               brd,
-               t,
-               n,
-               r,
+               message,
+               key,
+               signature,
+               board,
+               time,
+               name,
+               reply,
                hash,
                sent
         FROM boards

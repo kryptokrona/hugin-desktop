@@ -36,13 +36,13 @@
   window.api.receive("boardMsg", data => {
 
     //*TODO*//Keep logs to experiment with toast popups
-    console.log("boardMsg", data.brd);
+    console.log("boardMsg", data.board);
     console.log("user", $boards.thisBoard);
 
-    if (data.brd === thisBoard && $page.url.pathname === "/boards") {
+    if (data.board === thisBoard && $page.url.pathname === "/boards") {
       //Push new message to store
       printBoardMessage(data);
-    } else if (thisBoard == "Home" && $boards.boardsArray.some(a => a === data.brd) && $page.url.pathname === "/boards") {
+    } else if (thisBoard == "Home" && $boards.boardsArray.some(a => a === data.board) && $page.url.pathname === "/boards") {
       console.log("One of my boards");
       printBoardMessage(data);
       return;
@@ -64,7 +64,7 @@
       replyto = e.detail.reply;
     }
     //Construct a new json object (myBoardMessage) to be able to print our message instant.
-    let myBoardMessage = { m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time };
+    let myBoardMessage = { message: msg, board: thisBoard, reply: replyto, key: myaddr, time: time, name: myName, hash: time };
     window.api.sendBoardMsg(myBoardMessage);
     printBoardMessage(myBoardMessage);
     replyExit();
@@ -73,9 +73,9 @@
   //Prints any single board message. Takes boardmessage and updates to store.
   const printBoardMessage = (boardMsg) => {
 
-    if (boardMsg.r.length === 64 && boardMsg.m.length < 9 && containsOnlyEmojis(boardMsg.m)) {
+    if (boardMsg.reply.length === 64 && boardMsg.message.length < 9 && containsOnlyEmojis(boardMsg.message)) {
       updateReactions(boardMsg);
-    } else if (boardMsg.m.length > 0 && !(boardMsg.r.length === 64 && containsOnlyEmojis(boardMsg.m))) {
+    } else if (boardMsg.message.length > 0 && !(boardMsg.reply.length === 64 && containsOnlyEmojis(boardMsg.message))) {
       console.log("pushin");
       fixedBoards.unshift(boardMsg);
     }
@@ -138,7 +138,7 @@
   //Adds new board to boardArray and prints that board, its probably empty.
   const addNewBoard = (e) => {
     
-    let board = e.detail.brd;
+    let board = e.detail.board;
     if (board === "Home") return
     boards.update(current => {
       return {
@@ -161,9 +161,9 @@
   //Checks messages for reactions in chosen board from printBoard() function
   async function checkReactions() {
     //All boardmessages all messages except reactions
-    filterBoards = await $boardMessages.filter(m => m.m.length > 0 && !(m.r.length === 64 && containsOnlyEmojis(m.m)));
+    filterBoards = await $boardMessages.filter(m => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message)));
     //Only reactions
-    filterEmojis = await $boardMessages.filter(e => e.r.length === 64 && e.m.length < 9 && containsOnlyEmojis(e.m));
+    filterEmojis = await $boardMessages.filter(e => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message));
     console.log("filter emoji ", filterEmojis);
     if (filterEmojis.length) {
       //Adding emojis to the correct message.
@@ -205,10 +205,10 @@
 
     let reactionsFixed;
     reactionsFixed = fixedBoards.map(function(r) {
-      if (r.hash == msg.r && !r.react) {
+      if (r.hash == msg.reply && !r.react) {
         r.react = [];
         r.react.push(msg);
-      } else if (r.hash == msg.r && r.react) {
+      } else if (r.hash == msg.reply && r.react) {
         r.react.push(msg);
       }
       return r;
@@ -220,11 +220,11 @@
     //Check for replies and message hash that match and then adds reactions to the messages.
     filterBoards.forEach(async function(a) {
       await filterEmojis.forEach(function(b) {
-        if (!a.react && b.r == a.hash) {
+        if (!a.react && b.reply == a.hash) {
           a.react = [];
           a.react.push(b);
           console.log();
-        } else if (b.r == a.hash) {
+        } else if (b.reply == a.hash) {
           a.react.push(b);
         }
       });
@@ -275,16 +275,16 @@
       {#each fixedBoards as message (message.hash)}
         <BoardMessage
           on:reactTo={(e) => sendboardMsg(e)}
-          on:replyTo={(e)=> replyToMessage(message.hash, message.n)}
+          on:replyTo={(e)=> replyToMessage(message.hash, message.name)}
           message={message}
-          reply={message.r}
-          msg={message.m}
+          reply={message.reply}
+          msg={message.message}
           myMsg={message.sent}
-          signature={message.s}
-          board={message.brd}
-          nickname={message.n}
-          msgFrom={message.k}
-          timestamp={message.t} hash={message.hash} 
+          signature={message.signature}
+          board={message.board}
+          nickname={message.name}
+          msgFrom={message.key}
+          timestamp={message.time} hash={message.hash} 
           on:findMsg={(e)=> findMessage(e.detail)}/>
 
       {/each}
@@ -298,7 +298,7 @@
     </div>
   </div>
 
-  <RightMenu on:printBoard={(e) => printBoard(e.detail.brd)} />
+  <RightMenu on:printBoard={(e) => printBoard(e.detail.board)} />
 </main>
 
 <style>

@@ -83,7 +83,7 @@
 
   $: if (message.react) {
     let thisemoji = {};
-    reactions = message.react.filter(a => !thisemoji[a.m] && (thisemoji[a.m] = true));
+    reactions = message.react.filter(a => !thisemoji[a.message] && (thisemoji[a.message] = true));
     has_reaction = true;
   }
 
@@ -100,8 +100,8 @@
           <div style="display: flex; gap: 10px; align-items: center">
             <RepliedArrom />
             <div style="display: flex; align-items: center; gap: 10px;">
-              <p class="reply_nickname">{thisreply.n}</p>
-              <p>{thisreply.m}</p>
+              <p class="reply_nickname">{thisreply.name}</p>
+              <p>{thisreply.message}</p>
             </div>
           </div>
         </div>
