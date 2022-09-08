@@ -83,7 +83,7 @@
 
   $: if (message.react) {
     let thisemoji = {};
-    reactions = message.react.filter(a => !thisemoji[a.m] && (thisemoji[a.m] = true));
+    reactions = message.react.filter(a => !thisemoji[a.message] && (thisemoji[a.message] = true));
     has_reaction = true;
   }
 
@@ -101,8 +101,8 @@
             <RepliedArrom />
             <div>Länk</div>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <p class="reply_nickname">{thisreply.n}</p>
-              <p>{thisreply.m}</p>
+              <p class="reply_nickname">{thisreply.name}</p>
+              <p>{thisreply.message}</p>
             </div>
           </div>
         </div>
@@ -121,7 +121,7 @@
       <div class="header">
         <div style="display: flex; align-items: center; margin-left: -10px">
           <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-          <h5 class="nickname">{nickname}<span class="time" on:click={()=> dispatch('findMsg', {hash: hash, board: board})}>| <Time relative timestamp="{parseInt(message.t * 1000)}" /> | {#if $boards.thisBoard === "Home"}@{board}{/if}</span></h5>
+          <h5 class="nickname">{nickname}<span class="time" on:click={()=> dispatch('findMsg', {hash: hash, board: board})}>| <Time relative timestamp="{parseInt(message.time * 1000)}" /> | {#if $boards.thisBoard === "Home"}@{board}{/if}</span></h5>
         </div>
         <div class="actions">
           <EmojiSelector on:emoji={reactTo} />
@@ -138,7 +138,7 @@
             on:sendReaction={(e) => sendReactMsg(e)}
             thisReaction={reaction}
             reacts={message.react}
-            emoji={reaction.m}
+            emoji={reaction.message}
             react={react} />
         {/each}
       {/if}
