@@ -9,6 +9,8 @@
   import Plus from "/src/components/buttons/Plus.svelte";
   import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
   import ListButton from "/src/components/buttons/ListButton.svelte";
+
+  let new_message_sound = new Audio("/static/audio/message.mp3");
   const dispatch = createEventDispatcher();
   let activeHugins = [];
   let contacts = [];
@@ -66,9 +68,17 @@
   async function printGroups() {
 
     newArray = await window.api.getGroups();
-    // if (newArray.length === 0) {
-    //   newArray = [{name: "Private groups", key: "key"}]
-    // }
+    if (groupArray.length) {
+      if (newArray[0].timestamp != groupArray[0].timestamp && newArray[0].sent == 0 && $groups.thisGroup.key != groupArray[0].chat) {
+
+        newArray[0].new = true;
+
+        new_message_sound.play();
+        }
+
+      }
+    
+
     console.log('newArray', newArray)
     let my_groups = await checkNew();
 
@@ -176,7 +186,7 @@ async function checkNew() {
       <Exit on:remove={openRemove}/>
       <ListButton on:click={showList}/>
       <Plus on:click={addGroup}/>
-    </div>
+    </div><br>
   </div>
   {#if showActive}
   <div class="active_hugins">
