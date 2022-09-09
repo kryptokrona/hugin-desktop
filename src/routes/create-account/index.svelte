@@ -40,7 +40,7 @@
 
     username = ""
     password = ""
-    
+    step = 1
     goto("/dashboard");
   };
 
