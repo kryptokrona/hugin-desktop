@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition";
   import { messages } from "$lib/stores/messages.js";
   import { user } from "$lib/stores/user.js";
-  import addIcon from "/static/images/add-circle.png";
+  import AddCircle from "/src/components/buttons/AddCircle.svelte"
   import Contact from "/src/components/chat/Contact.svelte";
 
   let new_message_sound = new Audio("/static/audio/message.mp3");
@@ -149,7 +149,7 @@
 <div class="wrapper" in:fade="{{duration: 250}}" out:fade="{{duration: 100}}">
   <div class="top">
     <h2>Messages</h2>
-    <img class="add-icon" src={addIcon} on:click>
+    <AddCircle on:click={()=> dispatch('open')} />
   </div>
   <div class="list-wrapper">
     {#each filterArr as message (message.timestamp)}
