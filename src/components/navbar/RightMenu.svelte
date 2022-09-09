@@ -2,8 +2,7 @@
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
   import { user, boards, webRTC, transactions, groups, notify } from "$lib/stores/user.js";
-  import callIcon from "/static/images/call.svg";
-  import videoIcon from "/static/images/video.svg";
+ 
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher } from "svelte";
   import { get_board_icon } from "$lib/utils/hugin-utils.js";
@@ -12,9 +11,13 @@
   import MicIcon from "/src/components/buttons/MicIcon.svelte";
   import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
   import HomeIcon from "/src/components/buttons/HomeIcon.svelte";
-  import Plus from "../buttons/Plus.svelte";
   import Lock from "../buttons/Lock.svelte";
   
+  import CallIcon from "/src/components/buttons/CallIcon.svelte";
+  import CallSlash from "/src/components/buttons/CallSlash.svelte";
+  import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
+  import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
+
   const dispatch = createEventDispatcher();
   let contact;
   let active_contact;
@@ -170,27 +173,22 @@
   {#if $page.url.pathname === '/messages' && active_contact}
     <div class="nav">
       <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+      
+      <button in:fade out:fade class="button">
       {#if thisCall && !video}
-        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon"
-                                                                                src="/static/images/call-slash.svg"
-                                                                                alt="endcall"></button>
+          <CallSlash on:click={() => endCall()}/>
       {:else}
-        <button in:fade out:fade class="button" on:click={() => startCall(contact, false)}><img class="icon"
-                                                                                                src={callIcon}
-                                                                                                alt="call">
-        </button>
+          <CallIcon on:click={() => startCall(contact, false)}/>
+      
       {/if}
+      </button>
+      <button in:fade out:fade class="button">
       {#if thisCall && video}
-        <button in:fade out:fade class="button" on:click={() => endCall()}><img class="icon"
-                                                                                src="/static/images/video-slash.svg"
-                                                                                alt="video"></button>
+      <VideoSlash  on:click={() => endCall()}/>
       {:else}
-        <button in:fade out:fade class="button" on:click={() => startCall(contact, true)}><img class="icon"
-                                                                                               src={videoIcon}
-                                                                                               alt="video">
-        </button>
+      <VideoIcon on:click={() => startCall(contact, true)}/>
       {/if}
-
+      </button>
       {#if thisCall}
         <div in:fade out:fade class="button">
           {#if !muted}
