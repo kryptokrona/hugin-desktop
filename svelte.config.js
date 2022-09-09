@@ -1,6 +1,5 @@
 import sveltePreprocess from 'svelte-preprocess';
 import adapter from '@sveltejs/adapter-static';
-import path from "path";
 
 /** @type {import("@sveltejs/kit").Config} */
 const config = {
@@ -8,18 +7,11 @@ const config = {
 		adapter: adapter({}),
 		prerender : { default: true}
 	},
-	resolve: {
-		alias: {
-			$i18n: path.resolve('./src/i18n'),
-			$components: path.resolve('./src/components'),
-		},
-	},
 	preprocess: sveltePreprocess({
 		scss: {
 			prependData: `@import 'src/lib/theme/global.scss';`
 		}
 	}),
-
 	onwarn: (warning, handler) => {
 		const { code } = warning;
 		if (code === 'css-semicolonexpected' || code === 'css-ruleorselectorexpected' || code === 'css-unused-selector')
