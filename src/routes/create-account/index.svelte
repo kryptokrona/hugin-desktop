@@ -33,10 +33,14 @@
       };
     });
 
+
+
     window.api.send("create-account", accountData);
     console.log("Creating user account", accountData);
 
-
+    username = ""
+    password = ""
+    
     goto("/dashboard");
   };
 
