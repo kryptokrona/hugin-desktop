@@ -141,7 +141,7 @@
 
     let board = e.detail.board;
     if (board === "Home") return
-    if ($boards.boardsArray.indexOf(board)) {
+    if ($boards.boardsArray.indexOf(board) !== -1) {
       printBoard(board)
       openAddBoard()
       return;
