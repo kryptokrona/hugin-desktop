@@ -1,36 +1,25 @@
 <script>
   import { fade } from "svelte/transition";
-  import Balance from "/src/components/finance/Balance.svelte";
   import { user, userAvatar, misc, boards } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import { capitalizeFirstLetter } from "$lib/utils/utils";
-  import Globe from "$components/buttons/Globe.svelte";
-  import Warning from "$components/buttons/Warning.svelte";
-  import NodeStatus from "$components/popups/NodeStatus.svelte";
-  import FundsStatus from "$components/popups/FundsStatus.svelte";
-  import {prettyNumbers} from "$lib/utils/utils.js";
-  import Transactions from "$components/finance/Transactions.svelte";
+  import { prettyNumbers } from "$lib/utils/utils.js";
+  import Share from "/src/components/dashboard/Share.svelte";
 
-  let huginAddress;
-  let address;
-  let messageKey;
   let avatar;
   let myBoards = [];
   let date = new Date();
   let hrs = date.getHours();
   let greet;
-  let nodePopup;
-  let fundsPopup;
   let dc;
-  let buttonText = 'Copy'
 
   onMount(async () => {
 
     //Set boardsarray to store
     myBoards = await window.api.getMyBoards();
-    let filterBoards = myBoards.filter(a => a !== 'Home')
-    console.log(filterBoards)
-    filterBoards.unshift('Home')
+    let filterBoards = myBoards.filter(a => a !== "Home");
+    console.log(filterBoards);
+    filterBoards.unshift("Home");
 
     boards.update(data => {
       return {
@@ -40,11 +29,11 @@
     });
 
     misc.update(oldData => {
-				return {
-						...oldData,
-						loading: false,
-				}
-		})
+      return {
+        ...oldData,
+        loading: false
+      };
+    });
 
     if (hrs < 12)
       greet = "Good Morning";
@@ -55,120 +44,49 @@
   });
 
   $: {
-    huginAddress = $user.huginAddress;
     myBoards = $boards.boardsArray;
-    address = huginAddress.substring(0, 99);
-    messageKey = huginAddress.substring(99, 163);
     avatar = $userAvatar;
   }
 
-  //Copy address, msgkey or both
-  function copyThis(copy) {
-    navigator.clipboard.writeText(copy);
-    buttonGlow()
-  }
-  let glow = false
-  const buttonGlow = () =>  {
-    glow = true
-    buttonText = 'Copied'
-    let timer = setTimeout(function() {
-        glow = false
-        buttonText = 'Copy'
-   }, 900)
-  }
+  let locked;
+  let unlocked;
+  let total;
 
-  
-    let locked
-    let unlocked
-    let total
-
-    $: {
-        locked = prettyNumbers($misc.balance[1])
-        unlocked = prettyNumbers($misc.balance[0])
-        total = prettyNumbers($misc.balance[0] + $misc.balance[1])
-    }
+  $: {
+    locked = prettyNumbers($misc.balance[1]);
+    unlocked = prettyNumbers($misc.balance[0]);
+    total = prettyNumbers($misc.balance[0] + $misc.balance[1]);
+  }
 
 </script>
 
 <main in:fade>
+  <div class="dashboard">
 
-  <div class="status">
-    <Balance />
-    <div style="display: flex; align-items: center; justify-content: center; gap: 15px">
-      <Globe
-        yellow={$misc.syncState === 'Syncing'}
-        red={$misc.syncState === 'Not Synced' || $misc.syncState === 'Disconnected' || $misc.syncState === 'Dead node'}
-        blink={$misc.syncState !== 'Synced'}
-        on:click={() => nodePopup = !nodePopup}
-      />
-      <!-- <Warning
-        blink={($misc.balance[1] !== 0)}
-        grey={($misc.balance[1] === 0)}
-        yellow={($misc.balance[1] !== 0)}
-        red={dc} on:click={() => fundsPopup = !fundsPopup}
-      /> -->
+    <div class="header">
+      <h1>{greet}, {capitalizeFirstLetter($user.username)}!</h1>
+      <Share />
     </div>
-  </div>
 
-  {#if nodePopup}
-    <NodeStatus on:click={() => nodePopup = !nodePopup}/>
-  <!-- {:else if fundsPopup}
-    <FundsStatus on:click={() => fundsPopup = !fundsPopup}/> -->
-  {/if}
-
-<div class="dashboard">
-
-    <h2>{greet}, {capitalizeFirstLetter($user.username)}!</h2>
-    
-  <div id="profile" in:fade>
-    <div class="inner">
-    <h3>Profile</h3>
-    <div class="user">
-      <div>
-        <h4>Payment address</h4>
-        <p class="address" on:click={() => copyThis(address)}>{address.substring(0, 10) + "..." + address.substring(89, address.length)}</p>
-        <h4>Message key</h4>
-        <p class="myMsgKey" on:click={() => copyThis(messageKey)}>{messageKey.substring(0, 10) + "..." + messageKey.substring(54, messageKey.length)}</p>
-            
-        <button class:border_rgb={glow} on:click={() => copyThis(huginAddress)}>{buttonText}</button>
+    <div class="cards">
+      <div class="card">
+        <h4>Balance</h4>
+        <p>{unlocked}</p>
+        <div></div>
+      </div>
+      <div class="card">
+        <h4>Locked</h4>
+        <p>{locked}</p>
+        <div></div>
+      </div>
+      <div class="card">
+        <h4>Node status</h4>
+        <p>{$misc.syncState}</p>
+        <div></div>
       </div>
     </div>
 
-
-
   </div>
-
-    <div class="inner">
-      <div class="funds">
-          <h3>Balance</h3>
-          <div class="popup-card">
-            <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
-            </div>
-            <div style="margin-bottom: 10px">
-                <h5 style="color: var(--warn-color); margin: 0 0 5px 5px;">Locked</h5>
-                <p>{locked}</p>
-            </div>
-            <div style="margin-bottom: 10px">
-                <h5 style="color: var(--success-color); margin: 0 0 5px 5px;">Total</h5>
-                <p>{total}</p>
-            </div>
-            {#if $misc.balance[1] !== 0}
-            <div style="margin-bottom: 10px">
-                <h5 style="color: var(--alert-color); margin: 0 0 5px 5px;">Unlocked</h5>
-                <p>{unlocked}</p>
-            </div>
-            {/if}
-        </div>
-      </div>
-    </div>
-
-    <div class="transactions">
-      <Transactions/>
-    </div>
-  </div>
- <!-- End of dashboard window -->
-</div>
-
 </main>
 
 <style lang="scss">
@@ -178,98 +96,35 @@
     z-index: 3;
   }
 
-  .popup-card {
-    margin-top: 10px;
-  }
-
-  .status {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    border-bottom: 1px solid var(--border-color);
-    padding: 15px 20px 15px 20px;
-    box-sizing: border-box;
-  }
-
   .dashboard {
     padding: 15px 20px;
     border-radius: 10px;
   }
 
-  .user {
+  .header {
+    padding-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cards {
+    margin-top: 3rem;
     display: grid;
-    gap: 3rem;
+    grid-gap: 1rem;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    margin-top: 10px;
-    padding-top: 15px;
-    border-radius: 10px;
-    div {
-      column-span: spam 6/ span 6;
-    }
 
-    h4 {
-      opacity: 80%;
-      font-family: "Montserrat";
-      font-size: 12px;
-      font-weight: bold;
-      width: 250px;
-    }
-  }
-
-  button {
-    font-family: "Montserrat";
-    background: #181818;
-    padding: 10px;
-    color: var(--title-color);
-    cursor: pointer;
-    box-shadow: none;
-    border-radius: 5px;
-    margin: 10px;
-    margin-left: -5px;
-    border: 1px solid transparent;
-
-    &:hover {
-      outline: none;
-      border: 1px solid var(--title-color);
-    }
-  }
-
-  
-  #profile .inner {
-      padding: 3rem;
+    .card {
+      padding: 1rem;
+      background-color: var(--card-background);
+      border: 1px solid var(--card-border);
       border-radius: 0.4rem;
-      height: 220px;
-      transition: 0.25s ease-in-out all;
-      height: 250px;
-      overflow: hidden;
-    }
+      grid-column: span 4 / span 4;
 
-    #profile {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      p {
+        margin: 0;
+      }
     }
-
-    p {
-      font-size: 15px;
-    margin-top: 0px;
-    }
-
-    button {
-          margin: 10px;
-    margin-left: -5px;
-    border: 1px solid transparent;
-    }
-
-    .transactions {
-      width: 200%;
-    }
-
-    .funds {
-      margin-left: 80px;
-    }
-    
-    h3 {
-      font-size: 20px;
-    }
+  }
 
 </style>
