@@ -41,6 +41,7 @@
     username = ""
     password = ""
     step = 1
+
     goto("/dashboard");
   };
 
@@ -62,7 +63,7 @@
 
 
  window.addEventListener("keyup", e => {
-    if (e.keyCode === 13 && step === 3) {
+    if (e.keyCode === 13 && password.length && step === 3) {
         handleLogin();
     } else if (e.keyCode === 13 && step < 3) {
         step++
