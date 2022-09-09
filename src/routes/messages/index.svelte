@@ -214,7 +214,7 @@
 <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
 
   <ChatList on:openRename={(a) => openRename(a)} on:conversation={(e) => printConversation(e.detail)}
-            on:click={openAdd} />
+            on:open={openAdd} />
 
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
     <div class="fade"></div>
