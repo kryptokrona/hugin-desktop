@@ -6,6 +6,9 @@
     import {onDestroy, onMount} from "svelte";
     import {user, webRTC} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
+    import { goto } from "$app/navigation";
+    import CallIcon from "/src/components/buttons/CallIcon.svelte";
+    import CallSlash from "/src/components/buttons/CallSlash.svelte";
 
     export let paused = false
     export let thisCall
@@ -22,6 +25,8 @@
 
     //When a user clicks answer
     const handleAnswer = () => {
+
+        goto("/messages")
         dispatch('answerCall')
         //Variable to activate visual feedback
         answered = true
@@ -57,11 +62,11 @@
             <p>{'SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT'}</p>
         </div>
         <div class="options">
-            <a class="answer hover" on:click={handleAnswer} href="/messages">
-                <img src="/static/images/call.svg" alt="">
-            </a>
+            <div class="answer hover" on:click={handleAnswer}>    
+            <CallIcon />
+            </div>
             <div class="decline hover" on:click={declineCall}>
-                <img src="/static/images/call-slash.svg" alt="">
+            <CallSlash />
             </div>
         </div>
     </div>
