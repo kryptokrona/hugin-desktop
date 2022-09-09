@@ -1809,7 +1809,7 @@ async function sendGroupsMessage(message) {
     mainWindow.webContents.send("error_msg", error);
     console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
-
+  optimizeMessages();
 
 }
 
@@ -2027,8 +2027,6 @@ async function sendMessage(message, receiver, off_chain = false) {
   // Convert json to hex
   let payload_hex = toHex(JSON.stringify(payload_box));
 
-  optimizeMessages();
-
   // if (!off_chain) {
 
     let result = await js_wallet.sendTransactionAdvanced(
@@ -2056,7 +2054,11 @@ async function sendMessage(message, receiver, off_chain = false) {
       };
       console.log(`Failed to send transaction: ${result.error.toString()}`);
       mainWindow.webContents.send("error_msg", error);
+      
     }
+    
+  optimizeMessages();
+
   // } else if (off_chain) {
   //   let sentMsg = { msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address };
   //   console.log("sending rtc message");
@@ -2080,18 +2082,19 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
       txs = value.unconfirmedIncomingAmounts.length;
     });
-    if (txs > 0) {
+    if (txs > 0 && inputs.length > 10) {
       console.log("Already have incoming inputs, aborting..");
       return;
     }
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i > inputs && i < 11) {
+    while (i < inputs.length && inputs.length < 11) {
       payments.push([
         js_wallet.subWallets.getAddresses()[0],
         10000
       ]);
+      console.log(payments)
 
       i += 1;
 
@@ -2111,8 +2114,12 @@ async function optimizeMessages(nbrOfTxs) {
       undefined
     );
 
-    console.log("optimize completed");
-    return result;
+    if (result.success) {
+      console.log("optimize completed");
+    } else {
+      console.log('optimize failed')
+    }
+
 
 
 }
