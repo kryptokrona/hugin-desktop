@@ -7,7 +7,6 @@
   import { page } from "$app/stores";
   import { draggable } from "@neodrag/svelte";
   import { createEventDispatcher } from "svelte";
-  import videoIcon from '/static/images/video.svg'
   import Minus from '/src/components/buttons/Minus.svelte'
   import Plus from '/src/components/buttons/Plus.svelte'
   import Screen from '/src/components/buttons/Screenshare.svelte'
