@@ -24,6 +24,8 @@
     //Save username to localStorage
     window.localStorage.setItem("userName", username);
 
+    $user.username = username
+
     user.update(oldData => {
       return {
         ...oldData,
@@ -41,6 +43,7 @@
   $: {
     selectedNode;
     step;
+    username;
   }
 
   function chooseNode(node, i) {
@@ -54,11 +57,13 @@
   }
 
 
-/*  window.addEventListener("keyup", e => {
-    if (e.keyCode === 13) {
-      handleLogin();
+ window.addEventListener("keyup", e => {
+    if (e.keyCode === 13 && step === 3) {
+        handleLogin();
+    } else if (e.keyCode === 13 && step < 3) {
+        step++
     }
-  });*/
+  });
 
 
 </script>
