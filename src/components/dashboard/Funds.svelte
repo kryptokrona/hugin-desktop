@@ -89,12 +89,12 @@
     overflow: hidden;
 
     .locked {
-      background-color: #d73f65;
+      background-color: #f25f61;
       height: 20px;
     }
 
     .unlocked {
-      background-color: #3FD782;
+      background-color: #5ff281;
       height: 20px;
     }
   }
