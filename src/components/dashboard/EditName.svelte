@@ -26,18 +26,18 @@
   $user.username = window.localStorage.getItem("userName");
 </script>
 
-<div>
+<div style="display: flex; align-items: center">
   <Pen on:click={() => open = !open} />
-  {#if open}
-    <div on:click|self={() => open = false} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
-      <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
-        <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false"
-               bind:value={username}>
-        <GreenButton on:click={save} enabled={username} disabled={false} text="Change"/>
-      </div>
-    </div>
-  {/if}
 </div>
+{#if open}
+  <div on:click|self={() => open = false} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+      <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false"
+             bind:value={username}>
+      <GreenButton on:click={save} enabled={username} disabled={false} text="Change"/>
+    </div>
+  </div>
+{/if}
 
 <style lang="scss">
 
