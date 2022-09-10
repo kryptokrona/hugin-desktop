@@ -5,6 +5,7 @@
   import { capitalizeFirstLetter } from "$lib/utils/utils";
   import Share from "/src/components/dashboard/Share.svelte";
   import Funds from "/src/components/dashboard/Funds.svelte";
+  import EditName from "/src/components/dashboard/EditName.svelte";
 
   let avatar;
   let myBoards = [];
@@ -53,7 +54,10 @@
   <div class="dashboard">
 
     <div class="header">
-      <h1>{greet}, {capitalizeFirstLetter($user.username)}!</h1>
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <h1>{greet}, {capitalizeFirstLetter($user.username)}!</h1>
+        <EditName/>
+      </div>
       <Share />
     </div>
 

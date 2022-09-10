@@ -21,8 +21,8 @@
      border: 1px solid var(--border-color);
      color: var(--text-color);
      border-radius: 0.4rem;
-     padding: 9px 10px;
-     width: 100%;
+     padding: 9px 20px;
+     min-width: 100px;
      max-width: 200px;
      cursor: pointer;
      font-weight: 600;
