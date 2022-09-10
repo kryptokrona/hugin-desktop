@@ -226,7 +226,7 @@
     }
 
     main {
-        margin-left: 85px;
+        margin-left: 120px;
         padding: 40px;
         z-index: 3;
     }
