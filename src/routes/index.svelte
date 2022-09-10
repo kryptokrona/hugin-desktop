@@ -2,7 +2,7 @@
   import { fade, fly } from "svelte/transition";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import { user, misc, groups } from "$lib/stores/user.js";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { goto } from "$app/navigation";
   import { messages } from "$lib/stores/messages.js";
   import HuginArt from "/src/components/HuginArt.svelte";
@@ -25,7 +25,7 @@
   onMount(() => {
 
     window.addEventListener("keyup", enter)
-    
+
     window.api.send("app", true);
 
     $user.username = window.localStorage.getItem("userName");
@@ -83,7 +83,6 @@
   };
 
   $ :  myPassword;
-  $ :  console.log("mypass", myPassword);
 
   window.api.receive("wallet-started", async (myContacts, node, my_groups) => {
 

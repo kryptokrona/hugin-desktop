@@ -4,6 +4,7 @@
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import { nodelist } from "$lib/stores/nodes.js";
   import { goto } from "$app/navigation";
+  import { onMount, onDestroy } from "svelte";
 
   let password = "";
   let username = "";
