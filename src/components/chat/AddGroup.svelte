@@ -15,10 +15,20 @@
   let test
   let avatar
 
-  onDestroy(()=> {
-   key = ""
-   enableAddGroupButton = false;
+  onMount(()=> {
+    window.addEventListener("keyup", enter)
   })
+  
+  onDestroy(()=> {
+    window.removeEventListener("keyup", enter)
+  })
+
+  const enter = (e) => {
+    if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
+      addGroup();
+    }
+  }
+
 
   $: {
     if (key.length === 64) {
@@ -80,12 +90,6 @@
     $groups.addGroup = false;
 
   };
-
-    window.addEventListener("keyup", e => {
-    if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
-      addGroup();
-    }
-  });
 
   const createGroup = async () => {
 

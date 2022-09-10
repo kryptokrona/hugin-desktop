@@ -3,19 +3,24 @@
   import { user } from "$lib/stores/user.js";
   import {fade, fly} from 'svelte/transition'
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
-  import {onDestroy} from "svelte"
+  import {onDestroy, onMount} from "svelte"
   let open;
   let username;
 
+  onMount(()=> {
+    window.addEventListener("keyup", enter)
+  })
+  
   onDestroy(()=> {
-    username = ""
+    window.removeEventListener("keyup", enter)
   })
 
-  window.addEventListener("keyup", e => {
+  const enter = (e) => {
     if (e.keyCode=== 13 && username.length > 0) {
       save();
     }
-  });
+  }
+  
 
   const save = () => {
     if (username) {

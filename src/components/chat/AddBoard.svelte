@@ -10,10 +10,13 @@
   let text = "";
   let board;
   let add_board = "Add";
+
+  onMount(()=> {
+    window.addEventListener("keyup", enter)
+  })
   
   onDestroy(()=> {
-   text = ""
-   enableAddBoardButton = false
+    window.removeEventListener("keyup", enter)
   })
 
   $: {
@@ -26,6 +29,12 @@
     }
   }
 
+  const enter = (e) => {
+    if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
+      addBoard(text);
+    }
+  }
+
   // Dispatch the inputted data
   const addBoard = (board) => {
     // Dispatch the inputted data
@@ -35,11 +44,7 @@
     enableAddBoardButton = false;
   };
 
-  window.addEventListener("keyup", e => {
-    if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
-      addBoard(text);
-    }
-  });
+ 
 
 
 </script>
