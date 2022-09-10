@@ -12,6 +12,23 @@
   let selectedNode;
   let step = 1;
 
+  onMount(()=> {
+    window.addEventListener("keyup", enter)
+  })
+  
+  onDestroy(()=> {
+    window.removeEventListener("keyup", enter)
+  })
+
+  const enter = (e) => {
+    if (e.keyCode === 13 && password.length && step === 3) {
+        handleLogin();
+    } else if (e.keyCode === 13 && step < 3) {
+        step++
+    }
+  }
+
+
   const handleLogin = () => {
     $misc.loading = true;
     let accountData = {
@@ -60,16 +77,6 @@
   function defaultPicker() {
       nodeInput = "blocksum.org:11898";
   }
-
-
- window.addEventListener("keyup", e => {
-    if (e.keyCode === 13 && password.length && step === 3) {
-        handleLogin();
-    } else if (e.keyCode === 13 && step < 3) {
-        step++
-    }
-  });
-
 
 </script>
 
