@@ -3,12 +3,16 @@
   import { user } from "$lib/stores/user.js";
   import {fade, fly} from 'svelte/transition'
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
-
+  import {onDestroy} from "svelte"
   let open;
   let username;
 
+  onDestroy(()=> {
+    username = ""
+  })
+
   window.addEventListener("keyup", e => {
-    if (e.keyCode === 13) {
+    if (e.keyCode=== 13 && username.length > 0) {
       save();
     }
   });
@@ -18,7 +22,7 @@
       window.localStorage.setItem("userName", username);
       $user.username = username;
       open = false;
-      username = ''
+      username = ""
     }
   };
 

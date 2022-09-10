@@ -14,11 +14,21 @@
   let key = ""
   let test
   let avatar
+
+  onDestroy(()=> {
+   key = ""
+   enableAddGroupButton = false;
+  })
+
   $: {
-    if (key.length === 64 && name.length > 0) {
+    if (key.length === 64) {
+      
+      avatar = get_avatar(key)
+
+      if (name.length > 0) {
       //Enable add button
       enableAddGroupButton = true;
-      avatar = get_avatar(key)
+      }
 
     } else {
       enableAddGroupButton = false;
@@ -84,6 +94,10 @@
 
   $: key
   $: avatar
+
+   onDestroy(()=> {
+    key = ""
+  })
 
 </script>
 

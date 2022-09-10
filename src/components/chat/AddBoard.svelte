@@ -1,7 +1,7 @@
 <script>
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher, onMount, onDestroy } from "svelte";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
   const dispatch = createEventDispatcher();
@@ -10,6 +10,11 @@
   let text = "";
   let board;
   let add_board = "Add";
+  
+  onDestroy(()=> {
+   text = ""
+   enableAddBoardButton = false
+  })
 
   $: {
     if (text.length > 0) {
@@ -31,7 +36,7 @@
   };
 
   window.addEventListener("keyup", e => {
-    if (enableAddBoardButton && e.keyCode === 13) {
+    if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
       addBoard(text);
     }
   });
