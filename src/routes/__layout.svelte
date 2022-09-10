@@ -257,7 +257,7 @@ window.api.receive('node', async (node) => {
 	{#if $user.loggedIn}
 
 		<LeftMenu />
-		{#if $page.url.pathname !== '/boards'}
+		{#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard'}
 		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
 		{/if}
 		<Webrtc/>

@@ -69,7 +69,7 @@
 <style lang="scss">
 
   main {
-    margin: 0 85px;
+    margin: 0 20px 0 95px;
     z-index: 3;
   }
 
