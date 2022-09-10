@@ -1,7 +1,7 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import {fade, fly} from "svelte/transition";
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher, onMount, onDestroy} from "svelte";
     import GreenButton from "/src/components/buttons/GreenButton.svelte";
     import {user} from "$lib/stores/user.js";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -13,6 +13,22 @@
     let name = 'Change'
 
     export let this_contact
+
+    onMount(()=> {
+    window.addEventListener("keyup", enter)
+  })
+    
+    onDestroy(()=> {
+        window.removeEventListener("keyup", enter)
+    })
+
+    const enter = (e) => {
+        if (enableAddButton && rename && e.keyCode === 13) {
+            renameContact(text)
+            enableAddButton = false
+        }
+    }
+
 
     $: {
         if (text.length > 0) {
@@ -38,13 +54,6 @@
             }
         })
     }
-    
-    window.addEventListener('keyup', e => {
-        if (enableAddButton && rename && e.keyCode === 13) {
-            renameContact(text)
-            enableAddButton = false
-        }
-    })
 
 
 </script>
