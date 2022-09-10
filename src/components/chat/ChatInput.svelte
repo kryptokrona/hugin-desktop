@@ -5,9 +5,24 @@
   import { webRTC, boards } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
+  import { onMount, onDestroy } from "svelte";
 
   let off_chain;
   const dispatch = createEventDispatcher();
+
+  onMount(()=> {
+    window.addEventListener("keyup", enter)
+  })
+  
+  onDestroy(()=> {
+    window.removeEventListener("keyup", enter)
+  })
+
+  const enter = (e) => {
+    if (messageInput && e.keyCode === 13) {
+      sendMsg();
+    }
+  }
 
   //This handles the emojis, lets fork the repo and make a darker theme.
   function onEmoji(event) {
@@ -25,9 +40,7 @@
 
   //Check if enter is pressed and call sendMsg function
   window.addEventListener("keyup", e => {
-    if (messageInput && e.keyCode === 13) {
-      sendMsg();
-    }
+  
   });
 
   //Dispatches the input data to parent and resets input.

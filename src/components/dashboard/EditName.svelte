@@ -31,6 +31,10 @@
     }
   };
 
+  $: if (!open) {
+    username = ""
+  }
+
 
   $user.username = window.localStorage.getItem("userName");
 </script>
