@@ -17,14 +17,7 @@
   let errorMessage = "Wrong password";
   let enableLogin = false;
 
-  
-  onDestroy(()=> {
-    window.removeEventListener("keyup", enter)
-  })
-
   onMount(() => {
-
-    window.addEventListener("keyup", enter)
 
     window.api.send("app", true);
 
@@ -152,6 +145,7 @@
   }
 
 </script>
+<svelte:window on:keyup|preventDefault={enter} />
 <div class="wrapper" in:fade out:fade="{{duration: 200}}">
   {#if wallet}
     <div class="login-wrapper">

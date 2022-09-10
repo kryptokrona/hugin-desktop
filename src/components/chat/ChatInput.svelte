@@ -5,18 +5,9 @@
   import { webRTC, boards } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
-  import { onMount, onDestroy } from "svelte";
 
   let off_chain;
   const dispatch = createEventDispatcher();
-
-  onMount(()=> {
-    window.addEventListener("keyup", enter)
-  })
-  
-  onDestroy(()=> {
-    window.removeEventListener("keyup", enter)
-  })
 
   const enter = (e) => {
     if (messageInput && e.keyCode === 13) {
@@ -38,11 +29,6 @@
   //To handle button disabled enabled
   let enableSend = false;
 
-  //Check if enter is pressed and call sendMsg function
-  window.addEventListener("keyup", e => {
-  
-  });
-
   //Dispatches the input data to parent and resets input.
   const sendMsg = () => {
     dispatch("message", {
@@ -63,6 +49,8 @@
     console.log("offchain", off_chain);
   }
 </script>
+
+<svelte:window on:keyup|preventDefault={enter} />
 
 <div class="wrapper" class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home" && $page.url.pathname === '/boards'}
      class:border-top={$page.url.pathname === '/messages'} in:fade="{{duration: 400}}" out:fade="{{duration: 100}}">

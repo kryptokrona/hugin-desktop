@@ -14,21 +14,12 @@
 
     export let this_contact
 
-    onMount(()=> {
-    window.addEventListener("keyup", enter)
-  })
-    
-    onDestroy(()=> {
-        window.removeEventListener("keyup", enter)
-    })
-
     const enter = (e) => {
         if (enableAddButton && rename && e.keyCode === 13) {
             renameContact(text)
             enableAddButton = false
         }
     }
-
 
     $: {
         if (text.length > 0) {
@@ -58,6 +49,7 @@
 
 </script>
 
+<svelte:window on:keyup|preventDefault={enter} />
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 170}}" class="backdrop" on:click|self>
 
 <div class="card">

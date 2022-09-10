@@ -1,7 +1,7 @@
 <script>
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher, onMount, onDestroy } from "svelte";
+  import { createEventDispatcher } from "svelte";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
   const dispatch = createEventDispatcher();
@@ -10,14 +10,6 @@
   let text = "";
   let board;
   let add_board = "Add";
-
-  onMount(()=> {
-    window.addEventListener("keyup", enter)
-  })
-  
-  onDestroy(()=> {
-    window.removeEventListener("keyup", enter)
-  })
 
   $: {
     if (text.length > 0) {
@@ -48,6 +40,8 @@
 
 
 </script>
+
+<svelte:window on:keyup|preventDefault={enter} />
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
 

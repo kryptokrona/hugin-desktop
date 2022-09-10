@@ -15,14 +15,6 @@
   let test
   let avatar
 
-  onMount(()=> {
-    window.addEventListener("keyup", enter)
-  })
-  
-  onDestroy(()=> {
-    window.removeEventListener("keyup", enter)
-  })
-
   const enter = (e) => {
     if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
       addGroup();
@@ -99,11 +91,9 @@
   $: key
   $: avatar
 
-   onDestroy(()=> {
-    key = ""
-  })
-
 </script>
+
+<svelte:window on:keyup|preventDefault={enter} />
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
   <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">

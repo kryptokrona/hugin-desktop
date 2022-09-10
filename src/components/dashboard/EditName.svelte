@@ -3,17 +3,9 @@
   import { user } from "$lib/stores/user.js";
   import {fade, fly} from 'svelte/transition'
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
-  import {onDestroy, onMount} from "svelte"
+
   let open;
   let username;
-
-  onMount(()=> {
-    window.addEventListener("keyup", enter)
-  })
-  
-  onDestroy(()=> {
-    window.removeEventListener("keyup", enter)
-  })
 
   const enter = (e) => {
     if (e.keyCode=== 13 && username.length > 0) {
@@ -38,7 +30,7 @@
 
   $user.username = window.localStorage.getItem("userName");
 </script>
-
+<svelte:window on:keyup|preventDefault={enter} />
 <div style="display: flex; align-items: center">
   <Pen on:click={() => open = !open} />
 </div>

@@ -13,14 +13,6 @@
   let selectedNode;
   let step = 1;
 
-  onMount(()=> {
-    window.addEventListener("keyup", enter)
-  })
-  
-  onDestroy(()=> {
-    window.removeEventListener("keyup", enter)
-  })
-
   const enter = (e) => {
     if (e.keyCode === 13 && password.length && step === 3) {
         handleLogin();
@@ -81,6 +73,7 @@
 
 </script>
 
+<svelte:window on:keyup|preventDefault={enter} />
 <main in:fade>
 
   {#if step === 1}
