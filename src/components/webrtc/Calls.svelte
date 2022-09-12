@@ -15,7 +15,7 @@
 
         
     window.api.receive('endCall', (s, p, this_call) => {
-        endCall('peer', 'stream')
+        endCall('peer', 'stream', this_call)
     })
 
     window.api.receive('screen-share', (id) => {
@@ -131,7 +131,7 @@ function setMedia(screen_stream) {
 
 
 async function gotMedia (stream, contact, video, screen_stream=false) {
-
+    
     $webRTC.myStream = stream
 
     if ( video ) {
@@ -152,6 +152,8 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
 
     $webRTC.call[0].peer = peer1
     $webRTC.call[0].screen_stream = screen_stream
+    $webRTC.call[0].myStream = stream
+    $webRTC.call[0].video = video
 
     console.log('This call', $webRTC.call[0])
 
@@ -178,21 +180,19 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
         transceiverList[1].setCodecPreferences(custom_codecs)
 
     }
-
-    $webRTC.myVideo = video, 
     $webRTC.active = true
 
 
     peer1.on('stream', peerStream => {
 
-    console.log(' Got peerstream object in store', $webRTC.call[0].peerStream)
+    console.log(' Got peerstream object in store', )
 
     //Set peerStream to store
     $webRTC.call[0].peerStream = peerStream
     if (video) {
-        $webRTC.peerVideo = true
+        $webRTC.call[0].peerVideo = true
     } else {
-        $webRTC.peerAudio = true
+        $webRTC.call[0].peerAudio = true
     }
 
 })
@@ -215,6 +215,7 @@ function startPeer1(stream, video, contact) {
 
     peer1.on('close', (e) => {
         console.log(e)
+        if (e === undefined) return
         console.log('Connection lost..')
         endCall(peer1, stream)
         // ENDCALL AUDIO
@@ -229,9 +230,9 @@ function startPeer1(stream, video, contact) {
     })
 
     
-    peer1.on('connect', () => {
+    peer1.on('connect', (e) => {
         // SOUND EFFECT
-        console.log('Connection established')
+        console.log('Connection established', e)
         $webRTC.connected = true
 
     });
@@ -293,12 +294,14 @@ const answerCall = (msg, contact, key) => {
 
         $webRTC.call[0].peer = peer2
         $webRTC.myStream = stream
+        $webRTC.call[0].myStream = stream
         $webRTC.active = true
         $webRTC.call[0].video = video
 
         if (video) {
             $webRTC.myVideo = true
         }
+
 
         sendAnswer(msg, contact, peer2, key, video)
 
@@ -311,8 +314,9 @@ function startPeer2(stream, video) {
 
     let peer2 = new Peer({stream: stream, trickle: false, wrtc: wrtc})
 
-    peer2.on('close', () => {
-            console.log('Connection closed..')
+    peer2.on('close', (e) => {
+            console.log('Connection closed..', e)
+            if (e === undefined) return
             endCall(peer2, stream)
     })
 
@@ -334,9 +338,9 @@ function startPeer2(stream, video) {
         console.log('Setting up link..', track, stream)
     })
 
-    peer2.on('connect', () => {
+    peer2.on('connect', (e) => {
         // SOUND EFFECT
-        console.log('Connection established;')
+        console.log('Connection established;', e)
         $webRTC.connected = true
 
     });
@@ -348,10 +352,11 @@ function startPeer2(stream, video) {
         $webRTC.call[0].peerStream = peerStream
 
         if (video) {
-        $webRTC.peerVideo = true
+        $webRTC.call[0].peerVideo = true
         } else {
-        $webRTC.peerAudio = true
+            $webRTC.call[0].peerAudio = true
         }
+
 
         console.log('Setting up link..');
 
@@ -383,63 +388,61 @@ function sendOffer(peer, contact, video) {
 
 function sendAnswer(sdpOffer, address, peer, key, video) {
         
-        
-        window.api.expandSdp(sdpOffer, address)
+    console.log('offer?', sdpOffer)
+    
+    window.api.expandSdp(sdpOffer, address)
 
-        peer.on('signal', data => {
+    peer.on('signal', data => {
 
-        console.log('initial offer data:', data);
-        let dataToSend = {
-            data: data,
-            type: 'answer',
-            contact: address + key,
-            video: video,
-        }
-        console.log('sending sdp');
+    console.log('initial offer data:', data);
+    let dataToSend = {
+        data: data,
+        type: 'answer',
+        contact: address + key,
+        video: video,
+    }
+    console.log('sending sdp');
 
-        window.api.send('get-sdp', dataToSend)
-        
+    window.api.send('get-sdp', dataToSend)
+    
 
-        })
+    })
 }
 
 
   //End call
 function endCall (peer, stream, contact) {
 
-    console.log('webrtc peers',)
+    console.log('contact', contact)
+
+    let caller = $webRTC.call.filter(a => a.chat === contact)
+    let video = false
+
+    console.log('caller', caller)
+    if (!caller || caller.legnth === 0 || caller === undefined) return
     
-        try {
-            $webRTC.call[0].peer.destroy();
-            $webRTC.myStream.getTracks().forEach(function(track) {
-                track.stop();
-            });
-        } catch (e) {
-        }
+    try {
+        caller[0].peer.destroy();
+        caller[0].myStream.getTracks().forEach(function(track) {
+            track.stop();
+        });
+    } catch (e) {
+        console.log('error', e)
+    }
 
-        webRTC.update((data) => {
-          return {
-            ...data,
-            active: false,
-            peer: false,
-            myVideo: false,
-            peerVideo: false,
-            peerStream: false,
-            myStream: false,
-            connected: false,
-            call: []
-          }
-        })
+    let filter = $webRTC.call.filter(a => a.chat !== contact)
+    
+    $webRTC.call = filter
+    console.log('true?', $webRTC.call.some(a => a.peerVideo === true))
 
-        // $webRTC.call[0] = {
-        //     peer: false,
-        //     myVideo: false,
-        //     peerVideo: false,
-        //     peerStream: false,
-        //     myStream: false,
-        // }
+    if ($webRTC.call.some(a => a.video === true)) {
+        $webRTC.myVideo = true
+        return
+    }
 
-        console.log('Call ended')
+    $webRTC.myVideo = false
+
+    console.log('Call ended')
 
     }
 
