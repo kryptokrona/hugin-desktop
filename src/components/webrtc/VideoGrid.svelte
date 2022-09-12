@@ -4,7 +4,7 @@
   import PeerVideo from "$components/webrtc/PeerVideo.svelte";
 
   let drag = false
-
+  let videoCalls = []
   const dragWindow = () => {
     console.log('dragwindow', drag)
     drag = true
@@ -13,6 +13,10 @@
   const noDrag = () => {
     drag = false
   }
+
+  $: videoCalls = $webRTC.call.filter(a => a.peerVideo === true)
+
+  $: console.log('video calls', videoCalls)
 
 </script>
 
@@ -23,8 +27,8 @@
         on:nodrag={noDrag}/>
   {/if}
 
-  {#if  $webRTC.peerVideo}
-    {#each $webRTC.call as peer}
+  {#if videoCalls.length}
+    {#each videoCalls as peer (peer.chat)}
       <PeerVideo 
             on:drag={dragWindow}
             on:nodrag={noDrag}
