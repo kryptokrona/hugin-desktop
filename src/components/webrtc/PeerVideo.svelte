@@ -12,7 +12,6 @@
   
   let peerVideo = document.getElementById("peerVideo");
   let peerStream;
-  let thisCall;
   let move = false;
   let window_max = false
   let window_medium = false
@@ -53,7 +52,6 @@
     peerVideo.pause();
   });
 
-  $: if ($webRTC.peerVideo) thisCall = call.chat;
 
   const resize = (size) => {
     if (window_medium  && size == 'medium') {
@@ -80,8 +78,6 @@
   $: window_medium
   $: window_max
 
-
-  $: console.log("$webRTC active call", call);
 </script>
 
 <div class="card" use:draggable={{bounds: "parent"}} class:max_window={window_max} class:medium_window={window_medium}
