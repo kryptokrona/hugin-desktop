@@ -174,7 +174,7 @@ window.api.receive('node', async (node) => {
     $: loading = $misc.loading
 
 	$: errors = $notify.errors
-
+	
 </script>
 
 
@@ -191,7 +191,7 @@ window.api.receive('node', async (node) => {
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 }
 
-	{#if $webRTC.active && $webRTC.myStream}
+	{#if $webRTC.active && $webRTC.myVideo}
 		<VideoGrid />
 	{/if}
 
