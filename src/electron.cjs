@@ -435,6 +435,7 @@ async function startCheck() {
     let walletName = db.data.walletNames;
     console.log("walletname", walletName);
     mainWindow.webContents.send("wallet-exist", true, walletName);
+    createTables()
     node = db.data.node.node;
     ports = db.data.node.port;
     let mynode = { node: node, port: ports };
@@ -448,16 +449,20 @@ async function startCheck() {
   } else {
     //No wallet found, probably first start
     console.log("wallet not found");
-    boardMessageTable();
-    messagesTable();
-    knownTxsTable();
-    contactsTable();
-    boardsSubscriptionsTable();
-    groupMessageTable()
-    groupsTable()
+    createTables()
     mainWindow.webContents.send("wallet-exist", false);
   }
 
+}
+
+async function createTables() {
+  boardMessageTable();
+  messagesTable();
+  knownTxsTable();
+  contactsTable();
+  boardsSubscriptionsTable();
+  groupMessageTable()
+  groupsTable()
 }
 
 async function startWallet(data, mynode) {
@@ -470,7 +475,7 @@ async function startWallet(data, mynode) {
 
 function contactsTable() {
   const contactsTable = `
-                    CREATE TABLE contacts (
+                    CREATE TABLE IF NOT EXISTS contacts (
                        address TEXT,
                        key TEXT,
                        name TEXT,
@@ -489,7 +494,7 @@ function contactsTable() {
 
 function knownTxsTable() {
   const knownTxTable = `
-                  CREATE TABLE knownTxs (
+                  CREATE TABLE IF NOT EXISTS knownTxs (
                      hash TEXT,
                      UNIQUE (hash)
                  )`;
@@ -506,7 +511,7 @@ function knownTxsTable() {
 
 function boardMessageTable() {
   const boardTable = `
-                CREATE TABLE boards (
+                CREATE TABLE IF NOT EXISTS boards (
                      message TEXT,
                      key TEXT,
                      signature TEXT,
@@ -514,6 +519,8 @@ function boardMessageTable() {
                      time TEXT,
                      name TEXT,
                      reply TEXT,
+                     poll TEXT,
+                     thread TEXT,
                      hash TEXT UNIQUE,
                      sent BOOLEAN
                     )`;
@@ -528,7 +535,7 @@ function boardMessageTable() {
 
 function messagesTable() {
   const messageTable = `
-                CREATE TABLE messages (
+                CREATE TABLE IF NOT EXISTS messages (
                    msg TEXT,
                    chat TEXT,
                    sent BOOLEAN,
@@ -546,7 +553,7 @@ function messagesTable() {
 
 function boardsSubscriptionsTable() {
   const subscriptionTable = `
-            CREATE TABLE subscription (
+            CREATE TABLE IF NOT EXISTS subscription (
               board TEXT,
               UNIQUE (board)
           )`;
@@ -561,7 +568,7 @@ function boardsSubscriptionsTable() {
 
 function groupsTable() {
   const groupsTable = `
-            CREATE TABLE pgroups (
+            CREATE TABLE IF NOT EXISTS pgroups (
               key TEXT,
               name TEXT,
               UNIQUE (key)
@@ -578,13 +585,14 @@ function groupsTable() {
 
 function groupMessageTable() {
   const groupTable = `
-            CREATE TABLE groupmessages (
+            CREATE TABLE IF NOT EXISTS groupmessages (
               message TEXT,
               address TEXT,
               signature TEXT,
               grp TEXT,
               time TEXT,
               name TEXT,
+              thread TEXT,
               reply TEXT,
               hash TEXT UNIQUE,
               sent BOOLEAN
@@ -1785,7 +1793,7 @@ async function sendGroupsMessage(message) {
   let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
-      {fixedFee: 8500, isFixedFee: true}, // fee
+      {fixedFee: 1000, isFixedFee: true}, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -1909,7 +1917,7 @@ async function sendBoardMessage(message) {
     let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
-      { fixedFee: 8500, isFixedFee: true }, // fee
+      { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -1920,6 +1928,7 @@ async function sendBoardMessage(message) {
 
     if (result.success) {
       console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
+      mainWindow.webContents.send('sent_board', {hash: result.transactionHash, time: timestamp})
       known_pool_txs.push(result.transactionHash);
       const sentMsg = payload_json;
       sentMsg.sent = true;
@@ -2032,7 +2041,7 @@ async function sendMessage(message, receiver, off_chain = false) {
     let result = await js_wallet.sendTransactionAdvanced(
       [[address, 1]], // destinations,
       3, // mixin
-      { fixedFee: 8500, isFixedFee: true }, // fee
+      { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -2092,7 +2101,7 @@ async function optimizeMessages(nbrOfTxs) {
     while (i < inputs.length && inputs.length < 11) {
       payments.push([
         js_wallet.subWallets.getAddresses()[0],
-        10000
+        1000
       ]);
       console.log(payments)
 
@@ -2105,7 +2114,7 @@ async function optimizeMessages(nbrOfTxs) {
     let result = await js_wallet.sendTransactionAdvanced(
       payments, // destinations,
       3, // mixin
-      { fixedFee: 10000, isFixedFee: true }, // fee
+      { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
