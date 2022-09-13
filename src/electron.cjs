@@ -255,10 +255,11 @@ async function download(link) {
 
   let client = new WebTorrent();
 
-  console.log("download", link);
-  console.log("downloaddir", downloadDir);
-  client.add(link, { path: downloadDir }, function(torrent) {
-    console.log("torrent", torrent);
+
+  let thisLink = link
+  console.log("download", thisLink);
+  client.add(thisLink, { path: downloadDir }, function(torrent) {
+    console.log("Download started", torrent);
     // Got torrent metadata!
     torrent.on("download", function(bytes) {
       console.log("just downloaded: " + bytes);
@@ -1450,7 +1451,7 @@ async function printBoard(board = false) {
                hash,
                sent
         FROM boards
-        ${board ? "WHERE brd = \"" + board + "\"" : ""}
+        ${board ? "WHERE board = \"" + board + "\"" : ""}
         ORDER BY
             time
         ASC`;
@@ -1475,7 +1476,7 @@ async function getReply(reply = false) {
              message,
              key,
              signature,
-             brd,
+             board,
              time,
              name,
              reply,
@@ -1604,10 +1605,9 @@ async function saveMessageSQL(msg, hash) {
 
   }
   let magnetLinks = /(magnet:\?[^\s\"]*)/gmi.exec(text);
-  console.log("magnet", magnetLinks);
   if (magnetLinks) {
     message = "File uploaded";
-    torrent = magnetLinks[0] + "&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com";
+    torrent = magnetLinks[0]
   }
 
   console.log("Saving message", message, addr, sent, timestamp);
@@ -2341,7 +2341,7 @@ function parseCall(msg, sender, sent, emitCall = true) {
       if (emitCall) {
 
         // Start ringing sequence
-        console.log("call incoming", sent);
+        console.log("sent?", sent);
         if (!sent) {
           console.log("call  incoming");
           mainWindow.webContents.send("call-incoming", msg, sender);
