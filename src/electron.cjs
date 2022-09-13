@@ -1793,7 +1793,7 @@ async function sendGroupsMessage(message) {
   let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
-      {fixedFee: 1000, isFixedFee: true}, // fee
+      {fixedFee: 10000, isFixedFee: true}, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -1917,7 +1917,7 @@ async function sendBoardMessage(message) {
     let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1]], // destinations,
       3, // mixin
-      { fixedFee: 1000, isFixedFee: true }, // fee
+      { fixedFee: 10000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -2041,7 +2041,7 @@ async function sendMessage(message, receiver, off_chain = false) {
     let result = await js_wallet.sendTransactionAdvanced(
       [[address, 1]], // destinations,
       3, // mixin
-      { fixedFee: 1000, isFixedFee: true }, // fee
+      { fixedFee: 10000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -2101,7 +2101,7 @@ async function optimizeMessages(nbrOfTxs) {
     while (i < inputs.length && inputs.length < 11) {
       payments.push([
         js_wallet.subWallets.getAddresses()[0],
-        1000
+        10000
       ]);
       console.log(payments)
 
@@ -2114,7 +2114,7 @@ async function optimizeMessages(nbrOfTxs) {
     let result = await js_wallet.sendTransactionAdvanced(
       payments, // destinations,
       3, // mixin
-      { fixedFee: 1000, isFixedFee: true }, // fee
+      { fixedFee: 10000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
