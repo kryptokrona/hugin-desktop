@@ -1791,9 +1791,9 @@ async function sendGroupsMessage(message) {
   const payload_encrypted_hex = toHex(JSON.stringify(payload_encrypted));
 
   let result = await js_wallet.sendTransactionAdvanced(
-      [[my_address, 1]], // destinations,
+      [[my_address, 1000]], // destinations,
       3, // mixin
-      {fixedFee: 10000, isFixedFee: true}, // fee
+      {fixedFee: 1000, isFixedFee: true}, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -1808,6 +1808,7 @@ async function sendGroupsMessage(message) {
     saveGroupMessage(message_json, result.transactionHash, timestamp)
     mainWindow.webContents.send("sent_group_msg");
     known_pool_txs.push(result.transactionHash);
+    optimizeMessages()
   } else {
     let error = {
       message: "Failed to send",
@@ -1817,8 +1818,6 @@ async function sendGroupsMessage(message) {
     mainWindow.webContents.send("error_msg", error);
     console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
-  optimizeMessages();
-
 }
 
 async function decryptGroupMessage(tx, hash) {
@@ -1915,9 +1914,9 @@ async function sendBoardMessage(message) {
     payload_hex = toHex(JSON.stringify(payload_json));
 
     let result = await js_wallet.sendTransactionAdvanced(
-      [[my_address, 1]], // destinations,
+      [[my_address, 1000]], // destinations,
       3, // mixin
-      { fixedFee: 10000, isFixedFee: true }, // fee
+      { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -1934,6 +1933,7 @@ async function sendBoardMessage(message) {
       sentMsg.sent = true;
       sentMsg.type = "board";
       saveBoardMsg(sentMsg, result.transactionHash);
+      optimizeMessages()
     } else {
       let error = {
         message: "Failed to send",
@@ -1948,7 +1948,6 @@ async function sendBoardMessage(message) {
     mainWindow.webContents.send("error_msg");
     console.log("Error", err);
   }
-  optimizeMessages();
 
 }
 
@@ -2039,9 +2038,9 @@ async function sendMessage(message, receiver, off_chain = false) {
   // if (!off_chain) {
 
     let result = await js_wallet.sendTransactionAdvanced(
-      [[address, 1]], // destinations,
+      [[address, 1000]], // destinations,
       3, // mixin
-      { fixedFee: 10000, isFixedFee: true }, // fee
+      { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
@@ -2055,6 +2054,7 @@ async function sendMessage(message, receiver, off_chain = false) {
       known_pool_txs.push(result.transactionHash);
       console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
       saveMessageSQL(sentMsg, result.transactionHash);
+      optimizeMessages()
     } else {
       let error = {
         message: "Failed to send",
@@ -2065,8 +2065,6 @@ async function sendMessage(message, receiver, off_chain = false) {
       mainWindow.webContents.send("error_msg", error);
       
     }
-    
-  optimizeMessages();
 
   // } else if (off_chain) {
   //   let sentMsg = { msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address };
@@ -2082,7 +2080,7 @@ async function optimizeMessages(nbrOfTxs) {
     const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
     console.log("inputs", inputs.length)
-    if (inputs.length > 8) {
+    if (inputs.length > 17) {
      
       return;
     }
@@ -2091,17 +2089,17 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
       txs = value.unconfirmedIncomingAmounts.length;
     });
-    if (txs > 0 && inputs.length > 10) {
+    if (txs > 0 && inputs.length > 5) {
       console.log("Already have incoming inputs, aborting..");
       return;
     }
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i < inputs.length && inputs.length < 11) {
+    while (i < inputs.length && inputs.length < 22) {
       payments.push([
         js_wallet.subWallets.getAddresses()[0],
-        10000
+        1000
       ]);
       console.log(payments)
 
@@ -2114,7 +2112,7 @@ async function optimizeMessages(nbrOfTxs) {
     let result = await js_wallet.sendTransactionAdvanced(
       payments, // destinations,
       3, // mixin
-      { fixedFee: 10000, isFixedFee: true }, // fee
+      { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
       undefined, // subWalletsToTakeFrom
       undefined, // changeAddress
