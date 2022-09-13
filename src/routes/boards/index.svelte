@@ -51,12 +51,17 @@
     }
   });
 
+  window.api.receive("sent_board", data => {
+    console.log('hash', data)
+    addHash(data)
+  });
+
   //Send message to store and DB
   function sendboardMsg(e) {
     console.log("wanna send this", e);
     let msg = e.detail.text;
     let myaddr = $user.huginAddress.substring(0, 99);
-    let time = Date.now() / 1000;
+    let time = parseInt(Date.now() / 1000);
     let myName = $user.username;
     let brd = thisBoard;
     //Reaction switch
@@ -105,6 +110,7 @@
 
   //Enter reply mode
   async function replyToMessage(hash, nickname, emoji = false) {
+
     if (replyto != false) {
       await replyExit();
     }
@@ -238,6 +244,19 @@
     });
     fixedBoards = fixedBoards;
   }
+
+  function addHash(data) {
+
+    fixedBoards.forEach(function (a) {
+      if (a.hash === data.time) {
+        a.hash = data.hash
+      }
+    })
+    
+    fixedBoards = fixedBoards
+    console.log('fixed', fixedBoards) 
+  }
+
 
   //Checks for messages that only coinatins emojis.
   function containsOnlyEmojis(text) {
