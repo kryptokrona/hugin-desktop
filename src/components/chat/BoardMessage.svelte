@@ -45,6 +45,7 @@
   }
 
   const replyTo = () => {
+    if ($boards.thisBoard === "Home") return
     reply_to_this = true;
     // Dispatch the inputted data
     dispatch("replyTo", {
