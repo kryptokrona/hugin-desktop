@@ -2,13 +2,13 @@
     import {fly} from 'svelte/transition'
     import {user, misc, userAvatar} from "$lib/stores/user.js";
     import { goto } from "$app/navigation";
-    import BoardIcon from '/src/components/buttons/BoardIcon.svelte'
+    import GroupIcon from '/src/components/buttons/GroupIcon.svelte'
     import MessageIcon from '/src/components/buttons/MessageIcon.svelte'
     import SettingsIcon from '/src/components/buttons/SettingsIcon.svelte'
     import XkrLogo from "/src/components/buttons/XkrLogo.svelte";
     import Warning from "/src/components/buttons/Warning.svelte";
     import { openURL } from "$lib/utils/utils.js";
-    import BoardIcon2 from '/src/components/buttons/BoardIcon2.svelte'
+    import BoardIcon from '/src/components/buttons/BoardIcon.svelte'
 
     let sync
     let avatar
@@ -38,10 +38,10 @@
             <MessageIcon />
         </div>
         <div on:click={() => goto("/groups")} class="button">
-            <BoardIcon/>
+            <GroupIcon />
         </div>
         <div on:click={() => goto("/boards")} class="button">
-            <BoardIcon2/>
+            <BoardIcon/>
         </div>
         <!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
     </div>
