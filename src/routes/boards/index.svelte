@@ -247,14 +247,13 @@
 
   function addHash(data) {
 
-    fixedBoards.forEach(function (a) {
+    fixedBoards.some(function (a) {
       if (a.hash === data.time) {
         a.hash = data.hash
       }
     })
     
     fixedBoards = fixedBoards
-    console.log('fixed', fixedBoards) 
   }
 
 
