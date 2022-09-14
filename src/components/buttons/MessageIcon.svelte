@@ -1,3 +1,16 @@
+<script>
+
+  import { page } from "$app/stores";
+  import { fade } from "svelte/transition";
+  let thispage
+  $: thispage = $page.url.pathname === '/messages'
+
+</script>
+
+{#if thispage}
+<div class="dot" in:fade></div>
+{/if}
+
 <svg on:click width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
     <g id="vuesaxlinearsms">
       <g id="vuesaxlinearsms">
@@ -12,7 +25,7 @@
     </g>
   </svg>
 
-  <style lang="scss">
+<style lang="scss">
 
     svg {
         transition: 200ms ease-in-out;
@@ -22,4 +35,14 @@
           opacity: 80%;
         }
       }
-    </style>
+
+      .dot {
+        position: absolute;
+        background-color: white;
+        border-radius: 2px;
+        height: 16px;
+        width: 10px;
+        left: -5px;
+        box-shadow: 0 0 10px white;
+  }
+</style>
