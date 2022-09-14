@@ -1332,7 +1332,7 @@ async function getGroups() {
       if (err) {
         console.log("Error", err);
       }
-      my_groups.filter(function(chat) {
+      my_groups.some(function(chat) {
         if (chat.key === row.grp) {
           name = chat.name;
           key = chat.key;
@@ -1369,7 +1369,7 @@ async function getConversations() {
       if (err) {
         console.log("Error", err);
       }
-      let filterContacts = contacts.filter(function(chat) {
+      contacts.some(function(chat) {
         if (chat.address == row.chat) {
           name = chat.name;
           key = chat.key;
@@ -2138,7 +2138,14 @@ async function sendTx(tx) {
   console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
     const result = await js_wallet.sendTransactionBasic(tx.to, tx.amount, tx.paymentID)
     if (result.success) {
-        mainWindow.webContents.send('sent_tx')
+      let amount = tx.amount / 100000
+      let sent = {
+        message: `You sent ${amount} XKR`,
+        name: "Transaction sent",
+        hash: parseInt(Date.now()),
+        key: tx.to
+      };
+        mainWindow.webContents.send('sent_tx', sent)
         console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`);
