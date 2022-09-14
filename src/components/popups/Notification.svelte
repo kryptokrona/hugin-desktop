@@ -36,7 +36,7 @@
     <div class="inner-card">
         <div class="header">
             <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="">
-            <h4 class="name">{message.name}</h4><p>in {message.board}</p>
+            <h4 class="name">{message.name}</h4>{#if message.board}<p>in {message.board}</p>{/if}
         </div>
             <p class="message">{message.message}</p>
          <br>
