@@ -48,6 +48,12 @@
         console.log('Another group', data)
       }
     });
+
+    window.api.receive("sent_group", data => {
+    console.log('hash', data)
+    addHash(data)
+    });
+
   
     //Send message to store and DB
     function sendGroupMsg(e) {
@@ -242,6 +248,17 @@
     $: wantToAdd = $groups.addGroup;
   
     $: replyTrue = $groups.replyTo.reply;
+
+    function addHash(data) {
+
+      fixedGroups.some(function (a) {
+      if (a.hash === data.time) {
+        a.hash = data.hash
+      }
+    })
+
+    fixedGroups = fixedGroups
+}
   
   </script>
   
