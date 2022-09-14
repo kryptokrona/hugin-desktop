@@ -44,7 +44,7 @@ svg {
       border-radius: 2px;
       height: 16px;
       width: 10px;
-      left: -5px;
+      left: -10px;
       box-shadow: 0 0 10px white;
   }
 </style>
