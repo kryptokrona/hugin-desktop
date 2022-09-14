@@ -145,6 +145,12 @@ window.api.receive('node', async (node) => {
 		$notify.errors = $notify.errors
 	})
 
+	window.api.receive('sent_tx', async (data) => {
+		console.log('sent', data)
+		$notify.success.push(data)
+		$notify.success = $notify.success
+	})
+
 
 	});
 
@@ -174,7 +180,7 @@ window.api.receive('node', async (node) => {
     $: loading = $misc.loading
 
 	$: errors = $notify.errors
-	
+
 </script>
 
 
