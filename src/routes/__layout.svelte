@@ -11,7 +11,7 @@
 	import Loader from '/src/components/popups/Loader.svelte';
 	import { page } from "$app/stores";
 	//Stores
-	import { user, webRTC, misc, notify, boards } from "$lib/stores/user.js";
+	import { user, webRTC, misc, notify, boards, groups } from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
@@ -27,6 +27,7 @@
 	let board_message_sound
 	let errors = []
 	let loading = false
+	let new_message_sound
 
 	const closePopup = () => {
 		incoming_call = false
@@ -61,6 +62,7 @@
 			}
 		};
 		board_message_sound = new Audio("/static/audio/boardmessage.mp3");
+		new_message_sound = new Audio("/static/audio/message.mp3");
 		ready = true
 
 		//Handle incoming call
@@ -85,6 +87,17 @@
 			new_messages = true
 			if (data.board === $boards.thisBoard || $boards.thisBoard === "Home" && $page.url.pathname !== '/boards') return
 			board_message_sound.play();
+			$notify.new.push(data)
+			console.log('notif', $notify.new)
+			$notify.new = $notify.new
+		})
+
+		window.api.receive("groupMsg", data => {
+			new_messages = true
+			if (data.address == $user.huginAddress.substring(0, 99) ||
+			data.group === $groups.thisGroup && $page.url.pathname === '/groups') return
+			data.key = data.address
+			new_message_sound.play();
 			$notify.new.push(data)
 			console.log('notif', $notify.new)
 			$notify.new = $notify.new
