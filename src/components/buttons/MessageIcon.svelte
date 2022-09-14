@@ -42,7 +42,7 @@
         border-radius: 2px;
         height: 16px;
         width: 10px;
-        left: -10px;
+        left: -8px;
         box-shadow: 0 0 10px white;
   }
 </style>
