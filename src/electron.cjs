@@ -1806,7 +1806,7 @@ async function sendGroupsMessage(message) {
     console.log(result)
     message_json.sent = true
     saveGroupMessage(message_json, result.transactionHash, timestamp)
-    mainWindow.webContents.send("sent_group_msg");
+    mainWindow.webContents.send("sent_group", {hash: result.transactionHash, time: timestamp});
     known_pool_txs.push(result.transactionHash);
     optimizeMessages()
   } else {
