@@ -1113,7 +1113,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
   );
 
   if (first) {
-    saveMessageSQL({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: Date.now() });
+    saveMessageSQL({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: parseInt(Date.now()) });
     known_keys.pop(key);
     console.log("known_keys poped", known_keys);
   }
@@ -2081,7 +2081,7 @@ async function optimizeMessages(nbrOfTxs) {
     const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
     console.log("inputs", inputs.length)
-    if (inputs.length > 10) {
+    if (inputs.length > 9) {
      
       return;
     }
@@ -2097,16 +2097,12 @@ async function optimizeMessages(nbrOfTxs) {
     let payments = [];
     let i = 0;
     /* User payment */
-    if (inputs.length == 0) {
-      inputs.length = 1
-    }
-    while (i <= 22 && inputs.length > i) {
-      console.log('inputs length', inputs.length)
+    while (i <= 20) {
       payments.push([
         input_address,
         1000
       ]);
-      console.log(inputs.length)
+      console.log(payments.length)
       i += 1;
 
     }
