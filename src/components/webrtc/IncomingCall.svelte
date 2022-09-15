@@ -1,6 +1,6 @@
 <script>
     //To handle true and false, or in this case show and hide.
-    import {fade, fly} from "svelte/transition";
+    import {fly} from "svelte/transition";
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";

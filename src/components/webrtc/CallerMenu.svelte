@@ -1,12 +1,11 @@
 <script>
     //To handle true and false, or in this case show and hide.
-    import {fade, fly} from "svelte/transition";
+    import {fly} from "svelte/transition";
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user, webRTC} from "$lib/stores/user.js";
+    import { webRTC } from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
-    import videoIcon from '/static/images/video.svg'
 
 
     const dispatch = createEventDispatcher();
@@ -58,7 +57,7 @@
         <audio bind:paused src="/static/audio/startcall.mp3"></audio>
         <div class="options">
             <a class="answer hover" on:click={toggleAudio} class:active={toggle}>
-                <img src={videoIcon} alt="toggleMyWindow">
+                <img src="/images/video.svg" alt="toggleMyWindow">
             </a>
             <div class="decline hover" on:click={()=> endCall(peer, stream)} >
                 <img src="/static/images/call-slash.svg" alt="">
