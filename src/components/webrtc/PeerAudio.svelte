@@ -1,7 +1,6 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import {onDestroy, onMount} from "svelte";
-    import {user, webRTC} from "$lib/stores/user.js";
 
     let peerAudio = document.getElementById('peerAudio')
 

@@ -1,5 +1,3 @@
-import { browser } from "$app/env";
-
 export function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -20,7 +18,5 @@ export function prettyNumbers(amount) {
 }
 
 export const openURL = (link) => {
-  if(browser) {
     window.api.send('openLink', link)
-  }
 }

@@ -1,8 +1,7 @@
 <script>
     import wrtc from '@koush/wrtc'
     import Peer from "simple-peer";
-    import {onDestroy, onMount} from "svelte";
-    import {user, webRTC, misc} from "$lib/stores/user.js";
+    import { webRTC} from "$lib/stores/user.js";
 
 
     window.api.receive('answer-call', (msg, contact, key) => {
