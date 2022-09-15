@@ -1933,7 +1933,6 @@ async function sendBoardMessage(message) {
       sentMsg.sent = true;
       sentMsg.type = "board";
       saveBoardMsg(sentMsg, result.transactionHash);
-      optimizeMessages()
     } else {
       let error = {
         message: "Failed to send",
@@ -1948,6 +1947,8 @@ async function sendBoardMessage(message) {
     mainWindow.webContents.send("error_msg");
     console.log("Error", err);
   }
+  
+  optimizeMessages()
 
 }
 
@@ -2076,11 +2077,11 @@ async function sendMessage(message, receiver, off_chain = false) {
 
 async function optimizeMessages(nbrOfTxs) {
   console.log("optimize");
-
+    let input_address = js_wallet.subWallets.getAddresses()[0]
     const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
     console.log("inputs", inputs.length)
-    if (inputs.length > 17) {
+    if (inputs.length > 10) {
      
       return;
     }
@@ -2089,20 +2090,23 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
       txs = value.unconfirmedIncomingAmounts.length;
     });
-    if (txs > 0 && inputs.length > 5) {
+    if (txs > 1 && inputs.length > 5) {
       console.log("Already have incoming inputs, aborting..");
       return;
     }
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i < inputs.length && inputs.length < 22) {
+    if (inputs.length == 0) {
+      inputs.length = 1
+    }
+    while (i <= 22 && inputs.length > i) {
+      console.log('inputs length', inputs.length)
       payments.push([
-        js_wallet.subWallets.getAddresses()[0],
+        input_address,
         1000
       ]);
-      console.log(payments)
-
+      console.log(inputs.length)
       i += 1;
 
     }
@@ -2122,6 +2126,13 @@ async function optimizeMessages(nbrOfTxs) {
     );
 
     if (result.success) {
+      let sent = {
+        message: "Your wallet is optimizing",
+        name: "Optimizing",
+        hash: parseInt(Date.now()),
+        key: input_address
+      }
+      mainWindow.webContents.send('sent_tx', sent)
       console.log("optimize completed");
     } else {
       console.log('optimize failed')
