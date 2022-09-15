@@ -23,8 +23,10 @@
     let react = false;
     let unreadMsgs = [];
     let replyTrue = false;
+    let chatWindow
   
     onMount(async () => {
+      chatWindow = document.getElementById("chat_window");
       console.log("mounting");
        console.log('lol null', $groups.groupArray[0])
        if ($groups.groupArray.length) {
@@ -74,7 +76,12 @@
       console.log("wanna send this", sendMsg);
       printBoardMessage(myGroupMessage);
       replyExit();
-    }
+      scrollDown();
+  };
+
+  const scrollDown = () => {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  };
   
     //Prints any single board message. Takes boardmessage and updates to store.
     const printBoardMessage = (groupMsg) => {
@@ -178,7 +185,7 @@
   
     //Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisGroup.
     async function printGroup(group) {
-
+      
       console.log("Printing group", group);
       fixedGroups = [];
       noMsgs = false;
@@ -194,7 +201,7 @@
       await checkReactions();
       console.log($groups.groupArray)
       //Reactions should be set, update thisGroup in store and set reply to false.
-    
+      scrollDown()
       groups.update(data => {
         return {
           ...data,
