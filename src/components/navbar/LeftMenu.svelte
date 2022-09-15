@@ -33,7 +33,7 @@
 
 <div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
-        <a class='button myavatar' href="/dashboard"><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></a>
+        <div class='button myavatar' on:click={() => goto("/dashboard")}><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></div>
         <div on:click={() => goto("/messages")} class="button">
             <MessageIcon />
         </div>
