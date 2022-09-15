@@ -1,11 +1,8 @@
 <script>
   //To handle true and false, or in this case show and hide.
-  import { fade, fly } from "svelte/transition";
-  import { cubicOut, cubicIn } from "svelte/easing";
+  import { fade } from "svelte/transition";
   import { onDestroy, onMount } from "svelte";
-  import { user, webRTC } from "$lib/stores/user.js";
   import { createEventDispatcher } from "svelte";
-  import { page } from "$app/stores";
   import { draggable } from "@neodrag/svelte";
   import Minus from '/src/components/buttons/Minus.svelte'
   import Plus from '/src/components/buttons/Plus.svelte'
