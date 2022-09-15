@@ -2097,7 +2097,7 @@ async function optimizeMessages(nbrOfTxs) {
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i <= 20) {
+    while (i <= 30) {
       payments.push([
         input_address,
         1000
