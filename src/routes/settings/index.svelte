@@ -163,10 +163,10 @@
       <br>
      {#if showKeys}
       <h6 >Spend Key</h6>
-      <p in:fade type="text">{privateSpendKey}</p>
+      <p style="user-select: text;" in:fade type="text">{privateSpendKey}</p>
 
       <h6 >View key</h6>
-      <p in:fade type="text">{privateViewKey}</p>
+      <p style="user-select: text;" in:fade type="text">{privateViewKey}</p>
       {/if}
     </div>
 
@@ -178,7 +178,7 @@
       <br>
       {#if showMnemonic}
       <h6>Mnemonic seed</h6>
-      <p in:fade type="text">{seedPhrase}</p>
+      <p style="user-select: text;" in:fade type="text">{seedPhrase}</p>
       {/if}
     </div>
 
