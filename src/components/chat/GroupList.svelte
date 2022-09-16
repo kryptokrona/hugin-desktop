@@ -237,7 +237,7 @@ async function checkNew() {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 103px);
     overflow: scroll;
   }
   

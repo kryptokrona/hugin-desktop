@@ -184,7 +184,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: calc(100% - 85px);
+    height: calc(100% - 103px);
     overflow-x: scroll;
   }
 
