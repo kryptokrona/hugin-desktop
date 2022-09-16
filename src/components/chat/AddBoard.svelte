@@ -43,16 +43,15 @@
 
 <svelte:window on:keyup|preventDefault={enter} />
 
-<div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
-
-  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-      <h3>Add new board</h3>
-      <input placeholder="Join or create a new public board" type="text" bind:value={text}>
-      <GreenButton text={add_board} disabled={!enableAddBoardButton} enabled={enableAddBoardButton}
-                   on:click={()=> addBoard(text)} />
+<div on:click|self in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
+  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+    <input placeholder="Join or create a new public board" type="text" spellcheck="false" autocomplete="false"
+           bind:value={text}>
+    <GreenButton text={add_board} disabled={!enableAddBoardButton} enabled={enableAddBoardButton}
+    on:click={()=> addBoard(text)} />
   </div>
-
 </div>
+
 
 <style lang="scss">
 
@@ -74,33 +73,41 @@
     color: var(--title-color);
   }
 
-
-  .card {
-    background-color: var(--backgound-color);
-    border: 1px solid var(--card-border);
-    padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-    height: 180px;
+  .field {
     display: flex;
-    flex-direction: column;
     justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    padding: 0 10px;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    border-radius: 0.4rem;
+
+    .btn {
+      color: var(--text-color);
+      height: 100%;
+      border-left: 1px solid var(--card-border);
+      cursor: pointer;
+
+      &:hover {
+        background-color: var(--card-border);;
+      }
+    }
   }
 
   input {
-    box-sizing: border-box;
-    background-color: transparent;
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    padding: 0 1rem;
-    height: 35px;
-    width: 100%;
-    color: white;
+    margin: 0 auto;
+    width: 300px;
+    height: 50px;
     transition: 200ms ease-in-out;
+    color: var(--text-color);
+    background-color: transparent;
+    border: none;
+    font-size: 1.1rem;
 
     &:focus {
       outline: none;
-      border: 1px solid rgba(255, 255, 255, 0.6);
     }
   }
+  
 </style>
