@@ -55,7 +55,7 @@
 
     <div class="header">
       <div style="display: flex; align-items: center; gap: 0.5rem">
-        <h1>{greet}, {capitalizeFirstLetter($user.username)}!</h1>
+        <h1>{greet}, {$user.username}!</h1>
         <EditName/>
       </div>
       <Share />
