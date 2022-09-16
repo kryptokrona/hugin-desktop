@@ -100,7 +100,6 @@
         <div class="reply">
           <div style="display: flex; gap: 10px; align-items: center">
             <RepliedArrom />
-            <div>Länk</div>
             <div style="display: flex; align-items: center; gap: 10px;">
               <p class="reply_nickname">{thisreply.name}</p>
               <p>{thisreply.message}</p>
