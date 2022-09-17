@@ -170,11 +170,11 @@
     </div>
   {/if}
 
-  {#if $page.url.pathname === '/messages' && active_contact}
+  {#if $page.url.pathname === '/messages'}
     <div class="nav">
       <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
       
-      <button in:fade out:fade class="button">
+      <button class="button">
       {#if thisCall && !video}
           <CallSlash on:click={() => endCall()}/>
       {:else}
@@ -182,7 +182,7 @@
       
       {/if}
       </button>
-      <button in:fade out:fade class="button">
+      <button class="button">
       {#if thisCall && video}
       <VideoSlash  on:click={() => endCall()}/>
       {:else}
@@ -190,7 +190,7 @@
       {/if}
       </button>
       {#if thisCall}
-        <div in:fade out:fade class="button">
+        <div class="button">
           {#if !muted}
             <MicIcon on:click={toggleAudio} />
           {:else}
