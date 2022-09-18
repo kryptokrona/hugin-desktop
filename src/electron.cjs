@@ -6,6 +6,7 @@ const path = require("path");
 const { join } = require("path");
 const { JSONFile, Low } = require("@commonify/lowdb");
 const fs = require("fs");
+const files = require('fs/promises');
 const WB = require("kryptokrona-wallet-backend-js");
 const { default: fetch } = require("electron-fetch");
 const nacl = require("tweetnacl");
@@ -32,7 +33,6 @@ const {
 
 const appRoot = require('app-root-dir').get().replace('app.asar', '');
 const appBin = appRoot + '/bin/';
-
 
 const xkrUtils = new CryptoNote();
 const hexToUint = hexString => new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
@@ -424,8 +424,9 @@ if (process.platform !== 'darwin') {
         });
  
   });
- 
  }
+
+ 
  
 async function startCheck() {
 
@@ -440,6 +441,7 @@ async function startCheck() {
     ports = db.data.node.port;
     let mynode = { node: node, port: ports };
     daemon = new WB.Daemon(node, ports);
+
     ipcMain.on("login", async (event, data) => {
 
       startWallet(data, mynode);
@@ -490,7 +492,6 @@ function contactsTable() {
     resolve();
   });
 }
-
 
 function knownTxsTable() {
   const knownTxTable = `
@@ -712,7 +713,7 @@ ipcMain.on("create-account", async (e, accountData) => {
   db.data.walletNames.push(walletName);
   await db.write();
   console.log("creating dbs...");
-  await js_wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", myPassword);
+  saveWallet(js_wallet, myPassword)
   start_js_wallet(walletName, myPassword, mynode);
 });
 
@@ -765,17 +766,20 @@ async function loadKnownTxs() {
 
 async function logIntoWallet(walletName, password) {
 
-  const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + "/" + walletName + ".wallet", password);
+  let json_wallet = await openWallet()
+  let parsed_wallet = JSON.parse(json_wallet)
+  const [js_wallet, error] = await WB.WalletBackend.openWalletFromEncryptedString(daemon, parsed_wallet, password);
   if (error) {
-    console.log("Failed to open wallet: " + error.toString());
-    mainWindow.webContents.send("login-failed");
-    return "Wrong password";
+      console.log('Failed to open wallet: ' + error.toString());
+      mainWindow.webContents.send("login-failed");
+      return "Wrong password";
   }
 
   return js_wallet;
 }
 
 async function start_js_wallet(walletName, password, mynode) {
+  
 
   js_wallet = await logIntoWallet(walletName, password);
 
@@ -809,7 +813,7 @@ async function start_js_wallet(walletName, password, mynode) {
   mainWindow.webContents.send("node-sync-data", { walletBlockCount, localDaemonBlockCount, networkBlockCount });
 
   js_wallet.enableAutoOptimization(false);
-
+  
   //Incoming transaction event
   js_wallet.on("incomingtx", (transaction) => {
     optimizeMessages();
@@ -831,6 +835,11 @@ async function start_js_wallet(walletName, password, mynode) {
 
   mainWindow.webContents.send("addr", myAddress + msgKey);
 
+  js_wallet.on('createdtx', async (tx) => {
+    console.log('***** outgoing *****', tx);
+    await saveWallet(js_wallet, password)
+  })
+
 
   //Wallet heightchange event with funtion that saves wallet only if we are synced
   js_wallet.on("heightchange", async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
@@ -841,7 +850,7 @@ async function start_js_wallet(walletName, password, mynode) {
 
       // Save js wallet to file
       console.log("///////******** SAVING WALLET *****\\\\\\\\");
-      await js_wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", password);
+      await saveWallet(js_wallet, password)
     } else if (!synced) {
       return;
     }
@@ -885,6 +894,37 @@ async function start_js_wallet(walletName, password, mynode) {
       console.log(err);
     }
   }
+}
+
+
+async function encryptWallet(wallet, pass) {
+  
+  const encrypted_wallet = await wallet.encryptWalletToString(pass);
+
+  return encrypted_wallet
+
+}
+
+async function saveWallet(wallet, password) {
+  let my_wallet = await encryptWallet(wallet, password)
+  let wallet_json = JSON.stringify(my_wallet)
+  try {
+    await files.writeFile(userDataDir + "/wallet.json", wallet_json);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+ async function openWallet() {
+  let json_wallet
+
+  try {
+    json_wallet = await files.readFile(userDataDir + "/wallet.json");
+  } catch (err) {
+    console.error(err);
+  }
+  return json_wallet
+
 }
 
 async function backgroundSyncMessages(checkedTxs = false) {
@@ -1570,6 +1610,8 @@ async function getReplies(hash = false) {
     });
   });
 }
+
+
 
 //Saves private message
 async function saveMessageSQL(msg, hash) {
