@@ -214,7 +214,6 @@ function startPeer1(stream, video, contact) {
 
     peer1.on('close', (e) => {
         console.log(e)
-        if (e === undefined) return
         console.log('Connection lost..')
         endCall(peer1, stream)
         // ENDCALL AUDIO
@@ -315,7 +314,6 @@ function startPeer2(stream, video) {
 
     peer2.on('close', (e) => {
             console.log('Connection closed..', e)
-            if (e === undefined) return
             endCall(peer2, stream)
     })
 
@@ -413,12 +411,14 @@ function sendAnswer(sdpOffer, address, peer, key, video) {
 function endCall (peer, stream, contact) {
 
     console.log('contact', contact)
-
     let caller = $webRTC.call.filter(a => a.chat === contact)
     let video = false
-
+    console.log('stream?', stream)
     console.log('caller', caller)
-    if (!caller || caller.legnth === 0 || caller === undefined) return
+    console.log('peer', peer)
+    if (contact === undefined) {
+        caller = $webRTC.call.filter(e => e.peer == peer)
+    }
     
     try {
         caller[0].peer.destroy();
@@ -428,9 +428,13 @@ function endCall (peer, stream, contact) {
     } catch (e) {
         console.log('error', e)
     }
-
-    let filter = $webRTC.call.filter(a => a.chat !== contact)
     
+    let filter
+    if (contact === undefined) {
+        filter = $webRTC.call.filter(e => e.peer !== peer)
+    } else {
+        filter = $webRTC.call.filter(a => a.chat !== contact)
+    }
     $webRTC.call = filter
     console.log('true?', $webRTC.call.some(a => a.peerVideo === true))
 
