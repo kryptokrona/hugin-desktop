@@ -380,7 +380,7 @@ ipcMain.on("app", (data) => {
 
 if (process.platform !== 'darwin') {
   autoUpdater.on('update-downloaded', () => {
- 
+
     notifier.notify({
       title: "Hugin Update",
       appID: "Hugin Messenger",
@@ -391,17 +391,17 @@ if (process.platform !== 'darwin') {
       // Response is response from notification
       // Metadata contains activationType, activationAt, deliveredAt
       console.log(response, metadata.activationValue, err);
- 
+
       if(metadata.activationValue != "Later" || metadata.button != "Later" ) {
             autoUpdater.quitAndInstall();
             app.exit();
         }
       });
- 
+
     });
- 
+
   } else {
- 
+
     autoUpdater.on('update-available', () => {
       notifier.notify({
         title: "Hugin Messenger",
@@ -413,21 +413,21 @@ if (process.platform !== 'darwin') {
         // Response is response from notification
         // Metadata contains activationType, activationAt, deliveredAt
         console.log(response, metadata.activationValue, err);
- 
+
         if(metadata.activationValue == "Yes" || metadata.button == "Yes" ) {
- 
- 
+
+
          shell.openExternal('https://github.com/kryptokrona/hugin-svelte/releases/latest');
- 
- 
+
+
           }
         });
- 
+
   });
  }
 
- 
- 
+
+
 async function startCheck() {
 
 
@@ -684,6 +684,8 @@ function firstContact() {
 
 
 ipcMain.on("create-account", async (e, accountData) => {
+
+
   //Create welcome message
   welcomeMessage();
   console.log("accdata", accountData);
@@ -692,9 +694,10 @@ ipcMain.on("create-account", async (e, accountData) => {
   node = accountData.node;
   ports = accountData.port;
   daemon = new WB.Daemon(node, ports);
-  console.log("creating", walletName);
-  const js_wallet = await WB.WalletBackend.createWallet(daemon);
-  console.log(myPassword);
+
+
+  const [js_wallet, error] = ( accountData.mnemonic.length > 0 ? await WB.WalletBackend.importWalletFromSeed(daemon, accountData.blockheight, accountData.mnemonic) : [await WB.WalletBackend.createWallet(daemon), null]);
+
   //Create Hugin welcome contact
   firstContact();
   //Create Boards welcome message
@@ -778,7 +781,7 @@ async function logIntoWallet(walletName, password) {
 }
 
 async function start_js_wallet(walletName, password, mynode) {
-  
+
 
   js_wallet = await logIntoWallet(walletName, password);
 
@@ -812,7 +815,7 @@ async function start_js_wallet(walletName, password, mynode) {
   mainWindow.webContents.send("node-sync-data", { walletBlockCount, localDaemonBlockCount, networkBlockCount });
 
   js_wallet.enableAutoOptimization(false);
-  
+
   //Incoming transaction event
   js_wallet.on("incomingtx", (transaction) => {
     optimizeMessages();
@@ -897,7 +900,7 @@ async function start_js_wallet(walletName, password, mynode) {
 
 
 async function encryptWallet(wallet, pass) {
-  
+
   const encrypted_wallet = await wallet.encryptWalletToString(pass);
 
   return encrypted_wallet
@@ -973,7 +976,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
         if (thisExtra !== undefined && thisExtra.length > 200) {
           message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair());
           if (!message || message === undefined) {
-            let group = trimExtra(thisExtra) 
+            let group = trimExtra(thisExtra)
             console.log('group', group)
             message = JSON.parse(group)
             if (message.sb.length > 100)
@@ -1379,7 +1382,7 @@ async function getGroups() {
           myGroups.push(newRow);
         }
       });
-      
+
     }, () => {
       resolve(myGroups);
     });
@@ -1734,7 +1737,7 @@ ipcMain.handle('getTransactions', async (e, startIndex) => {
   const pages = Math.ceil(filtered_transactions.length / showPerPage)
   const pageTx = []
   for (const tx of filtered_transactions) {
-   
+
       pageTx.push({hash: tx.hash, amount: WB.prettyPrintAmount(tx.totalAmount()), time: tx.timestamp})
   }
 
@@ -1914,7 +1917,7 @@ async function decryptGroupMessage(tx, hash) {
   const from = payload_json.k;
 
   const this_addr = await Address.fromAddress(from);
-  
+
   const verified = await xkrUtils.verifyMessageSignature(payload_json.m, this_addr.spend.publicKey, payload_json.s);
 
   payload_json.sent = false
@@ -1988,7 +1991,7 @@ async function sendBoardMessage(message) {
     mainWindow.webContents.send("error_msg");
     console.log("Error", err);
   }
-  
+
   optimizeMessages()
 
 }
@@ -2105,7 +2108,7 @@ async function sendMessage(message, receiver, off_chain = false) {
       };
       console.log(`Failed to send transaction: ${result.error.toString()}`);
       mainWindow.webContents.send("error_msg", error);
-      
+
     }
 
   // } else if (off_chain) {
@@ -2123,7 +2126,7 @@ async function optimizeMessages(nbrOfTxs) {
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
     console.log("inputs", inputs.length)
     if (inputs.length > 9) {
-     
+
       return;
     }
     let subWallets = js_wallet.subWallets.subWallets;
@@ -2269,22 +2272,22 @@ ipcMain.on("startCall", async (e, contact, calltype) => {
 
 });
 
-ipcMain.handle("shareScreen", async (e, start) => { 
+ipcMain.handle("shareScreen", async (e, start) => {
   desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async sources => {
     for (const source of sources) {
 
      if (source.name === 'Entire Screen') {
-      
+
       }
       if (!start) {
         mainWindow.webContents.send('screen-share', source.id)
       }
       return source.id
-      
-    } 
+
+    }
     console.log('sources', sources)
   })
-  
+
 });
 
 ipcMain.on("setCamera", async (e, contact, calltype) => {
