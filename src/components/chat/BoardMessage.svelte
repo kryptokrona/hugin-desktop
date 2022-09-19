@@ -57,7 +57,8 @@
     console.log("wanna send", e.detail);
     dispatch("reactTo", {
       text: e.detail.msg,
-      reply: hash
+      reply: hash,
+      board: board
     });
   };
 
@@ -65,7 +66,8 @@
     console.log("reactto", e);
     dispatch("reactTo", {
       text: e.detail,
-      reply: hash
+      reply: hash,
+      board: board
     });
 
   };

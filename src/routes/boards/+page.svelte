@@ -67,6 +67,7 @@
     //Reaction switch
     if (e.detail.reply) {
       replyto = e.detail.reply;
+      brd = e.detail.board
     }
     //Construct a new json object (myBoardMessage) to be able to print our message instant.
     let myBoardMessage = { message: msg, board: thisBoard, reply: replyto, key: myaddr, time: time, name: myName, hash: time };
