@@ -4,7 +4,6 @@
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import { nodelist } from "$lib/stores/nodes.js";
   import { goto } from "$app/navigation";
-  import { onMount, onDestroy } from "svelte";
 
   let mnemonic = "";
   let blockheight = 0;
@@ -14,6 +13,7 @@
   let nodeInput = "";
   let selectedNode;
   let step = 1;
+  let blockHeight = "";
 
   const enter = (e) => {
     if (e.keyCode === 13 && password.length && step === 3) {
@@ -32,7 +32,7 @@
       node: nodeInput.split(":")[0],
       port: parseInt(nodeInput.split(":")[1]),
       mnemonic: mnemonic,
-      blockheight: 0
+      blockheight: parseInt(blockheight)
     };
 
     //Save username to localStorage
@@ -63,6 +63,7 @@
     selectedNode;
     step;
     username;
+    blockHeight
   }
 
   function chooseNode(node, i) {
@@ -73,6 +74,11 @@
 
   function defaultPicker() {
       nodeInput = "blocksum.org:11898";
+  }
+
+  function createAcc() {
+    $user.restore = false
+    step = 1
   }
 
 </script>
@@ -86,10 +92,10 @@
       <div in:fade class="wrapper">
         <h2>Please enter your mnemonic seed</h2>
 
-        <textarea spellcheck="false" placeholder="Type your mnemonic here" bind:value={mnemonic} />
-        <input type="text" spellcheck="false" placeholder="Blockheight (optional)" bind:value={blockheight}>
+        <input spellcheck="false" placeholder="Type your mnemonic here" bind:value={mnemonic} />
+        <input class="block_height" type="text" spellcheck="false" placeholder="Blockheight" bind:value={blockheight}>
 
-        <GreenButton disabled={mnemonic.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
+        <GreenButton disabled={mnemonic.length < 0} enabled={mnemonic.length > 0} text="Next" on:click={() => createAcc()} />
 
       </div>
 
@@ -207,6 +213,10 @@
     &:focus {
       outline: none;
     }
+  }
+
+  .block_height {
+    width: 30%;
   }
 
 </style>
