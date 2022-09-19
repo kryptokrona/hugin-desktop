@@ -700,7 +700,7 @@ ipcMain.on("create-account", async (e, accountData) => {
   //Create Boards welcome message
   welcomeBoardMessage();
   //Create misc DB template on first start
-
+  await saveWallet(js_wallet, myPassword)
   addBoard('Home')
   db.data = {
     walletNames: [],
@@ -713,7 +713,6 @@ ipcMain.on("create-account", async (e, accountData) => {
   db.data.walletNames.push(walletName);
   await db.write();
   console.log("creating dbs...");
-  saveWallet(js_wallet, myPassword)
   start_js_wallet(walletName, myPassword, mynode);
 });
 
