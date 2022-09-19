@@ -153,7 +153,6 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
     $webRTC.call[0].screen_stream = screen_stream
     $webRTC.call[0].myStream = stream
     $webRTC.call[0].video = video
-
     console.log('This call', $webRTC.call[0])
 
     let video_codecs = window.RTCRtpSender.getCapabilities('video');
@@ -228,11 +227,10 @@ function startPeer1(stream, video, contact) {
     })
 
     
-    peer1.on('connect', (e) => {
+    peer1.on('connect', () => {
         // SOUND EFFECT
-        console.log('Connection established', e)
+        console.log('Connection established')
         $webRTC.connected = true
-
     });
 
     peer1.on('data', msg => {
@@ -335,9 +333,9 @@ function startPeer2(stream, video) {
         console.log('Setting up link..', track, stream)
     })
 
-    peer2.on('connect', (e) => {
+    peer2.on('connect', () => {
         // SOUND EFFECT
-        console.log('Connection established;', e)
+        console.log('Connection established;')
         $webRTC.connected = true
 
     });
@@ -410,12 +408,8 @@ function sendAnswer(sdpOffer, address, peer, key, video) {
   //End call
 function endCall (peer, stream, contact) {
 
-    console.log('contact', contact)
     let caller = $webRTC.call.filter(a => a.chat === contact)
     let video = false
-    console.log('stream?', stream)
-    console.log('caller', caller)
-    console.log('peer', peer)
     if (contact === undefined) {
         caller = $webRTC.call.filter(e => e.peer == peer)
     }
@@ -436,7 +430,6 @@ function endCall (peer, stream, contact) {
         filter = $webRTC.call.filter(a => a.chat !== contact)
     }
     $webRTC.call = filter
-    console.log('true?', $webRTC.call.some(a => a.peerVideo === true))
 
     if ($webRTC.call.some(a => a.video === true)) {
         $webRTC.myVideo = true
