@@ -8,8 +8,8 @@
 
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
-        console.log('peerVideo call', audioCall);
-        console.log('before', audioCall.peerStream)
+        console.log('Audio call', audioCall);
+        console.log('Stream', audioCall.peerStream)
         peerAudio.srcObject = audioCall.peerStream
         playAudio()
 
