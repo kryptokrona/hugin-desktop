@@ -65,6 +65,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
   }
 
   h4 {
@@ -104,6 +105,7 @@
 
   .from {
     font-weight: bold;
+    display: inline-table;
   }
 
   .text {
