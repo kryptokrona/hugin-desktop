@@ -15,7 +15,7 @@
     export let this_contact
 
     const enter = (e) => {
-        if (enableAddButton && rename && e.keyCode === 13) {
+        if (enableAddButton && $user.rename && e.keyCode === 13) {
             renameContact(text)
             enableAddButton = false
         }
