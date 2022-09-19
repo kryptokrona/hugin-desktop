@@ -6,6 +6,8 @@
   import { goto } from "$app/navigation";
   import { onMount, onDestroy } from "svelte";
 
+  let mnemonic = "";
+  let blockheight = 0;
   let password = "";
   let username = "";
   let walletName = "";
@@ -28,7 +30,9 @@
       walletName,
       password,
       node: nodeInput.split(":")[0],
-      port: parseInt(nodeInput.split(":")[1])
+      port: parseInt(nodeInput.split(":")[1]),
+      mnemonic: mnemonic,
+      blockheight: 0
     };
 
     //Save username to localStorage
@@ -76,7 +80,22 @@
 <svelte:window on:keyup|preventDefault={enter} />
 <main in:fade>
 
-  {#if step === 1}
+  {#if step === 1 && $user.restore}
+
+
+      <div in:fade class="wrapper">
+        <h2>Please enter your mnemonic seed</h2>
+
+        <textarea spellcheck="false" placeholder="Type your mnemonic here" bind:value={mnemonic} />
+        <input type="text" spellcheck="false" placeholder="Blockheight (optional)" bind:value={blockheight}>
+
+        <GreenButton disabled={mnemonic.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
+
+      </div>
+
+  {/if}
+
+  {#if step === 1 && !$user.restore}
 
     <div in:fade class="wrapper">
       <h2>Select you username</h2>
