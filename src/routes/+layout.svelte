@@ -11,7 +11,7 @@
 	import Loader from '/src/components/popups/Loader.svelte';
 	import { page } from "$app/stores";
 	//Stores
-	import { user, webRTC, misc, notify, boards, groups } from "$lib/stores/user.js";
+	import { user, webRTC, misc, notify, boards, groups} from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
@@ -66,68 +66,83 @@
 		ready = true
 
 		//Handle incoming call
-		window.api.receive('call-incoming', (msg, chat) => {
+	window.api.receive('call-incoming', (msg, chat) => {
 
-			console.log('INCMING');
-			$webRTC.call.unshift({msg, chat, type: 'incoming'})
-			incoming_call = true
-		})
+		console.log('INCMING');
+		$webRTC.call.unshift({msg, chat, type: 'incoming'})
+		incoming_call = true
+	})	
 
 		//Handle sync status
-		window.api.receive('sync', data => {
-			misc.update(current => {
-				return{
-					...current,
-					syncState: data
-				}
-			})
-		})
-
-		window.api.receive("boardMsg", data => {
-		
-			if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
-			if ($boards.thisBoard === "Home") return
-			if ($page.url.pathname !== '/boards') {
-				data.type = "board"
-				$notify.unread.push(data)
-				$notify.unread = $notify.unread
+	window.api.receive('sync', data => {
+		misc.update(current => {
+			return{
+				...current,
+				syncState: data
 			}
-			new_messages = true
-			board_message_sound.play();
-			$notify.new.push(data)
-			console.log('notif', $notify.new)
-			$notify.new = $notify.new
 		})
+	})
 
-		window.api.receive("groupMsg", data => {
+	window.api.receive("boardMsg", data => {
+	
+		if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
+		if ($boards.thisBoard === "Home") return
+		if ($page.url.pathname !== '/boards') {
+			data.type = "board"
+			$notify.unread.push(data)
+			$notify.unread = $notify.unread
+		}
+		new_messages = true
+		board_message_sound.play();
+		$notify.new.push(data)
+		console.log('notif', $notify.new)
+		$notify.new = $notify.new
+	})
+
+	window.api.receive("groupMsg", data => {
+		console.log('data group', data.group)
+		if (data.address == $user.huginAddress.substring(0, 99)) return
+		if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') return
+		if ($page.url.pathname !== '/groups') {
+			data.type = "group"
+			$notify.unread.push(data)
+			$notify.unread = $notify.unread
+		}
+		new_messages = true
+		data.key = data.address
+		new_message_sound.play();
+		$notify.new.push(data)
+		console.log('notif', $notify.new)
+		$notify.new = $notify.new
+	})
+
 		
-			if (data.address == $user.huginAddress.substring(0, 99)) return
-			if (data.group === $groups.thisGroup && $page.url.pathname === '/groups') return
-			if ($page.url.pathname !== '/groups') {
-				data.type = "group"
-				$notify.unread.push(data)
-				$notify.unread = $notify.unread
+	window.api.receive('newMsg', async (data) => {
+		console.log('newmsg in layout', data);
+		if (data.chat !== $user.activeChat.chat) {
+          new_message_sound.play();
+		}
+		if ($page.url.pathname !== '/messages') {
+			data.type = "message"
+			$notify.unread.push(data)
+			$notify.unread = $notify.unread
+			console.log('unread', $notify.unread)
+		}
+		saveToStore(data)
+	})
+		
+
+	window.api.receive('addr', async (huginAddr) => {
+		console.log('Addr incoming')
+		user.update(data => {
+			return {
+				...data,
+				huginAddress: huginAddr,
 			}
-			new_messages = true
-			data.key = data.address
-			new_message_sound.play();
-			$notify.new.push(data)
-			console.log('notif', $notify.new)
-			$notify.new = $notify.new
 		})
-		
+	})
 
-		window.api.receive('addr', async (huginAddr) => {
-			console.log('Addr incoming')
-			user.update(data => {
-				return {
-					...data,
-					huginAddress: huginAddr,
-				}
-			})
-		})
-
-window.api.receive('node', async (node) => {
+	window.api.receive('node', async (node) => {
 
 		misc.update(current => {
 				return {
@@ -137,36 +152,26 @@ window.api.receive('node', async (node) => {
 		})
 	})
 
-		window.api.receive('node-sync-data', data => {
-			misc.update(current => {
-				return {
-					...current,
-					walletBlockCount: data.walletBlockCount,
-					networkBlockCount: data.networkBlockCount,
-					localDaemonBlockCount: data.localDaemonBlockCount,
+	window.api.receive('node-sync-data', data => {
+		misc.update(current => {
+			return {
+				...current,
+				walletBlockCount: data.walletBlockCount,
+				networkBlockCount: data.networkBlockCount,
+				localDaemonBlockCount: data.localDaemonBlockCount,
 
-				}
-			})
-		})
-  window.api.receive('newMsg', async (data) => {
-		console.log('newmsg in layout', data);
-		if ($page.url.pathname !== '/messages') {
-				data.type = "message"
-				$notify.unread.push(data)
-				$notify.unread = $notify.unread
-				console.log('unread', $notify.unread)
 			}
-		saveToStore(data)
+		})
 	})
 
-		const saveToStore = (data) => {
+	const saveToStore = (data) => {
 
-			messages.update(current => {
-					return [...current, data]
-			})
-		}
+		messages.update(current => {
+				return [...current, data]
+		})
+	}
 
-		window.api.receive('endCall', async (data) => {
+	window.api.receive('endCall', async (data) => {
 		console.log('endcall in layout', data);
 		endThisCall()
 	})
@@ -214,6 +219,10 @@ window.api.receive('node', async (node) => {
 	$: errors = $notify.errors
 
 	$: console.log('Unread?', $notify.unread)
+
+	$: console.log('path', $page.url.pathname)
+
+	$: console.log('this gr', $groups.thisGroup)
 
 </script>
 
@@ -264,7 +273,7 @@ window.api.receive('node', async (node) => {
 
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
 		<div class="notifs">
-		{#each $notify.new as notif (notif.h)}
+		{#each $notify.new as notif}
 		<Notification on:hide={removeNotification} message={notif} error={false}/>
 		{/each}
 		</div>
@@ -272,7 +281,7 @@ window.api.receive('node', async (node) => {
 
 	{#if $notify.errors.length > 0 && $user.loggedIn}
 		<div class="notifs">
-		{#each errors as error (error.hash)}
+		{#each errors as error}
 		<Notification message={error} error={true}  on:hide={removeErrors} />
 		{/each}
 		</div>
@@ -280,7 +289,7 @@ window.api.receive('node', async (node) => {
 
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
 		<div class="notifs">
-		{#each $notify.new as notif (notif.hash)}
+		{#each $notify.new as notif}
 		<Notification on:hide={removeNotification} message={notif} error={false}/>
 		{/each}
 		</div>
@@ -288,7 +297,7 @@ window.api.receive('node', async (node) => {
 
 	{#if $notify.success.length > 0 && $user.loggedIn}
 		<div class="notifs">
-		{#each $notify.success as success (success.hash)}
+		{#each $notify.success as success}
 		<Notification message={success} success={true}  on:hide={removeErrors} />
 		{/each}
 		</div>
