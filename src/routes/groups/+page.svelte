@@ -158,7 +158,7 @@
       let group = e.detail;
       if (group.length < 32) return
       openAddGroup();
-      let add = {m: "Added group", n: group.name, hash: Date.now() * 2, t: Date.now(), s: "", k: group.key, sent: false, r: "", g: group.key, h: parseInt(Date.now())}
+      let add = {m: "Added group", n: group.name, hash: Date.now() * 2, t: Date.now().toString(), s: "", k: group.key, sent: false, r: "", g: group.key, h: parseInt(Date.now())}
       window.api.addGroup(add);
       console.log('adding', add)
       
