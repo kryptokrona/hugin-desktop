@@ -104,10 +104,10 @@
     background-color: transparent;
     border: none;
     font-size: 1.1rem;
-
+    outline: none;
     &:focus {
       outline: none;
     }
   }
-  
+
 </style>
