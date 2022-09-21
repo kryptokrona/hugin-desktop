@@ -5,7 +5,7 @@
   import { boardMessages } from "$lib/stores/boardmsgs.js";
   import BoardMessage from "/src/components/chat/BoardMessage.svelte";
   import BoardStats from "/src/components/chat/BoardStats.svelte";
-  import { user, boards } from "$lib/stores/user.js";
+  import { user, boards, notify } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import AddBoard from "/src/components/chat/AddBoard.svelte";
   import RightMenu from "/src/components/navbar/RightMenu.svelte";
@@ -30,6 +30,10 @@
     if ($boards.thisBoard == null) {
       thisBoard = "Home";
     }
+
+    let filter = $notify.unread.filter(a => a.type !== "board")
+    $notify.unread = filter
+    
     printBoard(thisBoard);
   });
   //Listens for new messages from backend

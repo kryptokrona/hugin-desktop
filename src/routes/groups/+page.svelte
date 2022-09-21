@@ -5,7 +5,7 @@
     import { groupMessages } from "$lib/stores/groupmsgs.js";
     import GroupMessage from "/src/components/chat/GroupMessage.svelte";
     import GroupList from "/src/components/chat/GroupList.svelte";
-    import { user, groups } from "$lib/stores/user.js";
+    import { user, groups, notify } from "$lib/stores/user.js";
     import { onMount } from "svelte";
     import AddGroup from "/src/components/chat/AddGroup.svelte";
     import { page } from "$app/stores";
@@ -32,6 +32,10 @@
        if ($groups.groupArray.length) {
         $groups.thisGroup = $groups.groupArray[0]
        }
+
+       let filter = $notify.unread.filter(a => a.type !== "group")
+      $notify.unread = filter
+      
       printGroup($groups.thisGroup);
     });
     //Listens for new messages from backend

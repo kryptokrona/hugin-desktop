@@ -7,7 +7,7 @@
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   import ChatList from "/src/components/chat/ChatList.svelte";
   import AddChat from "/src/components/chat/AddChat.svelte";
-  import { user, boards, transactions } from "$lib/stores/user.js";
+  import { user, boards, transactions, notify } from "$lib/stores/user.js";
   import Rename from "/src/components/chat/Rename.svelte";
   import Dropzone from "svelte-file-dropzone";
   import BackDrop from "/src/components/popups/BackDrop.svelte";
@@ -37,6 +37,9 @@
         replyTo: { reply: false }
       };
     });
+
+    let filter = $notify.unread.filter(a => a.type !== "message")
+    $notify.unread = filter
 
     //If we have an active chat in store we show that conversation
     if ($user.activeChat) {
