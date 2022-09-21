@@ -84,8 +84,15 @@
 		})
 
 		window.api.receive("boardMsg", data => {
+		
+			if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
+			if ($boards.thisBoard === "Home") return
+			if ($page.url.pathname !== '/boards') {
+				data.type = "board"
+				$notify.unread.push(data)
+				$notify.unread = $notify.unread
+			}
 			new_messages = true
-			if (data.board === $boards.thisBoard || $boards.thisBoard === "Home" && $page.url.pathname !== '/boards') return
 			board_message_sound.play();
 			$notify.new.push(data)
 			console.log('notif', $notify.new)
@@ -93,9 +100,15 @@
 		})
 
 		window.api.receive("groupMsg", data => {
+		
+			if (data.address == $user.huginAddress.substring(0, 99)) return
+			if (data.group === $groups.thisGroup && $page.url.pathname === '/groups') return
+			if ($page.url.pathname !== '/groups') {
+				data.type = "group"
+				$notify.unread.push(data)
+				$notify.unread = $notify.unread
+			}
 			new_messages = true
-			if (data.address == $user.huginAddress.substring(0, 99) ||
-			data.group === $groups.thisGroup && $page.url.pathname === '/groups') return
 			data.key = data.address
 			new_message_sound.play();
 			$notify.new.push(data)
@@ -137,6 +150,12 @@ window.api.receive('node', async (node) => {
 		})
   window.api.receive('newMsg', async (data) => {
 		console.log('newmsg in layout', data);
+		if ($page.url.pathname !== '/messages') {
+				data.type = "message"
+				$notify.unread.push(data)
+				$notify.unread = $notify.unread
+				console.log('unread', $notify.unread)
+			}
 		saveToStore(data)
 	})
 
@@ -193,6 +212,8 @@ window.api.receive('node', async (node) => {
     $: loading = $misc.loading
 
 	$: errors = $notify.errors
+
+	$: console.log('Unread?', $notify.unread)
 
 </script>
 
