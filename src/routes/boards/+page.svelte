@@ -70,8 +70,8 @@
       brd = e.detail.board
     }
     //Construct a new json object (myBoardMessage) to be able to print our message instant.
-    let myBoardMessage = { message: msg, board: thisBoard, reply: replyto, key: myaddr, time: time, name: myName, hash: time };
-    let sendMsg = { m: msg, brd: thisBoard, r: replyto, k: myaddr, t: time, n: myName, hash: time };
+    let myBoardMessage = { message: msg, board: brd, reply: replyto, key: myaddr, time: time, name: myName, hash: time };
+    let sendMsg = { m: msg, brd: brd, r: replyto, k: myaddr, t: time, n: myName, hash: time };
     window.api.sendBoardMsg(sendMsg);
     printBoardMessage(myBoardMessage);
     replyExit();
