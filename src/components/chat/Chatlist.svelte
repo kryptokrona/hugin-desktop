@@ -5,8 +5,7 @@
   import { user } from "$lib/stores/user.js";
   import AddCircle from "/src/components/buttons/AddCircle.svelte"
   import Contact from "/src/components/chat/Contact.svelte";
-
-  let new_message_sound = new Audio("/static/audio/message.mp3");
+  import { page } from "$app/stores";
 
   const dispatch = createEventDispatcher();
 
@@ -77,11 +76,8 @@
 
 
     //If it is not the same message and not our active chat, add unread boolean
-    if (newArray[0].timestamp != filterArr[0].timestamp && newArray[0].sent == 0 && $user.activeChat.chat != newArray[0].chat) {
-
+    if (newArray[0].timestamp != filterArr[0].timestamp && newArray[0].sent == 0 && $user.activeChat.chat !== newArray[0].chat) {
       newArray[0].new = true;
-
-      new_message_sound.play();
     }
 
     let conversations = await checkNew();
