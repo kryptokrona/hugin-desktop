@@ -34,6 +34,7 @@
             k: pubkey,
             msg: 'New friend added!',
             sent: true,
+            timestamp: Date.now().toString()
         })
     }
 

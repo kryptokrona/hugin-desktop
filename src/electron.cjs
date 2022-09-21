@@ -979,11 +979,10 @@ async function backgroundSyncMessages(checkedTxs = false) {
             let group = trimExtra(thisExtra)
             console.log('group', group)
             message = JSON.parse(group)
-            if (message.sb.length > 100)
+            if (message.sb)
             {
               let msg = await decryptGroupMessage(message, thisHash)
               console.log('found group message?', msg)
-              if (msg) continue
             }
             saveHash(thisHash)
             console.log("Caught undefined null message, continue");
@@ -1155,7 +1154,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
   );
 
   if (first) {
-    saveMessageSQL({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: parseInt(Date.now()) });
+    saveMessageSQL({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: Date.now() });
     known_keys.pop(key);
     console.log("known_keys poped", known_keys);
   }
