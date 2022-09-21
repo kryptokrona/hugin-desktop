@@ -2,13 +2,24 @@
 
   import { page } from "$app/stores";
   import { fade } from "svelte/transition";
+  import {notify} from "$lib/stores/user.js";
   let thispage
+  let unread = false
   $: thispage = $page.url.pathname === '/messages'
 
+  $: if ($notify.unread.some(a => a.type === "message")) {
+    unread = true
+  } else {
+    unread = false
+  }
 </script>
 
 {#if thispage}
 <div class="dot" in:fade></div>
+{/if}
+
+{#if unread}
+<div class="unread" in:fade></div>
 {/if}
 
 <svg on:click width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
@@ -27,22 +38,33 @@
 
 <style lang="scss">
 
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
-    
-        &:hover {
-          opacity: 80%;
-        }
-      }
+  svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-      .dot {
-        position: absolute;
-        background-color: white;
-        border-radius: 2px;
-        height: 16px;
-        width: 10px;
-        left: -8px;
-        box-shadow: 0 0 10px white;
+    &:hover {
+      opacity: 80%;
+    }
   }
+
+  .dot {
+    position: absolute;
+    background-color: white;
+    border-radius: 2px;
+    height: 16px;
+    width: 10px;
+    left: -8px;
+    box-shadow: 0 0 10px white;
+  }
+
+  .unread {
+    position: absolute;
+    background-color: var(--warn-color);
+    border-radius: 50%;
+    height: 5px;
+    width: 5px;
+    left: 2px;
+    box-shadow: 0 0 10px white;
+  }
+  
 </style>
