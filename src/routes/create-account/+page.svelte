@@ -8,6 +8,8 @@
   let mnemonic = "";
   let blockheight = 0;
   let password = "";
+  let confirmPassword= "";
+  let completed = false
   let username = "";
   let walletName = "";
   let nodeInput = "";
@@ -16,9 +18,9 @@
   let blockHeight = "";
 
   const enter = (e) => {
-    if (e.keyCode === 13 && password.length && step === 3) {
+    if (e.key === 'Enter' && password.length && step === 3) {
         handleLogin();
-    } else if (e.keyCode === 13 && step < 3) {
+    } else if (e.key === 'Enter' && step < 3) {
         step++
     }
   }
@@ -115,11 +117,12 @@
       <h1>Create wallet</h1>
       <input type="text" placeholder="Wallet name" bind:value={walletName}>
       <input type="password" placeholder="Password" bind:value={password}>
+      <input type="password" placeholder="Confirm Password" bind:value={confirmPassword}>
 
       <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
         <GreenButton disabled={false} text="Back" on:click={() => step = 1} />
-        <GreenButton disabled={!(walletName.length > 0 && password.length > 0)} text="Next"
-                     enabled={(walletName.length > 0 && password.length > 0)} on:click={() => step = 3} />
+        <GreenButton disabled={!(walletName.length > 0 && password.length > 0 && password === confirmPassword)} text="Next"
+                     enabled={(walletName.length > 0 && password.length > 0 && password === confirmPassword)} on:click={() => step = 3} />
       </div>
     </div>
 
