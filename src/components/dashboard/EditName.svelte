@@ -1,48 +1,50 @@
 <script>
   import Pen from "/src/components/buttons/Pen.svelte";
   import { user } from "$lib/stores/user.js";
-  import {fade, fly} from 'svelte/transition'
+  import { fade, fly } from "svelte/transition";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
   let open;
   let username;
 
-  const enter = (e) => {
-    if (e.keyCode=== 13 && username.length > 0) {
+  const keyDown = (e) => {
+    if (e.key === "Enter" && username.length > 0) {
       save();
+    } else if (e.key === "Escape") {
+      close()
     }
-  }
-  
+  };
 
   const save = () => {
     if (username) {
       window.localStorage.setItem("userName", username);
       $user.username = username;
-      open = false;
-      username = ""
+      close();
     }
   };
 
-  $: if (!open) {
-    username = ""
-  }
-
+  const close = () => {
+    open = false;
+    username = "";
+  };
 
   $user.username = window.localStorage.getItem("userName");
+
 </script>
-<svelte:window on:keyup|preventDefault={enter} />
+
+<svelte:window on:keyup|preventDefault={keyDown} />
 <div style="display: flex; align-items: center">
-  <Pen on:click={() => open = !open} />
+  <Pen on:click={() => open = true} />
 </div>
 {#if open}
-  <div on:click|self={() => open = false} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
+  <div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
-      <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false"
-             bind:value={username}>
-      <GreenButton on:click={save} enabled={username} disabled={false} text="Change"/>
+      <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false" bind:value={username}>
+      <GreenButton on:click={save} enabled={username} disabled={false} text="Change" />
     </div>
   </div>
 {/if}
+
 
 <style lang="scss">
 
