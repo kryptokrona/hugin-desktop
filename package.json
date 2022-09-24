@@ -1,5 +1,6 @@
 {
 	"name": "hugin-messenger",
+	"author": "Kryptokrona Developers",
 	"productName": "Hugin Messenger",
 	"version": "0.0.1",
 	"private": true,
