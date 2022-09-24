@@ -30,7 +30,7 @@
 
     window.api.receive('change-source', (src) => {
         console.log('want to change in calls', src)
-        changeVideoSource(src)
+        changeDevice(true, src)
     })
                        
     window.api.receive('got-expanded', async (callData) => {
@@ -61,6 +61,11 @@
         console.log('Connecting to ...',  callerdata.chat)
 
     })
+
+    navigator.mediaDevices.ondevicechange = () => {
+        console.log('device plugged in')
+        checkSources();
+    };
        
 const startCall =  (contact, isVideo, screenshare=false) => {
             // spilt input to addr and pubkey
@@ -136,35 +141,45 @@ function setMedia(screen_stream) {
     $webRTC.video = false
 }
 
-$: console.log(' video sources', $webRTC.videoSrcs)
-$: console.log(' adio sources', $webRTC.audioSrcs)
+$: console.log(' device',  $webRTC.devices)
 
-function checkSources() {
-    let stream =  $webRTC.myStream
-    let audio = stream.getAudioTracks()
-    let video = stream.getVideoTracks()
-    $webRTC.audioSrcs = audio
-    $webRTC.videoSrcs = video
+async function checkSources() {
+    let stream = $webRTC.myStream
+    let devices = await navigator.mediaDevices.enumerateDevices()
+    console.log('devices', devices)
+    $webRTC.devices = devices
 
 
 }
 
 function changeVideoSource(src, oldSrc, chat) {
 
-    let stream = $webRTC.myStream
-    $webRTC.oldStream = stream
+    let stream = src
+    $webRTC.oldStream = $webRTC.myStream
     $webRTC.video = false
     console.log('new src', src)
     let peer = $webRTC.call[0].peer
-    console.log($webRTC.myStream.getVideoTracks())
-    let tracks = $webRTC.audioSrcs
-    let thisTrack = tracks.filter(a => a.id == src)
-    console.log('track chosen', thisTrack)
-    console.log('old?', stream.getVideoTracks()[0])
-    peer.replaceTrack(stream.getVideoTracks()[0], thisTrack[0], stream)
-    $webRTC.myStream = stream
+    console.log('new?', stream.getVideoTracks()[0])
+    peer.replaceTrack($webRTC.oldStream.getVideoTracks()[0], stream, $webRTC.oldStream)
+    $webRTC.myStream = src
     $webRTC.video = true
 
+}
+
+async function changeDevice(video, id, chat) {
+    if (video) {
+     // get video/voice stream
+     navigator.mediaDevices.getUserMedia({
+        video: {
+            deviceId: id
+        }
+        }).then(function (stream) {
+            changeVideoSource(stream)
+        }).catch(() => {
+            console.log('error', stream);
+
+        })
+}
 }
 
 

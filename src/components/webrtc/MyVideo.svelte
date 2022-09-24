@@ -99,7 +99,7 @@
       <Screen on:click={switchStream}/>
       <Minus on:click={()=> resize('min')}/>
       <Plus on:click={()=> resize('medium')}/>
-      {#if $webRTC.videoSrcs.length}
+      {#if $webRTC.myStream}
        <Sources/>
       {/if}
     </div>

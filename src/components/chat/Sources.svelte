@@ -3,6 +3,8 @@
   import { user, webRTC } from "$lib/stores/user.js";
   let open;
   let changed;
+  let videoDevices = $webRTC.devices.filter(a => a.kind == "videoinput")
+  $: console.log('devices', $webRTC.devices);
 
   function pickSource(src) {
     console.log('pick', src)
@@ -29,7 +31,7 @@
   </div>
   {#if open}
     <div in:fade class="list layered-shadow">
-      {#each $webRTC.videoSrcs as src}
+      {#each videoDevices as src}
       <div on:click={() => pickSource(src)}>
       <h5>{src.label}</h5>
       </div>
