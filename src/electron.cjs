@@ -1,6 +1,6 @@
 const windowStateManager = require("electron-window-state");
 const contextMenu = require("electron-context-menu");
-const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme } = require("electron");
+const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme, systemPreferences } = require("electron");
 const serve = require("electron-serve");
 const path = require("path");
 const { join } = require("path");
@@ -2264,6 +2264,10 @@ ipcMain.handle("getHeight", async () => {
 });
 
 ipcMain.on("startCall", async (e, contact, calltype) => {
+  if (process.platform !== "darwin") {
+    const cameraAccess = systemPreferences.askForMediaAccess('camera')
+    const microphoneAccess = systemPreferences.askForMediaAccess('microphone')
+  }
   console.log("CALL STARTEeeeeeeeeeeeeD");
 
   console.log("contact", contact + calltype);
