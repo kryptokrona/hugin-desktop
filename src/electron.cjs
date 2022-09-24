@@ -2263,6 +2263,7 @@ ipcMain.handle("getHeight", async () => {
   return { walletHeight, networkHeight };
 });
 
+
 ipcMain.on("startCall", async (e, contact, calltype) => {
   if (process.platform !== "darwin") {
     const cameraAccess = systemPreferences.askForMediaAccess('camera')
@@ -2295,6 +2296,15 @@ ipcMain.handle("shareScreen", async (e, start) => {
 
 ipcMain.on("setCamera", async (e, contact, calltype) => {
   mainWindow.webContents.send('set-camera')
+})
+
+ipcMain.on("change-src", async (e, src) => {
+  console.log('ipc main on',)
+  mainWindow.webContents.send('change-source', src)
+})
+
+ipcMain.on("check-srcs", async (e, src) => {
+  mainWindow.webContents.send('check-src', src)
 })
 
 

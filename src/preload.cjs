@@ -128,6 +128,14 @@ const WINDOW_API = {
     ipcRenderer.send('setCamera')
   },
 
+  changeSource: async (src) => {
+    console.log('preload', src)
+    ipcRenderer.send('change-src', src)
+  },
+  
+  checkSources: async () => {
+    ipcRenderer.send('check-srcs')
+  },
   //HANDLE FINANCE
   getBalance: async () => {
     return await ipcRenderer.invoke('getBalance')
