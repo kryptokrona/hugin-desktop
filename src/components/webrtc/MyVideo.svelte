@@ -8,13 +8,12 @@
   import Minus from '/src/components/buttons/Minus.svelte'
   import Plus from '/src/components/buttons/Plus.svelte'
   import Screen from '/src/components/buttons/Screenshare.svelte'
+  import Sources from '/src/components/chat/Sources.svelte'
 
   let myVideo = document.getElementById("myVideo");
   let video = false;
   let hover = false;
   let chatWindow = true;
-  let thisCall;
-  let sources = [{label: "screen"}, {label: "tjo"}]
   let window_max = false
   let window_medium = false
 
@@ -61,9 +60,6 @@
   onDestroy(() => {
   });
 
-
-  $: if ($webRTC.myVideo) thisCall = $webRTC.call[0].chat;
-
  $: if ($webRTC.screen_stream) {
   playVideo()
  } else if ($webRTC.video) {
@@ -103,11 +99,8 @@
       <Screen on:click={switchStream}/>
       <Minus on:click={()=> resize('min')}/>
       <Plus on:click={()=> resize('medium')}/>
-      {#if source}
-        {#each sources as src}
-          <!-- <div on:click={() => switchStream}>{src.label}</div> -->
-
-        {/each}
+      {#if $webRTC.videoSrcs.length}
+       <Sources/>
       {/if}
     </div>
   </div>

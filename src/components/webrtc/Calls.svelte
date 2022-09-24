@@ -24,12 +24,20 @@
         setCamera()
     })
 
+    window.api.receive('check-src', () => {
+        checkSources()
+    })
 
+    window.api.receive('change-source', (src) => {
+        console.log('want to change in calls', src)
+        changeVideoSource(src)
+    })
                        
     window.api.receive('got-expanded', async (callData) => {
         console.log('caller expanded', callData)
         let contact = $webRTC.call.filter(a => a.chat == callData[1])
         console.log(contact);
+        
         contact[0].peer.signal(callData[0]);
 
     })
@@ -128,11 +136,42 @@ function setMedia(screen_stream) {
     $webRTC.video = false
 }
 
+$: console.log(' video sources', $webRTC.videoSrcs)
+$: console.log(' adio sources', $webRTC.audioSrcs)
+
+function checkSources() {
+    let stream =  $webRTC.myStream
+    let audio = stream.getAudioTracks()
+    let video = stream.getVideoTracks()
+    $webRTC.audioSrcs = audio
+    $webRTC.videoSrcs = video
+
+
+}
+
+function changeVideoSource(src, oldSrc, chat) {
+
+    let stream = $webRTC.myStream
+    $webRTC.oldStream = stream
+    $webRTC.video = false
+    console.log('new src', src)
+    let peer = $webRTC.call[0].peer
+    console.log($webRTC.myStream.getVideoTracks())
+    let tracks = $webRTC.audioSrcs
+    let thisTrack = tracks.filter(a => a.id == src)
+    console.log('track chosen', thisTrack)
+    console.log('old?', stream.getVideoTracks()[0])
+    peer.replaceTrack(stream.getVideoTracks()[0], thisTrack[0], stream)
+    $webRTC.myStream = stream
+    $webRTC.video = true
+
+}
+
+
 
 async function gotMedia (stream, contact, video, screen_stream=false) {
     
     $webRTC.myStream = stream
-
     if ( video ) {
         
     $webRTC.myVideo = true
@@ -154,7 +193,7 @@ async function gotMedia (stream, contact, video, screen_stream=false) {
     $webRTC.call[0].myStream = stream
     $webRTC.call[0].video = video
     console.log('This call', $webRTC.call[0])
-
+    checkSources()
     let video_codecs = window.RTCRtpSender.getCapabilities('video');
     let audio_codecs = window.RTCRtpSender.getCapabilities('audio');
     console.log('audio calling codecs', audio_codecs);
