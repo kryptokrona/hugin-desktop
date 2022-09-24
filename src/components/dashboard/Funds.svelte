@@ -3,18 +3,6 @@
   import { prettyNumbers } from "$lib/utils/utils.js";
   import { onDestroy, onMount } from "svelte";
 
-  let locked;
-  let unlocked;
-  let total;
-
-  $: {
-    unlocked = prettyNumbers($misc.balance[0]);
-    locked = prettyNumbers($misc.balance[1]);
-    total = prettyNumbers($misc.balance[0] + $misc.balance[1]);
-    console.log($misc.balance[0], $misc.balance[1]);
-  }
-
-  //Get balance and then look every 15 seconds
   let interval;
   onMount(() => {
     getBalance();
@@ -27,24 +15,19 @@
 
   //Get balance function
   async function getBalance() {
-    let balance = await window.api.getBalance();
-    misc.update(current => {
-      return {
-        ...current,
-        balance: balance
-      };
-    });
+    $misc.balance = await window.api.getBalance()
   }
+
 </script>
 
 <div class="cards">
   <div class="card">
     <h4>Balance</h4>
-    <p>{unlocked}</p>
+    <p>{prettyNumbers($misc.balance[0])}</p>
   </div>
   <div class="card">
     <h4>Locked</h4>
-    <p>{locked}</p>
+    <p>{prettyNumbers($misc.balance[1])}</p>
   </div>
   <div class="card">
     <h4>Funds ratio</h4>
