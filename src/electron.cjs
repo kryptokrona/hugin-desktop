@@ -1010,7 +1010,8 @@ async function backgroundSyncMessages(checkedTxs = false) {
           } else if (message.type === "sealedbox" || "box") {
             console.log("Saving Message");
             // await saveMsg(message);
-            saveMessageSQL(message);
+            let hash = await createGroup()
+            saveMessageSQL(message, hash, true);
 
           }
 
@@ -1615,7 +1616,7 @@ async function getReplies(hash = false) {
 
 
 //Saves private message
-async function saveMessageSQL(msg, hash) {
+async function saveMessageSQL(msg, hash, offchain = false) {
   let torrent;
   let text;
   let sent = msg.sent;
@@ -1680,7 +1681,7 @@ async function saveMessageSQL(msg, hash) {
   if (magnetLinks && !sent) {
     message = torrent;
   }
-  let newMsg = { msg: message, chat: addr, sent: sent, timestamp: timestamp, magnet: magnetLinks };
+  let newMsg = { msg: message, chat: addr, sent: sent, timestamp: timestamp, magnet: magnetLinks, offchain: offchain };
   if (sent) {
     //If sent, update conversation list
     mainWindow.webContents.send("sent", newMsg);
@@ -2316,9 +2317,8 @@ ipcMain.on("check-srcs", async (e, src) => {
 ipcMain.on("decrypt_message", async (e, message) => {
   let msg = extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
-  let parsed = JSON.parse(message)
-  parsed.sent = false
-  saveMessageSQL(msg)
+  message.sent = false
+  saveMessageSQL(message, true)
 })
 
 
