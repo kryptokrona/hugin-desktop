@@ -9,7 +9,7 @@
   function pickSource(src) {
     console.log('pick', src)
     console.log('change this', src.id)
-    window.api.changeSource(src.id)
+    window.api.changeSource(src.deviceId)
     buttonGlow()
   }
 
