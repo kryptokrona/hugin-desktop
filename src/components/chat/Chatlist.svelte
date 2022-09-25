@@ -197,7 +197,7 @@
   }
 
   .hide {
-    margin-left: -280px;
+    margin-left: -281px;
   }
 
 </style>
