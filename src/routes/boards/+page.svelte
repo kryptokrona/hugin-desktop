@@ -287,7 +287,7 @@
 {#if wantToAdd}
   <AddBoard on:click={openAddBoard} on:addBoard={e =>addNewBoard(e)} />
 {/if}
-<main in:fade="{{duration: 300}}" out:fade="{{duration: 100}}">
+<main in:fade="{{duration: 300}}">
 
   {#if replyTrue}
     <div class="reply_to_exit" class:reply_to={replyTrue} on:click={()=> replyExit()}>{reply_exit_icon} Reply
