@@ -29,6 +29,10 @@ const WINDOW_API = {
     ipcRenderer.send('sendGroupsMessage', msg)
   },
 
+  decryptMessage: (msg) => {
+    ipcRenderer.send('decrypt_message', msg)
+  },
+
   getMessages: async (data) => {
     const res = await ipcRenderer.invoke('getMessages')
     return res

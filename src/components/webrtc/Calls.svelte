@@ -300,6 +300,13 @@
       console.log("msg from peer2", incMsg);
     });
 
+    peer1._channel.addEventListener("message", (event) => {
+        console.log('message', event.data)
+        let message = JSON.parse(event.data)
+        window.api.decryptMessage(message)
+    })
+    console.log('peer1', peer1._channel)
+
     sendOffer(peer1, contact, video);
 
     return peer1;
@@ -389,6 +396,12 @@
       console.log("msg from peer2", incMsg);
 
     });
+
+    peer2._channel.addEventListener("message", (event) => {
+        console.log('message', event.data)
+        let message = JSON.parse(event.data)
+        window.api.decryptMessage(message)
+    })
 
     console.log("sending offer!!!");
 
