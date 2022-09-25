@@ -53,7 +53,7 @@
 <svelte:window on:keyup|preventDefault={enter} />
 
 <div class="wrapper" class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home" && $page.url.pathname === '/boards'}
-     class:border-top={$page.url.pathname === '/messages'} in:fade="{{duration: 400}}" out:fade="{{duration: 100}}">
+     class:border-top={$page.url.pathname !== '/boards'} in:fade="{{duration: 400}}" out:fade="{{duration: 100}}">
   <input type="text" placeholder="Message.." bind:value={messageInput}>
   <EmojiSelector on:emoji={onEmoji} />
   <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px"
