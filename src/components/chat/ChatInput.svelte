@@ -48,8 +48,10 @@
   $: console.log('offchain', off_chain)
 
   $: {
+    if ($user.activeChat) {
     off_chain = $webRTC.call.some(a => a.chat == $user.activeChat.chat && a.connected);
     console.log("offchain", off_chain);
+    }
   }
 </script>
 
