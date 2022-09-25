@@ -293,7 +293,7 @@
     peer1.on("connect", () => {
       // SOUND EFFECT
       console.log("Connection established");
-      $webRTC.connected = true;
+      $webRTC.call[0].connected = true;
     });
 
     peer1.on("data", msg => {
@@ -408,7 +408,7 @@
     peer2.on("connect", () => {
       // SOUND EFFECT
       console.log("Connection established;");
-      $webRTC.connected = true;
+      $webRTC.call[0].connected = true;
       peer2._channel.addEventListener("message", (event) => {
         console.log('message', event.data)
         let message = JSON.parse(event.data)
