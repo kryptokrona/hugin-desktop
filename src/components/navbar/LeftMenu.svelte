@@ -51,7 +51,7 @@
 
 </script>
 
-<div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
+<div class="leftMenu">
     <div class="nav">
         <div class='button myavatar' on:click={() => goto("/dashboard")}><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></div>
         <div on:click={messagesRouteAndMenu} class="button">
@@ -93,7 +93,7 @@
         justify-content: space-between;
         align-items: center;
         position: fixed;
-        z-index: 99;
+        z-index: 100;
     }
 
     .nav {

@@ -160,6 +160,7 @@
     max-width: 280px;
     border-right: 1px solid var(--border-color);
     z-index: 3;
+    transition: all 0.3s ease-in-out;
   }
 
   .list-wrapper {
@@ -196,7 +197,7 @@
   }
 
   .hide {
-    display: none;
+    margin-left: -280px;
   }
 
 </style>
