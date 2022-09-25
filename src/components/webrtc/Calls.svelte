@@ -215,7 +215,6 @@
     $webRTC.call[0].screen_stream = screen_stream;
     $webRTC.call[0].myStream = stream;
     $webRTC.call[0].video = video;
-    $webRTC.cameraId = stream.getVideoTracks()[0].deviceId
     console.log("This call", $webRTC.call[0]);
     checkSources();
     let video_codecs = window.RTCRtpSender.getCapabilities("video");
@@ -237,8 +236,10 @@
     let transceiverList = peer1._pc.getTransceivers();
     console.log("audio tracks", transceiverList);
     if (video) {
-      // select the desired transceiver
-      transceiverList[1].setCodecPreferences(custom_codecs);
+        //Set defauklt camera id in store
+        $webRTC.cameraId = stream.getVideoTracks()[0].deviceId
+        // select the desired transceiver
+        transceiverList[1].setCodecPreferences(custom_codecs);
 
     }
     $webRTC.active = true;
@@ -293,7 +294,7 @@
     peer1.on("connect", () => {
       // SOUND EFFECT
       console.log("Connection established");
-      $webRTC.connected = true;
+      $webRTC.call[0].connected = true;
     });
 
     peer1.on("data", msg => {
@@ -353,6 +354,8 @@
       // select the desired transceiver
       let transceivers = peer2._pc.getTransceivers();
       if (video) {
+        //Set defauklt camera id in store
+        $webRTC.cameraId = stream.getVideoTracks()[0].deviceId
         console.log("transceivers", transceivers);
         transceivers[1].setCodecPreferences(custom_codecs);
       }
@@ -408,7 +411,7 @@
     peer2.on("connect", () => {
       // SOUND EFFECT
       console.log("Connection established;");
-      $webRTC.connected = true;
+      $webRTC.call[0].connected = true;
       peer2._channel.addEventListener("message", (event) => {
         console.log('message', event.data)
         let message = JSON.parse(event.data)
