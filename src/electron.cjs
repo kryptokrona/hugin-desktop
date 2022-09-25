@@ -2079,7 +2079,7 @@ async function sendMessage(message, receiver, off_chain = false) {
   // Convert json to hex
   let payload_hex = toHex(JSON.stringify(payload_box));
 
-  // if (!off_chain) {
+  if (!off_chain) {
 
     let result = await js_wallet.sendTransactionAdvanced(
       [[address, 1000]], // destinations,
@@ -2110,12 +2110,14 @@ async function sendMessage(message, receiver, off_chain = false) {
 
     }
 
-  // } else if (off_chain) {
-  //   let sentMsg = { msg: message, k: messageKey, from: my_address, sent: true, t: timestamp, chat: address };
-  //   console.log("sending rtc message");
-  //   mainWindow.webContents.send("rtc_message", sentMsg);
-  //   saveMessageSQL(sentMsg);
-  // }
+  } else if (off_chain) {
+    let randomKey = await createGroup()
+    let sentMsg = Buffer.from(payload_hex, "hex");
+    console.log("sending rtc message");
+    mainWindow.webContents.send("rtc_message", randomKey + '99' + sentMsg);
+    console.log('payload', randomKey + '99' + sentMsg)
+    //saveMessageSQL(sentMsg);
+  }
 }
 
 async function optimizeMessages(nbrOfTxs) {
@@ -2305,6 +2307,12 @@ ipcMain.on("change-src", async (e, src) => {
 
 ipcMain.on("check-srcs", async (e, src) => {
   mainWindow.webContents.send('check-src', src)
+})
+
+ipcMain.on("decrypt_message", async (e, message) => {
+  let msg = extraDataToMessage(message, known_keys, getXKRKeypair())
+  console.log('message', msg)
+  saveMessageSQL(msg)
 })
 
 
