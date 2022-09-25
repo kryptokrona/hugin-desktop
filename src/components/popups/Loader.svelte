@@ -7,7 +7,7 @@
 
 </script>
 
-<div in:fade="{{duration: 100}}" out:fade="{{duration: 170}}" class="backdrop" on:click|self>
+<div in:fade|local="{{duration: 100}}" out:fade|local="{{delay: 300, duration: 170}}" class="backdrop" on:click|self>
 
   <div class="card">
     <p in:fade="{{duration: 170}}">Loading Account...</p>
@@ -18,7 +18,7 @@
 <style lang="scss">
   .card {
     box-sizing: border-box;
-    background-color: var(--backgound-color);
+    background-color: var(--card-background);
     border: 1px solid var(--card-border);
     padding: 20px;
     border-radius: 0.4rem;
@@ -49,7 +49,7 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(10, 10, 10, 0.90);
+    background-color: var(--backgound-color);
     z-index: 103;
   }
 
