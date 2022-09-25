@@ -228,9 +228,10 @@ async function checkNew() {
   .wrapper {
     width: 100%;
     max-width: 280px;
-    z-index: 3;
     overflow: hidden;
     border-right: 1px solid var(--border-color);
+    transition: all 0.2s ease-in-out;
+    z-index: 0;
   }
 
   .list-wrapper {
@@ -252,11 +253,10 @@ async function checkNew() {
     width: 100%;
     max-width: 280px;
     padding: 20px;
-    display: block;
+    display: flex;
     justify-content: center;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
-    z-index: 9;
   }
 
   .card {
@@ -335,7 +335,7 @@ async function checkNew() {
   }
 
   .hide {
-    display: none;
+    margin-left: -281px;
   }
 
 </style>
