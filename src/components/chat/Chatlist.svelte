@@ -75,7 +75,7 @@
     }
 
     let conversations = await checkNew();
-
+    $user.contacts = conversations
     console.log("conv", conversations);
 
     console.log("Printing conversations");
