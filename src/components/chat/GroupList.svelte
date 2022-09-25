@@ -9,6 +9,7 @@
   import Plus from "/src/components/buttons/Plus.svelte";
   import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
   import ListButton from "/src/components/buttons/ListButton.svelte";
+  import { layoutState } from "$lib/stores/layout-state.js";
 
   let new_message_sound = new Audio("/static/audio/message.mp3");
   const dispatch = createEventDispatcher();
@@ -179,7 +180,7 @@ async function checkNew() {
 <RemoveGroup on:click={openRemove} on:remove={()=> removeGroup($groups.thisGroup)}/>
 {/if}
 
-<div class="wrapper">
+<div class="wrapper" class:hide={$layoutState.hideGroupList}>
   <div class="top">
     <h2>Groups</h2><br>
     <div class="buttons">
@@ -331,6 +332,10 @@ async function checkNew() {
     gap: 10px;
     cursor: pointer;
     justify-content: space-between;
+  }
+
+  .hide {
+    display: none;
   }
 
 </style>

@@ -9,6 +9,8 @@
     import Warning from "/src/components/buttons/Warning.svelte";
     import { openURL } from "$lib/utils/utils.js";
     import BoardIcon from '/src/components/buttons/BoardIcon.svelte'
+    import { page } from "$app/stores.js";
+    import { layoutState } from "$lib/stores/layout-state.js";
 
     let sync
     let avatar
@@ -29,15 +31,33 @@
         })
     }
 
+    const messagesRouteAndMenu = () => {
+        if ($page.url.pathname === '/messages') {
+            $layoutState.hideChatList = !$layoutState.hideChatList
+        } else {
+            $layoutState.hideChatList = false
+            goto("/messages")
+        }
+    }
+
+    const groupRouteAndMenu = () => {
+        if ($page.url.pathname === '/groups') {
+            $layoutState.hideGroupList = !$layoutState.hideGroupList
+        } else {
+            $layoutState.hideGroupList = false
+            goto("/groups")
+        }
+    }
+
 </script>
 
 <div class="leftMenu" in:fly="{{x: -100}}" out:fly="{{x: -100}}">
     <div class="nav">
         <div class='button myavatar' on:click={() => goto("/dashboard")}><img class="avatar" src="data:image/png;base64,{avatar}" alt=""></div>
-        <div on:click={() => goto("/messages")} class="button">
+        <div on:click={messagesRouteAndMenu} class="button">
             <MessageIcon />
         </div>
-        <div on:click={() => goto("/groups")} class="button">
+        <div on:click={groupRouteAndMenu} class="button">
             <GroupIcon />
         </div>
         <div on:click={() => goto("/boards")} class="button">

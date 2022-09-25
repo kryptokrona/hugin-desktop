@@ -1,17 +1,14 @@
 <script>
   import { createEventDispatcher, onMount } from "svelte";
-  import { fade } from "svelte/transition";
   import { messages } from "$lib/stores/messages.js";
   import { user } from "$lib/stores/user.js";
   import AddCircle from "/src/components/buttons/AddCircle.svelte"
   import Contact from "/src/components/chat/Contact.svelte";
-  import { page } from "$app/stores";
+  import { layoutState } from "$lib/stores/layout-state.js";
 
   const dispatch = createEventDispatcher();
 
   let filterArr = [];
-  let contacts = [];
-  let msgkey;
   let nickname;
   let newArray;
 
@@ -23,6 +20,7 @@
     sendConversation(newArray[0]);
 
   });
+
   //Get message updates and trigger filter
   messages.subscribe(() => {
     console.log(
@@ -51,16 +49,13 @@
   async function checkNew() {
     let filterNew = [];
     newArray.forEach(function(a) {
-
       filterArr.some(function(b) {
-        console.log("checking?");
         if (b.new && a.chat === b.chat) {
           console.log("old new, keep new", b);
           a.new = true;
         }
       });
       filterNew.push(a);
-      console.log("pushin");
     });
 
     console.log("conversations filtered and set", filterNew);
@@ -74,23 +69,14 @@
 
     newArray = await window.api.getConversations();
 
-
     //If it is not the same message and not our active chat, add unread boolean
-    if (newArray[0].timestamp != filterArr[0].timestamp && newArray[0].sent == 0 && $user.activeChat.chat !== newArray[0].chat) {
+    if (newArray[0].timestamp !== filterArr[0].timestamp && newArray[0].sent === 0 && $user.activeChat.chat !== newArray[0].chat) {
       newArray[0].new = true;
     }
 
     let conversations = await checkNew();
 
     console.log("conv", conversations);
-
-    //Remove this?
-    user.update(current => {
-      return {
-        ...current,
-        contacts: newArray
-      };
-    });
 
     console.log("Printing conversations");
     //If we have no active chat we take the latest known message and dispatch.
@@ -142,7 +128,7 @@
 
 </script>
 
-<div class="wrapper" in:fade="{{duration: 250}}" out:fade="{{duration: 100}}">
+<div class="wrapper" class:hide={$layoutState.hideChatList === true}>
   <div class="top">
     <h2>Messages</h2>
     <AddCircle on:click={()=> dispatch('open')} />
@@ -207,6 +193,10 @@
       opacity: 50%;
       padding: 5px;
     }
+  }
+
+  .hide {
+    display: none;
   }
 
 </style>
