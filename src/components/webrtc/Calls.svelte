@@ -397,11 +397,6 @@
 
     });
 
-    peer2._channel.addEventListener("message", (event) => {
-        console.log('message', event.data)
-        let message = JSON.parse(event.data)
-        window.api.decryptMessage(message)
-    })
 
     console.log("sending offer!!!");
 
@@ -413,6 +408,11 @@
       // SOUND EFFECT
       console.log("Connection established;");
       $webRTC.connected = true;
+      peer2._channel.addEventListener("message", (event) => {
+        console.log('message', event.data)
+        let message = JSON.parse(event.data)
+        window.api.decryptMessage(message)
+    })
 
     });
 

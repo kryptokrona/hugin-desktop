@@ -2114,7 +2114,7 @@ async function sendMessage(message, receiver, off_chain = false) {
     let randomKey = await createGroup()
     let sentMsg = Buffer.from(payload_hex, "hex");
     console.log("sending rtc message");
-    mainWindow.webContents.send("rtc_message", randomKey + '99' + sentMsg);
+    mainWindow.webContents.send("rtc_message", randomKey + '99' + sentMsg, address);
     console.log('payload', randomKey + '99' + sentMsg)
     //saveMessageSQL(sentMsg);
   }
