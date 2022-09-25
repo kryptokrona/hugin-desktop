@@ -5,6 +5,7 @@
   import { webRTC, boards } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
+  import { user } from "$lib/stores/user";
 
   let off_chain;
   const dispatch = createEventDispatcher();
@@ -44,8 +45,10 @@
     enableSend = !!messageInput;
   }
 
+  $: console.log('offchain', off_chain)
+
   $: {
-    off_chain = $webRTC.connected;
+    off_chain = $webRTC.call.some(a => a.chat == $user.activeChat.chat && a.connected);
     console.log("offchain", off_chain);
   }
 </script>
