@@ -1010,8 +1010,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
           } else if (message.type === "sealedbox" || "box") {
             console.log("Saving Message");
             // await saveMsg(message);
-            let hash = await createGroup()
-            saveMessageSQL(message, hash, true);
+            saveMessageSQL(message);
 
           }
 
@@ -2315,10 +2314,11 @@ ipcMain.on("check-srcs", async (e, src) => {
 })
 
 ipcMain.on("decrypt_message", async (e, message) => {
-  let msg = extraDataToMessage(message, known_keys, getXKRKeypair())
+  let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
   message.sent = false
-  saveMessageSQL(message, true)
+  let hash = await createGroup()
+  saveMessageSQL(message, hash, true);
 })
 
 
