@@ -2265,7 +2265,7 @@ ipcMain.handle("getHeight", async () => {
 
 
 ipcMain.on("startCall", async (e, contact, calltype) => {
-  if (process.platform !== "darwin") {
+  if (process.platform === "darwin") {
     const cameraAccess = systemPreferences.askForMediaAccess('camera')
     const microphoneAccess = systemPreferences.askForMediaAccess('microphone')
   }
