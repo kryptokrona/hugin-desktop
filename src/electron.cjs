@@ -1010,7 +1010,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
           } else if (message.type === "sealedbox" || "box") {
             console.log("Saving Message");
             // await saveMsg(message);
-            saveMessageSQL(message);
+            saveMessageSQL(message, thisHash);
 
           }
 
@@ -2318,7 +2318,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
   console.log('message', msg)
   message.sent = false
   let hash = await createGroup()
-  saveMessageSQL(message, hash, true);
+  saveMessageSQL(msg, hash, true);
 })
 
 
