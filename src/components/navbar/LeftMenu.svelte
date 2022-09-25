@@ -35,7 +35,9 @@
         if ($page.url.pathname === '/messages') {
             $layoutState.hideChatList = !$layoutState.hideChatList
         } else {
-            $layoutState.hideChatList = false
+            setTimeout(() => {
+                $layoutState.hideChatList = false
+            }, 300)
             goto("/messages")
         }
     }
@@ -44,7 +46,6 @@
         if ($page.url.pathname === '/groups') {
             $layoutState.hideGroupList = !$layoutState.hideGroupList
         } else {
-            $layoutState.hideGroupList = false
             goto("/groups")
         }
     }
