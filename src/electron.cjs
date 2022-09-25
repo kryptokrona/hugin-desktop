@@ -2114,8 +2114,12 @@ async function sendMessage(message, receiver, off_chain = false) {
     let randomKey = await createGroup()
     let sentMsg = Buffer.from(payload_hex, "hex");
     console.log("sending rtc message");
-    mainWindow.webContents.send("rtc_message", randomKey + '99' + sentMsg, address);
-    console.log('payload', randomKey + '99' + sentMsg)
+    let sendMsg = randomKey + '99' + sentMsg
+    let messageArray = []
+    messageArray.push(sendMsg)
+    messageArray.push(address)
+    mainWindow.webContents.send("rtc_message", messageArray);
+    console.log('payload', messageArray)
     //saveMessageSQL(sentMsg);
   }
 }
@@ -2312,6 +2316,8 @@ ipcMain.on("check-srcs", async (e, src) => {
 ipcMain.on("decrypt_message", async (e, message) => {
   let msg = extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
+  let parsed = JSON.parse(message)
+  parsed.sent = false
   saveMessageSQL(msg)
 })
 

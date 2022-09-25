@@ -44,9 +44,10 @@
   });
 
   window.api.receive("rtc_message", msg => {
-    let to = $webRTC.call.filter(a => a.chat == msg.chat);
-    console.log("sending rtc");
-    let sendMsg = JSON.stringify(msg);
+    let [message, address] = msg
+    let to = $webRTC.call.filter(a => a.chat == address)
+    console.log("sending rtc", message)
+    let sendMsg = JSON.stringify(message)
     to[0].peer.send(sendMsg);
     console.log("sent");
   });
