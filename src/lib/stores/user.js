@@ -48,7 +48,8 @@ export const webRTC = writable({
   screen: false,
   call: [],
   connected: false,
-  videoSources: []
+  videoSources: [],
+  incoming: []
 })
 
 export const notify = writable({

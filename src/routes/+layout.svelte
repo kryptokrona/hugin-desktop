@@ -28,6 +28,7 @@
 	let errors = []
 	let loading = false
 	let new_message_sound
+	let incomingCalls = []
 
 	const closePopup = () => {
 		incoming_call = false
@@ -43,10 +44,16 @@
 		myVideo = false
 	}
 
-	const openCallerMenu = () => {
+	const answerIncomingCall = (call) => {
+
+		$webRTC.call.unshift(call)
+		let filter = $webRTC.incoming.filter(a => a.chat !== call.chat)
+		$webRTC.incoming = filter
 		showCallerMenu = true
 		myVideo = true
 		incoming_call = false
+		console.log('incoming clean', $webRTC.incoming)
+		console.log('webRTC call ', $webRTC.call)
 	}
 
 	const toggleCallMenu = () => {
@@ -67,10 +74,13 @@
 
 		//Handle incoming call
 	window.api.receive('call-incoming', (msg, chat) => {
-
-		console.log('INCMING');
-		$webRTC.call.unshift({msg, chat, type: 'incoming'})
+		
 		incoming_call = true
+		console.log('INCMING');
+		console.log('new call', msg, chat)
+		$webRTC.incoming.push({msg, chat, type: 'incoming'})
+		$webRTC.incoming = $webRTC.incoming
+		console.log('calls incoming set', $webRTC.incoming)
 	})	
 
 		//Handle sync status
@@ -238,11 +248,12 @@
 	<Loader/>
 	{/if}
 
-	{#if $user.loggedIn && $webRTC.call.length != 0 }
+	{#if $user.loggedIn && $webRTC.call.length != 0 || $webRTC.incoming.length != 0 }
 
 	{#if $webRTC.active && $webRTC.myVideo}
 		<VideoGrid />
 	{/if}
+
 
 		{#each $webRTC.call as thiscall}
 
@@ -252,13 +263,6 @@
 
 		{/if}
 
-			{#if incoming_call}
-				<IncomingCall
-				thisCall={thiscall}
-				on:click={closePopup}
-				on:answerCall={openCallerMenu}
-				paused={!incoming_call}/>
-			{/if}
 			<!-- {#if showCallerMenu}
 				<CallerMenu
 				this_call={thiscall}
@@ -269,7 +273,21 @@
 			{/if} -->
 		{/each}
 
+		{#each $webRTC.incoming as call}
+
+		{#if incoming_call}	
+			<IncomingCall
+			thisCall={call}
+			on:click={closePopup}
+			on:answerCall={()=> answerIncomingCall(call)}
+			paused={!incoming_call}/>
+		{/if}
+
+		{/each}
+
 	{/if}
+
+	
 
 	{#if $user.loggedIn && $notify.new.length > 0 && new_messages}
 		<div class="notifs">
@@ -307,7 +325,7 @@
 
 		<LeftMenu />
 		{#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard'}
-		<RightMenu on:startCall={openCallerMenu} on:toggleCallMenu={toggleCallMenu}/>
+		<RightMenu on:toggleCallMenu={toggleCallMenu}/>
 		{/if}
 		<Webrtc/>
 	{/if}
