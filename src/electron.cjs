@@ -2111,6 +2111,7 @@ async function sendMessage(message, receiver, off_chain = false) {
     }
 
   } else if (off_chain) {
+    
     let randomKey = await createGroup()
     let sentMsg = Buffer.from(payload_hex, "hex");
     console.log("sending rtc message");
@@ -2120,7 +2121,8 @@ async function sendMessage(message, receiver, off_chain = false) {
     messageArray.push(address)
     mainWindow.webContents.send("rtc_message", messageArray);
     console.log('payload', messageArray)
-    //saveMessageSQL(sentMsg);
+    let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
+    saveMessageSQL(saveMsg);
   }
 }
 
