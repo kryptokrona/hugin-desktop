@@ -268,7 +268,7 @@
 
   }
 
-  function startPeer1(stream, video, contact) {
+  async function startPeer1(stream, video, contact) {
 
     let peer1 = new Peer({
       initiator: true,
@@ -338,10 +338,10 @@
     console.log("Got media");
 
 
-    function gotMedia(stream) {
+    async function gotMedia(stream) {
       console.log("FN getMedia", stream, video);
 
-      let peer2 = startPeer2(stream, video);
+      let peer2 = await startPeer2(stream, video);
 
       let custom_codecs = [];
       let video_codecs = window.RTCRtpSender.getCapabilities("video");
@@ -388,7 +388,7 @@
     }
   };
 
-  function startPeer2(stream, video) {
+  async function startPeer2(stream, video) {
 
     let peer2 = new Peer({ stream: stream, trickle: false, wrtc: wrtc });
 
