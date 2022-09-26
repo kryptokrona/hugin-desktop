@@ -9,7 +9,7 @@
 
 <div in:fade|local="{{duration: 100}}" out:fade|local="{{delay: 300, duration: 170}}" class="backdrop" on:click|self>
 
-  <div class="card">
+  <div class="card" in:fly="{{y: 50}}" out:fly="{{y: -50}}">
     <p in:fade="{{duration: 170}}">Loading Account...</p>
     <Moon color="var(--title-color)" size="30" unit="px" />
   </div>

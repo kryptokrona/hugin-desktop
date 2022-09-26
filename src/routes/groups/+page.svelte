@@ -277,7 +277,7 @@
     <AddGroup on:click={openAddGroup} on:addGroup={e =>addNewGroup(e)} />
   {/if}
   
-  <main in:fade="{{duration: 350}}" out:fade="{{duration: 150}}">
+  <main in:fade="{{duration: 350}}">
 
     <GroupList on:printGroup={(e)=> printGroup(e.detail)} on:removeGroup={() => printGroup($groups.groupArray[0])}/>
   
