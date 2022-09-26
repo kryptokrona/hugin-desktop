@@ -2122,7 +2122,7 @@ async function sendMessage(message, receiver, off_chain = false) {
     mainWindow.webContents.send("rtc_message", messageArray);
     console.log('payload', messageArray)
     let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
-    saveMessageSQL(saveMsg);
+    saveMessageSQL(saveMsg, randomKey, true);
   }
 }
 
