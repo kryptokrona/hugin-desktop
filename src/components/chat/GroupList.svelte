@@ -230,8 +230,8 @@ async function checkNew() {
     max-width: 280px;
     overflow: hidden;
     border-right: 1px solid var(--border-color);
-    transition: all 0.2s ease-in-out;
     z-index: 0;
+    transition: all 0.3s ease-in-out;
   }
 
   .list-wrapper {
@@ -254,7 +254,7 @@ async function checkNew() {
     max-width: 280px;
     padding: 20px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
   }
@@ -328,14 +328,14 @@ async function checkNew() {
   }
 
   .buttons {
-    display: flex;
+    display: contents;
     gap: 10px;
     cursor: pointer;
     justify-content: space-between;
   }
 
   .hide {
-    margin-left: -281px;
+    width: 0px;
   }
 
 </style>
