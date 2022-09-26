@@ -161,17 +161,21 @@
 
   }
 
-  function changeVideoSource(device, oldSrc, chat) {
+  async function changeVideoSource(device, oldSrc, chat) {
     let current = $webRTC.myStream;
-
+    //Set video boolean to stop video
     $webRTC.video = false;
-    console.log("new src", device);
+    //Set peer
     let peer = $webRTC.call[0].peer;
-    current.removeTrack(current.getVideoTracks()[0])
+    //Add new track to current stream
     current.addTrack(device.getVideoTracks()[0])
-    console.log("new?", device.getVideoTracks()[0]);
+    //Replace track
     peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current);
-    $webRTC.myStream = device;
+    //Remove old track
+    current.removeTrack(current.getVideoTracks()[0])
+    //Update stream
+    $webRTC.myStream = current;
+    //Set video boolean to play video
     $webRTC.video = true;
 
   }
@@ -237,7 +241,9 @@
     console.log("audio tracks", transceiverList);
     if (video) {
         //Set defauklt camera id in store
-        $webRTC.cameraId = stream.getVideoTracks()[0].deviceId
+        let camera = $webRTC.devices.filter(a => a.kind === "videoinput")
+        console.log('camera', camera)
+        $webRTC.cameraId = camera[0].deviceId
         // select the desired transceiver
         transceiverList[1].setCodecPreferences(custom_codecs);
 
@@ -355,7 +361,9 @@
       let transceivers = peer2._pc.getTransceivers();
       if (video) {
         //Set defauklt camera id in store
-        $webRTC.cameraId = stream.getVideoTracks()[0].deviceId
+        let camera = $webRTC.devices.filter(a => a.kind === "videoinput")
+        console.log('camera', camera)
+        $webRTC.cameraId = camera[0].deviceId
         console.log("transceivers", transceivers);
         transceivers[1].setCodecPreferences(custom_codecs);
       }
