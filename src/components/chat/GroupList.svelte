@@ -28,18 +28,14 @@
   $: if ($groups.thisGroup.key) {
     group = $groups.thisGroup.key
   }
-  groupMessages.subscribe(() => {
-    
-    filterActiveHugins($groupMessages);
-  });
 
-  
   onDestroy(()=> {
     window.api.removeAllListeners("groupMsg")
   })
   
   //Listen for sent message to update conversation list
   window.api.receive("groupMsg", () => {
+    filterActiveHugins($groupMessages)
     printGroups()
   });
 
