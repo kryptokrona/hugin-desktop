@@ -1233,7 +1233,7 @@ async function saveBoardMsg(msg, hash, follow=false) {
   let sig = sanitizeHtml(msg.s);
   let timestamp = sanitizeHtml(msg.t);
   let nick = sanitizeHtml(msg.n);
-  let txHash = hash;
+  let txHash = sanitizeHtml(hash);
   if (nick === "") {
     nick = "Anonymous";
   }
@@ -1292,7 +1292,8 @@ async function saveGroupMessage(msg, hash, time) {
   let sig = sanitizeHtml(msg.s);
   let timestamp = sanitizeHtml(time);
   let nick = sanitizeHtml(msg.n);
-  let txHash = hash;
+  let txHash = sanitizeHtml(hash);
+  
   if (nick === "") {
     nick = "Anonymous";
   }
@@ -2151,7 +2152,7 @@ async function sendMessage(message, receiver, off_chain = false) {
       optimizeMessages()
     } else {
       let error = {
-        message: "Failed to send",
+        message: `Failed: ${result.error.toString()}`,
         name: "Error",
         hash: Date.now()
       };
