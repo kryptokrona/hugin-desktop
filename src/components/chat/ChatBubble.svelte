@@ -15,8 +15,6 @@
   export let timestamp
   let file;
 
-  console.log('TIMESTAMP', timestamp);
-
   const dispatch = createEventDispatcher();
   let address = $user.huginAddress.substring(0, 99);
 
