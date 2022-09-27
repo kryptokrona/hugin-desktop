@@ -705,8 +705,6 @@ ipcMain.on("create-account", async (e, accountData) => {
   //Create misc DB template on first start
   await saveWallet(js_wallet, walletName, myPassword)
   // Save js wallet to file as backup
-  console.log("Saving backup wallet");
-  await js_wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", password);
   addBoard('Home')
   db.data = {
     walletNames: [],
@@ -773,13 +771,11 @@ async function logIntoWallet(walletName, password) {
 
   let parsed_wallet
   let json_wallet = await openWallet(walletName, password)
+  console.log('Opened, want to log in, json_wallet')
   try {
   //Try parse json wallet
   parsed_wallet = JSON.parse(json_wallet)
-  } catch (err) {
-  //Probably a wallet file, return this
-  return json_wallet
-  }
+  console.log('Got parsed', parsed_wallet)
   //Open encrypted json wallet
   const [js_wallet, error] = await WB.WalletBackend.openWalletFromEncryptedString(daemon, parsed_wallet, password);
   if (error) {
@@ -787,7 +783,26 @@ async function logIntoWallet(walletName, password) {
       mainWindow.webContents.send("login-failed");
       return "Wrong password";
   }
+    return js_wallet;
 
+  } catch (err) {
+    console.log('error parsing wallet', err)
+    let wallet = await openWalletFromFile(walletName, password)
+    return wallet
+  //Probably a wallet file, return this
+  }
+
+}
+
+async function openWalletFromFile(walletName, password) {
+
+  console.log('Open wallet from file')
+  const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + "/" + walletName + ".wallet", password);
+  if (error) {
+    console.log("Failed to open wallet: " + error.toString());
+    mainWindow.webContents.send("login-failed");
+    return "Wrong password";
+  }
   return js_wallet;
 }
 
@@ -808,7 +823,7 @@ async function start_js_wallet(walletName, password, mynode) {
   let my_groups = await getGroups()
 
   //Save backup wallet to file
-  await js_wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", password);
+  await saveWalletToFile(js_wallet, walletName, password);
   console.log('my', my_groups)
   if (knownTxsIds.length > 0) {
 
@@ -922,34 +937,35 @@ async function encryptWallet(wallet, pass) {
 }
 
 async function saveWallet(wallet, walletName, password) {
+  
   let my_wallet = await encryptWallet(wallet, password)
+  
   let wallet_json = JSON.stringify(my_wallet)
+
   try {
-    await files.writeFile(userDataDir + "/" + walletName + ".wallet", wallet_json);
+    await files.writeFile(userDataDir + "/" + walletName + ".json", wallet_json);
   } catch (err) {
-    await wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", password);
     console.log('Wallet json saving error, revert to saving wallet file');
+    saveWalletToFile(wallet, walletName, password)
   }
 }
 
- async function openWallet(walletName, password) {
+ function saveWalletToFile(wallet, walletName, password) {
+    wallet.saveWalletToFile(userDataDir + "/" + walletName + ".wallet", password);
+}
 
+ async function openWallet(walletName, password) {
+  console.log('Open wallet', walletName)
   let json_wallet
   
   try {
     json_wallet = await files.readFile(userDataDir + "/" + walletName + ".wallet");
-    
+    console.log('json wallet file?', json_wallet)
     return json_wallet
 
   } catch (err) {
-    console.log('Json wallet error, try backup wallet file')
-    const [js_wallet, error] = await WB.WalletBackend.openWalletFromFile(daemon, userDataDir + "/" + walletName + ".wallet", password);
-    if (error) {
-      console.log("Failed to open wallet: " + error.toString());
-      mainWindow.webContents.send("login-failed");
-      return "Wrong password";
-    }
-    return js_wallet;
+
+    console.log('Json wallet error, try backup wallet file', err)
   }
 
 }
@@ -2153,7 +2169,7 @@ async function sendMessage(message, receiver, off_chain = false) {
 
 async function optimizeMessages(nbrOfTxs) {
   console.log("optimize");
-  
+
     let input_address = js_wallet.subWallets.getAddresses()[0]
     const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
