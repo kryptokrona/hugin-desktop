@@ -37,7 +37,7 @@
      in:fade="{{duration: 100}}" out:fade="{{duration: 100}}"
      class:rgb={thisCall}
      class:active={contact.chat === $user.activeChat.chat}
-     on:click={(e) => printThis(contact)}>
+     on:click={() => printThis(contact)}>
 
   {#if contact.new}
     <div class:unread={contact.new}></div>
