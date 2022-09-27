@@ -93,7 +93,7 @@
 		})
 	})
 
-	window.api.receive("boardMsg", data => {
+	window.api.receive("newBoardMessage", data => {
 	
 		if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
 		if ($boards.thisBoard === "Home") return
@@ -109,7 +109,7 @@
 		$notify.new = $notify.new
 	})
 
-	window.api.receive("groupMsg", data => {
+	window.api.receive("newGroupMessage", data => {
 		console.log('data group', data.group)
 		if (data.address == $user.huginAddress.substring(0, 99)) return
 		if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') return
@@ -127,7 +127,7 @@
 	})
 
 		
-	window.api.receive('newMsg', async (data) => {
+	window.api.receive('privateMsg', async (data) => {
 		console.log('newmsg in layout', data);
 		if (data.chat !== $user.activeChat.chat) {
           new_message_sound.play();
