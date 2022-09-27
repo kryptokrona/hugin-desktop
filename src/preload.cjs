@@ -178,7 +178,11 @@ const WINDOW_API = {
   createGroup: async () => {
     return await ipcRenderer.invoke('createGroup')
   },
+  removeAllListeners: (channel) => {
+    console.log('want to remove', channel)
+      console.log('removed')
+      ipcRenderer.removeAllListeners(channel)
+  }
 }
-
 
 contextBridge.exposeInMainWorld('api', WINDOW_API);

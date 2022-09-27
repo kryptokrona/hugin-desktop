@@ -47,20 +47,19 @@
     }
   });
 
+  onDestroy(()=> {
+    window.api.removeAllListeners("newMsg")
+  })
+
   //Prints conversation from active contact
   const printConversation = (active) => {
 
-    console.log("printing conversation", active);
+    console.log("printing conversation messages", active);
     chat = active.chat;
     key = active.k;
     active_contact = chat + key;
     let active_chat = { chat: chat, k: key, name: active.name };
-    user.update(user => {
-      return {
-        ...user,
-        activeChat: active_chat
-      };
-    });
+    $user.activeChat = active_chat
     savedMsg = [];
     savedMsg = $messages.filter(x => x.chat === chat);
     scrollDown();
@@ -114,6 +113,7 @@
 
   //Send message to store and DB
   const sendMsg = e => {
+    console.log('Sending message')
     let offChain = false;
     let msg = e.detail.text;
     let myaddr = $user.huginAddress.substring(0, 99);
@@ -124,6 +124,7 @@
     }
     window.api.sendMsg(msg, active_contact, offChain);
     printMessage(myMessage);
+    console.log('Message sent')
   };
 
   //Default value should be false to hide the AddChat form.

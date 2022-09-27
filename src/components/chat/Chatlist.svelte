@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import { messages } from "$lib/stores/messages.js";
   import { user } from "$lib/stores/user.js";
   import AddCircle from "/src/components/buttons/AddCircle.svelte"
@@ -13,7 +13,6 @@
   let newArray;
 
   onMount(async () => {
-
     newArray = await window.api.getConversations();
     filterArr = newArray;
     if ($user.activeChat) return;
@@ -21,16 +20,12 @@
 
   });
 
-  //Get message updates and trigger filter
-  messages.subscribe(() => {
-    console.log(
-      " messages subscribe logg?"
-    );
-    //   console.log('$messages', $messages);
-    //         console.log('Printing conversations');
-    //           printConversations()
-  });
-
+  onDestroy(()=> {
+    window.api.removeAllListeners("sent")
+    window.api.removeAllListeners("newMsg")
+    window.api.removeAllListeners("saved-addr")
+  })
+  
   //Listen for sent message to update conversation list
   window.api.receive("sent", data => {
     printConversations();
@@ -47,6 +42,9 @@
   });
 
   async function checkNew() {
+    
+    console.log("Checking new chatlist");
+
     let filterNew = [];
     newArray.forEach(function(a) {
       filterArr.some(function(b) {
@@ -66,7 +64,8 @@
 
   //Print our conversations from DBs
   async function printConversations() {
-
+    
+    console.log("Printing conversations start");
     newArray = await window.api.getConversations();
 
     //If it is not the same message and not our active chat, add unread boolean
@@ -79,19 +78,12 @@
     console.log("conv", conversations);
 
     console.log("Printing conversations");
-    //If we have no active chat we take the latest known message and dispatch.
-    if (!$user.activeChat) {
-      console.log("no userchat", $user.activeChat);
-      console.log(newArray);
-
-      sendConversation(newArray[0]);
-    }
-
     filterArr = conversations;
   }
 
   //Dispatches the clicked conversation to parent
   function sendConversation(message) {
+    console.log('sending conversation')
     readMessage(message);
     let chat = message.chat;
     let msgkey = message.key;
@@ -106,6 +98,8 @@
     dispatch("conversation", active_chat);
     printConversations();
   }
+
+  $: console.log('active chat now', $user.activeChat)
 
   function readMessage(e) {
 

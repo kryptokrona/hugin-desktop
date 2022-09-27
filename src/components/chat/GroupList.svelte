@@ -34,6 +34,10 @@
   });
 
   
+  onDestroy(()=> {
+    window.api.removeAllListeners("groupMsg")
+  })
+  
   //Listen for sent message to update conversation list
   window.api.receive("groupMsg", () => {
     printGroups()
