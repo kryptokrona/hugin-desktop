@@ -959,7 +959,7 @@ async function saveWallet(wallet, walletName, password) {
   let json_wallet
   
   try {
-    json_wallet = await files.readFile(userDataDir + "/" + walletName + ".wallet");
+    json_wallet = await files.readFile(userDataDir + "/" + walletName + ".json");
     console.log('json wallet file?', json_wallet)
     return json_wallet
 
@@ -1279,7 +1279,8 @@ async function saveBoardMsg(msg, hash, follow=false) {
     saveHash(hash)
   if (msg.sent || !follow) return;
   //Send new board message to frontend.
-  mainWindow.webContents.send("boardMsg", message);
+  mainWindow.webContents.send("boardMsg", message)
+  mainWindow.webContents.send("newBoardMessage", message)
 }
 
 async function saveGroupMessage(msg, hash, time) {
@@ -1337,6 +1338,7 @@ async function saveGroupMessage(msg, hash, time) {
     saveHash(hash)
   //Send new board message to frontend.
   mainWindow.webContents.send("groupMsg", message);
+  mainWindow.webContents.send("newGroupMessage", message);
 }
 
 //Get all messages from db
@@ -1729,7 +1731,8 @@ async function saveMessageSQL(msg, hash, offchain = false) {
   }
   //Send message to front end
   console.log("sending newmessage");
-  mainWindow.webContents.send("newMsg", newMsg);
+  mainWindow.webContents.send("newMsg", newMsg)
+  mainWindow.webContents.send("privateMsg", newMsg)
 }
 
 
