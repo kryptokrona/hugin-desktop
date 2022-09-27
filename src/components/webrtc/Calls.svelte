@@ -498,6 +498,7 @@
 
     let caller = $webRTC.call.filter(a => a.chat === contact);
     let video = false;
+    
     if (contact === undefined) {
       caller = $webRTC.call.filter(e => e.peer == peer);
     }
@@ -519,13 +520,20 @@
     }
     $webRTC.call = filter;
 
-    if ($webRTC.call.some(a => a.video === true)) {
+    if ($webRTC.call.some(a => a.peerVideo)) {
       $webRTC.myVideo = true;
       return;
     }
 
-    $webRTC.myVideo = false;
+    if ($webRTC.call.some(a => a.peerAudio)) {
+      $webRTC.myVideo = false;
+      return;
+    }
 
+    $webRTC.myVideo = false;
+    $webRTC.myStream.getTracks().forEach(function(track) {
+        track.stop();
+      });
     console.log("Call ended");
 
   }
