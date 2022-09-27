@@ -6,7 +6,7 @@
   import BoardMessage from "/src/components/chat/BoardMessage.svelte";
   import BoardStats from "/src/components/chat/BoardStats.svelte";
   import { user, boards, notify } from "$lib/stores/user.js";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import AddBoard from "/src/components/chat/AddBoard.svelte";
   import RightMenu from "/src/components/navbar/RightMenu.svelte";
   import { page } from "$app/stores";
@@ -36,6 +36,12 @@
     
     printBoard(thisBoard);
   });
+
+  onDestroy(()=> {
+    window.api.removeAllListeners("boardMsg")
+    window.api.removeAllListeners("sent_board")
+    })
+
   //Listens for new messages from backend
   window.api.receive("boardMsg", data => {
 

@@ -3,7 +3,7 @@
     import {nodelist} from "$lib/stores/nodes.js";
     import {user, misc} from "$lib/stores/user.js";
     import NodeList from '/src/components/settings/NodeList.svelte';
-    import {onMount} from "svelte";
+    import {onMount, onDestroy} from "svelte";
     import Button from "/src/components/buttons/Button.svelte";
     import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
@@ -22,6 +22,9 @@
     let showMnemonic = false
     onMount(async () => {
       getHeight()
+    })
+    onDestroy(()=> {
+    window.api.removeAllListeners("node-sync-data")
     })
     async function getHeight() {
 

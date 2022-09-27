@@ -1,7 +1,7 @@
 <script>
 
   import { fade } from "svelte/transition";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { messages } from "$lib/stores/messages.js";
   import ChatBubble from "/src/components/chat/ChatBubble.svelte";
   import ChatInput from "/src/components/chat/ChatInput.svelte";

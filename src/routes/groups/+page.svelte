@@ -6,7 +6,7 @@
     import GroupMessage from "/src/components/chat/GroupMessage.svelte";
     import GroupList from "/src/components/chat/GroupList.svelte";
     import { user, groups, notify } from "$lib/stores/user.js";
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import AddGroup from "/src/components/chat/AddGroup.svelte";
     import { page } from "$app/stores";
   
@@ -38,6 +38,12 @@
       
       printGroup($groups.thisGroup);
     });
+
+    onDestroy(()=> {
+    window.api.removeAllListeners("groupMsg")
+    window.api.removeAllListeners("sent_group")
+    })
+
     //Listens for new messages from backend
     window.api.receive("groupMsg", data => {
 

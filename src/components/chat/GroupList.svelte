@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher, onMount, onDestroy } from "svelte";
   import { fade } from "svelte/transition";
   import { groupMessages } from "$lib/stores/groupmsgs.js";
   import { groups } from "$lib/stores/user.js";
