@@ -1868,6 +1868,8 @@ async function sendGroupsMessage(message) {
   if (message.r.length > 63) {
     message_json.r = message.r
   }
+  
+  let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
 
   const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json));
 
@@ -1882,7 +1884,7 @@ async function sendGroupsMessage(message) {
       3, // mixin
       {fixedFee: 1000, isFixedFee: true}, // fee
       undefined, //paymentID
-      undefined, // subWalletsToTakeFrom
+      [subWallet], // subWalletsToTakeFrom
       undefined, // changeAddress
       true, // relayToNetwork
       false, // sneedAll
@@ -2000,12 +2002,14 @@ async function sendBoardMessage(message) {
 
     payload_hex = toHex(JSON.stringify(payload_json));
 
+    let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
+
     let result = await js_wallet.sendTransactionAdvanced(
-      [[my_address, 1000]], // destinations,
+      [[mainWallet, 1000]], // destinations,
       3, // mixin
       { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
-      undefined, // subWalletsToTakeFrom
+      [subWallet], // subWalletsToTakeFrom
       undefined, // changeAddress
       true, // relayToNetwork
       false, // sneedAll
@@ -2213,7 +2217,7 @@ async function optimizeMessages(nbrOfTxs) {
     let payments = [];
     let i = 0;
     /* User payment */
-    while (i <= 30) {
+    while (i <= 49) {
       payments.push([
         subWallet,
         1000
