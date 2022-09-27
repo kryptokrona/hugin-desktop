@@ -2122,6 +2122,8 @@ async function sendMessage(message, receiver, off_chain = false) {
   // let payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp, "key":Buffer.from(getKeyPair().publicKey).toString('hex')};
   // Convert json to hex
   let payload_hex = toHex(JSON.stringify(payload_box));
+  //Choose subwallet with message inputs
+  let messageWallet = js_wallet.subWallets.getAddresses()[1]
 
   if (!off_chain) {
 
@@ -2130,8 +2132,8 @@ async function sendMessage(message, receiver, off_chain = false) {
       3, // mixin
       { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
-      undefined, // subWalletsToTakeFrom
-      undefined, // changeAddress
+      [messageWallet], // subWalletsToTakeFrom
+      undefined, // changeAddresss
       true, // relayToNetwork
       false, // sneedAll
       Buffer.from(payload_hex, "hex")
@@ -2172,12 +2174,30 @@ async function sendMessage(message, receiver, off_chain = false) {
 
 async function optimizeMessages(nbrOfTxs) {
   console.log("optimize");
+  console.log('my addresses', js_wallet.subWallets.getAddresses())
+  if (js_wallet.subWallets.getAddresses().length === 1) {
+    const [address, error] = await js_wallet.addSubWallet();
+      if (!error) {
+          console.log(`Created subwallet with address of ${address}`);
+          console.log('my addresses updated', js_wallet.subWallets.getAddresses())
+      }
+  }
+  console.log('Have two addresses now', js_wallet.subWallets.getAddresses())
 
-    let input_address = js_wallet.subWallets.getAddresses()[0]
-    const [walletHeight, localHeight, networkHeight] = js_wallet.getSyncStatus();
-    let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(js_wallet.subWallets.getAddresses(), networkHeight);
+
+    let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
+
+    console.log('got main address',mainWallet)
+    console.log('got sub address',subWallet)
+
+    const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus();
+
+    let messageAddress = []
+    messageAddress.push(subWallet)
+
+    let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(messageAddress, networkHeight);
     console.log("inputs", inputs.length)
-    if (inputs.length > 9) {
+    if (inputs.length > 17) {
 
       return;
     }
@@ -2186,7 +2206,7 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
       txs = value.unconfirmedIncomingAmounts.length;
     });
-    if (txs > 1 && inputs.length > 5) {
+    if (txs > 1 && inputs.length > 9) {
       console.log("Already have incoming inputs, aborting..");
       return;
     }
@@ -2195,7 +2215,7 @@ async function optimizeMessages(nbrOfTxs) {
     /* User payment */
     while (i <= 30) {
       payments.push([
-        input_address,
+        subWallet,
         1000
       ]);
       console.log(payments.length)
@@ -2210,7 +2230,7 @@ async function optimizeMessages(nbrOfTxs) {
       3, // mixin
       { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
-      undefined, // subWalletsToTakeFrom
+      [mainWallet], // subWalletsToTakeFrom
       undefined, // changeAddress
       true, // relayToNetwork
       false, // sneedAll
@@ -2222,7 +2242,7 @@ async function optimizeMessages(nbrOfTxs) {
         message: "Your wallet is optimizing",
         name: "Optimizing",
         hash: parseInt(Date.now()),
-        key: input_address
+        key: mainWallet
       }
       mainWindow.webContents.send('sent_tx', sent)
       console.log("optimize completed");
