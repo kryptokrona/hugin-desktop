@@ -1,11 +1,12 @@
 <script>
   import wrtc from "@koush/wrtc";
   import Peer from "simple-peer";
-  import { webRTC } from "$lib/stores/user.js";
+  import { webRTC, user } from "$lib/stores/user.js";
+  import { onMount } from "svelte";
 
 
-  window.api.receive("answer-call", (msg, contact, key) => {
-    answerCall(msg, contact, key);
+  window.api.receive("answer-call", (msg, contact, key, offchain) => {
+    answerCall(msg, contact, key, offchain);
   });
 
   window.api.receive("start-call", (conatct, calltype) => {
@@ -43,12 +44,37 @@
 
   });
 
-  window.api.receive("rtc_message", msg => {
+  window.api.receive("rtc_message", (msg, to_group = false) => {
+
+
+    if (to_group) {
+
+      $webRTC.call.forEach(a => {
+        let sendMsg = JSON.stringify(msg[0])
+        console.log("sending rtc", sendMsg)
+        a.peer.send(sendMsg)
+      })
+
+      return
+    }
+    //Address and messageobject
     let [message, address] = msg
+    //Find who we are going to send to
     let to = $webRTC.call.filter(a => a.chat == address)
     console.log("sending rtc", message)
-    let sendMsg = JSON.stringify(message)
-    to[0].peer.send(sendMsg);
+    let sendMsg
+    if (msg.length === 3) {
+      //Want to tunnel message through group inviter to the right address
+      sendMsg = JSON.stringify(message + address)
+      //Here we should try send it to the first connected peer, maybe more
+      let tunnel = $webRTC.call[$webRTC.call.length - 1]
+      tunnel[0].peer.send(sendMsg)
+      return
+
+    } else {
+      sendMsg = JSON.stringify(message)
+      to[0].peer.send(sendMsg);
+    }
     console.log("sent");
   });
 
@@ -299,8 +325,34 @@
 
     peer1.on("connect", () => {
       // SOUND EFFECT
+      $webRTC.call[0].connected = true
       console.log("Connection established");
-      $webRTC.call[0].connected = true;
+      if ($webRTC.groupCall && !$webRTC.invited && $webRTC.initiator) {
+        console.log('Group call connecting...')
+        //When you invite a new person to the call
+        let thisChat = $webRTC.call[0].chat
+        //Sort out all active calls except this
+        let callList = $webRTC.call.filter(a => a.chat !== thisChat)
+
+        let activeCall = []
+        //Go through that list and add our contacts to a new array
+        callList.forEach(a => {
+          let tunnelTo = $user.contacts.filter(c => c.chat === a.chat)
+          let listItem = a.chat + tunnelTo[0].key
+          activeCall.push(listItem)
+        })
+        //Make an invite message through the datachannel to our new participant
+        let msg = JSON.stringify({invite: activeCall, key: $webRTC.groupCall});
+        let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
+        let contact = $user.contacts.filter(a => a.chat === thisCall.chat)
+        console.log("Inviting contact", contact)
+        let to = thisChat + contact[0].key
+        //Send offchain invite message
+        window.api.sendMsg(myMessage, to, true)
+        
+      }
+       //Reset invited status for connected peer
+       $webRTC.invited = false
     });
 
     peer1.on("data", msg => {
@@ -308,20 +360,63 @@
       console.log("msg from peer2", incMsg);
     });
 
+    //Data channel
     peer1._channel.addEventListener("message", (event) => {
-        console.log('message', event.data)
-        let message = JSON.parse(event.data)
+      
+      let message = JSON.parse(event.data)
+      let parsedMsg = groupMessage.slice(groupMessage.length - 99)
+      let addr = message.substring(message.length - 99)
+
+      if (addr == $user.huginAddress.substring(0, 99)) {
+        console.log('found tunneled message to me', message)
+        window.api.decryptMessage(parsedMsg)
+        return
+      }
+
+      if ($webRTC.call.length > 1) {
+        console.log('Group message', event)
+        let groupMessage = JSON.parse(event.data)
+        let address = groupMessage.substring(groupMessage.length - 99)
+        //If the address is one of our active calls, tunnel the message
+        if ($webRTC.call.some(a => a.chat == address)) {
+          let tunnel = true
+          let sendTunnel = $webRTC.filter(a => a.chat === address)
+          sendTunnel[0].peer.send(event.data)
+          return
+        }
+        console.log('addr?', addr.substring(0,4))
+        if (addr.substring(0,4)  == "SEKR") {
+          console.log('this message should be routed elsewere')
+          return
+        }
+        //Decrypt group message, groupCall is either key or false.
+        console.log('Group message', groupMessage)
+        window.api.decryptGroupMessage(groupMessage, $webRTC.groupCall)
+        return
+      }
+        //Decrypt message
+        console.log('message', message)
         window.api.decryptMessage(message)
     })
     console.log('peer1', peer1._channel)
 
-    sendOffer(peer1, contact, video);
+    let group = false
+    let offchain = false
+
+    if ($webRTC.groupCall && $webRTC.call.length == 1) {
+      group = $webRTC.groupCall
+    } else if ($webRTC.groupCall) {
+      offchain = true
+    }
+
+
+    sendOffer(peer1, contact, video, group, offchain)
 
     return peer1;
   }
 
 
-  const answerCall = (msg, contact, key) => {
+  const answerCall = (msg, contact, key, offchain) => {
     console.log("APPLE", msg, contact, key);
 
     let video = false;
@@ -381,7 +476,7 @@
       }
 
 
-      sendAnswer(msg, contact, peer2, key, video);
+      sendAnswer(msg, contact, peer2, key, video, offchain);
 
       console.log("answrcall done");
 
@@ -420,9 +515,46 @@
       // SOUND EFFECT
       console.log("Connection established;");
       $webRTC.call[0].connected = true;
+      //Reset invited status for connected peer
+      $webRTC.invited = false
+      if ($webRTC.groupCall && $webRTC.call.length === 1) {
+        //This is the first peer invited to a call
+        $webRTC.invited = true
+      }
       peer2._channel.addEventListener("message", (event) => {
-        console.log('message', event.data)
+
         let message = JSON.parse(event.data)
+        let addr = message.substring(message.length - 99)
+        let parsedMsg = groupMessage.slice(groupMessage.length - 99)
+
+        if (addr == $user.huginAddress.substring(0, 99)) {
+          console.log('found tunneled message to me', message)
+          window.api.decryptMessage(parsedMsg)
+          return
+        }
+        if ($webRTC.call.length > 1) {
+        console.log('Group message', event)
+        let groupMessage = JSON.parse(event.data)
+        let address = groupMessage.substring(groupMessage.length - 99)
+        //If the address is one of our active calls, tunnel the message
+        if ($webRTC.call.some(a => a.chat == address)) {
+          let tunnel = true
+          let sendTunnel = $webRTC.filter(a => a.chat === address)
+          sendTunnel[0].peer.send(event.data)
+          return
+        }
+        console.log('addr?', addr.substring(0,4))
+        if (addr.substring(0,4)  == "SEKR") {
+          console.log('this message should be routed elsewere')
+          return
+        }
+        //Decrypt group message, groupCall is either key or false.
+        console.log('Group parsed message', message)
+        window.api.decryptGroupMessage(message, $webRTC.groupCall)
+        return
+      }
+      //Normal message
+        console.log('message', event.data)
         window.api.decryptMessage(message)
     })
 
@@ -448,7 +580,7 @@
     return peer2;
   }
 
-  function sendOffer(peer, contact, video) {
+  function sendOffer(peer, contact, video, group = false, offchain = false) {
 
     peer.on("signal", data => {
 
@@ -456,7 +588,9 @@
         data: data,
         type: "offer",
         contact: contact,
-        video: video
+        video: video,
+        group: group,
+        offchain: offchain
       };
 
       console.log("SDP", data);
@@ -469,12 +603,16 @@
 
   }
 
-  function sendAnswer(sdpOffer, address, peer, key, video) {
+  function sendAnswer(sdpOffer, address, peer, key, video, offchain = false, group = false) {
 
     console.log("offer?", sdpOffer);
 
     window.api.expandSdp(sdpOffer, address);
-
+    
+    if ($webRTC.groupCall && !$webRTC.invited) {
+      group = $webRTC.groupCall
+    }
+    
     peer.on("signal", data => {
 
       console.log("initial offer data:", data);
@@ -482,9 +620,11 @@
         data: data,
         type: "answer",
         contact: address + key,
-        video: video
+        video: video,
+        offchain: offchain,
+        group: group
       };
-      console.log("sending sdp");
+      console.log("sending sdp", dataToSend);
 
       window.api.send("get-sdp", dataToSend);
 
@@ -498,7 +638,7 @@
 
     let caller = $webRTC.call.filter(a => a.chat === contact);
     let video = false;
-    
+
     if (contact === undefined) {
       caller = $webRTC.call.filter(e => e.peer == peer);
     }
