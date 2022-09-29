@@ -38,8 +38,9 @@
 
   //Starts any call
   const startCall = async (contact, calltype) => {
+
     console.log(contact, calltype);
-    if ($webRTC.call.length > 1) {
+    if ($webRTC.call.length == 1) {
       $webRTC.initiator = true
     }
     if (calltype) {
