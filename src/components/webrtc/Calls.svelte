@@ -637,15 +637,25 @@
   function endCall(peer, stream, contact) {
 
     let caller = $webRTC.call.filter(a => a.chat === contact);
-    let video = false;
+    
+    console.log('Want to end call with', contact)
 
     if (contact === undefined) {
-      caller = $webRTC.call.filter(e => e.peer == peer);
+      console.log('contact', contact)
+      caller = $webRTC.call.filter(e => e.peer.channelName == peer.channelName);
     }
+
+    if (contact && peer == undefined) {
+      console.log('Call already ended')
+      return
+    }
+
+    console.log('this peer?', peer)
+    console.log(' ending this caller', caller[0])
 
     try {
       caller[0].peer.destroy();
-      caller[0].myStream.getTracks().forEach(function(track) {
+        caller[0].myStream.getTracks().forEach(function(track) {
         track.stop();
       });
     } catch (e) {
@@ -658,18 +668,23 @@
     } else {
       filter = $webRTC.call.filter(a => a.chat !== contact);
     }
+
+    console.log('cleared this call from', filter)
     $webRTC.call = filter;
 
     if ($webRTC.call.some(a => a.peerVideo)) {
       $webRTC.myVideo = true;
+      console.log('Already got a video call open, return')
       return;
     }
 
     if ($webRTC.call.some(a => a.peerAudio)) {
+      console.log('Already got a audio call open, return')
       $webRTC.myVideo = false;
       return;
     }
 
+    console.log('Last call ending')
     $webRTC.myVideo = false;
     $webRTC.myStream.getTracks().forEach(function(track) {
         track.stop();
