@@ -25,12 +25,15 @@ const WINDOW_API = {
     ipcRenderer.send('sendBoardMsg', msg)
   },
 
-  sendGroupMessage: (msg) => {
-    ipcRenderer.send('sendGroupsMessage', msg)
+  sendGroupMessage: (msg, offchain) => {
+    ipcRenderer.send('sendGroupsMessage', msg, offchain)
   },
 
   decryptMessage: (msg) => {
-    ipcRenderer.send('decrypt_message', msg)
+    ipcRenderer.send('decrypt_message', msg, key)
+  },
+  decryptGroupMessage: (msg) => {
+    ipcRenderer.send('decrypt_rtc_group_message', msg, key)
   },
 
   getMessages: async (data) => {
@@ -98,8 +101,8 @@ const WINDOW_API = {
     ipcRenderer.send('startCall', contact, calltype)
   },
 
-  answerCall: async (msg, contact, key) => {
-    ipcRenderer.send('answerCall', msg, contact, key)
+  answerCall: async (msg, contact, key, offchain) => {
+    ipcRenderer.send('answerCall', msg, contact, key, offchain)
   },
 
   endCall: async (peer, stream, contact) => {
