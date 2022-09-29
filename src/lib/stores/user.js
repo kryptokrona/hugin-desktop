@@ -49,7 +49,10 @@ export const webRTC = writable({
   call: [],
   connected: false,
   videoSources: [],
-  incoming: []
+  incoming: [],
+  groupCall: false,
+  invited: false,
+  initiator: false
 })
 
 export const notify = writable({
