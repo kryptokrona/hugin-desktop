@@ -33,8 +33,14 @@
 
         let caller = $user.contacts.filter(a => a.chat === thisCall.chat)
         console.log('caller', caller)
+        let offchain = false
+        
+        if ($webRTC.groupCall && !$webRTC.invited) {
+            offchain = true
+        }
+        console.log('offchain?', offchain)
          //We delay the answerCall for routing purposes
-         window.api.answerCall(thisCall.msg, thisCall.chat, caller[0].key)
+         window.api.answerCall(thisCall.msg, thisCall.chat, caller[0].key, offchain)
         
         //We pause the ringtone and destroy the popup
         ringtone.pause()
