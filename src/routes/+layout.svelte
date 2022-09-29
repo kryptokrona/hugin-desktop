@@ -73,15 +73,19 @@
 		ready = true
 
 		//Handle incoming call
-	window.api.receive('call-incoming', (msg, chat) => {
-		
+	window.api.receive('call-incoming', (msg, chat, group = false) => {
+
 		incoming_call = true
 		console.log('INCMING');
 		console.log('new call', msg, chat)
-		$webRTC.incoming.push({msg, chat, type: 'incoming'})
+		$webRTC.incoming.push({msg, chat, type: "incoming"})
 		$webRTC.incoming = $webRTC.incoming
 		console.log('calls incoming set', $webRTC.incoming)
-	})	
+	})
+
+	window.api.receive('group-call', (data) => {
+		$webRTC.groupCall = data
+	})
 
 		//Handle sync status
 	window.api.receive('sync', data => {
