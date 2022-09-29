@@ -61,9 +61,9 @@
         <div on:click={groupRouteAndMenu} class="button">
             <GroupIcon />
         </div>
-        <div on:click={() => goto("/boards")} class="button">
+        <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
-        </div>
+        </div> -->
         <!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
     </div>
     <div class="draggable"></div>
