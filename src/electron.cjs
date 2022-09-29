@@ -1667,8 +1667,15 @@ async function saveMessageSQL(msg, hash, offchain = false) {
   let timestamp = sanitizeHtml(msg.t);
   let key = sanitizeHtml(msg.k);
   console.log("msg", msg);
+  let group_call = false
+
+  console.log('Msg incoming')
+
+  if (msg.gc !== undefined) {
+    group_call = msg.gc
+  }
   //Checking if private msg is a call
-  text = await parseCall(msg.msg, addr, sent);
+  text = await parseCall(msg.msg, addr, sent, true, group_call);
 
   let message = sanitizeHtml(text);
 
@@ -1823,15 +1830,15 @@ ipcMain.on("sendBoardMsg", (e, msg) => {
   }
 );
 
-ipcMain.on("sendGroupsMessage", (e, msg) => {
-  sendGroupsMessage(msg);
+ipcMain.on("sendGroupsMessage", (e, msg, offchain) => {
+  sendGroupsMessage(msg, offchain);
 }
 );
 
 
-ipcMain.on("answerCall", (e, msg, contact, key) => {
+ipcMain.on("answerCall", (e, msg, contact, key, offchain) => {
     console.log("answr", msg, contact);
-    mainWindow.webContents.send("answer-call", msg, contact, key);
+    mainWindow.webContents.send("answer-call", msg, contact, key, offchain);
   }
 );
 
@@ -1839,7 +1846,14 @@ ipcMain.on("endCall", async (e, peer, stream, contact) => {
   mainWindow.webContents.send("endCall", peer, stream, contact);
 });
 
-async function sendGroupsMessage(message) {
+ipcMain.on("start_group_call", async (e, contacts) => {
+
+});
+
+
+
+
+async function sendGroupsMessage(message, offchain = false) {
 
   const my_address = message.k
 
@@ -1851,7 +1865,13 @@ async function sendGroupsMessage(message) {
 
   const nonce = nonceFromTimestamp(timestamp);
 
-  const group = message.g
+  let group 
+
+  if (offchain) {
+    group = offchain
+  } else {
+    group = message.g
+  }
 
   if (group.length !== 64) {
     console.log('wrong key size', group)
@@ -1879,6 +1899,8 @@ async function sendGroupsMessage(message) {
   const payload_encrypted = {"sb":Buffer.from(secretbox).toString('hex'), "t":timestamp};
 
   const payload_encrypted_hex = toHex(JSON.stringify(payload_encrypted));
+
+  if (!offchain) {
 
   let result = await js_wallet.sendTransactionAdvanced(
       [[my_address, 1000]], // destinations,
@@ -1908,15 +1930,31 @@ async function sendGroupsMessage(message) {
     mainWindow.webContents.send("error_msg", error);
     console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
+  } else if (offchain.length = 64) {
+      
+    let randomKey = await createGroup()
+    let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
+    console.log("sending group rtc message");
+    let sendMsg = randomKey + '99' + sentMsg
+    let messageArray = [sendMsg]
+    mainWindow.webContents.send("rtc_message", messageArray, true);
+    console.log('payload', messageArray)
+    //let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
+    //saveMessageSQL(saveMsg, randomKey, true);
+  }
 }
 
-async function decryptGroupMessage(tx, hash) {
+async function decryptGroupMessage(tx, hash, group_key = false) {
 
   console.log(tx);
 
   let decryptBox = false;
 
   let groups = await loadGroups()
+
+  if (group_key) {
+    groups.push(group_key)
+  }
 
   let key;
 
@@ -2044,7 +2082,7 @@ async function sendBoardMessage(message) {
 
 }
 
-async function sendMessage(message, receiver, off_chain = false) {
+async function sendMessage(message, receiver, off_chain = false, group = false) {
   let has_history;
   console.log("address", receiver.length);
   if (receiver.length !== 163) {
@@ -2170,10 +2208,13 @@ async function sendMessage(message, receiver, off_chain = false) {
     let messageArray = []
     messageArray.push(sendMsg)
     messageArray.push(address)
+    if (group) {
+    messageArray.push('group')
+    }
     mainWindow.webContents.send("rtc_message", messageArray);
     console.log('payload', messageArray)
-    let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
-    saveMessageSQL(saveMsg, randomKey, true);
+    //let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
+    //saveMessageSQL(saveMsg, randomKey, true);
   }
 }
 
@@ -2388,9 +2429,34 @@ ipcMain.on("check-srcs", async (e, src) => {
 ipcMain.on("decrypt_message", async (e, message) => {
   let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
+  console.log('message invite call list', msg.msg)
+
+  let group = JSON.parse(msg.msg)
+  if (group.invite) {
+    mainWindow.webContents.send("group-call", group.key)
+    let type = callerList.type
+    
+    sleep(100)
+    group.invite.forEach(a => {
+      mainWindow.webContents.send("start-call", a, type);
+      sleep(1500)
+      return
+    })
+  }
   message.sent = false
   let hash = await createGroup()
   saveMessageSQL(msg, hash, true);
+})
+
+ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
+  let msg = await decryptGroupMessage(message, key)
+  console.log('message', msg)
+  if (!msg) {
+    //Not a message to me, tunnel this
+  }
+  message.sent = false
+  let hash = await createGroup()
+  //saveMessageSQL(msg, hash, true);
 })
 
 
@@ -2495,7 +2561,7 @@ function parse_sdp(sdp) {
 }
 
 
-function parseCall(msg, sender, sent, emitCall = true) {
+function parseCall(msg, sender, sent, emitCall = true, group = false) {
   console.log("🤤🤤🤤🤤🤤🤤", sender, msg);
   switch (msg.substring(0, 1)) {
     case "Δ":
@@ -2508,7 +2574,7 @@ function parseCall(msg, sender, sent, emitCall = true) {
         console.log("sent?", sent);
         if (!sent) {
           console.log("call  incoming");
-          mainWindow.webContents.send("call-incoming", msg, sender);
+          mainWindow.webContents.send("call-incoming", msg, sender, group);
           // Handle answer/decline here
         }
         console.log("call incoming");
@@ -2561,14 +2627,14 @@ ipcMain.on("get-sdp", (e, data) => {
     console.log("Offer", data.data, data.type, data.contact, data.video);
     let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
     let recovered_data = expand_sdp_offer(parsed_data);
-    sendMessage(parsed_data, data.contact);
+    sendMessage(parsed_data, data.contact, data.offchain, data.group);
 
   } else if (data.type == "answer") {
     console.log("Answerrrrrrrr", data.data, data.type, data.contact, data.video);
     let parsed_data = `${data.video ? "δ" : "λ"}` + parse_sdp(data.data);
     console.log("parsed data really cool sheet:", parsed_data);
     let recovered_data = expand_sdp_answer(parsed_data);
-    sendMessage(parsed_data, data.contact);
+    sendMessage(parsed_data, data.contact, data.offchain, data.group);
 
   }
 });
