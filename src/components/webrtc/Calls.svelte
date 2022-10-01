@@ -356,7 +356,7 @@
           activeCall.push(listItem)
         })
         //Make an invite message through the datachannel to our new participant
-        let msg = JSON.stringify({invite: activeCall, key: $webRTC.groupCall, type: true});
+        let msg = JSON.stringify([ activeCall, $webRTC.groupCall, 'true']);
         let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
         let contact = $user.contacts.filter(a => a.chat === thisChat)
         console.log("Inviting contact", contact)
