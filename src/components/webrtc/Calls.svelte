@@ -99,6 +99,14 @@
     // spilt input to addr and pubkey
     let contact_address = contact.substring(0, 99);
 
+    if ($webRTC.call.length >= 2 && $webRTC.initiator) {
+      if ($webRTC.groupCall === false) {
+        //If no groupcall is started, get a new key
+        $webRTC.groupCall = await window.api.createGroup()
+      }
+
+    }
+
     console.log("contact address", contact_address);
     console.log("Hugin Address", contact);
 
