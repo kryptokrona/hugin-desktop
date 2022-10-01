@@ -327,7 +327,7 @@
       // SOUND EFFECT
       $webRTC.call[0].connected = true
       console.log("Connection established");
-      if (!$webRTC.invited && $webRTC.initiator) {
+      if (!$webRTC.invited) {
         console.log('Group call connecting...')
         if ($webRTC.call.length >= 2 && $webRTC.initiator) {
           if ($webRTC.groupCall === false) {
@@ -336,7 +336,6 @@
           }
 
         }
-        $webRTC.initiator = false
 
         //When you invite a new person to the call
         let thisChat = $webRTC.call[0].chat
@@ -353,15 +352,18 @@
         //Make an invite message through the datachannel to our new participant
         let msg = JSON.stringify({invite: activeCall, key: $webRTC.groupCall});
         let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
-        let contact = $user.contacts.filter(a => a.chat === thisCall.chat)
+        let contact = $user.contacts.filter(a => a.chat === thisChat)
         console.log("Inviting contact", contact)
         let to = thisChat + contact[0].key
         //Send offchain invite message
         window.api.sendMsg(myMessage, to, true)
         
       }
-       //Reset invited status for connected peer
-       $webRTC.invited = false
+      
+        //Reset initiator on connect
+        $webRTC.initiator = false
+        //Reset invited status for connected peer
+        $webRTC.invited = false
     });
 
     peer1.on("data", msg => {
@@ -382,7 +384,7 @@
         return
       }
 
-      if ($webRTC.call.length > 1) {
+      if ($webRTC.call.length > 1 && $webRTC.initiator) {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
@@ -535,7 +537,7 @@
 
         let message = JSON.parse(event.data)
         let addr = message.substring(message.length - 99)
-        let parsedMsg = groupMessage.slice(groupMessage.length - 99)
+        let parsedMsg = message.slice(message.length - 99)
 
         if (addr == $user.huginAddress.substring(0, 99)) {
           console.log('found tunneled message to me', message)
