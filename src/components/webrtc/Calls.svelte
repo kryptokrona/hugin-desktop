@@ -70,7 +70,9 @@
       console.log('sendMsg tunnel', message, address)
       //Here we should try send it to the first connected peer, maybe more
       let tunnel = $webRTC.call[$webRTC.call.length - 1]
-      tunnel[0].peer.send(sendMsg)
+      $webRTC.call.forEach(a => {
+        a.peer.send(sendMsg)
+      })
       return
 
     } else {
@@ -332,9 +334,11 @@
       if (!$webRTC.invited) {
         console.log('Group call connecting...')
         if ($webRTC.call.length >= 2 && $webRTC.initiator) {
+          console.log('Initiator true')
           if ($webRTC.groupCall === false) {
             //If no groupcall is started, get a new key
             $webRTC.groupCall = await window.api.createGroup()
+            console.log('New group key')
           }
 
         

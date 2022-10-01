@@ -2432,15 +2432,18 @@ ipcMain.on("check-srcs", async (e, src) => {
 ipcMain.on("decrypt_message", async (e, message) => {
   let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
-  console.log('message invite call list', msg.msg)
 
   let group = JSON.parse(msg.msg)
   if (group.invite) {
+    
+  console.log('message invite call?', group)
     mainWindow.webContents.send("group-call", group.key)
     let type = callerList.type
-    
+    console.log('found invite', group.key)
     sleep(100)
+
     group.invite.forEach(a => {
+      console.log('Invited to call, joining...')
       mainWindow.webContents.send("start-call", a, type);
       sleep(1500)
       return
