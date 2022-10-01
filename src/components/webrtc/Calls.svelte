@@ -293,7 +293,7 @@
 
 
   }
-
+  $webRTC.showVideoGrid = true
   async function startPeer1(stream, video, contact) {
 
     let peer1 = new Peer({
@@ -434,10 +434,11 @@
 
 
     async function gotMedia(stream) {
+      $webRTC.showVideoGrid = true
       console.log("FN getMedia", stream, video);
 
       let peer2 = await startPeer2(stream, video);
-
+      //Check codecs
       let custom_codecs = [];
       let video_codecs = window.RTCRtpSender.getCapabilities("video");
       let audio_codecs = window.RTCRtpSender.getCapabilities("audio");
@@ -464,7 +465,7 @@
       }
 
       console.log("codec set");
-
+      //Set webRTC store update for call
       $webRTC.call[0].peer = peer2;
       $webRTC.myStream = stream;
       $webRTC.call[0].myStream = stream;
@@ -683,7 +684,7 @@
       $webRTC.myVideo = false;
       return;
     }
-
+    $webRTC.showVideoGrid = false
     console.log('Last call ending')
     $webRTC.myVideo = false;
     $webRTC.myStream.getTracks().forEach(function(track) {
