@@ -10,7 +10,7 @@
     display: flex;
     gap: 5px;
     padding: 10px;
-    z-index: 100;
+    z-index: 999;
   }
 
   .light {
