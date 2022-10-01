@@ -2438,7 +2438,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
   console.log('message', msg)
   if (!msg) return
 
-  let group = JSON.parse(msg.msg)
+  let group = msg.msg
   if (group.key.length === 164) {
     
   console.log('message invite call?', group)
