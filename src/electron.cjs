@@ -2195,6 +2195,8 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
         name: "Error",
         hash: Date.now()
       };
+      
+      optimizeMessages()
       console.log(`Failed to send transaction: ${result.error.toString()}`);
       mainWindow.webContents.send("error_msg", error);
 
