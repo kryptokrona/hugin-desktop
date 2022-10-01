@@ -2441,7 +2441,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
     let type = callerList.type
     console.log('found invite', group.key)
     sleep(100)
-
+    console.log('type true?', type)
     group.invite.forEach(a => {
       console.log('Invited to call, joining...')
       mainWindow.webContents.send("start-call", a, type);
