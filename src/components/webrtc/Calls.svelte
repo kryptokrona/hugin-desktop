@@ -99,14 +99,6 @@
     // spilt input to addr and pubkey
     let contact_address = contact.substring(0, 99);
 
-    if ($webRTC.call.length >= 2 && $webRTC.initiator) {
-      if ($webRTC.groupCall === false) {
-        //If no groupcall is started, get a new key
-        $webRTC.groupCall = await window.api.createGroup()
-      }
-
-    }
-
     console.log("contact address", contact_address);
     console.log("Hugin Address", contact);
 
@@ -331,12 +323,21 @@
     });
 
 
-    peer1.on("connect", () => {
+    peer1.on("connect", async () => {
       // SOUND EFFECT
       $webRTC.call[0].connected = true
       console.log("Connection established");
-      if ($webRTC.groupCall && !$webRTC.invited && $webRTC.initiator) {
+      if (!$webRTC.invited && $webRTC.initiator) {
         console.log('Group call connecting...')
+        if ($webRTC.call.length >= 2 && $webRTC.initiator) {
+          if ($webRTC.groupCall === false) {
+            //If no groupcall is started, get a new key
+            $webRTC.groupCall = await window.api.createGroup()
+          }
+
+        }
+        $webRTC.initiator = false
+
         //When you invite a new person to the call
         let thisChat = $webRTC.call[0].chat
         //Sort out all active calls except this
