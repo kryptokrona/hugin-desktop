@@ -95,7 +95,7 @@
     checkSources();
   };
 
-  const startCall = (contact, isVideo, screenshare = false) => {
+  const startCall = async (contact, isVideo, screenshare = false) => {
     // spilt input to addr and pubkey
     let contact_address = contact.substring(0, 99);
 
