@@ -2436,13 +2436,13 @@ ipcMain.on("decrypt_message", async (e, message) => {
   console.log('message', msg)
   if (!msg) return
 
-  let group = JSON.parse(msg.msg)
-  if (group[0].length) {
+  let group = msg.msg.split(",")
+  if (group[0].length === 164) {
     
   console.log('message invite call?', group)
-    mainWindow.webContents.send("group-call", group.key)
-    let type = callerList.type
-    console.log('found invite', group.key)
+    mainWindow.webContents.send("group-call", group[1])
+    let type = group[2]
+    console.log('found invite', group[1])
     sleep(100)
     console.log('type true?', type)
     group.invite.forEach(a => {
