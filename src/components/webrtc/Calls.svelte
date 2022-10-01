@@ -356,7 +356,7 @@
           activeCall.push(listItem)
         })
         //Make an invite message through the datachannel to our new participant
-        let msg = JSON.stringify({invite: activeCall, key: $webRTC.groupCall, type:'true'});
+        let msg = {invite: activeCall, key: $webRTC.groupCall, type:'true'}
         let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
         let contact = $user.contacts.filter(a => a.chat === thisChat)
         console.log("Inviting contact", contact)
@@ -563,16 +563,17 @@
           sendTunnel[0].peer.send(event.data)
           return
         }
-        console.log('addr?', addr.substring(0,4))
-        if (addr.substring(0,4)  == "SEKR") {
-          console.log('this message should be routed elsewere')
-          return
-        }
         //Decrypt group message, groupCall is either key or false.
         console.log('Group parsed message', message)
         window.api.decryptGroupMessage(message, $webRTC.groupCall)
         return
       }
+      
+      console.log('addr?', addr.substring(0,4))
+        if (addr.substring(0,4)  == "SEKR") {
+          console.log('this message should be routed elsewere')
+          return
+        }
       //Normal message
         console.log('message', event.data)
         window.api.decryptMessage(message)
