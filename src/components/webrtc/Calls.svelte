@@ -382,7 +382,7 @@
     peer1._channel.addEventListener("message", (event) => {
       
       let message = JSON.parse(event.data)
-      let parsedMsg = groupMessage.slice(groupMessage.length - 99)
+      let parsedMsg = message.substring(0, message.length - 99)
       let addr = message.substring(message.length - 99)
 
       if (addr == $user.huginAddress.substring(0, 99)) {
@@ -545,7 +545,7 @@
 
         let message = JSON.parse(event.data)
         let addr = message.substring(message.length - 99)
-        let parsedMsg = message.slice(message.length - 99)
+        let parsedMsg = message.substring(0, message.length - 99)
 
         if (addr == $user.huginAddress.substring(0, 99)) {
           console.log('found tunneled message to me', message)
