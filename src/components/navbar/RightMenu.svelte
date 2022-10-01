@@ -17,6 +17,7 @@
   import CallSlash from "/src/components/buttons/CallSlash.svelte";
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
+    import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -122,7 +123,8 @@
 
   const toggleAudio = () => {
     muted = !muted;
-    $webRTC.myStream.getTracks().forEach(track => track.enabled = !track.enabled);
+    $webRTC.myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled)
+    $webRTC.myStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
   };
 
   function copyThis(copy) {
@@ -135,9 +137,6 @@
     $notify.success = $notify.success
     navigator.clipboard.writeText(copy);
   }
-  
-
-  console.log('HERE L', $boards.boardsArray);
 
 </script>
 
@@ -200,6 +199,9 @@
           {:else}
             <MuteIcon on:click={toggleAudio} />
           {/if}
+        </div>
+        <div class="button">
+          <ShowVideoMenu on:click={toggleCallMenu}/>
         </div>
       {/if}
     </div>
