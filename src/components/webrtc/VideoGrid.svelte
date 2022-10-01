@@ -13,6 +13,9 @@
   const noDrag = () => {
     drag = false
   }
+  const close = () => {
+    $webRTC.showVideoGrid = false
+  }
 
   $: videoCalls = $webRTC.call.filter(a => a.peerVideo === true)
 
@@ -20,7 +23,9 @@
 
 </script>
 
+
 <div class:drag={drag} class="grid">
+  <div class="exit" on:click={close}><p>Close</p></div>
   {#if  $webRTC.myVideo}
     <MyVideo 
         on:drag={dragWindow}
@@ -38,17 +43,36 @@
   {/if}
 </div>
 
-<style>
+<style lang="scss">
     .grid {
         box-sizing: border-box;
         position: absolute;
         height: 100vh;
         width: 100%;
         z-index: 499;
-        pointer-events: none;
+        pointer-events: all;
+        background: rgba(0,0,0,0.9);
     }
 
     .drag {
       pointer-events: visible;
+    }
+
+    p {
+      font-family: "Montserrat";
+      font-size: 17px;
+      cursor: pointer;
+      color: #c9c5c5;
+      &:hover {
+        color: white;
+      }
+    }
+
+    .exit {
+      align-content: center;
+    display: flex;
+    position: absolute;
+    bottom: 10px;
+    right: 25px;
     }
 </style>
