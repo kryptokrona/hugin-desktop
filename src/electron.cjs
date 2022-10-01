@@ -1031,23 +1031,24 @@ async function backgroundSyncMessages(checkedTxs = false) {
           }
 
           message.sent = false;
-          console.log("message type", message.type);
+          //console.log("message type", message.type);
           if (message.brd) {
-            message.type = "board";
-            if (my_boards.indexOf(message.brd) == -1) {
-              if (message.brd == "Home") {
-                saveHash(thisHash)
-                continue;
-              }
-              console.log("Not my board");
-              sanitizeHtml(message.brd)
-              sanitizeHtml(message.k)
-              let newBoard = {board: message.brd, address: message.k}
-              mainWindow.webContents.send('newBoard', newBoard)
-              saveBoardMsg(message, thisHash, false)
-              continue;
-            }
-            saveBoardMsg(message, thisHash, true);
+          //   message.type = "board";
+          //   if (my_boards.indexOf(message.brd) == -1) {
+          //     if (message.brd == "Home") {
+          //       saveHash(thisHash)
+          //       continue;
+          //     }
+          //     console.log("Not my board");
+          //     sanitizeHtml(message.brd)
+          //     sanitizeHtml(message.k)
+          //     let newBoard = {board: message.brd, address: message.k}
+          //     mainWindow.webContents.send('newBoard', newBoard)
+          //     saveBoardMsg(message, thisHash, false)
+          //     continue;
+          //   }
+            saveHash(thisHash)
+            //saveBoardMsg(message, thisHash, true);
           } else if (message.type === "sealedbox" || "box") {
             console.log("Saving Message");
             // await saveMsg(message);
@@ -1225,7 +1226,7 @@ async function saveHash(txHash) {
 
 //Saves board message.
 async function saveBoardMsg(msg, hash, follow=false) {
-
+  return
   let to_board = sanitizeHtml(msg.brd);
   let text = sanitizeHtml(msg.m);
   let addr = sanitizeHtml(msg.k);

@@ -36,7 +36,7 @@
 
 	const toggleMyWindow = () => {
 		console.log('toggleee my window');
-		myVideo = !myVideo
+
 	}
 
 	const endThisCall = () => {
@@ -45,7 +45,6 @@
 	}
 
 	const answerIncomingCall = (call) => {
-
 		$webRTC.call.unshift(call)
 		let filter = $webRTC.incoming.filter(a => a.chat !== call.chat)
 		$webRTC.incoming = filter
@@ -57,7 +56,7 @@
 	}
 
 	const toggleCallMenu = () => {
-		showCallerMenu = !showCallerMenu
+		$webRTC.showVideoGrid = !$webRTC.showVideoGrid
 	}
 
 	onMount( async () => {
@@ -254,7 +253,7 @@
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 || $webRTC.incoming.length != 0 }
 
-	{#if $webRTC.active && $webRTC.myVideo}
+	{#if $webRTC.active && $webRTC.myVideo && $webRTC.showVideoGrid}
 		<VideoGrid />
 	{/if}
 
