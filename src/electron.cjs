@@ -2430,11 +2430,14 @@ ipcMain.on("check-srcs", async (e, src) => {
 })
 
 ipcMain.on("decrypt_message", async (e, message) => {
+  
+  try {
   let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
+  if (!msg) return
 
   let group = JSON.parse(msg.msg)
-  if (group.invite) {
+  if (group[0].length) {
     
   console.log('message invite call?', group)
     mainWindow.webContents.send("group-call", group.key)
@@ -2448,6 +2451,9 @@ ipcMain.on("decrypt_message", async (e, message) => {
       sleep(1500)
       return
     })
+  } } catch (e) {
+    console.log('error decrypting', e)
+    return
   }
   message.sent = false
   let hash = await createGroup()
@@ -2455,10 +2461,14 @@ ipcMain.on("decrypt_message", async (e, message) => {
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
+  try {
   let msg = await decryptGroupMessage(message, key)
   console.log('message', msg)
   if (!msg) {
     //Not a message to me, tunnel this
+  }
+  } catch(e) {
+    console.log('error decrypting group msg', e)
   }
   message.sent = false
   let hash = await createGroup()
