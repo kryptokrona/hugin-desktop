@@ -1820,8 +1820,8 @@ ipcMain.on("sendTx", (e, tx) => {
 }
 );
 
-ipcMain.on("sendMsg", (e, msg, receiver, off_chain) => {
-    sendMessage(msg, receiver, off_chain);
+ipcMain.on("sendMsg", (e, msg, receiver, off_chain, grp) => {
+    sendMessage(msg, receiver, off_chain, grp);
     console.log(msg, receiver, off_chain);
   }
 );

@@ -62,10 +62,12 @@
     //Find who we are going to send to
     let to = $webRTC.call.filter(a => a.chat == address)
     console.log("sending rtc", message)
+    console.log('Message to route?', msg)
     let sendMsg
     if (msg.length === 3) {
       //Want to tunnel message through group inviter to the right address
       sendMsg = JSON.stringify(message + address)
+      console.log('sendMsg tunnel', message, address)
       //Here we should try send it to the first connected peer, maybe more
       let tunnel = $webRTC.call[$webRTC.call.length - 1]
       tunnel[0].peer.send(sendMsg)
@@ -335,7 +337,7 @@
             $webRTC.groupCall = await window.api.createGroup()
           }
 
-        }
+        
 
         //When you invite a new person to the call
         let thisChat = $webRTC.call[0].chat
@@ -356,9 +358,10 @@
         console.log("Inviting contact", contact)
         let to = thisChat + contact[0].key
         //Send offchain invite message
-        window.api.sendMsg(myMessage, to, true)
+        window.api.sendMsg(myMessage, to, true, true)
         
       }
+    }
       
         //Reset initiator on connect
         $webRTC.initiator = false
@@ -529,6 +532,7 @@
       $webRTC.call[0].connected = true;
       //Reset invited status for connected peer
       $webRTC.invited = false
+      console.log('groupcall key?', $webRTC.groupCall)
       if ($webRTC.groupCall && $webRTC.call.length === 1) {
         //This is the first peer invited to a call
         $webRTC.invited = true
@@ -544,7 +548,7 @@
           window.api.decryptMessage(parsedMsg)
           return
         }
-        if ($webRTC.call.length > 1) {
+        if ($webRTC.call.length > 1 && $webRTC.groupCall) {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
