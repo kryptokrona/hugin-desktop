@@ -76,6 +76,8 @@
       return
 
     } else {
+      console.log('sending', message)
+      console.log('to', to[0])
       sendMsg = JSON.stringify(message)
       to[0].peer.send(sendMsg);
     }
@@ -332,17 +334,15 @@
       $webRTC.call[0].connected = true
       console.log("Connection established");
       if (!$webRTC.invited) {
-        console.log('Group call connecting...')
-        if ($webRTC.call.length >= 2 && $webRTC.initiator) {
+        if ($webRTC.call.length > 1 && $webRTC.initiator) {
           console.log('Initiator true')
+          
+        console.log('Group call connecting...')
           if ($webRTC.groupCall === false) {
             //If no groupcall is started, get a new key
             $webRTC.groupCall = await window.api.createGroup()
             console.log('New group key')
           }
-
-        
-
         //When you invite a new person to the call
         let thisChat = $webRTC.call[0].chat
         //Sort out all active calls except this
