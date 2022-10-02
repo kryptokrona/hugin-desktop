@@ -30,7 +30,7 @@
       console.log("mounting");
        console.log('lol null', $groups.groupArray[0])
        if ($groups.groupArray.length) {
-        $groups.thisGroup = $groups.groupArray[0]
+        $groups.thisGroup = $groups.groupArray[$groups.groupArray.length - 1]
        }
 
        let filter = $notify.unread.filter(a => a.type !== "group")
