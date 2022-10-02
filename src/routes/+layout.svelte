@@ -83,7 +83,8 @@
 	})
 
 	window.api.receive('group-call', (data) => {
-		$webRTC.groupCall = data
+		console.log('group call data', data)
+		$webRTC.groupCall = data.key
 	})
 
 		//Handle sync status

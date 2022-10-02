@@ -2434,24 +2434,25 @@ ipcMain.on("decrypt_message", async (e, message) => {
 
   let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
+  
+  let hash = await createGroup()
     if (msg) {
       
     msg.sent = false
-    let hash = await createGroup()
 
     }
   try {
 
-  if (!msg.invite) {
-    saveMessageSQL(msg, hash, true);
-    return
-  }
+  // if (!msg.invite) {
+  //   saveMessageSQL(msg, hash, true);
+  //   return
+  // }
     
   let group = msg.msg
   console.log('group?', msg,msg)
     
   console.log('message invite call?', group)
-    mainWindow.webContents.send("group-call", group.key)
+    mainWindow.webContents.send("group-call", group)
     let type = false
     console.log('found invite', group.key)
     sleep(100)
@@ -2475,7 +2476,7 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   try {
   
   let hash = await createGroup()
-  let msg = await decryptGroupMessage(message, hash ,key)
+  let msg = await decryptGroupMessage(message, hash, key)
   console.log('message', msg)
   if (!msg) {
     //Not a message to me, tunnel this
