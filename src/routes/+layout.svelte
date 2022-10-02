@@ -253,9 +253,7 @@
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 || $webRTC.incoming.length != 0 }
 
-	{#if $webRTC.active && $webRTC.myVideo && $webRTC.showVideoGrid}
 		<VideoGrid />
-	{/if}
 
 
 		{#each $webRTC.call as thiscall}
