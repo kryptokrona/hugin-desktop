@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import sendIcon from "/static/images/send.png";
+  import SendIcon from "/src/components/buttons/SendIcon.svelte";
   import EmojiSelector from "svelte-emoji-selector";
   import { webRTC, boards } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
@@ -61,8 +61,7 @@
      class:border-top={$page.url.pathname !== '/boards'}>
   <input type="text" placeholder="Message.." bind:value={messageInput}>
   <EmojiSelector on:emoji={onEmoji} />
-  <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><img src={sendIcon} height="15px"
-                                                                                       alt=""></button>
+  <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><SendIcon /></button>
 </div>
 
 <style lang="scss">
