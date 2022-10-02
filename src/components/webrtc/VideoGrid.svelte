@@ -9,6 +9,7 @@
   import ActiveBoard from "../chat/ActiveBoard.svelte";
   import { onMount, onDestroy } from "svelte";
   import { fade } from "svelte/transition";
+  import GreenButton from "/src/components/buttons/GreenButton.svelte";
   let drag = false
   let videoCalls = []
 
@@ -37,7 +38,9 @@
     let unreadMsgs = [];
     let replyTrue = false;
     let chatWindow
-  
+    let groupKey = ""
+    let join = false
+
     onMount(async () => {
       chatWindow = document.getElementById("chat_window");
       console.log("mounting video grid");
@@ -205,6 +208,16 @@
       console.log(onlyEmojis.length === visibleChars.length);
       return onlyEmojis.length === visibleChars.length;
     }
+
+    const joinGroupChat = () => {
+      console.log('joining')
+      $webRTC.groupCall = groupKey
+      groupKey = ""
+      join = false
+    }
+
+
+    $: groupKey
   
     $: fixedRtcGroups;
 
@@ -250,7 +263,14 @@
 
   <div class="wrapper">
     <div class="videogrid">
-    <div class="exit" on:click={close}><p>Close</p></div>
+    <p on:click={close}>Close</p>
+    <p on:click={()=> join = !join}>Join chat</p>
+    <div class="exit">
+
+      <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
+        <GreenButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
+      </div>
+    </div>
     {#if  $webRTC.myVideo}
       <MyVideo 
           on:drag={dragWindow}
@@ -299,7 +319,6 @@
   .exit {
     align-content: center;
     display: flex;
-    position: absolute;
     bottom: 10px;
     right: 25px;
   }
@@ -361,5 +380,29 @@
     width: 100%;
     display: flex;
   }
+
+
+  input {
+    box-sizing: border-box;
+    background-color: transparent;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 0 1rem;
+    height: 35px;
+    width: 100%;
+    color: white;
+    transition: 200ms ease-in-out;
+
+    &:focus {
+      outline: none;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .join_group {
+    position: absolute;
+    display: flex;
+  }
+
 
 </style>
