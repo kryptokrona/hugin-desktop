@@ -26,6 +26,7 @@ const WINDOW_API = {
   },
 
   sendGroupMessage: (msg, offchain) => {
+    console.log('Send group msg', msg, offchain)
     ipcRenderer.send('sendGroupsMessage', msg, offchain)
   },
 
