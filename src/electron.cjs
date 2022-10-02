@@ -2463,7 +2463,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
       sleep(1500)
       return
     })
-  } } catch (e) {
+   } catch (e) {
     console.log('error decrypting or parsing', e)
     return
   }
