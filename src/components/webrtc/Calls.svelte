@@ -48,7 +48,7 @@
 
 
     if (to_group) {
-
+      console.log('sending rtc group message')
       $webRTC.call.forEach(a => {
         let sendMsg = JSON.stringify(msg[0])
         console.log("sending rtc", sendMsg)
@@ -391,16 +391,18 @@
         return
       }
 
-      if ($webRTC.call.length > 1 && $webRTC.initiator) {
+      if ($webRTC.groupCall) {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
+        if ($webRTC.initiator && $webRTC.call.length > 1 ) {
         //If the address is one of our active calls, tunnel the message
         if ($webRTC.call.some(a => a.chat == address)) {
           let tunnel = true
           let sendTunnel = $webRTC.filter(a => a.chat === address)
           sendTunnel[0].peer.send(event.data)
           return
+        }
         }
         //Decrypt group message, groupCall is either key or false.
         console.log('Group message', groupMessage)
@@ -552,16 +554,18 @@
           window.api.decryptMessage(parsedMsg)
           return
         }
-        if ($webRTC.call.length > 1 && $webRTC.groupCall) {
+        if ($webRTC.groupCall) {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
+        if ($webRTC.initiator && $webRTC.call.length > 1 ) {
         //If the address is one of our active calls, tunnel the message
-        if ($webRTC.call.some(a => a.chat == address)) {
-          let tunnel = true
-          let sendTunnel = $webRTC.filter(a => a.chat === address)
-          sendTunnel[0].peer.send(event.data)
-          return
+          if ($webRTC.call.some(a => a.chat == address)) {
+            let tunnel = true
+            let sendTunnel = $webRTC.filter(a => a.chat === address)
+            sendTunnel[0].peer.send(event.data)
+            return
+          } 
         }
         //Decrypt group message, groupCall is either key or false.
         console.log('Group parsed message', message)
