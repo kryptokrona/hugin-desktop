@@ -775,7 +775,6 @@ async function logIntoWallet(walletName, password) {
   try {
   //Try parse json wallet
   parsed_wallet = JSON.parse(json_wallet)
-  console.log('Got parsed', parsed_wallet)
   //Open encrypted json wallet
   const [js_wallet, error] = await WB.WalletBackend.openWalletFromEncryptedString(daemon, parsed_wallet, password);
   if (error) {
@@ -1660,7 +1659,7 @@ async function getReplies(hash = false) {
 
 
 //Saves private message
-async function saveMessageSQL(msg, hash, offchain = false) {
+async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
   let torrent;
   let text;
   let sent = msg.sent;
@@ -1675,9 +1674,10 @@ async function saveMessageSQL(msg, hash, offchain = false) {
   if (msg.gc !== undefined) {
     group_call = msg.gc
   }
+  if (!invite) {
   //Checking if private msg is a call
   text = await parseCall(msg.msg, addr, sent, true, group_call);
-
+  }
   let message = sanitizeHtml(text);
 
   //If sent set chat to chat instead of from
@@ -1854,7 +1854,7 @@ ipcMain.on("start_group_call", async (e, contacts) => {
 
 
 async function sendGroupsMessage(message, offchain = false) {
-
+  console.log('Send group msg', message, offchain)
   const my_address = message.k
 
   const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys();
@@ -2436,15 +2436,17 @@ ipcMain.on("decrypt_message", async (e, message) => {
   console.log('message', msg)
     if (msg) {
       
-    message.sent = false
+    msg.sent = false
     let hash = await createGroup()
+
     saveMessageSQL(msg, hash, true);
     }
   try {
+
+  if (!msg.invite) return
     
-  let group = JSON.parse(msg.msg)
+  let group = msg.msg
   console.log('group?', msg,msg)
-  if (group.key.length === 164) {
     
   console.log('message invite call?', group)
     mainWindow.webContents.send("group-call", group.key)
