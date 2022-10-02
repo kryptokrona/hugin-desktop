@@ -2439,11 +2439,13 @@ ipcMain.on("decrypt_message", async (e, message) => {
     msg.sent = false
     let hash = await createGroup()
 
-    saveMessageSQL(msg, hash, true);
     }
   try {
 
-  if (!msg.invite) return
+  if (!msg.invite) {
+    saveMessageSQL(msg, hash, true);
+    return
+  }
     
   let group = msg.msg
   console.log('group?', msg,msg)
