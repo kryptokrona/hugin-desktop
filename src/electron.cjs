@@ -2446,7 +2446,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
   console.log('message invite call?', group)
     mainWindow.webContents.send("group-call", group.key)
     let type = group.type
-    console.log('found invite', group.key])
+    console.log('found invite', group.key)
     sleep(100)
     console.log('type true?', type)
     if (type == 'true') {
