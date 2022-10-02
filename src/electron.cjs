@@ -1747,7 +1747,6 @@ async function saveMessageSQL(msg, hash, offchain = false) {
 
 //Get all contacts from db
 async function getContacts() {
-
   const myContactList = [];
   return new Promise((resolve, reject) => {
     const getMyContacts = `SELECT * FROM contacts`;
@@ -1990,7 +1989,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
   if (!decryptBox) {
     return false;
   }
-
 
   const message_dec = naclUtil.encodeUTF8(decryptBox);
 
@@ -2433,23 +2431,28 @@ ipcMain.on("decrypt_message", async (e, message) => {
 
   console.log('message to decrypt??', message)
   
-  try {
+
   let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message', msg)
-  if (!msg) return
-
+    if (msg) {
+      
+    message.sent = false
+    let hash = await createGroup()
+    saveMessageSQL(msg, hash, true);
+    }
+  try {
+    
   let group = JSON.parse(msg.msg)
-
   console.log('group?', msg,msg)
   if (group.key.length === 164) {
     
   console.log('message invite call?', group)
     mainWindow.webContents.send("group-call", group.key)
-    let type = group.type
+    let type = false
     console.log('found invite', group.key)
     sleep(100)
     console.log('type true?', type)
-    if (type == 'true') {
+    if (group.type == 'true') {
       type = true
     }
     group.invite.forEach(a => {
@@ -2462,14 +2465,13 @@ ipcMain.on("decrypt_message", async (e, message) => {
     console.log('error decrypting or parsing', e)
     return
   }
-  message.sent = false
-  let hash = await createGroup()
-  saveMessageSQL(msg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   try {
-  let msg = await decryptGroupMessage(message, key)
+  
+  let hash = await createGroup()
+  let msg = await decryptGroupMessage(message, hash ,key)
   console.log('message', msg)
   if (!msg) {
     //Not a message to me, tunnel this
@@ -2477,8 +2479,9 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   } catch(e) {
     console.log('error decrypting group msg', e)
   }
+  mainWindow.webContents.send("groupRtcMsg", msg);
   message.sent = false
-  let hash = await createGroup()
+
   //saveMessageSQL(msg, hash, true);
 })
 
