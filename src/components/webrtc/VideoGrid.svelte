@@ -56,8 +56,6 @@
     <div class="video-grid">
       {#if $webRTC.myVideo}
         <MyVideo />
-        <MyVideo />
-        <MyVideo />
       {/if}
 
       {#if videoCalls.length}
