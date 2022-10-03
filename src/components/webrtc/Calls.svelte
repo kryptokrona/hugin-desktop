@@ -9,7 +9,7 @@
     answerCall(msg, contact, key, offchain);
   });
 
-  window.api.receive("start-call", (conatct, calltype, invite) => {
+  window.api.receive("start-call", (conatct, calltype, invite = false) => {
     startCall(conatct, calltype, invite);
   });
 
