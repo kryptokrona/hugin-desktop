@@ -1926,7 +1926,7 @@ async function sendGroupsMessage(message, offchain = false) {
     mainWindow.webContents.send("error_msg", error);
     console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
-  } else if (offchain.length = 64) {
+  } else if (offchain) {
       
     let randomKey = await createGroup()
     let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
@@ -2004,7 +2004,7 @@ async function decryptGroupMessage(tx, hash, group_key) {
 
   payload_json.sent = false
 
-  if (!offchian) {
+  if (!offchain) {
     saveGroupMessage(payload_json, hash, tx.t);
   }
  
@@ -2488,9 +2488,10 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   }
   } catch(e) {
     console.log('error decrypting group msg', e)
+    return
   }
-  mainWindow.webContents.send("groupRtcMsg", msg);
   message.sent = false
+  mainWindow.webContents.send("groupRtcMsg", msg);
 
   //saveMessageSQL(msg, hash, true);
 })
