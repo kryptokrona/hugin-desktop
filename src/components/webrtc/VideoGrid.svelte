@@ -58,9 +58,9 @@
       console.log("Group message", data.g);
       console.log("This group call", $webRTC.groupCall);
   
-      if (data.group === $webRTC.groupCall) {
+      if (data.g === $webRTC.groupCall) {
         //Push new message to store
-        printRtcGroupMessage(data);
+        printGroupRtcMessage(data);
       } else {
 
         console.log('Another group', data)
@@ -100,9 +100,9 @@
     //Prints any single board message. Takes boardmessage and updates to store.
     const printGroupRtcMessage = (groupMsg) => {
   
-      if (groupMsg.reply.length === 64 && groupMsg.message.length < 9 && containsOnlyEmojis(groupMsg.message)) {
+      if (groupMsg.reply.length === 64 && groupMsg.m.length < 9 && containsOnlyEmojis(groupMsg.m)) {
         updateReactions(groupMsg);
-      } else if (groupMsg.message.length > 0 && !(groupMsg.reply.length === 64 && containsOnlyEmojis(groupMsg.message))) {
+      } else if (groupMsg.m.length > 0 && !(groupMsg.r.length === 64 && containsOnlyEmojis(groupMsg.m))) {
         console.log("pushin");
         fixedRtcGroups.push(groupMsg)
       }
@@ -157,9 +157,9 @@
     //Checks messages for reactions in chosen board from printBoard() function
     async function checkReactions() {
       //All boardmessages all messages except reactions
-      filterRtcGroup = await $rtcgroupMessages.filter(m => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message)));
+      filterRtcGroup = await $rtcgroupMessages.filter(m => m.m.length > 0 && !(m.r.length === 64 && containsOnlyEmojis(m.m)));
       //Only reactions
-      filterEmojis = await $rtcgroupMessages.filter(e => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message));
+      filterEmojis = await $rtcgroupMessages.filter(e => e.r.length === 64 && e.m.length < 9 && containsOnlyEmojis(e.m));
       console.log("filter emoji ", filterEmojis);
       if (filterEmojis.length) {
         //Adding emojis to the correct message.
@@ -173,10 +173,10 @@
   
       let reactionsFixed;
       reactionsFixed = fixedRtcGroups.map(function(r) {
-        if (r.hash == msg.reply && !r.react) {
+        if (r.t == msg.r && !r.react) {
           r.react = [];
           r.react.push(msg);
-        } else if (r.hash == msg.reply && r.react) {
+        } else if (r.t == msg.r && r.react) {
           r.react.push(msg);
         }
         return r;
@@ -188,11 +188,11 @@
       //Check for replies and message hash that match and then adds reactions to the messages.
       filterRtcGroup.forEach(async function(a) {
         await filterEmojis.forEach(function(b) {
-          if (!a.react && b.reply == a.hash) {
+          if (!a.react && b.r == a.hash) {
             a.react = [];
             a.react.push(b);
             console.log();
-          } else if (b.reply == a.hash) {
+          } else if (b.r == a.hash) {
             a.react.push(b);
           }
         });
@@ -245,13 +245,13 @@
           on:reactTo={(e) => sendGroupRtCMsg(e)}
           on:replyTo={(e)=> replyToMessage(message.hash, message.name)}
           message={message}
-          reply={message.reply}
-          msg={message.message}
+          reply={message.r}
+          msg={message.m}
           myMsg={message.sent}
-          signature={message.signature}
-          group={message.grp}
-          nickname={message.name}
-          msgFrom={message.address}
+          signature={message.s}
+          group={message.g}
+          nickname={message.n}
+          msgFrom={message.k}
           timestamp={message.time} hash={message.hash}/>
       {/each}
       </div>
