@@ -1945,12 +1945,14 @@ async function decryptGroupMessage(tx, hash, group_key) {
   console.log(tx);
 
   let decryptBox = false;
-
+  let offchain = false
   let groups = await loadGroups()
   console.log('group key', group_key)
   if (group_key.length === 64) {
-    console.log('Offchain group key')
-    groups.unshift(group_key)
+    let msg = tx
+    tx = JSON.parse(trimExtra(msg))
+    groups.unshift({key:group_key})
+    offchain = true
   }
 
   let key;
@@ -2001,7 +2003,11 @@ async function decryptGroupMessage(tx, hash, group_key) {
   const verified = await xkrUtils.verifyMessageSignature(payload_json.m, this_addr.spend.publicKey, payload_json.s);
 
   payload_json.sent = false
-  saveGroupMessage(payload_json, hash, tx.t);
+
+  if (!offchian) {
+    saveGroupMessage(payload_json, hash, tx.t);
+  }
+ 
 
   return payload_json;
 
