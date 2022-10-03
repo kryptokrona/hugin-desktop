@@ -1676,9 +1676,6 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
 
   console.log('Msg incoming')
 
-  if (msg.gc !== undefined) {
-    group_call = msg.gc
-  }
   if (!invite) {
   //Checking if private msg is a call
   text = await parseCall(msg.msg, addr, sent, true, group_call);
@@ -1717,7 +1714,7 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
     message = "File uploaded";
     torrent = magnetLinks[0]
   }
-
+  if (!offchain) {
   console.log("Saving message", message, addr, sent, timestamp);
   //Save to DB
   database.run(
@@ -1733,6 +1730,7 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
     ]
   );
   saveHash(hash)
+  
   //New message object
   if (magnetLinks && !sent) {
     message = torrent;
@@ -1747,6 +1745,9 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
   console.log("sending newmessage");
   mainWindow.webContents.send("newMsg", newMsg)
   mainWindow.webContents.send("privateMsg", newMsg)
+  } else if (offchain) {
+    console.log('offchain message, not saving this..')
+  }
 }
 
 
@@ -2441,7 +2442,6 @@ ipcMain.on("decrypt_message", async (e, message) => {
   let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message decrypted? ', newMsg)
   
-  let hash = await createGroup()
     if (newMsg) {
       
       newMsg.sent = false
@@ -2453,28 +2453,37 @@ ipcMain.on("decrypt_message", async (e, message) => {
     
     let group = newMsg.msg.msg
     console.log('group?', group)
-      
-    console.log('message invite call?', group)
-      mainWindow.webContents.send("group-call", group)
-      let type = false
-      console.log('found invite', group.key)
-      sleep(100)
-      console.log('type true?', type)
-      if (group.type == 'true') {
+    console.log('Group key?', group.key)
+    console.log('Group key length?', group.key.length)
+
+    if (group.key.length !== 64) return
+    
+    mainWindow.webContents.send("group-call", group)
+
+    if (group.type == "invite") {
+      console.log('Got key', group.key)
+      console.log('Group invite, thanks.')
+      return
+    }
+
+    let type = false
+    sleep(100)
+    console.log('type true?', type)
+    if (group.type == "video") {
         type = true
-      }
+    }
       group.invite.forEach(a => {
         console.log('Invited to call, joining...')
         mainWindow.webContents.send("start-call", a, type, true);
         sleep(1500)
-      })
-    }
-}   catch (e) {
+    })
+  }
+  } catch (e) {
     console.log('error decrypting or parsing', e)
     return
   }
-  
-saveMessageSQL(newMsg, hash, true);
+
+//saveMessageSQL(newMsg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
