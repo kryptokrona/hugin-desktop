@@ -3,7 +3,7 @@
   import GroupMessage from "/src/components/chat/GroupMessage.svelte";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import { onMount, onDestroy } from "svelte";
-  import { webRTC, user } from "$lib/stores/user.js";
+  import { webRTC, user, rtc_groups } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   //Use for filesharing later
