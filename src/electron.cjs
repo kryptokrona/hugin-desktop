@@ -2432,24 +2432,24 @@ ipcMain.on("decrypt_message", async (e, message) => {
   console.log('message to decrypt??', message)
   
 
-  let msg = await extraDataToMessage(message, known_keys, getXKRKeypair())
-  console.log('message', msg)
+  let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
+  console.log('message', newMsg)
   
   let hash = await createGroup()
-    if (msg) {
+    if (newMsg) {
       
     msg.sent = false
 
     }
   try {
 
-  // if (!msg.invite) {
+  //     if (!newMsg.msg.msg) {
   //   saveMessageSQL(msg, hash, true);
   //   return
   // }
     
-  let group = msg.msg
-  console.log('group?', msg,msg)
+  let group = newMsg.msg.msg
+  console.log('group?', group)
     
   console.log('message invite call?', group)
     mainWindow.webContents.send("group-call", group)

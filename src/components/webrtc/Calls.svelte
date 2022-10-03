@@ -359,7 +359,7 @@
         let msg = {invite: activeCall, key: $webRTC.groupCall, type:'true'}
         let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
         let contact = $user.contacts.filter(a => a.chat === thisChat)
-        console.log("Inviting contact", contact)
+        console.log("Inviting contact", myMessage)
         let to = thisChat + contact[0].key
         //Send offchain invite message
         window.api.sendMsg(myMessage, to, true, true)
@@ -425,7 +425,7 @@
 
     if ($webRTC.groupCall && $webRTC.call.length == 1) {
       group = $webRTC.groupCall
-    } else if ($webRTC.groupCall) {
+    } else if ($webRTC.groupCall && $webRTC.call.length > 1 && !$webRTC.initiator) {
       offchain = true
     }
 
