@@ -72,7 +72,7 @@
 </script>
 
 <div class="card">
-  <video class:toggleVideo={move} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
+  <video in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
 </div>
 
 <style lang="scss">
