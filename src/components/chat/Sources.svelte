@@ -26,18 +26,18 @@
 </script>
 
 <div style="display: flex; flex-direction: column">
-  <div class="share" class:border_rgb={changed} class:open={open} on:click={() => open = !open}>
-    <h5>{changed ? 'Changed' : 'Change'}</h5>
-  </div>
   {#if open}
     <div in:fade class="list layered-shadow">
       {#each videoDevices as src}
-      <div on:click={() => pickSource(src)}>
-      <h5>{src.label}</h5>
-      </div>
+        <div on:click={() => pickSource(src)}>
+          <h5>{src.label}</h5>
+        </div>
       {/each}
     </div>
   {/if}
+  <div class="share" class:border_rgb={changed} class:open={open} on:click={() => open = !open}>
+    <h5>{changed ? 'Changed' : 'Change'}</h5>
+  </div>
 </div>
 
 <style lang="scss">
@@ -64,12 +64,12 @@
 
   .list {
     position: absolute;
+    bottom: 85px;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     width: 120px;
     padding: 5px;
-    margin-top: 45px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;

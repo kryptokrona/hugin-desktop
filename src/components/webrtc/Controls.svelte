@@ -1,27 +1,23 @@
 <script>
-
   import VideoIcon from "$components/buttons/VideoIcon.svelte";
   import MicIcon from "$components/buttons/MicIcon.svelte";
   import Screenshare from "$components/buttons/Screenshare.svelte";
   import CallSlash from "$components/buttons/CallSlash.svelte";
   import MessageIcon from "$components/buttons/MessageIcon.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
+  import { webRTC } from "$lib/stores/user.js";
+  import Sources from "$components/chat/Sources.svelte";
 
-  const keyDown = (e) => {
-    if (e.key === "Space") {
-      //If muted, push to talk
-    } else if (e.key === "Shift" && e.key === "M") {
-      //Start/stop mic
-    } else if (e.key === "Shift" && e.key === "V") {
-      //Start/stop video
-    } else if (e.key === "Shift" && e.key === "C") {
-      //Open/close chat
+  const switchStream = async () => {
+    if (!$webRTC.screen_stream) {
+      await window.api.shareScreen(false)
+    } else {
+      window.api.setCamera()
     }
-  };
+
+  }
 
 </script>
-
-<svelte:window on:keydown={keyDown} />
 
 <div class="wrapper">
   <div>
@@ -36,12 +32,15 @@
     <div class="icon" on:click>
       <MicIcon/>
     </div>
-    <div class="icon" on:click>
+    <div class="icon" on:click={switchStream}>
       <Screenshare/>
     </div>
     <div class="icon" on:click>
       <CallSlash/>
     </div>
+    {#if $webRTC.myStream}
+      <Sources/>
+    {/if}
   </div>
   <div>
     <div class="icon" on:click={() => $videoGrid.showChat = !$videoGrid.showChat}>

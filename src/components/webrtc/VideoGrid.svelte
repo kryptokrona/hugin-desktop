@@ -38,8 +38,8 @@
 
   $: console.log("video calls", videoCalls);
 
-</script>
 
+</script>
 
 <div class:hide={!$webRTC.showVideoGrid} class="layout">
 
@@ -56,12 +56,12 @@
   <div class="video-wrapper">
     <div class="video-grid">
       {#if $webRTC.myVideo}
-        <MyVideo on:drag={dragWindow} on:nodrag={noDrag} />
+        <MyVideo />
       {/if}
 
       {#if videoCalls.length}
         {#each videoCalls as peer (peer.chat)}
-          <PeerVideo on:drag={dragWindow} on:nodrag={noDrag} call={peer} />
+          <PeerVideo call={peer} />
         {/each}
       {/if}
     </div>

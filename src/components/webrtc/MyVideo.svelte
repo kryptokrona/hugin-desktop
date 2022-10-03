@@ -5,17 +5,17 @@
   import { user, webRTC } from "$lib/stores/user.js";
   import { draggable } from "@neodrag/svelte";
   import { createEventDispatcher } from "svelte";
-  import Minus from '/src/components/buttons/Minus.svelte'
-  import Plus from '/src/components/buttons/Plus.svelte'
-  import Screen from '/src/components/buttons/Screenshare.svelte'
-  import Sources from '/src/components/chat/Sources.svelte'
+  import Minus from "/src/components/buttons/Minus.svelte";
+  import Plus from "/src/components/buttons/Plus.svelte";
+  import Screen from "/src/components/buttons/Screenshare.svelte";
+  import Sources from "/src/components/chat/Sources.svelte";
 
   let myVideo = document.getElementById("myVideo");
   let video = false;
   let hover = false;
   let chatWindow = true;
-  let window_max = false
-  let window_medium = false
+  let window_max = false;
+  let window_medium = false;
 
   export let call;
 
@@ -60,50 +60,39 @@
   onDestroy(() => {
   });
 
- $: if ($webRTC.screen_stream) {
-  playVideo()
- } else if ($webRTC.video) {
-  playVideo()
- }
+  $: if ($webRTC.screen_stream) {
+    playVideo();
+  } else if ($webRTC.video) {
+    playVideo();
+  }
 
-  let source = true
+  let source = true;
 
   const switchStream = async () => {
     if (!$webRTC.screen_stream) {
-      await window.api.shareScreen(false)
+      await window.api.shareScreen(false);
     } else {
-      window.api.setCamera()
+      window.api.setCamera();
     }
-
-  }
+  };
 
   const resize = (size) => {
     switch (size) {
-      case 'min':
-      window_medium = false
-      break;
-      case 'medium':
-      window_medium = true
+      case "min":
+        window_medium = false;
+        break;
+      case "medium":
+        window_medium = true;
     }
-  }
+  };
 
-  $: window_medium
+  $: window_medium;
 </script>
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:medium_window={window_medium} use:draggable={{bounds: 'parent'}}  on:mouseenter={(e)=> dispatch('drag')} on:mouseleave={(a)=> dispatch('nodrag')}>
+<div class="card">
   <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
-  <div class="fade">
-    <div class="toggles">
-      <Screen on:click={switchStream}/>
-      <Minus on:click={()=> resize('min')}/>
-      <Plus on:click={()=> resize('medium')}/>
-      {#if $webRTC.myStream}
-       <Sources/>
-      {/if}
-    </div>
-  </div>
 </div>
 
 <style lang="scss">
@@ -120,37 +109,7 @@
     height: 47.652%;
     pointer-events: all;
     transition: 0.35s;
-    cursor: pointer;
     aspect-ratio: 16/9;
-
-    .fade {
-      position: absolute;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      bottom: 0;
-      width: 100%;
-      height: 100px;
-      z-index: 501;
-      opacity: 0%;
-      transition: 200ms ease-in-out;
-      border-radius: 0 0 10px 10px;
-    }
-
-    &:hover {
-      .fade {
-        opacity: 100%;
-        background-image: linear-gradient(180deg, #00000000, #000000);
-        pointer-events: visible;
-      }
-    }
-
-    .toggles {
-      display: flex;
-      width: 100%;
-      justify-content: space-evenly;
-      align-items: center;
-    }
 
     video {
       position: absolute;
@@ -236,26 +195,6 @@
     width: 50px;
     height: 50px;
   }
-
-
- .max_window {
-  width: 1000px;
-  height: 800px;
-  transition: 0.35s;
- }
-
- .medium_window {
-  width: 650px;
-  height: 400px;
-  transition: 0.35s;
- }
-
- .resize {
-  color: white;
-    font-size: 30px;
-    position: relative;
-    display: inline-block;
- }
 
 
 </style>
