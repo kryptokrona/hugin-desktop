@@ -41,7 +41,7 @@
 
 </script>
 
-<div class:hide={!$webRTC.showVideoGrid} class="layout">
+<div in:fade out:fade class:hide={!$webRTC.showVideoGrid} class="layout">
 
   <!--
   <p on:click={close}>Close</p>
@@ -52,7 +52,6 @@
     </div>
   </div>
   -->
-
   <div class="video-wrapper">
     <div class="video-grid">
       {#if $webRTC.myVideo}
@@ -71,8 +70,8 @@
   {#if $videoGrid.showChat}
     <RtcGroupMessages />
   {/if}
-
 </div>
+
 
 <style lang="scss">
 
@@ -96,7 +95,7 @@
 
   .video-grid {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 73px);
     max-width: 100%;
     display: flex;
     flex-wrap: wrap;
