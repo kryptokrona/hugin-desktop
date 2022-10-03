@@ -9,8 +9,8 @@
     answerCall(msg, contact, key, offchain);
   });
 
-  window.api.receive("start-call", (conatct, calltype) => {
-    startCall(conatct, calltype);
+  window.api.receive("start-call", (conatct, calltype, invite) => {
+    startCall(conatct, calltype, invite);
   });
 
 
@@ -89,6 +89,7 @@
   window.api.receive("got-callback", (callerdata) => {
     let callback = JSON.parse(callerdata.data);
     console.log("callback parsed", callback);
+    console.log('callerdata', callerdata)
     let contact = $webRTC.call.filter(a => a.chat === callerdata.chat);
     console.log("contact filter", contact);
     contact[0].peer.signal(callback);
@@ -101,9 +102,14 @@
     checkSources();
   };
 
-  const startCall = async (contact, isVideo, screenshare = false) => {
+  const startCall = async (contact, isVideo, invite, screenshare = false) => {
     // spilt input to addr and pubkey
+   
     let contact_address = contact.substring(0, 99);
+    if (invite) {
+      let call = {chat: contact_address, type: "invite"}
+      $webRTC.call.unshift(call)
+    }
 
     console.log("contact address", contact_address);
     console.log("Hugin Address", contact);
@@ -427,6 +433,7 @@
       group = $webRTC.groupCall
     } else if ($webRTC.groupCall && $webRTC.call.length > 1 && !$webRTC.initiator) {
       offchain = true
+      group = true
     }
 
 
