@@ -1867,11 +1867,7 @@ async function sendGroupsMessage(message, offchain = false) {
 
   let group 
 
-  if (offchain) {
-    group = offchain
-  } else {
     group = message.g
-  }
 
   if (group.length !== 64) {
     console.log('wrong key size', group)
@@ -2436,7 +2432,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
   let hash = await createGroup()
     if (newMsg) {
       
-    msg.sent = false
+      newMsg.sent = false
 
     }
   try {
@@ -2466,7 +2462,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
     return
   }
   
-saveMessageSQL(msg, hash, true);
+saveMessageSQL(newMsg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
