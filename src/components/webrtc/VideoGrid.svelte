@@ -53,7 +53,7 @@
     //Listens for new messages from backend
     window.api.receive("groupRtcMsg", data => {
 
-        if (data.address === $user.huginAddress.substring(0, 99)) return
+        if (data.k === $user.huginAddress.substring(0, 99)) return
       //*TODO*//Keep logs to experiment with toast popups
       console.log("Group message", data.g);
       console.log("This group call", $webRTC.groupCall);
@@ -88,7 +88,7 @@
       console.log("wanna send this", sendMsg);
       printGroupRtcMessage(myGroupMessage);
       if (!offchain) return
-      window.api.sendGroupMessage(sendMsg, offchain);
+      window.api.sendGroupMessage(sendMsg, true);
       // replyExit();
       scrollDown();
   };
@@ -100,7 +100,7 @@
     //Prints any single board message. Takes boardmessage and updates to store.
     const printGroupRtcMessage = (groupMsg) => {
   
-      if (groupMsg.reply.length === 64 && groupMsg.m.length < 9 && containsOnlyEmojis(groupMsg.m)) {
+      if (groupMsg.r.length === 64 && groupMsg.m.length < 9 && containsOnlyEmojis(groupMsg.m)) {
         updateReactions(groupMsg);
       } else if (groupMsg.m.length > 0 && !(groupMsg.r.length === 64 && containsOnlyEmojis(groupMsg.m))) {
         console.log("pushin");
@@ -252,7 +252,7 @@
           group={message.g}
           nickname={message.n}
           msgFrom={message.k}
-          timestamp={message.time} hash={message.hash}/>
+          timestamp={message.t} hash={message.hash}/>
       {/each}
       </div>
       <!-- </Dropzone> -->
