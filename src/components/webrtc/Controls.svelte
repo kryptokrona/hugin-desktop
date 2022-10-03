@@ -17,6 +17,18 @@
 
   }
 
+  const endCall = () => {
+    //We delay the answerCall for routing purposes
+    $webRTC.call.forEach(a => {
+      window.api.endCall("peer", "stream", a.chat)
+    })
+    //We pause the ringtone and destroy the popup
+  };
+
+  const toggleWindow = () => {
+    $webRTC.showVideoGrid = !$webRTC.showVideoGrid
+  }
+
 </script>
 
 <div class="wrapper">
@@ -35,12 +47,15 @@
     <div class="icon" on:click={switchStream}>
       <Screenshare/>
     </div>
-    <div class="icon" on:click>
+    <div class="icon" on:click={endCall}>
       <CallSlash/>
     </div>
     {#if $webRTC.myStream}
       <Sources/>
     {/if}
+  </div>
+  <div class="icon">
+    <p on:click={toggleWindow}>Hide</p>
   </div>
   <div>
     <div class="icon" on:click={() => $videoGrid.showChat = !$videoGrid.showChat}>
