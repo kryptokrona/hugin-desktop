@@ -266,7 +266,7 @@
         let myMessage = { chat: thisCall.chat, msg: msg, sent: true, timestamp: Date.now() };
         let contact = $user.contacts.filter(a => a.chat === thisCall.chat)
         console.log("Inviting contact", myMessage)
-        let to = thisChat + contact[0].key
+        let to = thisCall.chat + contact[0].key
         //Send offchain invite message
         window.api.sendMsg(myMessage, to, true, true)
   }
