@@ -235,6 +235,36 @@
     }
   }
 
+  async function inviteToGroupCall() {
+    
+    console.log('Group call connecting...')
+          if ($webRTC.groupCall === false) {
+            //If no groupcall is started, get a new key
+            $webRTC.groupCall = await window.api.createGroup()
+            console.log('New group key')
+          }
+        //When you invite a new person to the call
+        let thisChat = $webRTC.call[0].chat
+        //Sort out all active calls except this
+        let callList = $webRTC.call.filter(a => a.chat !== thisChat)
+
+        let activeCall = []
+        //Go through that list and add our contacts to a new array
+        callList.forEach(a => {
+          let tunnelTo = $user.contacts.filter(c => c.chat === a.chat)
+          let listItem = a.chat + tunnelTo[0].key
+          activeCall.push(listItem)
+        })
+        //Make an invite message through the datachannel to our new participant
+        let msg = {invite: activeCall, key: $webRTC.groupCall, type:'true'}
+        let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
+        let contact = $user.contacts.filter(a => a.chat === thisChat)
+        console.log("Inviting contact", myMessage)
+        let to = thisChat + contact[0].key
+        //Send offchain invite message
+        window.api.sendMsg(myMessage, to, true, true)
+  }
+
 
   async function gotMedia(stream, contact, video, screen_stream = false) {
 
@@ -344,39 +374,10 @@
       if (!$webRTC.invited) {
         if ($webRTC.call.length > 1 && $webRTC.initiator) {
           console.log('Initiator true')
-          
-        console.log('Group call connecting...')
-          if ($webRTC.groupCall === false) {
-            //If no groupcall is started, get a new key
-            $webRTC.groupCall = await window.api.createGroup()
-            console.log('New group key')
-          }
-        //When you invite a new person to the call
-        let thisChat = $webRTC.call[0].chat
-        //Sort out all active calls except this
-        let callList = $webRTC.call.filter(a => a.chat !== thisChat)
-
-        let activeCall = []
-        //Go through that list and add our contacts to a new array
-        callList.forEach(a => {
-          let tunnelTo = $user.contacts.filter(c => c.chat === a.chat)
-          let listItem = a.chat + tunnelTo[0].key
-          activeCall.push(listItem)
-        })
-        //Make an invite message through the datachannel to our new participant
-        let msg = {invite: activeCall, key: $webRTC.groupCall, type:'true'}
-        let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
-        let contact = $user.contacts.filter(a => a.chat === thisChat)
-        console.log("Inviting contact", myMessage)
-        let to = thisChat + contact[0].key
-        //Send offchain invite message
-        window.api.sendMsg(myMessage, to, true, true)
+          inviteToGroupCall(peer1)
         
       }
     }
-      
-        //Reset initiator on connect
-        $webRTC.initiator = false
         //Reset invited status for connected peer
         $webRTC.invited = false
     });
@@ -707,6 +708,10 @@
       filter = $webRTC.call.filter(e => e.peer !== peer);
     } else {
       filter = $webRTC.call.filter(a => a.chat !== contact);
+    }
+
+    if (filter.length < 2) {
+      $webRTC.groupCall = false
     }
 
     console.log('cleared this call from', filter)
