@@ -434,9 +434,7 @@
     let group = false
     let offchain = false
 
-    if ($webRTC.groupCall && $webRTC.call.length == 1) {
-      group = $webRTC.groupCall
-    } else if ($webRTC.groupCall && $webRTC.call.length > 1 && !$webRTC.initiator) {
+    if ($webRTC.groupCall && $webRTC.call.length > 1 && $webRTC.call[0].type == "invite") {
       offchain = true
       group = true
     }
@@ -551,10 +549,6 @@
       //Reset invited status for connected peer
       $webRTC.invited = false
       console.log('groupcall key?', $webRTC.groupCall)
-      if ($webRTC.groupCall && $webRTC.call.length === 1) {
-        //This is the first peer invited to a call
-        $webRTC.invited = true
-      }
       peer2._channel.addEventListener("message", (event) => {
 
         let message = JSON.parse(event.data)

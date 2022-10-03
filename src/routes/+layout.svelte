@@ -85,6 +85,10 @@
 	window.api.receive('group-call', (data) => {
 		console.log('group call data', data)
 		$webRTC.groupCall = data.key
+		if ($webRTC.groupCall && $webRTC.call.length === 1) {
+        //This is the first peer invited to a call
+        $webRTC.invited = true
+      }
 	})
 
 		//Handle sync status
