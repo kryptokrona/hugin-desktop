@@ -1021,8 +1021,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
             message = JSON.parse(group)
             if (message.sb)
             {
-              let msg = await decryptGroupMessage(message, thisHash)
-              console.log('found group message?', msg)
+              decryptGroupMessage(message, thisHash)
             }
             saveHash(thisHash)
             console.log("Caught undefined null message, continue");
@@ -1283,7 +1282,7 @@ async function saveBoardMsg(msg, hash, follow=false) {
   mainWindow.webContents.send("newBoardMessage", message)
 }
 
-async function saveGroupMessage(msg, hash, time) {
+async function saveGroupMessage(msg, hash, time, offchain) {
 
   let group = sanitizeHtml(msg.g);
   let text = sanitizeHtml(msg.m);
@@ -1310,6 +1309,7 @@ async function saveGroupMessage(msg, hash, time) {
     sent: msg.sent
   };
 
+  if (!offchain) {
   database.run(
     `REPLACE INTO groupmessages  (
         message,
@@ -1337,9 +1337,14 @@ async function saveGroupMessage(msg, hash, time) {
     ]
   );
     saveHash(hash)
+  
   //Send new board message to frontend.
   mainWindow.webContents.send("groupMsg", message);
   mainWindow.webContents.send("newGroupMessage", message);
+  } else if (offchain) {
+    console.log('Not saving offchain message')
+  mainWindow.webContents.send("groupRtcMsg", message);
+  }
 }
 
 //Get all messages from db
@@ -1865,7 +1870,8 @@ async function sendGroupsMessage(message, offchain = false) {
 
   const nonce = nonceFromTimestamp(timestamp);
 
-  let group 
+  let group
+  let reply = ""
 
     group = message.g
 
@@ -1880,9 +1886,10 @@ async function sendGroupsMessage(message, offchain = false) {
     "s": signature,
     "g": group,
     "n": message.n,
+    "r": reply
   }
 
-  if (message.r.length > 63) {
+  if (message.r.length === 64) {
     message_json.r = message.r
   }
   
@@ -1927,7 +1934,7 @@ async function sendGroupsMessage(message, offchain = false) {
     console.log(`Failed to send transaction: ${result.error.toString()}`);
   }
   } else if (offchain) {
-      
+    //Generate a random hash
     let randomKey = await createGroup()
     let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
     console.log("sending group rtc message");
@@ -2004,12 +2011,10 @@ async function decryptGroupMessage(tx, hash, group_key) {
 
   payload_json.sent = false
 
-  if (!offchain) {
-    saveGroupMessage(payload_json, hash, tx.t);
-  }
+  saveGroupMessage(payload_json, hash, tx.t);
  
 
-  return payload_json;
+  return [payload_json, tx.t, hash];
 
 
 }
@@ -2046,7 +2051,7 @@ async function sendBoardMessage(message) {
     let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
 
     let result = await js_wallet.sendTransactionAdvanced(
-      [[mainWallet, 1000]], // destinations,
+      [[subWallet, 1000]], // destinations,
       3, // mixin
       { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
@@ -2479,9 +2484,9 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   console.log('key?', key)
 
   try {
-  
-  let hash = await createGroup()
-  msg = await decryptGroupMessage(message, hash, key)
+  let hash = message.substring(0,64)
+  console.log('hash?', hash)
+  decryptGroupMessage(message, hash, key)
   console.log('message', msg)
   if (!msg) {
     //Not a message to me, tunnel this
@@ -2490,10 +2495,7 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
     console.log('error decrypting group msg', e)
     return
   }
-  message.sent = false
-  mainWindow.webContents.send("groupRtcMsg", msg);
 
-  //saveMessageSQL(msg, hash, true);
 })
 
 
