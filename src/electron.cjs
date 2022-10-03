@@ -2469,7 +2469,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
     let type = false
     sleep(100)
     console.log('type true?', type)
-    if (group.type == "video") {
+    if (group.type == true) {
         type = true
     }
       group.invite.forEach(a => {
