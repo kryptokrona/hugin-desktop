@@ -41,7 +41,7 @@
 
 </script>
 
-<div in:fade out:fade class:hide={!$webRTC.showVideoGrid} class="layout">
+<div in:fade out:fade class:hide={!$videoGrid.showVideoGrid} class="layout">
 
   <!--
   <p on:click={close}>Close</p>
@@ -55,6 +55,8 @@
   <div class="video-wrapper">
     <div class="video-grid">
       {#if $webRTC.myVideo}
+        <MyVideo />
+        <MyVideo />
         <MyVideo />
       {/if}
 

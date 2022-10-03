@@ -35,7 +35,7 @@
     <div class="icon" on:click={switchStream}>
       <Screenshare/>
     </div>
-    <div class="icon" on:click>
+    <div class="icon" on:click={() => $videoGrid.showVideoGrid = !$videoGrid.showVideoGrid}>
       <CallSlash/>
     </div>
     {#if $webRTC.myStream}

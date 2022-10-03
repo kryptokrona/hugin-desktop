@@ -18,6 +18,7 @@
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
     import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
+  import { videoGrid } from "$lib/stores/layout-state.js";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -204,7 +205,7 @@
           {/if}
         </div>
         <div class="button">
-          <ShowVideoMenu on:click={toggleCallMenu}/>
+          <ShowVideoMenu on:click={() => $videoGrid.showVideoGrid = !$videoGrid.showVideoGrid}/>
         </div>
       {/if}
     </div>
