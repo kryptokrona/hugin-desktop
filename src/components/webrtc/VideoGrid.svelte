@@ -2,110 +2,109 @@
   import MyVideo from "./MyVideo.svelte";
   import { webRTC, user } from "$lib/stores/user.js";
   import PeerVideo from "$components/webrtc/PeerVideo.svelte";
+  import { videoGrid } from "$lib/stores/layout-state.js";
   import { fade } from "svelte/transition";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import RtcGroupMessages from "$components/webrtc/RtcGroupMessages.svelte";
+  import Controls from "$components/webrtc/Controls.svelte";
 
-  let drag = false
-  let videoCalls = []
-  let join = false
-  let groupKey = ""
+  let drag = false;
+  let videoCalls = [];
+  let join = false;
+  let groupKey = "";
 
   const dragWindow = () => {
-    console.log('dragwindow', drag)
-    drag = true
-  }
+    console.log("dragwindow", drag);
+    drag = true;
+  };
 
   const noDrag = () => {
-    drag = false
-  }
+    drag = false;
+  };
   const close = () => {
-    $webRTC.showVideoGrid = false
-  }
+    $webRTC.showVideoGrid = false;
+  };
 
   const joinGroupChat = () => {
-      console.log('joining')
-      $webRTC.groupCall = groupKey
-      groupKey = ""
-      join = false
-    }
+    console.log("joining");
+    $webRTC.groupCall = groupKey;
+    groupKey = "";
+    join = false;
+  };
 
-  $: groupKey
+  $: groupKey;
 
-  $: videoCalls = $webRTC.call.filter(a => a.peerVideo === true)
+  $: videoCalls = $webRTC.call.filter(a => a.peerVideo === true);
 
-  $: console.log('video calls', videoCalls)
+  $: console.log("video calls", videoCalls);
 
 </script>
 
 
+<div class:hide={!$webRTC.showVideoGrid} class="layout">
 
-
-<div class:hide={!$webRTC.showVideoGrid} class="grid">
-
-  <RtcGroupMessages />
-
-
-  <div class="wrapper">
-    <div class="videogrid">
-    <p on:click={close}>Close</p>
-    <p on:click={()=> join = !join}>Join chat</p>
-    <div class="exit">
-
-      <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
-        <GreenButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
-      </div>
-    </div>
-    {#if  $webRTC.myVideo}
-      <MyVideo 
-          on:drag={dragWindow}
-          on:nodrag={noDrag}/>
-    {/if}
-
-    {#if videoCalls.length}
-      {#each videoCalls as peer (peer.chat)}
-        <PeerVideo 
-              on:drag={dragWindow}
-              on:nodrag={noDrag}
-              call={peer} />
-        
-      {/each}
-    {/if}
+  <!--
+  <p on:click={close}>Close</p>
+  <p on:click={()=> join = !join}>Join chat</p>
+  <div class="exit">
+    <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
+      <GreenButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
     </div>
   </div>
+  -->
+
+  <div class="video-wrapper">
+    <div class="video-grid">
+      {#if $webRTC.myVideo}
+        <MyVideo on:drag={dragWindow} on:nodrag={noDrag} />
+      {/if}
+
+      {#if videoCalls.length}
+        {#each videoCalls as peer (peer.chat)}
+          <PeerVideo on:drag={dragWindow} on:nodrag={noDrag} call={peer} />
+        {/each}
+      {/if}
+    </div>
+    <Controls />
+  </div>
+
+  {#if $videoGrid.showChat}
+    <RtcGroupMessages />
+  {/if}
 
 </div>
+
 <style lang="scss">
-  .grid {
-      box-sizing: border-box;
-      position: absolute;
-      display: flex;
-      height: 100vh;
-      width: 100%;
-      z-index: 499;
-      pointer-events: all;
-      background: rgba(0,0,0,0.94);
-  }
 
-  .drag {
-    pointer-events: visible;
-  }
-
-  p {
-    font-family: "Montserrat";
-    font-size: 17px;
-    cursor: pointer;
-    color: #c9c5c5;
-    &:hover {
-      color: white;
-    }
-  }
-
-  .exit {
-    align-content: center;
+  .layout {
     display: flex;
-    bottom: 10px;
-    right: 25px;
+    position: absolute;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--backgound-color);
+    height: 100%;
+    width: 100%;
+    z-index: 9999;
+  }
+
+  .video-wrapper {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .video-grid {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    vertical-align: middle;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
   }
 
   .fade {
@@ -127,28 +126,8 @@
     }
   }
 
-  .left_side {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .wrapper {
-    max-width: 100%;
-    display: flex;
-    overflow: hidden;
-    border-right: 1px solid var(--border-color);
-    z-index: 0;
-    transition: all 0.3s ease-in-out;
-  }
-
   .hide {
     display: none
-  }
-
-  .videogrid {
-    width: 100%;
-    display: flex;
   }
 
 
