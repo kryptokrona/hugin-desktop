@@ -2430,10 +2430,8 @@ ipcMain.on("check-srcs", async (e, src) => {
 ipcMain.on("decrypt_message", async (e, message) => {
 
   console.log('message to decrypt??', message)
-  
-
   let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
-  console.log('message', newMsg)
+  console.log('message decrypted? ', newMsg)
   
   let hash = await createGroup()
     if (newMsg) {
@@ -2443,33 +2441,32 @@ ipcMain.on("decrypt_message", async (e, message) => {
     }
   try {
 
-  //     if (!newMsg.msg.msg) {
-  //   saveMessageSQL(msg, hash, true);
-  //   return
-  // }
+  if (newMsg.msg.msg) {
     
-  let group = newMsg.msg.msg
-  console.log('group?', group)
-    
-  console.log('message invite call?', group)
-    mainWindow.webContents.send("group-call", group)
-    let type = false
-    console.log('found invite', group.key)
-    sleep(100)
-    console.log('type true?', type)
-    if (group.type == 'true') {
-      type = true
+    let group = newMsg.msg.msg
+    console.log('group?', group)
+      
+    console.log('message invite call?', group)
+      mainWindow.webContents.send("group-call", group)
+      let type = false
+      console.log('found invite', group.key)
+      sleep(100)
+      console.log('type true?', type)
+      if (group.type == 'true') {
+        type = true
+      }
+      group.invite.forEach(a => {
+        console.log('Invited to call, joining...')
+        mainWindow.webContents.send("start-call", a, type, true);
+        sleep(1500)
+      })
     }
-    group.invite.forEach(a => {
-      console.log('Invited to call, joining...')
-      mainWindow.webContents.send("start-call", a, type);
-      sleep(1500)
-      return
-    })
-   } catch (e) {
+}   catch (e) {
     console.log('error decrypting or parsing', e)
     return
   }
+  
+saveMessageSQL(msg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
@@ -2640,7 +2637,6 @@ function parseCall(msg, sender, sent, emitCall = true, group = false) {
 let stream;
 
 ipcMain.on("expand-sdp", (e, data, address) => {
-  console.log("INCOMING EXPAND SDP", data);
   console.log("INCOMING EXPAND SDP", address);
   let recovered_data = expand_sdp_offer(data);
   console.log("TYPE EXPAND_O", recovered_data);
@@ -2652,16 +2648,16 @@ ipcMain.on("expand-sdp", (e, data, address) => {
 
 
 ipcMain.on("get-sdp", (e, data) => {
-  console.log("get-sdp", data.data, data.type, data.contact, data.video);
+  console.log("get-sdp", data.type, data.contact, data.video);
 
   if (data.type == "offer") {
-    console.log("Offer", data.data, data.type, data.contact, data.video);
+    console.log("Offer",  data.type, data.contact, data.video);
     let parsed_data = `${data.video ? "Δ" : "Λ"}` + parse_sdp(data.data);
     let recovered_data = expand_sdp_offer(parsed_data);
     sendMessage(parsed_data, data.contact, data.offchain, data.group);
 
   } else if (data.type == "answer") {
-    console.log("Answerrrrrrrr", data.data, data.type, data.contact, data.video);
+    console.log("Answerrrrrrrr", data.type, data.contact, data.video);
     let parsed_data = `${data.video ? "δ" : "λ"}` + parse_sdp(data.data);
     console.log("parsed data really cool sheet:", parsed_data);
     let recovered_data = expand_sdp_answer(parsed_data);
