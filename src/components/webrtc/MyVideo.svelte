@@ -116,11 +116,12 @@
     box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--card-border);
     z-index: 500;
-    height: 203px;
-    width: 360px;
+    width: 47.652%;
+    height: 47.652%;
     pointer-events: all;
     transition: 0.35s;
     cursor: pointer;
+    aspect-ratio: 16/9;
 
     .fade {
       position: absolute;
