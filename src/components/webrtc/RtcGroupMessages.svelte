@@ -207,7 +207,7 @@
 <!-- {#if $webRTC.call.length > 1} -->
 <div class="chat layered-shadow" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
   <div class="outer" id="chat_window">
-    <div class="fade"></div>
+<!--    <div class="fade"></div>-->
     <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
           on:drop={dropFile}> -->
     <div class="inner">
