@@ -235,30 +235,36 @@
     }
   }
 
-  async function inviteToGroupCall() {
+  async function inviteToGroupCall(peer) {
     
     console.log('Group call connecting...')
           if ($webRTC.groupCall === false) {
             //If no groupcall is started, get a new key
             $webRTC.groupCall = await window.api.createGroup()
-            console.log('New group key')
+            console.log('New group key', $webRTC.groupCall)
           }
+          
         //When you invite a new person to the call
-        let thisChat = $webRTC.call[0].chat
+        let thisCall = $webRTC.call.filter(a => a.peer == peer)
         //Sort out all active calls except this
-        let callList = $webRTC.call.filter(a => a.chat !== thisChat)
-
+        let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
         let activeCall = []
+        let type
+        //If we have more active calls, invite them aswell.
+        if (callList.length) {
         //Go through that list and add our contacts to a new array
         callList.forEach(a => {
           let tunnelTo = $user.contacts.filter(c => c.chat === a.chat)
           let listItem = a.chat + tunnelTo[0].key
           activeCall.push(listItem)
         })
+        } else {
+          type = "invite"
+        }
         //Make an invite message through the datachannel to our new participant
-        let msg = {invite: activeCall, key: $webRTC.groupCall, type:'true'}
-        let myMessage = { chat: thisChat, msg: msg, sent: true, timestamp: Date.now() };
-        let contact = $user.contacts.filter(a => a.chat === thisChat)
+        let msg = {invite: activeCall, key: $webRTC.groupCall, type: type}
+        let myMessage = { chat: thisCall.chat, msg: msg, sent: true, timestamp: Date.now() };
+        let contact = $user.contacts.filter(a => a.chat === thisCall.chat)
         console.log("Inviting contact", myMessage)
         let to = thisChat + contact[0].key
         //Send offchain invite message
@@ -372,15 +378,9 @@
       $webRTC.call[0].connected = true
       console.log("Connection established");
       if (!$webRTC.invited) {
-        if ($webRTC.call.length > 1 && $webRTC.initiator) {
-          console.log('Initiator true')
           inviteToGroupCall(peer1)
-        
       }
-    }
-        //Reset invited status for connected peer
-        $webRTC.invited = false
-    });
+    })
 
     peer1.on("data", msg => {
       let incMsg = JSON.parse(msg);
