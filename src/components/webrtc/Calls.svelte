@@ -245,7 +245,8 @@
           }
           
         //When you invite a new person to the call
-        let thisCall = $webRTC.call.filter(a => a.peer == peer)
+        let thisCall = $webRTC.call[0].chat
+        console.log('this call', thisCall)
         //Sort out all active calls except this
         let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
         let activeCall = []
