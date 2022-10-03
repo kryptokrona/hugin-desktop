@@ -82,11 +82,10 @@
       }
 
       //Construct a new json object (myBoardMessage) to be able to print our message instant.
-      let myGroupMessage = { message: msg, grp: group, reply: replyto, address: myaddr, time: time, name: myName, hash: time };
       let sendMsg = { m: msg, g: group, r: replyto, k: myaddr, t: time, n: myName, hash: time };
      
       console.log("wanna send this", sendMsg);
-      printGroupRtcMessage(myGroupMessage);
+      printGroupRtcMessage(sendMsg);
       if (!offchain) return
       window.api.sendGroupMessage(sendMsg, true);
       // replyExit();
