@@ -46,10 +46,14 @@
 
   window.api.receive("rtc_message", (msg, to_group = false) => {
 
+    console.log('my active calls', $webRTC.call)
 
     if (to_group) {
       console.log('sending rtc group message')
       $webRTC.call.forEach(a => {
+        console.log(
+          'sending to peer', a.peer
+        )
         let sendMsg = JSON.stringify(msg[0])
         console.log("sending rtc", sendMsg)
         a.peer.send(sendMsg)
@@ -410,10 +414,12 @@
         }
         //Decrypt group message, groupCall is either key or false.
         console.log('Group message', groupMessage)
-        window.api.decryptGroupMessage(groupMessage, $webRTC.groupCall)
+        let key = $webRTC.groupCall
+        console.log('decrypting with', key)
+        window.api.decryptGroupMessage(groupMessage, key)
         return
       }
-      console.log('addr?', addr.substring(0,4))
+        console.log('addr?', addr.substring(0,4))
         if (addr.substring(0,4)  == "SEKR") {
           console.log('this message should be routed elsewere')
           return
@@ -574,6 +580,8 @@
         }
         //Decrypt group message, groupCall is either key or false.
         console.log('Group parsed message', message)
+        let key =  $webRTC.groupCall
+        console.log('decrypting with', key)
         window.api.decryptGroupMessage(message, $webRTC.groupCall)
         return
       }
@@ -685,9 +693,11 @@
 
     try {
       caller[0].peer.destroy();
+      if ($webRTC.call.length === 1) {
         caller[0].myStream.getTracks().forEach(function(track) {
         track.stop();
       });
+    }
     } catch (e) {
       console.log("error", e);
     }

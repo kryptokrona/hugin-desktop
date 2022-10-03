@@ -34,6 +34,7 @@ const WINDOW_API = {
     ipcRenderer.send('decrypt_message', msg)
   },
   decryptGroupMessage: (msg, key) => {
+    console.log('key', key)
     ipcRenderer.send('decrypt_rtc_group_message', msg, key)
   },
 

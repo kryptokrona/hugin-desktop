@@ -1940,16 +1940,17 @@ async function sendGroupsMessage(message, offchain = false) {
   }
 }
 
-async function decryptGroupMessage(tx, hash, group_key = false) {
+async function decryptGroupMessage(tx, hash, group_key) {
 
   console.log(tx);
 
   let decryptBox = false;
 
   let groups = await loadGroups()
-
-  if (group_key) {
-    groups.push(group_key)
+  console.log('group key', group_key)
+  if (group_key.length === 64) {
+    console.log('Offchain group key')
+    groups.unshift(group_key)
   }
 
   let key;
@@ -2466,10 +2467,15 @@ saveMessageSQL(newMsg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
+
+  let msg
+
+  console.log('key?', key)
+
   try {
   
   let hash = await createGroup()
-  let msg = await decryptGroupMessage(message, hash, key)
+  msg = await decryptGroupMessage(message, hash, key)
   console.log('message', msg)
   if (!msg) {
     //Not a message to me, tunnel this
