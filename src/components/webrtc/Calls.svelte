@@ -249,7 +249,7 @@
         //Sort out all active calls except this
         let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
         let activeCall = []
-        let type
+        let type = $webRTC.myVideo
         //If we have more active calls, invite them aswell.
         if (callList.length) {
         //Go through that list and add our contacts to a new array
