@@ -29,6 +29,11 @@ export const groups = writable({
     groupArray: [],
 })
 
+export const rtc_groups = writable({
+    addGroup: false,
+    replyTo: {reply: false},
+})
+
 export const misc = writable({
     syncState: '',
     walletBlockCount: null,
