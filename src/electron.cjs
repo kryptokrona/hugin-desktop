@@ -1050,7 +1050,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
           } else if (message.type === "sealedbox" || "box") {
             console.log("Saving Message");
             // await saveMsg(message);
-            saveMessageSQL(message, thisHash);
+            saveMessage(message, thisHash);
 
           }
 
@@ -1194,7 +1194,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
   );
 
   if (first) {
-    saveMessageSQL({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: Date.now() });
+    saveMessage({ msg: "New friend added!", k: key, from: addr, chat: addr, sent: true, t: Date.now() });
     known_keys.pop(key);
     console.log("known_keys poped", known_keys);
   }
@@ -1664,7 +1664,7 @@ async function getReplies(hash = false) {
 
 
 //Saves private message
-async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
+async function saveMessage(msg, hash, offchain = false) {
   let torrent;
   let text;
   let sent = msg.sent;
@@ -1714,7 +1714,6 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
     message = "File uploaded";
     torrent = magnetLinks[0]
   }
-  if (!offchain) {
   console.log("Saving message", message, addr, sent, timestamp);
   //Save to DB
   database.run(
@@ -1729,8 +1728,10 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
       timestamp
     ]
   );
-  saveHash(hash)
-  
+
+  if (!offchain) {
+    saveHash(hash)
+  }
   //New message object
   if (magnetLinks && !sent) {
     message = torrent;
@@ -1745,9 +1746,6 @@ async function saveMessageSQL(msg, hash, offchain = false, invite = false) {
   console.log("sending newmessage");
   mainWindow.webContents.send("newMsg", newMsg)
   mainWindow.webContents.send("privateMsg", newMsg)
-  } else if (offchain) {
-    console.log('offchain message, not saving this..')
-  }
 }
 
 
@@ -2196,7 +2194,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     if (result.success) {
       known_pool_txs.push(result.transactionHash);
       console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-      saveMessageSQL(sentMsg, result.transactionHash);
+      saveMessage(sentMsg, result.transactionHash);
       optimizeMessages()
     } else {
       let error = {
@@ -2225,8 +2223,8 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     }
     mainWindow.webContents.send("rtc_message", messageArray);
     console.log('payload', messageArray)
-    //let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
-    //saveMessageSQL(saveMsg, randomKey, true);
+    let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
+    saveMessageSQL(saveMsg, randomKey, true);
   }
 }
 
@@ -2487,7 +2485,7 @@ ipcMain.on("decrypt_message", async (e, message) => {
 
   if (!newMsg) return
 
-  saveMessageSQL(newMsg, hash, true);
+  saveMessage(newMsg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
