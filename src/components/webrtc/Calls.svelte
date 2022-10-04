@@ -4,6 +4,7 @@
   import { webRTC, user } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
+  import { videoGrid } from "$lib/stores/layout-state.js";
 
   window.api.receive("answer-call", (msg, contact, key, offchain) => {
     answerCall(msg, contact, key, offchain);
@@ -305,7 +306,7 @@
 
 
   }
-  $webRTC.showVideoGrid = true
+  $videoGrid.showVideoGrid = true
   async function startPeer1(stream, video, contact) {
 
     let peer1 = new Peer({
@@ -433,7 +434,7 @@
 
 
     async function gotMedia(stream) {
-      $webRTC.showVideoGrid = true
+      $videoGrid.showVideoGrid = true
 
       let peer2 = await startPeer2(stream, video);
       //Check codecs
@@ -688,7 +689,7 @@
       $webRTC.myVideo = false;
       return;
     }
-    $webRTC.showVideoGrid = false
+    $videoGrid.showVideoGrid = false
     console.log('Last call ending')
     $webRTC.myVideo = false;
     $webRTC.myStream.getTracks().forEach(function(track) {
