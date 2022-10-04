@@ -90,7 +90,7 @@
   </div>
   </div>
   <div class="icon">
-    <p on:click={() => $videoGrid.showVideoGrid = !$videoGrid.showVideoGrid}>Hide</p>
+    <p on:click={() => $videoGrid.showVideoGrid = false}>Hide</p>
   </div>
   <div>
     <div class="icon" on:click={() => $videoGrid.showChat = !$videoGrid.showChat}>
