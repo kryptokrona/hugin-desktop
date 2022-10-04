@@ -1,7 +1,7 @@
 <script>
   import { webRTC } from "$lib/stores/user.js";
   let color = "#f5f5f5"
-  
+
   $: if ($webRTC.myVideo && $webRTC.screenshare) {
     color = "#4dbb45"
   } else if (!$webRTC.screenshare) {
@@ -41,3 +41,16 @@
     </g>
   </g>
 </svg>
+
+<style lang="scss">
+
+  svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 80%;
+    }
+  }
+
+</style>
