@@ -20,3 +20,10 @@ export function prettyNumbers(amount) {
 export const openURL = (link) => {
     window.api.send('openLink', link)
 }
+
+export const calcTime = (ms) => {
+  const s = ("0" + Math.floor((ms / (1000)) % 60)).substr(-2);
+  const m = ("0" + Math.floor((ms / (60 * 1000)) % 60)).substr(-2);
+  const h = Math.floor((ms / (60 * 60 * 1000)));
+  return h + ":" + m + ":" + s;
+}
