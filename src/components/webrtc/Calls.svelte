@@ -74,7 +74,7 @@
       console.log('sendMsg tunnel', message, address)
       //Here we should try send it to the first connected peer, maybe more
       let tunnel = $webRTC.call[$webRTC.call.length - 1]
-      tunnel[0].peer.send(sendMsg)
+      tunnel.peer.send(sendMsg)
       return
 
     } else {
@@ -245,7 +245,7 @@
           }
           
         //When you invite a new person to the call
-        let thisCall = $webRTC.call[0].chat
+        let thisCall = $webRTC.call[0]
         console.log('this call', thisCall)
         //Sort out all active calls except this
         let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
