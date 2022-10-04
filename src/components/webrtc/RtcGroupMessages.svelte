@@ -200,13 +200,13 @@
 
   function addHash(data) {
 
-    fixedGroups.some(function (a) {
+    fixedRtcGroups.some(function (a) {
     if (a.hash === data.time) {
     a.hash = data.hash
     }
     })
 
-    fixedGroups = fixedGroups
+    fixedRtcGroups = fixedRtcGroups
     }
 
   window.api.receive("sent_rtc_group", data => {

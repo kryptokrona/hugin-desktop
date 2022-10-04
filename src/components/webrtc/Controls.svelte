@@ -80,9 +80,11 @@
     <div class="icon" on:click={endCall}>
       <CallSlash />
     </div>
+    <div class="icon">
     {#if $webRTC.myStream}
       <Sources />
     {/if}
+  </div>
   </div>
   <div class="icon">
     <p on:click={() => $videoGrid.showVideoGrid = !$videoGrid.showVideoGrid}>Hide</p>
