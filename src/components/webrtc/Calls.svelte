@@ -3,7 +3,7 @@
   import Peer from "simple-peer";
   import { webRTC, user } from "$lib/stores/user.js";
   import { onMount } from "svelte";
-
+  import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
 
   window.api.receive("answer-call", (msg, contact, key, offchain) => {
     answerCall(msg, contact, key, offchain);
@@ -74,7 +74,7 @@
       console.log('sendMsg tunnel', message, address)
       //Here we should try send it to the first connected peer, maybe more
       let tunnel = $webRTC.call[$webRTC.call.length - 1]
-      tunnel[0].peer.send(sendMsg)
+      tunnel.peer.send(sendMsg)
       return
 
     } else {
@@ -245,7 +245,7 @@
           }
           
         //When you invite a new person to the call
-        let thisCall = $webRTC.call[0].chat
+        let thisCall = $webRTC.call[0]
         console.log('this call', thisCall)
         //Sort out all active calls except this
         let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
@@ -705,9 +705,11 @@
       filter = $webRTC.call.filter(a => a.chat !== contact);
     }
 
-    if (filter.length < 2) {
+    if (filter.length < 1) {
       $webRTC.groupCall = false
+      $rtcgroupMessages = []
     }
+      
 
     console.log('cleared this call from', filter)
     $webRTC.call = filter;
