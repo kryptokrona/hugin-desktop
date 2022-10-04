@@ -127,11 +127,12 @@
   .hide {
     @keyframes fadeLayout {
       from {
-        opacity: 100%
+        opacity: 100%;
+        visibility: visible;
       }
       to {
         opacity: 0;
-        display: none
+        visibility: hidden;
       }
     }
 
