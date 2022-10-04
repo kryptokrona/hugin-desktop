@@ -7,7 +7,7 @@
   import EmojiSelector from "svelte-emoji-selector";
   import Time from "svelte-time";
   import ReplyArrow from "/src/components/buttons/ReplyArrow.svelte";
-  import RepliedArrom from "/src/components/buttons/RepliedArrow.svelte";
+  import RepliedArrow from "/src/components/buttons/RepliedArrow.svelte";
   import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
 
   export let msg;
@@ -23,19 +23,11 @@
   export let reply_to_this = false;
   export let rtc = false
 
-  let active;
-  let replyicon = "<";
   let thisreply = "";
   let has_reaction = false;
-  let reactionslist = [];
-  let hoverReactions = false;
   let reactions = [];
-  let reactors = [];
   let react = false;
-  let reactIcon = "😊";
   let replyMessage = false;
-  let reactionCount;
-  let time;
 
   const dispatch = createEventDispatcher();
 
@@ -122,7 +114,7 @@
       {:then thisreply}
         <div class="reply">
           <div style="display: flex; gap: 10px; align-items: center">
-            <RepliedArrom />
+            <RepliedArrow />
             <div style="display: flex; align-items: center; gap: 10px;">
               <p class="reply_nickname">{thisreply.name}</p>
               <p>{thisreply.message}</p>
