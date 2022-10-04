@@ -29,7 +29,10 @@
 
   //Share screen
   const switchStream = async () => {
+    if (!$webRTC.screenshare) {
     await window.api.shareScreen(false);
+    $webRTC.screenshare = true
+    }
   };
 
   //End call with all peers
