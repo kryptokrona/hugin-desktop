@@ -2,12 +2,13 @@
   import { fade } from "svelte/transition";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher, onMount } from "svelte";
-  import { user, boards, groups, rtc_groups } from "$lib/stores/user.js";
+  import { user, boards, groups, rtc_groups, webRTC } from "$lib/stores/user.js";
   import Reaction from "/src/components/chat/Reaction.svelte";
   import EmojiSelector from "svelte-emoji-selector";
   import Time from "svelte-time";
   import ReplyArrow from "/src/components/buttons/ReplyArrow.svelte";
   import RepliedArrom from "/src/components/buttons/RepliedArrow.svelte";
+  import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
 
   export let msg;
   export let msgFrom;
@@ -20,6 +21,7 @@
   export let hash;
   export let message;
   export let reply_to_this = false;
+  export let rtc = false
 
   let active;
   let replyicon = "<";
@@ -37,7 +39,22 @@
 
   const dispatch = createEventDispatcher();
 
+  let page
+  let offchain = false
+
+  $: if ($webRTC.groupCall && rtc) {
+    offchain = true
+  } else {
+    offchain = false
+  }
+
   async function checkreply(reply) {
+    if (offchain) {
+      let find = $rtcgroupMessages.filter(a => a.hash == reply)
+      console.log('find', find)
+      thisreply = find[0]
+      return thisreply
+    }
     thisreply = await window.api.getGroupReply(reply);
     //Add extra number to avoid collision for keys in Svelte each loop
     thisreply.hash = thisreply.hash + "1337";
@@ -69,9 +86,15 @@
 
   };
 
-  $ : if ($groups.replyTo.reply || $rtc_groups.replyTo.reply == false) {
+  $ : if ($groups.replyTo.reply == false) {
     reply_to_this = false;
-  } else if ($groups.replyTo.to || $rtc_groups.replyTo.to == hash) {
+  } else if ($groups.replyTo.to == hash) {
+    reply_to_this = true;
+  }
+
+  $ : if ($rtc_groups.replyTo.reply == false) {
+    reply_to_this = false;
+  } else if ($rtc_groups.replyTo.to == hash) {
     reply_to_this = true;
   }
   
