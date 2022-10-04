@@ -154,42 +154,8 @@
 
   }
 
-/*  function setCamera(video) {
-
-    let current = $webRTC.myStream;
-
-    console.log(video.getVideoTracks()[0]);
-    console.log("tracks", current.getVideoTracks()[0]);
-    let peer = $webRTC.call[0].peer;
-    current.removeTrack(current.getVideoTracks()[0])
-    current.addTrack(video.getVideoTracks()[0])
-    peer.replaceTrack(current.getVideoTracks()[0], video.getVideoTracks()[0], current);
-    $webRTC.screen_stream = false;
-    $webRTC.myStream = video;
-    $webRTC.video = true;
-  }*/
-
-/*  function setMedia(screen) {
-
-    let oldStream = $webRTC.myStream;
-    $webRTC.oldStream = oldStream;
-    //Set microphone audio to screen_share track
-
-    oldStream.removeTrack(oldStream.getVideoTracks()[0])
-    screen.addTrack(screen.getVideoTracks()[0])
-    screen.addTrack(oldStream.getAudioTracks()[0]);
-    let peer = $webRTC.call[0].peer;
-    //Replace track
-    peer.replaceTrack(oldStream.getVideoTracks()[0], screen.getVideoTracks()[0], oldStream);
-    $webRTC.myStream = screen;
-    console.log("stream set", $webRTC.myStream);
-    $webRTC.screen_stream = true;
-    $webRTC.video = false;
-
-  }*/
-
   $: {
-    console.log("device", $webRTC.devices);
+    console.log("My Audio/Video devices", $webRTC.devices);
     console.log("Active Camera", $webRTC.cameraId)
   }
 
@@ -300,8 +266,6 @@
     checkSources();
     let video_codecs = window.RTCRtpSender.getCapabilities("video");
     let audio_codecs = window.RTCRtpSender.getCapabilities("audio");
-    console.log("audio calling codecs", audio_codecs);
-    console.log("audio calling codecs", video_codecs);
     let custom_codecs = [];
 
     let codec;
@@ -310,16 +274,13 @@
       if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) == "level") {
         custom_codecs.push(this_codec);
       }
-      console.log("custom codenccc", custom_codecs);
 
     }
 
     let transceiverList = peer1._pc.getTransceivers();
-    console.log("audio tracks", transceiverList);
     if (video) {
         //Set defauklt camera id in store
         let camera = $webRTC.devices.filter(a => a.kind === "videoinput")
-        console.log('camera', camera)
         $webRTC.cameraId = camera[0].deviceId
         // select the desired transceiver
         transceiverList[1].setCodecPreferences(custom_codecs);
@@ -401,15 +362,17 @@
         return
       }
 
-      if ($webRTC.groupCall && addr.substring(0,4)  !== "SEKR") {
+      if ($webRTC.groupCall) {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
-        if ($webRTC.initiator && $webRTC.call.length > 1 ) {
+        if ($webRTC.call.length > 1 && addr.substring(0,4)  == "SEKR") {
         //If the address is one of our active calls, tunnel the message
+        console.log('Found address', addres)
         if ($webRTC.call.some(a => a.chat == address)) {
           let tunnel = true
           let sendTunnel = $webRTC.filter(a => a.chat === address)
+          console.log('Found message, sending to other peer')
           sendTunnel[0].peer.send(event.data)
           return
         }
@@ -417,17 +380,17 @@
         //Decrypt group message, groupCall is either key or false.
         console.log('Group message', groupMessage)
         let key = $webRTC.groupCall
-        console.log('decrypting with', key)
+        console.log('Decrypting with', key)
         window.api.decryptGroupMessage(groupMessage, key)
         return
       }
-        console.log('addr?', addr.substring(0,4))
+        console.log('Addr?', addr.substring(0,4))
         if (addr.substring(0,4)  == "SEKR") {
           console.log('this message should be routed elsewere')
           return
         }
         //Decrypt message
-        console.log('message', message)
+        console.log('Private rtc message?', message)
         window.api.decryptMessage(message)
     })
     console.log('peer1', peer1._channel)
@@ -466,15 +429,12 @@
 
     async function gotMedia(stream) {
       $webRTC.showVideoGrid = true
-      console.log("FN getMedia", stream, video);
 
       let peer2 = await startPeer2(stream, video);
       //Check codecs
       let custom_codecs = [];
       let video_codecs = window.RTCRtpSender.getCapabilities("video");
       let audio_codecs = window.RTCRtpSender.getCapabilities("audio");
-      console.log("audio calling codecs", audio_codecs);
-      console.log("audio calling codecs", video_codecs);
       let codec;
       for (codec in video_codecs.codecs) {
         let this_codec = video_codecs.codecs[codec];
@@ -489,9 +449,7 @@
       if (video) {
         //Set defauklt camera id in store
         let camera = $webRTC.devices.filter(a => a.kind === "videoinput")
-        console.log('camera', camera)
         $webRTC.cameraId = camera[0].deviceId
-        console.log("transceivers", transceivers);
         transceivers[1].setCodecPreferences(custom_codecs);
       }
 
@@ -547,9 +505,6 @@
       // SOUND EFFECT
       console.log("Connection established;");
       $webRTC.call[0].connected = true;
-      //Reset invited status for connected peer
-      $webRTC.invited = false
-      console.log('groupcall key?', $webRTC.groupCall)
       peer2._channel.addEventListener("message", (event) => {
 
         let message = JSON.parse(event.data)
@@ -561,11 +516,11 @@
           window.api.decryptMessage(parsedMsg)
           return
         }
-        if ($webRTC.groupCall && addr.substring(0,4)  !== "SEKR") {
+        if ($webRTC.groupCall) {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
-        if ($webRTC.initiator && $webRTC.call.length > 1 ) {
+        if ($webRTC.call.length > 1 && addr.substring(0,4)  == "SEKR" ) {
         //If the address is one of our active calls, tunnel the message
           if ($webRTC.call.some(a => a.chat == address)) {
             let tunnel = true
@@ -577,18 +532,18 @@
         //Decrypt group message, groupCall is either key or false.
         console.log('Group parsed message', message)
         let key =  $webRTC.groupCall
-        console.log('decrypting with', key)
-        window.api.decryptGroupMessage(message, $webRTC.groupCall)
+        console.log('Decrypting with', key)
+        window.api.decryptGroupMessage(groupMessage, key)
         return
       }
       
-      console.log('addr?', addr.substring(0,4))
-        if (addr.substring(0,4)  == "SEKR") {
+      console.log('Addr?', addr.substring(0,4))
+        if (addr.substring(0,4) === "SEKR") {
           console.log('this message should be routed elsewere')
           return
         }
       //Normal message
-        console.log('message', event.data)
+        console.log('Private rtc message?', message)
         window.api.decryptMessage(message)
     })
 
