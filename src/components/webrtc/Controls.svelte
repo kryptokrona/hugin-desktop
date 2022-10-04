@@ -1,72 +1,86 @@
 <script>
   import VideoIcon from "$components/buttons/VideoIcon.svelte";
-    import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
-    import MicIcon from "$components/buttons/MicIcon.svelte";
-    import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
-    import Screenshare from "$components/buttons/Screenshare.svelte";
-    import CallSlash from "$components/buttons/CallSlash.svelte";
-    import MessageIcon from "$components/buttons/MessageIcon.svelte";
-    import { videoGrid } from "$lib/stores/layout-state.js";
-    import { webRTC } from "$lib/stores/user.js";
-    import Sources from "$components/chat/Sources.svelte";
-  
-  
-    let muted = false;
-    let video = true
-    //Share screen
-    const switchStream = async () => {
-        await window.api.shareScreen(false)
-    }
-    
-    //End call with all peers
-    const endCall = () => {
-      $webRTC.call.forEach(a => {
-        window.api.endCall("peer", "stream", a.chat)
-      })
-      //We pause the ringtone and destroy the popup
-    };
-  
-    const toggleAudio = () => {
-      muted = !muted;
-      $webRTC.myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled)
-    };
-  
-    const toggleVideo = () => {
+  import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
+  import MicIcon from "$components/buttons/MicIcon.svelte";
+  import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
+  import Screenshare from "$components/buttons/Screenshare.svelte";
+  import CallSlash from "$components/buttons/CallSlash.svelte";
+  import MessageIcon from "$components/buttons/MessageIcon.svelte";
+  import { videoGrid } from "$lib/stores/layout-state.js";
+  import { webRTC } from "$lib/stores/user.js";
+  import Sources from "$components/chat/Sources.svelte";
+  import { onMount } from "svelte";
+  import { calcTime } from "$lib/utils/utils.js";
+
+
+  let muted = false;
+  let video = true;
+  let startTime = Date.now();
+  let time = '0:00:00'
+
+  onMount(() => {
+    setInterval(() => {
+      let currentTime = Date.now();
+      let ms = currentTime - startTime;
+      time = calcTime(ms)
+    }, 1000)
+  });
+
+
+  //Share screen
+  const switchStream = async () => {
+    await window.api.shareScreen(false);
+  };
+
+  //End call with all peers
+  const endCall = () => {
+    $webRTC.call.forEach(a => {
+      window.api.endCall("peer", "stream", a.chat);
+    });
+    //We pause the ringtone and destroy the popup
+  };
+
+  const toggleAudio = () => {
+    muted = !muted;
+    $webRTC.myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+  };
+
+  const toggleVideo = () => {
     video = !video;
-    $webRTC.myStream.getVideotracks().forEach(track => track.enabled = !track.enabled)
-    };
+    $webRTC.myStream.getVideotracks().forEach(track => track.enabled = !track.enabled);
+  };
 
 </script>
 
 <div class="wrapper layered-shadow">
   <div>
     <div on:click>
-      <p>Time</p>
+      <p>{time}</p>
     </div>
   </div>
   <div class="controls">
     <div class="icon" on:click={() => toggleVideo()}>
-    {#if !video}
-      <VideoSlash/>
-    {:else}
-      <VideoIcon/>
-    {/if}
+      {#if !video}
+        <VideoSlash />
+      {:else}
+        <VideoIcon />
+      {/if}
     </div>
-    <div class="icon" on:click={toggleAudio} >
-    {#if !muted}
-      <MicIcon/>
-    {:else}
-      <MuteIcon/>
-    {/if}
+    <div class="icon" on:click={toggleAudio}>
+      {#if !muted}
+        <MicIcon />
+      {:else}
+        <MuteIcon />
+      {/if}
     </div>
     <div class="icon" on:click={switchStream}>
-      <Screenshare/>
+      <Screenshare />
     </div>
     <div class="icon" on:click={endCall}>
-      <CallSlash/>
+      <CallSlash />
     </div>
     {#if $webRTC.myStream}
-      <Sources/>
+      <Sources />
     {/if}
   </div>
   <div class="icon">
@@ -74,7 +88,7 @@
   </div>
   <div>
     <div class="icon" on:click={() => $videoGrid.showChat = !$videoGrid.showChat}>
-      <MessageIcon/>
+      <MessageIcon />
     </div>
   </div>
 </div>
