@@ -1948,7 +1948,7 @@ async function sendGroupsMessage(message, offchain = false) {
   }
 }
 
-async function decryptGroupMessage(tx, hash, group_key) {
+async function decryptGroupMessage(tx, hash, group_key = false) {
 
   console.log(tx);
 
@@ -2012,7 +2012,7 @@ async function decryptGroupMessage(tx, hash, group_key) {
 
   payload_json.sent = false
 
-  saveGroupMessage(payload_json, hash, tx.t);
+  saveGroupMessage(payload_json, hash, tx.t, offchain);
  
 
   return [payload_json, tx.t, hash];
@@ -2496,7 +2496,6 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   let hash = message.substring(0,64)
   console.log('hash?', hash)
   decryptGroupMessage(message, hash, key)
-  console.log('message', msg)
   if (!msg) {
     //Not a message to me, tunnel this
   }
