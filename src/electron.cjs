@@ -1676,10 +1676,9 @@ async function saveMessage(msg, hash, offchain = false) {
 
   console.log('Msg incoming')
 
-  if (!invite) {
   //Checking if private msg is a call
   text = await parseCall(msg.msg, addr, sent, true, group_call);
-  }
+  
   let message = sanitizeHtml(text);
 
   //If sent set chat to chat instead of from
