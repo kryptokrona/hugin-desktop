@@ -1,33 +1,40 @@
 <script>
   import VideoIcon from "$components/buttons/VideoIcon.svelte";
-  import MicIcon from "$components/buttons/MicIcon.svelte";
-  import Screenshare from "$components/buttons/Screenshare.svelte";
-  import CallSlash from "$components/buttons/CallSlash.svelte";
-  import MessageIcon from "$components/buttons/MessageIcon.svelte";
-  import { videoGrid } from "$lib/stores/layout-state.js";
-  import { webRTC } from "$lib/stores/user.js";
-  import Sources from "$components/chat/Sources.svelte";
-
-  const switchStream = async () => {
-    if (!$webRTC.screen_stream) {
-      await window.api.shareScreen(false)
-    } else {
-      window.api.setCamera()
+    import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
+    import MicIcon from "$components/buttons/MicIcon.svelte";
+    import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
+    import Screenshare from "$components/buttons/Screenshare.svelte";
+    import CallSlash from "$components/buttons/CallSlash.svelte";
+    import MessageIcon from "$components/buttons/MessageIcon.svelte";
+    import { videoGrid } from "$lib/stores/layout-state.js";
+    import { webRTC } from "$lib/stores/user.js";
+    import Sources from "$components/chat/Sources.svelte";
+  
+  
+    let muted = false;
+    let video = true
+    //Share screen
+    const switchStream = async () => {
+        await window.api.shareScreen(false)
     }
-
-  }
-
-  const endCall = () => {
-    //We delay the answerCall for routing purposes
-    $webRTC.call.forEach(a => {
-      window.api.endCall("peer", "stream", a.chat)
-    })
-    //We pause the ringtone and destroy the popup
-  };
-
-  const toggleWindow = () => {
-    $webRTC.showVideoGrid = !$webRTC.showVideoGrid
-  }
+    
+    //End call with all peers
+    const endCall = () => {
+      $webRTC.call.forEach(a => {
+        window.api.endCall("peer", "stream", a.chat)
+      })
+      //We pause the ringtone and destroy the popup
+    };
+  
+    const toggleAudio = () => {
+      muted = !muted;
+      $webRTC.myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled)
+    };
+  
+    const toggleVideo = () => {
+    video = !video;
+    $webRTC.myStream.getVideotracks().forEach(track => track.enabled = !track.enabled)
+    };
 
 </script>
 
@@ -38,11 +45,19 @@
     </div>
   </div>
   <div class="controls">
-    <div class="icon" on:click>
+    <div class="icon" on:click={() => toggleVideo()}>
+    {#if !video}
+      <VideoSlash/>
+    {:else}
       <VideoIcon/>
+    {/if}
     </div>
-    <div class="icon" on:click>
+    <div class="icon" on:click={toggleAudio} >
+    {#if !muted}
       <MicIcon/>
+    {:else}
+      <MuteIcon/>
+    {/if}
     </div>
     <div class="icon" on:click={switchStream}>
       <Screenshare/>
