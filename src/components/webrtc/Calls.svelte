@@ -3,7 +3,7 @@
   import Peer from "simple-peer";
   import { webRTC, user } from "$lib/stores/user.js";
   import { onMount } from "svelte";
-
+  import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
 
   window.api.receive("answer-call", (msg, contact, key, offchain) => {
     answerCall(msg, contact, key, offchain);
@@ -705,9 +705,11 @@
       filter = $webRTC.call.filter(a => a.chat !== contact);
     }
 
-    if (filter.length < 2) {
+    if (filter.length < 1) {
       $webRTC.groupCall = false
+      $groupRtcMessages = []
     }
+      
 
     console.log('cleared this call from', filter)
     $webRTC.call = filter;
