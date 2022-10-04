@@ -2441,14 +2441,14 @@ ipcMain.on("check-srcs", async (e, src) => {
 ipcMain.on("decrypt_message", async (e, message) => {
 
   console.log('message to decrypt??', message)
+  let hash = message.substring(0,64)
   let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
   console.log('message decrypted? ', newMsg)
   
-    if (newMsg) {
-      
-      newMsg.sent = false
+  if (newMsg) {
+    newMsg.sent = false
+  }
 
-    }
   try {
 
   if (newMsg.msg.msg) {
@@ -2479,13 +2479,15 @@ ipcMain.on("decrypt_message", async (e, message) => {
         mainWindow.webContents.send("start-call", a, type, true);
         sleep(1500)
     })
-  }
-  } catch (e) {
-    console.log('error decrypting or parsing', e)
     return
   }
+  } catch (e) {
+    console.log('Not an invite', e)
+  }
 
-//saveMessageSQL(newMsg, hash, true);
+  if (!newMsg) return
+
+  saveMessageSQL(newMsg, hash, true);
 })
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
