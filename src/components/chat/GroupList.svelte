@@ -71,7 +71,7 @@
 
     newArray = await window.api.getGroups();
     if (groupArray.length) {
-      if (newArray[0].timestamp != groupArray[0].timestamp && newArray[0].sent == 0 && $groups.thisGroup.key != groupArray[0].chat) {
+      if (newArray[0].timestamp != groupArray[0].timestamp && newArray[0].sent == 0 && $groups.thisGroup.key != newArray[0].chat) {
 
         newArray[0].new = true;
 
