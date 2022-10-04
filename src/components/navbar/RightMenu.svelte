@@ -17,7 +17,7 @@
   import CallSlash from "/src/components/buttons/CallSlash.svelte";
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
-    import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
+  import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
 
   const dispatch = createEventDispatcher();
@@ -30,6 +30,7 @@
   let endTone = new Audio("/static/audio/endcall.mp3");
   let thisCall = false;
   let video = false;
+
   $: {
     if ($user.activeChat) {
       active_contact = $user.activeChat;
@@ -144,7 +145,7 @@
 
 </script>
 
-<div class="rightMenu">
+<div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
 
   {#if $page.url.pathname === '/boards'}
     <div class="nav" style="display:block !important;">
@@ -205,7 +206,7 @@
           {/if}
         </div>
         <div class="button">
-          <ShowVideoMenu on:click={() => $videoGrid.showVideoGrid = !$videoGrid.showVideoGrid}/>
+          <ShowVideoMenu on:click={() => $videoGrid.showVideoGrid = true}/>
         </div>
       {/if}
     </div>
@@ -367,6 +368,10 @@
     width: 10px;
     right: -7px;
     box-shadow: 0 0 10px white
+  }
+
+  .hide {
+    display: none !important;
   }
 
 
