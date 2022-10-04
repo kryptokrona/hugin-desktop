@@ -38,7 +38,7 @@
 
 </script>
 
-<div class="wrapper">
+<div class="wrapper layered-shadow">
   <div>
     <div on:click>
       <p>Time</p>

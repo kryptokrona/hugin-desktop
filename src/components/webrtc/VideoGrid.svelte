@@ -67,9 +67,7 @@
     <Controls />
   </div>
 
-  {#if $videoGrid.showChat}
-    <RtcGroupMessages />
-  {/if}
+  <RtcGroupMessages />
 </div>
 
 
@@ -79,11 +77,12 @@
     display: flex;
     position: absolute;
     gap: 1rem;
-    padding: 1rem;
+    padding: 1.5rem;
     background-color: var(--backgound-color);
     height: 100%;
     width: 100%;
     z-index: 9999;
+    transition: all 500ms ease-in-out;
   }
 
   .video-wrapper {
@@ -126,7 +125,18 @@
   }
 
   .hide {
-    display: none
+    @keyframes fadeLayout {
+      from {
+        opacity: 100%
+      }
+      to {
+        opacity: 0;
+        display: none
+      }
+    }
+
+    animation: fadeLayout ease-out 300ms;
+    animation-fill-mode: forwards;
   }
 
 
@@ -139,7 +149,6 @@
     height: 35px;
     width: 100%;
     color: white;
-    transition: 200ms ease-in-out;
 
     &:focus {
       outline: none;

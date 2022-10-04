@@ -8,6 +8,7 @@
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   //Use for filesharing later
   import Dropzone from "svelte-file-dropzone";
+  import { videoGrid } from "$lib/stores/layout-state.js";
 
   let replyto = "";
   let reply_exit_icon = "x";
@@ -205,7 +206,7 @@
 </script>
 
 <!-- {#if $webRTC.call.length > 1} -->
-<div class="chat layered-shadow" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
+<div class="chat layered-shadow" class:hide={!$videoGrid.showChat}>
   <div class="outer" id="chat_window">
 <!--    <div class="fade"></div>-->
     <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
@@ -237,12 +238,16 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    position: relative;
-    min-width: 300px;
+    min-width: 323px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
     overflow: hidden;
+    transition: all 300ms ease-in-out;
+  }
+
+  .hide {
+    margin-right: -340px;
   }
 
   .fade {
