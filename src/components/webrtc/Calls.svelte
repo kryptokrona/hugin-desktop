@@ -707,7 +707,7 @@
 
     if (filter.length < 1) {
       $webRTC.groupCall = false
-      $groupRtcMessages = []
+      $rtcgroupMessages = []
     }
       
 
