@@ -10,6 +10,7 @@
 	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
 	import Loader from '/src/components/popups/Loader.svelte';
 	import { page } from "$app/stores";
+	import { videoGrid } from "$lib/stores/layout-state.js";
 	//Stores
 	import { user, webRTC, misc, notify, boards, groups} from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
@@ -56,7 +57,7 @@
 	}
 
 	const toggleCallMenu = () => {
-		$webRTC.showVideoGrid = !$webRTC.showVideoGrid
+		$videoGrid.showVideoGrid = !$videoGrid.showVideoGrid
 	}
 
 	onMount( async () => {
@@ -85,7 +86,7 @@
 	window.api.receive('group-call', (data) => {
 		console.log('group call data', data)
 		$webRTC.groupCall = data.key
-		if ($webRTC.groupCall && $webRTC.call.length === 1) {
+		if ($webRTC.groupCall && data.invite.length) {
         //This is the first peer invited to a call
         $webRTC.invited = true
       }
