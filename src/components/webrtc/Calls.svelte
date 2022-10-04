@@ -401,7 +401,7 @@
         return
       }
 
-      if ($webRTC.groupCall) {
+      if ($webRTC.groupCall && addr.substring(0,4)  !== "SEKR") {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
@@ -561,7 +561,7 @@
           window.api.decryptMessage(parsedMsg)
           return
         }
-        if ($webRTC.groupCall) {
+        if ($webRTC.groupCall && addr.substring(0,4)  !== "SEKR") {
         console.log('Group message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)

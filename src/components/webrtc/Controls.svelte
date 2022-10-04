@@ -50,6 +50,7 @@
     $webRTC.myStream.getVideotracks().forEach(track => track.enabled = !track.enabled);
   };
 
+
 </script>
 
 <div class="wrapper layered-shadow">
