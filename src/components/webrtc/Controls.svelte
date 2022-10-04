@@ -47,7 +47,7 @@
 
   const toggleVideo = () => {
     video = !video;
-    $webRTC.myStream.getVideotracks().forEach(track => track.enabled = !track.enabled);
+    $webRTC.myStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
   };
 
 
@@ -115,7 +115,7 @@
     align-items: center;
 
     .icon {
-
+      cursor: pointer;
     }
   }
 
