@@ -41,16 +41,10 @@
 
     if (data.k === $user.huginAddress.substring(0, 99)) return;
 //*TODO*//Keep logs to experiment with toast popups
-    console.log("Group message", data.g);
+    console.log("Group message", data.group);
     console.log("This group call", $webRTC.groupCall);
-
-    if (data.g === $webRTC.groupCall) {
 //Push new message to store
       printGroupRtcMessage(data);
-    } else {
-
-      console.log("Another group", data);
-    }
   });
 
   //Send message to store and DB
