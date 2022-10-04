@@ -816,6 +816,7 @@ async function start_js_wallet(walletName, password, mynode) {
   }
   /* Start wallet sync process */
   await js_wallet.start();
+  js_wallet.enableAutoOptimization(false);
   //Load known pool txs from db.
   let checkedTxs;
   let knownTxsIds = await loadKnownTxs();
@@ -842,7 +843,6 @@ async function start_js_wallet(walletName, password, mynode) {
   mainWindow.webContents.send("sync", "Not syncing");
   mainWindow.webContents.send("node-sync-data", { walletBlockCount, localDaemonBlockCount, networkBlockCount });
 
-  js_wallet.enableAutoOptimization(false);
 
   //Incoming transaction event
   js_wallet.on("incomingtx", (transaction) => {
