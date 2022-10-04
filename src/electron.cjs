@@ -1922,7 +1922,7 @@ async function sendGroupsMessage(message, offchain = false) {
     console.log(result)
     message_json.sent = true
     saveGroupMessage(message_json, result.transactionHash, timestamp)
-    mainWindow.webContents.send("sent_group", {hash: result.transactionHash, time: timestamp});
+    mainWindow.webContents.send("sent_group", {hash: result.transactionHash, time: message.t});
     known_pool_txs.push(result.transactionHash);
     optimizeMessages()
   } else {
@@ -1937,11 +1937,13 @@ async function sendGroupsMessage(message, offchain = false) {
   } else if (offchain) {
     //Generate a random hash
     let randomKey = await createGroup()
+    
     let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
     console.log("sending group rtc message");
     let sendMsg = randomKey + '99' + sentMsg
     let messageArray = [sendMsg]
     mainWindow.webContents.send("rtc_message", messageArray, true);
+    mainWindow.webContents.send("sent_rtc_group", {hash: randomKey, time: message.t});
     console.log('payload', messageArray)
     //let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
     //saveMessageSQL(saveMsg, randomKey, true);
@@ -2065,7 +2067,7 @@ async function sendBoardMessage(message) {
 
     if (result.success) {
       console.log(`Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(result.fee)}`);
-      mainWindow.webContents.send('sent_board', {hash: result.transactionHash, time: timestamp})
+      mainWindow.webContents.send('sent_board', {hash: result.transactionHash, time: message.t})
       known_pool_txs.push(result.transactionHash);
       const sentMsg = payload_json;
       sentMsg.sent = true;

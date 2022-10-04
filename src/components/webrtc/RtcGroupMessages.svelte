@@ -29,6 +29,7 @@
   onMount(async () => {
     chatWindow = document.getElementById("chat_window");
     console.log("mounting video grid");
+    checkReactions()
   });
 
   onDestroy(() => {
@@ -196,6 +197,22 @@
     console.log(onlyEmojis.length === visibleChars.length);
     return onlyEmojis.length === visibleChars.length;
   }
+
+  function addHash(data) {
+
+    fixedGroups.some(function (a) {
+    if (a.hash === data.time) {
+    a.hash = data.hash
+    }
+    })
+
+    fixedGroups = fixedGroups
+    }
+
+  window.api.receive("sent_rtc_group", data => {
+    console.log('hash', data)
+    addHash(data)
+    });
 
 </script>
 
