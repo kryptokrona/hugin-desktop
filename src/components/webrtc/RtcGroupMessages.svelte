@@ -154,7 +154,7 @@
 //Adding emojis to the correct message.
       await addEmoji();
     } else {
-      fixedGroups = filterRtcGroup;
+      fixedRtcGroups = filterRtcGroup;
     }
   }
 
@@ -235,7 +235,8 @@
           group={message.group}
           nickname={message.name}
           msgFrom={message.address}
-          timestamp={message.time} hash={message.hash} />
+          timestamp={message.time} hash={message.hash}
+          rtc={true} />
       {/each}
     </div>
     <!-- </Dropzone> -->
