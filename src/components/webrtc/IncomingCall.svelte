@@ -31,7 +31,7 @@
         //Variable to activate visual feedback
         answered = true
 
-        let caller = $user.contacts.filter(a => a.chat === thisCall.chat)
+        let caller = $user.contacts.find(a => a.chat === thisCall.chat)
         console.log('caller', caller)
         let offchain = false
         
@@ -40,7 +40,7 @@
         }
         console.log('offchain?', offchain)
          //We delay the answerCall for routing purposes
-         window.api.answerCall(thisCall.msg, thisCall.chat, caller[0].key, offchain)
+         window.api.answerCall(thisCall.msg, thisCall.chat, caller.key, offchain)
         
         //We pause the ringtone and destroy the popup
         ringtone.pause()

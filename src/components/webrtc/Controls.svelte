@@ -38,7 +38,7 @@
   //End call with all peers
   const endCall = () => {
     $webRTC.call.forEach(a => {
-      window.api.endCall("peer", "stream", a.chat);
+      window.api.endCall('peer', "stream", a.chat);
     });
     //We pause the ringtone and destroy the popup
   };

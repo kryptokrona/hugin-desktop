@@ -210,7 +210,6 @@
     }
 
   window.api.receive("sent_rtc_group", data => {
-    console.log('hash', data)
     addHash(data)
     });
 
