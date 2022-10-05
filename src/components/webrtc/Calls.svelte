@@ -257,7 +257,7 @@
       console.log("Audio call");
     }
 
-    let peer1 = await startPeer1(stream, video, contact, call);
+    let peer1 = await startPeer1(stream, video, contact);
 
     $webRTC.call[0].peer = peer1;
     $webRTC.call[0].screen_stream = screen_stream;
@@ -307,7 +307,7 @@
 
   }
   $videoGrid.showVideoGrid = true
-  async function startPeer1(stream, video, contact, call) {
+  async function startPeer1(stream, video, contact) {
 
     let peer1 = new Peer({
       initiator: true,
