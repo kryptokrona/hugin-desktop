@@ -14,7 +14,6 @@
     startCall(conatct, calltype, invite);
   });
 
-
   window.api.receive("endCall", (s, p, this_call) => {
     endCall("peer", "stream", this_call);
   });
@@ -38,10 +37,10 @@
 
   window.api.receive("got-expanded", async (callData) => {
     console.log("caller expanded", callData);
-    let contact = $webRTC.call.filter(a => a.chat == callData[1]);
+    let contact = $webRTC.call.find(a => a.chat == callData[1]);
     console.log(contact);
 
-    contact[0].peer.signal(callData[0]);
+    contact.peer.signal(callData[0]);
 
   });
 
@@ -65,7 +64,7 @@
     //Address and messageobject
     let [message, address] = msg
     //Find who we are going to send to
-    let to = $webRTC.call.filter(a => a.chat == address)
+    let to = $webRTC.call.find(a => a.chat == address)
     console.log("sending rtc", message)
     console.log('Message to route?', msg)
     let sendMsg
@@ -82,7 +81,7 @@
       console.log('sending', message)
       console.log('to', to[0])
       sendMsg = JSON.stringify(message)
-      to[0].peer.send(sendMsg);
+      to.peer.send(sendMsg);
     }
     console.log("sent");
   });
@@ -93,9 +92,9 @@
     let callback = JSON.parse(callerdata.data);
     console.log("callback parsed", callback);
     console.log('callerdata', callerdata)
-    let contact = $webRTC.call.filter(a => a.chat === callerdata.chat);
+    let contact = $webRTC.call.find(a => a.chat === callerdata.chat);
     console.log("contact filter", contact);
-    contact[0].peer.signal(callback);
+    contact.peer.signal(callback);
     console.log("Connecting to ...", callerdata.chat);
 
   });
@@ -109,6 +108,7 @@
     // spilt input to addr and pubkey
    
     let contact_address = contact.substring(0, 99);
+
     if (invite) {
       let call = {chat: contact_address, type: "invite"}
       $webRTC.call.unshift(call)
@@ -222,8 +222,8 @@
         if (callList.length) {
         //Go through that list and add our contacts to a new array
         callList.forEach(a => {
-          let tunnelTo = $user.contacts.filter(c => c.chat === a.chat)
-          let listItem = a.chat + tunnelTo[0].key
+          let tunnelTo = $user.contacts.find(c => c.chat === a.chat)
+          let listItem = a.chat + tunnelTo.key
           activeCall.push(listItem)
         })
         } else {
@@ -232,9 +232,9 @@
         //Make an invite message through the datachannel to our new participant
         let msg = {invite: activeCall, key: $webRTC.groupCall, type: type}
         let myMessage = { chat: thisCall.chat, msg: msg, sent: true, timestamp: Date.now() };
-        let contact = $user.contacts.filter(a => a.chat === thisCall.chat)
+        let contact = $user.contacts.find(a => a.chat === thisCall.chat)
         console.log("Inviting contact", myMessage)
-        let to = thisCall.chat + contact[0].key
+        let to = thisCall.chat + contact.key
         //Send offchain invite message
         window.api.sendMsg(myMessage, to, true, true)
   }
@@ -257,7 +257,7 @@
       console.log("Audio call");
     }
 
-    let peer1 = await startPeer1(stream, video, contact);
+    let peer1 = await startPeer1(stream, video, contact, call);
 
     $webRTC.call[0].peer = peer1;
     $webRTC.call[0].screen_stream = screen_stream;
@@ -307,7 +307,7 @@
 
   }
   $videoGrid.showVideoGrid = true
-  async function startPeer1(stream, video, contact) {
+  async function startPeer1(stream, video, contact, call) {
 
     let peer1 = new Peer({
       initiator: true,
@@ -382,9 +382,9 @@
         console.log('Found address', addres)
         if ($webRTC.call.some(a => a.chat == address)) {
           let tunnel = true
-          let sendTunnel = $webRTC.filter(a => a.chat === address)
+          let sendTunnel = $webRTC.find(a => a.chat === address)
           console.log('Found message, sending to other peer')
-          sendTunnel[0].peer.send(event.data)
+          sendTunnel.peer.send(event.data)
           return
         }
       }
@@ -471,8 +471,11 @@
         $webRTC.myVideo = true;
       }
 
+      if (offchain) {
+        group = true
+      }
 
-      sendAnswer(msg, contact, peer2, key, video, offchain);
+      sendAnswer(msg, contact, peer2, key, video, offchain, group);
 
       console.log("answrcall done");
 
@@ -530,7 +533,7 @@
 
         if (message.substring(68,70) == "sb") {
           //Decrypt group message, groupCall is either key or false.
-          let key =  $webRTC.groupCall
+          let key = $webRTC.groupCall
           console.log('Decrypting group with', key)
           window.api.decryptGroupMessage(message, key)
           return
@@ -541,8 +544,8 @@
         //If the address is one of our active calls, tunnel the message
           if ($webRTC.call.some(a => a.chat == addr)) {
             let tunnel = true
-            let sendTunnel = $webRTC.filter(a => a.chat === addr)
-            sendTunnel[0].peer.send(event.data)
+            let sendTunnel = $webRTC.find(a => a.chat === addr)
+            sendTunnel.peer.send(event.data)
             return
           } 
         }
@@ -634,7 +637,7 @@
   //End call
   function endCall(peer, stream, contact) {
 
-    let caller = $webRTC.call.filter(a => a.chat === contact);
+    let caller = $webRTC.call.find(a => a.chat === contact);
     
     console.log('Want to end call with', contact)
 
@@ -649,12 +652,12 @@
     }
 
     console.log('this peer?', peer)
-    console.log(' ending this caller', caller[0])
+    console.log(' ending this caller', caller)
 
     try {
-      caller[0].peer.destroy();
+      caller.peer.destroy();
       if ($webRTC.call.length === 1) {
-        caller[0].myStream.getTracks().forEach(function(track) {
+        caller.myStream.getTracks().forEach(function(track) {
         track.stop();
       });
     }

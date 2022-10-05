@@ -43,7 +43,6 @@
   async function checkreply(reply) {
     if (offchain) {
       let group_reply = $rtcgroupMessages.find(a => a.hash == reply)
-      console.log('find', group_reply)
       thisreply = group_reply
       return thisreply
     }
