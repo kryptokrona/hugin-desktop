@@ -13,22 +13,20 @@
   import BackDrop from "/src/components/popups/BackDrop.svelte";
   import SendTransaction from "/src/components/finance/SendTransaction.svelte";
 
-  let video;
-  let audio;
   let chat;
   let active_contact;
   let savedMsg = [];
   let key;
-  let data;
   let contact;
-  let codec;
-  let stream;
   let box;
   let chatWindow;
   let dragover = false;
 
-  //Get messages on mount
+  //Get messages on mount.
   onMount(async () => {
+  
+    messages.set(await window.api.getMessages(res => {}));
+
     chatWindow = document.getElementById("chat_window");
 
     boards.update(data => {
@@ -90,6 +88,7 @@
 
   const scrollDown = () => {
     chatWindow.scrollTop = chatWindow.scrollHeight;
+    box.scrollTop = box.scrollHeight
   };
 
   const saveToStore = (data) => {
@@ -137,7 +136,6 @@
 
   function renameContact(e) {
     console.log("contac", e);
-    console.log("USER RENAME", $user.rename);
     let thisContact = $user.rename.chat + $user.rename.key;
     //Send contact to backend and overwrite our old contact
     console.log(" want to add", thisContact);
@@ -222,9 +220,9 @@
 
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
     <div class="fade"></div>
+    <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
+      on:drop={dropFile}>
     <div class="outer" id="chat_window" bind:this={box}>
-      <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
-                on:drop={dropFile}>
         <div class="inner">
           {#each savedMsg as message}
             <ChatBubble on:download={() => download(message.msg)} files={message.file} torrent={message.magnet}
@@ -232,9 +230,8 @@
                         timestamp={message.timestamp} />
           {/each}
         </div>
-      </Dropzone>
     </div>
-
+    </Dropzone>
     <ChatInput on:message={sendMsg} />
   </div>
 </main>
