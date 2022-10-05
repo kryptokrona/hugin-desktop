@@ -1672,13 +1672,16 @@ async function saveMessage(msg, hash, offchain = false) {
   let timestamp = sanitizeHtml(msg.t);
   let key = sanitizeHtml(msg.k);
   console.log("msg", msg);
+
   let group_call = false
 
   console.log('Msg incoming')
-
+  if (offchain) {
+    group_call = true
+  }
   //Checking if private msg is a call
   text = await parseCall(msg.msg, addr, sent, true, group_call);
-  
+
   let message = sanitizeHtml(text);
 
   //If sent set chat to chat instead of from
@@ -2223,7 +2226,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     mainWindow.webContents.send("rtc_message", messageArray);
     console.log('payload', messageArray)
     let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
-    saveMessageSQL(saveMsg, randomKey, true);
+    saveMessage(saveMsg, randomKey, true);
   }
 }
 
