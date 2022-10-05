@@ -110,7 +110,7 @@ const removeGroup = async () => {
     $groups.thisGroup = $groups.groupArray[0]
   } else {
     $groups.groupArray = []
-    let nogroup = {name: "Private groups", chat: "verysecretkeyinchat", key: "verysecretkeyinchat", msg: "Click the add icon"}
+    let nogroup = {nick: "Private groups", chat: "verysecretkeyinchat", key: "verysecretkeyinchat", msg: "Click the add icon"}
     $groups.groupArray.push(nogroup)
     $groups.thisGroup = nogroup
   }

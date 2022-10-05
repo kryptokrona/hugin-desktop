@@ -20,9 +20,11 @@
     let nodeInput = ""
     let showKeys = false
     let showMnemonic = false
+    
     onMount(async () => {
       getHeight()
     })
+    
     onDestroy(()=> {
     window.api.removeAllListeners("node-sync-data")
     })
