@@ -416,7 +416,7 @@
   }
 
 
-  const answerCall = (msg, contact, key, offchain) => {
+  const answerCall = (msg, contact, key, offchain = false) => {
     console.log("APPLE", msg, contact, key);
 
     let video = false;
@@ -471,6 +471,8 @@
         $webRTC.myVideo = true;
       }
 
+      let group = false
+      
       if (offchain) {
         group = true
       }

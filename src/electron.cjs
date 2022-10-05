@@ -1842,8 +1842,8 @@ ipcMain.on("sendGroupsMessage", (e, msg, offchain) => {
 );
 
 
-ipcMain.on("answerCall", (e, msg, contact, key, offchain) => {
-    console.log("answr", msg, contact);
+ipcMain.on("answerCall", (e, msg, contact, key, offchain = false) => {
+    console.log("Answer call", msg, contact, key, offchain);
     mainWindow.webContents.send("answer-call", msg, contact, key, offchain);
   }
 );
