@@ -133,11 +133,24 @@
   };
 
   function copyThis(copy) {
+
+    let msg = "You copied a key"
+    let name = "Copy"
+    let key = copy
+    console.log('copy?', copy)
+    if (copy.length > 64) {
+      //Notification 
+      msg = "You copied a Hugin address"
+      name =  $user.activeChat.name
+      //Avatar in notification
+      key = $user.activeChat.chat
+    }
+
     $notify.success.push({
-      message: "You copied a key",
-      name: "Copy",
+      message: msg,
+      name: name,
       hash: Date.now(),
-      key: copy,
+      key: key,
     })
     $notify.success = $notify.success
     navigator.clipboard.writeText(copy);
@@ -180,7 +193,7 @@
 
   {#if $page.url.pathname === '/messages'}
     <div class="nav">
-      <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+      <img class="avatar" src="data:image/png;base64,{avatar}" alt="" on:click={() => copyThis($user.activeChat.chat + $user.activeChat.k)}>
       
       <button class="button">
       {#if thisCall && !video}
@@ -348,6 +361,7 @@
     margin-top: 0px;
     height: 55px;
     margin-bottom: 5px;
+    cursor: pointer;
   }
 
   .board {
