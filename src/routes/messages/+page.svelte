@@ -88,7 +88,6 @@
 
   const scrollDown = () => {
     chatWindow.scrollTop = chatWindow.scrollHeight;
-    box.scrollTop = box.scrollHeight
   };
 
   const saveToStore = (data) => {
@@ -220,9 +219,9 @@
 
   <div class="right_side" in:fade="{{duration: 350}}" out:fade="{{duration: 100}}">
     <div class="fade"></div>
-    <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
-      on:drop={dropFile}>
-    <div class="outer" id="chat_window" bind:this={box}>
+    <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
+      on:drop={dropFile}> -->
+    <div class="outer" id="chat_window">
         <div class="inner">
           {#each savedMsg as message}
             <ChatBubble on:download={() => download(message.msg)} files={message.file} torrent={message.magnet}
@@ -231,7 +230,7 @@
           {/each}
         </div>
     </div>
-    </Dropzone>
+    <!-- </Dropzone> -->
     <ChatInput on:message={sendMsg} />
   </div>
 </main>
