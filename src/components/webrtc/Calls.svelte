@@ -279,6 +279,7 @@
     }
 
     let transceiverList = peer1._pc.getTransceivers();
+
     if (video) {
         //Set defauklt camera id in store
         let camera = $webRTC.devices.filter(a => a.kind === "videoinput")
@@ -301,12 +302,13 @@
       } else {
         $webRTC.call[0].peerAudio = true;
       }
-
+      
+    $videoGrid.showVideoGrid = true
     });
 
-
   }
-  $videoGrid.showVideoGrid = true
+
+  
   async function startPeer1(stream, video, contact) {
 
     let peer1 = new Peer({
@@ -339,6 +341,7 @@
     peer1.on("connect", async () => {
       // SOUND EFFECT
       $webRTC.call[0].connected = true
+      checkVolume(peer1)
       console.log("Connection established");
       if (!$webRTC.invited) {
           inviteToGroupCall(peer1)
@@ -472,7 +475,7 @@
       }
 
       let group = false
-      
+
       if (offchain) {
         group = true
       }
@@ -516,6 +519,7 @@
       // SOUND EFFECT
       console.log("Connection established;");
       $webRTC.call[0].connected = true;
+      checkVolume(peer2)
       if ($webRTC.call.length > 1) {
         $webRTC.group = true
       }
@@ -635,6 +639,32 @@
     });
   }
 
+  
+  let array = new Array(10)
+
+
+  async function checkVolume(peer) {
+
+    interval = setInterval(getAudioLevel, 300);
+    console.log('')
+
+    function getAudioLevel() {
+    const rec = peer._pc.getReceivers().find(r => {return r.track.kind === "audio"})
+    if (rec && rec.getSynchronizationSources()) {
+      const source = rec.getSynchronizationSources()[0]
+      if (source) {
+        array.push(source.audioLevel)
+      } else {
+        console.log('No audio')
+      }
+      array.shift()
+      console.log('Audio array', array)
+      }
+    }
+  }
+
+
+
 
   //End call
   function endCall(peer, stream, contact) {
@@ -655,8 +685,8 @@
 
     console.log('this peer?', peer)
     console.log(' ending this caller', caller)
-
     try {
+      clearInterval(getAudioLevel)
       caller.peer.destroy();
       if ($webRTC.call.length === 1) {
         caller.myStream.getTracks().forEach(function(track) {
