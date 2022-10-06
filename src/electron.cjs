@@ -2213,10 +2213,6 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
 
   } else if (off_chain) {
 
-     //Do not save invite message.
-    if (message.msg.invite) {
-      return
-    }
     let randomKey = await createGroup()
     let sentMsg = Buffer.from(payload_hex, "hex");
     console.log("sending rtc message");
@@ -2228,6 +2224,10 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     messageArray.push('group')
     }
     mainWindow.webContents.send("rtc_message", messageArray);
+     //Do not save invite message.
+     if (message.msg.invite) {
+      return
+    }
     console.log('payload', messageArray)
     let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
     saveMessage(saveMsg, randomKey, true);
