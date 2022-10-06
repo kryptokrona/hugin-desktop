@@ -358,49 +358,11 @@
 
     //Data channel
     peer1._channel.addEventListener("message", (event) => {
-      
-      let message = JSON.parse(event.data)
-      let parsedMsg = message.substring(0, message.length - 99)
-      let addr = message.substring(message.length - 99)
-      
-      if (addr == $user.huginAddress.substring(0, 99)) {
-        console.log('found tunneled message to me', message)
-        window.api.decryptMessage(parsedMsg)
-        return
-      }
 
-      if (message.substring(68,70) == "sb") {
-          //Decrypt group message, groupCall is either key or false.
-          let key =  $webRTC.groupCall
-          console.log('Decrypting group with', key)
-          window.api.decryptGroupMessage(message, key)
-          return
-        }
+      checkMessage(event)
 
-      if ($webRTC.groupCall && addr.substring(0,4)  == "SEKR") {
-        console.log('Group tunnel message', event)
-        let groupMessage = JSON.parse(event.data)
-        let address = groupMessage.substring(groupMessage.length - 99)
-        //If the address is one of our active calls, tunnel the message
-        console.log('Found address', addres)
-        if ($webRTC.call.some(a => a.chat == address)) {
-          let tunnel = true
-          let sendTunnel = $webRTC.find(a => a.chat === address)
-          console.log('Found message, sending to other peer')
-          sendTunnel.peer.send(event.data)
-          return
-        }
-      }
-
-      console.log('Addr?', addr.substring(0,4))
-      if (addr.substring(0,4)  == "SEKR") {
-        console.log('this message should be routed elsewere')
-        return
-      }
-      //Decrypt message
-      console.log('Private rtc message?', message)
-      window.api.decryptMessage(message)
     })
+  
 
     //Check status for offer
 
@@ -527,42 +489,7 @@
       //Data channel
       peer2._channel.addEventListener("message", (event) => {
 
-        let message = JSON.parse(event.data)
-        let addr = message.substring(message.length - 99)
-        let parsedMsg = message.substring(0, message.length - 99)
-
-        if (addr == $user.huginAddress.substring(0, 99)) {
-          console.log('found tunneled message to me', message)
-          window.api.decryptMessage(parsedMsg)
-          return
-        }
-
-        if (message.substring(68,70) == "sb") {
-          //Decrypt group message, groupCall is either key or false.
-          let key = $webRTC.groupCall
-          console.log('Decrypting group with', key)
-          window.api.decryptGroupMessage(message, key)
-          return
-        }
-        
-        if ($webRTC.groupCall && addr.substring(0,4) == "SEKR") {
-        console.log('Group tunnel message', event)
-        //If the address is one of our active calls, tunnel the message
-          if ($webRTC.call.some(a => a.chat == addr)) {
-            let tunnel = true
-            let sendTunnel = $webRTC.find(a => a.chat === addr)
-            sendTunnel.peer.send(event.data)
-            return
-          } 
-        }
-        console.log('Addr?', addr.substring(0,4))
-        if (addr.substring(0,4) === "SEKR") {
-          console.log('this message should be routed elsewere')
-          return
-        }
-      //Normal message
-        console.log('Private rtc message?', message)
-        window.api.decryptMessage(message)
+        checkMessage(event)
     })
 
     });
@@ -639,9 +566,53 @@
     });
   }
 
+  function checkMessage(event) {
+    
+    let message = JSON.parse(event.data)
+    let parsedMsg = message.substring(0, message.length - 99)
+    let addr = message.substring(message.length - 99)
+    
+    if (addr == $user.huginAddress.substring(0, 99)) {
+      console.log('found tunneled message to me', message)
+      window.api.decryptMessage(parsedMsg)
+      return
+    }
+
+    if (message.substring(68,70) == "sb") {
+        //Decrypt group message, groupCall is either key or false.
+        let key =  $webRTC.groupCall
+        console.log('Decrypting group with', key)
+        window.api.decryptGroupMessage(message, key)
+        return
+      }
+
+    if ($webRTC.groupCall && addr.substring(0,4)  == "SEKR") {
+      console.log('Group tunnel message', event)
+      let groupMessage = JSON.parse(event.data)
+      let address = groupMessage.substring(groupMessage.length - 99)
+      //If the address is one of our active calls, tunnel the message
+      console.log('Found address', addres)
+      if ($webRTC.call.some(a => a.chat == address)) {
+        let tunnel = true
+        let sendTunnel = $webRTC.find(a => a.chat === address)
+        console.log('Found message, sending to other peer')
+        sendTunnel.peer.send(event.data)
+        return
+      }
+    }
+
+    console.log('Addr?', addr.substring(0,4))
+    if (addr.substring(0,4)  == "SEKR") {
+      console.log('This message should be routed elsewere')
+      return
+    }
+    //Decrypt message
+    console.log('Private rtc message?', message)
+    window.api.decryptMessage(message)
+  }
+
   
   let array = new Array(10)
-
 
   async function checkVolume(peer) {
 
