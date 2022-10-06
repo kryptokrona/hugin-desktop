@@ -1,133 +1,111 @@
 <script>
-    //To handle true and false, or in this case show and hide.
-    import {fade, fly} from "svelte/transition";
-    import {createEventDispatcher, onMount} from "svelte";
-    import {get_avatar} from "$lib/utils/hugin-utils.js";
-    import { transactions } from "$lib/stores/user.js";
-    const dispatch = createEventDispatcher()
+  //To handle true and false, or in this case show and hide.
+  import { fade, fly } from "svelte/transition";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { get_avatar } from "$lib/utils/hugin-utils.js";
+  import { transactions } from "$lib/stores/user.js";
+  import GreenButton from "$components/buttons/GreenButton.svelte";
 
-    let enableButton = false
-    let addr = $transactions.send.to
-    let amount
-    let paymentId = ""
-    let avatar = get_avatar($transactions.send.to)
+  const dispatch = createEventDispatcher();
 
-    $: {
-        if (amount > 0) {
-            enableButton = true
-            
-        }
+  let enableButton = false;
+  let addr = $transactions.send.to;
+  let amount;
+  let paymentId = "";
+  let avatar = get_avatar($transactions.send.to);
+
+  $: {
+    if (amount > 0) {
+      enableButton = true;
+
     }
+  }
 
-    // Dispatch the inputted data
-    const sendTransaction = () => {
-        dispatch('send', {
-            to: addr,
-            amount: parseInt(amount) * 100000,
-            paymentId: undefined
-        })
+  const keyDown = (e) => {
+    if (e.key === "Enter" && amount.length > 0) {
+      sendTransaction();
+    } else if (e.key === "Escape") {
+      close();
     }
+  };
+
+  const close = () => {
+    $transactions.tip = false;
+    amount = 0;
+  };
+
+  // Dispatch the inputted data
+  const sendTransaction = () => {
+    dispatch("send", {
+      to: addr,
+      amount: parseInt(amount) * 100000,
+      paymentId: undefined
+    });
+  };
 
 </script>
 
-<div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-            <div class="nickname-wrapper">
-                <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
-                <p>{$transactions.send.name}</p>
-            </div>
-            <input placeholder="1" type="text" bind:value={amount}>
-            <!-- <h4>Payment ID</h4>
-            <input disabled="true" class="key" type="text" bind:value={paymentId}> -->
-        <button disabled={!enableButton} class:rgb={enableButton} on:click={sendTransaction}>Send</button>
-    </div>
+<svelte:window on:keyup|preventDefault={keyDown} />
+
+<div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
+  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+    <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+    <input placeholder="Enter amount" type="text" spellcheck="false" autocomplete="false" bind:value={amount}
+           oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
+    <GreenButton on:click={sendTransaction} enabled={amount > 0} disabled={!enableButton} text="Send" />
+  </div>
 </div>
 
 <style lang="scss">
 
-    .backdrop {
-      position: fixed;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background-color: var(--backdrop-color);
-      z-index: 103;
-    }
+  .field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    padding: 0 10px;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    border-radius: 0.4rem;
 
-    .card {
-        display: flex;
-        flex-direction: column;
-        height: 220px;
-        width: 320px;
-        padding: 10px;
-        background-color: var(--backgound-color);
-        border-radius: 8px;
-        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--border-color);
-    }
-
-    .nickname-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        img {
-            margin-bottom: 9px;
-            width: 50px;
-            height: 50px;
-        }
-    }
-
-    input {
-        background-color: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding-left: 8px;
-        height: 60px;
-        display: flex;
-        margin-left: 25%;
-        font-size: 22px;
-        width: 50%;
-        margin-top: 10px;
-        margin-bottom: 20px;
-        color: white;
-        transition: 250ms ease-in-out;
-        font-family: "Roboto Mono";
-
-      &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.6);
-      }
-    }
-
-    .key {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    button {
-        border: none;
-        border-radius: 8px;
-        width: 100%;
-        height: 36px;
-        transition: 250ms ease-in-out;
-        background-color: rgb(225, 18, 80);
-        color: white;
-        cursor: pointer;
+    .btn {
+      color: var(--text-color);
+      height: 100%;
+      border-left: 1px solid var(--card-border);
+      cursor: pointer;
 
       &:hover {
-        opacity: 80%;
+        background-color: var(--card-border);;
       }
     }
+  }
 
-    p {
-    font-family: "Montserrat";
-    }
+  input {
+    margin: 0 auto;
+    width: 300px;
+    height: 50px;
+    transition: 200ms ease-in-out;
+    color: var(--text-color);
+    background-color: transparent;
+    border: none;
+    font-size: 1.1rem;
 
-    h4 {
-    align-self: center;
+    &:focus {
+      outline: none;
     }
+  }
+
+  .backdrop {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--backdrop-color);
+    backdrop-filter: blur(8px);
+    z-index: 103;
+  }
 </style>
