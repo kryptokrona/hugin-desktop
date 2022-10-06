@@ -614,22 +614,27 @@
   
   let array = new Array(10)
 
+  let interval
+  
   async function checkVolume(peer) {
-
+    
     interval = setInterval(getAudioLevel, 300);
-    console.log('')
-
     function getAudioLevel() {
-    const rec = peer._pc.getReceivers().find(r => {return r.track.kind === "audio"})
-    if (rec && rec.getSynchronizationSources()) {
-      const source = rec.getSynchronizationSources()[0]
-      if (source) {
-        array.push(source.audioLevel)
+    if ($webRTC.call.some(a => a.peer == peer)) {
+      const rec = peer._pc.getReceivers().find(r => {return r.track.kind === "audio"})
+      if (rec && rec.getSynchronizationSources()) {
+        const source = rec.getSynchronizationSources()[0]
+        if (source) {
+          array.push(source.audioLevel)
+        } else {
+          console.log('No audio')
+        }
+        array.shift()
+        console.log('Audio array', array)
+        }
       } else {
-        console.log('No audio')
-      }
-      array.shift()
-      console.log('Audio array', array)
+      clearInterval(interval)
+      return
       }
     }
   }
