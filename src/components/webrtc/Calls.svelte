@@ -615,7 +615,7 @@
   let array = new Array(10)
 
   let interval
-  
+
   async function checkVolume(peer) {
     
     interval = setInterval(getAudioLevel, 300);
@@ -662,7 +662,6 @@
     console.log('this peer?', peer)
     console.log(' ending this caller', caller)
     try {
-      clearInterval(getAudioLevel)
       caller.peer.destroy();
       if ($webRTC.call.length === 1) {
         caller.myStream.getTracks().forEach(function(track) {
