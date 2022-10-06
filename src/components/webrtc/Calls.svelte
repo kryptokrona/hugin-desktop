@@ -122,7 +122,9 @@
     // get video/voice stream
     navigator.mediaDevices.getUserMedia({
       video: isVideo,
-      audio: true
+      audio: {
+        googNoiseSupression: true
+        },
     }).then(function(stream) {
       gotMedia(stream, contact, isVideo, screenshare);
     }).catch(() => {
@@ -257,7 +259,11 @@
       console.log("Audio call");
     }
 
+    
+
     let peer1 = await startPeer1(stream, video, contact);
+
+    checkMyVolume(peer1)
 
     $webRTC.call[0].peer = peer1;
     $webRTC.call[0].screen_stream = screen_stream;
@@ -638,9 +644,10 @@
       }
     }
   }
+  
+  async function checkMyVolume(peer) {
 
-
-
+  }
 
   //End call
   function endCall(peer, stream, contact) {
