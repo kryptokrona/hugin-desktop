@@ -1,7 +1,7 @@
 <script>
   import wrtc from "@koush/wrtc";
   import Peer from "simple-peer";
-  import { webRTC, user } from "$lib/stores/user.js";
+  import { webRTC, user, audioLevel } from "$lib/stores/user.js";
   import { onMount } from "svelte";
   import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
   import { videoGrid } from "$lib/stores/layout-state.js";
@@ -119,7 +119,7 @@
 
     console.log("Starting call..");
 
-    // get video/voice stream
+    //Get video/voice stream
     navigator.mediaDevices.getUserMedia({
       video: isVideo,
       audio: {
@@ -137,7 +137,6 @@
 
 
   async function shareScreen(id) {
-
 
     const screen_stream = await navigator.mediaDevices.getUserMedia({
       audio: false,
@@ -204,41 +203,41 @@
     }
   }
 
-  async function inviteToGroupCall(peer) {
+  async function inviteToGroupCall() {
     
     console.log('Group call connecting...')
-          if ($webRTC.groupCall === false) {
-            //If no groupcall is started, get a new key
-            $webRTC.groupCall = await window.api.createGroup()
-            console.log('New group key', $webRTC.groupCall)
-          }
-          
-        //When you invite a new person to the call
-        let thisCall = $webRTC.call[0]
-        console.log('this call', thisCall)
-        //Sort out all active calls except this
-        let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
-        let activeCall = []
-        let type = $webRTC.myVideo
-        //If we have more active calls, invite them aswell.
-        if (callList.length) {
-        //Go through that list and add our contacts to a new array
-        callList.forEach(a => {
-          let tunnelTo = $user.contacts.find(c => c.chat === a.chat)
-          let listItem = a.chat + tunnelTo.key
-          activeCall.push(listItem)
-        })
-        } else {
-          type = "invite"
-        }
-        //Make an invite message through the datachannel to our new participant
-        let msg = {invite: activeCall, key: $webRTC.groupCall, type: type}
-        let myMessage = { chat: thisCall.chat, msg: msg, sent: true, timestamp: Date.now() };
-        let contact = $user.contacts.find(a => a.chat === thisCall.chat)
-        console.log("Inviting contact", myMessage)
-        let to = thisCall.chat + contact.key
-        //Send offchain invite message
-        window.api.sendMsg(myMessage, to, true, true)
+    if ($webRTC.groupCall === false) {
+      //If no groupcall is started, get a new key
+      $webRTC.groupCall = await window.api.createGroup()
+      console.log('New group key', $webRTC.groupCall)
+    }
+      
+    //When you invite a new person to the call
+    let thisCall = $webRTC.call[0]
+    console.log('this call', thisCall)
+    //Sort out all active calls except this
+    let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
+    let activeCall = []
+    let type = $webRTC.myVideo
+    //If we have more active calls, invite them aswell.
+    if (callList.length) {
+    //Go through that list and add our contacts to a new array
+    callList.forEach(a => {
+      let tunnelTo = $user.contacts.find(c => c.chat === a.chat)
+      let listItem = a.chat + tunnelTo.key
+      activeCall.push(listItem)
+    })
+    } else {
+      type = "invite"
+    }
+    //Make an invite message through the datachannel to our new participant
+    let msg = {invite: activeCall, key: $webRTC.groupCall, type: type}
+    let myMessage = { chat: thisCall.chat, msg: msg, sent: true, timestamp: Date.now() };
+    let contact = $user.contacts.find(a => a.chat === thisCall.chat)
+    console.log("Inviting contact", myMessage)
+    let to = thisCall.chat + contact.key
+    //Send offchain invite message
+    window.api.sendMsg(myMessage, to, true, true)
   }
 
 
@@ -259,16 +258,17 @@
       console.log("Audio call");
     }
 
-    
-
     let peer1 = await startPeer1(stream, video, contact);
 
     checkMyVolume(peer1)
-
-    $webRTC.call[0].peer = peer1;
-    $webRTC.call[0].screen_stream = screen_stream;
-    $webRTC.call[0].myStream = stream;
-    $webRTC.call[0].video = video;
+     //Set webRTC store update for call
+    $webRTC.call[0] = {
+      peer: peer1,
+      screen_stream: screen_stream,
+      myStream: stream,
+      video: video
+    }
+    
     console.log("This call", $webRTC.call[0]);
     checkSources();
     let video_codecs = window.RTCRtpSender.getCapabilities("video");
@@ -369,7 +369,6 @@
 
     })
   
-
     //Check status for offer
 
     let group = false
@@ -379,7 +378,6 @@
       offchain = true
       group = true
     }
-
 
     sendOffer(peer1, contact, video, group, offchain)
 
@@ -432,11 +430,13 @@
 
       console.log("codec set");
       //Set webRTC store update for call
-      $webRTC.call[0].peer = peer2;
+      $webRTC.call[0] = {
+        peer: peer2,
+        myStream: stream,
+        video: video,
+      }
       $webRTC.myStream = stream;
-      $webRTC.call[0].myStream = stream;
       $webRTC.active = true;
-      $webRTC.call[0].video = video;
 
       if (video) {
         $webRTC.myVideo = true;
@@ -537,9 +537,7 @@
 
       window.api.send("get-sdp", dataToSend);
 
-
     });
-
 
   }
 
@@ -568,8 +566,8 @@
 
       window.api.send("get-sdp", dataToSend);
 
-
     });
+
   }
 
   function checkMessage(event) {
@@ -585,12 +583,12 @@
     }
 
     if (message.substring(68,70) == "sb") {
-        //Decrypt group message, groupCall is either key or false.
-        let key =  $webRTC.groupCall
-        console.log('Decrypting group with', key)
-        window.api.decryptGroupMessage(message, key)
-        return
-      }
+      //Decrypt group message, groupCall is either key or false.
+      let key =  $webRTC.groupCall
+      console.log('Decrypting group with', key)
+      window.api.decryptGroupMessage(message, key)
+      return
+    }
 
     if ($webRTC.groupCall && addr.substring(0,4)  == "SEKR") {
       console.log('Group tunnel message', event)
@@ -607,8 +605,8 @@
       }
     }
 
-    console.log('Addr?', addr.substring(0,4))
     if (addr.substring(0,4)  == "SEKR") {
+      onsole.log('Address?', addr.substring(0,4))
       console.log('This message should be routed elsewere')
       return
     }
@@ -617,32 +615,59 @@
     window.api.decryptMessage(message)
   }
 
-  
-  let array = new Array(10)
-
-  let interval
-
   async function checkVolume(peer) {
-    
+
+    let interval
+    let array = new Array(10)
+    let contact = $webRTC.call.find(a => a.peer == peer)
+    $audioLevel.call[0] = {
+        chat: contact.chat, 
+        activeVoice: false
+    }
+    let caller = $user.contacts.find(a => {return a.chat === contact.chat})
+    $audioLevel.sensitivity = 0.001
     interval = setInterval(getAudioLevel, 300);
     function getAudioLevel() {
-    if ($webRTC.call.some(a => a.peer == peer)) {
-      const rec = peer._pc.getReceivers().find(r => {return r.track.kind === "audio"})
-      if (rec && rec.getSynchronizationSources()) {
-        const source = rec.getSynchronizationSources()[0]
-        if (source) {
-          array.push(source.audioLevel)
-        } else {
-          console.log('No audio')
+      if ($webRTC.call.some(a => a.chat == contact.chat)) {
+        const rec = peer._pc.getReceivers().find(r => {return r.track.kind === "audio"})
+        if (rec && rec.getSynchronizationSources()) {
+          const source = rec.getSynchronizationSources()[0]
+          if (source) {
+            array.push(source.audioLevel)
+          } else {
+            console.log('No audio')
+          }
+          let list = $audioLevel.call
+          for (const speaker of list) {
+            if (speaker.chat == contact.chat) {
+              if (array.some(volume => volume > $audioLevel.sensitivity) && source.audioLevel > 0.001) {
+                speaker.activeVoice = true
+                speaker.volume = source.audioLevel
+                console.log('.*******....*******....******.')
+                console.log(`${caller.name} is Talking`)
+                console.log('.*******....*******....******.')
+              } else {
+                speaker.activeVoice = false
+                console.log('...LOW.....')
+                console.log('..........')
+                console.log('.VOLUME..')
+                console.log('.......')
+              }
+            } else {
+              continue;
+            }
+          }
+          $audioLevel.call = list
         }
         array.shift()
-        console.log('Audio array', array)
-        }
       } else {
-      clearInterval(interval)
-      return
+        clearInterval(interval)
+        let clearAudio = $audioLevel.call.filter(a => a.chat !== contact.chat)
+        $audioLevel.call = clearAudio
+        console.log('Audio field cleared', $audioLevel.call)
+        return
       }
-    }
+    } 
   }
   
   async function checkMyVolume(peer) {
@@ -653,7 +678,6 @@
   function endCall(peer, stream, contact) {
 
     let caller = $webRTC.call.find(a => a.chat === contact);
-    
     console.log('Want to end call with', contact)
 
     if (contact === undefined) {
@@ -690,8 +714,7 @@
       $webRTC.groupCall = false
       $rtcgroupMessages = []
     }
-      
-
+    
     console.log('cleared this call from', filter)
     $webRTC.call = filter;
 
@@ -706,9 +729,11 @@
       $webRTC.myVideo = false;
       return;
     }
+
     $videoGrid.showVideoGrid = false
     console.log('Last call ending')
     $webRTC.myVideo = false;
+
     $webRTC.myStream.getTracks().forEach(function(track) {
         track.stop();
       });
