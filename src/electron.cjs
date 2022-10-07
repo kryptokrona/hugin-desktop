@@ -133,11 +133,11 @@ function createWindow() {
   });
 
   const mainWindow = new BrowserWindow({
-    backgroundColor: "#121212",
     frame: false,
     autoHideMenuBar: true,
     minHeight: 700,
     minWidth: 1000,
+    transparent: true,
     webPreferences: {
       enableRemoteModule: true,
       contextIsolation: true,
@@ -151,7 +151,7 @@ function createWindow() {
     width: windowState.width,
     height: windowState.height
   });
-
+  
   windowState.manage(mainWindow);
 
   mainWindow.once("ready-to-show", () => {
@@ -2189,8 +2189,8 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
       3, // mixin
       { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
-      undefined, // subWalletsToTakeFrom
-      undefined, // changeAddresss
+      [messageWallet], // subWalletsToTakeFrom
+      messageWallet, // changeAddresss
       true, // relayToNetwork
       false, // sneedAll
       Buffer.from(payload_hex, "hex")
