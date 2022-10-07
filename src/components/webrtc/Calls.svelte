@@ -266,7 +266,8 @@
       peer: peer1,
       screen_stream: screen_stream,
       myStream: stream,
-      video: video
+      video: video,
+      contact: contact.substring(0,99)
     }
     
     console.log("This call", $webRTC.call[0]);
@@ -434,7 +435,9 @@
         peer: peer2,
         myStream: stream,
         video: video,
+        contact: contact.substring(0, 99)
       }
+
       $webRTC.myStream = stream;
       $webRTC.active = true;
 
@@ -714,7 +717,7 @@
       $webRTC.groupCall = false
       $rtcgroupMessages = []
     }
-    
+
     console.log('cleared this call from', filter)
     $webRTC.call = filter;
 
