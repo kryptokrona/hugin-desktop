@@ -262,14 +262,11 @@
 
     checkMyVolume(peer1)
      //Set webRTC store update for call
-    $webRTC.call[0] = {
-      peer: peer1,
-      screen_stream: screen_stream,
-      myStream: stream,
-      video: video,
-      contact: contact.substring(0,99)
-    }
-    
+    $webRTC.call[0].peer = peer1;
+    $webRTC.call[0].screen_stream = screen_stream;
+    $webRTC.call[0].myStream = stream;
+    $webRTC.call[0].video = video;
+   
     console.log("This call", $webRTC.call[0]);
     checkSources();
     let video_codecs = window.RTCRtpSender.getCapabilities("video");
@@ -431,12 +428,11 @@
 
       console.log("codec set");
       //Set webRTC store update for call
-      $webRTC.call[0] = {
-        peer: peer2,
-        myStream: stream,
-        video: video,
-        contact: contact.substring(0, 99)
-      }
+      $webRTC.call[0].peer = peer2;
+      $webRTC.myStream = stream;
+      $webRTC.call[0].myStream = stream;
+      $webRTC.active = true;
+      $webRTC.call[0].video = video;
 
       $webRTC.myStream = stream;
       $webRTC.active = true;
