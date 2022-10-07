@@ -239,7 +239,7 @@
     </div>
     <!-- </Dropzone> -->
   </div>
-  <ChatInput on:message={sendGroupRtCMsg} />
+  <ChatInput rtc={true} on:message={sendGroupRtCMsg} />
 </div>
 
 <style lang="scss">
@@ -248,7 +248,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    min-width: 323px;
+    min-width: 355px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
@@ -257,7 +257,7 @@
   }
 
   .hide {
-    margin-right: -340px;
+    margin-right: -370px;
   }
 
   .fade {
@@ -293,5 +293,13 @@
     border-right: 1px solid var(--border-color);
     z-index: 0;
     transition: all 0.3s ease-in-out;
+  }
+
+  .message {
+    width: 342px;
+  }
+
+  p {
+    max-width: 330px;
   }
 </style>
