@@ -211,15 +211,15 @@
       {/if}
       </button>
       {#if thisCall}
-        <div class="button">
+        <div class="button" on:click={toggleAudio}>
           {#if !muted}
-            <MicIcon on:click={toggleAudio} />
+            <MicIcon  />
           {:else}
-            <MuteIcon on:click={toggleAudio} />
+            <MuteIcon />
           {/if}
         </div>
-        <div class="button">
-          <ShowVideoMenu on:click={() => $videoGrid.showVideoGrid = true}/>
+        <div class="button" on:click={() => $videoGrid.showVideoGrid = true}>
+          <ShowVideoMenu/>
         </div>
       {/if}
     </div>
