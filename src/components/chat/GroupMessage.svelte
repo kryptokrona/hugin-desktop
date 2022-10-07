@@ -135,14 +135,14 @@
       <div class="header">
         <div style="display: flex; align-items: center; margin-left: -10px">
           <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-          <h5 class="nickname">{nickname}<span class="time">| <Time relative timestamp="{parseInt(message.time)}" /></span></h5>
+          <h5 class="nickname">{nickname}<span class="time" class:min={rtc}>| <Time relative timestamp="{parseInt(message.time)}" /></span></h5>
         </div>
         <div class="actions">
           <EmojiSelector on:emoji={reactTo} />
           <ReplyArrow on:click={replyTo} />
         </div>
       </div>
-      <p style="user-select: text;">{msg}</p>
+      <p class:rtc={rtc} style="user-select: text;">{msg}</p>
     </div>
 
     <div class="reactions">
@@ -252,6 +252,14 @@
     margin-left: 8px;
     font-weight: 400;
     font-size: 0.75rem;
+  }
+
+  .rtc {
+    width: 240px;
+  }
+
+  .min {
+    font-size: 0.65rem;
   }
 
 </style>
