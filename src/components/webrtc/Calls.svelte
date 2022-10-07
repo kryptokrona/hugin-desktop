@@ -81,7 +81,7 @@
       console.log('sending', message)
       console.log('to', to[0])
       sendMsg = JSON.stringify(message)
-      to.peer.send(sendMsg);
+      to[0].peer.send(sendMsg);
     }
     console.log("sent");
   });
