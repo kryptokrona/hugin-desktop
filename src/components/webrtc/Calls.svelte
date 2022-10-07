@@ -596,7 +596,7 @@
       let groupMessage = JSON.parse(event.data)
       let address = groupMessage.substring(groupMessage.length - 99)
       //If the address is one of our active calls, tunnel the message
-      console.log('Found address', addres)
+      console.log('Found address', address)
       if ($webRTC.call.some(a => a.chat == address)) {
         let tunnel = true
         let sendTunnel = $webRTC.find(a => a.chat === address)

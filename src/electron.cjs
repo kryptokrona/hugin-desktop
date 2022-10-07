@@ -2229,12 +2229,15 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     }
     mainWindow.webContents.send("rtc_message", messageArray);
      //Do not save invite message.
+    try {
      if (message.msg.invite) {
       return
-    }
+     }
+    }catch (e) {
     console.log('payload', messageArray)
     let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
     saveMessage(saveMsg, randomKey, true);
+    }
   }
 }
 
