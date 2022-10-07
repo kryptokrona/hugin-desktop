@@ -44,21 +44,20 @@ export const misc = writable({
 })
 
 export const webRTC = writable({
-  stream: false,
-  peer: false,
-  myVideo: false,
-  peerVideo: false,
-  myStream: false,
-  peerStream: false,
-  screen: false,
-  call: [],
-  connected: false,
-  videoSources: [],
-  incoming: [],
-  groupCall: false,
-  invited: false,
-  initiator: false,
-  activeVoice: false,
+    stream: false,
+    peer: false,
+    myVideo: false,
+    peerVideo: false,
+    myStream: false,
+    peerStream: false,
+    screen: false,
+    call: [],
+    connected: false,
+    videoSources: [],
+    incoming: [],
+    groupCall: false,
+    invited: false,
+    initiator: false,
 })
 
 export const audioLevel = writable({

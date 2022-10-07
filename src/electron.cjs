@@ -702,10 +702,12 @@ ipcMain.on("create-account", async (e, accountData) => {
   firstContact();
   //Create Boards welcome message
   welcomeBoardMessage();
-  //Create misc DB template on first start
-  await saveWallet(js_wallet, walletName, myPassword)
+  
   // Save js wallet to file as backup
+  await saveWallet(js_wallet, walletName, myPassword)
   addBoard('Home')
+  
+  //Create misc DB template on first start
   db.data = {
     walletNames: [],
     node: { node: "", port: "" }
@@ -2012,6 +2014,8 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
   const verified = await xkrUtils.verifyMessageSignature(payload_json.m, this_addr.spend.publicKey, payload_json.s);
 
+  if (!verified) return
+  
   payload_json.sent = false
 
   saveGroupMessage(payload_json, hash, tx.t, offchain);
@@ -2185,7 +2189,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
       3, // mixin
       { fixedFee: 1000, isFixedFee: true }, // fee
       undefined, //paymentID
-      [messageWallet], // subWalletsToTakeFrom
+      undefined, // subWalletsToTakeFrom
       undefined, // changeAddresss
       true, // relayToNetwork
       false, // sneedAll
