@@ -12,7 +12,6 @@
   import { onMount } from "svelte";
   import { calcTime } from "$lib/utils/utils.js";
 
-
   let muted = false;
   let video = true;
   let startTime = Date.now();
@@ -25,7 +24,6 @@
       time = calcTime(ms)
     }, 1000)
   });
-
 
   //Share screen
   const switchStream = async () => {
