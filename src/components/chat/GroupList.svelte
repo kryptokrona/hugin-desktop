@@ -59,12 +59,10 @@
   function filterActiveHugins(arr) {
     let uniq = {};
     activeHugins = arr.filter(obj => !uniq[obj.address] && (uniq[obj.address] = true));
-    console.log('active hugins',activeHugins)
   }
 
   $: activeHugins;
   $: groupArray = $groups.groupArray
-  
 
   //Print our conversations from DBs
   async function printGroups() {
@@ -90,11 +88,9 @@
         ...current,
         groupArray: my_groups
       };
-      
-      filterActiveHugins($groupMessages);
     });
 
-
+  filterActiveHugins($groupMessages)
   console.log("Printing conversations", newArray);
 }
 
@@ -153,8 +149,6 @@ async function checkNew() {
       console.log("pushin");
     });
 
-    console.log("conversations filtered and set", filterNew);
-
     return filterNew;
   }
 
@@ -196,11 +190,13 @@ async function checkNew() {
   <div class="list-wrapper">
    
     {#each activeHugins as user}
+    {#if user.address !== user.grp}
       <div class="card" on:click={(e) => sendPM(user)}>
         <img class="avatar"
              src="data:image/png;base64,{get_avatar(user.address)}" alt="">
         <p class="nickname">{user.name}</p><br>
-      </div>
+      </div>      
+    {/if}
     {/each}
   </div>
     {:else}
