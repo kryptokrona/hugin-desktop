@@ -11,6 +11,7 @@
   import Sources from "$components/chat/Sources.svelte";
   import { onMount } from "svelte";
   import { calcTime } from "$lib/utils/utils.js";
+  import HideVideoGrid from "$components/buttons/HideVideoGrid.svelte";
 
   let muted = false;
   let video = true;
@@ -87,8 +88,8 @@
     {/if}
   </div>
   </div>
-  <div class="icon">
-    <p on:click={() => $videoGrid.showVideoGrid = false}>Hide</p>
+  <div class="icon" on:click={() => $videoGrid.showVideoGrid = false}>
+    <HideVideoGrid/>
   </div>
   <div>
     <div class="icon" on:click={() => $videoGrid.showChat = !$videoGrid.showChat}>
