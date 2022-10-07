@@ -68,7 +68,7 @@
     console.log("sending rtc", message)
     console.log('Message to route?', msg)
     let sendMsg
-    if (msg.length === 3 && $webRTC.initiator && !to.connected) {
+    if (msg.length === 3 && !to.connected) {
       //Want to tunnel message through group inviter to the right address
       sendMsg = JSON.stringify(message + address)
       console.log('sendMsg tunnel', message, address)
