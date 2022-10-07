@@ -41,10 +41,9 @@
   window.api.receive("groupRtcMsg", data => {
 
     if (data.k === $user.huginAddress.substring(0, 99)) return;
-//*TODO*//Keep logs to experiment with toast popups
-    console.log("Group message", data.group);
-    console.log("This group call", $webRTC.groupCall);
-//Push new message to store
+    console.log("Group rtc message", data.group);
+    console.log("This group rtc key", $webRTC.groupCall);
+    //Push new message to store
       printGroupRtcMessage(data);
   });
 
@@ -57,12 +56,12 @@
     let myName = $user.username;
     let group = $webRTC.groupCall;
     let offchain = true;
-//Reaction switch
+    //Reaction switch 
     if (e.detail.reply) {
       replyto = e.detail.reply;
     }
 
-//Construct a new json object (myBoardMessage) to be able to print our message instant.
+    //Construct a new json object (myBoardMessage) to be able to print our message instant.
     let myGroupRtCMessage = {
       message: msg,
       grp: group,
@@ -143,15 +142,15 @@
     noMsgs = false;
   }
 
-  //Checks messages for reactions in chosen board from printBoard() function
+  //Checks messages for reactions
   async function checkReactions() {
-//All boardmessages all messages except reactions
+    //All boardmessages all messages except reactions
     filterRtcGroup = await $rtcgroupMessages.filter(m => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message)));
-//Only reactions
+    //Only reactions
     filterEmojis = await $rtcgroupMessages.filter(e => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message));
     console.log("filter emoji ", filterEmojis);
     if (filterEmojis.length) {
-//Adding emojis to the correct message.
+    //Adding emojis to the correct message.
       await addEmoji();
     } else {
       fixedRtcGroups = filterRtcGroup;
@@ -174,7 +173,7 @@
   }
 
   async function addEmoji() {
-//Check for replies and message hash that match and then adds reactions to the messages.
+  //Check for replies and message hash that match and then adds reactions to the messages.
     filterRtcGroup.forEach(async function(a) {
       await filterEmojis.forEach(function(b) {
         if (!a.react && b.reply == a.hash) {
