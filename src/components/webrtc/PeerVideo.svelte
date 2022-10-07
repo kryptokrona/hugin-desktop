@@ -6,6 +6,7 @@
   import { draggable } from "@neodrag/svelte";
   import Minus from "/src/components/buttons/Minus.svelte";
   import Plus from "/src/components/buttons/Plus.svelte";
+  import { audioLevel } from "$lib/stores/user.js";
 
   let peerVideo = document.getElementById("peerVideo");
   let peerStream;
@@ -42,36 +43,22 @@
   onDestroy(() => {
     peerVideo.pause();
   });
+  
+  let isTalking = false
 
-
-  const resize = (size) => {
-    if (window_medium && size == "medium") {
-      size = "max";
-    }
-    if (window_max && size == "min") {
-      size = "medium";
-    }
-    switch (size) {
-      case "min":
-        window_max = false;
-        window_medium = false;
-        break;
-      case "medium":
-        window_max = false;
-        window_medium = true;
-        break;
-      case "max":
-        window_max = true;
-        window_medium = false;
-    }
-  };
+  $: if ($audioLevel.call.some(a => a.activeVoice == true && a.chat === call.chat)) {
+    isTalking = true
+    console.log('Is talking', call.chat)
+  } else {
+    isTalking = false
+  }
 
   $: window_medium;
   $: window_max;
 
 </script>
 
-<div class="card">
+<div class="card" class:talking={isTalking}>
   <video in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
 </div>
 
@@ -110,7 +97,9 @@
   .options {
     display: flex;
   }
-
+  .talking {
+    border: 1px solid red;
+  }
   .answer {
     display: flex;
     justify-content: center;
