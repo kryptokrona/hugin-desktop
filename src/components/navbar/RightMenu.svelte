@@ -26,8 +26,8 @@
   let avatar;
   let calltype;
   let call_active = false;
-  let startTone = new Audio("/static/audio/startcall.mp3");
-  let endTone = new Audio("/static/audio/endcall.mp3");
+  let startTone = new Audio("/audio/startcall.mp3");
+  let endTone = new Audio("/audio/endcall.mp3");
   let thisCall = false;
   let video = false;
 
