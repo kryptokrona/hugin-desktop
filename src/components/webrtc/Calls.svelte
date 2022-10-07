@@ -599,7 +599,7 @@
       console.log('Found address', address)
       if ($webRTC.call.some(a => a.chat == address)) {
         let tunnel = true
-        let sendTunnel = $webRTC.find(a => a.chat === address)
+        let sendTunnel = $webRTC.call.find(a => a.chat === address)
         console.log('Found message, sending to other peer')
         sendTunnel.peer.send(event.data)
         return
