@@ -68,10 +68,12 @@
     console.log("sending rtc", message)
     console.log('Message to route?', msg)
     let sendMsg
-    if (msg.length === 3) {
+    if (msg.length === 3 && !$webRTC.invited) {
       //Want to tunnel message through group inviter to the right address
       sendMsg = JSON.stringify(message + address)
       console.log('sendMsg tunnel', message, address)
+      //Here we should try send it to the first connected peer, maybe more
+      let tunnel = $webRTC.call[$webRTC.call.length - 1]
       to.peer.send(sendMsg)
       return
 
