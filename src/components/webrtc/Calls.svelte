@@ -72,9 +72,7 @@
       //Want to tunnel message through group inviter to the right address
       sendMsg = JSON.stringify(message + address)
       console.log('sendMsg tunnel', message, address)
-      //Here we should try send it to the first connected peer, maybe more
-      let tunnel = $webRTC.call[$webRTC.call.length - 1]
-      tunnel.peer.send(sendMsg)
+      to.peer.send(sendMsg)
       return
 
     } else {
@@ -570,10 +568,12 @@
   }
 
   function checkMessage(event) {
-    
+    console.log('RTC Message event', event)
     let message = JSON.parse(event.data)
     let parsedMsg = message.substring(0, message.length - 99)
     let addr = message.substring(message.length - 99)
+
+    console.log('Address?', addr)
     
     if (addr == $user.huginAddress.substring(0, 99)) {
       console.log('found tunneled message to me', message)
