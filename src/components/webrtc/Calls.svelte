@@ -74,7 +74,7 @@
       console.log('sendMsg tunnel', message, address)
       //Here we should try send it to the first connected peer, maybe more
       let tunnel = $webRTC.call[$webRTC.call.length - 1]
-      to.peer.send(sendMsg)
+      tunnel.peer.send(sendMsg)
       return
 
     } else {
