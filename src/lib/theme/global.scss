@@ -59,12 +59,18 @@
 }*/
 
 body {
-  background-color: var(--backgound-color);
   font-family: Montserratm, Arial, serif;
   font-weight: 400;
   margin: 0;
   box-sizing: border-box;
   user-select: none;
+  min-height: 700px;
+}
+
+#svelte {
+  background-color: var(--backgound-color);
+  border-radius: 10px;
+  min-height: 700px;
 }
 
 html {
