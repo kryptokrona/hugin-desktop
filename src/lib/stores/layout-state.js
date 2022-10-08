@@ -8,5 +8,5 @@ export const layoutState = writable({
 
 export const videoGrid = writable({
   showChat: false,
-  showVideoGrid: true,
+  showVideoGrid: false,
 })
