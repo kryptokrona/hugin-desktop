@@ -6,6 +6,7 @@
   import Share from "/src/components/dashboard/Share.svelte";
   import Funds from "/src/components/dashboard/Funds.svelte";
   import EditName from "/src/components/dashboard/EditName.svelte";
+  import Transactions from "/src/components/finance/Transactions.svelte";
 
   let avatar;
   let myBoards = [];
@@ -63,6 +64,10 @@
 
     <Funds/>
 
+  </div>
+
+  <div>
+    <Transactions/>
   </div>
 </main>
 
