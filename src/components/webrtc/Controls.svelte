@@ -66,7 +66,7 @@
       {#if !video}
         <VideoSlash />
       {:else}
-        <VideoIcon />
+        <VideoIcon grid={true}/>
       {/if}
     </div>
     <div class="icon" on:click={toggleAudio}>
