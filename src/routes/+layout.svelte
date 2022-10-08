@@ -78,7 +78,13 @@
 		incoming_call = true
 		console.log('INCMING');
 		console.log('new call', msg, chat)
-		$webRTC.incoming.push({msg, chat, type: "incoming"})
+		
+        let caller = $user.contacts.find(a => a.chat === chat)
+		let type = "incoming"
+		if ($webRTC.groupCall) {
+			type = "groupinvite"
+		}
+		$webRTC.incoming.push({msg, chat, type: type, name: caller.name})
 		$webRTC.incoming = $webRTC.incoming
 		console.log('calls incoming set', $webRTC.incoming)
 	})
