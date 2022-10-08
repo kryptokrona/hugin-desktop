@@ -678,7 +678,7 @@
 
     if (contact === undefined) {
       console.log('contact', contact)
-      caller = $webRTC.call.filter(e => e.peer.channelName == peer.channelName);
+      caller = $webRTC.call.find(e => e.peer.channelName == peer.channelName);
     }
 
     if (contact && peer == undefined) {
