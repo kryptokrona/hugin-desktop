@@ -111,8 +111,8 @@
   }
 
   $: if (thisCall) {
-    let active_vdeo = $webRTC.call.filter(a => a.chat === active_contact.chat);
-    if (active_vdeo[0].video) {
+    let active_video = $webRTC.call.filter(a => a.chat === active_contact.chat);
+    if (active_video.peerVideo) {
       video = true;
     } else {
       video = false;
