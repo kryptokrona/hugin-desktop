@@ -647,7 +647,6 @@
                 console.log(`${caller.name} is Talking`)
               } else {
                 speaker.activeVoice = false
-                console.log('...')
               }
             } else {
               continue;
