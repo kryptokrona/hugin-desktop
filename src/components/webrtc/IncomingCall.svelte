@@ -4,7 +4,7 @@
     import {cubicOut , cubicIn} from "svelte/easing"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {onDestroy, onMount} from "svelte";
-    import {user, webRTC} from "$lib/stores/user.js";
+    import {user, webRTC, notify} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
     import { goto } from "$app/navigation";
     import CallIcon from "/src/components/buttons/CallIcon.svelte";
@@ -14,29 +14,47 @@
     export let thisCall
     let avatar
     let ringtone = new Audio("/static/audio/ringtone.mp3")
-
+    let invite = false
     let answered = false
+    let video = true
+
     const dispatch = createEventDispatcher();
     // When incoming call and this get mounted we play the ringtone
     onMount(() => {
+        
         ringtone.play()
          avatar = get_avatar(thisCall.chat)
+         if (thisCall.type === "groupinvite") {
+            invite = true
+         }
+        video = $webRTC.devices.some(a => a.kind == "videoinput")
+        if (video) return
+        video = false
     })
 
-    //When a user clicks answer
-    const handleAnswer = () => {
 
-        goto("/messages")
-        dispatch('answerCall')
+    //When a user clicks answer
+    const handleAnswer = async () => {
+
+        await goto("/messages")
         //Variable to activate visual feedback
         answered = true
 
-        let caller = $user.contacts.find(a => a.chat === thisCall.chat)
         console.log('caller', caller)
         let offchain = false
         
-        if ($webRTC.groupCall && !$webRTC.invited) {
+        if ($webRTC.groupCall) {
             offchain = true
+        }
+        //If video call incoming and no video device is plugged in
+        if (caller.msg.substring(0, 1) == Δ && !video) {
+            $notify.errors.push({
+            message: "You have no video device",
+            name: "Error",
+            hash: parseInt(Date.now())
+            })
+            $notify.errors = $notify.errors
+            return
         }
         console.log('offchain?', offchain)
          //We delay the answerCall for routing purposes
@@ -60,12 +78,12 @@
 </script>
 
 
-<div in:fly="{{y: -200, duration:800, easing: cubicOut}}" out:fly="{{y: -200, duration: 800, easing: cubicIn}}" class="card" class:answered={answered} class:rgb={!answered}>
+<div in:fly="{{y: -200, duration:400, easing: cubicOut}}" out:fly="{{y: -200, duration: 400, easing: cubicIn}}" class="card" class:answered={answered} class:rgb={!answered}>
     <audio bind:paused src="/static/audio/static_ringtone.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <p>{'SEKReYaGR8MLzRvJEj626B1ybiZTrvyoUFtexaHpEiFL5cynpxKfVeV3BUVAKZqYQyDPQtT26sTAUi47gskf9MTyDHoq1utP4xT'}</p>
+            <p class="name">{thisCall.name}</p>{#if invite}<p> wants to join the call</p>{:else}<p> is calling</p>{/if}
         </div>
         <div class="options">
             <div class="answer hover" on:click={handleAnswer}>    
@@ -83,14 +101,14 @@
     .card {
         display: flex;
         position: absolute;
-        padding: 1px;
-        top: 20px;
-        right: 105px;
-        height: 50px;
-        width: 300px;
-        background-color: #5f86f2;
+        right: 50px;
+        padding: 3px;
+        height: 70px;
+        width: 400px;
+        flex-direction: column;
+        box-sizing: border-box;
         border-radius: 5px;
-        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255,255,255, 0.1);
         z-index: 500;
     }
@@ -148,6 +166,11 @@
         font-weight: normal;
         max-width: 120px;
         overflow: hidden;
-        text-overflow: ellipsis
+        text-overflow: ellipsis;
+        font-family: "Montserrat";
+    }
+
+    .name {
+        font-weight: bold;
     }
 </style>
