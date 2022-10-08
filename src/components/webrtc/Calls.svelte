@@ -203,7 +203,7 @@
     }
   }
 
-  async function inviteToGroupCall() {
+  async function inviteToGroupCall(peer) {
     
     console.log('Group call connecting...')
     if ($webRTC.groupCall === false) {
@@ -213,7 +213,7 @@
     }
       
     //When you invite a new person to the call
-    let thisCall = $webRTC.call[0]
+    let thisCall = $webRTC.call.find(a => a.peer === peer)
     console.log('this call', thisCall)
     //Sort out all active calls except this
     let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
@@ -616,15 +616,17 @@
     window.api.decryptMessage(message)
   }
 
-  async function checkVolume(peer) {
+  function checkVolume(peer) {
 
     let interval
     let array = new Array(10)
     let contact = $webRTC.call.find(a => a.peer == peer)
-    $audioLevel.call[0] = {
+    let audioCall = {
         chat: contact.chat, 
         activeVoice: false
     }
+    $audioLevel.call.push(audioCall)
+    
     let caller = $user.contacts.find(a => {return a.chat === contact.chat})
     $audioLevel.sensitivity = 0.001
     interval = setInterval(getAudioLevel, 300);
