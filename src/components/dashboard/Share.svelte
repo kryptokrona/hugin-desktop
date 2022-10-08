@@ -32,7 +32,7 @@
         <h5>Key</h5>
       </div>
       <div on:click={() => copyThis($user.huginAddress)}>
-        <h5>Both</h5>
+        <h5>Hugin</h5>
       </div>
     </div>
   {/if}
