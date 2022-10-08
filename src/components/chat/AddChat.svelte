@@ -3,16 +3,18 @@
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher, onMount} from "svelte";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import GreenButton from "/src/components/buttons/GreenButton.svelte";
 
     const dispatch = createEventDispatcher()
 
     let enableButton = false
-    let nickname
+    let nickname = ""
     let addr
     let pubkey
     let text = ''
     let myAddress
     let avatar
+    let step = 1
 
     $: {
         if (text.length > 98) {
@@ -36,7 +38,15 @@
             sent: true,
             timestamp: Date.now().toString()
         })
+        close()
     }
+
+    const close = () => {
+        open = false
+        text = ""
+        nickname = ""
+        step = 1
+  };
 
     $: {
         //Handle state of the button, disabled by default, when enabled RGB class will be added.
@@ -49,99 +59,90 @@
         }
     }
 
+    const next = () => {
+        step = 2
+    }
+
+    $: step
+
 </script>
 
-<div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-            <h4>Nickname</h4>
-            <div class="nickname-wrapper">
-                <input type="text" bind:value={nickname}>
-                {#if (pubkey)}
-                    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
-                {/if}
-            </div>
-            <h4>Address</h4>
-            <input type="text" bind:value={text}>
-            <h4>Message key</h4>
-            <input disabled="true" class="key" type="text" bind:value={pubkey}>
-        <button disabled={!enableButton} class:rgb={enableButton} on:click={handleAdd}>Add</button>
+<div on:click|self in:fade="{{duration: 70}}" out:fade="{{duration: 100}}" class="backdrop">
+
+     
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+        {#if (pubkey)}
+        <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
+        {/if}
+        {#if step == 1} 
+        <input placeholder="Enter Hugin address" type="text" spellcheck="false" autocomplete="false" bind:value={text}>
+        
+        <GreenButton disabled={!enableButton} enabled={enableButton && step == 1} on:click={next} text="Next" />
+        {/if}
+    </div>
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+        {#if pubkey && step == 2 }
+        <input placeholder="Enter a nickname" type="text" spellcheck="false" autocomplete="false" bind:value={nickname}>
+         
+        <GreenButton disabled={!enableButton} enabled={step == 2 && nickname.length} on:click={handleAdd} text="Add" />
+        {/if}
     </div>
 </div>
 
 <style lang="scss">
+  
+  .field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    padding: 0 10px;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    border-radius: 0.4rem;
 
-    .backdrop {
-      position: fixed;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background-color: var(--backdrop-color);
-      z-index: 103;
-    }
-
-    .card {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 360px;
-        width: 320px;
-        padding: 30px;
-        background-color: var(--backgound-color);
-        border-radius: 8px;
-        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--border-color);
-    }
-
-    .nickname-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        img {
-            margin-bottom: 9px;
-            width: 50px;
-            height: 50px;
-        }
-    }
-
-    input {
-        background-color: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding-left: 8px;
-        height: 35px;
-        width: 100%;
-        margin-top: 10px;
-        margin-bottom: 20px;
-        color: white;
-        transition: 250ms ease-in-out;
-
-      &:focus {
-        outline: none;
-        border-color: rgba(255, 255, 255, 0.6);
-      }
-    }
-
-    .key {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    button {
-        border: none;
-        border-radius: 8px;
-        width: 100%;
-        height: 36px;
-        transition: 250ms ease-in-out;
-        background-color: rgb(225, 18, 80);
-        color: white;
-        cursor: pointer;
+    .btn {
+      color: var(--text-color);
+      height: 100%;
+      border-left: 1px solid var(--card-border);
+      cursor: pointer;
 
       &:hover {
-        opacity: 80%;
+        background-color: var(--card-border);;
       }
     }
+  }
+
+  input {
+    margin: 0 auto;
+    width: 300px;
+    height: 50px;
+    transition: 200ms ease-in-out;
+    color: var(--text-color);
+    background-color: transparent;
+    border: none;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .backdrop {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--backdrop-color);
+    backdrop-filter: blur(8px);
+    z-index: 103;
+  }
+  
+  .hide {
+    dislay: none;
+  }
 </style>
