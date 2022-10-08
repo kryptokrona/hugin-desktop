@@ -293,6 +293,7 @@ async function download(link) {
 ipcMain.on("download", async (e, link) => {
   console.log("ipcmain downloading");
   download(link);
+  return
 });
 
 
@@ -313,6 +314,7 @@ function upload(filename, path, address) {
     torrent.files.forEach(function(file) {
       console.log("file", file);
     });
+    return
     sendMessage(torrent.magnetURI.split("&tr")[0], address);
   });
 }
