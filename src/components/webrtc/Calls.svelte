@@ -616,7 +616,7 @@
     window.api.decryptMessage(message)
   }
 
-  function checkVolume(peer) {
+  async function checkVolume(peer) {
 
     let interval
     let array = new Array(10)
@@ -625,8 +625,8 @@
         chat: contact.chat, 
         activeVoice: false
     }
-    $audioLevel.call.push(audioCall)
-    
+    $audioLevel.call.unshift(audioCall)
+
     let caller = $user.contacts.find(a => {return a.chat === contact.chat})
     $audioLevel.sensitivity = 0.001
     interval = setInterval(getAudioLevel, 300);
