@@ -104,15 +104,15 @@
 
   };
 
-  $: if ($webRTC.active) {
+  $: if ($webRTC.call.length) {
     thisCall = $webRTC.call.some(a => a.chat === active_contact.chat);
   } else {
     thisCall = false;
   }
 
   $: if (thisCall) {
-    let active_video = $webRTC.call.filter(a => a.chat === active_contact.chat);
-    if (active_video.peerVideo) {
+    let active_video = $webRTC.call.find(a => a.chat === active_contact.chat);
+    if (active_video.video) {
       video = true;
     } else {
       video = false;
@@ -205,9 +205,9 @@
       </button>
       <button class="button">
       {#if thisCall && video}
-      <VideoSlash  on:click={() => endCall()}/>
+        <VideoSlash  on:click={() => endCall()}/>
       {:else}
-      <VideoIcon on:click={() => startCall(contact, true)}/>
+        <VideoIcon menu={true} on:click={() => startCall(contact, true)}/>
       {/if}
       </button>
       {#if thisCall}

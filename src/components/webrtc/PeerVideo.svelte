@@ -98,7 +98,7 @@
     display: flex;
   }
   .talking {
-    border: 1px solid red;
+    border: 1px solid var(--success-color);
   }
   .answer {
     display: flex;

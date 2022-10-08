@@ -1,10 +1,13 @@
 <script>
 import { webRTC } from "$lib/stores/user.js";
 export let grid = false
+export let menu = false
+
   let color = "#f5f5f5"
+
    $: if ($webRTC.myVideo && !$webRTC.screenshare && grid) {
       color = "#4dbb45"
-    } else if ($webRTC.screenshare) {
+    } else if ($webRTC.screenshare || !$webRTC.screenshare && !$webRTC.myVideo) {
       color = "#f5f5f5"
     }
 </script>
