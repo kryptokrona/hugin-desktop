@@ -88,7 +88,7 @@
     let chat = message.chat;
     let msgkey = message.key;
     let name = message.name;
-    let active_chat = { chat: chat, k: msgkey, name: name };
+    let active_chat = { chat: chat, key: msgkey, name: name };
     user.update(user => {
       return {
         ...user,
