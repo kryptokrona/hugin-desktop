@@ -30,6 +30,10 @@
     changeCamera(true, $webRTC.cameraId);
   });
 
+  window.api.receive("set-audio-input", (id) => {
+    changeAudio(id);
+  });
+
   window.api.receive("check-src", () => {
     checkSources();
   });
@@ -108,7 +112,7 @@
     checkSources();
   };
 
-  const startCall = async (contact, isVideo, invite, screenshare = false) => {
+  const startCall = async (contact, isVideo, invite = false, screenshare = false) => {
     // spilt input to addr and pubkey
    
     let contact_address = contact.substring(0, 99);
@@ -189,6 +193,36 @@
     //Set video boolean to play video
     $webRTC.video = true;
 
+  }
+
+  async function changeAudioSource(device, oldSrc, chat) {
+    let current = $webRTC.myStream;
+    console.log('want to change audio', device)
+    //Add new track to current stream
+    current.addTrack(device.getAudioTracks()[0])
+    //Replace track
+    $webRTC.call.forEach(a => {
+      console.log('replacing track', a.peer)
+      a.peer.replaceTrack(current.getAudioTracks()[0], device.getAudioTracks()[0], current)
+    });
+    //Remove old track
+    current.removeTrack(current.getAudioTracks()[0])
+    //Update stream
+    $webRTC.myStream = current;
+
+  }
+
+  async function changeAudio(id, chat) {
+      // get video/voice stream
+      navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: id
+        }
+      }).then(function(device) {
+        changeAudioSource(device);
+      }).catch((e) => {
+        console.log("error", e);
+      });
   }
 
   async function changeCamera(video, id, chat) {
