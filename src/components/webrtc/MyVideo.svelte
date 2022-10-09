@@ -8,7 +8,7 @@
   import Minus from "/src/components/buttons/Minus.svelte";
   import Plus from "/src/components/buttons/Plus.svelte";
   import Screen from "/src/components/buttons/Screenshare.svelte";
-  import Sources from "/src/components/chat/Sources.svelte";
+  import VideoSources from "/src/components/chat/VideoSources.svelte";
 
   let myVideo = document.getElementById("myVideo");
   let video = false;
