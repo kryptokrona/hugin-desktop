@@ -10,6 +10,7 @@
   import { webRTC } from "$lib/stores/user.js";
   import VideoSources from "$components/chat/VideoSources.svelte";
   import AudioSources from "/src/components/chat/AudioSources.svelte";
+  import Contacts from "/src/components/chat/Contacts.svelte";
   import { onMount } from "svelte";
   import { calcTime } from "$lib/utils/utils.js";
   import HideVideoGrid from "$components/buttons/HideVideoGrid.svelte";
@@ -87,6 +88,9 @@
     {#if $webRTC.myStream}
       <VideoSources />
     {/if}
+  </div>
+  <div class="icon">
+      <Contacts />
   </div>
   <!-- <div class="icon">
       <AudioSources />
