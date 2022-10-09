@@ -6,6 +6,10 @@
   import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
   import { videoGrid } from "$lib/stores/layout-state.js";
 
+  onMount(()=> {
+    checkSources()
+  })
+
   window.api.receive("answer-call", (msg, contact, key, offchain) => {
     answerCall(msg, contact, key, offchain);
   });
@@ -166,7 +170,6 @@
     let devices = await navigator.mediaDevices.enumerateDevices();
     console.log("devices", devices);
     $webRTC.devices = devices;
-
   }
 
   async function changeVideoSource(device, oldSrc, chat) {
