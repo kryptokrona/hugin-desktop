@@ -2447,6 +2447,10 @@ ipcMain.on("change-src", async (e, src) => {
   mainWindow.webContents.send('change-source', src)
 })
 
+ipcMain.on("change-audio-src", async (e, id) => {
+  mainWindow.webContents.send('set-audio-input', id)
+})
+
 ipcMain.on("check-srcs", async (e, src) => {
   mainWindow.webContents.send('check-src', src)
 })
