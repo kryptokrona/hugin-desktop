@@ -34,10 +34,12 @@
   $: {
     if ($user.activeChat) {
       active_contact = $user.activeChat;
-      contact = $user.activeChat.chat + $user.activeChat.k;
+      contact = $user.activeChat.chat + $user.activeChat.key;
       avatar = get_avatar(active_contact.chat);
     }
   }
+
+  $: console.log('active chat', $user.activeChat)
 
   //Starts any call
   const startCall = async (contact, calltype) => {
@@ -193,7 +195,7 @@
 
   {#if $page.url.pathname === '/messages'}
     <div class="nav">
-      <img class="avatar" src="data:image/png;base64,{avatar}" alt="" on:click={() => copyThis($user.activeChat.chat + $user.activeChat.k)}>
+      <img class="avatar" src="data:image/png;base64,{avatar}" alt="" on:click={() => copyThis($user.activeChat.chat + $user.activeChat.key)}>
       
       <button class="button">
       {#if thisCall && !video}

@@ -54,9 +54,9 @@
 
     console.log("printing conversation messages", active);
     chat = active.chat;
-    key = active.k;
+    key = active.key;
     active_contact = chat + key;
-    let active_chat = { chat: chat, k: key, name: active.name };
+    let active_chat = { chat: chat, key: key, name: active.name };
     $user.activeChat = active_chat
     savedMsg = [];
     savedMsg = $messages.filter(x => x.chat === chat);
@@ -164,7 +164,7 @@
     if (fileRejections.length) {
       console.log("rejected file");
     }
-    let address = $user.activeChat.chat + $user.activeChat.k;
+    let address = $user.activeChat.chat + $user.activeChat.key;
     console.log(acceptedFiles);
 
     let message = { chat: $user.activeChat.chat, msg: "", sent: true, t: Date.now(), file: acceptedFiles };
