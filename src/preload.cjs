@@ -142,6 +142,11 @@ const WINDOW_API = {
     ipcRenderer.send('change-src', src)
   },
   
+  changeAudioSource: async (src) => {
+    console.log('preload audio', src)
+    ipcRenderer.send('change-audio-src', src)
+  },
+
   checkSources: async () => {
     ipcRenderer.send('check-srcs')
   },
