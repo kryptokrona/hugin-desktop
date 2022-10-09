@@ -38,7 +38,8 @@
 
     //When a user clicks answer
     const handleAnswer = async () => {
-
+        
+        dispatch('answerCall')
         await goto("/messages")
         //Variable to activate visual feedback
         answered = true
@@ -124,10 +125,6 @@
         width: 100%;
         border-radius: 3px;
         background-color: #202020;
-    }
-
-    .answered {
-      background-color: #5ff281;
     }
 
     .caller {
