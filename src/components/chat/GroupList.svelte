@@ -48,6 +48,7 @@
     console.log('print group!', grp)
     readMessage(grp)
     dispatch("printGroup", grp)
+    filterActiveHugins($groupMessages)
   };
 
   const showList = () => {
@@ -58,7 +59,7 @@
   //Function to filer array of active users on board.
   function filterActiveHugins(arr) {
     let uniq = {};
-    activeHugins = arr.filter(obj => !uniq[obj.address] && (uniq[obj.address] = true));
+    activeHugins = arr.filter(obj => !uniq[obj.chat] && (uniq[obj.chat] = true));
   }
 
   $: activeHugins;
