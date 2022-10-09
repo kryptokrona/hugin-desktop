@@ -8,7 +8,8 @@
   import MessageIcon from "$components/buttons/MessageIcon.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
   import { webRTC } from "$lib/stores/user.js";
-  import Sources from "$components/chat/Sources.svelte";
+  import VideoSources from "$components/chat/VideoSources.svelte";
+  import AudioSources from "/src/components/chat/AudioSources.svelte";
   import { onMount } from "svelte";
   import { calcTime } from "$lib/utils/utils.js";
   import HideVideoGrid from "$components/buttons/HideVideoGrid.svelte";
@@ -26,7 +27,7 @@
     }, 1000)
   });
 
-  //Share screen
+  //Share screenpmn
   const switchStream = async () => {
     if (!$webRTC.screenshare) {
     await window.api.shareScreen(false);
@@ -84,9 +85,12 @@
     </div>
     <div class="icon">
     {#if $webRTC.myStream}
-      <Sources />
+      <VideoSources />
     {/if}
   </div>
+  <!-- <div class="icon">
+      <AudioSources />
+  </div> -->
   </div>
   <div class="icon" on:click={() => $videoGrid.showVideoGrid = false}>
     <HideVideoGrid/>
