@@ -77,17 +77,16 @@
 
   $ :  myPassword;
 
-  window.api.receive("wallet-started", async (myContacts, node, my_groups) => {
-
+  window.api.receive("wallet-started", async (node, my_groups) => {
     //Set contacts to store
     user.update(data => {
       return {
         ...data,
         loggedIn: true,
-        contacts: myContacts
-      };
+      }
 
     });
+
     //Set chosen node from last startup in store
     misc.update(oldData => {
       return {

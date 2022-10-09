@@ -30,7 +30,6 @@
 	let loading = false
 	let new_message_sound
 	let incomingCalls = []
-
 	const closePopup = () => {
 		incoming_call = false
 	}
@@ -68,25 +67,34 @@
 				return null;
 			}
 		};
-		board_message_sound = new Audio("/static/audio/boardmessage.mp3");
-		new_message_sound = new Audio("/static/audio/message.mp3");
-		ready = true
+	board_message_sound = new Audio("/static/audio/boardmessage.mp3");
+	new_message_sound = new Audio("/static/audio/message.mp3");
+
+	 window.api.receive("contacts", async (my_contacts) => {
+		console.log('contacts!', my_contacts)
+		//Set contacts to store
+		$user.contacts = my_contacts
+
+		$user.activeChat = $user.contacts[my_contacts.length - 1]
+	 })
+
+	 ready = true
 
 		//Handle incoming call
-	window.api.receive('call-incoming', (msg, chat, group = false) => {
-
+	window.api.receive('call-incoming', async (msg, chat, group = false) => {
+		console.log('chat', chat)
+		let incoming = $user.contacts.find(a => a.chat === chat)
+		console.log('contacts set???',$user.contacts)
 		incoming_call = true
-		console.log('INCMING');
+		console.log('INCMING CALL');
 		console.log('new call', msg, chat)
 		
-        let caller = $user.contacts.find(a => a.chat === chat)
 		let type = "incoming"
 		if ($webRTC.groupCall) {
 			type = "groupinvite"
 		}
-		$webRTC.incoming.push({msg, chat, type: type, name: caller.name})
+		$webRTC.incoming.push({msg, chat, type: type, name: incoming.name})
 		$webRTC.incoming = $webRTC.incoming
-		console.log('calls incoming set', $webRTC.incoming)
 	})
 
 	window.api.receive('group-call', (data) => {
