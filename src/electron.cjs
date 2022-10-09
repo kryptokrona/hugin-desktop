@@ -292,13 +292,14 @@ async function download(link) {
 
 ipcMain.on("download", async (e, link) => {
   console.log("ipcmain downloading");
-  download(link);
   return
+  download(link);
 });
 
 
 ipcMain.on("upload", async (e, filename, path, address) => {
   console.log("ipcmain uploading");
+  return
   upload(filename, path, address);
 });
 
@@ -314,7 +315,6 @@ function upload(filename, path, address) {
     torrent.files.forEach(function(file) {
       console.log("file", file);
     });
-    return
     sendMessage(torrent.magnetURI.split("&tr")[0], address);
   });
 }
@@ -818,6 +818,12 @@ async function start_js_wallet(walletName, password, mynode) {
     console.log("A", js_wallet);
     return;
   }
+  
+  //Load known public keys and contacts
+  let myContacts = await loadKeys(start = true);
+  mainWindow.webContents.send("contacts", myContacts)
+  await sleep(300)
+
   /* Start wallet sync process */
   await js_wallet.start();
   js_wallet.enableAutoOptimization(false);
@@ -828,7 +834,7 @@ async function start_js_wallet(walletName, password, mynode) {
 
   //Save backup wallet to file
   await saveWalletToFile(js_wallet, walletName, password);
-  console.log('my', my_groups)
+
   if (knownTxsIds.length > 0) {
 
     checkedTxs = knownTxsIds.map(function(knownTX) {
@@ -839,8 +845,6 @@ async function start_js_wallet(walletName, password, mynode) {
     //Push one test hash to the array if this is a new account, this should be empty?
     checkedTxs = [];
   }
-  //Load known public keys
-  let myContacts = await loadKeys(start = true);
   my_boards = await getMyBoardList();
 
   const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus();
@@ -890,7 +894,7 @@ async function start_js_wallet(walletName, password, mynode) {
     }
   });
 
-  mainWindow.webContents.send("wallet-started", myContacts, mynode, my_groups);
+  mainWindow.webContents.send("wallet-started", mynode, my_groups);
   console.log("Started wallet");
   await sleep(2000);
   console.log("Loading Sync");
@@ -982,7 +986,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
 
   console.log("Background syncing...");
   mainWindow.webContents.send("sync", "Syncing");
-  let message_was_unknown;
   try {
     const resp = await fetch("http://" + node + ":" + ports.toString() + "/get_pool_changes_lite", {
       method: "POST",
@@ -1764,7 +1767,9 @@ async function getContacts() {
       if (err) {
         console.log("Error", err);
       }
-      myContactList.push(row);
+      let newRow = row
+      newRow.chat = row.address
+      myContactList.push(newRow);
     }, () => {
       resolve(myContactList);
     });
