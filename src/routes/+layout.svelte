@@ -233,8 +233,8 @@
 			//Add prompt to add unknown contact
 			name = "Anon"
 			key = data.substring(99,163)
+			//Todo?
 			console.log('**** DONT KNOW THIS CONTACT. ADD ?? ****')
-			return
 		}
 		
 		$notify.success.push({
@@ -243,7 +243,7 @@
 			hash: Date.now(),
 			key: key,
 			type: "success",
-    })
+    	})
 
     	$notify.success = $notify.success
 		$webRTC.joining = data.key
