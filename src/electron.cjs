@@ -2529,7 +2529,6 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
       let invited = sanitizeHtml(groupMessage.r)
       mainWindow.webContents.send("group_invited_contact", invited);
       console.log('Invited')
-      console.log('Group invite', msg)
     }
   return
   }
