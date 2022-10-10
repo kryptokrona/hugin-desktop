@@ -58,7 +58,8 @@
 
     if (to_group) {
       console.log('sending rtc group message')
-      $webRTC.call.forEach(a => {
+      let connected = $webRTC.call.filter(a => a.connected == true)
+      connected.forEach(a => {
         console.log(
           'sending to peer', a.peer
         )
@@ -121,8 +122,12 @@
       let call = {chat: contact_address, type: "invite"}
       $webRTC.call.unshift(call)
     }
+    
+    if ($webRTC.initiator) {
+      await sendInviteNotification(contact, contact_address)
+    }
 
-    console.log("contact address", contact_address);
+    console.log("XKR Address", contact_address);
     console.log("Hugin Address", contact);
 
     console.log("Starting call..");
@@ -167,6 +172,21 @@
   $: {
     console.log("My Audio/Video devices", $webRTC.devices);
     console.log("Active Camera", $webRTC.cameraId)
+  }
+
+  async function sendInviteNotification(contact, contact_address) {
+    
+    let callList = $webRTC.call.filter(a => a.chat !== contact_address)
+     //Notify other users in the call about the invite.
+     let msg = {
+        m: "ᛊNVITᛊ",
+        r: contact,  
+        g: $webRTC.groupCall,
+        k: $user.huginAddress.substring(0,99)
+      }
+    callList.forEach(a => {
+      window.api.sendGroupMessage(msg, true)
+    })
   }
 
   async function checkSources() {
@@ -265,9 +285,6 @@
       let listItem = a.chat + tunnelTo.key
       activeCall.push(listItem)
       console.log('inviting', listItem)
-      //Notify other users in the call about the invite.
-      let msg = {m: "ᛊNVITᛊ", r: thisCall.chat + contact.key, g: $webRTC.groupCall, k: $user.huginAddress.substring(0,99)}
-      window.api.sendGroupMessage(msg, true)
     })
     } else {
       //First
@@ -335,6 +352,7 @@
 
     }
     $webRTC.active = true;
+
 
 
     peer1.on("stream", peerStream => {
