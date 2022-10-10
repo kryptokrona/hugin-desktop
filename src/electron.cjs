@@ -2524,7 +2524,7 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
     console.log('No group message')
     return
   }
-  if (groupMessage.m === "1/\/\/173") {
+  if (groupMessage.m === "ᛊNVITᛊ") {
 
   if (groupMessage.r.length === 163) {
     let invited = sanitizeHtml(groupMessage.r)
