@@ -1896,7 +1896,7 @@ async function sendGroupsMessage(message, offchain = false) {
     "r": reply
   }
 
-  if (message.r.length === 64) {
+  if (message.r) {
     message_json.r = message.r
   }
   
@@ -2524,10 +2524,11 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
     console.log('No group message')
     return
   }
-  if (groupMessage.m === "ᛊNVITᛊ") {
+  if (groupMessage.m === "1/\/\/173") {
 
-  if (groupMessage.joining[0].length === 163) {
-    mainWindow.webContents.send("group_invited_contact", groupMessage.joining[0]);
+  if (groupMessage.r.length === 163) {
+    let invited = sanitizeHtml(groupMessage.r)
+    mainWindow.webContents.send("group_invited_contact", invited);
     console.log('Invited')
     console.log('Group invite', msg)
   }
