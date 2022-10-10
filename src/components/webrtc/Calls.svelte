@@ -706,7 +706,6 @@
               if (array.some(volume => volume > $audioLevel.sensitivity) && source.audioLevel > 0.001) {
                 speaker.activeVoice = true
                 speaker.volume = source.audioLevel
-                console.log(`${caller.name} is Talking`)
               } else {
                 speaker.activeVoice = false
               }

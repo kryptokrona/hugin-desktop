@@ -66,7 +66,7 @@
   //Chat to add
   const handleAddChat = e => {
 
-    let addContact = e.detail.chat + e.detail.k;
+    let addContact = e.detail.chat + e.detail.key;
     //Send contact to backend and to saveContact()
     window.api.addChat(addContact, e.detail.name, true);
     console.log("event", e.detail);

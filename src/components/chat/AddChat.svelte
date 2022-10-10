@@ -33,7 +33,7 @@
         dispatch('addChat', {
             name: nickname,
             chat: addr,
-            k: pubkey,
+            key: pubkey,
             msg: 'New friend added!',
             sent: true,
             timestamp: Date.now().toString()
