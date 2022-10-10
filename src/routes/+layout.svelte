@@ -223,7 +223,30 @@
 
 	window.api.receive('group_invited_contact', async (data) => {
 		console.log('***** GROUP INVITED ****', data)
-		$webRTC.joining = data
+		let name
+		let key
+		if ($user.contacts.some(a => a.chat == data.substring(0,99))) {
+			let contact = $user.contacts.find(a => a.chat == data.substring(0,99))
+			name = contact.name
+			key = contact.key
+		} else {
+			//Add prompt to add unknown contact
+			name = "Anon"
+			key = data.substring(99,163)
+			console.log('**** DONT KNOW THIS CONTACT. ADD ?? ****')
+			return
+		}
+		
+		$notify.success.push({
+			message: "Invited to call",
+			name: name,
+			hash: Date.now(),
+			key: key,
+			type: "success",
+    })
+
+    	$notify.success = $notify.success
+		$webRTC.joining = data.key
 	})
 
 	$: console.log('Contact joining call ',$webRTC.joining)
