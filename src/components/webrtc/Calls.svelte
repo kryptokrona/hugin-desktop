@@ -350,7 +350,8 @@
       //Test with only two peers
       let thisCall = $webRTC.call.find(a => a.peer === peer1)
       let contact = $user.contacts.find(a => a.chat === thisCall.chat)
-      let msg = {m: "ᛊNVITᛊ", joining: [thisCall.chat + contact.key], g: $webRTC.groupCall, n: $user.username}
+      //Test
+      let msg = {m: "ᛊNVITᛊ", joining: [$user.huginAddress], g: $webRTC.groupCall, n: $user.username}
       window.api.sendGroupMessage(msg, true)
       
       $videoGrid.showVideoGrid = true
