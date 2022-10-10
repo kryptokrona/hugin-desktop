@@ -1349,7 +1349,8 @@ async function saveGroupMessage(msg, hash, time, offchain) {
   mainWindow.webContents.send("groupMsg", message);
   mainWindow.webContents.send("newGroupMessage", message);
   } else if (offchain) {
-    console.log('Not saving offchain message')
+  console.log('group?', message)
+  console.log('Not saving offchain message')
   mainWindow.webContents.send("groupRtcMsg", message);
   }
 }
@@ -2206,7 +2207,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
       optimizeMessages()
     } else {
       let error = {
-        message: `Failed: ${result.error.toString()}`,
+        message: `Failed to send message. `,
         name: "Error",
         hash: Date.now()
       };
@@ -2509,19 +2510,33 @@ ipcMain.on("decrypt_message", async (e, message) => {
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
 
-  let msg
+ 
 
   console.log('key?', key)
 
   try {
   let hash = message.substring(0,64)
   console.log('hash?', hash)
-  decryptGroupMessage(message, hash, key)
-  if (!msg) {
-    //Not a message to me, tunnel this
+  let groupMessage = await decryptGroupMessage(message, hash, key)
+
+  console.log('Group message', groupMessage)
+
+  if (!groupMessage) {
+    console.log('No group message')
+    return
   }
+  if (groupMessage.m === "ᛊNVITᛊ") {
+
+  if (groupMessage.joining[0].length === 163) {
+    mainWindow.webContents.send("group_invited_contact", groupMessage.joining[0]);
+    console.log('Invited')
+    console.log('Group invite', msg)
+    return
+  }
+}
+
   } catch(e) {
-    console.log('error decrypting group msg', e)
+    console.log('Not an invite', e)
     return
   }
 

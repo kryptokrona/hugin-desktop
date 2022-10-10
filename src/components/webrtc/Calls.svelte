@@ -251,6 +251,7 @@
       
     //When you invite a new person to the call
     let thisCall = $webRTC.call.find(a => a.peer === peer)
+    let contact = $user.contacts.find(a => a.chat === thisCall.chat)
     console.log('this call', thisCall)
     //Sort out all active calls except this
     let callList = $webRTC.call.filter(a => a.chat !== thisCall.chat)
@@ -263,14 +264,17 @@
       let tunnelTo = $user.contacts.find(c => c.chat === a.chat)
       let listItem = a.chat + tunnelTo.key
       activeCall.push(listItem)
+      console.log('inviting', listItem)
+      let msg = {m: "ᛊNVITᛊ", joining: [thisCall.chat + contact.key], g: $webRTC.groupCall}
+      window.api.sendGroupMessage(msg, true)
     })
     } else {
+      //First
       type = "invite"
     }
     //Make an invite message through the datachannel to our new participant
     let msg = {invite: activeCall, key: $webRTC.groupCall, type: type}
     let myMessage = { chat: thisCall.chat, msg: msg, sent: true, timestamp: Date.now() };
-    let contact = $user.contacts.find(a => a.chat === thisCall.chat)
     console.log("Inviting contact", myMessage)
     let to = thisCall.chat + contact.key
     //Send offchain invite message
@@ -343,8 +347,13 @@
       } else {
         $webRTC.call[0].peerAudio = true;
       }
+      //Test with only two peers
+      let thisCall = $webRTC.call.find(a => a.peer === peer1)
+      let contact = $user.contacts.find(a => a.chat === thisCall.chat)
+      let msg = {m: "ᛊNVITᛊ", joining: [thisCall.chat + contact.key], g: $webRTC.groupCall, n: $user.username}
+      window.api.sendGroupMessage(msg, true)
       
-    $videoGrid.showVideoGrid = true
+      $videoGrid.showVideoGrid = true
     });
 
   }
