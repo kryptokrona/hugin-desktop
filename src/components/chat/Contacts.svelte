@@ -23,6 +23,9 @@
         //Reset invited status
         $webRTC.invited = false
 
+        //Hide contact window
+        open = false
+
         //Add callobject to store
         let call = {
             msg: "outgoing",
@@ -30,20 +33,19 @@
             chat: contact.chat,
             video: video
         };
-
+        //Invite notification
         let invite = {
             message: `Inviting ${contact.name} to call`,
             name: "Invited",
             key: contact.chat,
             hash: Date.now()
         }
-
+        //Update store
         $notify.success.push(invite)
         $notify.success = $notify.success
-
-        open = false
-        
         $webRTC.call.unshift(call);
+        
+        //Start call
         window.api.startCall(contact.chat + contact.key, video);
     }
   
