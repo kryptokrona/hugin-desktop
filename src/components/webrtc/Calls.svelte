@@ -265,7 +265,8 @@
       let listItem = a.chat + tunnelTo.key
       activeCall.push(listItem)
       console.log('inviting', listItem)
-      let msg = {m: "ᛊNVITᛊ", joining: [thisCall.chat + contact.key], g: $webRTC.groupCall}
+      //Notify other users in the call about the invite.
+      let msg = {m: "ᛊNVITᛊ", r: thisCall.chat + contact.key, g: $webRTC.groupCall, k: $user.huginAddress.substring(0,99)}
       window.api.sendGroupMessage(msg, true)
     })
     } else {
@@ -347,12 +348,6 @@
       } else {
         $webRTC.call[0].peerAudio = true;
       }
-      //Test with only two peers
-      let thisCall = $webRTC.call.find(a => a.peer === peer1)
-      let contact = $user.contacts.find(a => a.chat === thisCall.chat)
-      //Test
-      let msg = {m: "ᛊNVITᛊ", joining: [$user.huginAddress], g: $webRTC.groupCall, n: $user.username}
-      window.api.sendGroupMessage(msg, true)
       
       $videoGrid.showVideoGrid = true
     });
