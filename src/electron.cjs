@@ -1350,6 +1350,7 @@ async function saveGroupMessage(msg, hash, time, offchain) {
   mainWindow.webContents.send("newGroupMessage", message);
   } else if (offchain) {
   console.log('group?', message)
+  if (message.message === "ᛊNVITᛊ") return
   console.log('Not saving offchain message')
   mainWindow.webContents.send("groupRtcMsg", message);
   }
@@ -2510,8 +2511,6 @@ ipcMain.on("decrypt_message", async (e, message) => {
 
 ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
 
- 
-
   console.log('key?', key)
 
   try {
@@ -2531,8 +2530,8 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
     mainWindow.webContents.send("group_invited_contact", groupMessage.joining[0]);
     console.log('Invited')
     console.log('Group invite', msg)
-    return
   }
+  return
 }
 
   } catch(e) {
