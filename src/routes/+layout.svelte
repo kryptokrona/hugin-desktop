@@ -221,6 +221,10 @@
 		$notify.success = $notify.success
 	})
 
+	window.api.receive('group_invited_contact', async (data) => {
+		console.log('***** GROUP INVITED ****', data)
+	})
+
 
 	});
 
