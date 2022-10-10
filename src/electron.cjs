@@ -2489,7 +2489,6 @@ ipcMain.on("decrypt_message", async (e, message) => {
 
     let type = false
     sleep(100)
-    console.log('type true?', type)
     if (group.type == true) {
         type = true
     }
@@ -2516,7 +2515,7 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   try {
   let hash = message.substring(0,64)
   console.log('hash?', hash)
-  let [groupMessage, time, hash]  = await decryptGroupMessage(message, hash, key)
+  let [groupMessage, time, txHash] = await decryptGroupMessage(message, hash, key)
 
   console.log('Group message', groupMessage)
 
@@ -2526,14 +2525,14 @@ ipcMain.on("decrypt_rtc_group_message", async (e, message, key) => {
   }
   if (groupMessage.m === "ᛊNVITᛊ") {
 
-  if (groupMessage.r.length === 163) {
-    let invited = sanitizeHtml(groupMessage.r)
-    mainWindow.webContents.send("group_invited_contact", invited);
-    console.log('Invited')
-    console.log('Group invite', msg)
-  }
+    if (groupMessage.r.length === 163) {
+      let invited = sanitizeHtml(groupMessage.r)
+      mainWindow.webContents.send("group_invited_contact", invited);
+      console.log('Invited')
+      console.log('Group invite', msg)
+    }
   return
-}
+  }
 
   } catch(e) {
     console.log('Not an invite', e)
