@@ -155,6 +155,7 @@
       font-family: "Montserrat", sans-serif;
       font-weight: 400;
       color: var(--text-color);
+      font-size: 15px;
     }
   }
 
