@@ -34,11 +34,6 @@
 		incoming_call = false
 	}
 
-	const toggleMyWindow = () => {
-		console.log('toggleee my window');
-
-	}
-
 	const endThisCall = () => {
 		showCallerMenu = false
 		myVideo = false
@@ -53,10 +48,6 @@
 		incoming_call = false
 		console.log('incoming clean', $webRTC.incoming)
 		console.log('webRTC call ', $webRTC.call)
-	}
-
-	const toggleCallMenu = () => {
-		$videoGrid.showVideoGrid = !$videoGrid.showVideoGrid
 	}
 
 	onMount( async () => {
@@ -302,15 +293,14 @@
 	{/if}
 
 	{#if $user.loggedIn && $webRTC.call.length != 0 || $webRTC.incoming.length != 0 }
-
+	
 		<VideoGrid />
-
 		
 		<CallerMenu
 		on:click={endThisCall}
 		on:endCall={endThisCall}
 		paused={!showCallerMenu}/>
-		
+
 		{#each $webRTC.call as thiscall}
 
 		{#if $webRTC.call.some(a => a.peerAudio === true)}
