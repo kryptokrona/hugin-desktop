@@ -303,6 +303,7 @@
   async function gotMedia(stream, contact, video, screen_stream = false) {
 
     $webRTC.myStream = stream;
+
     if (video) {
 
       $webRTC.myVideo = true;
@@ -313,7 +314,6 @@
       }
 
     } else {
-
       console.log("Audio call");
     }
 
@@ -746,6 +746,11 @@
       return
     }
 
+    if ($webRTC.call.length === 0) { 
+      console.log('Call no longer active')
+      return
+    }
+
     console.log('this peer?', peer)
     console.log(' ending this caller', caller)
     try {
@@ -785,14 +790,17 @@
       $webRTC.myVideo = false;
       return;
     }
-
-    $videoGrid.showVideoGrid = false
+    
+    //
     console.log('Last call ending')
-    $webRTC.myVideo = false;
-
+    $webRTC.screenshare = false
+    $webRTC.video = false
+    $webRTC.screen_stream = false
+    $webRTC.myVideo = false
     $webRTC.myStream.getTracks().forEach(function(track) {
         track.stop();
       });
+      
     console.log("Call ended");
 
   }
