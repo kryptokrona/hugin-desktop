@@ -105,7 +105,7 @@ html {
 
 @font-face {
   font-family: 'Roboto Mono';
-  src: url('/static/fonts/RobotoMono-Regular.woff') format('woff'),
+  src: url('/fonts/RobotoMono-Regular.woff') format('woff'),
   url('/static/fonts/RobotoMono-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
@@ -114,8 +114,8 @@ html {
 
 @font-face {
   font-family: 'Montserrat';
-  src: url('/static/fonts/Montserrat-Regular.woff') format('woff'),
-  url('/static/fonts/Montserrat-Regular.woff2') format('woff2');
+  src: url('/fonts/Montserrat-Regular.woff') format('woff'),
+  url('/fonts/Montserrat-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: auto;

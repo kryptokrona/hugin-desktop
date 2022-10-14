@@ -11,7 +11,7 @@
   import ListButton from "/src/components/buttons/ListButton.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
 
-  let new_message_sound = new Audio("/static/audio/message.mp3");
+  let new_message_sound = new Audio("/audio/message.mp3");
   const dispatch = createEventDispatcher();
   let activeHugins = [];
   let contacts = [];
