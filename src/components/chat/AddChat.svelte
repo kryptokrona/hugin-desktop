@@ -80,13 +80,15 @@
         <GreenButton disabled={!enableButton} enabled={enableButton && step == 1} on:click={next} text="Next" />
         {/if}
     </div>
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
         {#if pubkey && step == 2 }
+        
+        <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
         <input placeholder="Enter a nickname" type="text" spellcheck="false" autocomplete="false" bind:value={nickname}>
          
         <GreenButton disabled={!enableButton} enabled={step == 2 && nickname.length} on:click={handleAdd} text="Add" />
+        
+        </div>
         {/if}
-    </div>
 </div>
 
 <style lang="scss">
@@ -140,6 +142,7 @@
     background-color: var(--backdrop-color);
     backdrop-filter: blur(8px);
     z-index: 103;
+    border-radius: 15px;
   }
   
   .hide {
