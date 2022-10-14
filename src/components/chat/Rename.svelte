@@ -112,5 +112,6 @@
     width: 100%;
     background-color: var(--backdrop-color);
     z-index: 103;
+    border-radius: 15px;
   }
 </style>

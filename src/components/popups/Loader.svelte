@@ -51,6 +51,7 @@
     width: 100%;
     background-color: var(--backgound-color);
     z-index: 103;
+    border-radius: 15px;
   }
 
   .wrapper {
