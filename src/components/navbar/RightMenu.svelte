@@ -92,11 +92,6 @@
     call_active = false;
   }
 
-  const toggleCallMenu = () => {
-    console.log("toggle callmenu dispatch");
-    dispatch("toggleCallMenu");
-  };
-
   const endCall = () => {
     //We delay the answerCall for routing purposes
     window.api.endCall("peer", "stream", active_contact.chat);

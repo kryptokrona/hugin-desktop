@@ -363,7 +363,7 @@
 
 		<LeftMenu />
 		{#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard'}
-		<RightMenu on:toggleCallMenu={toggleCallMenu}/>
+		<RightMenu />
 		{/if}
 		<Webrtc/>
 	{/if}
