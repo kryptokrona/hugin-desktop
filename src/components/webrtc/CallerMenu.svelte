@@ -101,7 +101,7 @@
         bottom: 20px;
         right: 105px;
         height: 100px;
-        width: 300px;
+        width: 350px;
         border-radius: 5px;
         z-index: 500;
     }

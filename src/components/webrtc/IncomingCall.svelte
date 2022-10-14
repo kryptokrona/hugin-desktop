@@ -13,7 +13,7 @@
     export let paused = false
     export let thisCall
     let avatar
-    let ringtone = new Audio("/static/audio/ringtone.mp3")
+    let ringtone = new Audio("/audio/ringtone.mp3")
     let invite = false
     let answered = false
     let video = true
@@ -83,7 +83,7 @@
 
 
 <div in:fly="{{y: -200, duration:400, easing: cubicOut}}" out:fly="{{y: -200, duration: 400, easing: cubicIn}}" class="card" class:answered={answered}>
-    <audio bind:paused src="/static/audio/static_ringtone.mp3"></audio>
+    <audio bind:paused src="/audio/static_ringtone.mp3"></audio>
     <div class="inner-card">
         <div class="caller">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
