@@ -17,7 +17,6 @@
   import CallSlash from "/src/components/buttons/CallSlash.svelte";
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
-  import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
 
   const dispatch = createEventDispatcher();
@@ -219,9 +218,6 @@
           {:else}
             <MuteIcon />
           {/if}
-        </div>
-        <div class="button" on:click={() => $videoGrid.showVideoGrid = true}>
-          <ShowVideoMenu/>
         </div>
       {/if}
     </div>
