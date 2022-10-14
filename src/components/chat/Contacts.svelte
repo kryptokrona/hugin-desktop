@@ -2,6 +2,7 @@
     import { fade } from 'svelte/transition'
     import { user, webRTC, notify } from "$lib/stores/user.js";
     import { get_avatar } from "$lib/utils/hugin-utils.js";
+    import AddToCall from '../buttons/AddToCall.svelte';
 
     let open;
     let changed;
@@ -9,7 +10,7 @@
     $: console.log('devices', $webRTC.devices);
   
     function invite(contact) {
-
+      buttonGlow()
         console.log('invite!', contact)
         let video = false
         //If video
@@ -73,21 +74,21 @@
         {/each}
       </div>
     {/if}
-    <div class="share" class:border_rgb={changed} class:open={open} on:click={() => open = !open}>
-      <h5>{changed ? 'Invited' : 'Invite'}</h5>
+    <div class="contacts_button" class:border_rgb={changed} class:open={open} on:click={() => open = !open}>
+      <AddToCall />
     </div>
   </div>
   
   <style lang="scss">
 
-    .share {
+    .contacts_button {
       display: flex;
       justify-content: center;
       align-items: center;
       background-color: var(--card-background);
       border: 1px solid var(--card-border);
       border-radius: 0.4rem;
-      width: 120px;
+      width: 50px;
       height: 38px;
       cursor: pointer;
       transition: 200ms;
@@ -106,9 +107,13 @@
       bottom: 85px;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      width: 250px;
+      gap: 0px;
+      width: 290px;
       padding: 5px;
+      overflow: hidden;
+      overflow: scroll;
+      overflow-x: hidden;
+      max-height: 500px;
       background-color: var(--card-background);
       border: 1px solid var(--card-border);
       border-radius: 0.4rem;
@@ -128,5 +133,31 @@
         &:hover {
         background-color: #333333;
         }
-  }
+    }
+
+    .nickname {
+      font-family: "Montserrat";
+    }
+
+    .list {
+        --scrollbarBG: transparent;
+        --thumbBG: #3337;
+        overflow: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+    }
+
+    .list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .list::-webkit-scrollbar-track {
+        background: var(--scrollbarBG);
+    }
+
+    .list::-webkit-scrollbar-thumb {
+        background-color: var(--thumbBG) ;
+        border-radius: 3px;
+        border: 3px solid var(--scrollbarBG);
+    }
   </style>
