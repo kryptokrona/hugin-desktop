@@ -83,6 +83,7 @@
     width: 100%;
     z-index: 9999;
     transition: all 500ms ease-in-out;
+    border-radius: 15px;
   }
 
   .video-wrapper {
