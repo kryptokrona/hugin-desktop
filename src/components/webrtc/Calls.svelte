@@ -792,7 +792,7 @@
     }
     
     //
-    console.log('Last call ending')
+    $webRTC.initiator = false
     $webRTC.screenshare = false
     $webRTC.video = false
     $webRTC.screen_stream = false
