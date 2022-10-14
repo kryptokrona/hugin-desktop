@@ -11,7 +11,7 @@
   import VideoSources from "$components/chat/VideoSources.svelte";
   import AudioSources from "/src/components/chat/AudioSources.svelte";
   import Contacts from "/src/components/chat/Contacts.svelte";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { calcTime } from "$lib/utils/utils.js";
   import HideVideoGrid from "$components/buttons/HideVideoGrid.svelte";
 
@@ -19,14 +19,20 @@
   let video = true;
   let startTime = Date.now();
   let time = '0:00:00'
-
+  let timer
+  
   onMount(() => {
-    setInterval(() => {
-      let currentTime = Date.now();
-      let ms = currentTime - startTime;
-      time = calcTime(ms)
-    }, 1000)
-  });
+        timer = setInterval(() => {
+        let currentTime = Date.now();
+        let ms = currentTime - startTime;
+        time = calcTime(ms)
+        }, 1000)
+    });
+
+    onDestroy(() => {
+        clearInterval(timer)
+    })
+
 
   //Share screenpmn
   const switchStream = async () => {
