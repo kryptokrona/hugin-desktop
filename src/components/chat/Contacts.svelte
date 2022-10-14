@@ -108,7 +108,7 @@
       display: flex;
       flex-direction: column;
       gap: 0px;
-      width: 290px;
+      width: 220px;
       padding: 5px;
       overflow: hidden;
       overflow: scroll;
@@ -137,6 +137,7 @@
 
     .nickname {
       font-family: "Montserrat";
+      font-weight: bold;
     }
 
     .list {
