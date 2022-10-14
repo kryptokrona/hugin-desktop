@@ -76,6 +76,7 @@
   main {
     margin: 0 20px 0 95px;
     z-index: 3;
+    height: 100vh;
   }
 
   .dashboard {
