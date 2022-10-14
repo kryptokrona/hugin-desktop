@@ -36,8 +36,8 @@
         };
         //Invite notification
         let invite = {
-            message: `Inviting ${contact.name} to call`,
-            name: "Invited",
+            message: `Invited to call...`,
+            name: contact.name,
             key: contact.chat,
             hash: Date.now()
         }
@@ -121,19 +121,19 @@
     }
 
     .card {
-        display: flex;
-        align-items: center;
-        padding: 0.5rem;
-        width: 100%;
-        color: white;
-        border-bottom: 1px solid var(--border-color);
-        transition: 177ms ease-in-out;
-        cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      width: 100%;
+      color: white;
+      border-bottom: 1px solid var(--border-color);
+      transition: 177ms ease-in-out;
+      cursor: pointer;
 
-        &:hover {
-        background-color: #333333;
-        }
-    }
+      &:hover {
+      background-color: #333333;
+      }
+  }
 
     .nickname {
       font-family: "Montserrat";
@@ -141,24 +141,24 @@
     }
 
     .list {
-        --scrollbarBG: transparent;
-        --thumbBG: #3337;
-        overflow: auto;
-        scrollbar-width: thin;
-        scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+      --scrollbarBG: transparent;
+      --thumbBG: #3337;
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--thumbBG) var(--scrollbarBG);
     }
 
     .list::-webkit-scrollbar {
-        width: 8px;
+      width: 8px;
     }
 
     .list::-webkit-scrollbar-track {
-        background: var(--scrollbarBG);
+      background: var(--scrollbarBG);
     }
 
     .list::-webkit-scrollbar-thumb {
-        background-color: var(--thumbBG) ;
-        border-radius: 3px;
-        border: 3px solid var(--scrollbarBG);
+      background-color: var(--thumbBG) ;
+      border-radius: 3px;
+      border: 3px solid var(--scrollbarBG);
     }
   </style>
