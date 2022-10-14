@@ -70,7 +70,7 @@
 <div on:click|self in:fade="{{duration: 70}}" out:fade="{{duration: 100}}" class="backdrop">
 
      
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+    <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
         {#if (pubkey)}
         <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
         {/if}
@@ -82,7 +82,7 @@
     </div>
         {#if pubkey && step == 2 }
         
-        <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+        <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
         <input placeholder="Enter a nickname" type="text" spellcheck="false" autocomplete="false" bind:value={nickname}>
          
         <GreenButton disabled={!enableButton} enabled={step == 2 && nickname.length} on:click={handleAdd} text="Add" />

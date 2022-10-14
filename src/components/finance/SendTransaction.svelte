@@ -48,7 +48,7 @@
 <svelte:window on:keyup|preventDefault={keyDown} />
 
 <div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
-  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+  <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
     <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
     <input placeholder="Enter amount" type="text" spellcheck="false" autocomplete="false" bind:value={amount}
            oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
