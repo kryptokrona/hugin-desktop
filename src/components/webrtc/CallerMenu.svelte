@@ -6,8 +6,10 @@
     import {onDestroy, onMount} from "svelte";
     import { webRTC } from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
-
-
+    import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
+    import { videoGrid } from "$lib/stores/layout-state.js";
+    import { calcTime } from "$lib/utils/utils.js";
+    import CallSlash from "$components/buttons/CallSlash.svelte";
     const dispatch = createEventDispatcher();
     
     export let paused = false
@@ -15,23 +17,30 @@
     let stream
     let calling = true
     let toggle = false
-    export let this_call
-    let avatar = get_avatar(this_call.chat)
-    // When incoming call and this get mounted we play the ringtone
+    
+    let startTime = Date.now();
+    let time = '0:00:00'
+    let timer
+
     onMount(() => {
-        
+        timer = setInterval(() => {
+        let currentTime = Date.now();
+        let ms = currentTime - startTime;
+        time = calcTime(ms)
+        }, 1000)
+    });
+
+    onDestroy(() => {
+        clearInterval(timer)
     })
 
-    //When a user clicks answer
+    //End call with all peers
     const endCall = () => {
-
-        //We delay the answerCall for routing purposes
-        window.api.endCall('peer', 'stream', this_call.chat)
-
-        dispatch('endCall')
-        //Variable to activate visual feedback
-
-    }
+        $webRTC.call.forEach(a => {
+        window.api.endCall('peer', "stream", a.chat);
+        });
+        //We pause the ringtone and destroy the popup
+    };
 
     //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
@@ -47,38 +56,53 @@
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div in:fly="{{y: -100, duration:900, easing: cubicOut}}" out:fly="{{y: -100, duration: 900, easing: cubicIn}}" class="card">
-    <audio bind:paused src="/static/audio/startcall.mp3"></audio>
-    <div class="inner-card">
+<div in:fly="{{y: 100, duration:300, easing: cubicOut}}" out:fly="{{y: 100, duration: 300, easing: cubicIn}}" class="card">
+    <audio bind:paused></audio>
+    <div class="wrapper">
         <div class="caller">
-            <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-            <p>{this_call.chat}</p>
+            {#each $webRTC.call as call}
+            <img class="avatar" src="data:image/png;base64,{get_avatar(call.chat)}" alt="">
+            {/each}
+            <!-- <p>{this_call.name}</p> -->
         </div>
-        <audio bind:paused src="/static/audio/startcall.mp3"></audio>
-        <div class="options">
-            <a class="answer hover" on:click={toggleAudio} class:active={toggle}>
-                <img src="/images/video.svg" alt="toggleMyWindow">
-            </a>
-            <div class="decline hover" on:click={()=> endCall(peer, stream)} >
-                <img src="/static/images/call-slash.svg" alt="">
+        
+        <audio bind:paused></audio>
+        <div class="controls">
+            <div on:click>
+                <p>{time}</p>
+              </div>
+            <div on:click={endCall}>
+                <CallSlash />
+              </div>
+            <div on:click={()=> $videoGrid.showVideoGrid = true}>
+            <ShowVideoMenu/>
             </div>
         </div>
     </div>
 </div>
 
 <style lang="scss">
+
+    .wrapper {
+        margin-top: 1rem;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--card-background);
+        border: 1px solid var(--card-border);
+        border-radius: 0.4rem;
+        padding: 0 1rem;
+    }
     .card {
         display: flex;
         position: absolute;
         padding: 1px;
         bottom: 20px;
         right: 105px;
-        height: 50px;
+        height: 100px;
         width: 300px;
-        background-color: #5f86f2;
         border-radius: 5px;
-        box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255,255,255, 0.1);
         z-index: 500;
     }
 
@@ -98,9 +122,16 @@
         padding: 10px;
     }
 
-    .options {
-        display: flex;
+    
+  .controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    .icon {
+      cursor: pointer;
     }
+  }
 
     .answer {
         display: flex;
