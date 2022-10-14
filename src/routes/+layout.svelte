@@ -67,8 +67,8 @@
 				return null;
 			}
 		};
-	board_message_sound = new Audio("/static/audio/boardmessage.mp3");
-	new_message_sound = new Audio("/static/audio/message.mp3");
+	board_message_sound = new Audio("/audio/boardmessage.mp3");
+	new_message_sound = new Audio("/audio/message.mp3");
 
 	 window.api.receive("contacts", async (my_contacts) => {
 		console.log('contacts!', my_contacts)
@@ -305,7 +305,12 @@
 
 		<VideoGrid />
 
-
+		
+		<CallerMenu
+		on:click={endThisCall}
+		on:endCall={endThisCall}
+		paused={!showCallerMenu}/>
+		
 		{#each $webRTC.call as thiscall}
 
 		{#if $webRTC.call.some(a => a.peerAudio === true)}
@@ -314,14 +319,6 @@
 
 		{/if}
 
-			<!-- {#if showCallerMenu}
-				<CallerMenu
-				this_call={thiscall}
-				on:click={endThisCall}
-				on:endCall={endThisCall}
-				paused={!showCallerMenu}
-				on:toggleMyWindow={toggleMyWindow}/>
-			{/if} -->
 		{/each}
 
 		{#each $webRTC.incoming as call}
