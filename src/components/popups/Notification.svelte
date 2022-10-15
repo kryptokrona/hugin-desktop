@@ -86,7 +86,7 @@
         align-items: center;
         width: 100%;
         border-radius: 3px;
-        background-color: #202020;
+        background-color: #111111;
     }
 
     .avatar {
