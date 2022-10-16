@@ -8,6 +8,9 @@
   import EditName from "/src/components/dashboard/EditName.svelte";
   import Transactions from "/src/components/finance/Transactions.svelte";
   import CreateRoom from "/src/components/dashboard/CreateRoom.svelte";
+  import { layoutState } from "$lib/stores/layout-state.js";
+  import GreenButton from "$components/buttons/GreenButton.svelte";
+  import { openURL } from "$lib/utils/utils.js";
 
   let avatar;
   let myBoards = [];
@@ -17,6 +20,9 @@
 
   onMount(async () => {
 
+    $layoutState.showFaucetButton = window.localStorage.getItem('faucet')
+
+    console.log('FAUCET BTN', $layoutState.showFaucetButton);
     //Set boardsarray to store
     myBoards = await window.api.getMyBoards();
     let filterBoards = myBoards.filter(a => a !== "Home");
@@ -58,18 +64,25 @@
     <div class="header">
       <div style="display: flex; align-items: center; gap: 0.5rem">
         <h1>{greet}, {$user.username}!</h1>
-        <EditName/>
+        <EditName />
       </div>
-      <Share />
+      <div class="button_wrapper">
+        {#if $layoutState.showFaucetButton === null}
+          <GreenButton text="Faucet" enabled={true} disabled={false}
+                       on:click={() => openURL(`https:faucet.kryptokrona.org/?address=${$user.huginAddress.substring(0, 99)}`)} />
+        {/if}
+        <Share />
+      </div>
     </div>
 
-    <Funds/>
+    <Funds />
 
   </div>
 
   <div>
     <CreateRoom/>
     <!-- <Transactions/> -->
+    <Transactions />
   </div>
 </main>
 
@@ -91,6 +104,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .button_wrapper {
+    display: flex;
+    gap: 1rem;
   }
 
 

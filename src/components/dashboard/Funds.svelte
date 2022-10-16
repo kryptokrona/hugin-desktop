@@ -1,11 +1,14 @@
 <script>
-  import { misc } from "$lib/stores/user.js";
+  import { misc, user } from "$lib/stores/user.js";
   import { prettyNumbers } from "$lib/utils/utils.js";
   import { onDestroy, onMount } from "svelte";
+  import { layoutState } from "$lib/stores/layout-state.js";
 
+  let showFaucet
   let interval;
-  onMount(() => {
-    getBalance();
+  onMount(async () => {
+    await getBalance();
+
     interval = setInterval(getBalance, 1000 * 15);
   });
 
@@ -16,6 +19,11 @@
   //Get balance function
   async function getBalance() {
     $misc.balance = await window.api.getBalance()
+
+    if ($misc.balance[0] > 0) {
+      window.localStorage.setItem('faucet', 'false')
+      $layoutState.showFaucetButton = false
+    }
   }
 
 </script>
