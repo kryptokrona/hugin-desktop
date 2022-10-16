@@ -282,7 +282,7 @@
     console.log('Want to create room!')
     $webRTC.myStream = stream
     $webRTC.myVideo = true
-    let call = {chat: $user.huginAddress.substring(0,99), type: "room"}
+    let call = {chat: $user.huginAddress.substring(0,99), type: "room", myStream: stream}
     $webRTC.call.unshift(call)
     $webRTC.call = $webRTC.call
     $videoGrid.showVideoGrid = true
@@ -784,12 +784,17 @@
     console.log('this peer?', peer)
     console.log(' ending this caller', caller)
     try {
-      caller.peer.destroy();
-      if ($webRTC.call.length === 1) {
-        caller.myStream.getTracks().forEach(function(track) {
+      caller.myStream.getTracks().forEach(function(track) {
         track.stop();
       });
-    }
+      caller.peer.destroy();
+      console.log('$webRTC.call.length ', $webRTC.call.length)
+      if ($webRTC.call.length < 2) {
+        $webRTC.myStream.getTracks().forEach(function(track) {
+          console.log('track stopped')
+        track.stop();
+      });
+      }
     } catch (e) {
       console.log("error", e);
     }
@@ -827,9 +832,6 @@
     $webRTC.video = false
     $webRTC.screen_stream = false
     $webRTC.myVideo = false
-    $webRTC.myStream.getTracks().forEach(function(track) {
-        track.stop();
-      });
       
     console.log("Call ended");
 

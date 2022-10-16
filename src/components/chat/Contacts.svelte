@@ -27,9 +27,10 @@
         //Hide contact window
         open = false
 
-        if ($webRTC.call[0].type === "room") {
-          let filter = $webRTC.call.filter(a => a.type !== "room")
-          $webRTC.call = filter
+        if ($webRTC.call[0].type === "room" && $webRTC.call.length === 1) {
+          $webRTC.call.forEach(a => {
+            window.api.endCall('peer', 'stream', a.chat)
+          })
         }
 
         //Add callobject to store
