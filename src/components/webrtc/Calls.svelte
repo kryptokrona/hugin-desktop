@@ -18,6 +18,10 @@
     startCall(conatct, calltype, invite);
   });
 
+  window.api.receive("start-room", (video) => {
+    createRoom(video);
+  });
+
   window.api.receive("endCall", (s, p, this_call) => {
     endCall("peer", "stream", this_call);
   });
@@ -259,6 +263,32 @@
       });
     }
   }
+
+  async function createRoom(video) {
+    //Get video/voice stream
+    navigator.mediaDevices.getUserMedia({
+      video: video,
+      audio: {
+        googNoiseSupression: true
+        },
+    }).then(function(stream) {
+      awaitInvite(stream);
+    }).catch((e) => {
+      console.log("error", e);
+    });
+  }
+
+  async function awaitInvite(stream) {
+    console.log('Want to create room!')
+    $webRTC.myStream = stream
+    $webRTC.myVideo = true
+    let call = {chat: $user.huginAddress.substring(0,99), type: "room"}
+    $webRTC.call.unshift(call)
+    $webRTC.call = $webRTC.call
+    $videoGrid.showVideoGrid = true
+  }
+
+
 
   async function inviteToGroupCall(peer) {
     

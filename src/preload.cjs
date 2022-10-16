@@ -141,7 +141,7 @@ const WINDOW_API = {
     console.log('preload', src)
     ipcRenderer.send('change-src', src)
   },
-  
+
   changeAudioSource: async (src) => {
     console.log('preload audio', src)
     ipcRenderer.send('change-audio-src', src)
@@ -149,6 +149,10 @@ const WINDOW_API = {
 
   checkSources: async () => {
     ipcRenderer.send('check-srcs')
+  },
+  
+  createRoom: async (type) => {
+    ipcRenderer.send('create-room', type)
   },
   //HANDLE FINANCE
   getBalance: async () => {

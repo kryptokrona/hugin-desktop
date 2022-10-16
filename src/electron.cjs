@@ -1862,6 +1862,10 @@ ipcMain.on("start_group_call", async (e, contacts) => {
 
 });
 
+ipcMain.on("create-room", async (e, type) => {
+  mainWindow.webContents.send("start-room", type);
+});
+
 
 
 
