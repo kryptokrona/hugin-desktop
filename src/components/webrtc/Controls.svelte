@@ -20,7 +20,7 @@
   let startTime = Date.now();
   let time = '0:00:00'
   let timer
-  
+
   onMount(() => {
         timer = setInterval(() => {
         let currentTime = Date.now();
@@ -77,7 +77,7 @@
         <VideoIcon grid={true}/>
       {/if}
     </div>
-    <div class="icon" on:click={toggleAudio}>
+    <div class="icon" on:click={() => toggleAudio}>
       {#if !muted}
         <MicIcon />
       {:else}
