@@ -27,6 +27,7 @@
      cursor: pointer;
      font-weight: 600;
      transition: 250ms ease-in-out;
+     font-family: "Montserrat";
      &:hover {
        background-color: var(--card-border);
      }

@@ -22,6 +22,7 @@
     background-color: var(--button-background);
     transition: 250ms ease-in-out;
     cursor: pointer;
+    font-family: "Montserrat";
 
     &:hover {
       opacity: 80%;

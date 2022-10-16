@@ -21,11 +21,12 @@
   <style lang="scss">
   
     .cards {
-      margin-top: 3rem;
-      display: grid;
-      grid-gap: 1rem;
-      grid-template-columns: repeat(12, minmax(0, 3fr));
-  
+        display: flex;
+        grid-gap: 1rem;
+        justify-content: space-around;
+        cursor: pointer;
+        margin: 10px;
+          
       .card {
         display: flex;
         flex-direction: column;
