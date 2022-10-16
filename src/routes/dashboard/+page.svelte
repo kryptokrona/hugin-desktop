@@ -7,6 +7,7 @@
   import Funds from "/src/components/dashboard/Funds.svelte";
   import EditName from "/src/components/dashboard/EditName.svelte";
   import Transactions from "/src/components/finance/Transactions.svelte";
+  import CreateRoom from "/src/components/dashboard/CreateRoom.svelte";
 
   let avatar;
   let myBoards = [];
@@ -67,7 +68,8 @@
   </div>
 
   <div>
-    <Transactions/>
+    <CreateRoom/>
+    <!-- <Transactions/> -->
   </div>
 </main>
 
