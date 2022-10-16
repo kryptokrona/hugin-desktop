@@ -4,29 +4,30 @@
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import { nodelist } from "$lib/stores/nodes.js";
   import { goto } from "$app/navigation";
+  import NodeSelector from "$components/popups/NodeSelector.svelte";
 
   let mnemonic = "";
-  let blockheight = 0;
+  let blockHeight;
   let password = "";
-  let confirmPassword= "";
-  let completed = false
+  let confirmPassword = "";
+  let completed = false;
   let username = "";
   let walletName = "";
   let nodeInput = "";
-  let selectedNode;
   let step = 1;
-  let blockHeight = "";
 
   const enter = (e) => {
-    if (e.key === 'Enter' && password.length && step === 3) {
-        handleLogin();
-    } else if (e.key === 'Enter' && step < 3) {
-        step++
+    if (e.key === "Enter" && password.length && step === 3) {
+      handleLogin();
+    } else if (e.key === "Enter" && step < 3) {
+      step++;
     }
-  }
+  };
 
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    blockHeight ? blockHeight : 0
+    nodeInput = e.detail.node
     $misc.loading = true;
     let accountData = {
       walletName,
@@ -34,13 +35,13 @@
       node: nodeInput.split(":")[0],
       port: parseInt(nodeInput.split(":")[1]),
       mnemonic: mnemonic,
-      blockheight: parseInt(blockheight)
+      blockheight: parseInt(blockHeight)
     };
 
     //Save username to localStorage
     window.localStorage.setItem("userName", username);
 
-    $user.username = username
+    $user.username = username;
 
     user.update(oldData => {
       return {
@@ -49,38 +50,26 @@
       };
     });
 
-
-
     window.api.send("create-account", accountData);
     console.log("Creating user account", accountData);
 
-    username = ""
-    password = ""
-    step = 1
+    username = "";
+    password = "";
+    step = 1;
 
     goto("/dashboard");
   };
 
   $: {
-    selectedNode;
     step;
     username;
-    blockHeight
+    blockHeight;
   }
 
-  function chooseNode(node, i) {
-    nodeInput = `${node.url}:${node.port}`;
-    selectedNode = i;
-  }
-
-
-  function defaultPicker() {
-      nodeInput = "blocksum.org:11898";
-  }
 
   function createAcc() {
-    $user.restore = false
-    step = 1
+    $user.restore = false;
+    step = 1;
   }
 
 </script>
@@ -91,15 +80,18 @@
   {#if step === 1 && $user.restore}
 
 
-      <div in:fade class="wrapper">
-        <h2>Please enter your mnemonic seed</h2>
+    <div in:fade class="wrapper">
+      <h2>Please enter your mnemonic seed</h2>
 
-        <input spellcheck="false" placeholder="Type your mnemonic here" bind:value={mnemonic} />
-        <input class="block_height" type="text" spellcheck="false" placeholder="Blockheight" bind:value={blockheight}>
+      <input spellcheck="false" placeholder="Type your mnemonic here" bind:value={mnemonic} />
+      <input type="text" spellcheck="false" placeholder="Blockheight" bind:value={blockHeight}>
 
-        <GreenButton disabled={mnemonic.length < 0} enabled={mnemonic.length > 0} text="Next" on:click={() => createAcc()} />
-
+      <div class="button_wrapper">
+        <GreenButton text="Back" disabled={false} on:click={() => {$user.restore = false; goto('/');}} />
+        <GreenButton disabled={mnemonic.length < 0} enabled={mnemonic.length > 0} text="Next"
+                     on:click={() => createAcc()} />
       </div>
+    </div>
 
   {/if}
 
@@ -108,7 +100,11 @@
     <div in:fade class="wrapper">
       <h2>Select you username</h2>
       <input type="text" spellcheck="false" placeholder="Username" bind:value={username}>
-      <GreenButton disabled={username.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
+
+      <div class="button_wrapper">
+        <GreenButton text="Back" disabled={false} on:click={() => goto('/')} />
+        <GreenButton disabled={username.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
+      </div>
     </div>
 
   {:else if step === 2}
@@ -121,30 +117,16 @@
 
       <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
         <GreenButton disabled={false} text="Back" on:click={() => step = 1} />
-        <GreenButton disabled={!(walletName.length > 0 && password.length > 0 && password === confirmPassword)} text="Next"
-                     enabled={(walletName.length > 0 && password.length > 0 && password === confirmPassword)} on:click={() => step = 3} />
+        <GreenButton disabled={!(walletName.length > 0 && password.length > 0 && password === confirmPassword)}
+                     text="Next"
+                     enabled={(walletName.length > 0 && password.length > 0 && password === confirmPassword)}
+                     on:click={() => step = 3} />
       </div>
     </div>
 
   {:else if step === 3}
 
-    <div in:fade class="wrapper">
-      <h1>Chose a node</h1>
-      <input class="node-input" spellcheck="false" type="text" placeholder="Enter url & port" bind:value={nodeInput}>
-      <div class="node-list">
-        {#each $nodelist as node, i}
-          <div class="node-card" class:selected={selectedNode === i} on:click={() => {chooseNode(node, i)}}>
-            <p id="node">{node.name}</p>
-          </div>
-        {/each}
-      </div>
-      <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
-        <GreenButton text="Back" disabled={false} on:click={() => step = 2} />
-        <GreenButton text="Auto" disabled={false} on:click={()=> {defaultPicker(); selectedNode = null}} />
-        <GreenButton text="Next" disabled={!(nodeInput.length > 0)} enabled={nodeInput.length > 0} on:click={handleLogin} />
-      </div>
-    </div>
-
+    <NodeSelector on:back={() => step = 2} on:connect={e => handleLogin(e)} />
 
   {/if}
 
@@ -170,36 +152,6 @@
     max-width: 840px;
   }
 
-  .node-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-  }
-
-  .node-card {
-    background-color: var(--card-background);
-    border: 1px solid var(--card-border);
-    padding: 0.75rem;
-    border-radius: 0.4rem;
-    cursor: pointer;
-
-    p {
-      margin: 0;
-      font-size: 0.75rem;
-    }
-  }
-
-  .selected {
-    background-color: var(--success-color);
-  }
-
-
-  label {
-    color: white;
-    margin-top: 20px;
-  }
-
   input {
     margin: 0 auto;
     max-width: 700px;
@@ -218,8 +170,10 @@
     }
   }
 
-  .block_height {
-    width: 30%;
+  .button_wrapper {
+    display: flex;
+    gap:1rem; width: 100%;
+    justify-content: center;
   }
 
 </style>
