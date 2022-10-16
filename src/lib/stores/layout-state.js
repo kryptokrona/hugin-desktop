@@ -4,6 +4,7 @@ import { writable } from "svelte/store";
 export const layoutState = writable({
   hideChatList: true,
   hideGroupList: false,
+  showNodeSelector: false,
 })
 
 export const videoGrid = writable({
