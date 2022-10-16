@@ -27,6 +27,11 @@
         //Hide contact window
         open = false
 
+        if ($webRTC.call[0].type === "room") {
+          let filter = $webRTC.call.filter(a => a.type !== "room")
+          $webRTC.call = filter
+        }
+
         //Add callobject to store
         let call = {
             msg: "outgoing",
