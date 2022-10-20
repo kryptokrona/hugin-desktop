@@ -107,7 +107,6 @@ function trimExtra(extra) {
 
   try {
     let payload = fromHex(extra.substring(66));
-
     let payload_json = JSON.parse(payload);
     return fromHex(extra.substring(66));
   } catch (e) {
