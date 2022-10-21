@@ -240,9 +240,9 @@
         </div>
       {/if}
     </div>
-    <div class="button" on:click={joinBeam}>
+    <!-- <div class="button" on:click={joinBeam}>
       <p>join beam</p>
-    </div>
+    </div> -->
     <div class="button" on:click={newBeam}>
       <p>create beam</p>
     </div>

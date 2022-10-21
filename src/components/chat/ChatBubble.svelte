@@ -47,6 +47,11 @@
   const joinBeam = () => {
     let key = message.substring(7,59)
     window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
+    $beam.active.push({
+      chat: $user.activeChat.chat,
+      connected: false,
+    })
+    $beam.active = $beam.active
   }
 
 </script>
