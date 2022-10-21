@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import { user } from "$lib/stores/user.js";
+  import { user, beam } from "$lib/stores/user.js";
   import Button from "/src/components/buttons/Button.svelte";
   import { createEventDispatcher } from "svelte";
   import Time from "svelte-time";
