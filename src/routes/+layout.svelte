@@ -288,12 +288,16 @@
 	$: console.log('path', $page.url.pathname)
 
 	$: console.log('this gr', $groups.thisGroup)
+	$: console.log('beam active?',  $beam.active)
 
 	window.api.receive('beam-connected', (addr)  => {
+		console.log('beam addr inc', addr)
+		console.log('beam active?',  $beam.active)
 		let update = $beam.active.map(a => {
 			if (a.chat == addr) {
 				a.connected = true
 			}
+			return a
 		})
 		console.log('Updated', update)
 		$beam.active = update
