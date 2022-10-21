@@ -71,6 +71,9 @@ export const notify = writable({
     unread: [],
 })
 
+export const beam = writable({
+    active: []
+})
 
 export const transactions = writable({
    tip: false,

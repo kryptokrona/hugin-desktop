@@ -3,7 +3,7 @@
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher } from "svelte";
   import GreenButton from "/src/components/buttons/GreenButton.svelte";
-
+  import { user, beam } from "$lib/stores/user.js";
   const dispatch = createEventDispatcher();
 
   let enableAddBoardButton = false;
@@ -30,6 +30,10 @@
   const newBeam = (key) => {
     // Dispatch the inputted data
     window.api.createBeam(key)
+    $beam.active.push({
+      chat: $user.activeChat.chat,
+      connected: false,
+    })
     enableAddBoardButton = false;
   };
 
