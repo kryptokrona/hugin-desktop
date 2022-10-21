@@ -209,7 +209,9 @@
     //Add new track to current stream
     current.addTrack(device.getVideoTracks()[0])
     //Replace track
+    if (peer) {
     peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current);
+    }
     //Remove old track
     current.removeTrack(current.getVideoTracks()[0])
     //Update stream
