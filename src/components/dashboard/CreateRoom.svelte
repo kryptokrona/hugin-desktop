@@ -1,5 +1,6 @@
 <script>
     import { misc } from "$lib/stores/user.js";
+    import { goto } from "$app/navigation";
 
     const createRoom = () => {
         let video = true
@@ -11,10 +12,10 @@
   
   <div class="cards">
     <div class="card" on:click={createRoom}>
-      <h4>Create room</h4>
+      <h4>Create video room</h4>
     </div>
-    <div class="card">
-      <h4>Create group chat</h4>
+    <div class="card" on:click={() => goto('/groups')}>
+      <h4 >Create group chat</h4>
     </div>
   </div>
   

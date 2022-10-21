@@ -16,7 +16,7 @@
 		"build": "cross-env NODE_ENV=production npm run build:svelte && npm run build:electron",
 		"build:svelte": "vite build",
 		"build:electron": "electron-builder --x64 --win --config build.config.json ",
-		"build:mac": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --config build.config.json",
+		"build:mac": "cross-env NODE_ENV=production vite build && electron-builder --mac --config build.config.json",
 		"start": "vite start"
 	},
 	"build": {
