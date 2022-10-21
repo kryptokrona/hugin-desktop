@@ -26,7 +26,6 @@
         gap: 1rem;
         cursor: pointer;
         margin-top: 3rem;
-        width: 40%;
         height: 100%;
         margin-right: 1rem;
           
