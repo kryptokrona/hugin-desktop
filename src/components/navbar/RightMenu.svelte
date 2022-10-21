@@ -160,7 +160,7 @@
   }
 
   function newBeam() {
-    window.api.createBeam("new", $user.activeChat.chat)
+    window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
     $beam.active.push({
       chat: $user.activeChat.chat,
       connected: false,
