@@ -18,6 +18,7 @@
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
+  import NewBeam from "../popups/NewBeam.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -151,11 +152,17 @@
     $notify.success = $notify.success
     navigator.clipboard.writeText(copy);
   }
+  let new_beam = false
+  function beam() {
+    new_beam = true
+  }
 
 </script>
-
+{#if new_beam}
+<NewBeam/>
+{/if}
 <div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
-
+  
   {#if $page.url.pathname === '/boards'}
     <div class="nav" style="display:block !important;">
       <div class="add" on:click={openAdd}>
@@ -215,6 +222,8 @@
           {/if}
         </div>
       {/if}
+    </div>
+    <div class="button" on:click={beam}>
     </div>
   {/if}
 

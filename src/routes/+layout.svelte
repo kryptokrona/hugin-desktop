@@ -278,6 +278,10 @@
 
 	$: console.log('this gr', $groups.thisGroup)
 
+	window.api.receive('beam-object', (data)  => {
+		console.log('Beam', data)
+	})
+	
 </script>
 
 

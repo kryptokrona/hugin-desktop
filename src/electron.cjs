@@ -1,6 +1,6 @@
 const windowStateManager = require("electron-window-state");
 const contextMenu = require("electron-context-menu");
-const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme, systemPreferences } = require("electron");
+const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme, systemPreferences, webContents } = require("electron");
 const serve = require("electron-serve");
 const path = require("path");
 const { join } = require("path");
@@ -20,6 +20,9 @@ const Peer = require("simple-peer");
 const WebTorrent = require("webtorrent");
 const { desktopCapturer, shell } = require('electron');
 const {autoUpdater} = require("electron-updater");
+const Hyperbeam = require('hyperbeam')
+
+
 const {
   Address,
   AddressPrefix,
@@ -73,6 +76,44 @@ function toHex(str, hex) {
   }
   return hex;
 }
+
+
+async function newBeam(key) {
+
+  const beam = new Hyperbeam(key)
+  console.log('joined stream.key', beam.key)
+  console.log('beam activated', beam)
+  
+  beam.on('remote-address', function ({ host, port }) {
+    if (!host) console.error('[hyperbeam] Could not detect remote address')
+    else console.error('[hyperbeam] Joined the DHT - remote address is ' + host + ':' + port)
+    if (port) console.error('[hyperbeam] Network is holepunchable \\o/')
+  })
+
+  beam.on('connected', function () {
+    console.error('[hyperbeam] Success! Encrypted tunnel established to remote peer')
+    beam.on('data', (data) => {
+      let buffer = toHex(data)
+      console.log('Beam data', naclUtil.decodeUTF8(data))
+      console.log('Buff', buffer)
+    })
+  })
+
+  beam.on('end', () => beam.end())
+
+  function closeASAP () {
+    console.error('[hyperbeam] Shutting down beam...')
+
+    const timeout = setTimeout(() => process.exit(1), 2000)
+    beam.destroy()
+    beam.on('close', function () {
+      clearTimeout(timeout)
+    })
+  }
+}
+
+
+
 
 function nonceFromTimestamp(tmstmp) {
 
@@ -289,6 +330,11 @@ async function download(link) {
   console.log("log log");
 
 }
+
+ipcMain.on("beam", async (e, link) => {
+  console.log("ipcmain start beam");
+  newBeam(link);
+});
 
 ipcMain.on("download", async (e, link) => {
   console.log("ipcmain downloading");

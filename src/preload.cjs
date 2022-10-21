@@ -154,6 +154,9 @@ const WINDOW_API = {
   createRoom: async (type) => {
     ipcRenderer.send('create-room', type)
   },
+  createBeam: async (key) => {
+    ipcRenderer.send('beam', key)
+  },
   //HANDLE FINANCE
   getBalance: async () => {
     return await ipcRenderer.invoke('getBalance')
@@ -198,5 +201,7 @@ const WINDOW_API = {
       ipcRenderer.removeAllListeners(channel)
   }
 }
+
+
 
 contextBridge.exposeInMainWorld('api', WINDOW_API);

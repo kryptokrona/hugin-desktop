@@ -197,6 +197,7 @@
     margin: 0 20px 0 95px;
     padding: 15px 20px;
     z-index: 3;
+    height: 100vh;
   }
 
   p {
