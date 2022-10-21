@@ -123,6 +123,7 @@
     }
     if (e.detail.beam) {
       beam = true
+      offChain = true;
     }
     window.api.sendMsg(msg, active_contact, offChain, false, beam);
     printMessage(myMessage);
