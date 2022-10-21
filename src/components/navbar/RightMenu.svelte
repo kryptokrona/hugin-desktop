@@ -160,7 +160,7 @@
   }
 
   function newBeam() {
-    window.api.createBeam("new", $user.activeChat.chat)
+    window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
     $beam.active.push({
       chat: $user.activeChat.chat,
       connected: false,
@@ -168,11 +168,15 @@
     $beam.active = $beam.active
   }
 
+  function hide() {
+    new_beam = false
+  }
+
 
 
 </script>
 {#if new_beam}
-<NewBeam/>
+<NewBeam on:join={hide}/>
 {/if}
 <div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
   

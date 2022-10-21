@@ -85,13 +85,14 @@ function newBeam(key, chat) {
     beam = new Hyperbeam()
     console.log('beam key', beam.key)
     console.log('starting new beam', beam)
+    sendMessage("//:BEAM" + beam.key, chat, false)
     beam.write('Start')
   } else {
     beam = new Hyperbeam(key)
     console.log('connected to beam', beam)
   }
 
-  mainWindow.webContents.send('new-beam', beam.key, chat)
+  mainWindow.webContents.send('new-beam', beam.key, chat.substring(0,99))
 
   beam.on('remote-address', function ({ host, port }) {
     if (!host) console.error('[hyperbeam] Could not detect remote address')
@@ -104,8 +105,15 @@ function newBeam(key, chat) {
     mainWindow.webContents.send('beam-connected', chat)
   })
   
-  beam.on('data', (data) => {
+  beam.on('data', async (data) => {
     console.log('data', data )
+    const str = new TextDecoder().decode(data);
+    console.log('string', str)
+    if (str === "Start") return
+    let hash = str.substring(0,64)
+    let message = await extraDataToMessage(str, known_keys, getXKRKeypair())
+    console.log('extra', message )
+    saveMessage(message, hash, true)
   })
 
   beam.on('end', () => beam.end())

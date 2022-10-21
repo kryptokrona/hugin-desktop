@@ -14,7 +14,7 @@
   export let files;
   export let timestamp
   let file;
-
+  let beam = false
   const dispatch = createEventDispatcher();
   let address = $user.huginAddress.substring(0, 99);
 
@@ -34,10 +34,20 @@
     }
   }
 
+  $: if (message.substring(0,7) == "//:BEAM") {
+    beam = true
+  }
+
   const downloadTorrent = () => {
     console.log("downloading torrent");
     dispatch("download");
   };
+
+
+  const joinBeam = () => {
+    let key = message.substring(7,59)
+    window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
+  }
 
 </script>
 
@@ -75,6 +85,8 @@
             {#each files as image}
             {/each}
           </div>
+        {:else if beam}
+            <p in:fade class="message">'Started hyperchat'</p>
         {:else}
             <p class="message">{message}</p>
         {/if}
@@ -97,13 +109,14 @@
             {#each files as image}
             {/each}
           </div>
+          {:else if beam}
+          <Button text="Join beam" disabled={false} on:click={joinBeam} />
         {:else}
             <p class="message" style="user-select: text;">{message}</p>
         {/if}
       </div>
     </div>
   {/if}
-
 {/if}
 
 <style lang="scss">
