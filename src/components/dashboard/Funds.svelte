@@ -56,6 +56,7 @@
     margin-top: 3rem;
     display: grid;
     grid-gap: 1rem;
+    width: 100%;
     grid-template-columns: repeat(12, minmax(0, 1fr));
 
     .card {
@@ -66,7 +67,7 @@
       background-color: var(--card-background);
       border: 1px solid var(--card-border);
       border-radius: 0.4rem;
-      grid-column: span 3 / span 3;
+      grid-column: span 6 / span 6;
 
       p {
         margin: 0;

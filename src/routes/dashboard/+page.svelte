@@ -75,14 +75,12 @@
       </div>
     </div>
 
-    <Funds />
 
-  </div>
+    <div class="content">
+      <CreateRoom/>
+      <Funds />
+    </div>
 
-  <div>
-    <CreateRoom/>
-    <!-- <Transactions/> -->
-    <Transactions />
   </div>
 </main>
 
@@ -111,5 +109,9 @@
     gap: 1rem;
   }
 
+  .content {
+    display: flex;
+    width: 100%;
+  }
 
 </style>

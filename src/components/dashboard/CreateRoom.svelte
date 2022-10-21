@@ -22,12 +22,17 @@
   
     .cards {
         display: flex;
-        grid-gap: 1rem;
-        justify-content: space-around;
+        flex-direction: column;
+        gap: 1rem;
         cursor: pointer;
-        margin: 10px;
+        margin-top: 3rem;
+        width: 40%;
+        height: 100%;
+        margin-right: 1rem;
           
       .card {
+        height: 100px;
+        width: 230px;
         display: flex;
         flex-direction: column;
         gap: 1rem;
@@ -39,6 +44,10 @@
   
         p {
           margin: 0;
+        }
+
+        &:hover {
+          opacity: 80%;
         }
       }
     }
