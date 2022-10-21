@@ -102,7 +102,7 @@ function newBeam(key, chat) {
 
   beam.on('connected', function () {
     console.error('[hyperbeam] Success! Encrypted tunnel established to remote peer')
-    mainWindow.webContents.send('beam-connected', chat.substrinbg(0,99))
+    mainWindow.webContents.send('beam-connected', chat.substring(0,99))
   })
   
   beam.on('data', async (data) => {
