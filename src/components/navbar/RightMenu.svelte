@@ -18,7 +18,6 @@
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
-  import NewBeam from "../popups/NewBeam.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -153,11 +152,6 @@
     navigator.clipboard.writeText(copy);
   }
 
-  let new_beam = false
-
-  function joinBeam() {
-    new_beam = true
-  }
 
   function newBeam() {
     window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
@@ -168,16 +162,10 @@
     $beam.active = $beam.active
   }
 
-  function hide() {
-    new_beam = false
-  }
 
 
 
 </script>
-{#if new_beam}
-<NewBeam on:join={hide}/>
-{/if}
 <div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
   
   {#if $page.url.pathname === '/boards'}
@@ -240,9 +228,9 @@
         </div>
       {/if}
     </div>
-    <div class="button" on:click={joinBeam}>
+    <!-- <div class="button" on:click={joinBeam}>
       <p>join beam</p>
-    </div>
+    </div> -->
     <div class="button" on:click={newBeam}>
       <p>create beam</p>
     </div>

@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import { user } from "$lib/stores/user.js";
+  import { user, beam } from "$lib/stores/user.js";
   import Button from "/src/components/buttons/Button.svelte";
   import { createEventDispatcher } from "svelte";
   import Time from "svelte-time";
@@ -14,7 +14,7 @@
   export let files;
   export let timestamp
   let file;
-  let beam = false
+  let beamInvite = false
   const dispatch = createEventDispatcher();
   let address = $user.huginAddress.substring(0, 99);
 
@@ -35,7 +35,7 @@
   }
 
   $: if (message.substring(0,7) == "//:BEAM") {
-    beam = true
+    beamInvite = true
   }
 
   const downloadTorrent = () => {
@@ -47,6 +47,11 @@
   const joinBeam = () => {
     let key = message.substring(7,59)
     window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
+    $beam.active.push({
+      chat: $user.activeChat.chat,
+      connected: false,
+    })
+    $beam.active = $beam.active
   }
 
 </script>
@@ -85,7 +90,7 @@
             {#each files as image}
             {/each}
           </div>
-        {:else if beam}
+        {:else if beamInvite}
             <p in:fade class="message">'Started hyperchat'</p>
         {:else}
             <p class="message">{message}</p>
@@ -109,7 +114,7 @@
             {#each files as image}
             {/each}
           </div>
-          {:else if beam}
+          {:else if beamInvite}
           <Button text="Join beam" disabled={false} on:click={joinBeam} />
         {:else}
             <p class="message" style="user-select: text;">{message}</p>
