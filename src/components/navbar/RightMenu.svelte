@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
-  import { user, boards, webRTC, transactions, groups, notify } from "$lib/stores/user.js";
+  import { user, boards, webRTC, transactions, groups, notify, beam } from "$lib/stores/user.js";
  
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher } from "svelte";
@@ -152,10 +152,23 @@
     $notify.success = $notify.success
     navigator.clipboard.writeText(copy);
   }
+
   let new_beam = false
-  function beam() {
+
+  function joinBeam() {
     new_beam = true
   }
+
+  function newBeam() {
+    window.api.createBeam("new", $user.activeChat.chat)
+    $beam.active.push({
+      chat: $user.activeChat.chat,
+      connected: false,
+    })
+    $beam.active = $beam.active
+  }
+
+
 
 </script>
 {#if new_beam}
@@ -223,7 +236,11 @@
         </div>
       {/if}
     </div>
-    <div class="button" on:click={beam}>
+    <div class="button" on:click={joinBeam}>
+      <p>join beam</p>
+    </div>
+    <div class="button" on:click={newBeam}>
+      <p>create beam</p>
     </div>
   {/if}
 
