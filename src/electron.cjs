@@ -80,7 +80,7 @@ let beam
 
 function newBeam(key, chat) {
   console.log('Start new beam', key)
-
+  console.log('Start new beam', chat)
   if (key === "new") {
     beam = new Hyperbeam()
     console.log('beam key', beam.key)
@@ -90,7 +90,7 @@ function newBeam(key, chat) {
     beam = new Hyperbeam(key)
     console.log('connected to beam', beam)
   }
-  
+
   mainWindow.webContents.send('new-beam', beam.key, chat)
 
   beam.on('remote-address', function ({ host, port }) {
@@ -101,7 +101,7 @@ function newBeam(key, chat) {
 
   beam.on('connected', function () {
     console.error('[hyperbeam] Success! Encrypted tunnel established to remote peer')
-    mainWindow.webContents.send('beam-connected', beam.key, chat)
+    mainWindow.webContents.send('beam-connected', chat)
   })
   
   beam.on('data', (data) => {

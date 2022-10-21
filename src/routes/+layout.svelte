@@ -289,7 +289,7 @@
 
 	$: console.log('this gr', $groups.thisGroup)
 
-	window.api.receive('beam-connected', (data, addr)  => {
+	window.api.receive('beam-connected', (addr)  => {
 		let update = $beam.active.map(a => {
 			if (a.chat == addr) {
 				a.connected = true

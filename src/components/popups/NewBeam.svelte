@@ -29,11 +29,12 @@
   // Dispatch the inputted data
   const newBeam = (key) => {
     // Dispatch the inputted data
-    window.api.createBeam(key)
+    window.api.createBeam(key, $user.activeChat.chat)
     $beam.active.push({
       chat: $user.activeChat.chat,
       connected: false,
     })
+    $beam.active = $beam.active
     enableAddBoardButton = false;
   };
 
