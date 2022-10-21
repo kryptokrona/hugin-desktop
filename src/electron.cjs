@@ -22,7 +22,6 @@ const { desktopCapturer, shell } = require('electron');
 const {autoUpdater} = require("electron-updater");
 const Hyperbeam = require('hyperbeam')
 
-
 const {
   Address,
   AddressPrefix,
@@ -77,13 +76,23 @@ function toHex(str, hex) {
   return hex;
 }
 
+let beam
 
-async function newBeam(key) {
+function newBeam(key, chat) {
+  console.log('Start new beam', key)
 
-  const beam = new Hyperbeam(key)
-  console.log('joined stream.key', beam.key)
-  console.log('beam activated', beam)
+  if (key === "new") {
+    beam = new Hyperbeam()
+    console.log('beam key', beam.key)
+    console.log('starting new beam', beam)
+    beam.write('Start')
+  } else {
+    beam = new Hyperbeam(key)
+    console.log('connected to beam', beam)
+  }
   
+  mainWindow.webContents.send('new-beam', beam.key, chat)
+
   beam.on('remote-address', function ({ host, port }) {
     if (!host) console.error('[hyperbeam] Could not detect remote address')
     else console.error('[hyperbeam] Joined the DHT - remote address is ' + host + ':' + port)
@@ -92,14 +101,19 @@ async function newBeam(key) {
 
   beam.on('connected', function () {
     console.error('[hyperbeam] Success! Encrypted tunnel established to remote peer')
-    beam.on('data', (data) => {
-      let buffer = toHex(data)
-      console.log('Beam data', naclUtil.decodeUTF8(data))
-      console.log('Buff', buffer)
-    })
+    mainWindow.webContents.send('beam-connected', beam.key, chat)
+  })
+  
+  beam.on('data', (data) => {
+    console.log('data', data )
   })
 
   beam.on('end', () => beam.end())
+
+  process.once('SIGINT', () => {
+    if (!beam.connected) closeASAP()
+    else beam.end()
+  })
 
   function closeASAP () {
     console.error('[hyperbeam] Shutting down beam...')
@@ -111,9 +125,6 @@ async function newBeam(key) {
     })
   }
 }
-
-
-
 
 function nonceFromTimestamp(tmstmp) {
 
@@ -331,9 +342,9 @@ async function download(link) {
 
 }
 
-ipcMain.on("beam", async (e, link) => {
+ipcMain.on("beam", async (e, link, chat) => {
   console.log("ipcmain start beam");
-  newBeam(link);
+  newBeam(link, chat);
 });
 
 ipcMain.on("download", async (e, link) => {
@@ -1877,9 +1888,9 @@ ipcMain.on("sendTx", (e, tx) => {
 }
 );
 
-ipcMain.on("sendMsg", (e, msg, receiver, off_chain, grp) => {
-    sendMessage(msg, receiver, off_chain, grp);
-    console.log(msg, receiver, off_chain);
+ipcMain.on("sendMsg", (e, msg, receiver, off_chain, grp, beam) => {
+    sendMessage(msg, receiver, off_chain, grp, beam);
+    console.log(msg, receiver, off_chain, grp, beam);
   }
 );
 
@@ -2150,7 +2161,7 @@ async function sendBoardMessage(message) {
 
 }
 
-async function sendMessage(message, receiver, off_chain = false, group = false) {
+async function sendMessage(message, receiver, off_chain = false, group = false, beam = false) {
   let has_history;
   console.log("address", receiver.length);
   if (receiver.length !== 163) {
@@ -2280,6 +2291,11 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     messageArray.push(address)
     if (group) {
     messageArray.push('group')
+    }
+    if (beam) {
+      console.log('beam this!', sendMsg)
+      beam.write(sendMsg)
+      return
     }
     mainWindow.webContents.send("rtc_message", messageArray);
      //Do not save invite message.

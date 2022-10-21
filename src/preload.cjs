@@ -18,8 +18,8 @@ const WINDOW_API = {
     ipcRenderer.send('addChat', hugin, name, first)
   },
   // HANDLE MESSAGES
-  sendMsg: (msg, address, offChain, grp = false) => {
-    ipcRenderer.send('sendMsg', msg, address, offChain, grp )
+  sendMsg: (msg, address, offChain, grp = false, beam = false) => {
+    ipcRenderer.send('sendMsg', msg, address, offChain, grp, beam)
   },
   sendBoardMsg: (msg) => {
     ipcRenderer.send('sendBoardMsg', msg)
@@ -154,8 +154,8 @@ const WINDOW_API = {
   createRoom: async (type) => {
     ipcRenderer.send('create-room', type)
   },
-  createBeam: async (key) => {
-    ipcRenderer.send('beam', key)
+  createBeam: async (key, chat) => {
+    ipcRenderer.send('beam', key, chat)
   },
   //HANDLE FINANCE
   getBalance: async () => {
