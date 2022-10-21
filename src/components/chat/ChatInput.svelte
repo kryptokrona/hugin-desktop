@@ -10,6 +10,7 @@
   let off_chain;
   const dispatch = createEventDispatcher();
   export let rtc = false
+  let activeBeam = false
 
   const enter = (e) => {
     if (messageInput && e.keyCode === 13) {
@@ -36,7 +37,7 @@
     dispatch("message", {
       text: messageInput,
       offChain: off_chain,
-      beam: beam,
+      beam: activeBeam,
     });
     //Reset input field
     messageInput = "";
@@ -58,8 +59,8 @@
 
   $: {
     if ($beam.active.length) {
-    beam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
-    console.log("Beam active", beam);
+    activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
+    console.log("Beam active", activeBeam);
     }
   }
 </script>
