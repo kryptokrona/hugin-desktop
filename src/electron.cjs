@@ -2161,7 +2161,7 @@ async function sendBoardMessage(message) {
 
 }
 
-async function sendMessage(message, receiver, off_chain = false, group = false, beam = false) {
+async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
   let has_history;
   console.log("address", receiver.length);
   if (receiver.length !== 163) {
@@ -2292,7 +2292,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     if (group) {
     messageArray.push('group')
     }
-    if (beam) {
+    if (beam_this) {
       console.log('beam this!', sendMsg)
       beam.write(sendMsg)
       return
