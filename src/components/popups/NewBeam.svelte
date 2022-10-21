@@ -36,6 +36,7 @@
     })
     $beam.active = $beam.active
     enableAddBoardButton = false;
+    dispatch('join')
   };
 
  

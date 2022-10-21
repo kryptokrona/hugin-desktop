@@ -168,11 +168,15 @@
     $beam.active = $beam.active
   }
 
+  function hide() {
+    new_beam = false
+  }
+
 
 
 </script>
 {#if new_beam}
-<NewBeam/>
+<NewBeam on:join={hide}/>
 {/if}
 <div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
   

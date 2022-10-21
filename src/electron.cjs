@@ -104,8 +104,15 @@ function newBeam(key, chat) {
     mainWindow.webContents.send('beam-connected', chat)
   })
   
-  beam.on('data', (data) => {
+  beam.on('data', async (data) => {
     console.log('data', data )
+    const str = new TextDecoder().decode(data);
+    console.log('string', str)
+    if (str === "Start") return
+    let hash = str.substring(0,64)
+    let message = await extraDataToMessage(str, known_keys, getXKRKeypair())
+    console.log('extra', message )
+    saveMessage(message, hash, true)
   })
 
   beam.on('end', () => beam.end())
