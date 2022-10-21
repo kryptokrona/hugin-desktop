@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
-  import { user, boards, webRTC, transactions, groups, notify } from "$lib/stores/user.js";
+  import { user, boards, webRTC, transactions, groups, notify, beam } from "$lib/stores/user.js";
  
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher } from "svelte";
@@ -18,6 +18,7 @@
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
+  import NewBeam from "../popups/NewBeam.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -152,10 +153,29 @@
     navigator.clipboard.writeText(copy);
   }
 
+  let new_beam = false
+
+  function joinBeam() {
+    new_beam = true
+  }
+
+  function newBeam() {
+    window.api.createBeam("new", $user.activeChat.chat)
+    $beam.active.push({
+      chat: $user.activeChat.chat,
+      connected: false,
+    })
+    $beam.active = $beam.active
+  }
+
+
+
 </script>
-
+{#if new_beam}
+<NewBeam/>
+{/if}
 <div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
-
+  
   {#if $page.url.pathname === '/boards'}
     <div class="nav" style="display:block !important;">
       <div class="add" on:click={openAdd}>
@@ -215,6 +235,12 @@
           {/if}
         </div>
       {/if}
+    </div>
+    <div class="button" on:click={joinBeam}>
+      <p>join beam</p>
+    </div>
+    <div class="button" on:click={newBeam}>
+      <p>create beam</p>
     </div>
   {/if}
 

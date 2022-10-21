@@ -116,11 +116,16 @@
     let msg = e.detail.text;
     let myaddr = $user.huginAddress.substring(0, 99);
     let myMessage = { chat: chat, msg: msg, sent: true, timestamp: Date.now() };
+    let beam = false
     saveToStore(myMessage);
     if (e.detail.offChain) {
       offChain = true;
     }
-    window.api.sendMsg(msg, active_contact, offChain);
+    if (e.detail.beam) {
+      beam = true
+      offChain = true;
+    }
+    window.api.sendMsg(msg, active_contact, offChain, false, beam);
     printMessage(myMessage);
     console.log('Message sent')
   };

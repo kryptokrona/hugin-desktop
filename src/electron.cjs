@@ -1,6 +1,6 @@
 const windowStateManager = require("electron-window-state");
 const contextMenu = require("electron-context-menu");
-const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme, systemPreferences } = require("electron");
+const { app, BrowserWindow, ipcMain, ipcRenderer, Tray, Menu, nativeTheme, systemPreferences, webContents } = require("electron");
 const serve = require("electron-serve");
 const path = require("path");
 const { join } = require("path");
@@ -20,6 +20,8 @@ const Peer = require("simple-peer");
 const WebTorrent = require("webtorrent");
 const { desktopCapturer, shell } = require('electron');
 const {autoUpdater} = require("electron-updater");
+const Hyperbeam = require('hyperbeam')
+
 const {
   Address,
   AddressPrefix,
@@ -72,6 +74,56 @@ function toHex(str, hex) {
     //console.log('invalid text input: ' + str)
   }
   return hex;
+}
+
+let beam
+
+function newBeam(key, chat) {
+  console.log('Start new beam', key)
+
+  if (key === "new") {
+    beam = new Hyperbeam()
+    console.log('beam key', beam.key)
+    console.log('starting new beam', beam)
+    beam.write('Start')
+  } else {
+    beam = new Hyperbeam(key)
+    console.log('connected to beam', beam)
+  }
+  
+  mainWindow.webContents.send('new-beam', beam.key, chat)
+
+  beam.on('remote-address', function ({ host, port }) {
+    if (!host) console.error('[hyperbeam] Could not detect remote address')
+    else console.error('[hyperbeam] Joined the DHT - remote address is ' + host + ':' + port)
+    if (port) console.error('[hyperbeam] Network is holepunchable \\o/')
+  })
+
+  beam.on('connected', function () {
+    console.error('[hyperbeam] Success! Encrypted tunnel established to remote peer')
+    mainWindow.webContents.send('beam-connected', beam.key, chat)
+  })
+  
+  beam.on('data', (data) => {
+    console.log('data', data )
+  })
+
+  beam.on('end', () => beam.end())
+
+  process.once('SIGINT', () => {
+    if (!beam.connected) closeASAP()
+    else beam.end()
+  })
+
+  function closeASAP () {
+    console.error('[hyperbeam] Shutting down beam...')
+
+    const timeout = setTimeout(() => process.exit(1), 2000)
+    beam.destroy()
+    beam.on('close', function () {
+      clearTimeout(timeout)
+    })
+  }
 }
 
 function nonceFromTimestamp(tmstmp) {
@@ -288,6 +340,11 @@ async function download(link) {
   console.log("log log");
 
 }
+
+ipcMain.on("beam", async (e, link, chat) => {
+  console.log("ipcmain start beam");
+  newBeam(link, chat);
+});
 
 ipcMain.on("download", async (e, link) => {
   console.log("ipcmain downloading");
@@ -1830,9 +1887,9 @@ ipcMain.on("sendTx", (e, tx) => {
 }
 );
 
-ipcMain.on("sendMsg", (e, msg, receiver, off_chain, grp) => {
-    sendMessage(msg, receiver, off_chain, grp);
-    console.log(msg, receiver, off_chain);
+ipcMain.on("sendMsg", (e, msg, receiver, off_chain, grp, beam) => {
+    sendMessage(msg, receiver, off_chain, grp, beam);
+    console.log(msg, receiver, off_chain, grp, beam);
   }
 );
 
@@ -2103,7 +2160,7 @@ async function sendBoardMessage(message) {
 
 }
 
-async function sendMessage(message, receiver, off_chain = false, group = false) {
+async function sendMessage(message, receiver, off_chain = false, group = false, beam = false) {
   let has_history;
   console.log("address", receiver.length);
   if (receiver.length !== 163) {
@@ -2233,6 +2290,11 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     messageArray.push(address)
     if (group) {
     messageArray.push('group')
+    }
+    if (beam) {
+      console.log('beam this!', sendMsg)
+      beam.write(sendMsg)
+      return
     }
     mainWindow.webContents.send("rtc_message", messageArray);
      //Do not save invite message.

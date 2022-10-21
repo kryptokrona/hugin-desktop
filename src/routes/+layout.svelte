@@ -12,7 +12,7 @@
 	import { page } from "$app/stores";
 	import { videoGrid } from "$lib/stores/layout-state.js";
 	//Stores
-	import { user, webRTC, misc, notify, boards, groups} from "$lib/stores/user.js";
+	import { user, webRTC, misc, notify, boards, groups, beam} from "$lib/stores/user.js";
 	import {messages} from "$lib/stores/messages.js";
 
 	//Global CSS
@@ -240,6 +240,17 @@
 		$webRTC.joining = data.key
 	})
 
+	window.api.receive('new-beam', async (key, chat) => {
+        let data = {
+            message: "New beam activated",
+            key: chat,
+            name: "Hyperbeam",
+            hash: Date.now()
+        }
+        $notify.success.push(data)
+        $notify.success = $notify.success
+    })
+
 	$: console.log('Contact joining call ',$webRTC.joining)
 
 
@@ -278,6 +289,16 @@
 
 	$: console.log('this gr', $groups.thisGroup)
 
+	window.api.receive('beam-connected', (data, addr)  => {
+		let update = $beam.active.map(a => {
+			if (a.chat == addr) {
+				a.connected = true
+			}
+		})
+		console.log('Updated', update)
+		$beam.active = update
+	})
+	
 </script>
 
 

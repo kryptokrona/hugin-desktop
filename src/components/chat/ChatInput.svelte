@@ -2,7 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import SendIcon from "/src/components/buttons/SendIcon.svelte";
   import EmojiSelector from "svelte-emoji-selector";
-  import { webRTC, boards } from "$lib/stores/user.js";
+  import { webRTC, boards, beam } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";
   import { page } from "$app/stores";
   import { user } from "$lib/stores/user";
@@ -35,7 +35,8 @@
   const sendMsg = () => {
     dispatch("message", {
       text: messageInput,
-      offChain: off_chain
+      offChain: off_chain,
+      beam: beam,
     });
     //Reset input field
     messageInput = "";
@@ -52,6 +53,13 @@
     if ($user.activeChat) {
     off_chain = $webRTC.call.some(a => a.chat == $user.activeChat.chat && a.connected);
     console.log("offchain", off_chain);
+    }
+  }
+
+  $: {
+    if ($beam.active.length) {
+    beam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
+    console.log("Beam active", beam);
     }
   }
 </script>
