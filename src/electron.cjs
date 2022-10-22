@@ -2865,7 +2865,7 @@ a=ssrc:` + ssrc[0] + ` cname:c2J8K3mNIXGEi9qt
 a=ssrc:` + ssrc[0] + ` msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=ssrc:` + ssrc[0] + ` mslabel:` + msid + `
 a=ssrc:` + ssrc[0] + ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
+m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 98 100 127 125 108 124 123 35 114
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[2] +
@@ -2888,6 +2888,20 @@ a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${type == "Δ" ? "a=sendrecv\r\na=msid:" + msid + " 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa" : "a=inactive"}
 a=rtcp-mux
 a=rtcp-rsize
+a=rtpmap:98 VP9/90000
+a=rtcp-fb:98 goog-remb
+a=rtcp-fb:98 transport-cc
+a=rtcp-fb:98 ccm fir
+a=rtcp-fb:98 nack
+a=rtcp-fb:98 nack pli
+a=fmtp:98 profile-id=0
+a=rtpmap:100 VP9/90000
+a=rtcp-fb:100 goog-remb
+a=rtcp-fb:100 transport-cc
+a=rtcp-fb:100 ccm fir
+a=rtcp-fb:100 nack
+a=rtcp-fb:100 nack pli
+a=fmtp:100 profile-id=2
 a=rtpmap:127 H264/90000
 a=rtcp-fb:127 goog-remb
 a=rtcp-fb:127 transport-cc
@@ -3094,7 +3108,7 @@ a=rtpmap:112 telephone-event/32000
 a=rtpmap:113 telephone-event/16000
 a=rtpmap:126 telephone-event/8000
 a=ssrc:` + ssrc[0] + ` cname:vhWDFlNcJ4vSUvs5
-m=video 9 UDP/TLS/RTP/SAVPF 127 125 108 124 123 35 114
+m=video 9 UDP/TLS/RTP/SAVPF 98 100 127 125 108 124 123 35 114
 c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
 a=ice-ufrag:` + ice_ufrag + `
@@ -3116,6 +3130,20 @@ a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${type == "δ" ? "a=sendrecv\r\na=msid:" + msid + " 06691570-5673-40ba-a027-72001bbc6f70" : "a=recvonly"}
 a=rtcp-mux
 a=rtcp-rsize
+a=rtpmap:98 VP9/90000
+a=rtcp-fb:98 goog-remb
+a=rtcp-fb:98 transport-cc
+a=rtcp-fb:98 ccm fir
+a=rtcp-fb:98 nack
+a=rtcp-fb:98 nack pli
+a=fmtp:98 profile-id=0
+a=rtpmap:100 VP9/90000
+a=rtcp-fb:100 goog-remb
+a=rtcp-fb:100 transport-cc
+a=rtcp-fb:100 ccm fir
+a=rtcp-fb:100 nack
+a=rtcp-fb:100 nack pli
+a=fmtp:100 profile-id=2
 a=rtpmap:127 H264/90000
 a=rtcp-fb:127 goog-remb
 a=rtcp-fb:127 transport-cc
