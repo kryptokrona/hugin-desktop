@@ -17,7 +17,8 @@
   import CallSlash from "/src/components/buttons/CallSlash.svelte";
   import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
-  import { videoGrid } from "$lib/stores/layout-state.js";
+  import { layoutState, videoGrid } from "$lib/stores/layout-state.js";
+  import ListButton from "$components/buttons/ListButton.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -223,6 +224,9 @@
     <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="">
     <button class="button">
       <Lock on:copy={() => copyThis($groups.thisGroup.key)}/>
+    </button>
+    <button class="button">
+      <ListButton on:click={() => $layoutState.showActiveList = !$layoutState.showActiveList}/>
     </button>
   </div>
   {/if}

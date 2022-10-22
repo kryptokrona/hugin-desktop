@@ -18,7 +18,7 @@
   let msgkey;
   let newArray = []
   let groupArray = []
-  let showActive = false
+
   //Get message updates and trigger filter
   let group = ""
   let groupName
@@ -50,10 +50,6 @@
     dispatch("printGroup", grp)
     filterActiveHugins($groupMessages)
   };
-
-  const showList = () => {
-    showActive = !showActive
-  }
 
 
   //Function to filer array of active users on board.
@@ -180,11 +176,10 @@ async function checkNew() {
     <h2>Groups</h2><br>
     <div class="buttons">
       <Exit on:remove={openRemove}/>
-      <ListButton on:click={showList}/>
       <Plus on:click={addGroup}/>
     </div><br>
   </div>
-  {#if showActive}
+  {#if $layoutState.showActiveList}
   <div class="active_hugins">
     <h4>Active Hugins</h4>
   </div>
