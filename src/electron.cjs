@@ -20,6 +20,8 @@ const Peer = require("simple-peer");
 const WebTorrent = require("webtorrent");
 const { desktopCapturer, shell } = require('electron');
 const {autoUpdater} = require("electron-updater");
+const notifier = require('node-notifier');
+
 const {
   Address,
   AddressPrefix,
@@ -405,7 +407,7 @@ if (process.platform !== 'darwin') {
 
     autoUpdater.on('update-available', () => {
       notifier.notify({
-        title: "Hugin Messenger",
+        title: "Hugin Update",
         appID: "Hugin Messenger",
         message: "A new update is available, would you like to install it now?",
         wait: true, // Wait with callback, until user action is taken against notification,
