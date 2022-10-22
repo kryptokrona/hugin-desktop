@@ -5,7 +5,7 @@
   import AddCircle from "/src/components/buttons/AddCircle.svelte"
   import Contact from "/src/components/chat/Contact.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
-
+  import { fade } from "svelte/transition";
   const dispatch = createEventDispatcher();
 
   let filterArr = [];
@@ -123,7 +123,7 @@
 </script>
 
 <div class="wrapper" class:hide={$layoutState.hideChatList === true}>
-  <div class="top">
+  <div class="top" in:fade>
     <h2>Messages</h2>
     <AddCircle on:click={()=> dispatch('open')} />
   </div>
