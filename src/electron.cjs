@@ -2990,10 +2990,15 @@ a=rtpmap:117 rtx/90000
 a=fmtp:117 apt=116
 a=rtpmap:118 ulpfec/90000
 ${type == "Δ" ?
+      "a=ssrc-group:FID " + ssrc[1] + " " + ssrc[2] + "\r\n" +
       "a=ssrc:" + ssrc[1] + " cname:qwjy1Thr/obQUvqd\r\n" +
       "a=ssrc:" + ssrc[1] + " msid:" + msid + " 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
       "a=ssrc:" + ssrc[1] + " mslabel:" + msid + "\r\n" +
-      "a=ssrc:" + ssrc[1] + " label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" : ""}m=application ` + external_ports[((external_ports.length / 3) * 2)] + ` UDP/DTLS/SCTP webrtc-datachannel
+      "a=ssrc:" + ssrc[1] + " label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
+      "a=ssrc:" + ssrc[2] + " cname:qwjy1Thr/obQUvqd\r\n" +
+      "a=ssrc:" + ssrc[2] + " msid:" + msid + " 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" +
+      "a=ssrc:" + ssrc[2] + " mslabel:" + msid + "\r\n" +
+      "a=ssrc:" + ssrc[2] + " label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n" : ""}m=application ` + external_ports[((external_ports.length / 3) * 2)] + ` UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 ` + external_ip + `
 ` + candidates[3] +
     `a=ice-ufrag:` + ice_ufrag + `
@@ -3270,7 +3275,9 @@ a=rtpmap:117 rtx/90000
 a=fmtp:117 apt=116
 a=rtpmap:118 ulpfec/90000
 ${type == "δ" ?
-      `a=ssrc:` + ssrc[1] + ` cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+      "a=ssrc-group:FID " + ssrc[1] + " " + ssrc[2] + "\r\n" +
+      "a=ssrc:" + ssrc[1] + "cname:0v7phLz3L82cIhVT" + "\r\n" +
+      `a=ssrc:` + ssrc[2] + `cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
 b=AS:30
 a=ice-ufrag:` + ice_ufrag + `
