@@ -2828,7 +2828,7 @@ t=0 0
 a=group:BUNDLE 0 1 2
 a=extmap-allow-mixed
 a=msid-semantic: WMS ` + msid + `
-m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 127 121 125 107 108 109 124 120 123 119 35 36 41 42 114 115 116 117 118
+m=audio ` + external_ports[0] + ` UDP/TLS/RTP/SAVPF 111 63 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[1] +
@@ -2865,7 +2865,7 @@ a=ssrc:` + ssrc[0] + ` cname:c2J8K3mNIXGEi9qt
 a=ssrc:` + ssrc[0] + ` msid:` + msid + ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
 a=ssrc:` + ssrc[0] + ` mslabel:` + msid + `
 a=ssrc:` + ssrc[0] + ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 98 100 127 125 108 124 123 35 114
+m=video ` + external_ports[(external_ports.length / 3)] + ` UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 127 121 125 107 108 109 124 120 123 119 35 36 41 42 114 115 116 117 118
 c=IN IP4 ` + external_ip + `
 a=rtcp:9 IN IP4 0.0.0.0
 ` + candidates[2] +
