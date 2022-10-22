@@ -175,7 +175,7 @@ async function checkNew() {
 <RemoveGroup on:click={openRemove} on:remove={()=> removeGroup($groups.thisGroup)}/>
 {/if}
 
-<div class="wrapper" class:hide={$layoutState.hideGroupList}>
+<div class="wrapper" in:fade class:hide={$layoutState.hideGroupList}>
   <div class="top">
     <h2>Groups</h2><br>
     <div class="buttons">
