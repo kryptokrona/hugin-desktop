@@ -367,14 +367,14 @@
     let custom_codecs = [];
 
     let codec;
-    for (codec in video_codecs.codecs) {
-      let this_codec = video_codecs.codecs[codec];
-      console.log('this codec', this_codec)
-      if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
-        custom_codecs.push(this_codec);
-      }
+    // for (codec in video_codecs.codecs) {
+    //   let this_codec = video_codecs.codecs[codec];
+    //   console.log('this codec', this_codec)
+    //   if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
+    //     custom_codecs.push(this_codec);
+    //   }
 
-    }
+    // }
 
     let transceiverList = peer1._pc.getTransceivers();
 
@@ -505,14 +505,14 @@
       let video_codecs = window.RTCRtpSender.getCapabilities("video");
       let audio_codecs = window.RTCRtpSender.getCapabilities("audio");
       let codec;
-      for (codec in video_codecs.codecs) {
-        let this_codec = video_codecs.codecs[codec];
-        console.log('this codec', this_codec)
-        if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
-          custom_codecs.push(this_codec);
-        }
-        console.log(custom_codecs);
-      }
+      // for (codec in video_codecs.codecs) {
+      //   let this_codec = video_codecs.codecs[codec];
+      //   console.log('this codec', this_codec)
+      //   if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
+      //     custom_codecs.push(this_codec);
+      //   }
+      //   console.log(custom_codecs);
+      // }
 
       // select the desired transceiver
       let transceivers = peer2._pc.getTransceivers();
