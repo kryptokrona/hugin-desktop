@@ -3276,8 +3276,8 @@ a=fmtp:117 apt=116
 a=rtpmap:118 ulpfec/90000
 ${type == "δ" ?
       "a=ssrc-group:FID " + ssrc[1] + " " + ssrc[2] + "\r\n" +
-      "a=ssrc:" + ssrc[1] + "cname:0v7phLz3L82cIhVT" + "\r\n" +
-      `a=ssrc:` + ssrc[2] + `cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+      "a=ssrc:" + ssrc[1] + " cname:0v7phLz3L82cIhVT" + "\r\n" +
+      `a=ssrc:` + ssrc[2] + ` cname:0v7phLz3L82cIhVT"\r\n` : ""}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
 b=AS:30
 a=ice-ufrag:` + ice_ufrag + `
