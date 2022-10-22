@@ -11,6 +11,7 @@
     import BoardIcon from '/src/components/buttons/BoardIcon.svelte'
     import { page } from "$app/stores.js";
     import { layoutState } from "$lib/stores/layout-state.js";
+    import AlphaIcon from "$components/buttons/AlphaIcon.svelte";
 
     let sync
     let avatar
@@ -71,11 +72,11 @@
         <div on:click={() => goto("/settings")} class="button">
             <SettingsIcon/>
         </div>
-        <div on:click={() => openURL('https://github.com/kryptokrona/hugin-svelte/issues/new/choose')} class="button">
-            <Warning/>
-        </div>
         <!-- <a class='button' href="/" on:click={handleLogout}><img class="icon" src={logoutIcon} alt="logout"></a> -->
         <XkrLogo grey={true}/>
+        <div on:click={() => openURL('https://github.com/kryptokrona/hugin-svelte/issues/new/choose')}>
+          <AlphaIcon/>
+        </div>
     </div>
 </div>
 
@@ -87,8 +88,8 @@
         width: 85px;
         border-right: 1px solid var(--border-color);
         box-sizing: border-box;
-        padding-bottom: 2em;
-        padding-top: 3em;
+        padding-bottom: 1rem;
+        padding-top: 3rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
