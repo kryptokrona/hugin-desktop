@@ -369,7 +369,8 @@
     let codec;
     for (codec in video_codecs.codecs) {
       let this_codec = video_codecs.codecs[codec];
-      if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) == "level") {
+      console.log('this codec', this_codec)
+      if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
         custom_codecs.push(this_codec);
       }
 
@@ -416,6 +417,7 @@
       wrtc: wrtc,
       offerOptions: { offerToReceiveVideo: true, offerToReceiveAudio: true },
       sdpTransform: (sdp) => {
+        console.log('sdp')
         return sdp;
       }
     });
@@ -505,7 +507,8 @@
       let codec;
       for (codec in video_codecs.codecs) {
         let this_codec = video_codecs.codecs[codec];
-        if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level") {
+        console.log('this codec', this_codec)
+        if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
           custom_codecs.push(this_codec);
         }
         console.log(custom_codecs);
