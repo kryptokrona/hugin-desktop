@@ -211,7 +211,7 @@
     //Replace track
     if (peer) {
       $webRTC.call.forEach(a => {
-        peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current);
+        a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current);
       })
     }
     //Remove old track
