@@ -204,13 +204,13 @@
     let current = $webRTC.myStream;
     //Set video boolean to stop video
     $webRTC.video = false;
-    //Set peer
-    let peer = $webRTC.call[0].peer;
     //Add new track to current stream
     current.addTrack(device.getVideoTracks()[0])
     //Replace track
     if (peer) {
-    peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current);
+      $webRTC.call.forEach(a => {
+        a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current);
+      })
     }
     //Remove old track
     current.removeTrack(current.getVideoTracks()[0])

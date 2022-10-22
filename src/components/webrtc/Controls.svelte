@@ -52,7 +52,9 @@
 
   const toggleAudio = () => {
     muted = !muted;
-    $webRTC.myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+    $webRTC.call.forEach(a => {
+      a.myStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+    })
   };
 
   const toggleVideo = () => {
@@ -70,14 +72,14 @@
     </div>
   </div>
   <div class="controls">
-    <div class="icon" on:click={() => toggleVideo()}>
+    <div class="icon" on:click={toggleVideo}>
       {#if !video}
         <VideoSlash />
       {:else}
         <VideoIcon grid={true}/>
       {/if}
     </div>
-    <div class="icon" on:click={() => toggleAudio}>
+    <div class="icon" on:click={toggleAudio}>
       {#if !muted}
         <MicIcon />
       {:else}
