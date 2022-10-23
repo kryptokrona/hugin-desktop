@@ -76,6 +76,151 @@ function toHex(str, hex) {
   return hex;
 }
 
+const {Client, Server} = require('hyperspace')
+const Hyperdrive = require('hyperdrive')
+
+async function makeDirectory(drive, path) {
+  await drive.promises.mkdir(path)
+}
+
+async function createHyperDrive(drive, path, name) {
+  const localDrive = new Hyperdrive(userDataDir + "/" + name, null) // create new
+  await localDrive.promises.ready()
+  return localDrive
+}
+
+async function createFile(drive, pathName, text) {
+  // File writes
+  try {
+    await drive.promises.writeFile(pathName, text)
+    return true
+  } catch (e) {
+    console.log('File already exists? Path may be incorrect.')
+    return "Error"
+  }
+}
+
+async function readFile(drive, pathName, type = false) {
+  let enc = type
+  if (!type) {
+    enc = "utf8"
+  }
+  try {
+    const file = await drive.promises.readFile(pathName, type)
+    return file
+  } catch (e) {
+    console.log('Error reading file')
+    return "Error"
+  }
+}
+
+async function readDirectory(drive, path) {
+  try {
+    const directory = await drive.promises.readdir(path)
+    return directory
+  } catch (e) {
+    return "Error"
+  }
+}
+  
+
+async function checkFileStat(drive, path) {
+  try {
+    const stat = await drive.promises.stat(path)
+    return stat
+  } catch (e) {
+    return "Error"
+  }
+}
+
+async function deleteFile(drive, path) {
+  try {
+    await drive.promises.unlink(path)
+    return true
+  } catch (e) {
+    return "Error"
+  }
+}
+
+async function shareFiles() {
+  // Setup the Hyperspace Daemon connection
+  const {client, cleanup} = await setupHyperspace()
+  console.log('Hyperspace daemon connected, status:')
+  console.log(await client.status())
+  console.log('Client started', client)
+
+  //Create hyperdrive
+  let hyperDriveName = "hyperdrivetest"
+  let drive = await createHyperDrive(userDataDir, hyperDriveName)
+  console.log('New drive created, key:')
+  let driveKey = drive.key.toString('hex')
+  mainWindow.webContents.send('hyperdrive-key', driveKey)
+  console.log('Hyperdrive key ', driveKey)
+
+  let dirPath = "/test" //test
+  let path = "/test/test.txt"  //test
+  let text = "test" //test
+  //Create directory with drive and path
+  await makeDirectory(drive, dirPath)
+  // File writes
+  await createFile(drive, path, text)
+
+  let thisFIle = await readFile(drive, path)
+  let fileState = await checkFileStat(drive, path)
+
+  console.log('this file', thisFIle)
+  console.log('file state', fileState)
+
+  let delFile = await readFile(drive, path)
+  console.log("Deleted? If so, give error", delFile)
+  console.log(fileState.isDirectory())
+  console.log(fileState.isFile())
+  console.log(fileState.size)
+  console.log(fileState.blocks)
+  // =
+  // Swarm on the network
+  // =
+  console.log('drive discovery', drive.discoveryKey.toString('hex'))
+  await client.replicate(drive)
+  await new Promise(r => setTimeout(r, 3e3)) // just a few seconds
+  await client.network.configure(drive, {announce: true, lookup: false})
+
+  // APPLICATION GOES HERE
+
+  //await cleanup()
+}
+
+async function setupHyperspace () {
+  let client
+  let server
+  
+  try {
+    client = new Client()
+    console.log('Client started')
+    await client.ready()
+  } catch (e) {
+    console.log('No daemon', e)
+    // no daemon, start it in-process
+    server = new Server()
+    await server.ready()
+    console.log('Server started', server)
+    client = new Client()
+    await client.ready()
+    console.log('Client started', client)
+  }
+  
+  return {
+    client,
+    async cleanup () {
+      await client.close()
+      if (server) {
+        console.log('Shutting down Hyperspace, this may take a few seconds...')
+        await server.stop()
+      }
+    }
+  }
+}
+
 let beam
 
 function newBeam(key, chat) {
@@ -496,7 +641,7 @@ if (process.platform !== 'darwin') {
 
 async function startCheck() {
 
-
+  shareFiles()
   if (fs.existsSync(userDataDir + "/misc.db")) {
     await db.read();
     let walletName = db.data.walletNames
