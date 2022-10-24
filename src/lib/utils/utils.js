@@ -27,3 +27,7 @@ export const calcTime = (ms) => {
   const h = Math.floor((ms / (60 * 60 * 1000)));
   return h + ":" + m + ":" + s;
 }
+
+export const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

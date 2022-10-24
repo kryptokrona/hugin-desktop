@@ -10,6 +10,7 @@
   import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
   import ListButton from "/src/components/buttons/ListButton.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
+  import { sleep } from "$lib/utils/utils.js";
 
   let new_message_sound = new Audio("/audio/message.mp3");
   const dispatch = createEventDispatcher();
@@ -44,18 +45,17 @@
     console.log
   };
 
-  const printGroup = (grp) => {
-    console.log('print group!', grp)
-    readMessage(grp)
+  const printGroup = async (grp) => {
     dispatch("printGroup", grp)
-    filterActiveHugins($groupMessages)
+    await sleep(200)
+    readMessage(grp)
   };
 
 
   //Function to filer array of active users on board.
   function filterActiveHugins(arr) {
     let uniq = {};
-    activeHugins = arr.filter(obj => !uniq[obj.chat] && (uniq[obj.chat] = true));
+    activeHugins = arr.filter(obj => !uniq[obj.address] && (uniq[obj.address] = true));
   }
 
   $: activeHugins;
@@ -74,8 +74,6 @@
         }
       }
     
-
-    console.log('newArray', newArray)
     let my_groups = await checkNew();
 
     console.log("conv", my_groups);
@@ -127,6 +125,7 @@ groupArray = groupArray.map(function(a) {
 });
 
 groupArray = groupArray;
+filterActiveHugins($groupMessages)
 }
 
 $ : groupArray;
