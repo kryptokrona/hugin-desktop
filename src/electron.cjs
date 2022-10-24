@@ -478,6 +478,8 @@ async function startWallet(data, mynode) {
   start_js_wallet(walletName, password, mynode);
 }
 
+const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
+
 function contactsTable() {
   const contactsTable = `
                     CREATE TABLE IF NOT EXISTS contacts (
@@ -655,7 +657,7 @@ function welcomeMessage() {
     database.run(huginMessage,
       [
         "Welcome to hugin",
-        "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
+        welcomeAddress,
         false,
         "1650919475320"
       ], (err) => {
@@ -673,7 +675,7 @@ function firstContact() {
   return new Promise((resolve, reject) => {
     database.run(firstContact,
       [
-        "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
+        welcomeAddress,
         "133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f",
         "Hugin"
       ], (err) => {
@@ -1100,6 +1102,10 @@ ipcMain.on("removeGroup", async (e, grp) => {
   removeGroup(grp)
 });
 
+ipcMain.on("removeContact", async (e, contact) => {
+  removeContact(contact)
+});
+
 
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on("addChat", async (e, hugin_address, nickname, first = false) => {
@@ -1165,13 +1171,37 @@ async function removeGroup(group) {
 console.log('removed brd', group)
 }
 
+async function removeContact(contact) {
 
+  database.run(
+    `DELETE FROM
+        contacts
+      WHERE
+        address = ?`,
+    [ contact ]
+  );
+
+console.log('removed contact', contact)
+}
+
+async function removeMessages(contact) {
+
+  database.run(
+    `DELETE FROM
+        messages
+      WHERE
+        chat = ?`,
+    [ contact ]
+  );
+}
 
 
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname = false, first = false) {
   console.log("huginadress", hugin_address);
   console.log(first);
+  let contacts = await getContacts()
+  
   let name;
   if (!nickname) {
     console.log("no nickname");
@@ -1451,6 +1481,12 @@ async function getGroups() {
 //Get one message from every unique user sorted by latest timestmap.
 async function getConversations() {
   let contacts = await getContacts();
+
+  if (contacts.length > 1) {
+    removeContact(welcomeAddress)
+    removeMessages(welcomeAddress)
+  }
+
   let name;
   let newRow;
   let key;
@@ -1473,10 +1509,12 @@ async function getConversations() {
         if (chat.address == row.chat) {
           name = chat.name;
           key = chat.key;
+          newRow = { name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key};
+          myConversations.push(newRow);
         }
+        
       });
-      newRow = { name: name, msg: row.msg, chat: row.chat, timestamp: row.timestamp, sent: row.sent, key: key};
-      myConversations.push(newRow);
+      
     }, () => {
       resolve(myConversations);
     });
