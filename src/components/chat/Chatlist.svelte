@@ -128,7 +128,7 @@
     <AddCircle on:click={()=> dispatch('open')} />
   </div>
   <div class="list-wrapper">
-    {#each filterArr as message (message.timestamp)}
+    {#each filterArr as message}
       <Contact on:openRename={(e)=> dispatch('openRename')} on:rename={(a) => dispatch('rename', a)} contact={message}
                on:thisContact={(e)=> sendConversation(e.detail.contact)} />
     {/each}
