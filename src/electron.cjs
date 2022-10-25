@@ -1482,7 +1482,8 @@ async function getGroups() {
 async function getConversations() {
   let contacts = await getContacts();
 
-  if (contacts.length > 1) {
+  //Remove Hugin welcome message and contact if new contact was added.
+  if (contacts.length > 1 && contacts.some(a => a.address === welcomeAddress)) {
     removeContact(welcomeAddress)
     removeMessages(welcomeAddress)
   }
