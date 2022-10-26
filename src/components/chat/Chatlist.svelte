@@ -37,8 +37,10 @@
   });
 
   //Listen for sent message to update conversation list
-  window.api.receive("saved-addr", data => {
-    printConversations();
+  window.api.receive("saved-addr", async (data) => {
+    await printConversations();
+    let sender = filterArr.find(a => a.chat == data.substring(0,99))
+    sendConversation(sender)
   });
 
   async function checkNew() {
