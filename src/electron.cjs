@@ -395,8 +395,7 @@ if (process.platform !== 'darwin') {
  }
 
  ipcMain.on("update", async (e, data) => {
-  console.log('update!!!!!!')
-  return
+
   if (data === "mac") {
     shell.openExternal('https://github.com/kryptokrona/hugin-svelte/releases/latest');
     return
@@ -408,8 +407,6 @@ if (process.platform !== 'darwin') {
 
 
 async function startCheck() {
-
-  mainWindow.webContents.send('update-ready', "win", welcomeAddress)
 
   if (fs.existsSync(userDataDir + "/misc.db")) {
     await db.read();
