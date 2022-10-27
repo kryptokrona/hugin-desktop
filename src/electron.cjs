@@ -383,56 +383,33 @@ ipcMain.on("app", (data) => {
 
 if (process.platform !== 'darwin') {
   autoUpdater.on('update-downloaded', () => {
-
-    notifier.notify({
-      title: "Hugin Update",
-      appID: "Hugin Messenger",
-      message: "A new update is available, would you like to install it now?",
-      wait: true, // Wait with callback, until user action is taken against notification,
-      actions: ['Yes', 'Later']
-    },function (err, response, metadata) {
-      // Response is response from notification
-      // Metadata contains activationType, activationAt, deliveredAt
-      console.log(response, metadata.activationValue, err);
-
-      if(metadata.activationValue != "Later" || metadata.button != "Later" ) {
-            autoUpdater.quitAndInstall();
-            app.exit();
-        }
-      });
+      mainWindow.webContents.send('update-ready', "win")
 
     });
 
   } else {
 
     autoUpdater.on('update-available', () => {
-      notifier.notify({
-        title: "Hugin Update",
-        appID: "Hugin Messenger",
-        message: "A new update is available, would you like to install it now?",
-        wait: true, // Wait with callback, until user action is taken against notification,
-        actions: ['Yes', 'Later']
-      },function (err, response, metadata) {
-        // Response is response from notification
-        // Metadata contains activationType, activationAt, deliveredAt
-        console.log(response, metadata.activationValue, err);
-
-        if(metadata.activationValue == "Yes" || metadata.button == "Yes" ) {
-
-
-         shell.openExternal('https://github.com/kryptokrona/hugin-svelte/releases/latest');
-
-
-          }
-        });
-
+      mainWindow.webContents.send('update-ready', "mac")
   });
  }
+
+ ipcMain.on("update", async (e, data) => {
+  console.log('update!!!!!!')
+  return
+  if (data === "mac") {
+    shell.openExternal('https://github.com/kryptokrona/hugin-svelte/releases/latest');
+    return
+  }
+  autoUpdater.quitAndInstall();
+  app.exit();
+})
 
 
 
 async function startCheck() {
 
+  mainWindow.webContents.send('update-ready', "win", welcomeAddress)
 
   if (fs.existsSync(userDataDir + "/misc.db")) {
     await db.read();

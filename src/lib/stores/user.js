@@ -69,6 +69,7 @@ export const notify = writable({
     errors: [],
     success: [],
     unread: [],
+    update: []
 })
 
 
