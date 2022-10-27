@@ -7,10 +7,11 @@
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import GreenButton from "$components/buttons/GreenButton.svelte";
 
-  const dispatch = createEventDispatcher();
-  let timer;
   export let updates;
-  export let platform;
+
+  const dispatch = createEventDispatcher();
+
+  let timer;
 
   onMount(() =>
 
@@ -30,7 +31,7 @@
   }
 
   function update() {
-    window.api.send("update", platform);
+    window.api.send("update");
     console.log("update!");
   }
 
@@ -39,7 +40,7 @@
 <div in:fly="{{x: 200, duration:200, easing: cubicOut}}" out:fly="{{y: -200, duration: 200, easing: cubicIn}}" class="card">
     <div class="header">
       <img src="/icon.png" width="20px" height="20px" alt="">
-      <h3>Update available!</h3>
+      <h3>Update available</h3>
     </div>
     <div class="buttons">
       <GreenButton text="Update" on:click={update} />

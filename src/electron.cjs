@@ -360,9 +360,15 @@ ipcMain.on("app", (data) => {
   if (dev) {
     console.log('Running in development');
      mainWindow.openDevTools();
+    mainWindow.webContents.send('updater', 'available')
   } else {
     console.log('Running in production');
-    autoUpdater.checkForUpdates();
+
+    autoUpdater.autoInstallOnAppQuit = false
+    autoUpdater.autoDownload = false
+    //This can be a setting if people wants beta releases in the future.
+    autoUpdater.allowPrerelease = false
+    autoUpdater.checkForUpdatesAndNotify();
 
     var AutoLaunch = require('auto-launch');
     var autoLauncher = new AutoLaunch({
@@ -377,32 +383,41 @@ ipcMain.on("app", (data) => {
     }).catch(function (err) {
       throw err;
     });
+
   }
 });
 
-
-if (process.platform !== 'darwin') {
-  autoUpdater.on('update-downloaded', () => {
-      mainWindow.webContents.send('update-ready', "win")
-
-    });
-
-  } else {
-
-    autoUpdater.on('update-available', () => {
-      mainWindow.webContents.send('update-ready', "mac")
-  });
- }
-
- ipcMain.on("update", async (e, data) => {
-
-  if (data === "mac") {
-    shell.openExternal('https://github.com/kryptokrona/hugin-svelte/releases/latest');
-    return
-  }
-  autoUpdater.quitAndInstall();
-  app.exit();
+autoUpdater.on('checking-for-update', () => {
+  mainWindow.webContents.send('updater', 'checking')
 })
+
+autoUpdater.on('update-available', () => {
+  mainWindow.webContents.send('updater', 'available')
+})
+
+autoUpdater.on('update-not-available', () => {
+  mainWindow.webContents.send('updater', 'not-available')
+})
+
+autoUpdater.on('download-progress', (progress) => {
+  mainWindow.webContents.send('update-progress', progress)
+})
+
+autoUpdater.on("error", (err) => {
+  mainWindow.webContents.send("updater", err);
+});
+
+autoUpdater.on("update-downloaded", () => {
+  mainWindow.webContents.send("updater", 'downloaded');
+});
+
+ipcMain.on("download-update", (e) => {
+  autoUpdater.downloadUpdate();
+});
+
+ipcMain.on("install-update", async (e, data) => {
+  autoUpdater.quitAndInstall();
+});
 
 
 

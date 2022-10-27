@@ -19,6 +19,8 @@
 	//Global CSS
 	import '/src/lib/theme/global.scss'
 	import Notification from '/src/components/popups/Notification.svelte';
+	import { appUpdateState } from "$lib/stores/updater-state.js";
+	import UpdatePopup from "$components/popups/UpdatePopup.svelte";
 
 	let ready = false
 	let myVideo = false
@@ -241,13 +243,10 @@
 		$webRTC.joining = data.key
 	})
 
-	window.api.receive('update-ready', async (data, huginAvatar) => { 
+	window.api.receive('update-ready', async () => {
 		$notify.update.push({
 			message: "New update available",
 			name: 'Update',
-			hash: Date.now(),
-			key: huginAvatar,
-			platform: data
     	})
 
 		$notify.update = $notify.update
@@ -296,6 +295,40 @@
 	$: console.log('path', $page.url.pathname)
 
 	$: console.log('this gr', $groups.thisGroup)
+
+
+	//APP UPDATER
+	window.api.receive("updater", (data) => {
+		data = data.toString()
+
+		switch (data) {
+			case "checking":
+				$appUpdateState.state = 'checking'
+				break;
+			case "available":
+				$appUpdateState.updateAvailable = true
+				break;
+			case "not-available":
+				$appUpdateState.state = 'not-available'
+				break;
+			case "downloaded":
+				$appUpdateState.step = 3
+				$appUpdateState.state = 'downloaded'
+				break;
+			default:
+				//Do nothing
+		}
+	});
+
+	//APP UPDATE PROGRESS
+	window.api.receive('update-progress', progress => {
+		$appUpdateState.step = 2
+		$appUpdateState.percentageDownloaded = progress.percent
+		$appUpdateState.dataDownloaded = progress.transferred
+		$appUpdateState.downloadSize = progress.total
+		$appUpdateState.downloadSpeed = progress.bytesPerSecond
+	})
+
 
 </script>
 
@@ -393,6 +426,10 @@
 		<RightMenu />
 		{/if}
 		<Webrtc/>
+	{/if}
+
+	{#if $appUpdateState.updateAvailable}
+		<UpdatePopup/>
 	{/if}
 
 	<slot />

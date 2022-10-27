@@ -23,7 +23,7 @@
      border-radius: 0.4rem;
      padding: 9px 20px;
      min-width: 100px;
-     max-width: 200px;
+    width: 100%;
      cursor: pointer;
      font-weight: 600;
      transition: 250ms ease-in-out;
