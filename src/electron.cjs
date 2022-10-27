@@ -2378,7 +2378,17 @@ async function sendTx(tx) {
 
   console.log('transactions', tx)
   console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
-    const result = await js_wallet.sendTransactionBasic(tx.to, tx.amount, tx.paymentID)
+  let result = await js_wallet.sendTransactionAdvanced(
+    [[tx.to, tx.amount]], // destinations,
+    3, // mixin
+    {fixedFee: 1000, isFixedFee: true}, // fee
+    undefined, //paymentID
+    undefined, // subWalletsToTakeFrom
+    undefined, // changeAddress
+    true, // relayToNetwork
+    false, // sneedAll
+    undefined,
+    );
     if (result.success) {
       let amount = tx.amount / 100000
       let sent = {
