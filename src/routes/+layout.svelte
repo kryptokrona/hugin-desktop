@@ -9,7 +9,6 @@
 	import PeerAudio from "/src/components/webrtc/PeerAudio.svelte";
 	import VideoGrid from "$components/webrtc/VideoGrid.svelte";
 	import Loader from '/src/components/popups/Loader.svelte';
-	import Update from '/src/components/popups/Update.svelte';
 	import { page } from "$app/stores";
 	import { videoGrid } from "$lib/stores/layout-state.js";
 	//Stores
@@ -243,15 +242,6 @@
 		$webRTC.joining = data.key
 	})
 
-	window.api.receive('update-ready', async () => {
-		$notify.update.push({
-			message: "New update available",
-			name: 'Update',
-    	})
-
-		$notify.update = $notify.update
-	})
-
 	$: console.log('Contact joining call ',$webRTC.joining)
 
 
@@ -260,13 +250,6 @@
 	function removeErrors(e) {
 
 		console.log(' remove this', e)
-
-		if ($notify.update.some(a => a.hash === e.detail.hash)) {
-			let filterArr = $notify.update.filter(a => a.hash !== e.detail.hash)
-			console.log('filtered', filterArr)
-			$notify.update = filterArr
-			return
-		}
 
 		if ($notify.success.some(a => a.hash === e.detail.hash)) {
 			let filterArr = $notify.success.filter(a => a.hash !== e.detail.hash)
@@ -407,14 +390,6 @@
 		<div class="notifs">
 		{#each $notify.success as success}
 		<Notification message={success} success={true}  on:hide={removeErrors} />
-		{/each}
-		</div>
-	{/if}
-
-	{#if $notify.update.length > 0}
-		<div class="notifs">
-		{#each $notify.update as update}
-		<Update updates={update} platform={update.platform}  on:hide={removeErrors} />
 		{/each}
 		</div>
 	{/if}
