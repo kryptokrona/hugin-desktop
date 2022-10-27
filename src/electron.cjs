@@ -700,7 +700,9 @@ ipcMain.on("create-account", async (e, accountData) => {
   ports = accountData.port;
   daemon = new WB.Daemon(node, ports);
 
-
+  if (!accountData.blockheight) {
+    accountData.blockheight = 1
+  }
   const [js_wallet, error] = ( accountData.mnemonic.length > 0 ? await WB.WalletBackend.importWalletFromSeed(daemon, accountData.blockheight, accountData.mnemonic) : [await WB.WalletBackend.createWallet(daemon), null]);
 
   //Create Hugin welcome contact
