@@ -360,7 +360,6 @@ ipcMain.on("app", (data) => {
   if (dev) {
     console.log('Running in development');
      mainWindow.openDevTools();
-    mainWindow.webContents.send('updater', 'available')
   } else {
     console.log('Running in production');
 

@@ -32,7 +32,7 @@ export const sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function formatBytes(bytes, decimals = 2) {
+export const formatBytes = (bytes, decimals = 2) => {
   if (!+bytes) return '0 Bytes'
 
   const k = 1024
