@@ -3,21 +3,22 @@ import * as path from "path";
 
 /** @type {import("vite").UserConfig} */
 const config = {
-  plugins: [sveltekit()],
-  optimizeDeps: {
-    include: ["dayjs/plugin/relativeTime.js"],
-  },
-  server: {
-    fs: {
-      allow: [".."]
-    }
-  },
-  resolve: {
-    alias: {
-      $lib: path.resolve('./src/lib'),
-      $components: path.resolve('./src/components'),
+    plugins: [sveltekit()],
+    optimizeDeps: {
+        include: ["dayjs/plugin/relativeTime.js"],
     },
-  },
+    server: {
+        fs: {
+            allow: [".."]
+        }
+    },
+    resolve: {
+        alias: {
+            $lib: path.resolve('./src/lib'),
+            $components: path.resolve('./src/components'),
+        },
+    },
+    root: "./",
 };
 
 export default config;
