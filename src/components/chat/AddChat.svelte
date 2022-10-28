@@ -73,10 +73,10 @@
   <div in:fly="{{y: 20}}" out:fade class="field">
     {#if step === 1}
       {#if (pubkey)}
-        <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
+        <img in:fade style="margin-left: -5px" class="avatar" src="data:image/png;base64,{avatar}" alt="">
       {/if}
-      <input placeholder="Enter Hugin address" type="text" spellcheck="false" autocomplete="false" bind:value={text}>
-      <div style="width: 100px">
+      <input out:fade placeholder="Enter Hugin address" type="text" spellcheck="false" autocomplete="false" bind:value={text}>
+      <div style="width: 100px; margin-left: 10px">
         <GreenButton disabled={!enableButton} enabled={enableButton && step == 1} on:click={next} text="Next" />
       </div>
     {/if}
@@ -86,10 +86,10 @@
 
     <div in:fade class="field">
       {#if (pubkey)}
-        <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
+        <img style="margin-left: -5px" class="avatar" src="data:image/png;base64,{avatar}" alt="">
       {/if}
-      <input placeholder="Enter a nickname" type="text" spellcheck="false" autocomplete="false" bind:value={nickname}>
-      <div style="width: 100px">
+      <input in:fade placeholder="Enter a nickname" type="text" spellcheck="false" autocomplete="false" bind:value={nickname}>
+      <div style="width: 100px; margin-left: 10px">
         <GreenButton disabled={!enableButton} enabled={step == 2 && nickname.length} on:click={handleAdd} text="Add" />
       </div>
     </div>
