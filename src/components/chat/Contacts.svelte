@@ -2,7 +2,7 @@
     import { fade } from 'svelte/transition'
     import { user, webRTC, notify } from "$lib/stores/user.js";
     import { get_avatar } from "$lib/utils/hugin-utils.js";
-    import AddToCall from '../buttons/AddToCall.svelte';
+    import AddToCall from '../icons/AddToCall.svelte';
 
     let open;
     let changed;

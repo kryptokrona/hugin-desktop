@@ -6,10 +6,10 @@
     import {onDestroy, onMount} from "svelte";
     import { webRTC } from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
-    import ShowVideoMenu from "../buttons/ShowVideoMenu.svelte";
+    import ShowVideoMenu from "../icons/ShowVideoMenu.svelte";
     import { videoGrid } from "$lib/stores/layout-state.js";
     import { calcTime } from "$lib/utils/utils.js";
-    import CallSlash from "$components/buttons/CallSlash.svelte";
+    import CallSlash from "$components/icons/CallSlash.svelte";
     const dispatch = createEventDispatcher();
     
     export let paused = false

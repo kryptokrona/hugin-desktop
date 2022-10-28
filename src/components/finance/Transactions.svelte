@@ -2,8 +2,8 @@
 import { user } from "$lib/stores/user";
 import {fade} from "svelte/transition";
 import {onMount} from "svelte";
-import Forward from "/src/components/buttons/Forward.svelte";
-import Backward from "/src/components/buttons/Backward.svelte";
+import Forward from "/src/components/icons/Forward.svelte";
+import Backward from "/src/components/icons/Backward.svelte";
 
 let pageNum = 0
 let pages

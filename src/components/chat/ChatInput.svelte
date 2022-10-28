@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import SendIcon from "/src/components/buttons/SendIcon.svelte";
+  import SendIcon from "/src/components/icons/SendIcon.svelte";
   import EmojiSelector from "svelte-emoji-selector";
   import { webRTC, boards } from "$lib/stores/user.js";
   import { fade } from "svelte/transition";

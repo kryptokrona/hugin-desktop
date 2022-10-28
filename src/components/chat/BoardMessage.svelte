@@ -6,8 +6,8 @@
   import Reaction from "/src/components/chat/Reaction.svelte";
   import EmojiSelector from "svelte-emoji-selector";
   import Time from "svelte-time";
-  import ReplyArrow from "/src/components/buttons/ReplyArrow.svelte";
-  import RepliedArrom from "/src/components/buttons/RepliedArrow.svelte";
+  import ReplyArrow from "/src/components/icons/ReplyArrow.svelte";
+  import RepliedArrom from "/src/components/icons/RepliedArrow.svelte";
 
   export let msg;
   export let msgFrom;

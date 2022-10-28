@@ -6,8 +6,8 @@
   import Reaction from "/src/components/chat/Reaction.svelte";
   import EmojiSelector from "svelte-emoji-selector";
   import Time from "svelte-time";
-  import ReplyArrow from "/src/components/buttons/ReplyArrow.svelte";
-  import RepliedArrow from "/src/components/buttons/RepliedArrow.svelte";
+  import ReplyArrow from "/src/components/icons/ReplyArrow.svelte";
+  import RepliedArrow from "/src/components/icons/RepliedArrow.svelte";
   import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
 
   export let msg;

@@ -2,16 +2,16 @@
     import {fly} from 'svelte/transition'
     import {user, misc, userAvatar} from "$lib/stores/user.js";
     import { goto } from "$app/navigation";
-    import GroupIcon from '/src/components/buttons/GroupIcon.svelte'
-    import MessageIcon from '/src/components/buttons/MessageIcon.svelte'
-    import SettingsIcon from '/src/components/buttons/SettingsIcon.svelte'
-    import XkrLogo from "/src/components/buttons/XkrLogo.svelte";
-    import Warning from "/src/components/buttons/Warning.svelte";
+    import GroupIcon from '/src/components/icons/GroupIcon.svelte'
+    import MessageIcon from '/src/components/icons/MessageIcon.svelte'
+    import SettingsIcon from '/src/components/icons/SettingsIcon.svelte'
+    import XkrLogo from "/src/components/icons/XkrLogo.svelte";
+    import Warning from "/src/components/icons/Warning.svelte";
     import { openURL } from "$lib/utils/utils.js";
-    import BoardIcon from '/src/components/buttons/BoardIcon.svelte'
+    import BoardIcon from '/src/components/icons/BoardIcon.svelte'
     import { page } from "$app/stores.js";
     import { layoutState } from "$lib/stores/layout-state.js";
-    import AlphaIcon from "$components/buttons/AlphaIcon.svelte";
+    import AlphaIcon from "$components/icons/AlphaIcon.svelte";
 
     let sync
     let avatar

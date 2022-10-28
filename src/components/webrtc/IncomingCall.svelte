@@ -7,8 +7,8 @@
     import {user, webRTC, notify} from "$lib/stores/user.js";
     import {createEventDispatcher} from "svelte";
     import { goto } from "$app/navigation";
-    import CallIcon from "/src/components/buttons/CallIcon.svelte";
-    import CallSlash from "/src/components/buttons/CallSlash.svelte";
+    import CallIcon from "/src/components/icons/CallIcon.svelte";
+    import CallSlash from "/src/components/icons/CallSlash.svelte";
 
     export let paused = false
     export let thisCall

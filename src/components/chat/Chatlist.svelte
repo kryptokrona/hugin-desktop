@@ -2,7 +2,7 @@
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import { messages } from "$lib/stores/messages.js";
   import { user } from "$lib/stores/user.js";
-  import AddCircle from "/src/components/buttons/AddCircle.svelte"
+  import AddCircle from "/src/components/icons/AddCircle.svelte"
   import Contact from "/src/components/chat/Contact.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
   import { fade } from "svelte/transition";

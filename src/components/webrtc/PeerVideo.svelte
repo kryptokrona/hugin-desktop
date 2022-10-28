@@ -4,8 +4,8 @@
   import { onDestroy, onMount } from "svelte";
   import { createEventDispatcher } from "svelte";
   import { draggable } from "@neodrag/svelte";
-  import Minus from "/src/components/buttons/Minus.svelte";
-  import Plus from "/src/components/buttons/Plus.svelte";
+  import Minus from "/src/components/icons/Minus.svelte";
+  import Plus from "/src/components/icons/Plus.svelte";
   import { audioLevel } from "$lib/stores/user.js";
 
   let peerVideo = document.getElementById("peerVideo");

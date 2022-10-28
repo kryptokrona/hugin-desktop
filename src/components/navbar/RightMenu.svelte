@@ -6,20 +6,20 @@
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { createEventDispatcher } from "svelte";
   import { get_board_icon } from "$lib/utils/hugin-utils.js";
-  import SimpleAdd from "/src/components/buttons/SimpleAdd.svelte";
-  import PayIcon from "/src/components/buttons/PayIcon.svelte";
-  import MicIcon from "/src/components/buttons/MicIcon.svelte";
-  import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
-  import HomeIcon from "/src/components/buttons/HomeIcon.svelte";
-  import Lock from "../buttons/Lock.svelte";
+  import SimpleAdd from "/src/components/icons/SimpleAdd.svelte";
+  import PayIcon from "/src/components/icons/PayIcon.svelte";
+  import MicIcon from "/src/components/icons/MicIcon.svelte";
+  import MuteIcon from "/src/components/icons/MuteIcon.svelte";
+  import HomeIcon from "/src/components/icons/HomeIcon.svelte";
+  import Lock from "../icons/Lock.svelte";
   
-  import CallIcon from "/src/components/buttons/CallIcon.svelte";
-  import CallSlash from "/src/components/buttons/CallSlash.svelte";
-  import VideoIcon from "/src/components/buttons/VideoIcon.svelte";
-  import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
+  import CallIcon from "/src/components/icons/CallIcon.svelte";
+  import CallSlash from "/src/components/icons/CallSlash.svelte";
+  import VideoIcon from "/src/components/icons/VideoIcon.svelte";
+  import VideoSlash from "/src/components/icons/VideoSlash.svelte";
   import { layoutState, videoGrid } from "$lib/stores/layout-state.js";
-  import ListButton from "$components/buttons/ListButton.svelte";
-  import Exit from "$components/buttons/Exit.svelte";
+  import ListButton from "$components/icons/ListButton.svelte";
+  import Exit from "$components/icons/Exit.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;

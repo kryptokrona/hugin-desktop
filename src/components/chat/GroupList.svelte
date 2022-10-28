@@ -4,11 +4,11 @@
   import { groupMessages } from "$lib/stores/groupmsgs.js";
   import { groups } from "$lib/stores/user.js";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import Exit from "/src/components/buttons/Exit.svelte";
+  import Exit from "/src/components/icons/Exit.svelte";
   import Group from "/src/components/chat/Group.svelte";
-  import Plus from "/src/components/buttons/Plus.svelte";
+  import Plus from "/src/components/icons/Plus.svelte";
   import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
-  import ListButton from "/src/components/buttons/ListButton.svelte";
+  import ListButton from "/src/components/icons/ListButton.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
   import { sleep } from "$lib/utils/utils.js";
 

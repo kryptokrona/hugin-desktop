@@ -1,11 +1,11 @@
 <script>
-  import VideoIcon from "$components/buttons/VideoIcon.svelte";
-  import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
-  import MicIcon from "$components/buttons/MicIcon.svelte";
-  import MuteIcon from "/src/components/buttons/MuteIcon.svelte";
-  import Screenshare from "$components/buttons/Screenshare.svelte";
-  import CallSlash from "$components/buttons/CallSlash.svelte";
-  import MessageIcon from "$components/buttons/MessageIcon.svelte";
+  import VideoIcon from "$components/icons/VideoIcon.svelte";
+  import VideoSlash from "/src/components/icons/VideoSlash.svelte";
+  import MicIcon from "$components/icons/MicIcon.svelte";
+  import MuteIcon from "/src/components/icons/MuteIcon.svelte";
+  import Screenshare from "$components/icons/Screenshare.svelte";
+  import CallSlash from "$components/icons/CallSlash.svelte";
+  import MessageIcon from "$components/icons/MessageIcon.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
   import { webRTC } from "$lib/stores/user.js";
   import VideoSources from "$components/chat/VideoSources.svelte";
@@ -13,7 +13,7 @@
   import Contacts from "/src/components/chat/Contacts.svelte";
   import { onMount, onDestroy } from "svelte";
   import { calcTime } from "$lib/utils/utils.js";
-  import HideVideoGrid from "$components/buttons/HideVideoGrid.svelte";
+  import HideVideoGrid from "$components/icons/HideVideoGrid.svelte";
 
   let muted = false;
   let video = true;
