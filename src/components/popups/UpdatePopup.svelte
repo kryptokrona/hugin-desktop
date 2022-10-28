@@ -2,6 +2,7 @@
   import { fade, fly } from "svelte/transition";
   import { appUpdateState } from "$lib/stores/updater-state.js";
   import GreenButton from "$components/buttons/GreenButton.svelte";
+  import { formatBytes } from "$lib/utils/utils";
 </script>
 
 <div class="backdrop" in:fade="{{duration: 100}}" out:fade="{{duration: 100}}">
@@ -29,8 +30,8 @@
           <div class="goal">
             <div class="progress" style="width: {$appUpdateState.percentageDownloaded}%"></div>
           </div>
-          <h5>Downloaded: {$appUpdateState.dataDownloaded} MB of {$appUpdateState.downloadSize} MB</h5>
-          <h5>{$appUpdateState.downloadSpeed} b/s</h5>
+          <h5>Downloaded: {formatBytes(parseInt($appUpdateState.dataDownloaded))} of {formatBytes(parseInt($appUpdateState.downloadSize))}</h5>
+          <h5>{formatBytes(parseInt($appUpdateState.downloadSpeed))}/s</h5>
         </div>
         <div></div>
       </div>
