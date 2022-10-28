@@ -103,7 +103,7 @@
     padding: 1px;
 
     .progress {
-      animation: load 3s normal forwards;
+      animation: load 500ms normal forwards;
       box-shadow: 0 10px 40px -10px #ffffff;
       background-color: var(--info-color);
       height: 8px;

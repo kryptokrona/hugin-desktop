@@ -104,7 +104,8 @@
 
   .button_wrapper {
     display: flex;
-    gap:1rem; width: 100%;
+    gap:1rem;
+    width: 400px;
     justify-content: center;
   }
 </style>

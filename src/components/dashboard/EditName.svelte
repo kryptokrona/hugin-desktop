@@ -40,7 +40,9 @@
   <div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
     <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
       <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false" bind:value={username}>
-      <GreenButton on:click={save} enabled={username} disabled={false} text="Change" />
+      <div style="width: 100px">
+        <GreenButton on:click={save} enabled={username} disabled={false} text="Change" />
+      </div>
     </div>
   </div>
 {/if}

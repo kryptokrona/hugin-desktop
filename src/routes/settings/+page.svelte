@@ -111,8 +111,10 @@
 <main in:fade>
   <h1>Settings</h1>
 <div style="margin-top: 1rem">
-  <GreenButton text="Node" enabled={false} disabled={false} on:click={toNode} />
-  <GreenButton text="Wallet" enabled={false} disabled={false} on:click={toWallet} />
+  <div style="width: 240px; display: inline-flex; gap: 1rem">
+    <GreenButton text="Node" enabled={false} disabled={false} on:click={toNode} />
+    <GreenButton text="Wallet" enabled={false} disabled={false} on:click={toWallet} />
+  </div>
 </div>
 
 
@@ -150,8 +152,11 @@
             <p class="nodeinfo"> {networkHeight} - {walletHeight} </p>
           {/if}
         </div>
-        <GreenButton text="Change Node" enabled={false} disabled={false}
-                     on:click={() => $layoutState.showNodeSelector = true} />
+        <div style="width: 140px;">
+          <GreenButton text="Change Node" enabled={false} disabled={false}
+                       on:click={() => $layoutState.showNodeSelector = true} />
+        </div>
+
       </div>
     </div>
 
