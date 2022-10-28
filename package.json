@@ -2,12 +2,12 @@
 	"name": "hugin-messenger",
 	"author": "Kryptokrona Developers",
 	"productName": "Hugin Messenger",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"private": true,
 	"description": "A messenger app built on top of the kryptokrona blockchain",
 	"main": "src/electron.cjs",
 	"type": "module",
-	"repository": "https://github.com/kryptokrona/hugin-svelte",
+	"repository": "https://github.com/kryptokrona/hugin-desktop",
 	"scripts": {
 		"dev": "cross-env NODE_ENV=dev npm run dev:all",
 		"dev:all": "concurrently -n=svelte,electron -c='#ff3e00',blue \"npm run dev:svelte\" \"npm run dev:electron\"",
@@ -27,7 +27,7 @@
 			{
 				"provider": "github",
 				"owner": "kryptokrona",
-				"repo": "hugin-svelte"
+				"repo": "hugin-desktop"
 			}
 		],
 		"mac": {
