@@ -19,6 +19,7 @@
   import VideoSlash from "/src/components/buttons/VideoSlash.svelte";
   import { layoutState, videoGrid } from "$lib/stores/layout-state.js";
   import ListButton from "$components/buttons/ListButton.svelte";
+  import Exit from "$components/buttons/Exit.svelte";
 
   const dispatch = createEventDispatcher();
   let contact;
@@ -153,6 +154,10 @@
     navigator.clipboard.writeText(copy);
   }
 
+  const openRemove = () => {
+    $groups.removeGroup =! $groups.removeGroup
+  }
+
 </script>
 
 <div class="rightMenu" class:hide={$videoGrid.showVideoGrid && $webRTC.call.length}>
@@ -197,9 +202,9 @@
           <CallSlash on:click={() => endCall()}/>
       {:else}
           <CallIcon on:click={() => startCall(contact, false)}/>
-      
       {/if}
       </button>
+
       <button class="button">
       {#if thisCall && video}
         <VideoSlash  on:click={() => endCall()}/>
@@ -207,6 +212,13 @@
         <VideoIcon menu={true} on:click={() => startCall(contact, true)}/>
       {/if}
       </button>
+
+      {#if $page.url.pathname === '/messages'}
+        <div on:click={()=> sendMoney(contact)} class="button">
+          <PayIcon />
+        </div>
+      {/if}
+
       {#if thisCall}
         <div class="button" on:click={toggleAudio}>
           {#if !muted}
@@ -217,24 +229,26 @@
         </div>
       {/if}
     </div>
+    <div class="draggable"></div>
   {/if}
 
   {#if $page.url.pathname === '/groups'}
-  <div class="nav">
-    <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="">
-    <button class="button">
-      <Lock on:copy={() => copyThis($groups.thisGroup.key)}/>
-    </button>
-    <button class="button">
-      <ListButton on:click={() => $layoutState.showActiveList = !$layoutState.showActiveList}/>
-    </button>
-  </div>
-  {/if}
-  <div class="draggable hitbox"></div>
-  {#if $page.url.pathname === '/messages'}
-    <div on:click={()=> sendMoney(contact)} class="button">
-      <PayIcon />
+  <div class="nav" style="height: 100%">
+
+    <div class="nav">
+      <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="">
+      <button class="button">
+        <Lock on:copy={() => copyThis($groups.thisGroup.key)}/>
+      </button>
+      <button class="button">
+        <ListButton on:click={() => $layoutState.showActiveList = !$layoutState.showActiveList}/>
+      </button>
     </div>
+    <div class="draggable hitbox"></div>
+    <div class="button">
+      <Exit on:remove={openRemove}/>
+    </div>
+  </div>
   {/if}
 </div>
 
@@ -266,7 +280,6 @@
   }
 
   .nav {
-    height: 100%;
     display: flex;
     align-items: center;
     flex-direction: column;

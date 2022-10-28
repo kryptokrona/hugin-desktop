@@ -157,26 +157,20 @@ async function checkNew() {
     $groups.addGroup = true
   }
 
-  const openRemove = () => {
-    $groups.removeGroup =! $groups.removeGroup
-  }
-
-
   $: groupName = $groups.thisGroup.name
 
 </script>
 
 {#if $groups.removeGroup}
-<RemoveGroup on:click={openRemove} on:remove={()=> removeGroup($groups.thisGroup)}/>
+  <RemoveGroup on:click={() => $groups.removeGroup = false} on:remove={()=> removeGroup($groups.thisGroup)}/>
 {/if}
 
 <div class="wrapper" in:fade class:hide={$layoutState.hideGroupList}>
   <div class="top">
     <h2>Groups</h2><br>
     <div class="buttons">
-      <Exit on:remove={openRemove}/>
       <Plus on:click={addGroup}/>
-    </div><br>
+    </div>
   </div>
   {#if $layoutState.showActiveList}
   <div class="active_hugins">
@@ -239,7 +233,7 @@ async function checkNew() {
     }
 
   .top {
-    height: 100px;
+    height: 85px;
     top: 0;
     width: 100%;
     max-width: 280px;
@@ -319,10 +313,10 @@ async function checkNew() {
   }
 
   .buttons {
-    display: contents;
-    gap: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
     cursor: pointer;
-    justify-content: space-between;
   }
 
   .hide {
