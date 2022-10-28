@@ -11,7 +11,7 @@
 
   const buttonGlow = () => {
     copied = true
-    let timer = setTimeout(function() {
+    setTimeout(() => {
       copied = false
       open = false
     }, 1000);

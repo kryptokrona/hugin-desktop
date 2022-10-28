@@ -1,10 +1,9 @@
 <script>
-  import { misc, user } from "$lib/stores/user.js";
+  import { misc } from "$lib/stores/user.js";
   import { prettyNumbers } from "$lib/utils/utils.js";
   import { onDestroy, onMount } from "svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
 
-  let showFaucet
   let interval;
   onMount(async () => {
     await getBalance();

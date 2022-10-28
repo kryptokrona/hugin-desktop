@@ -1,5 +1,4 @@
 <script>
-    import { misc } from "$lib/stores/user.js";
     import { goto } from "$app/navigation";
 
     const createRoom = () => {
