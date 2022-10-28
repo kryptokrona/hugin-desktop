@@ -74,7 +74,7 @@
         </div>
         <!-- <a class='button' href="/" on:click={handleLogout}><img class="icon" src={logoutIcon} alt="logout"></a> -->
         <XkrLogo grey={true}/>
-        <div on:click={() => openURL('https://github.com/kryptokrona/hugin-svelte/issues/new/choose')}>
+        <div on:click={() => openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}>
           <AlphaIcon/>
         </div>
     </div>
