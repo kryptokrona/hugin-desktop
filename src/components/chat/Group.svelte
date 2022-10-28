@@ -51,6 +51,7 @@
       color: white;
       opacity: 1.0;
       background-color: var(--card-border);
+      border-bottom: 1px solid transparent;
     }
   }
 
@@ -100,7 +101,8 @@
   }
 
   .active {
-    animation: border_rgb 10s infinite;
+    background-color: var(--border-color);
+    border-bottom: 1px solid transparent;
   }
 
   .from {
