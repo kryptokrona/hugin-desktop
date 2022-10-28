@@ -4,19 +4,19 @@
 <a href="https://chat.kryptokrona.se">
     <img src="https://img.shields.io/discord/562673808582901793?label=Discord&logo=Discord&logoColor=white&style=flat">
 </a>
-<a href="https://github.com/kryptokrona/hugin-svelte/issues">
+<a href="https://github.com/kryptokrona/hugin-desktop/issues">
     <img src="https://img.shields.io/github/issues/kryptokrona/hugin-svelte">
 </a>
-<a href="https://github.com/kryptokrona/hugin-svelte/pulls">
+<a href="https://github.com/kryptokrona/hugin-desktop/pulls">
     <img src="https://img.shields.io/github/issues-pr/kryptokrona/hugin-svelte">
 </a>
-<a href="https://github.com/kryptokrona/hugin-svelte/commits/main">
+<a href="https://github.com/kryptokrona/hugin-desktop/commits/main">
     <img src="https://img.shields.io/github/commit-activity/m/kryptokrona/hugin-svelte">
 </a>
-<a href="https://github.com/kryptokrona/hugin-svelte/graphs/contributors">
+<a href="https://github.com/kryptokrona/hugin-desktop/graphs/contributors">
     <img src="https://img.shields.io/github/contributors/kryptokrona/hugin-cache">
 </a>
-<a href="https://github.com/kryptokrona/hugin-svelte/blob/main/LICENSE">
+<a href="https://github.com/kryptokrona/hugin-desktop/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/kryptokrona/hugin-svelte">
 </a>
 <a href="https://twitter.com/kryptokrona">
