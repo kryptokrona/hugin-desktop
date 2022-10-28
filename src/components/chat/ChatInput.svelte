@@ -61,7 +61,7 @@
 <div class="wrapper" class:rtc={rtc} class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home" && $page.url.pathname === '/boards'}
      class:border-top={$page.url.pathname !== '/boards'}>
   <input type="text" placeholder="Message.." bind:value={messageInput}>
-  <EmojiSelector on:emoji={onEmoji} />
+  <!--<EmojiSelector on:emoji={onEmoji} />-->
   <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><SendIcon /></button>
 </div>
 
