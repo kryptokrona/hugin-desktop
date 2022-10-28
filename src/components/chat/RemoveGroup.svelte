@@ -2,7 +2,6 @@
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher, onMount, onDestroy } from "svelte";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
   import Button from "/src/components/buttons/Button.svelte";
   import { groups, notify } from "$lib/stores/user";
   import {get_avatar} from "$lib/utils/hugin-utils.js";

@@ -4,7 +4,6 @@
   import PeerVideo from "$components/webrtc/PeerVideo.svelte";
   import { videoGrid } from "$lib/stores/layout-state.js";
   import { fade } from "svelte/transition";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
   import RtcGroupMessages from "$components/webrtc/RtcGroupMessages.svelte";
   import Controls from "$components/webrtc/Controls.svelte";
 
@@ -48,7 +47,7 @@
   <p on:click={()=> join = !join}>Join chat</p>
   <div class="exit">
     <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
-      <GreenButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
+      <FillButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
     </div>
   </div>
   -->

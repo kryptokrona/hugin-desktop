@@ -1,6 +1,6 @@
 <script>
   import { fade, fly } from "svelte/transition";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
   import { user, misc, groups } from "$lib/stores/user.js";
   import { onMount, onDestroy } from "svelte";
   import { goto } from "$app/navigation";
@@ -160,7 +160,7 @@
       <div>
         <h2 class="title">Sign into your account</h2>
         <input type="password" placeholder="Password" bind:value={myPassword}>
-        <GreenButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
+        <FillButton text="Log in" enabled={enableLogin} on:click={handleLogin} />
       </div>
     </div>
     <div in:fade class="hero">
@@ -180,8 +180,8 @@
       <div></div>
       <div class="center">
         <HuginArt />
-        <GreenButton disabled={false} text="Create Account" on:click={() => goTo(false)} />
-        <GreenButton disabled={false} text="Restore Account" on:click={() => goTo(true)} />
+        <FillButton disabled={false} text="Create Account" on:click={() => goTo(false)} />
+        <FillButton disabled={false} text="Restore Account" on:click={() => goTo(true)} />
       </div>
       <div></div>
     </div>

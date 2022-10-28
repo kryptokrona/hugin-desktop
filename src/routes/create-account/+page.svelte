@@ -1,8 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { user, misc } from "$lib/stores/user.js";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
-  import { nodelist } from "$lib/stores/nodes.js";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
   import { goto } from "$app/navigation";
   import NodeSelector from "$components/popups/NodeSelector.svelte";
 
@@ -87,8 +86,8 @@
       <input type="text" spellcheck="false" placeholder="Blockheight" bind:value={blockHeight}>
 
       <div class="button_wrapper">
-        <GreenButton text="Back" disabled={false} on:click={() => {$user.restore = false; goto('/');}} />
-        <GreenButton disabled={mnemonic.length < 0} enabled={mnemonic.length > 0} text="Next"
+        <FillButton text="Back" disabled={false} on:click={() => {$user.restore = false; goto('/');}} />
+        <FillButton disabled={mnemonic.length < 0} enabled={mnemonic.length > 0} text="Next"
                      on:click={() => createAcc()} />
       </div>
     </div>
@@ -102,8 +101,8 @@
       <input type="text" spellcheck="false" placeholder="Username" bind:value={username}>
 
       <div class="button_wrapper">
-        <GreenButton text="Back" disabled={false} on:click={() => goto('/')} />
-        <GreenButton disabled={username.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
+        <FillButton text="Back" disabled={false} on:click={() => goto('/')} />
+        <FillButton disabled={username.length < 0} enabled={username.length > 0} text="Next" on:click={() => step = 2} />
       </div>
     </div>
 
@@ -116,8 +115,8 @@
       <input type="password" placeholder="Confirm Password" bind:value={confirmPassword}>
 
       <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
-        <GreenButton disabled={false} text="Back" on:click={() => step = 1} />
-        <GreenButton disabled={!(walletName.length > 0 && password.length > 0 && password === confirmPassword)}
+        <FillButton disabled={false} text="Back" on:click={() => step = 1} />
+        <FillButton disabled={!(walletName.length > 0 && password.length > 0 && password === confirmPassword)}
                      text="Next"
                      enabled={(walletName.length > 0 && password.length > 0 && password === confirmPassword)}
                      on:click={() => step = 3} />

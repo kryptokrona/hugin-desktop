@@ -3,7 +3,7 @@
   import { user, misc } from "$lib/stores/user.js";
   import { onMount, onDestroy } from "svelte";
   import Button from "/src/components/buttons/Button.svelte";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
   import NodeSelector from "$components/popups/NodeSelector.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
 
@@ -112,9 +112,9 @@
   <h1>Settings</h1>
 <div style="margin-top: 1rem">
   <div style="width: 500px; display: flex; gap: 1rem">
-    <GreenButton text="Node" enabled={false} disabled={false} on:click={toNode} />
-    <GreenButton text="Wallet" enabled={false} disabled={false} on:click={toWallet} />
-    <GreenButton text="Check updates" disabled={false} on:click={() => window.api.send('check-new-release')}/>
+    <FillButton text="Node" enabled={false} disabled={false} on:click={toNode} />
+    <FillButton text="Wallet" enabled={false} disabled={false} on:click={toWallet} />
+    <FillButton text="Check updates" disabled={false} on:click={() => window.api.send('check-new-release')}/>
   </div>
 </div>
 
@@ -154,7 +154,7 @@
           {/if}
         </div>
         <div style="width: 160px;">
-          <GreenButton text="Change Node" enabled={false} disabled={false} on:click={() => $layoutState.showNodeSelector = true} />
+          <FillButton text="Change Node" enabled={false} disabled={false} on:click={() => $layoutState.showNodeSelector = true} />
         </div>
 
       </div>

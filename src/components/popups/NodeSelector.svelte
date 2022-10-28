@@ -1,5 +1,5 @@
 <script>
-  import GreenButton from "$components/buttons/FillButton.svelte";
+  import FillButton from "$components/buttons/FillButton.svelte";
   import { nodelist } from "$lib/stores/nodes.js";
   import { fade } from 'svelte/transition'
   import { createEventDispatcher } from "svelte";
@@ -42,9 +42,9 @@
       {/each}
     </div>
     <div class="button_wrapper">
-      <GreenButton text="Back" disabled={false} on:click={back} />
-      <GreenButton text="Auto" disabled={false} on:click={auto} />
-      <GreenButton text="Connect" disabled={!(nodeInput.length > 0)} enabled={nodeInput.length > 0} on:click={connectTo} />
+      <FillButton text="Back" disabled={false} on:click={back} />
+      <FillButton text="Auto" disabled={false} on:click={auto} />
+      <FillButton text="Connect" disabled={!(nodeInput.length > 0)} enabled={nodeInput.length > 0} on:click={connectTo} />
     </div>
   </div>
 

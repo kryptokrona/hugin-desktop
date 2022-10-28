@@ -1,7 +1,7 @@
 <script>
   import { fade, fly } from "svelte/transition";
   import { appUpdateState } from "$lib/stores/updater-state.js";
-  import GreenButton from "$components/buttons/FillButton.svelte";
+  import FillButton from "$components/buttons/FillButton.svelte";
   import { formatBytes } from "$lib/utils/utils";
 </script>
 
@@ -17,8 +17,8 @@
       <div class="content">
         <h4>There's a new update available! Get it now to stay up to date with new features and improvements.</h4>
         <div class="buttons">
-          <GreenButton text="Download" enabled={true} on:click={() => window.api.send('download-update')} />
-          <GreenButton text="Later" on:click={() => $appUpdateState.updateAvailable = false} />
+          <FillButton text="Download" enabled={true} on:click={() => window.api.send('download-update')} />
+          <FillButton text="Later" on:click={() => $appUpdateState.updateAvailable = false} />
         </div>
       </div>
 
@@ -41,7 +41,7 @@
       <div class="content">
         <h4>Your update is ready, please press install to restart.</h4>
         <div class="buttons">
-          <GreenButton text="install" enabled={true} on:click={() => window.api.send('install-update')} />
+          <FillButton text="install" enabled={true} on:click={() => window.api.send('install-update')} />
         </div>
       </div>
 

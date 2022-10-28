@@ -2,7 +2,7 @@
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher } from "svelte";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -47,7 +47,7 @@
   <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
     <input placeholder="Join or create a new public board" type="text" spellcheck="false" autocomplete="false"
            bind:value={text}>
-    <GreenButton text={add_board} disabled={!enableAddBoardButton} enabled={enableAddBoardButton}
+    <FillButton text={add_board} disabled={!enableAddBoardButton} enabled={enableAddBoardButton}
     on:click={()=> addBoard(text)} />
   </div>
 </div>

@@ -3,7 +3,7 @@
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher, onMount } from "svelte";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -77,7 +77,7 @@
       {/if}
       <input out:fade placeholder="Enter Hugin address" type="text" spellcheck="false" autocomplete="false" bind:value={text}>
       <div style="width: 100px; margin-left: 10px">
-        <GreenButton disabled={!enableButton} enabled={enableButton && step == 1} on:click={next} text="Next" />
+        <FillButton disabled={!enableButton} enabled={enableButton && step == 1} on:click={next} text="Next" />
       </div>
     {/if}
   </div>
@@ -90,7 +90,7 @@
       {/if}
       <input in:fade placeholder="Enter a nickname" type="text" spellcheck="false" autocomplete="false" bind:value={nickname}>
       <div style="width: 100px; margin-left: 10px">
-        <GreenButton disabled={!enableButton} enabled={step == 2 && nickname.length} on:click={handleAdd} text="Add" />
+        <FillButton disabled={!enableButton} enabled={step == 2 && nickname.length} on:click={handleAdd} text="Add" />
       </div>
     </div>
   {/if}

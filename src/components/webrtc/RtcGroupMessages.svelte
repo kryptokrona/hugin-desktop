@@ -1,10 +1,9 @@
 <script>
   import { rtcgroupMessages } from "$lib/stores/rtcgroupmsgs.js";
   import GroupMessage from "/src/components/chat/GroupMessage.svelte";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
   import { onMount, onDestroy } from "svelte";
   import { webRTC, user, rtc_groups } from "$lib/stores/user.js";
-  import { fade } from "svelte/transition";
   import ChatInput from "/src/components/chat/ChatInput.svelte";
   //Use for filesharing later
   import Dropzone from "svelte-file-dropzone";

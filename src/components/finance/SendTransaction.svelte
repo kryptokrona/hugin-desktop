@@ -4,7 +4,7 @@
   import { createEventDispatcher, onMount } from "svelte";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { transactions } from "$lib/stores/user.js";
-  import GreenButton from "$components/buttons/FillButton.svelte";
+  import FillButton from "$components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -52,7 +52,7 @@
     <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
     <input placeholder="Enter amount" type="text" spellcheck="false" autocomplete="false" bind:value={amount}
            oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
-    <GreenButton on:click={sendTransaction} enabled={amount > 0} disabled={!enableButton} text="Send" />
+    <FillButton on:click={sendTransaction} enabled={amount > 0} disabled={!enableButton} text="Send" />
   </div>
 </div>
 

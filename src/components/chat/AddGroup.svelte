@@ -2,7 +2,7 @@
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher, onMount, onDestroy } from "svelte";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
   import Button from "/src/components/buttons/Button.svelte";
   import { groups, notify } from "$lib/stores/user";
   import {get_avatar} from "$lib/utils/hugin-utils.js";
@@ -106,7 +106,7 @@
     <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
     {/if}
     </div>
-      <GreenButton text={create_group} disabled={!enableAddGroupButton} enabled={enableAddGroupButton}
+      <FillButton text={create_group} disabled={!enableAddGroupButton} enabled={enableAddGroupButton}
                    on:click={()=> addGroup()} />
   </div>
 </div>

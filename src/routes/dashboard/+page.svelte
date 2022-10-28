@@ -6,10 +6,9 @@
   import Share from "/src/components/dashboard/Share.svelte";
   import Funds from "/src/components/dashboard/Funds.svelte";
   import EditName from "/src/components/dashboard/EditName.svelte";
-  import Transactions from "/src/components/finance/Transactions.svelte";
   import CreateRoom from "/src/components/dashboard/CreateRoom.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
-  import GreenButton from "$components/buttons/FillButton.svelte";
+  import FillButton from "$components/buttons/FillButton.svelte";
   import { openURL } from "$lib/utils/utils.js";
 
   let avatar;
@@ -68,7 +67,7 @@
       </div>
       <div class="button_wrapper">
         {#if $layoutState.showFaucetButton === null}
-          <GreenButton text="Faucet" enabled={true} disabled={false}
+          <FillButton text="Faucet" enabled={true} disabled={false}
                        on:click={() => openURL(`https:faucet.kryptokrona.org/?address=${$user.huginAddress.substring(0, 99)}`)} />
         {/if}
         <Share />

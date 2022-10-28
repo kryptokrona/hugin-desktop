@@ -2,7 +2,7 @@
     //To handle true and false, or in this case show and hide.
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher, onMount, onDestroy} from "svelte";
-    import GreenButton from "/src/components/buttons/FillButton.svelte";
+    import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import Contact from "./Contact.svelte";
@@ -57,7 +57,7 @@
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
       <input placeholder="Rename {$user.rename.name}" type="text" spellcheck="false" autocomplete="false"
              bind:value={text}>
-      <GreenButton text={name} disabled={!enableAddButton} enabled={enableAddButton}
+      <FillButton text={name} disabled={!enableAddButton} enabled={enableAddButton}
       on:click={()=> renameContact(text)} />
     </div>
 </div>

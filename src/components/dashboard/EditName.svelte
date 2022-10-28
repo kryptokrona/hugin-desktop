@@ -2,7 +2,7 @@
   import Pen from "/src/components/icons/Pen.svelte";
   import { user } from "$lib/stores/user.js";
   import { fade, fly } from "svelte/transition";
-  import GreenButton from "/src/components/buttons/FillButton.svelte";
+  import FillButton from "/src/components/buttons/FillButton.svelte";
 
   let open;
   let username;
@@ -41,7 +41,7 @@
     <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
       <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false" bind:value={username}>
       <div style="width: 100px">
-        <GreenButton on:click={save} enabled={username} disabled={false} text="Change" />
+        <FillButton on:click={save} enabled={username} disabled={false} text="Change" />
       </div>
     </div>
   </div>
