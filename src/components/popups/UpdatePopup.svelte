@@ -1,7 +1,7 @@
 <script>
   import { fade, fly } from "svelte/transition";
   import { appUpdateState } from "$lib/stores/updater-state.js";
-  import GreenButton from "$components/buttons/GreenButton.svelte";
+  import GreenButton from "$components/buttons/FillButton.svelte";
   import { formatBytes } from "$lib/utils/utils";
 </script>
 

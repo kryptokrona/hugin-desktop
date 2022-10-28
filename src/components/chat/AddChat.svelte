@@ -3,7 +3,7 @@
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher, onMount } from "svelte";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
+  import GreenButton from "/src/components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 

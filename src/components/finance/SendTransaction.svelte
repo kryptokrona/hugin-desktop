@@ -4,7 +4,7 @@
   import { createEventDispatcher, onMount } from "svelte";
   import { get_avatar } from "$lib/utils/hugin-utils.js";
   import { transactions } from "$lib/stores/user.js";
-  import GreenButton from "$components/buttons/GreenButton.svelte";
+  import GreenButton from "$components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 

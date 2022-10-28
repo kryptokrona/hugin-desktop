@@ -2,7 +2,7 @@
   //To handle true and false, or in this case show and hide.
   import { fade, fly } from "svelte/transition";
   import { createEventDispatcher } from "svelte";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
+  import GreenButton from "/src/components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 

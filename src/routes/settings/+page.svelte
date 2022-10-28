@@ -3,7 +3,7 @@
   import { user, misc } from "$lib/stores/user.js";
   import { onMount, onDestroy } from "svelte";
   import Button from "/src/components/buttons/Button.svelte";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
+  import GreenButton from "/src/components/buttons/FillButton.svelte";
   import NodeSelector from "$components/popups/NodeSelector.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
 

@@ -1,7 +1,7 @@
 <script>
   import { fade } from "svelte/transition";
   import { user, misc } from "$lib/stores/user.js";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
+  import GreenButton from "/src/components/buttons/FillButton.svelte";
   import { nodelist } from "$lib/stores/nodes.js";
   import { goto } from "$app/navigation";
   import NodeSelector from "$components/popups/NodeSelector.svelte";

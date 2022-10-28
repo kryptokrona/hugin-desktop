@@ -2,7 +2,7 @@
   import Pen from "/src/components/icons/Pen.svelte";
   import { user } from "$lib/stores/user.js";
   import { fade, fly } from "svelte/transition";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
+  import GreenButton from "/src/components/buttons/FillButton.svelte";
 
   let open;
   let username;

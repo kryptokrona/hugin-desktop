@@ -1,6 +1,6 @@
 <script>
   import { fade, fly } from "svelte/transition";
-  import GreenButton from "/src/components/buttons/GreenButton.svelte";
+  import GreenButton from "/src/components/buttons/FillButton.svelte";
   import { user, misc, groups } from "$lib/stores/user.js";
   import { onMount, onDestroy } from "svelte";
   import { goto } from "$app/navigation";

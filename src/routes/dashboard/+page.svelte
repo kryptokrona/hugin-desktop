@@ -9,7 +9,7 @@
   import Transactions from "/src/components/finance/Transactions.svelte";
   import CreateRoom from "/src/components/dashboard/CreateRoom.svelte";
   import { layoutState } from "$lib/stores/layout-state.js";
-  import GreenButton from "$components/buttons/GreenButton.svelte";
+  import GreenButton from "$components/buttons/FillButton.svelte";
   import { openURL } from "$lib/utils/utils.js";
 
   let avatar;

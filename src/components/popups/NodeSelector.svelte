@@ -1,5 +1,5 @@
 <script>
-  import GreenButton from "$components/buttons/GreenButton.svelte";
+  import GreenButton from "$components/buttons/FillButton.svelte";
   import { nodelist } from "$lib/stores/nodes.js";
   import { fade } from 'svelte/transition'
   import { createEventDispatcher } from "svelte";
