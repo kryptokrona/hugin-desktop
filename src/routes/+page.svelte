@@ -168,8 +168,8 @@
       <div>
         <HuginArt />
         <div in:fly="{{y: 100}}" class="socials">
-          <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-svelte')}>Github</p>
-          <p on:click={()=> openURL("https://github.com/kryptokrona/hugin-svelte/issues")}>Support</p>
+          <p on:click={()=> openURL('https://github.com/kryptokrona/hugin-desktop')}>Github</p>
+          <p on:click={()=> openURL("https://github.com/kryptokrona/hugin-desktop/issues")}>Support</p>
           <p on:click={()=> openURL("https://hugin.chat")}>Website</p>
         </div>
       </div>
