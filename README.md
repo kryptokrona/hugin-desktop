@@ -22,6 +22,12 @@
 <a href="https://twitter.com/kryptokrona">
     <img src="https://img.shields.io/twitter/follow/kryptokrona">
 </a>
+<a href="https://github.com/kryptokrona/hugin-desktop/releases/latest">
+    <img src="https://img.shields.io/github/downloads/kryptokrona/hugin-desktop/total">
+</a>
+<a href="https://github.com/kryptokrona/hugin-desktop/releases/latest">
+    <img src="https://img.shields.io/github/downloads/kryptokrona/hugin-desktop/latest/total">
+</a>
 </p>
 
 Hugin is a messaging service where messages are stored on the Kryptokrona Blockchain. Your messages are secured with industry leading encryption so that only you and your chat partner have the possibility to read them. **The purpose** is **not** to gather any personal information about the users, unlike most apps and social media.
