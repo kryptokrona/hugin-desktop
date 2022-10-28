@@ -111,9 +111,10 @@
 <main in:fade>
   <h1>Settings</h1>
 <div style="margin-top: 1rem">
-  <div style="width: 240px; display: inline-flex; gap: 1rem">
+  <div style="width: 500px; display: flex; gap: 1rem">
     <GreenButton text="Node" enabled={false} disabled={false} on:click={toNode} />
     <GreenButton text="Wallet" enabled={false} disabled={false} on:click={toWallet} />
+    <GreenButton text="Check updates" disabled={false} on:click={() => window.api.send('check-new-release')}/>
   </div>
 </div>
 
@@ -152,9 +153,8 @@
             <p class="nodeinfo"> {networkHeight} - {walletHeight} </p>
           {/if}
         </div>
-        <div style="width: 140px;">
-          <GreenButton text="Change Node" enabled={false} disabled={false}
-                       on:click={() => $layoutState.showNodeSelector = true} />
+        <div style="width: 160px;">
+          <GreenButton text="Change Node" enabled={false} disabled={false} on:click={() => $layoutState.showNodeSelector = true} />
         </div>
 
       </div>

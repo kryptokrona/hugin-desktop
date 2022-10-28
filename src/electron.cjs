@@ -367,7 +367,7 @@ ipcMain.on("app", (data) => {
     autoUpdater.autoDownload = false
     //This can be a setting if people wants beta releases in the future.
     autoUpdater.allowPrerelease = false
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify()
 
     var AutoLaunch = require('auto-launch');
     var autoLauncher = new AutoLaunch({
@@ -385,6 +385,11 @@ ipcMain.on("app", (data) => {
 
   }
 });
+
+ipcMain.on('check-new-release', () => {
+  console.log('checking if new release');
+  autoUpdater.checkForUpdates();
+})
 
 autoUpdater.on('checking-for-update', () => {
   mainWindow.webContents.send('updater', 'checking')
