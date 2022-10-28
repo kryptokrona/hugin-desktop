@@ -1,4 +1,4 @@
-![hugin](https://user-images.githubusercontent.com/36674091/113739971-d2a04100-96ef-11eb-8f4e-ef8fed5949d7.png)
+![hugin](https://user-images.githubusercontent.com/36674091/198717153-c46bdb04-f3b4-45c0-ace4-0f9a41675911.png)
 
 <p>
 <a href="https://chat.kryptokrona.se">
