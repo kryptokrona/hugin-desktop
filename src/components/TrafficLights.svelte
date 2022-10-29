@@ -1,6 +1,6 @@
 <div class="traffic">
-  <div on:click={() => window.api.send('close')} class="light"></div>
-  <div on:click={() => window.api.send('min')} class="light"></div>
+    <div on:click={() => window.api.send('close')} class="light"></div>
+    <div on:click={() => window.api.send('min')} class="light"></div>
 </div>
 
 <style lang="scss">

@@ -1,53 +1,55 @@
 <script>
-  import { fade, fly } from "svelte/transition";
-  import { appUpdateState } from "$lib/stores/updater-state.js";
-  import FillButton from "$components/buttons/FillButton.svelte";
-  import { formatBytes } from "$lib/utils/utils";
+    import {fade, fly} from "svelte/transition";
+    import {appUpdateState} from "$lib/stores/updater-state.js";
+    import FillButton from "$components/buttons/FillButton.svelte";
+    import {formatBytes} from "$lib/utils/utils";
 </script>
 
 <div class="backdrop" in:fade="{{duration: 100}}" out:fade="{{duration: 100}}">
-  <div class="card layered-shadow" in:fly="{{y: 20}}" out:fly="{{y: -50}}">
-    <div class="header">
-      <img src="/icon.png" height="48px" width="48px" alt="">
-      <h2>Hugin updater</h2>
+    <div class="card layered-shadow" in:fly="{{y: 20}}" out:fly="{{y: -50}}">
+        <div class="header">
+            <img src="/icon.png" height="48px" width="48px" alt="">
+            <h2>Hugin updater</h2>
+        </div>
+
+        {#if ($appUpdateState.step === 1)}
+
+            <div class="content">
+                <h4>There's a new update available! Get it now to stay up to date with new features and
+                    improvements.</h4>
+                <div class="buttons">
+                    <FillButton text="Download" enabled={true} on:click={() => window.api.send('download-update')}/>
+                    <FillButton text="Later" on:click={() => $appUpdateState.updateAvailable = false}/>
+                </div>
+            </div>
+
+        {:else if ($appUpdateState.step === 2)}
+
+            <div class="content">
+                <div></div>
+                <div>
+                    <div class="goal">
+                        <div class="progress" style="width: {$appUpdateState.percentageDownloaded}%"></div>
+                    </div>
+                    <h5>Downloaded: {formatBytes(parseInt($appUpdateState.dataDownloaded))}
+                        of {formatBytes(parseInt($appUpdateState.downloadSize))}</h5>
+                    <h5>{formatBytes(parseInt($appUpdateState.downloadSpeed))}/s</h5>
+                </div>
+                <div></div>
+            </div>
+
+        {:else if ($appUpdateState.step === 3)}
+
+            <div class="content">
+                <h4>Your update is ready, please press install to restart.</h4>
+                <div class="buttons">
+                    <FillButton text="install" enabled={true} on:click={() => window.api.send('install-update')}/>
+                </div>
+            </div>
+
+        {/if}
+
     </div>
-
-    {#if ($appUpdateState.step === 1)}
-
-      <div class="content">
-        <h4>There's a new update available! Get it now to stay up to date with new features and improvements.</h4>
-        <div class="buttons">
-          <FillButton text="Download" enabled={true} on:click={() => window.api.send('download-update')} />
-          <FillButton text="Later" on:click={() => $appUpdateState.updateAvailable = false} />
-        </div>
-      </div>
-
-    {:else if ($appUpdateState.step === 2)}
-
-      <div class="content">
-        <div></div>
-        <div>
-          <div class="goal">
-            <div class="progress" style="width: {$appUpdateState.percentageDownloaded}%"></div>
-          </div>
-          <h5>Downloaded: {formatBytes(parseInt($appUpdateState.dataDownloaded))} of {formatBytes(parseInt($appUpdateState.downloadSize))}</h5>
-          <h5>{formatBytes(parseInt($appUpdateState.downloadSpeed))}/s</h5>
-        </div>
-        <div></div>
-      </div>
-
-    {:else if ($appUpdateState.step === 3)}
-
-      <div class="content">
-        <h4>Your update is ready, please press install to restart.</h4>
-        <div class="buttons">
-          <FillButton text="install" enabled={true} on:click={() => window.api.send('install-update')} />
-        </div>
-      </div>
-
-    {/if}
-
-  </div>
 </div>
 
 <style lang="scss">

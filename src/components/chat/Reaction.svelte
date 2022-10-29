@@ -1,49 +1,49 @@
 <script>
-  import { fade } from "svelte/transition";
-  import { createEventDispatcher, onMount } from "svelte";
+    import {fade} from "svelte/transition";
+    import {createEventDispatcher} from "svelte";
 
-  const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
-  export let reacts = [];
-  export let reactCount = 0;
-  export let thisReaction;
-  export let emoji;
-  export let react = false;
-  export let counter = false;
-  let filterReactions = [];
-  let hoverReaction = false;
-  let filterReactors = [];
+    export let reacts = [];
+    export let reactCount = 0;
+    export let thisReaction;
+    export let emoji;
+    export let react = false;
+    export let counter = false;
+    let filterReactions = [];
+    let hoverReaction = false;
+    let filterReactors = [];
 
-  $: if (reacts.length) filterReactions = reacts.filter(a => a.message == thisReaction.message);
+    $: if (reacts.length) filterReactions = reacts.filter(a => a.message == thisReaction.message);
 
-  $: if (filterReactions.length > 0) {
-    let reactor = {};
-    filterReactors = filterReactions.filter(r => !reactor[r.key] && (reactor[r.key] = true));
-    reactCount = filterReactors.length;
-  }
+    $: if (filterReactions.length > 0) {
+        let reactor = {};
+        filterReactors = filterReactions.filter(r => !reactor[r.key] && (reactor[r.key] = true));
+        reactCount = filterReactors.length;
+    }
 
-  const sendReaction = () => {
-    dispatch("sendReaction", {
-      msg: thisReaction.message,
-      brd: thisReaction.board,
-      reply: thisReaction.reply
-    });
-  };
+    const sendReaction = () => {
+        dispatch("sendReaction", {
+            msg: thisReaction.message,
+            brd: thisReaction.board,
+            reply: thisReaction.reply
+        });
+    };
 
-  $: reactCount
+    $: reactCount
 
 </script>
 
 <div class="reaction" on:click={sendReaction}>{thisReaction.message}
-  {#if filterReactions.length >= 1}
-    <p class="count">{reactCount}</p>
-  {/if}
+    {#if filterReactions.length >= 1}
+        <p class="count">{reactCount}</p>
+    {/if}
 
-  <div in:fade class="reactors">
-    {#each filterReactors as reactors}
-      <p class="reactor">{reactors.name}</p>
-    {/each}
-  </div>
+    <div in:fade class="reactors">
+        {#each filterReactors as reactors}
+            <p class="reactor">{reactors.name}</p>
+        {/each}
+    </div>
 
 </div>
 
@@ -60,7 +60,8 @@
     background-color: var(--card-border);
     border-radius: 20px;
     position: relative;
-   .reactors {
+
+    .reactors {
       display: none;
     }
 

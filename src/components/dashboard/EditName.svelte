@@ -1,50 +1,51 @@
 <script>
   import Pen from "/src/components/icons/Pen.svelte";
-  import { user } from "$lib/stores/user.js";
-  import { fade, fly } from "svelte/transition";
+  import {user} from "$lib/stores/user.js";
+  import {fade, fly} from "svelte/transition";
   import FillButton from "/src/components/buttons/FillButton.svelte";
 
   let open;
-  let username;
+    let username;
 
-  const keyDown = (e) => {
-    if (e.key === "Enter" && username.length > 0) {
-      save();
-    } else if (e.key === "Escape") {
-      close()
-    }
-  };
+    const keyDown = (e) => {
+        if (e.key === "Enter" && username.length > 0) {
+            save();
+        } else if (e.key === "Escape") {
+            close()
+        }
+    };
 
-  const save = () => {
-    if (username) {
-      window.localStorage.setItem("userName", username);
-      $user.username = username;
-      close();
-    }
-  };
+    const save = () => {
+        if (username) {
+            window.localStorage.setItem("userName", username);
+            $user.username = username;
+            close();
+        }
+    };
 
-  const close = () => {
-    open = false;
-    username = "";
-  };
+    const close = () => {
+        open = false;
+        username = "";
+    };
 
-  $user.username = window.localStorage.getItem("userName");
+    $user.username = window.localStorage.getItem("userName");
 
 </script>
 
-<svelte:window on:keyup|preventDefault={keyDown} />
+<svelte:window on:keyup|preventDefault={keyDown}/>
 <div style="display: flex; align-items: center">
-  <Pen on:click={() => open = true} />
+    <Pen on:click={() => open = true}/>
 </div>
 {#if open}
-  <div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
-    <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
-      <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false" bind:value={username}>
-      <div style="width: 100px">
-        <FillButton on:click={save} enabled={username} disabled={false} text="Change" />
-      </div>
+    <div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
+        <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
+            <input placeholder="Enter nickname" type="text" spellcheck="false" autocomplete="false"
+                   bind:value={username}>
+            <div style="width: 100px">
+                <FillButton on:click={save} enabled={username} disabled={false} text="Change"/>
+            </div>
+        </div>
     </div>
-  </div>
 {/if}
 
 

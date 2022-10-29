@@ -6,7 +6,7 @@
 </script>
 
 <!-- The button in HTML with variables-->
-<a href={url} on:click >{text}</a>
+<a href={url} on:click>{text}</a>
 
 
 <style>

@@ -2,7 +2,7 @@
     // Copyright (c) 2022, The Kryptokrona Developers
     import {fade, fly} from "svelte/transition";
     import Close from "/src/components/icons/Close.svelte";
-    import { misc } from "$lib/stores/user.js";
+    import {misc} from "$lib/stores/user.js";
 
     let progress
 
@@ -39,82 +39,82 @@
 </div>
 
 <style lang="scss">
-    .popup {
-        position: fixed;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: var(--backdrop-color);
-        z-index: 103;
+  .popup {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--backdrop-color);
+    z-index: 103;
 
-        .popup-card {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            background-color: var(--backgound-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.4rem;
-            box-sizing: border-box;
-            padding: 30px 30px 40px 30px;
-            width: 300px;
-        }
+    .popup-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background-color: var(--backgound-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.4rem;
+      box-sizing: border-box;
+      padding: 30px 30px 40px 30px;
+      width: 300px;
+    }
+  }
+
+  .goal {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+    background-color: var(--input-background);
+    border: 1px solid var(--input-border);
+    border-radius: 0.4rem;
+    margin: 5px 0;
+
+    h4 {
+      color: white;
+      position: absolute;
+      align-self: center;
+      z-index: 9999;
+    }
+  }
+
+  .progress {
+    background-color: var(--border-color);
+    height: 40px;
+    margin-right: auto;
+    border-radius: 0.4rem;
+    transition: 200ms ease-in-out;
+  }
+
+  .synced {
+    background-color: var(--border-color);
+  }
+
+  input {
+    height: 40px;
+    box-sizing: border-box;
+    background-color: var(--input-background);
+    border: 1px solid var(--input-border);
+    padding: 10px;
+    border-radius: var(--border-radius);
+    color: var(--title-color);
+    transition: 200ms ease-in-out;
+    width: 100%;
+
+    &::placeholder {
+      color: var(--input-placeholder);
+      font-family: "Roboto Mono", monospace;
     }
 
-    .goal {
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 40px;
-        background-color: var(--input-background);
-        border: 1px solid var(--input-border);
-        border-radius: 0.4rem;
-        margin: 5px 0;
-
-        h4 {
-            color: white;
-            position: absolute;
-            align-self: center;
-            z-index: 9999;
-        }
+    &:focus {
+      outline: none;
+      border: 1px solid var(--primary-color);
     }
-
-    .progress {
-        background-color: var(--border-color);
-        height: 40px;
-        margin-right: auto;
-        border-radius: 0.4rem;
-        transition: 200ms ease-in-out;
-    }
-
-    .synced {
-        background-color: var(--border-color);
-    }
-
-    input {
-        height: 40px;
-        box-sizing: border-box;
-        background-color: var(--input-background);
-        border: 1px solid var(--input-border);
-        padding: 10px;
-        border-radius: var(--border-radius);
-        color: var(--title-color);
-        transition: 200ms ease-in-out;
-        width: 100%;
-
-        &::placeholder {
-            color: var(--input-placeholder);
-            font-family: "Roboto Mono", monospace;
-        }
-
-        &:focus {
-            outline: none;
-            border: 1px solid var(--primary-color);
-        }
-    }
+  }
 </style>

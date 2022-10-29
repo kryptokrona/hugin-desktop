@@ -1,61 +1,61 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte";
-  import { fade } from "svelte/transition";
-  import { boards } from "$lib/stores/user.js";
-  import { get_board_icon } from "$lib/utils/hugin-utils.js";
+  import {createEventDispatcher, onMount} from "svelte";
+  import {fade} from "svelte/transition";
+  import {boards} from "$lib/stores/user.js";
   import ActiveBoard from "./ActiveBoard.svelte";
+
   const dispatch = createEventDispatcher();
-  let active_boards = [];
-  let removeBoard = false
-  onMount(()=> {
-    filterActiveBoards($boards.newBoards);
-  })
+    let active_boards = [];
+    let removeBoard = false
+    onMount(() => {
+        filterActiveBoards($boards.newBoards);
+    })
 
-  //Get message updates and trigger filter
-	window.api.receive('newBoard', async (data) => {
-		console.log('data newboard', data)
-		$boards.newBoards.push(data)
-		filterActiveBoards($boards.newBoards);
-	})
+    //Get message updates and trigger filter
+    window.api.receive('newBoard', async (data) => {
+        console.log('data newboard', data)
+        $boards.newBoards.push(data)
+        filterActiveBoards($boards.newBoards);
+    })
 
-  //Function to filer array of active users on board.
-  function filterActiveBoards(arr) {
-    let uniq = {};
-    active_boards = arr.filter(obj => !uniq[obj.board] && (uniq[obj.board] = true));
-  }
+    //Function to filer array of active users on board.
+    function filterActiveBoards(arr) {
+        let uniq = {};
+        active_boards = arr.filter(obj => !uniq[obj.board] && (uniq[obj.board] = true));
+    }
 
-  const toggleBoardSettings = () => {
-    console.log(removeBoard)
-    removeBoard = !removeBoard
-  }
+    const toggleBoardSettings = () => {
+        console.log(removeBoard)
+        removeBoard = !removeBoard
+    }
 
-  const removeThisBoard = () => {
-    window.api.removeBoard($boards.thisBoard)
-    let filter = $boards.boardsArray.filter(a => a !== $boards.thisBoard)
-    $boards.boardsArray = filter
-  }
+    const removeThisBoard = () => {
+        window.api.removeBoard($boards.thisBoard)
+        let filter = $boards.boardsArray.filter(a => a !== $boards.thisBoard)
+        $boards.boardsArray = filter
+    }
 
-  $ : active_boards
+    $ : active_boards
 
 </script>
 
 <div class="wrapper">
-  <div class="top" on:click={toggleBoardSettings}>
-    <h2>{$boards.thisBoard}</h2><br>
-    {#if removeBoard}
-    <div in:fade class="remove">
-    <p style="color: var(--warn-color)" on:click={removeThisBoard}>Remove</p>
+    <div class="top" on:click={toggleBoardSettings}>
+        <h2>{$boards.thisBoard}</h2><br>
+        {#if removeBoard}
+            <div in:fade class="remove">
+                <p style="color: var(--warn-color)" on:click={removeThisBoard}>Remove</p>
+            </div>
+        {/if}
     </div>
-    {/if}
-  </div>
-  <div class="active_hugins">
-    <h4>Active Boards</h4>
-  </div>
-  <div class="list-wrapper">
-    {#each active_boards as board}
-       <ActiveBoard board={board} on:click={()=> dispatch('printBoard', board.board)}/>
-    {/each}
-  </div>
+    <div class="active_hugins">
+        <h4>Active Boards</h4>
+    </div>
+    <div class="list-wrapper">
+        {#each active_boards as board}
+            <ActiveBoard board={board} on:click={()=> dispatch('printBoard', board.board)}/>
+        {/each}
+    </div>
 </div>
 
 <style lang="scss">

@@ -1,114 +1,115 @@
 <script>
-  //To handle true and false, or in this case show and hide.
-  import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher, onMount, onDestroy } from "svelte";
-  import FillButton from "/src/components/buttons/FillButton.svelte";
-  import Button from "/src/components/buttons/Button.svelte";
-  import { groups, notify } from "$lib/stores/user";
-  import {get_avatar} from "$lib/utils/hugin-utils.js";
-  const dispatch = createEventDispatcher();
+    //To handle true and false, or in this case show and hide.
+    import {fade, fly} from "svelte/transition";
+    import {createEventDispatcher} from "svelte";
+    import FillButton from "/src/components/buttons/FillButton.svelte";
+    import Button from "/src/components/buttons/Button.svelte";
+    import {groups, notify} from "$lib/stores/user";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
 
-  let enableAddGroupButton = false;
-  let create_group = "Create";
-  let name = ""
-  let key = ""
-  let test
-  let avatar
+    const dispatch = createEventDispatcher();
 
-  const enter = (e) => {
-    if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
-      addGroup();
+    let enableAddGroupButton = false;
+    let create_group = "Create";
+    let name = ""
+    let key = ""
+    let test
+    let avatar
+
+    const enter = (e) => {
+        if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
+            addGroup();
+        }
     }
-  }
 
-  $: {
-    if (key.length === 64) {
-      
-      avatar = get_avatar(key)
+    $: {
+        if (key.length === 64) {
 
-      if (name.length > 0) {
-      //Enable add button
-      enableAddGroupButton = true;
-      }
+            avatar = get_avatar(key)
 
-    } else {
-      enableAddGroupButton = false;
-    }
-  }
+            if (name.length > 0) {
+                //Enable add button
+                enableAddGroupButton = true;
+            }
 
-  // Dispatch the inputted data
-  const addGroup = (g) => {
-    let error = false
-    if ($groups.groupArray.some(g => g.name === name)) {
-      $notify.errors.push({
-      message: "Group name already exists",
-      name: "Error",
-      hash: parseInt(Date.now())
-    })
-    error = true
+        } else {
+            enableAddGroupButton = false;
+        }
     }
-    if ($groups.groupArray.some(g => g.key === key)) {
-      $notify.errors.push({
-      message: "This group key already exists",
-      name: "Error",
-      hash: Date.now()
-    })
-    error = true
-    }
-    if (error) {
-      $notify.errors = $notify.errors
-      console.log($notify.errors);
-      return
-    }
+
     // Dispatch the inputted data
-    dispatch("addGroup", {
-      key: key,
-      name: name
-    });
+    const addGroup = (g) => {
+        let error = false
+        if ($groups.groupArray.some(g => g.name === name)) {
+            $notify.errors.push({
+                message: "Group name already exists",
+                name: "Error",
+                hash: parseInt(Date.now())
+            })
+            error = true
+        }
+        if ($groups.groupArray.some(g => g.key === key)) {
+            $notify.errors.push({
+                message: "This group key already exists",
+                name: "Error",
+                hash: Date.now()
+            })
+            error = true
+        }
+        if (error) {
+            $notify.errors = $notify.errors
+            console.log($notify.errors);
+            return
+        }
+        // Dispatch the inputted data
+        dispatch("addGroup", {
+            key: key,
+            name: name
+        });
 
-    $notify.success.push({
-      message: "Joined group",
-      name: name,
-      hash: Date.now(),
-      key: key,
-      type: "success",
-    })
+        $notify.success.push({
+            message: "Joined group",
+            name: name,
+            hash: Date.now(),
+            key: key,
+            type: "success",
+        })
 
-    $notify.success = $notify.success
+        $notify.success = $notify.success
 
-    key = ""
-    enableAddGroupButton = false;
-    $groups.addGroup = false;
+        key = ""
+        enableAddGroupButton = false;
+        $groups.addGroup = false;
 
-  };
+    };
 
-  const createGroup = async () => {
+    const createGroup = async () => {
 
-   key = await window.api.createGroup()
-  }
+        key = await window.api.createGroup()
+    }
 
-  $: key
-  $: avatar
+    $: key
+    $: avatar
 
 </script>
 
-<svelte:window on:keyup|preventDefault={enter} />
+<svelte:window on:keyup|preventDefault={enter}/>
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop" on:click|self>
-  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-    
-    <h3 in:fade>Name your group</h3>
-    <input placeholder="Name your group" type="text" bind:value={name}>
-      <Button disabled={false} text="Generate key" on:click={() => createGroup()}/>
-    <div class="key-wrapper" in:fade>
-    <input placeholder="Input group key" type="text" bind:value={key}>
-    {#if key.length}
-    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
-    {/if}
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
+
+        <h3 in:fade>Name your group</h3>
+        <input placeholder="Name your group" type="text" bind:value={name}>
+        <Button disabled={false} text="Generate key" on:click={() => createGroup()}/>
+        <div class="key-wrapper" in:fade>
+            <input placeholder="Input group key" type="text" bind:value={key}>
+            {#if key.length}
+                <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="">
+            {/if}
+        </div>
+        <FillButton text={create_group} disabled={!enableAddGroupButton} enabled={enableAddGroupButton}
+                    on:click={()=> addGroup()}/>
     </div>
-      <FillButton text={create_group} disabled={!enableAddGroupButton} enabled={enableAddGroupButton}
-                   on:click={()=> addGroup()} />
-  </div>
 </div>
 
 <style lang="scss">
@@ -167,7 +168,7 @@
     font-family: "Roboto Mono";
     font-size: 17px;
   }
-  
+
   .avatar {
     width: 40px;
     height: 40px;

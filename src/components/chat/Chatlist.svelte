@@ -1,140 +1,141 @@
 <script>
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
-  import { messages } from "$lib/stores/messages.js";
-  import { user } from "$lib/stores/user.js";
-  import AddCircle from "/src/components/icons/AddCircle.svelte"
-  import Contact from "/src/components/chat/Contact.svelte";
-  import { layoutState } from "$lib/stores/layout-state.js";
-  import { fade } from "svelte/transition";
-  const dispatch = createEventDispatcher();
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import {user} from "$lib/stores/user.js";
+    import AddCircle from "/src/components/icons/AddCircle.svelte"
+    import Contact from "/src/components/chat/Contact.svelte";
+    import {layoutState} from "$lib/stores/layout-state.js";
+    import {fade} from "svelte/transition";
 
-  let filterArr = [];
-  let nickname;
-  let newArray;
+    const dispatch = createEventDispatcher();
 
-  onMount(async () => {
-    newArray = await window.api.getConversations();
-    filterArr = newArray;
-    if ($user.activeChat) return;
-    sendConversation(newArray[0]);
+    let filterArr = [];
+    let nickname;
+    let newArray;
 
-  });
+    onMount(async () => {
+        newArray = await window.api.getConversations();
+        filterArr = newArray;
+        if ($user.activeChat) return;
+        sendConversation(newArray[0]);
 
-  onDestroy(()=> {
-    window.api.removeAllListeners("sent")
-    window.api.removeAllListeners("newMsg")
-    window.api.removeAllListeners("saved-addr")
-  })
-  
-  //Listen for sent message to update conversation list
-  window.api.receive("sent", data => {
-    printConversations();
-  });
-
-  //Listen for sent message to update conversation list
-  window.api.receive("newMsg", () => {
-    printConversations();
-  });
-
-  //Listen for sent message to update conversation list
-  window.api.receive("saved-addr", async (data) => {
-    await printConversations();
-    let sender = filterArr.find(a => a.chat == data.substring(0,99))
-    sendConversation(sender)
-  });
-
-  async function checkNew() {
-    
-    console.log("Checking new chatlist");
-
-    let filterNew = [];
-    newArray.forEach(function(a) {
-      filterArr.some(function(b) {
-        if (b.new && a.chat === b.chat) {
-          console.log("old new, keep new", b);
-          a.new = true;
-        }
-      });
-      filterNew.push(a);
     });
 
-    console.log("conversations filtered and set", filterNew);
+    onDestroy(() => {
+        window.api.removeAllListeners("sent")
+        window.api.removeAllListeners("newMsg")
+        window.api.removeAllListeners("saved-addr")
+    })
 
-    return filterNew;
-  }
+    //Listen for sent message to update conversation list
+    window.api.receive("sent", data => {
+        printConversations();
+    });
 
+    //Listen for sent message to update conversation list
+    window.api.receive("newMsg", () => {
+        printConversations();
+    });
 
-  //Print our conversations from DBs
-  async function printConversations() {
-    
-    console.log("Printing conversations start");
-    newArray = await window.api.getConversations();
+    //Listen for sent message to update conversation list
+    window.api.receive("saved-addr", async (data) => {
+        await printConversations();
+        let sender = filterArr.find(a => a.chat == data.substring(0, 99))
+        sendConversation(sender)
+    });
 
-    //If it is not the same message and not our active chat, add unread boolean
-    if (newArray[0].timestamp !== filterArr[0].timestamp && newArray[0].sent === 0 && $user.activeChat.chat !== newArray[0].chat) {
-      newArray[0].new = true;
+    async function checkNew() {
+
+        console.log("Checking new chatlist");
+
+        let filterNew = [];
+        newArray.forEach(function (a) {
+            filterArr.some(function (b) {
+                if (b.new && a.chat === b.chat) {
+                    console.log("old new, keep new", b);
+                    a.new = true;
+                }
+            });
+            filterNew.push(a);
+        });
+
+        console.log("conversations filtered and set", filterNew);
+
+        return filterNew;
     }
 
-    let conversations = await checkNew();
-    $user.contacts = conversations
-    console.log("conv", conversations);
 
-    console.log("Printing conversations");
-    filterArr = conversations;
-  }
+    //Print our conversations from DBs
+    async function printConversations() {
 
-  //Dispatches the clicked conversation to parent
-  function sendConversation(message) {
-    console.log('sending conversation')
-    readMessage(message);
-    let chat = message.chat;
-    let msgkey = message.key;
-    let name = message.name;
-    let active_chat = { chat: chat, key: msgkey, name: name };
-    user.update(user => {
-      return {
-        ...user,
-        activeChat: active_chat
-      };
-    });
-    dispatch("conversation", active_chat);
-    printConversations();
-  }
+        console.log("Printing conversations start");
+        newArray = await window.api.getConversations();
 
-  $: console.log('active chat now', $user.activeChat)
+        //If it is not the same message and not our active chat, add unread boolean
+        if (newArray[0].timestamp !== filterArr[0].timestamp && newArray[0].sent === 0 && $user.activeChat.chat !== newArray[0].chat) {
+            newArray[0].new = true;
+        }
 
-  function readMessage(e) {
+        let conversations = await checkNew();
+        $user.contacts = conversations
+        console.log("conv", conversations);
 
-    console.log("reading this");
+        console.log("Printing conversations");
+        filterArr = conversations;
+    }
 
-    filterArr = filterArr.map(function(a) {
+    //Dispatches the clicked conversation to parent
+    function sendConversation(message) {
+        console.log('sending conversation')
+        readMessage(message);
+        let chat = message.chat;
+        let msgkey = message.key;
+        let name = message.name;
+        let active_chat = {chat: chat, key: msgkey, name: name};
+        user.update(user => {
+            return {
+                ...user,
+                activeChat: active_chat
+            };
+        });
+        dispatch("conversation", active_chat);
+        printConversations();
+    }
 
-      if (e.new && a.chat == e.chat) {
-        console.log("reading this", a);
-        a.new = false;
-      }
-      return a;
+    $: console.log('active chat now', $user.activeChat)
 
-    });
+    function readMessage(e) {
 
-    filterArr = filterArr;
-  }
+        console.log("reading this");
 
-  $ : filterArr;
+        filterArr = filterArr.map(function (a) {
+
+            if (e.new && a.chat == e.chat) {
+                console.log("reading this", a);
+                a.new = false;
+            }
+            return a;
+
+        });
+
+        filterArr = filterArr;
+    }
+
+    $ : filterArr;
 
 </script>
 
 <div class="wrapper" class:hide={$layoutState.hideChatList === true}>
-  <div class="top" in:fade>
-    <h2>Messages</h2>
-    <AddCircle on:click={()=> dispatch('open')} />
-  </div>
-  <div class="list-wrapper">
-    {#each filterArr as message}
-      <Contact on:openRename={(e)=> dispatch('openRename')} on:rename={(a) => dispatch('rename', a)} contact={message}
-               on:thisContact={(e)=> sendConversation(e.detail.contact)} />
-    {/each}
-  </div>
+    <div class="top" in:fade>
+        <h2>Messages</h2>
+        <AddCircle on:click={()=> dispatch('open')}/>
+    </div>
+    <div class="list-wrapper">
+        {#each filterArr as message}
+            <Contact on:openRename={(e)=> dispatch('openRename')} on:rename={(a) => dispatch('rename', a)}
+                     contact={message}
+                     on:thisContact={(e)=> sendConversation(e.detail.contact)}/>
+        {/each}
+    </div>
 </div>
 
 <style lang="scss">

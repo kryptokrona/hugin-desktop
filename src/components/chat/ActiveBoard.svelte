@@ -1,51 +1,53 @@
 <script>
-import { boards } from "$lib/stores/user.js";
-import { get_board_icon } from "$lib/utils/hugin-utils.js";
-import {fade, fly} from "svelte/transition";
-export let board
-let board_post_count
-let poster_count
-let this_board = []
+    import {boards} from "$lib/stores/user.js";
+    import {get_board_icon} from "$lib/utils/hugin-utils.js";
+    import {fade} from "svelte/transition";
 
-$: if($boards.newBoards.length) {
-    this_board = $boards.newBoards.filter(a => a.board === board.board)
-    board_post_count = this_board.length
-}
+    export let board
+    let board_post_count
+    let poster_count
+    let this_board = []
 
-$: if (this_board.length) {
-    let posters = {};
-    let active_posters = this_board.filter(r => !posters[r.address] && (posters[r.address] = true));
-    poster_count = active_posters.length;
-}
+    $: if ($boards.newBoards.length) {
+        this_board = $boards.newBoards.filter(a => a.board === board.board)
+        board_post_count = this_board.length
+    }
 
-$: board_post_count
+    $: if (this_board.length) {
+        let posters = {};
+        let active_posters = this_board.filter(r => !posters[r.address] && (posters[r.address] = true));
+        poster_count = active_posters.length;
+    }
 
-$: poster_count
+    $: board_post_count
+
+    $: poster_count
 
 </script>
 
 <div class="card" in:fade="{{duration: 150}}">
     {#await get_board_icon(board.board)}
     {:then board_color}
-    <div class="brd" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
-      <button class="board-icon">{board.board.substring(0, 1).toUpperCase()}</button>
-    </div>
+        <div class="brd" style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
+            <button class="board-icon">{board.board.substring(0, 1).toUpperCase()}</button>
+        </div>
     {/await}
     <p class="board" on:click>{board.board}</p><br>
     {#if poster_count > 1}
-    <p in:fade="{{duration: 250}}">{poster_count} people are talking here</p>
+        <p in:fade="{{duration: 250}}">{poster_count} people are talking here</p>
     {:else}
-    <p in:fade="{{duration: 250}}">{poster_count} new message</p>
+        <p in:fade="{{duration: 250}}">{poster_count} new message</p>
     {/if}
-  </div>
+</div>
 
 <style lang="scss">
-.card {
+  .card {
     display: block;
     width: 100%;
     padding: 15px;
-}
-.board {
+  }
+
+  .board {
     margin: 0;
     word-break: break-word;
     display: inline-block;

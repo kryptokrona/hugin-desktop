@@ -1,41 +1,42 @@
 <script>
-  import { fade } from 'svelte/transition'
-  import { user } from "$lib/stores/user.js";
-  let open;
-  let copied;
+    import {fade} from 'svelte/transition'
+    import {user} from "$lib/stores/user.js";
 
-  function copyThis(copy) {
-    navigator.clipboard.writeText(copy);
-    buttonGlow()
-  }
+    let open;
+    let copied;
 
-  const buttonGlow = () => {
-    copied = true
-    setTimeout(() => {
-      copied = false
-      open = false
-    }, 1000);
-  };
+    function copyThis(copy) {
+        navigator.clipboard.writeText(copy);
+        buttonGlow()
+    }
+
+    const buttonGlow = () => {
+        copied = true
+        setTimeout(() => {
+            copied = false
+            open = false
+        }, 1000);
+    };
 
 </script>
 
 <div style="display: flex; flex-direction: column">
-  <div class="share" class:border_rgb={copied} class:open={open} on:click={() => open = !open}>
-    <h5>{copied ? 'Copied' : 'Copy'}</h5>
-  </div>
-  {#if open}
-    <div in:fade class="list layered-shadow">
-      <div on:click={() => copyThis($user.huginAddress.substring(0, 99))}>
-        <h5>Address</h5>
-      </div>
-      <div on:click={() => copyThis($user.huginAddress.substring(99, 163))}>
-        <h5>Key</h5>
-      </div>
-      <div on:click={() => copyThis($user.huginAddress)}>
-        <h5>Hugin</h5>
-      </div>
+    <div class="share" class:border_rgb={copied} class:open={open} on:click={() => open = !open}>
+        <h5>{copied ? 'Copied' : 'Copy'}</h5>
     </div>
-  {/if}
+    {#if open}
+        <div in:fade class="list layered-shadow">
+            <div on:click={() => copyThis($user.huginAddress.substring(0, 99))}>
+                <h5>Address</h5>
+            </div>
+            <div on:click={() => copyThis($user.huginAddress.substring(99, 163))}>
+                <h5>Key</h5>
+            </div>
+            <div on:click={() => copyThis($user.huginAddress)}>
+                <h5>Hugin</h5>
+            </div>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">

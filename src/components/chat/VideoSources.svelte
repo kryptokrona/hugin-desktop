@@ -1,46 +1,47 @@
 <script>
-  import { fade } from 'svelte/transition'
-  import { user, webRTC } from "$lib/stores/user.js";
-  let open;
-  let changed;
-  let videoDevices = $webRTC.devices.filter(a => a.kind == "videoinput")
-  $: console.log('devices', $webRTC.devices);
+    import {fade} from 'svelte/transition'
+    import {webRTC} from "$lib/stores/user.js";
 
-  function pickSource(src) {
-    console.log('pick', src)
-    console.log('change this', src.id)
-    window.api.changeSource(src.deviceId)
-    if ($webRTC.screenshare) {
-    $webRTC.screenshare = false
+    let open;
+    let changed;
+    let videoDevices = $webRTC.devices.filter(a => a.kind == "videoinput")
+    $: console.log('devices', $webRTC.devices);
+
+    function pickSource(src) {
+        console.log('pick', src)
+        console.log('change this', src.id)
+        window.api.changeSource(src.deviceId)
+        if ($webRTC.screenshare) {
+            $webRTC.screenshare = false
+        }
+        buttonGlow()
     }
-    buttonGlow()
-  }
 
-  const buttonGlow = () => {
-    changed = true
-    let timer = setTimeout(function() {
-      changed = false
-      open = false
-    }, 1000);
-  };
+    const buttonGlow = () => {
+        changed = true
+        let timer = setTimeout(function () {
+            changed = false
+            open = false
+        }, 1000);
+    };
 
-  $: if (open) window.api.checkSources()
+    $: if (open) window.api.checkSources()
 
 </script>
 
 <div style="display: flex; flex-direction: column">
-  {#if open}
-    <div in:fade class="list layered-shadow">
-      {#each videoDevices as src}
-        <div on:click={() => pickSource(src)}>
-          <h5>{src.label}</h5>
+    {#if open}
+        <div in:fade class="list layered-shadow">
+            {#each videoDevices as src}
+                <div on:click={() => pickSource(src)}>
+                    <h5>{src.label}</h5>
+                </div>
+            {/each}
         </div>
-      {/each}
+    {/if}
+    <div class="share" class:border_rgb={changed} class:open={open} on:click={() => open = !open}>
+        <h5>{$webRTC.screenshare ? 'Screen' : 'Camera'}</h5>
     </div>
-  {/if}
-  <div class="share" class:border_rgb={changed} class:open={open} on:click={() => open = !open}>
-    <h5>{$webRTC.screenshare ? 'Screen' : 'Camera'}</h5>
-  </div>
 </div>
 
 <style lang="scss">

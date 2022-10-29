@@ -1,72 +1,72 @@
 <script>
   import MyVideo from "./MyVideo.svelte";
-  import { webRTC, user } from "$lib/stores/user.js";
+  import {webRTC} from "$lib/stores/user.js";
   import PeerVideo from "$components/webrtc/PeerVideo.svelte";
-  import { videoGrid } from "$lib/stores/layout-state.js";
-  import { fade } from "svelte/transition";
+  import {videoGrid} from "$lib/stores/layout-state.js";
+  import {fade} from "svelte/transition";
   import RtcGroupMessages from "$components/webrtc/RtcGroupMessages.svelte";
   import Controls from "$components/webrtc/Controls.svelte";
 
   let drag = false;
-  let videoCalls = [];
-  let join = false;
-  let groupKey = "";
+    let videoCalls = [];
+    let join = false;
+    let groupKey = "";
 
-  const dragWindow = () => {
-    console.log("dragwindow", drag);
-    drag = true;
-  };
+    const dragWindow = () => {
+        console.log("dragwindow", drag);
+        drag = true;
+    };
 
-  const noDrag = () => {
-    drag = false;
-  };
-  const close = () => {
-    $webRTC.showVideoGrid = false;
-  };
+    const noDrag = () => {
+        drag = false;
+    };
+    const close = () => {
+        $webRTC.showVideoGrid = false;
+    };
 
-  const joinGroupChat = () => {
-    console.log("joining");
-    $webRTC.groupCall = groupKey;
-    groupKey = "";
-    join = false;
-  };
+    const joinGroupChat = () => {
+        console.log("joining");
+        $webRTC.groupCall = groupKey;
+        groupKey = "";
+        join = false;
+    };
 
-  $: groupKey;
+    $: groupKey;
 
-  $: videoCalls = $webRTC.call.filter(a => a.peerVideo === true);
+    $: videoCalls = $webRTC.call.filter(a => a.peerVideo === true);
 
-  $: console.log("video calls", videoCalls);
+    $: console.log("video calls", videoCalls);
 
 
 </script>
 
 <div in:fade out:fade class:hide={!$videoGrid.showVideoGrid} class="layout">
 
-  <!--
-  <p on:click={close}>Close</p>
-  <p on:click={()=> join = !join}>Join chat</p>
-  <div class="exit">
-    <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
-      <FillButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
+    <!--
+    <p on:click={close}>Close</p>
+    <p on:click={()=> join = !join}>Join chat</p>
+    <div class="exit">
+      <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
+        <FillButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
+      </div>
     </div>
-  </div>
-  -->
-  <div class="video-wrapper">
-    <div class="video-grid">
-      {#if $webRTC.myVideo}
-        <MyVideo />
-      {/if}
+    -->
+    <div class="video-wrapper">
+        <div class="video-grid">
+            {#if $webRTC.myVideo}
+                <MyVideo/>
+            {/if}
 
-      {#if videoCalls.length}
-        {#each videoCalls as peer (peer.chat)}
-          <PeerVideo call={peer} />
-        {/each}
-      {/if}
+            {#if videoCalls.length}
+                {#each videoCalls as peer (peer.chat)}
+                    <PeerVideo call={peer}/>
+                {/each}
+            {/if}
+        </div>
+        <Controls/>
     </div>
-    <Controls />
-  </div>
 
-  <RtcGroupMessages />
+    <RtcGroupMessages/>
 </div>
 
 

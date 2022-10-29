@@ -1,59 +1,59 @@
 <script>
   //To handle true and false, or in this case show and hide.
-  import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher, onMount } from "svelte";
-  import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import { transactions } from "$lib/stores/user.js";
+  import {fade, fly} from "svelte/transition";
+  import {createEventDispatcher} from "svelte";
+  import {get_avatar} from "$lib/utils/hugin-utils.js";
+  import {transactions} from "$lib/stores/user.js";
   import FillButton from "$components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 
-  let enableButton = false;
-  let addr = $transactions.send.to;
-  let amount;
-  let paymentId = "";
-  let avatar = get_avatar($transactions.send.to);
+    let enableButton = false;
+    let addr = $transactions.send.to;
+    let amount;
+    let paymentId = "";
+    let avatar = get_avatar($transactions.send.to);
 
-  $: {
-    if (amount > 0) {
-      enableButton = true;
+    $: {
+        if (amount > 0) {
+            enableButton = true;
 
+        }
     }
-  }
 
-  const keyDown = (e) => {
-    if (e.key === "Enter" && amount.length > 0) {
-      sendTransaction();
-    } else if (e.key === "Escape") {
-      close();
-    }
-  };
+    const keyDown = (e) => {
+        if (e.key === "Enter" && amount.length > 0) {
+            sendTransaction();
+        } else if (e.key === "Escape") {
+            close();
+        }
+    };
 
-  const close = () => {
-    $transactions.tip = false;
-    amount = 0;
-  };
+    const close = () => {
+        $transactions.tip = false;
+        amount = 0;
+    };
 
-  // Dispatch the inputted data
-  const sendTransaction = () => {
-    dispatch("send", {
-      to: addr,
-      amount: parseInt(amount) * 100000,
-      paymentId: undefined
-    });
-  };
+    // Dispatch the inputted data
+    const sendTransaction = () => {
+        dispatch("send", {
+            to: addr,
+            amount: parseInt(amount) * 100000,
+            paymentId: undefined
+        });
+    };
 
 </script>
 
-<svelte:window on:keyup|preventDefault={keyDown} />
+<svelte:window on:keyup|preventDefault={keyDown}/>
 
 <div on:click|self={close} in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
-  <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
-    <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
-    <input placeholder="Enter amount" type="text" spellcheck="false" autocomplete="false" bind:value={amount}
-           oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
-    <FillButton on:click={sendTransaction} enabled={amount > 0} disabled={!enableButton} text="Send" />
-  </div>
+    <div in:fly="{{y: 20}}" out:fly="{{y: -50}}" class="field">
+        <img class="avatar" src="data:image/png;base64,{avatar}" alt="">
+        <input placeholder="Enter amount" type="text" spellcheck="false" autocomplete="false" bind:value={amount}
+               oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
+        <FillButton on:click={sendTransaction} enabled={amount > 0} disabled={!enableButton} text="Send"/>
+    </div>
 </div>
 
 <style lang="scss">

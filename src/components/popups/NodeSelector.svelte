@@ -1,52 +1,53 @@
 <script>
-  import FillButton from "$components/buttons/FillButton.svelte";
-  import { nodelist } from "$lib/stores/nodes.js";
-  import { fade } from 'svelte/transition'
-  import { createEventDispatcher } from "svelte";
+    import FillButton from "$components/buttons/FillButton.svelte";
+    import {nodelist} from "$lib/stores/nodes.js";
+    import {fade} from 'svelte/transition'
+    import {createEventDispatcher} from "svelte";
 
-  let nodeInput = '';
-  let selectedNode;
+    let nodeInput = '';
+    let selectedNode;
 
-  const dispatch = new createEventDispatcher()
+    const dispatch = new createEventDispatcher()
 
-  const back = () => {
-    dispatch('back')
-  }
+    const back = () => {
+        dispatch('back')
+    }
 
-  const auto = () => {
-    //Handle auto select
-    nodeInput = "blocksum.org:11898";
-  }
+    const auto = () => {
+        //Handle auto select
+        nodeInput = "blocksum.org:11898";
+    }
 
-  const connectTo = () => {
-    dispatch('connect', {
-      node: nodeInput
-    })
-  }
+    const connectTo = () => {
+        dispatch('connect', {
+            node: nodeInput
+        })
+    }
 
-  function chooseNode(node, i) {
-    nodeInput = `${node.url}:${node.port}`;
-    selectedNode = i;
-  }
+    function chooseNode(node, i) {
+        nodeInput = `${node.url}:${node.port}`;
+        selectedNode = i;
+    }
 
 </script>
 
-  <div in:fade|local out:fade|local class="wrapper">
+<div in:fade|local out:fade|local class="wrapper">
     <h1>Pick a node</h1>
     <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value={nodeInput}>
     <div class="node-list">
-      {#each $nodelist as node, i}
-        <div class="node-card" class:selected={selectedNode === i} on:click={() => {chooseNode(node, i)}}>
-          <p id="node">{node.name}</p>
-        </div>
-      {/each}
+        {#each $nodelist as node, i}
+            <div class="node-card" class:selected={selectedNode === i} on:click={() => {chooseNode(node, i)}}>
+                <p id="node">{node.name}</p>
+            </div>
+        {/each}
     </div>
     <div class="button_wrapper">
-      <FillButton text="Back" disabled={false} on:click={back} />
-      <FillButton text="Auto" disabled={false} on:click={auto} />
-      <FillButton text="Connect" disabled={!(nodeInput.length > 0)} enabled={nodeInput.length > 0} on:click={connectTo} />
+        <FillButton text="Back" disabled={false} on:click={back}/>
+        <FillButton text="Auto" disabled={false} on:click={auto}/>
+        <FillButton text="Connect" disabled={!(nodeInput.length > 0)} enabled={nodeInput.length > 0}
+                    on:click={connectTo}/>
     </div>
-  </div>
+</div>
 
 <style lang="scss">
 
@@ -104,7 +105,7 @@
 
   .button_wrapper {
     display: flex;
-    gap:1rem;
+    gap: 1rem;
     width: 400px;
     justify-content: center;
   }

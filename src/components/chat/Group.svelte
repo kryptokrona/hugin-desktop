@@ -1,15 +1,15 @@
 <script>
-  import { createEventDispatcher } from "svelte";
-  import { fade } from "svelte/transition";
-  import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import { user, groups } from "$lib/stores/user.js";
+    import {createEventDispatcher} from "svelte";
+    import {fade} from "svelte/transition";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import {groups} from "$lib/stores/user.js";
 
-  export let group;
-  const dispatch = createEventDispatcher();
+    export let group;
+    const dispatch = createEventDispatcher();
 
-  const printThis = (contact) => {
-    dispatch("print")
-  };
+    const printThis = (contact) => {
+        dispatch("print")
+    };
 
 
 </script>
@@ -19,18 +19,19 @@
      class:active={$groups.thisGroup.key === group.key}
      on:click={(e) => printThis(group)}>
 
-  {#if group.new}
-    <div class:unread={group.new}></div>
-  {/if}
+    {#if group.new}
+        <div class:unread={group.new}></div>
+    {/if}
 
-  <img class="avatar"
-       src="data:image/png;base64,{get_avatar(group.key)}" alt="">
-  <div class="content">
-    <h4>{group.name}</h4>
-    <div class="text">
-    <p class="from">{group.nick}:</p><p>{group.msg}</p>
-  </div>
-  </div>
+    <img class="avatar"
+         src="data:image/png;base64,{get_avatar(group.key)}" alt="">
+    <div class="content">
+        <h4>{group.name}</h4>
+        <div class="text">
+            <p class="from">{group.nick}:</p>
+            <p>{group.msg}</p>
+        </div>
+    </div>
 
 </div>
 
@@ -113,6 +114,6 @@
   .text {
     display: flex;
     gap: 4px;
-    
+
   }
 </style>

@@ -1,4 +1,4 @@
-import { expand_sdp_offer, expand_sdp_answer } from "./sdp.js";
+import {expand_sdp_answer, expand_sdp_offer} from "./sdp.js";
 import Peer from 'simple-peer'
 
 
@@ -7,7 +7,7 @@ let awaiting_callback;
 let active_calls = []
 let callback;
 
-function parse_sdp (sdp) {
+function parse_sdp(sdp) {
 
     let ice_ufrag = '';
     let ice_pwd = '';
@@ -21,7 +21,7 @@ function parse_sdp (sdp) {
 
     let lines = sdp.sdp.split('\n')
         .map(l => l.trim()); // split and remove trailing CR
-    lines.forEach(function(line) {
+    lines.forEach(function (line) {
 
         if (line.includes('a=fingerprint:') && fingerprint == '') {
 
@@ -51,7 +51,6 @@ function parse_sdp (sdp) {
             type = candidate[7]
 
 
-
             let hexa = ip.split('.').map(function (h) {
                 return h.toString(16);
             });
@@ -70,7 +69,7 @@ function parse_sdp (sdp) {
 
             }
 
-            let indexedport = port+ips.indexOf(ip_hex).toString();
+            let indexedport = port + ips.indexOf(ip_hex).toString();
 
             ports = ports.concat(en.encode(parseInt(indexedport)));
 
@@ -94,7 +93,6 @@ function parse_sdp (sdp) {
         }
 
 
-
     })
 
     return ice_ufrag + "," + ice_pwd + "," + fingerprint + "," + ips.join('&') + "," + ports.join('&') + "," + ssrcs.join('&') + "," + msid;
@@ -102,9 +100,9 @@ function parse_sdp (sdp) {
 }
 
 
-export function startCall (contact, audio, video, screenshare=false) {
+export function startCall(contact, audio, video, screenshare = false) {
     // spilt input to addr and pubkey
-    let contact_address = contact.substring(0,99);
+    let contact_address = contact.substring(0, 99);
     console.log('contact address', contact_address)
 
     console.log('Starting call..');
@@ -126,9 +124,9 @@ export function startCall (contact, audio, video, screenshare=false) {
 
 }
 
-export function parseCall (msg, sender=false, emitCall=true) {
+export function parseCall(msg, sender = false, emitCall = true) {
 
-    switch (msg.substring(0,1)) {
+    switch (msg.substring(0, 1)) {
         case "Δ":
         // Fall through
         case "Λ":
@@ -142,7 +140,7 @@ export function parseCall (msg, sender=false, emitCall=true) {
 
                 console.log('call incoming')
             }
-            return `${msg.substring(0,1) == "Δ" ? "Video" : "Audio"} call started`;
+            return `${msg.substring(0, 1) == "Δ" ? "Video" : "Audio"} call started`;
             break;
         case "δ":
         // Fall through
@@ -164,7 +162,7 @@ export function parseCall (msg, sender=false, emitCall=true) {
 
 }
 
-async function gotMedia (stream, screen_stream=false, contact) {
+async function gotMedia(stream, screen_stream = false, contact) {
     if (video) {
         // var myvideo = document.getElementById('myvideo')
 
@@ -281,7 +279,7 @@ async function gotMedia (stream, screen_stream=false, contact) {
         first = false;
 
     })
-        //Awaits msg answer with sdp from contact
+    //Awaits msg answer with sdp from contact
     window.api.on('got-callback', async (data, sender) => {
 
         peer1.signal(data);
@@ -291,9 +289,9 @@ async function gotMedia (stream, screen_stream=false, contact) {
 
 }
 
-export function answerCall (msg, contact_address) {
+export function answerCall(msg, contact_address) {
 
-    let video = msg.substring(0,1) == 'Δ';
+    let video = msg.substring(0, 1) == 'Δ';
     // $('#messages_contacts').addClass('in-call');
     // $('#settings').addClass('in-call');
 
@@ -301,9 +299,10 @@ export function answerCall (msg, contact_address) {
     navigator.mediaDevices.getUserMedia({
         video: video,
         audio: true
-    }).then(gotMedia).catch(() => {})
+    }).then(gotMedia).catch(() => {
+    })
 
-    function gotMedia (stream) {
+    function gotMedia(stream) {
         let extra_class = '';
         if (video) {
             extra_class = ' video'
@@ -321,7 +320,7 @@ export function answerCall (msg, contact_address) {
 
         for (codec in video_codecs.codecs) {
             let this_codec = video_codecs.codecs[codec];
-            if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0,5) == "level") {
+            if (this_codec.mimeType == "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) == "level") {
                 custom_codecs.push(this_codec);
             }
 
@@ -351,7 +350,6 @@ export function answerCall (msg, contact_address) {
         })
 
         let first = true;
-
 
 
         peer2.on('signal', data => {
@@ -402,9 +400,9 @@ export function answerCall (msg, contact_address) {
 
 }
 
-export function endCall (peer, stream) {
+export function endCall(peer, stream) {
     peer.destroy();
-    stream.getTracks().forEach(function(track) {
+    stream.getTracks().forEach(function (track) {
         track.stop();
     });
 

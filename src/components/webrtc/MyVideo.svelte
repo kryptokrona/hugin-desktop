@@ -1,98 +1,92 @@
 <script>
-  //To handle true and false, or in this case show and hide.
-  import { fade } from "svelte/transition";
-  import { onDestroy, onMount } from "svelte";
-  import { user, webRTC } from "$lib/stores/user.js";
-  import { draggable } from "@neodrag/svelte";
-  import { createEventDispatcher } from "svelte";
-  import Minus from "/src/components/icons/Minus.svelte";
-  import Plus from "/src/components/icons/Plus.svelte";
-  import Screen from "/src/components/icons/Screenshare.svelte";
-  import VideoSources from "/src/components/chat/VideoSources.svelte";
+    //To handle true and false, or in this case show and hide.
+    import {fade} from "svelte/transition";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import {webRTC} from "$lib/stores/user.js";
 
-  let myVideo = document.getElementById("myVideo");
-  let video = false;
-  let hover = false;
-  let chatWindow = true;
-  let window_max = false;
-  let window_medium = false;
+    let myVideo = document.getElementById("myVideo");
+    let video = false;
+    let hover = false;
+    let chatWindow = true;
+    let window_max = false;
+    let window_medium = false;
 
-  export let call;
+    export let call;
 
-  const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
-  // When incoming call and this get mounted we play the ringtone
-  onMount(async () => {
+    // When incoming call and this get mounted we play the ringtone
+    onMount(async () => {
 
 
-    playVideo();
+        playVideo();
 
-  });
+    });
 
-  onDestroy(() => {
-  });
+    onDestroy(() => {
+    });
 
-  //Hover functions
-  function enter() {
-    console.log("enter");
-    hover = true;
-  }
-
-  function leave() {
-    hover = false;
-  }
-
-
-  //When a user clicks answer
-  const pauseVideo = () => {
-    console.log("pausevideo");
-    myVideo.pause();
-
-  };
-
-  const playVideo = () => {
-    myVideo.srcObject = $webRTC.myStream;
-    console.log("play video");
-    myVideo.play();
-  };
-
-  //As a precaution we pause the ringtone again when destroyed
-  onDestroy(() => {
-  });
-
-  $: if ($webRTC.screen_stream) {
-    playVideo();
-  } else if ($webRTC.video) {
-    playVideo();
-  }
-
-  let source = true;
-
-  const switchStream = async () => {
-    if (!$webRTC.screen_stream) {
-      await window.api.shareScreen(false);
-    } else {
-      window.api.setCamera();
+    //Hover functions
+    function enter() {
+        console.log("enter");
+        hover = true;
     }
-  };
 
-  const resize = (size) => {
-    switch (size) {
-      case "min":
-        window_medium = false;
-        break;
-      case "medium":
-        window_medium = true;
+    function leave() {
+        hover = false;
     }
-  };
 
-  $: window_medium;
+
+    //When a user clicks answer
+    const pauseVideo = () => {
+        console.log("pausevideo");
+        myVideo.pause();
+
+    };
+
+    const playVideo = () => {
+        myVideo.srcObject = $webRTC.myStream;
+        console.log("play video");
+        myVideo.play();
+    };
+
+    //As a precaution we pause the ringtone again when destroyed
+    onDestroy(() => {
+    });
+
+    $: if ($webRTC.screen_stream) {
+        playVideo();
+    } else if ($webRTC.video) {
+        playVideo();
+    }
+
+    let source = true;
+
+    const switchStream = async () => {
+        if (!$webRTC.screen_stream) {
+            await window.api.shareScreen(false);
+        } else {
+            window.api.setCamera();
+        }
+    };
+
+    const resize = (size) => {
+        switch (size) {
+            case "min":
+                window_medium = false;
+                break;
+            case "medium":
+                window_medium = true;
+        }
+    };
+
+    $: window_medium;
 </script>
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
 <div class="card">
-  <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
+    <video on:click={playVideo} muted in:fade id="myVideo" playsinline autoplay bind:this={myVideo}></video>
 </div>
 
 <style lang="scss">

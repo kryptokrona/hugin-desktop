@@ -1,65 +1,61 @@
 <script>
-  //To handle true and false, or in this case show and hide.
-  import { fade } from "svelte/transition";
-  import { onDestroy, onMount } from "svelte";
-  import { createEventDispatcher } from "svelte";
-  import { draggable } from "@neodrag/svelte";
-  import Minus from "/src/components/icons/Minus.svelte";
-  import Plus from "/src/components/icons/Plus.svelte";
-  import { audioLevel } from "$lib/stores/user.js";
+    //To handle true and false, or in this case show and hide.
+    import {fade} from "svelte/transition";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import {audioLevel} from "$lib/stores/user.js";
 
-  let peerVideo = document.getElementById("peerVideo");
-  let peerStream;
-  let window_max = false;
-  let window_medium = false;
-  export let call;
+    let peerVideo = document.getElementById("peerVideo");
+    let peerStream;
+    let window_max = false;
+    let window_medium = false;
+    export let call;
 
-  const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
 
-  // When incoming call and this get mounted we play the ringtone
-  onMount(() => {
-    console.log("peerVideo call", call);
-    console.log("before", call.peerStream);
-    peerVideo.srcObject = call.peerStream;
-    console.log("peerVideo call", call);
-    playVideo();
+    // When incoming call and this get mounted we play the ringtone
+    onMount(() => {
+        console.log("peerVideo call", call);
+        console.log("before", call.peerStream);
+        peerVideo.srcObject = call.peerStream;
+        console.log("peerVideo call", call);
+        playVideo();
 
-  });
+    });
 
-  //When a user clicks answer
-  const pauseVideo = () => {
-    console.log("pausevideo");
-    peerVideo.pause();
+    //When a user clicks answer
+    const pauseVideo = () => {
+        console.log("pausevideo");
+        peerVideo.pause();
 
-  };
+    };
 
-  const playVideo = () => {
-    console.log("play video");
-    peerVideo.play();
-  };
+    const playVideo = () => {
+        console.log("play video");
+        peerVideo.play();
+    };
 
-  //As a precaution we pause the ringtone again when destroyed
-  onDestroy(() => {
-    peerVideo.pause();
-  });
-  
-  let isTalking = false
+    //As a precaution we pause the ringtone again when destroyed
+    onDestroy(() => {
+        peerVideo.pause();
+    });
 
-  $: if ($audioLevel.call.some(a => a.activeVoice == true && a.chat === call.chat)) {
-    isTalking = true
-    console.log('Is talking', call.chat)
-  } else {
-    isTalking = false
-  }
+    let isTalking = false
 
-  $: window_medium;
-  $: window_max;
+    $: if ($audioLevel.call.some(a => a.activeVoice == true && a.chat === call.chat)) {
+        isTalking = true
+        console.log('Is talking', call.chat)
+    } else {
+        isTalking = false
+    }
+
+    $: window_medium;
+    $: window_max;
 
 </script>
 
 <div class="card" class:talking={isTalking}>
-  <video in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
+    <video in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video>
 </div>
 
 <style lang="scss">
@@ -97,9 +93,11 @@
   .options {
     display: flex;
   }
+
   .talking {
     border: 1px solid var(--success-color);
   }
+
   .answer {
     display: flex;
     justify-content: center;

@@ -1,11 +1,9 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import {fade, fly} from "svelte/transition";
-    import {createEventDispatcher, onMount, onDestroy} from "svelte";
+    import {createEventDispatcher} from "svelte";
     import FillButton from "/src/components/buttons/FillButton.svelte";
     import {user} from "$lib/stores/user.js";
-    import {get_avatar} from "$lib/utils/hugin-utils.js";
-    import Contact from "./Contact.svelte";
 
     const dispatch = createEventDispatcher()
 
@@ -34,15 +32,15 @@
 
     // Dispatch the inputted data
     const renameContact = (board) => {
-      // Dispatch the inputted data
-          dispatch('rename', {
-              text: text,
-          })
+        // Dispatch the inputted data
+        dispatch('rename', {
+            text: text,
+        })
 
-          user.update(a => {
+        user.update(a => {
             return {
-            ...a,
-            rename: false
+                ...a,
+                rename: false
             }
         })
     }
@@ -50,20 +48,20 @@
 
 </script>
 
-<svelte:window on:keyup|preventDefault={enter} />
+<svelte:window on:keyup|preventDefault={enter}/>
 
 <div on:click|self in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
- 
+
     <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
-      <input placeholder="Rename {$user.rename.name}" type="text" spellcheck="false" autocomplete="false"
-             bind:value={text}>
-      <FillButton text={name} disabled={!enableAddButton} enabled={enableAddButton}
-      on:click={()=> renameContact(text)} />
+        <input placeholder="Rename {$user.rename.name}" type="text" spellcheck="false" autocomplete="false"
+               bind:value={text}>
+        <FillButton text={name} disabled={!enableAddButton} enabled={enableAddButton}
+                    on:click={()=> renameContact(text)}/>
     </div>
 </div>
 
 <style lang="scss">
-    
+
   .field {
     display: flex;
     justify-content: space-between;

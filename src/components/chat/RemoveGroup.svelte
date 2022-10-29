@@ -1,30 +1,31 @@
 <script>
-  //To handle true and false, or in this case show and hide.
-  import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher, onMount, onDestroy } from "svelte";
-  import Button from "/src/components/buttons/Button.svelte";
-  import { groups, notify } from "$lib/stores/user";
-  import {get_avatar} from "$lib/utils/hugin-utils.js";
-  const dispatch = createEventDispatcher();
+    //To handle true and false, or in this case show and hide.
+    import {fade, fly} from "svelte/transition";
+    import {createEventDispatcher} from "svelte";
+    import Button from "/src/components/buttons/Button.svelte";
+    import {groups} from "$lib/stores/user";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
 
-  let enableAddGroupButton = false;
-  let create_group = "Create";
-  let name = ""
-  let key = ""
-  let avatar = get_avatar($groups.thisGroup.key)
+    const dispatch = createEventDispatcher();
 
-  const remove = async () => {
-    console.log('remove')
-    dispatch('remove')
-  }
+    let enableAddGroupButton = false;
+    let create_group = "Create";
+    let name = ""
+    let key = ""
+    let avatar = get_avatar($groups.thisGroup.key)
+
+    const remove = async () => {
+        console.log('remove')
+        dispatch('remove')
+    }
 
 </script>
 
 <div in:fade="{{duration: 100}}" out:fade="{{duration: 80}}" class="backdrop" on:click|self>
-  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
-    <h3 in:fade>Remove group?</h3>
-     <Button disabled={false} text="Remove" on:click={remove}/>
-  </div>
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="card">
+        <h3 in:fade>Remove group?</h3>
+        <Button disabled={false} text="Remove" on:click={remove}/>
+    </div>
 </div>
 
 <style lang="scss">
@@ -82,7 +83,7 @@
     font-family: "Roboto Mono";
     font-size: 17px;
   }
-  
+
   .avatar {
     width: 40px;
     height: 40px;

@@ -17,19 +17,19 @@
 
     //When a user clicks answer
     const pauseVideo = () => {
-      console.log('pausevideo');
-      peerAudio.pause()
+        console.log('pausevideo');
+        peerAudio.pause()
 
     }
 
     const playAudio = () => {
-      console.log('play video');
-      peerAudio.play()
+        console.log('play video');
+        peerAudio.play()
     }
 
     //As a precaution we pause the ringtone again when destroyed
     onDestroy(() => {
-      peerAudio.pause()
+        peerAudio.pause()
     })
 
 </script>

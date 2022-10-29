@@ -1,34 +1,34 @@
 <script>
-  import { createEventDispatcher } from "svelte";
-  import { fade } from "svelte/transition";
-  import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import { user, webRTC } from "$lib/stores/user.js";
+    import {createEventDispatcher} from "svelte";
+    import {fade} from "svelte/transition";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import {user, webRTC} from "$lib/stores/user.js";
 
-  export let contact;
-  let thisCall = false;
+    export let contact;
+    let thisCall = false;
 
-  $: if ($webRTC.active) {
-    thisCall = $webRTC.call.some(a => a.chat === contact.chat);
-  } else {
-    thisCall = false;
-  }
-  const dispatch = createEventDispatcher();
+    $: if ($webRTC.active) {
+        thisCall = $webRTC.call.some(a => a.chat === contact.chat);
+    } else {
+        thisCall = false;
+    }
+    const dispatch = createEventDispatcher();
 
-  const printThis = (contact) => {
-    dispatch("thisContact", {
-      contact: contact
-    });
-  };
+    const printThis = (contact) => {
+        dispatch("thisContact", {
+            contact: contact
+        });
+    };
 
-  const rename = () => {
-    user.update(a => {
-      return {
-        ...a,
-        rename: contact
-      };
-    });
-    dispatch("openRename");
-  };
+    const rename = () => {
+        user.update(a => {
+            return {
+                ...a,
+                rename: contact
+            };
+        });
+        dispatch("openRename");
+    };
 
 
 </script>
@@ -39,16 +39,16 @@
      class:active={contact.chat === $user.activeChat.chat}
      on:click={() => printThis(contact)}>
 
-  {#if contact.new}
-    <div class:unread={contact.new}></div>
-  {/if}
+    {#if contact.new}
+        <div class:unread={contact.new}></div>
+    {/if}
 
-  <img class="avatar" on:click={() => rename(contact)}
-       src="data:image/png;base64,{get_avatar(contact.chat)}" alt="">
-  <div class="content">
-    <h4>{contact.name}</h4>
-    <p>{contact.msg}</p>
-  </div>
+    <img class="avatar" on:click={() => rename(contact)}
+         src="data:image/png;base64,{get_avatar(contact.chat)}" alt="">
+    <div class="content">
+        <h4>{contact.name}</h4>
+        <p>{contact.msg}</p>
+    </div>
 
 </div>
 

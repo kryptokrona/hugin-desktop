@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store";
+import {derived, writable} from "svelte/store";
 import {get_avatar} from "$lib/utils/hugin-utils.js";
 
 //Default values
@@ -25,7 +25,12 @@ export const boards = writable({
 export const groups = writable({
     addGroup: false,
     replyTo: {reply: false},
-    thisGroup: {name: "Private groups", chat: "verysecretkeyinchat", key: "verysecretkeyinchat", msg: "Click the add icon"},
+    thisGroup: {
+        name: "Private groups",
+        chat: "verysecretkeyinchat",
+        key: "verysecretkeyinchat",
+        msg: "Click the add icon"
+    },
     groupArray: [],
 })
 
@@ -74,12 +79,12 @@ export const notify = writable({
 
 
 export const transactions = writable({
-   tip: false,
-   send: false,
+    tip: false,
+    send: false,
 })
 
 export const userAvatar = derived(user, $user => {
     if ($user.huginAddress.length > 15) {
-        return get_avatar($user.huginAddress.substring(0,99))
+        return get_avatar($user.huginAddress.substring(0, 99))
     }
 })

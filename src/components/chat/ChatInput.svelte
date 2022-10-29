@@ -1,68 +1,69 @@
 <script>
-  import { createEventDispatcher } from "svelte";
-  import SendIcon from "/src/components/icons/SendIcon.svelte";
-  import EmojiSelector from "svelte-emoji-selector";
-  import { webRTC, boards } from "$lib/stores/user.js";
-  import { fade } from "svelte/transition";
-  import { page } from "$app/stores";
-  import { user } from "$lib/stores/user";
+    import {createEventDispatcher} from "svelte";
+    import SendIcon from "/src/components/icons/SendIcon.svelte";
+    import {boards, webRTC} from "$lib/stores/user.js";
+    import {page} from "$app/stores";
+    import {user} from "$lib/stores/user";
 
-  let off_chain;
-  const dispatch = createEventDispatcher();
-  export let rtc = false
+    let off_chain;
+    const dispatch = createEventDispatcher();
+    export let rtc = false
 
-  const enter = (e) => {
-    if (messageInput && e.keyCode === 13) {
-      sendMsg();
+    const enter = (e) => {
+        if (messageInput && e.keyCode === 13) {
+            sendMsg();
+        }
     }
-  }
 
-  //This handles the emojis, lets fork the repo and make a darker theme.
-  function onEmoji(event) {
-    console.log("event", event);
-    if (messageInput) {
-      messageInput += event.detail;
-    } else messageInput = event.detail;
-  }
-
-  //Input data to dispatch
-  let messageInput;
-
-  //To handle button disabled enabled
-  let enableSend = false;
-
-  //Dispatches the input data to parent and resets input.
-  const sendMsg = () => {
-    dispatch("message", {
-      text: messageInput,
-      offChain: off_chain
-    });
-    //Reset input field
-    messageInput = "";
-  };
-
-  //Checks if input is empty
-  $: {
-    enableSend = !!messageInput;
-  }
-
-  $: console.log('offchain', off_chain)
-
-  $: {
-    if ($user.activeChat) {
-    off_chain = $webRTC.call.some(a => a.chat == $user.activeChat.chat && a.connected);
-    console.log("offchain", off_chain);
+    //This handles the emojis, lets fork the repo and make a darker theme.
+    function onEmoji(event) {
+        console.log("event", event);
+        if (messageInput) {
+            messageInput += event.detail;
+        } else messageInput = event.detail;
     }
-  }
+
+    //Input data to dispatch
+    let messageInput;
+
+    //To handle button disabled enabled
+    let enableSend = false;
+
+    //Dispatches the input data to parent and resets input.
+    const sendMsg = () => {
+        dispatch("message", {
+            text: messageInput,
+            offChain: off_chain
+        });
+        //Reset input field
+        messageInput = "";
+    };
+
+    //Checks if input is empty
+    $: {
+        enableSend = !!messageInput;
+    }
+
+    $: console.log('offchain', off_chain)
+
+    $: {
+        if ($user.activeChat) {
+            off_chain = $webRTC.call.some(a => a.chat == $user.activeChat.chat && a.connected);
+            console.log("offchain", off_chain);
+        }
+    }
 </script>
 
-<svelte:window on:keyup|preventDefault={enter} />
+<svelte:window on:keyup|preventDefault={enter}/>
 
-<div class="wrapper" class:rtc={rtc} class:border-bottom={$page.url.pathname === '/boards'} class:hide={$boards.thisBoard == "Home" && $page.url.pathname === '/boards'}
+<div class="wrapper" class:rtc={rtc} class:border-bottom={$page.url.pathname === '/boards'}
+     class:hide={$boards.thisBoard == "Home" && $page.url.pathname === '/boards'}
      class:border-top={$page.url.pathname !== '/boards'}>
-  <input type="text" placeholder="Message.." bind:value={messageInput}>
-  <!--<EmojiSelector on:emoji={onEmoji} />-->
-  <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}><SendIcon /></button>
+    <input type="text" placeholder="Message.." bind:value={messageInput}>
+    <!--<EmojiSelector on:emoji={onEmoji} />-->
+    <button disabled={!enableSend} class:enableSend={enableSend} on:click={sendMsg}>
+        <SendIcon/>
+    </button>
 </div>
 
 <style lang="scss">

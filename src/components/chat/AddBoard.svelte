@@ -1,55 +1,53 @@
 <script>
   //To handle true and false, or in this case show and hide.
-  import { fade, fly } from "svelte/transition";
-  import { createEventDispatcher } from "svelte";
+  import {fade, fly} from "svelte/transition";
+  import {createEventDispatcher} from "svelte";
   import FillButton from "/src/components/buttons/FillButton.svelte";
 
   const dispatch = createEventDispatcher();
 
-  let enableAddBoardButton = false;
-  let text = "";
-  let board;
-  let add_board = "Add";
+    let enableAddBoardButton = false;
+    let text = "";
+    let board;
+    let add_board = "Add";
 
-  $: {
-    if (text.length > 0) {
-      //Enable add button
-      enableAddBoardButton = true;
+    $: {
+        if (text.length > 0) {
+            //Enable add button
+            enableAddBoardButton = true;
 
-    } else {
-      enableAddBoardButton = false;
+        } else {
+            enableAddBoardButton = false;
+        }
     }
-  }
 
-  const enter = (e) => {
-    if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
-      addBoard(text);
+    const enter = (e) => {
+        if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
+            addBoard(text);
+        }
     }
-  }
 
-  // Dispatch the inputted data
-  const addBoard = (board) => {
     // Dispatch the inputted data
-    dispatch("addBoard", {
-      board: board
-    });
-    enableAddBoardButton = false;
-  };
-
- 
+    const addBoard = (board) => {
+        // Dispatch the inputted data
+        dispatch("addBoard", {
+            board: board
+        });
+        enableAddBoardButton = false;
+    };
 
 
 </script>
 
-<svelte:window on:keyup|preventDefault={enter} />
+<svelte:window on:keyup|preventDefault={enter}/>
 
 <div on:click|self in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
-  <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
-    <input placeholder="Join or create a new public board" type="text" spellcheck="false" autocomplete="false"
-           bind:value={text}>
-    <FillButton text={add_board} disabled={!enableAddBoardButton} enabled={enableAddBoardButton}
-    on:click={()=> addBoard(text)} />
-  </div>
+    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
+        <input placeholder="Join or create a new public board" type="text" spellcheck="false" autocomplete="false"
+               bind:value={text}>
+        <FillButton text={add_board} disabled={!enableAddBoardButton} enabled={enableAddBoardButton}
+                    on:click={()=> addBoard(text)}/>
+    </div>
 </div>
 
 
@@ -105,6 +103,7 @@
     border: none;
     font-size: 1.1rem;
     outline: none;
+
     &:focus {
       outline: none;
     }

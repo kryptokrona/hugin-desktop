@@ -1,199 +1,203 @@
 <script>
-  import { createEventDispatcher, onMount, onDestroy } from "svelte";
-  import { fade } from "svelte/transition";
-  import { groupMessages } from "$lib/stores/groupmsgs.js";
-  import { groups } from "$lib/stores/user.js";
-  import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import Exit from "/src/components/icons/Exit.svelte";
-  import Group from "/src/components/chat/Group.svelte";
-  import Plus from "/src/components/icons/Plus.svelte";
-  import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
-  import ListButton from "/src/components/icons/ListButton.svelte";
-  import { layoutState } from "$lib/stores/layout-state.js";
-  import { sleep } from "$lib/utils/utils.js";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
+    import {fade} from "svelte/transition";
+    import {groupMessages} from "$lib/stores/groupmsgs.js";
+    import {groups} from "$lib/stores/user.js";
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
+    import Group from "/src/components/chat/Group.svelte";
+    import Plus from "/src/components/icons/Plus.svelte";
+    import RemoveGroup from "/src/components/chat/RemoveGroup.svelte";
+    import {layoutState} from "$lib/stores/layout-state.js";
+    import {sleep} from "$lib/utils/utils.js";
 
-  let new_message_sound = new Audio("/audio/message.mp3");
-  const dispatch = createEventDispatcher();
-  let activeHugins = [];
-  let contacts = [];
-  let msgkey;
-  let newArray = []
-  let groupArray = []
+    let new_message_sound = new Audio("/audio/message.mp3");
+    const dispatch = createEventDispatcher();
+    let activeHugins = [];
+    let contacts = [];
+    let msgkey;
+    let newArray = []
+    let groupArray = []
 
-  //Get message updates and trigger filter
-  let group = ""
-  let groupName
-  onMount(()=> {
-    printGroups()
-  })
-  $: if ($groups.thisGroup.key) {
-    group = $groups.thisGroup.key
-  }
+    //Get message updates and trigger filter
+    let group = ""
+    let groupName
+    onMount(() => {
+        printGroups()
+    })
+    $: if ($groups.thisGroup.key) {
+        group = $groups.thisGroup.key
+    }
 
-  onDestroy(()=> {
-    window.api.removeAllListeners("groupMsg")
-  })
-  
-  //Listen for sent message to update conversation list
-  window.api.receive("groupMsg", () => {
-    filterActiveHugins($groupMessages)
-    printGroups()
-  });
+    onDestroy(() => {
+        window.api.removeAllListeners("groupMsg")
+    })
 
-  const sendPM = (user) => {
-    console.log("User", user);
-    console.log
-  };
-
-  const printGroup = async (grp) => {
-    dispatch("printGroup", grp)
-    await sleep(200)
-    readMessage(grp)
-  };
-
-
-  //Function to filer array of active users on board.
-  function filterActiveHugins(arr) {
-    let uniq = {};
-    activeHugins = arr.filter(obj => !uniq[obj.address] && (uniq[obj.address] = true));
-  }
-
-  $: activeHugins;
-  $: groupArray = $groups.groupArray
-
-  //Print our conversations from DBs
-  async function printGroups() {
-
-    newArray = await window.api.getGroups();
-    if (groupArray.length) {
-      if (newArray[0].timestamp != groupArray[0].timestamp && newArray[0].sent == 0 && $groups.thisGroup.key != newArray[0].chat) {
-
-        newArray[0].new = true;
-
-        new_message_sound.play();
-        }
-      }
-    
-    let my_groups = await checkNew();
-
-    console.log("conv", my_groups);
-
-    groups.update(current => {
-      return {
-        ...current,
-        groupArray: my_groups
-      };
+    //Listen for sent message to update conversation list
+    window.api.receive("groupMsg", () => {
+        filterActiveHugins($groupMessages)
+        printGroups()
     });
 
-  filterActiveHugins($groupMessages)
-  console.log("Printing conversations", newArray);
-}
+    const sendPM = (user) => {
+        console.log("User", user);
+        console.log
+    };
 
-const removeGroup = async () => {
-  console.log($groups.thisGroup.key)
-  window.api.removeGroup($groups.thisGroup.key)
-  let filter = $groups.groupArray.filter(a => a.key !== $groups.thisGroup.key)
-  $groups.groupArray = filter
-  console.log('array', $groups.groupArray)
-  await printGroups()
-  if ($groups.groupArray.length) {
+    const printGroup = async (grp) => {
+        dispatch("printGroup", grp)
+        await sleep(200)
+        readMessage(grp)
+    };
 
-    $groups.thisGroup = $groups.groupArray[0]
-  } else {
-    $groups.groupArray = []
-    let nogroup = {nick: "No contacts", chat: "verysecretkeyinchat", key: "verysecretkeyinchat", msg: "Click the add icon", name: "Private groups"}
-    $groups.groupArray.push(nogroup)
-    $groups.thisGroup = nogroup
-  }
-  $groups.removeGroup = false
-  console.log('want to print', $groups.thisGroup)
-  dispatch("removeGroup")
-}
 
-function readMessage(e) {
+    //Function to filer array of active users on board.
+    function filterActiveHugins(arr) {
+        let uniq = {};
+        activeHugins = arr.filter(obj => !uniq[obj.address] && (uniq[obj.address] = true));
+    }
 
-console.log("reading this");
+    $: activeHugins;
+    $: groupArray = $groups.groupArray
 
-groupArray = groupArray.map(function(a) {
+    //Print our conversations from DBs
+    async function printGroups() {
 
-  if (e.new && a.key == e.key) {
-    console.log("reading this", a);
-    a.new = false;
-  }
-  return a;
+        newArray = await window.api.getGroups();
+        if (groupArray.length) {
+            if (newArray[0].timestamp != groupArray[0].timestamp && newArray[0].sent == 0 && $groups.thisGroup.key != newArray[0].chat) {
 
-});
+                newArray[0].new = true;
 
-groupArray = groupArray;
-filterActiveHugins($groupMessages)
-}
-
-$ : groupArray;
-
-async function checkNew() {
-    let filterNew = [];
-    newArray.forEach(function(a) {
-
-      groupArray.some(function(b) {
-        console.log("checking?");
-        if (b.new && a.chat === b.chat) {
-          console.log("old new, keep new", b);
-          a.new = true;
+                new_message_sound.play();
+            }
         }
-      });
-      filterNew.push(a);
-      console.log("pushin");
-    });
 
-    return filterNew;
-  }
+        let my_groups = await checkNew();
 
-  function copyThis(copy) {
-    navigator.clipboard.writeText(copy);
-  }
+        console.log("conv", my_groups);
 
-  
-  const addGroup = () => {
-    $groups.addGroup = true
-  }
+        groups.update(current => {
+            return {
+                ...current,
+                groupArray: my_groups
+            };
+        });
 
-  $: groupName = $groups.thisGroup.name
+        filterActiveHugins($groupMessages)
+        console.log("Printing conversations", newArray);
+    }
+
+    const removeGroup = async () => {
+        console.log($groups.thisGroup.key)
+        window.api.removeGroup($groups.thisGroup.key)
+        let filter = $groups.groupArray.filter(a => a.key !== $groups.thisGroup.key)
+        $groups.groupArray = filter
+        console.log('array', $groups.groupArray)
+        await printGroups()
+        if ($groups.groupArray.length) {
+
+            $groups.thisGroup = $groups.groupArray[0]
+        } else {
+            $groups.groupArray = []
+            let nogroup = {
+                nick: "No contacts",
+                chat: "verysecretkeyinchat",
+                key: "verysecretkeyinchat",
+                msg: "Click the add icon",
+                name: "Private groups"
+            }
+            $groups.groupArray.push(nogroup)
+            $groups.thisGroup = nogroup
+        }
+        $groups.removeGroup = false
+        console.log('want to print', $groups.thisGroup)
+        dispatch("removeGroup")
+    }
+
+    function readMessage(e) {
+
+        console.log("reading this");
+
+        groupArray = groupArray.map(function (a) {
+
+            if (e.new && a.key == e.key) {
+                console.log("reading this", a);
+                a.new = false;
+            }
+            return a;
+
+        });
+
+        groupArray = groupArray;
+        filterActiveHugins($groupMessages)
+    }
+
+    $ : groupArray;
+
+    async function checkNew() {
+        let filterNew = [];
+        newArray.forEach(function (a) {
+
+            groupArray.some(function (b) {
+                console.log("checking?");
+                if (b.new && a.chat === b.chat) {
+                    console.log("old new, keep new", b);
+                    a.new = true;
+                }
+            });
+            filterNew.push(a);
+            console.log("pushin");
+        });
+
+        return filterNew;
+    }
+
+    function copyThis(copy) {
+        navigator.clipboard.writeText(copy);
+    }
+
+
+    const addGroup = () => {
+        $groups.addGroup = true
+    }
+
+    $: groupName = $groups.thisGroup.name
 
 </script>
 
 {#if $groups.removeGroup}
-  <RemoveGroup on:click={() => $groups.removeGroup = false} on:remove={()=> removeGroup($groups.thisGroup)}/>
+    <RemoveGroup on:click={() => $groups.removeGroup = false} on:remove={()=> removeGroup($groups.thisGroup)}/>
 {/if}
 
 <div class="wrapper" in:fade class:hide={$layoutState.hideGroupList}>
-  <div class="top">
-    <h2>Groups</h2><br>
-    <div class="buttons">
-      <Plus on:click={addGroup}/>
+    <div class="top">
+        <h2>Groups</h2><br>
+        <div class="buttons">
+            <Plus on:click={addGroup}/>
+        </div>
     </div>
-  </div>
-  {#if $layoutState.showActiveList}
-  <div class="active_hugins">
-    <h4>Active Hugins</h4>
-  </div>
-  <div class="list-wrapper">
-   
-    {#each activeHugins as user}
-    {#if user.address !== user.grp}
-      <div class="card" on:click={(e) => sendPM(user)}>
-        <img class="avatar"
-             src="data:image/png;base64,{get_avatar(user.address)}" alt="">
-        <p class="nickname">{user.name}</p><br>
-      </div>      
-    {/if}
-    {/each}
-  </div>
+    {#if $layoutState.showActiveList}
+        <div class="active_hugins">
+            <h4>Active Hugins</h4>
+        </div>
+        <div class="list-wrapper">
+
+            {#each activeHugins as user}
+                {#if user.address !== user.grp}
+                    <div class="card" on:click={(e) => sendPM(user)}>
+                        <img class="avatar"
+                             src="data:image/png;base64,{get_avatar(user.address)}" alt="">
+                        <p class="nickname">{user.name}</p><br>
+                    </div>
+                {/if}
+            {/each}
+        </div>
     {:else}
-    <div class="list-wrapper">
-      {#each $groups.groupArray as group}
-        <Group {group} on:print={()=> printGroup(group)}/>
-      {/each}
-    </div>
+        <div class="list-wrapper">
+            {#each $groups.groupArray as group}
+                <Group {group} on:print={()=> printGroup(group)}/>
+            {/each}
+        </div>
     {/if}
 
 </div>
@@ -227,10 +231,10 @@ async function checkNew() {
     height: calc(100% - 103px);
     overflow: scroll;
   }
-  
+
   .wrapper::-webkit-scrollbar, .list-wrapper::-webkit-scrollbar {
-      display: none;
-    }
+    display: none;
+  }
 
   .top {
     height: 85px;
@@ -300,7 +304,7 @@ async function checkNew() {
     font-size: 15px;
     color: white;
   }
-  
+
   .content {
     margin-left: 10px;
     display: flex;

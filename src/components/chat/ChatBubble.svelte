@@ -1,108 +1,112 @@
 <script>
-  import { fade } from "svelte/transition";
-  import { get_avatar } from "$lib/utils/hugin-utils.js";
-  import { user } from "$lib/stores/user.js";
+  import {fade} from "svelte/transition";
+  import {get_avatar} from "$lib/utils/hugin-utils.js";
+  import {user} from "$lib/stores/user.js";
   import Button from "/src/components/buttons/Button.svelte";
-  import { createEventDispatcher } from "svelte";
+  import {createEventDispatcher} from "svelte";
   import Time from "svelte-time";
 
   export let message;
-  export let handleType;
-  export let msgFrom;
-  export let ownMsg;
-  export let torrent;
-  export let files;
-  export let timestamp
-  let file;
+    export let handleType;
+    export let msgFrom;
+    export let ownMsg;
+    export let torrent;
+    export let files;
+    export let timestamp
+    let file;
 
-  const dispatch = createEventDispatcher();
-  let address = $user.huginAddress.substring(0, 99);
+    const dispatch = createEventDispatcher();
+    let address = $user.huginAddress.substring(0, 99);
 
-  $: if (files) {
+    $: if (files) {
 
-    file = files[0];
-  }
-
-  $: {
-    switch (message.substring(0, 1)) {
-      case "Δ":
-      // Fall through
-      case "Λ":
-        // Call offer
-        message = `${message.substring(0, 1) == "Δ" ? "Video" : "Audio"} call started`;
-        break;
+        file = files[0];
     }
-  }
 
-  const downloadTorrent = () => {
-    console.log("downloading torrent");
-    dispatch("download");
-  };
+    $: {
+        switch (message.substring(0, 1)) {
+            case "Δ":
+            // Fall through
+            case "Λ":
+                // Call offer
+                message = `${message.substring(0, 1) == "Δ" ? "Video" : "Audio"} call started`;
+                break;
+        }
+    }
+
+    const downloadTorrent = () => {
+        console.log("downloading torrent");
+        dispatch("download");
+    };
 
 </script>
 
 {#if torrent}
-  <div class="peer">
-    <div class="header peer">
-      <img class="avatar " in:fade="{{duration: 150}}"
-           src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-      <h5>{$user.activeChat.name}</h5>
+    <div class="peer">
+        <div class="header peer">
+            <img class="avatar " in:fade="{{duration: 150}}"
+                 src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+            <h5>{$user.activeChat.name}</h5>
+        </div>
+        <div class="bubble from" in:fade="{{duration: 150}}">
+            <Button text="Download" disabled={false} on:click={downloadTorrent}/>
+        </div>
     </div>
-    <div class="bubble from" in:fade="{{duration: 150}}">
-      <Button text="Download" disabled={false} on:click={downloadTorrent} />
-    </div>
-  </div>
 
 
 {:else}
 
 
-  <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
-  {#if ownMsg}
+    <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
+    {#if ownMsg}
 
 
-    <div class="wrapper">
-      <div class="avatar-box">
-        <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(address)}" alt="">
-      </div>
-      <div class="content">
-        <div style="display: flex; gap: 1rem">
-          <p class="nickname">{$user.username} <span class="time"> | <Time relative timestamp="{parseInt(timestamp)}" /></span></p>
+        <div class="wrapper">
+            <div class="avatar-box">
+                <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(address)}" alt="">
+            </div>
+            <div class="content">
+                <div style="display: flex; gap: 1rem">
+                    <p class="nickname">{$user.username} <span class="time"> | <Time relative
+                                                                                     timestamp="{parseInt(timestamp)}"/></span>
+                    </p>
+                </div>
+                {#if files}
+                    <div class="file" in:fade="{{duration: 150}}">
+                        <p>{file.name}</p>
+                        {#each files as image}
+                        {/each}
+                    </div>
+                {:else}
+                    <p class="message">{message}</p>
+                {/if}
+            </div>
         </div>
-        {#if files}
-          <div class="file" in:fade="{{duration: 150}}">
-            <p>{file.name}</p>
-            {#each files as image}
-            {/each}
-          </div>
-        {:else}
-            <p class="message">{message}</p>
-        {/if}
-      </div>
-    </div>
 
-  {:else}
+    {:else}
 
-    <div class="wrapper">
-      <div class="avatar-box">
-        <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
-      </div>
-      <div class="content">
-        <div style="display: flex; gap: 1rem">
-          <p class="nickname">{$user.activeChat.name} <span class="time"> | <Time relative timestamp="{parseInt(timestamp)}" /></span></p>
+        <div class="wrapper">
+            <div class="avatar-box">
+                <img in:fade="{{duration: 150}}" src="data:image/png;base64,{get_avatar(msgFrom)}" alt="">
+            </div>
+            <div class="content">
+                <div style="display: flex; gap: 1rem">
+                    <p class="nickname">{$user.activeChat.name} <span class="time"> | <Time relative
+                                                                                            timestamp="{parseInt(timestamp)}"/></span>
+                    </p>
+                </div>
+                {#if files}
+                    <div class="file" in:fade="{{duration: 150}}">
+                        <p>{file.name}</p>
+                        {#each files as image}
+                        {/each}
+                    </div>
+                {:else}
+                    <p class="message" style="user-select: text;">{message}</p>
+                {/if}
+            </div>
         </div>
-        {#if files}
-          <div class="file" in:fade="{{duration: 150}}">
-            <p>{file.name}</p>
-            {#each files as image}
-            {/each}
-          </div>
-        {:else}
-            <p class="message" style="user-select: text;">{message}</p>
-        {/if}
-      </div>
-    </div>
-  {/if}
+    {/if}
 
 {/if}
 

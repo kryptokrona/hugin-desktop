@@ -1,4 +1,4 @@
-import { writable, } from 'svelte/store';
+import {writable,} from 'svelte/store';
 
 // items
 const uri = 'https://raw.githubusercontent.com/kryptokrona/kryptokrona-nodes-list/master/nodes.json';
