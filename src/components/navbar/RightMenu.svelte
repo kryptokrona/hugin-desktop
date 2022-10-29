@@ -37,6 +37,11 @@
     let endTone = new Audio('/audio/endcall.mp3')
     let thisCall = false
     let video = false
+    let videoInput
+
+    $: if ($webRTC.devices.length) {
+        videoInput = $webRTC.devices.some((a) => a.kind == 'videoinput')
+    }
 
     $: {
         if ($user.activeChat) {
@@ -51,6 +56,15 @@
     //Starts any call
     const startCall = async (contact, calltype) => {
         console.log(contact, calltype)
+        if (!videoInput && calltype) {
+            $notify.errors.push({
+                message: 'You have no video device',
+                name: 'Error',
+                hash: parseInt(Date.now()),
+            })
+            $notify.errors = $notify.errors
+            return
+        }
         if ($webRTC.call.length >= 1) {
             $webRTC.initiator = true
         }
@@ -238,7 +252,7 @@
             <button class="button">
                 {#if thisCall && video}
                     <VideoSlash on:click={() => endCall()} />
-                {:else}
+                {:else if (!thisCall)}
                     <VideoIcon
                         menu={true}
                         on:click={() => startCall(contact, true)}
