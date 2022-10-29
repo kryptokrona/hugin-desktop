@@ -1,9 +1,9 @@
 <script>
     //To handle true and false, or in this case show and hide.
-    import {fade, fly} from "svelte/transition";
-    import {createEventDispatcher} from "svelte";
-    import FillButton from "/src/components/buttons/FillButton.svelte";
-    import {user} from "$lib/stores/user.js";
+    import { fade, fly } from 'svelte/transition'
+    import { createEventDispatcher } from 'svelte'
+    import FillButton from '/src/components/buttons/FillButton.svelte'
+    import { user } from '$lib/stores/user.js'
 
     const dispatch = createEventDispatcher()
 
@@ -24,7 +24,6 @@
         if (text.length > 0) {
             //Enable add button
             enableAddButton = true
-
         } else {
             enableAddButton = false
         }
@@ -37,79 +36,89 @@
             text: text,
         })
 
-        user.update(a => {
+        user.update((a) => {
             return {
                 ...a,
-                rename: false
+                rename: false,
             }
         })
     }
-
-
 </script>
 
-<svelte:window on:keyup|preventDefault={enter}/>
+<svelte:window on:keyup|preventDefault={enter} />
 
-<div on:click|self in:fade="{{duration: 100}}" out:fade="{{duration: 100}}" class="backdrop">
-
-    <div in:fly="{{y: 50}}" out:fly="{{y: -50}}" class="field">
-        <input placeholder="Rename {$user.rename.name}" type="text" spellcheck="false" autocomplete="false"
-               bind:value={text}>
-        <FillButton text={name} disabled={!enableAddButton} enabled={enableAddButton}
-                    on:click={()=> renameContact(text)}/>
+<div
+    on:click|self
+    in:fade={{ duration: 100 }}
+    out:fade={{ duration: 100 }}
+    class="backdrop"
+>
+    <div in:fly={{ y: 50 }} out:fly={{ y: -50 }} class="field">
+        <input
+            placeholder="Rename {$user.rename.name}"
+            type="text"
+            spellcheck="false"
+            autocomplete="false"
+            bind:value={text}
+        />
+        <FillButton
+            text={name}
+            disabled={!enableAddButton}
+            enabled={enableAddButton}
+            on:click={() => renameContact(text)}
+        />
     </div>
 </div>
 
 <style lang="scss">
+    .field {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: absolute;
+        padding: 0 10px;
+        background-color: var(--card-background);
+        border: 1px solid var(--card-border);
+        border-radius: 0.4rem;
 
-  .field {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: absolute;
-    padding: 0 10px;
-    background-color: var(--card-background);
-    border: 1px solid var(--card-border);
-    border-radius: 0.4rem;
+        .btn {
+            color: var(--text-color);
+            height: 100%;
+            border-left: 1px solid var(--card-border);
+            cursor: pointer;
 
-    .btn {
-      color: var(--text-color);
-      height: 100%;
-      border-left: 1px solid var(--card-border);
-      cursor: pointer;
-
-      &:hover {
-        background-color: var(--card-border);;
-      }
+            &:hover {
+                background-color: var(--card-border);
+            }
+        }
     }
-  }
 
-  input {
-    margin: 0 auto;
-    width: 300px;
-    height: 50px;
-    transition: 200ms ease-in-out;
-    color: var(--text-color);
-    background-color: transparent;
-    border: none;
-    font-size: 1.1rem;
+    input {
+        margin: 0 auto;
+        width: 300px;
+        height: 50px;
+        transition: 200ms ease-in-out;
+        color: var(--text-color);
+        background-color: transparent;
+        border: none;
+        font-size: 1.1rem;
 
-    &:focus {
-      outline: none;
+        &:focus {
+            outline: none;
+        }
     }
-  }
 
-  .backdrop {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--backdrop-color);
-    z-index: 103;
-    border-radius: 15px;
-  }
+    .backdrop {
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--backdrop-color);
+        z-index: 103;
+        border-radius: 15px;
+    }
 </style>

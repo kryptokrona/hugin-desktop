@@ -1,5 +1,5 @@
-import {derived, writable} from "svelte/store";
-import {get_avatar} from "$lib/utils/hugin-utils.js";
+import { derived, writable } from 'svelte/store'
+import { get_avatar } from '$lib/utils/hugin-utils.js'
 
 //Default values
 export const user = writable({
@@ -11,12 +11,12 @@ export const user = writable({
     contacts: null,
     addChat: false,
     rename: false,
-    transactions: []
+    transactions: [],
 })
 
 export const boards = writable({
     addBoard: false,
-    replyTo: {reply: false},
+    replyTo: { reply: false },
     thisBoard: null,
     boardsArray: ['Home'],
     newBoards: [],
@@ -24,19 +24,19 @@ export const boards = writable({
 
 export const groups = writable({
     addGroup: false,
-    replyTo: {reply: false},
+    replyTo: { reply: false },
     thisGroup: {
-        name: "Private groups",
-        chat: "verysecretkeyinchat",
-        key: "verysecretkeyinchat",
-        msg: "Click the add icon"
+        name: 'Private groups',
+        chat: 'verysecretkeyinchat',
+        key: 'verysecretkeyinchat',
+        msg: 'Click the add icon',
     },
     groupArray: [],
 })
 
 export const rtc_groups = writable({
     addGroup: false,
-    replyTo: {reply: false},
+    replyTo: { reply: false },
 })
 
 export const misc = writable({
@@ -66,7 +66,7 @@ export const webRTC = writable({
 })
 
 export const audioLevel = writable({
-    call: []
+    call: [],
 })
 
 export const notify = writable({
@@ -74,16 +74,15 @@ export const notify = writable({
     errors: [],
     success: [],
     unread: [],
-    update: []
+    update: [],
 })
-
 
 export const transactions = writable({
     tip: false,
     send: false,
 })
 
-export const userAvatar = derived(user, $user => {
+export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
         return get_avatar($user.huginAddress.substring(0, 99))
     }

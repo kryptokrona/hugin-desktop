@@ -1,30 +1,28 @@
 {
-	"appId": "com.electron.hugin",
-	"productName": "Hugin Messenger",
-	"directories": {
-		"output": "dist"
-	},
-	"mac": {
-		"category": "",
-		"hardenedRuntime": true,
-		"gatekeeperAssess": false,
-		"entitlements": "bin/entitlements.mac.plist",
-		"entitlementsInherit": "bin/entitlements.mac.inherit.plist",
-		"type": "development",
-		"extendInfo": {
-			"NSMicrophoneUsageDescription": "Please give us access to your microphone",
-			"NSCameraUsageDescription": "Please give us access to your camera"
-		}
-	},
-	"files": [
-		"src/electron.cjs",
-		"src/preload.cjs",
-		{
-			"from": "build",
-			"to": ""
-		}
-	],
-	"extraResources": [
-		"bin/*"
-	]
+    "appId": "com.electron.hugin",
+    "productName": "Hugin Messenger",
+    "directories": {
+        "output": "dist"
+    },
+    "mac": {
+        "category": "",
+        "hardenedRuntime": true,
+        "gatekeeperAssess": false,
+        "entitlements": "bin/entitlements.mac.plist",
+        "entitlementsInherit": "bin/entitlements.mac.inherit.plist",
+        "type": "development",
+        "extendInfo": {
+            "NSMicrophoneUsageDescription": "Please give us access to your microphone",
+            "NSCameraUsageDescription": "Please give us access to your camera"
+        }
+    },
+    "files": [
+        "src/electron.cjs",
+        "src/preload.cjs",
+        {
+            "from": "build",
+            "to": ""
+        }
+    ],
+    "extraResources": ["bin/*"]
 }

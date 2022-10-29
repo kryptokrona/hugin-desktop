@@ -2,12 +2,10 @@
     //Export variables with default values
     export let url
     export let text = 'Button'
-
 </script>
 
 <!-- The button in HTML with variables-->
 <a href={url} on:click>{text}</a>
-
 
 <style>
     /* Button style */
@@ -27,5 +25,4 @@
         background-color: white;
         color: #1d1d1d;
     }
-
 </style>

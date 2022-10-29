@@ -1,16 +1,16 @@
-import { sveltekit } from "@sveltejs/kit/vite";
-import * as path from "path";
+import { sveltekit } from '@sveltejs/kit/vite'
+import * as path from 'path'
 
 /** @type {import("vite").UserConfig} */
 const config = {
     plugins: [sveltekit()],
     optimizeDeps: {
-        include: ["dayjs/plugin/relativeTime.js"],
+        include: ['dayjs/plugin/relativeTime.js'],
     },
     server: {
         fs: {
-            allow: [".."]
-        }
+            allow: ['..'],
+        },
     },
     resolve: {
         alias: {
@@ -18,7 +18,7 @@ const config = {
             $components: path.resolve('./src/components'),
         },
     },
-    root: "./",
-};
+    root: './',
+}
 
-export default config;
+export default config

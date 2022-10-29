@@ -36,35 +36,36 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 # Table of Contents
 
-- [Development resources](#development-resources)
-- [Technologies](#technologies)
-- [Usage](#usage)
-- [Contribute](#contribute)
-    - [Pull Request](#pull-request)
-- [Contributors](#contributors)
-- [License](#license)
+-   [Development resources](#development-resources)
+-   [Technologies](#technologies)
+-   [Usage](#usage)
+-   [Contribute](#contribute)
+    -   [Pull Request](#pull-request)
+-   [Contributors](#contributors)
+-   [License](#license)
 
 # Development Resources
 
-- Web: https://hugin.chat
-- GitHub: https://github.com/kryptokrona
-- Hugin: projectdevelopment board on Hugin Messenger
-- It is HIGHLY recommended to join our board on Hugin Messenger if you want to contribute to stay up to date on what is happening on the project.
+-   Web: https://hugin.chat
+-   GitHub: https://github.com/kryptokrona
+-   Hugin: projectdevelopment board on Hugin Messenger
+-   It is HIGHLY recommended to join our board on Hugin Messenger if you want to contribute to stay up to date on what is happening on the project.
 
 # Technologies
 
-- Electron
-- Svelte
-- WebRTC
+-   Electron
+-   Svelte
+-   WebRTC
 
 # Usage
-> *Feel free to substitute `npm` with `pnpm` or `yarn`.
 
-|         |                                             |
-| ------- | ------------------------------------------- |
-| Install | · `npm install`                             |
-| Develop | · `npm run dev`                             |
-| Build   | · `npm run build`                           |
+> \*Feel free to substitute `npm` with `pnpm` or `yarn`.
+
+|         |                   |
+| ------- | ----------------- |
+| Install | · `npm install`   |
+| Develop | · `npm run dev`   |
+| Build   | · `npm run build` |
 
 # Contribute
 
@@ -83,7 +84,6 @@ Extra details?
 ```
 
 A pull request is approved if the GitHub Actions pipeline is marked green. Otherwise it will be closed directly. Always make sure to run the unit tests before creating a pull request.
-
 
 # Contributors
 

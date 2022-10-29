@@ -1,8 +1,7 @@
 // preload.cjs
-const {contextBridge, ipcRenderer} = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 
 const WINDOW_API = {
-
     //GENERAL API CALLS
     send: (channel, data) => {
         ipcRenderer.send(channel, data)
@@ -125,7 +124,7 @@ const WINDOW_API = {
     getNodes: async () => {
         ipcRenderer.send('getNodes')
     },
-    switchNode: node => {
+    switchNode: (node) => {
         ipcRenderer.send('switchNode', node)
     },
 
@@ -196,7 +195,7 @@ const WINDOW_API = {
         console.log('want to remove', channel)
         console.log('removed')
         ipcRenderer.removeAllListeners(channel)
-    }
+    },
 }
 
-contextBridge.exposeInMainWorld('api', WINDOW_API);
+contextBridge.exposeInMainWorld('api', WINDOW_API)

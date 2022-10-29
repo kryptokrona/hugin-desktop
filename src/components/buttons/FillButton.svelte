@@ -6,51 +6,47 @@
     export let disabled
 </script>
 
-<button
-        disabled={disabled}
-        on:click
-        class:enabled
-        class:info
-        class:border_rgb={rgb}
->{text}</button>
+<button {disabled} on:click class:enabled class:info class:border_rgb={rgb}
+    >{text}</button
+>
 
 <style lang="scss">
-  button {
-    background-color: var(--card-background);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    border-radius: 0.4rem;
-    padding: 9px 20px;
-    min-width: 100px;
-    width: 100%;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 250ms ease-in-out;
-    font-family: "Montserrat";
+    button {
+        background-color: var(--card-background);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        border-radius: 0.4rem;
+        padding: 9px 20px;
+        min-width: 100px;
+        width: 100%;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 250ms ease-in-out;
+        font-family: 'Montserrat';
 
-    &:hover {
-      background-color: var(--card-border);
+        &:hover {
+            background-color: var(--card-border);
+        }
     }
-  }
 
-  .enabled {
-    background-color: #3FD782;
-    border-color: #63e79f;
-    color: #fff;
-    font-weight: 600;
+    .enabled {
+        background-color: #3fd782;
+        border-color: #63e79f;
+        color: #fff;
+        font-weight: 600;
 
-    &:hover {
-      background-color: #63e79f;
+        &:hover {
+            background-color: #63e79f;
+        }
     }
-  }
 
-  .info {
-    background: #5F86F2;
-    border: 1px solid #83A4FF;
-    color: white;
+    .info {
+        background: #5f86f2;
+        border: 1px solid #83a4ff;
+        color: white;
 
-    &:hover {
-      background-color: #83A4FF;
+        &:hover {
+            background-color: #83a4ff;
+        }
     }
-  }
 </style>

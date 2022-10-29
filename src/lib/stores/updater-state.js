@@ -1,4 +1,4 @@
-import {writable} from "svelte/store";
+import { writable } from 'svelte/store'
 
 //Default values
 export const appUpdateState = writable({
@@ -7,5 +7,5 @@ export const appUpdateState = writable({
     percentageDownloaded: 0,
     dataDownloaded: 0,
     downloadSize: 0,
-    downloadSpeed: 0
+    downloadSpeed: 0,
 })
