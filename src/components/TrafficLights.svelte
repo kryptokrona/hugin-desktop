@@ -1,4 +1,4 @@
-<div class="traffic">
+<div class="traffic draggable">
     <div on:click={() => window.api.send('close')} class="light" />
     <div on:click={() => window.api.send('min')} class="light" />
 </div>
@@ -6,10 +6,13 @@
 <style lang="scss">
     .traffic {
         position: fixed;
+        top: 0;
         display: flex;
+        width: 100%;
         gap: 5px;
         padding: 10px;
-        z-index: 999;
+        z-index: 9999;
+        height: 25px;
     }
 
     .light {
