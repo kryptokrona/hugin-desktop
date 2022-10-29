@@ -1,24 +1,24 @@
 <script>
-    import { page } from '$app/stores'
-    import { fade } from 'svelte/transition'
-    import { notify } from '$lib/stores/user.js'
+import { page } from '$app/stores'
+import { fade } from 'svelte/transition'
+import { notify } from '$lib/stores/user.js'
 
-    let thispage
-    let unread = false
-    $: thispage = $page.url.pathname === '/groups'
-    $: if ($notify.unread.some((a) => a.type === 'group')) {
-        unread = true
-    } else {
-        unread = false
-    }
+let thispage
+let unread = false
+$: thispage = $page.url.pathname === '/groups'
+$: if ($notify.unread.some((a) => a.type === 'group')) {
+    unread = true
+} else {
+    unread = false
+}
 </script>
 
 {#if thispage}
-    <div class="dot" in:fade />
+    <div class="dot" in:fade></div>
 {/if}
 
 {#if unread}
-    <div class="unread" in:fade />
+    <div class="unread" in:fade></div>
 {/if}
 
 <svg
@@ -40,8 +40,7 @@
                     stroke="#f4f4f4"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
             </g>
             <path
                 d="M21.98 10.79C21.98 13.73 20.63 15.31 17.94 15.54C17.97 15.3 17.98 15.05 17.98 14.79L17.98 10.79C17.98 7.60001 16.38 6 13.19 6L6.79004 6C6.53004 6 6.28004 6.01001 6.04004 6.04001C6.27004 3.35001 7.86004 2 10.79 2L17.19 2C20.38 2 21.98 3.60001 21.98 6.79001L21.98 10.79Z"
@@ -50,15 +49,13 @@
                 stroke="#f4f4f4"
                 stroke-width="1.5"
                 stroke-linecap="round"
-                stroke-linejoin="round"
-            />
+                stroke-linejoin="round"></path>
             <path
                 d="M24 0L24 24L0 24L0 0L24 0Z"
                 id="Vector"
                 fill="none"
                 fill-rule="evenodd"
-                stroke="none"
-            />
+                stroke="none"></path>
             <path
                 d="M13.4955 13.25L13.5045 13.25"
                 id="Vector"
@@ -67,8 +64,7 @@
                 stroke="#f4f4f4"
                 stroke-width="2"
                 stroke-linecap="round"
-                stroke-linejoin="round"
-            />
+                stroke-linejoin="round"></path>
             <path
                 d="M9.9955 13.25L10.0045 13.25"
                 id="Vector"
@@ -77,8 +73,7 @@
                 stroke="#f4f4f4"
                 stroke-width="2"
                 stroke-linecap="round"
-                stroke-linejoin="round"
-            />
+                stroke-linejoin="round"></path>
             <path
                 d="M6.4955 13.25L6.5045 13.25"
                 id="Vector"
@@ -87,39 +82,38 @@
                 stroke="#f4f4f4"
                 stroke-width="2"
                 stroke-linecap="round"
-                stroke-linejoin="round"
-            />
+                stroke-linejoin="round"></path>
         </g>
     </g>
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 
-    .dot {
-        position: absolute;
-        background-color: white;
-        border-radius: 2px;
-        height: 16px;
-        width: 10px;
-        left: -8px;
-        box-shadow: 0 0 10px white;
-    }
+.dot {
+    position: absolute;
+    background-color: white;
+    border-radius: 2px;
+    height: 16px;
+    width: 10px;
+    left: -8px;
+    box-shadow: 0 0 10px white;
+}
 
-    .unread {
-        position: absolute;
-        background-color: var(--warn-color);
-        border-radius: 50%;
-        height: 5px;
-        width: 5px;
-        left: 2px;
-        box-shadow: 0 0 10px white;
-    }
+.unread {
+    position: absolute;
+    background-color: var(--warn-color);
+    border-radius: 50%;
+    height: 5px;
+    width: 5px;
+    left: 2px;
+    box-shadow: 0 0 10px white;
+}
 </style>

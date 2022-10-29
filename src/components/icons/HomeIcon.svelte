@@ -7,7 +7,7 @@
 >
     <defs>
         <clipPath id="95118481111044510611111752">
-            <path d="M880,0 L880,886 L0,886 L0,0 L880,0 Z" />
+            <path d="M880,0 L880,886 L0,886 L0,0 L880,0 Z"></path>
         </clipPath>
     </defs>
     <g transform="translate(-621.0 -189.0)">
@@ -21,8 +21,7 @@
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        stroke-dasharray=" 0.0 0.0"
-                    />
+                        stroke-dasharray=" 0.0 0.0"></path>
                 </g>
                 <g transform="translate(12.0 14.989990234375)">
                     <path
@@ -32,8 +31,7 @@
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        stroke-dasharray=" 0.0 0.0"
-                    />
+                        stroke-dasharray=" 0.0 0.0"></path>
                 </g>
             </g>
         </g>
@@ -41,7 +39,7 @@
 </svg>
 
 <style>
-    svg {
-        margin-top: 4px;
-    }
+svg {
+    margin-top: 4px;
+}
 </style>

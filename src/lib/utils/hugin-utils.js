@@ -8,12 +8,7 @@ export function get_avatar(hash, format = 'png') {
     // Options for avatar
     let options = {
         foreground: [rgb.red, rgb.green, rgb.blue, 255], // rgba black
-        background: [
-            parseInt(rgb.red / 10),
-            parseInt(rgb.green / 10),
-            parseInt(rgb.blue / 10),
-            0,
-        ], // rgba white
+        background: [parseInt(rgb.red / 10), parseInt(rgb.green / 10), parseInt(rgb.blue / 10), 0], // rgba white
         margin: 0.2, // 20% margin
         size: 40, // 420px square
         format: format, // use SVG instead of PNG

@@ -1,21 +1,21 @@
 <script>
-    import { createEventDispatcher } from 'svelte/internal'
+import { createEventDispatcher } from 'svelte/internal'
 
-    const dispatch = createEventDispatcher()
-    let color = '#f5f5f5'
+const dispatch = createEventDispatcher()
+let color = '#f5f5f5'
 
-    const iconGlow = () => {
-        color = 'red'
-        let timer = setTimeout(function () {
-            color = '#f5f5f5'
-        }, 900)
+const iconGlow = () => {
+    color = 'red'
+    let timer = setTimeout(function () {
+        color = '#f5f5f5'
+    }, 900)
 
-        dispatch('remove')
-    }
+    dispatch('remove')
+}
 </script>
 
 <svg
-    on:click={iconGlow}
+    on:click="{iconGlow}"
     width="24px"
     height="24px"
     viewBox="0 0 24 24"
@@ -34,8 +34,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M14.83 14.83L9.16998 9.17004"
                     id="Vector"
@@ -44,8 +43,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M15 22C20 22 22 20 22 15L22 9C22 4 20 2 15 2L9 2C4 2 2 4 2 9L2 15C2 20 4 22 9 22L15 22Z"
                     id="Vector"
@@ -54,27 +52,25 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M24 0L24 24L0 24L0 0L24 0Z"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="none"
-                />
+                    stroke="none"></path>
             </g>
         </g>
     </g>
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 </style>

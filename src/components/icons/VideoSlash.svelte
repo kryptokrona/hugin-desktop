@@ -1,5 +1,5 @@
 <script>
-    let color = 'red'
+let color = 'red'
 </script>
 
 <svg
@@ -19,60 +19,55 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke={color}
+                    stroke="{color}"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M16.74 10.95L16.74 16.21C16.74 19.3699 15.69 20.42 12.53 20.42L7.26001 20.42"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke={color}
+                    stroke="{color}"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M22 6.73999L22 15.81C22 17.48 20.88 18.06 19.52 17.1L16.74 15.15"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke={color}
+                    stroke="{color}"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M22.02 2.18994L2.02002 22.1899"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke={color}
+                    stroke="{color}"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M24 0L24 24L0 24L0 0L24 0Z"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="none"
-                />
+                    stroke="none"></path>
             </g>
         </g>
     </g>
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 </style>

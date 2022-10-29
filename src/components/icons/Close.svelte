@@ -21,19 +21,19 @@
             stroke="#ffffff"
             stroke-width="5"
         >
-            <line x1="2.36161665e-16" y1="25" x2="50" y2="25" id="Line-9" />
-            <line x1="25" y1="50" x2="25" y2="1.91800598e-15" id="Line-9" />
+            <line x1="2.36161665e-16" y1="25" x2="50" y2="25" id="Line-9"></line>
+            <line x1="25" y1="50" x2="25" y2="1.91800598e-15" id="Line-9"></line>
         </g>
     </g>
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 </style>

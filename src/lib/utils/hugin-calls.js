@@ -126,9 +126,7 @@ export function parseCall(msg, sender = false, emitCall = true) {
 
                 console.log('call incoming')
             }
-            return `${
-                msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'
-            } call started`
+            return `${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
             break
         case 'δ':
         // Fall through

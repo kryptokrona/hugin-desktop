@@ -17,8 +17,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M3 11L3 13C3 17.97 7.03 22 12 22C16.97 22 21 17.97 21 13L21 11"
                     id="Vector"
@@ -27,8 +26,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M9.11011 7.47993C10.8901 6.82993 12.8301 6.82993 14.6101 7.47993"
                     id="Vector"
@@ -37,8 +35,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M10.03 10.4799C11.23 10.1499 12.5 10.1499 13.7 10.4799"
                     id="Vector"
@@ -47,27 +44,25 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M24 0L24 24L0 24L0 0L24 0Z"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="none"
-                />
+                    stroke="none"></path>
             </g>
         </g>
     </g>
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 </style>

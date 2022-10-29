@@ -8,10 +8,10 @@
 >
     <defs>
         <clipPath id="4511112010810611210611010753">
-            <path d="M880,0 L880,886 L0,886 L0,0 L880,0 Z" />
+            <path d="M880,0 L880,886 L0,886 L0,0 L880,0 Z"></path>
         </clipPath>
         <clipPath id="5597117971131051059810097">
-            <path d="M705,0 L705,73 L0,73 L0,0 L705,0 Z" />
+            <path d="M705,0 L705,73 L0,73 L0,0 L705,0 Z"></path>
         </clipPath>
     </defs>
     <g transform="translate(-621.0 -253.0)">
@@ -25,8 +25,7 @@
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        stroke-dasharray=" 0.0 0.0"
-                    />
+                        stroke-dasharray=" 0.0 0.0"></path>
                 </g>
                 <g transform="translate(12.0 8.0)">
                     <path
@@ -36,8 +35,7 @@
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        stroke-dasharray=" 0.0 0.0"
-                    />
+                        stroke-dasharray=" 0.0 0.0"></path>
                 </g>
                 <g transform="translate(2.0 2.0)">
                     <path
@@ -47,8 +45,7 @@
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        stroke-dasharray=" 0.0 0.0"
-                    />
+                        stroke-dasharray=" 0.0 0.0"></path>
                 </g>
             </g>
             <g transform="translate(86.0 227.0)">
@@ -58,8 +55,7 @@
                         stroke="var(--text-color)"
                         stroke-width="6"
                         fill="none"
-                        stroke-miterlimit="5"
-                    />
+                        stroke-miterlimit="5"></polygon>
                 </g>
             </g>
         </g>

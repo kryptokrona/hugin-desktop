@@ -1,16 +1,5 @@
-<svg
-    width="60"
-    viewBox="0 0 349 125"
-    version="1.1"
-    xmlns="http://www.w3.org/2000/svg"
->
-    <g
-        id="Page-1"
-        stroke="none"
-        stroke-width="1"
-        fill="none"
-        fill-rule="evenodd"
-    >
+<svg width="60" viewBox="0 0 349 125" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Group-5" fill="#FFFFFF60">
             <rect
                 id="Rectangle"
@@ -21,8 +10,7 @@
                 y="3.5"
                 width="342"
                 height="118"
-                rx="15"
-            />
+                rx="15"></rect>
             <text
                 id="ALPHA"
                 font-family="MontserratRoman-Medium, Montserrat"
@@ -36,12 +24,12 @@
 </svg>
 
 <style lang="scss">
-    svg {
-        margin-top: 1rem;
-        cursor: pointer;
+svg {
+    margin-top: 1rem;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 </style>

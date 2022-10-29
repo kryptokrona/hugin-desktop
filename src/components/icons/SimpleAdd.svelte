@@ -7,7 +7,7 @@
 >
     <defs>
         <clipPath id="108110501129745119121104114">
-            <path d="M256,0 L256,256 L0,256 L0,0 L256,0 Z" />
+            <path d="M256,0 L256,256 L0,256 L0,0 L256,0 Z"></path>
         </clipPath>
     </defs>
     <g transform="translate(-133.0 -118.0)">
@@ -20,8 +20,7 @@
                         stroke-width="8"
                         fill="none"
                         stroke-linecap="round"
-                        stroke-miterlimit="10"
-                    />
+                        stroke-miterlimit="10"></path>
                 </g>
                 <g transform="translate(0.0 31.875)">
                     <path
@@ -30,8 +29,7 @@
                         stroke-width="8"
                         fill="none"
                         stroke-linecap="round"
-                        stroke-miterlimit="10"
-                    />
+                        stroke-miterlimit="10"></path>
                 </g>
             </g>
         </g>

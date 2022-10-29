@@ -54,9 +54,7 @@ export function expand_sdp_offer(compressed_string) {
         }
         if (ips[ip_index].substring(0, 1) == '!') {
             external_ip = ips[ip_index].substring(1)
-            external_ports = external_ports.concat(
-                ports[port].substring(0, ports[port].length - 1)
-            )
+            external_ports = external_ports.concat(ports[port].substring(0, ports[port].length - 1))
             external_port_found = true
             candidates[j] +=
                 'a=candidate:3098175849 1 udp 1686052607 ' +
@@ -218,9 +216,7 @@ a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${
     type == 'Δ'
-        ? 'a=sendrecv\r\na=msid:' +
-          msid +
-          ' 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa'
+        ? 'a=sendrecv\r\na=msid:' + msid + ' 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa'
         : 'a=recvonly'
 }
 a=rtcp-mux
@@ -352,10 +348,7 @@ export function expand_sdp_answer(compressed_string) {
             let ip_index = ports[port].slice(-1)
             if (ips[ip_index].substring(0, 1) == '!') {
                 if (external_port.length == 0) {
-                    external_port = ports[port].substring(
-                        0,
-                        ports[port].length - 1
-                    )
+                    external_port = ports[port].substring(0, ports[port].length - 1)
                 }
                 external_ip = ips[ip_index].substring(1)
                 candidates +=
@@ -368,9 +361,7 @@ export function expand_sdp_answer(compressed_string) {
                     ' rport ' +
                     ports[0].substring(0, ports[port].length - 1) +
                     ' generation 0 network-id 1 network-cost 50\r\n'
-            } else if (
-                ports[port].substring(0, ports[port].length - 1) == '9'
-            ) {
+            } else if (ports[port].substring(0, ports[port].length - 1) == '9') {
                 candidates +=
                     'a=candidate:3377426864 1 tcp ' +
                     tcp_prio +
@@ -494,9 +485,7 @@ a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${
     type == 'δ'
-        ? 'a=sendrecv\r\na=msid:' +
-          msid +
-          ' 06691570-5673-40ba-a027-72001bbc6f70'
+        ? 'a=sendrecv\r\na=msid:' + msid + ' 06691570-5673-40ba-a027-72001bbc6f70'
         : 'a=inactive'
 }
 a=rtcp-mux
@@ -557,10 +546,7 @@ let decode_fingerprint = (fingerprint) => {
     let decoded_fingerprint = ''
 
     for (letter in atob(fingerprint).split('')) {
-        let piece = atob(fingerprint)
-            .split('')
-            [letter].charCodeAt(0)
-            .toString(16)
+        let piece = atob(fingerprint).split('')[letter].charCodeAt(0).toString(16)
         if (piece.length == 1) {
             piece = '0' + piece
         }

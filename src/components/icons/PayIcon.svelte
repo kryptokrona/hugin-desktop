@@ -18,8 +18,7 @@
                         stroke="#f5f5f5"
                         stroke-width="1.5"
                         stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
+                        stroke-linejoin="round"></path>
                     <path
                         d="M12 6L12 18"
                         id="Vector"
@@ -28,8 +27,7 @@
                         stroke="#f5f5f5"
                         stroke-width="1.5"
                         stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
+                        stroke-linejoin="round"></path>
                     <path
                         d="M9 22C4 22 2 20 2 15L2 9C2 4 4 2 9 2L15 2C20 2 22 4 22 9L22 15C22 20 20 22 15 22L9 22Z"
                         id="Vector"
@@ -38,15 +36,13 @@
                         stroke="#f5f5f5"
                         stroke-width="1.5"
                         stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
+                        stroke-linejoin="round"></path>
                     <path
                         d="M24 0L24 24L0 24L0 0L24 0Z"
                         id="Vector"
                         fill="none"
                         fill-rule="evenodd"
-                        stroke="none"
-                    />
+                        stroke="none"></path>
                 </g>
             </g>
         </g>
@@ -54,12 +50,12 @@
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 </style>

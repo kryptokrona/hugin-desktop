@@ -50,15 +50,13 @@ const hexToUint = (hexString) =>
     new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
 
 function getXKRKeypair() {
-    const [privateSpendKey, privateViewKey] =
-        js_wallet.getPrimaryAddressPrivateKeys()
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     return { privateSpendKey: privateSpendKey, privateViewKey: privateViewKey }
 }
 
 function getKeyPair() {
     // return new Promise((resolve) => setTimeout(resolve, ms));
-    const [privateSpendKey, privateViewKey] =
-        js_wallet.getPrimaryAddressPrivateKeys()
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33))
     let keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
     return keyPair
@@ -796,12 +794,11 @@ async function logIntoWallet(walletName, password) {
         //Try parse json wallet
         parsed_wallet = JSON.parse(json_wallet)
         //Open encrypted json wallet
-        const [js_wallet, error] =
-            await WB.WalletBackend.openWalletFromEncryptedString(
-                daemon,
-                parsed_wallet,
-                password
-            )
+        const [js_wallet, error] = await WB.WalletBackend.openWalletFromEncryptedString(
+            daemon,
+            parsed_wallet,
+            password
+        )
         if (error) {
             console.log('Failed to open wallet: ' + error.toString())
             mainWindow.webContents.send('login-failed')
@@ -865,8 +862,7 @@ async function start_js_wallet(walletName, password, mynode) {
     }
     my_boards = await getMyBoardList()
 
-    const [walletBlockCount, localDaemonBlockCount, networkBlockCount] =
-        js_wallet.getSyncStatus()
+    const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
     mainWindow.webContents.send('sync', 'Not syncing')
     mainWindow.webContents.send('node-sync-data', {
         walletBlockCount,
@@ -877,9 +873,7 @@ async function start_js_wallet(walletName, password, mynode) {
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
         optimizeMessages()
-        console.log(
-            `Incoming transaction of ${transaction.totalAmount()} received!`
-        )
+        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
 
         console.log('transaction', transaction)
         mainWindow.webContents.send('new-message', transaction.toJSON())
@@ -973,10 +967,7 @@ async function saveWallet(wallet, walletName, password) {
     let wallet_json = JSON.stringify(my_wallet)
 
     try {
-        await files.writeFile(
-            userDataDir + '/' + walletName + '.json',
-            wallet_json
-        )
+        await files.writeFile(userDataDir + '/' + walletName + '.json', wallet_json)
     } catch (err) {
         console.log('Wallet json saving error, revert to saving wallet file')
         saveWalletToFile(wallet, walletName, password)
@@ -984,10 +975,7 @@ async function saveWallet(wallet, walletName, password) {
 }
 
 function saveWalletToFile(wallet, walletName, password) {
-    wallet.saveWalletToFile(
-        userDataDir + '/' + walletName + '.wallet',
-        password
-    )
+    wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
 }
 
 async function openWallet(walletName, password) {
@@ -995,9 +983,7 @@ async function openWallet(walletName, password) {
     let json_wallet
 
     try {
-        json_wallet = await files.readFile(
-            userDataDir + '/' + walletName + '.json'
-        )
+        json_wallet = await files.readFile(userDataDir + '/' + walletName + '.json')
         console.log('json wallet file?', json_wallet)
         return json_wallet
     } catch (err) {
@@ -1015,11 +1001,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
     mainWindow.webContents.send('sync', 'Syncing')
     try {
         const resp = await fetch(
-            'http://' +
-                node +
-                ':' +
-                ports.toString() +
-                '/get_pool_changes_lite',
+            'http://' + node + ':' + ports.toString() + '/get_pool_changes_lite',
             {
                 method: 'POST',
                 body: JSON.stringify({ knownTxsIds: known_pool_txs }),
@@ -1029,19 +1011,14 @@ async function backgroundSyncMessages(checkedTxs = false) {
         let json = await resp.json()
         json = JSON.stringify(json)
             .replaceAll('.txPrefix', '')
-            .replaceAll(
-                'transactionPrefixInfo.txHash',
-                'transactionPrefixInfotxHash'
-            )
+            .replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash')
 
         json = JSON.parse(json)
 
         let transactions = json.addedTxs
         let transaction
         //Try clearing known pool txs from checked
-        known_pool_txs = known_pool_txs.filter(
-            (n) => !json.deletedTxsIds.includes(n)
-        )
+        known_pool_txs = known_pool_txs.filter((n) => !json.deletedTxsIds.includes(n))
         if (transactions.length === 0) {
             console.log('Empty array...')
             console.log('No incoming messages...')
@@ -1050,10 +1027,8 @@ async function backgroundSyncMessages(checkedTxs = false) {
 
         for (transaction in transactions) {
             try {
-                let thisExtra =
-                    transactions[transaction].transactionPrefixInfo.extra
-                let thisHash =
-                    transactions[transaction].transactionPrefixInfotxHash
+                let thisExtra = transactions[transaction].transactionPrefixInfo.extra
+                let thisHash = transactions[transaction].transactionPrefixInfotxHash
 
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash)
@@ -1063,11 +1038,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
                 }
                 let message
                 if (thisExtra !== undefined && thisExtra.length > 200) {
-                    message = await extraDataToMessage(
-                        thisExtra,
-                        known_keys,
-                        getXKRKeypair()
-                    )
+                    message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
                     if (!message || message === undefined) {
                         let group = trimExtra(thisExtra)
                         console.log('group', group)
@@ -1503,10 +1474,7 @@ async function getConversations() {
     let contacts = await getContacts()
 
     //Remove Hugin welcome message and contact if new contact was added.
-    if (
-        contacts.length > 1 &&
-        contacts.some((a) => a.address === welcomeAddress)
-    ) {
+    if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
         removeContact(welcomeAddress)
         removeMessages(welcomeAddress)
     }
@@ -1797,9 +1765,7 @@ async function saveMessage(msg, hash, offchain = false) {
         case 'Δ':
         // Fall through
         case 'Λ':
-            message = `${
-                message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'
-            } call started`
+            message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
             break
         default:
             message = message
@@ -1952,8 +1918,7 @@ async function sendGroupsMessage(message, offchain = false) {
     console.log('Send group msg', message, offchain)
     const my_address = message.k
 
-    const [privateSpendKey, privateViewKey] =
-        js_wallet.getPrimaryAddressPrivateKeys()
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
 
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
 
@@ -1986,15 +1951,9 @@ async function sendGroupsMessage(message, offchain = false) {
 
     let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
 
-    const payload_unencrypted = naclUtil.decodeUTF8(
-        JSON.stringify(message_json)
-    )
+    const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json))
 
-    const secretbox = nacl.secretbox(
-        payload_unencrypted,
-        nonce,
-        hexToUint(group)
-    )
+    const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group))
 
     const payload_encrypted = {
         sb: Buffer.from(secretbox).toString('hex'),
@@ -2033,9 +1992,7 @@ async function sendGroupsMessage(message, offchain = false) {
                 hash: Date.now(),
             }
             mainWindow.webContents.send('error_msg', error)
-            console.log(
-                `Failed to send transaction: ${result.error.toString()}`
-            )
+            console.log(`Failed to send transaction: ${result.error.toString()}`)
         }
     } else if (offchain) {
         //Generate a random hash
@@ -2133,8 +2090,7 @@ async function sendBoardMessage(message) {
     let msg = message.m
     try {
         let timestamp = parseInt(Date.now() / 1000)
-        let [privateSpendKey, privateViewKey] =
-            js_wallet.getPrimaryAddressPrivateKeys()
+        let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
         let xkr_private_key = privateSpendKey
         let signature = await xkrUtils.signMessage(msg, xkr_private_key)
 
@@ -2169,9 +2125,9 @@ async function sendBoardMessage(message) {
 
         if (result.success) {
             console.log(
-                `Sent transaction, hash ${
-                    result.transactionHash
-                }, fee ${WB.prettyPrintAmount(result.fee)}`
+                `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
+                    result.fee
+                )}`
             )
             mainWindow.webContents.send('sent_board', {
                 hash: result.transactionHash,
@@ -2189,9 +2145,7 @@ async function sendBoardMessage(message) {
                 hash: Date.now(),
             }
             mainWindow.webContents.send('error_msg', error)
-            console.log(
-                `Failed to send transaction: ${result.error.toString()}`
-            )
+            console.log(`Failed to send transaction: ${result.error.toString()}`)
         }
     } catch (err) {
         mainWindow.webContents.send('error_msg')
@@ -2201,12 +2155,7 @@ async function sendBoardMessage(message) {
     optimizeMessages()
 }
 
-async function sendMessage(
-    message,
-    receiver,
-    off_chain = false,
-    group = false
-) {
+async function sendMessage(message, receiver, off_chain = false, group = false) {
     let has_history
     console.log('address', receiver.length)
     if (receiver.length !== 163) {
@@ -2253,8 +2202,7 @@ async function sendMessage(
         //console.log('No history found..');
         // payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp};
         const addr = await Address.fromAddress(my_address)
-        const [privateSpendKey, privateViewKey] =
-            js_wallet.getPrimaryAddressPrivateKeys()
+        const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
         let xkr_private_key = privateSpendKey
         let signature = await xkrUtils.signMessage(message, xkr_private_key)
         let payload_json = {
@@ -2263,9 +2211,7 @@ async function sendMessage(
             msg: message,
             s: signature,
         }
-        let payload_json_decoded = naclUtil.decodeUTF8(
-            JSON.stringify(payload_json)
-        )
+        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
         box = new naclSealed.sealedbox(
             payload_json_decoded,
             nonceFromTimestamp(timestamp),
@@ -2276,9 +2222,7 @@ async function sendMessage(
         // Convert message data to json
         let payload_json = { from: my_address, msg: message }
 
-        let payload_json_decoded = naclUtil.decodeUTF8(
-            JSON.stringify(payload_json)
-        )
+        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
 
         box = nacl.box(
             payload_json_decoded,
@@ -2319,9 +2263,9 @@ async function sendMessage(
         if (result.success) {
             known_pool_txs.push(result.transactionHash)
             console.log(
-                `Sent transaction, hash ${
-                    result.transactionHash
-                }, fee ${WB.prettyPrintAmount(result.fee)}`
+                `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
+                    result.fee
+                )}`
             )
             saveMessage(sentMsg, result.transactionHash)
             optimizeMessages()
@@ -2333,9 +2277,7 @@ async function sendMessage(
             }
 
             optimizeMessages()
-            console.log(
-                `Failed to send transaction: ${result.error.toString()}`
-            )
+            console.log(`Failed to send transaction: ${result.error.toString()}`)
             mainWindow.webContents.send('error_msg', error)
         }
     } else if (off_chain) {
@@ -2375,10 +2317,7 @@ async function optimizeMessages(nbrOfTxs) {
         const [address, error] = await js_wallet.addSubWallet()
         if (!error) {
             console.log(`Created subwallet with address of ${address}`)
-            console.log(
-                'my addresses updated',
-                js_wallet.subWallets.getAddresses()
-            )
+            console.log('my addresses updated', js_wallet.subWallets.getAddresses())
         }
     }
     console.log('Have two addresses now', js_wallet.subWallets.getAddresses())
@@ -2388,8 +2327,7 @@ async function optimizeMessages(nbrOfTxs) {
     console.log('got main address', mainWallet)
     console.log('got sub address', subWallet)
 
-    const [walletHeight, localHeight, networkHeight] =
-        await js_wallet.getSyncStatus()
+    const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus()
 
     let messageAddress = []
     messageAddress.push(subWallet)
@@ -2472,9 +2410,9 @@ async function sendTx(tx) {
         }
         mainWindow.webContents.send('sent_tx', sent)
         console.log(
-            `Sent transaction, hash ${
-                result.transactionHash
-            }, fee ${WB.prettyPrintAmount(result.fee)}`
+            `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
+                result.fee
+            )}`
         )
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`)
@@ -2536,16 +2474,14 @@ ipcMain.handle('getAddress', async () => {
 })
 
 ipcMain.handle('getHeight', async () => {
-    let [walletHeight, daemonCount, networkHeight] =
-        await js_wallet.getSyncStatus()
+    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
     return { walletHeight, networkHeight }
 })
 
 ipcMain.on('startCall', async (e, contact, calltype) => {
     if (process.platform === 'darwin') {
         const cameraAccess = systemPreferences.askForMediaAccess('camera')
-        const microphoneAccess =
-            systemPreferences.askForMediaAccess('microphone')
+        const microphoneAccess = systemPreferences.askForMediaAccess('microphone')
     }
     console.log('CALL STARTEeeeeeeeeeeeeD')
 
@@ -2554,19 +2490,17 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
 })
 
 ipcMain.handle('shareScreen', async (e, start) => {
-    desktopCapturer
-        .getSources({ types: ['window', 'screen'] })
-        .then(async (sources) => {
-            for (const source of sources) {
-                if (source.name === 'Entire Screen') {
-                }
-                if (!start) {
-                    mainWindow.webContents.send('screen-share', source.id)
-                }
-                return source.id
+    desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
+        for (const source of sources) {
+            if (source.name === 'Entire Screen') {
             }
-            console.log('sources', sources)
-        })
+            if (!start) {
+                mainWindow.webContents.send('screen-share', source.id)
+            }
+            return source.id
+        }
+        console.log('sources', sources)
+    })
 })
 
 ipcMain.on('setCamera', async (e, contact, calltype) => {
@@ -2640,11 +2574,7 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
     try {
         let hash = message.substring(0, 64)
         console.log('hash?', hash)
-        let [groupMessage, time, txHash] = await decryptGroupMessage(
-            message,
-            hash,
-            key
-        )
+        let [groupMessage, time, txHash] = await decryptGroupMessage(message, hash, key)
 
         console.log('Group message', groupMessage)
 
@@ -2766,19 +2696,12 @@ function parseCall(msg, sender, sent, emitCall = true, group = false) {
                 console.log('sent?', sent)
                 if (!sent) {
                     console.log('call  incoming')
-                    mainWindow.webContents.send(
-                        'call-incoming',
-                        msg,
-                        sender,
-                        group
-                    )
+                    mainWindow.webContents.send('call-incoming', msg, sender, group)
                     // Handle answer/decline here
                 }
                 console.log('call incoming')
             }
-            return `${
-                msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'
-            } call started`
+            return `${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
             break
         case 'δ':
         // Fall through
@@ -2887,9 +2810,7 @@ function expand_sdp_offer(compressed_string) {
         }
         if (ips[ip_index].substring(0, 1) == '!') {
             external_ip = ips[ip_index].substring(1)
-            external_ports = external_ports.concat(
-                port.substring(0, port.length - 1)
-            )
+            external_ports = external_ports.concat(port.substring(0, port.length - 1))
             external_port_found = true
             candidates[j] +=
                 'a=candidate:3098175849 1 udp 1686052607 ' +
@@ -3051,9 +2972,7 @@ a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${
     type == 'Δ'
-        ? 'a=sendrecv\r\na=msid:' +
-          msid +
-          ' 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa'
+        ? 'a=sendrecv\r\na=msid:' + msid + ' 0278bd6c-5efa-4fb7-838a-d9ba6a1d8baa'
         : 'a=inactive'
 }
 a=rtcp-mux
@@ -3423,9 +3342,7 @@ a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
 a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
 ${
     type == 'δ'
-        ? 'a=sendrecv\r\na=msid:' +
-          msid +
-          ' 06691570-5673-40ba-a027-72001bbc6f70'
+        ? 'a=sendrecv\r\na=msid:' + msid + ' 06691570-5673-40ba-a027-72001bbc6f70'
         : 'a=recvonly'
 }
 a=rtcp-mux

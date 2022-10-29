@@ -1,24 +1,24 @@
 <script>
-    import { page } from '$app/stores'
-    import { fade } from 'svelte/transition'
-    import { notify } from '$lib/stores/user.js'
+import { page } from '$app/stores'
+import { fade } from 'svelte/transition'
+import { notify } from '$lib/stores/user.js'
 
-    let thispage
-    let unread = false
-    $: thispage = $page.url.pathname === '/boards'
-    $: if ($notify.unread.some((a) => a.type === 'board')) {
-        unread = true
-    } else {
-        unread = false
-    }
+let thispage
+let unread = false
+$: thispage = $page.url.pathname === '/boards'
+$: if ($notify.unread.some((a) => a.type === 'board')) {
+    unread = true
+} else {
+    unread = false
+}
 </script>
 
 {#if thispage}
-    <div class="dot" in:fade />
+    <div class="dot" in:fade></div>
 {/if}
 
 {#if unread}
-    <div class="unread" in:fade />
+    <div class="unread" in:fade></div>
 {/if}
 
 <svg
@@ -41,8 +41,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M7 8L17 8"
                     id="Vector"
@@ -51,8 +50,7 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M7 13L13 13"
                     id="Vector"
@@ -61,47 +59,45 @@
                     stroke="#f5f5f5"
                     stroke-width="1.5"
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
+                    stroke-linejoin="round"></path>
                 <path
                     d="M24 0L24 24L0 24L0 0L24 0Z"
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="none"
-                />
+                    stroke="none"></path>
             </g>
         </g>
     </g>
 </svg>
 
 <style lang="scss">
-    svg {
-        transition: 200ms ease-in-out;
-        cursor: pointer;
+svg {
+    transition: 200ms ease-in-out;
+    cursor: pointer;
 
-        &:hover {
-            opacity: 80%;
-        }
+    &:hover {
+        opacity: 80%;
     }
+}
 
-    .dot {
-        position: absolute;
-        background-color: white;
-        border-radius: 2px;
-        height: 16px;
-        width: 10px;
-        left: -8px;
-        box-shadow: 0 0 10px white;
-    }
+.dot {
+    position: absolute;
+    background-color: white;
+    border-radius: 2px;
+    height: 16px;
+    width: 10px;
+    left: -8px;
+    box-shadow: 0 0 10px white;
+}
 
-    .unread {
-        position: absolute;
-        background-color: var(--warn-color);
-        border-radius: 50%;
-        height: 5px;
-        width: 5px;
-        left: 2px;
-        box-shadow: 0 0 10px white;
-    }
+.unread {
+    position: absolute;
+    background-color: var(--warn-color);
+    border-radius: 50%;
+    height: 5px;
+    width: 5px;
+    left: 2px;
+    box-shadow: 0 0 10px white;
+}
 </style>
