@@ -113,6 +113,11 @@
             })
         })
 
+        window.api.receive('rec-off', (data) => {
+            //This is for logging SDP for calls, to look for bugs etc during parse and expand phase
+            console.log('Reconstructed offer expanded, testdata:', data)
+        })
+
         window.api.receive('newBoardMessage', (data) => {
             if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
             if ($boards.thisBoard === 'Home') return
