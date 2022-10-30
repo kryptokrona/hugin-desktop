@@ -92,7 +92,7 @@ $: console.log('notifications', $notify)
 .card {
     display: flex;
     padding: 1px;
-    height: 68px;
+    height: 72px;
     width: 300px;
     flex-direction: column;
     box-sizing: border-box;
@@ -106,6 +106,7 @@ $: console.log('notifications', $notify)
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    max-height: 69px;
     border-radius: 3px;
     background-color: #111111;
 }
@@ -139,7 +140,7 @@ h4 {
 
 .header {
     margin-left: 10px;
-    padding-top: 5px;
+    padding-top: 4px;
     align-items: center;
     display: flex;
     align-items: center;
@@ -150,7 +151,12 @@ h4 {
     font-family: 'Montserrat';
     font-size: 12px;
     display: inline-flex;
+    height: 30px;
+    overflow: hidden;
+    padding-right: 10px;
     margin-left: 44px;
+    margin-top: -9px;
+    word-break: break-word;
 }
 
 .success {
