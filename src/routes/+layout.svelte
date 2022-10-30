@@ -278,17 +278,20 @@
 
         switch (data) {
             case 'checking':
-                $appUpdateState.state = 'checking'
+                //Do something
                 break
             case 'available':
+                $appUpdateState.step = 1
+                $appUpdateState.openPopup = true
                 $appUpdateState.updateAvailable = true
                 break
             case 'not-available':
-                $appUpdateState.state = 'not-available'
+                $appUpdateState.step = 4
+                $appUpdateState.openPopup = true
                 break
             case 'downloaded':
+                $appUpdateState.openPopup = true
                 $appUpdateState.step = 3
-                $appUpdateState.state = 'downloaded'
                 break
             default:
             //Do nothing
@@ -383,7 +386,7 @@
         <Webrtc/>
     {/if}
 
-    {#if $appUpdateState.updateAvailable}
+    {#if $appUpdateState.openPopup}
         <UpdatePopup/>
     {/if}
 

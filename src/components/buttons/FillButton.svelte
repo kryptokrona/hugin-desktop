@@ -32,6 +32,7 @@
     width: 100%;
     cursor: pointer;
     font-weight: 600;
+    font-size: 1rem;
     transition: 250ms ease-in-out;
     font-family: 'Montserrat', sans-serif;
 
@@ -43,7 +44,9 @@
   .enabled {
     background-color: #3fd782;
     border-color: #63e79f;
-    color: #fff;
+    color: #ffffff;
+    font-size: 1rem;
+    text-shadow:  0 0 1px black;
     font-weight: 600;
 
     &:hover {
