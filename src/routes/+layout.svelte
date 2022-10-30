@@ -286,8 +286,10 @@
                 $appUpdateState.updateAvailable = true
                 break
             case 'not-available':
-                $appUpdateState.step = 4
-                $appUpdateState.openPopup = true
+                if($page.url.pathname === '/settings') {
+                    $appUpdateState.step = 4
+                    $appUpdateState.openPopup = true
+                }
                 break
             case 'downloaded':
                 $appUpdateState.openPopup = true
