@@ -1,15 +1,15 @@
 <script>
-import { fade } from 'svelte/transition'
-import ChatInput from '/src/components/chat/ChatInput.svelte'
-import { groupMessages } from '$lib/stores/groupmsgs.js'
-import GroupMessage from '/src/components/chat/GroupMessage.svelte'
-import GroupList from '/src/components/chat/GroupList.svelte'
-import { groups, notify, user } from '$lib/stores/user.js'
-import { onDestroy, onMount } from 'svelte'
-import AddGroup from '/src/components/chat/AddGroup.svelte'
-import { page } from '$app/stores'
+    import {fade} from 'svelte/transition'
+    import ChatInput from '/src/components/chat/ChatInput.svelte'
+    import {groupMessages} from '$lib/stores/groupmsgs.js'
+    import GroupMessage from '/src/components/chat/GroupMessage.svelte'
+    import GroupList from '/src/components/chat/GroupList.svelte'
+    import {groups, notify, user} from '$lib/stores/user.js'
+    import {onDestroy, onMount} from 'svelte'
+    import AddGroup from '/src/components/chat/AddGroup.svelte'
+    import {page} from '$app/stores'
 
-let boardMsgs = []
+    let boardMsgs = []
 let replyto = ''
 let reply_exit_icon = 'x'
 let active
@@ -25,7 +25,7 @@ let replyTrue = false
 let chatWindow
 
 onMount(async () => {
-    chatWindow = document.getElementById('chat_window')
+    chatWindow = document.getElementById('group_chat_window')
     console.log('mounting')
     console.log('lol null', $groups.groupArray[0])
     if ($groups.groupArray.length) {
@@ -36,6 +36,7 @@ onMount(async () => {
     $notify.unread = filter
 
     printGroup($groups.thisGroup)
+    scrollDown()
 })
 
 onDestroy(() => {
@@ -246,13 +247,13 @@ async function printGroup(group) {
     await checkReactions()
     console.log($groups.groupArray)
     //Reactions should be set, update thisGroup in store and set reply to false.
-    scrollDown()
     groups.update((data) => {
         return {
             ...data,
             replyTo: { reply: false },
         }
     })
+    scrollDown()
 }
 
 async function updateReactions(msg) {
@@ -323,7 +324,7 @@ function addHash(data) {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="chat_window">
+        <div class="outer" id="group_chat_window">
             {#each fixedGroups as message (message.hash)}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupMsg(e)}"
@@ -425,7 +426,7 @@ p {
 .outer {
     display: flex;
     flex-direction: column-reverse;
-    overflow: scroll;
+    overflow: auto;
 
     &::-webkit-scrollbar {
         display: none;

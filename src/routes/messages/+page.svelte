@@ -1,17 +1,17 @@
 <script>
-import { fade } from 'svelte/transition'
-import { onDestroy, onMount } from 'svelte'
-import { messages } from '$lib/stores/messages.js'
-import ChatBubble from '/src/components/chat/ChatBubble.svelte'
-import ChatInput from '/src/components/chat/ChatInput.svelte'
-import ChatList from '/src/components/chat/ChatList.svelte'
-import AddChat from '/src/components/chat/AddChat.svelte'
-import { boards, notify, transactions, user } from '$lib/stores/user.js'
-import Rename from '/src/components/chat/Rename.svelte'
-import BackDrop from '/src/components/popups/BackDrop.svelte'
-import SendTransaction from '/src/components/finance/SendTransaction.svelte'
+    import {fade} from 'svelte/transition'
+    import {onDestroy, onMount} from 'svelte'
+    import {messages} from '$lib/stores/messages.js'
+    import ChatBubble from '/src/components/chat/ChatBubble.svelte'
+    import ChatInput from '/src/components/chat/ChatInput.svelte'
+    import ChatList from '/src/components/chat/ChatList.svelte'
+    import AddChat from '/src/components/chat/AddChat.svelte'
+    import {boards, notify, transactions, user} from '$lib/stores/user.js'
+    import Rename from '/src/components/chat/Rename.svelte'
+    import BackDrop from '/src/components/popups/BackDrop.svelte'
+    import SendTransaction from '/src/components/finance/SendTransaction.svelte'
 
-let chat
+    let chat
 let active_contact
 let savedMsg = []
 let key
@@ -40,6 +40,8 @@ onMount(async () => {
     if ($user.activeChat) {
         printConversation($user.activeChat)
     }
+
+    scrollDown()
 })
 
 onDestroy(() => {

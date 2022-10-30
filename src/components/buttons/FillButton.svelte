@@ -15,9 +15,7 @@
         {:else}
         {text}
     {/if}
-
-</button
->
+</button>
 
 <style lang="scss">
   button {
