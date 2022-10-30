@@ -8,7 +8,6 @@ import Group from '/src/components/chat/Group.svelte'
 import Plus from '/src/components/icons/Plus.svelte'
 import RemoveGroup from '/src/components/chat/RemoveGroup.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
-import { sleep } from '$lib/utils/utils.js'
 
 const dispatch = createEventDispatcher()
 let activeHugins = []
@@ -22,7 +21,7 @@ let group = ''
 let groupName
 onMount( async () => {
     await printGroups()
-    if (!$groups.thisGroup) {
+    if ($groups.thisGroup.key !== 64) {
         printGroup($groups.groupArray[0])
     }
     printGroup($groups.thisGroup)
