@@ -2195,6 +2195,10 @@ async function sendBoardMessage(message) {
 
 async function sendMessage(message, receiver, off_chain = false, group = false) {
     let has_history
+    if (message.length > 477) {
+        console.log('Very long message')
+        return
+    }
     console.log('address', receiver.length)
     if (receiver.length !== 163) {
         return
