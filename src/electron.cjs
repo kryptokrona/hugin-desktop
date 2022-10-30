@@ -2007,7 +2007,7 @@ async function sendGroupsMessage(message, offchain = false) {
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
             [subWallet], // subWalletsToTakeFrom
-            undefined, // changeAddress
+            subWallet, // changeAddress
             true, // relayToNetwork
             false, // sneedAll
             Buffer.from(payload_encrypted_hex, 'hex')
