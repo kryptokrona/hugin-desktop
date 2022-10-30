@@ -10,7 +10,6 @@ import RemoveGroup from '/src/components/chat/RemoveGroup.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
 import { sleep } from '$lib/utils/utils.js'
 
-let new_message_sound = new Audio('/audio/message.mp3')
 const dispatch = createEventDispatcher()
 let activeHugins = []
 let contacts = []
@@ -21,8 +20,12 @@ let groupArray = []
 //Get message updates and trigger filter
 let group = ''
 let groupName
-onMount(() => {
-    printGroups()
+onMount( async () => {
+    await printGroups()
+    if (!$groups.thisGroup) {
+        printGroup($groups.groupArray[0])
+    }
+    printGroup($groups.thisGroup)
 })
 $: if ($groups.thisGroup.key) {
     group = $groups.thisGroup.key
@@ -68,8 +71,6 @@ async function printGroups() {
             $groups.thisGroup.key != newArray[0].chat
         ) {
             newArray[0].new = true
-
-            new_message_sound.play()
         }
     }
 

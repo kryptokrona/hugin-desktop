@@ -27,15 +27,9 @@ let chatWindow
 onMount(async () => {
     chatWindow = document.getElementById('group_chat_window')
     console.log('mounting')
-    console.log('lol null', $groups.groupArray[0])
-    if ($groups.groupArray.length) {
-        $groups.thisGroup = $groups.groupArray[$groups.groupArray.length - 1]
-    }
 
     let filter = $notify.unread.filter((a) => a.type !== 'group')
     $notify.unread = filter
-
-    printGroup($groups.thisGroup)
     scrollDown()
 })
 
