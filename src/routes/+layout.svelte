@@ -1,4 +1,11 @@
 <script>
+    //Global CSS
+    import '/src/lib/theme/global.scss'
+
+    //Stores
+    import {boards, groups, misc, notify, user, webRTC} from '$lib/stores/user.js'
+    import {messages} from '$lib/stores/messages.js'
+
     import {onMount} from 'svelte'
     import LeftMenu from '../components/navbar/LeftMenu.svelte'
     import RightMenu from '/src/components/navbar/RightMenu.svelte'
@@ -9,16 +16,12 @@
     import PeerAudio from '/src/components/webrtc/PeerAudio.svelte'
     import VideoGrid from '$components/webrtc/VideoGrid.svelte'
     import {page} from '$app/stores'
-    //Stores
-    import {boards, groups, misc, notify, user, webRTC} from '$lib/stores/user.js'
-    import {messages} from '$lib/stores/messages.js'
-
-    //Global CSS
-    import '/src/lib/theme/global.scss'
     import Notification from '/src/components/popups/Notification.svelte'
-    import {appUpdateState} from '$lib/stores/updater-state.js'
-    import UpdatePopup from '$components/popups/UpdatePopup.svelte'
     import toast, {Toaster} from "svelte-french-toast";
+    import {appUpdateState} from "$components/updater/update-store.js";
+    import Updater from "$components/updater/Updater.svelte";
+
+
 
     let ready = false
     let myVideo = false
@@ -394,7 +397,7 @@
     {/if}
 
     {#if $appUpdateState.openPopup}
-        <UpdatePopup/>
+        <Updater/>
     {/if}
 
     <slot/>
