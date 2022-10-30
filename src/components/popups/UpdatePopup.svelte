@@ -3,64 +3,86 @@ import { fade, fly } from 'svelte/transition'
 import { appUpdateState } from '$lib/stores/updater-state.js'
 import FillButton from '$components/buttons/FillButton.svelte'
 import { formatBytes } from '$lib/utils/utils'
+import Close from "$components/icons/Close.svelte";
+import {misc} from "$lib/stores/user.js";
 </script>
 
 <div class="backdrop" in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}">
-    <div class="card layered-shadow" in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}">
+    <div class="card layered-shadow" in:fly="{{ x: 100 }}" out:fly="{{ x: 100 }}">
+
         <div class="header">
             <img src="/icon.png" height="48px" width="48px" alt="" />
             <h2>Hugin updater</h2>
         </div>
 
         {#if $appUpdateState.step === 1}
+
             <div class="content">
+                <div></div>
                 <h4>
                     There's a new update available! Get it now to stay up to date with new features
-                    and improvements.
+                    and improvements
                 </h4>
                 <div class="buttons">
-                    <FillButton
-                        text="Download"
-                        enabled="{true}"
-                        on:click="{() => window.api.send('download-update')}"
-                    />
-                    <FillButton
-                        text="Later"
-                        on:click="{() => ($appUpdateState.updateAvailable = false)}"
-                    />
+                    <FillButton text="Download" on:click="{() => window.api.send('download-update')}"/>
+                    <FillButton text="Later" on:click="{() => ($appUpdateState.openPopup = false)}"/>
                 </div>
             </div>
+
         {:else if $appUpdateState.step === 2}
+
             <div class="content">
                 <div></div>
                 <div>
+                    <h4 style="margin-bottom: 1rem">You can close this window, it will popup again when downloaded.</h4>
+                    <div style="max-width: 140px; margin: 0 auto">
+                        <FillButton text="Close" on:click={() => {$appUpdateState.openPopup = false}}/>
+                    </div>
+                </div>
+                <div>
                     <div class="goal">
+                        <h4>
+                            {$appUpdateState.percentageDownloaded === 100 ? $appUpdateState.percentageDownloaded.toFixed(0) : $appUpdateState.percentageDownloaded.toFixed()}%
+                        </h4>
                         <div
-                            class="progress"
-                            style="width: {$appUpdateState.percentageDownloaded}%"
+                                class="progress"
+                                class:stripes="{$appUpdateState.percentageDownloaded !== 100}"
+                                class:synced="{$appUpdateState.percentageDownloaded === 100}"
+                                style="width: {$appUpdateState.percentageDownloaded}%;"
                         ></div>
                     </div>
-                    <h5>
-                        Downloaded: {formatBytes(parseInt($appUpdateState.dataDownloaded))}
-                        of {formatBytes(parseInt($appUpdateState.downloadSize))}
-                    </h5>
-                    <h5>
-                        {formatBytes(parseInt($appUpdateState.downloadSpeed))}/s
-                    </h5>
+                    <h5>{formatBytes(parseInt($appUpdateState.dataDownloaded))} of {formatBytes(parseInt($appUpdateState.downloadSize))}</h5>
+                    <h5>{formatBytes(parseInt($appUpdateState.downloadSpeed))}/s</h5>
                 </div>
-                <div></div>
             </div>
+
         {:else if $appUpdateState.step === 3}
+
             <div class="content">
+                <div></div>
                 <h4>Your update is ready, please press install to restart.</h4>
                 <div class="buttons">
                     <FillButton
-                        text="install"
+                        text="Install"
                         enabled="{true}"
                         on:click="{() => window.api.send('install-update')}"
                     />
                 </div>
             </div>
+
+            {:else if $appUpdateState.step === 4}
+
+            <div class="content">
+                <div></div>
+                <div>
+                    <h4>You're on the latest version.</h4>
+                    <p>v{$misc.version}</p>
+                </div>
+                <div class="buttons">
+                    <FillButton text="Close" on:click="{() => {$appUpdateState.openPopup = false; $appUpdateState.step = 1;}}"/>
+                </div>
+            </div>
+
         {/if}
     </div>
 </div>
@@ -73,12 +95,17 @@ import { formatBytes } from '$lib/utils/utils'
     text-align: center;
     justify-content: space-between;
     gap: 0.5rem;
-    border-radius: 8px;
     width: 361px;
-    height: 240px;
+    height: 100%;
     padding: 2rem;
     background-color: var(--card-background);
-    border: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+}
+
+.close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
 }
 
 .header {
@@ -107,38 +134,44 @@ import { formatBytes } from '$lib/utils/utils'
 }
 
 .goal {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    height: 10px;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    background-color: var(--border-color);
-    width: 100%;
-    padding: 1px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  background-color: var(--input-background);
+  border: 1px solid var(--input-border);
+  border-radius: 0.4rem;
+  margin: 5px 0;
 
-    .progress {
-        animation: load 500ms normal forwards;
-        box-shadow: 0 10px 40px -10px #ffffff;
-        background-color: var(--info-color);
-        height: 8px;
-        border-radius: 10em;
-        width: 8%;
-        transition: all 3s;
-    }
+  h4 {
+    color: white;
+    position: absolute;
+    align-self: center;
+    z-index: 9999;
+  }
+}
+
+.progress {
+  background-color: var(--border-color);
+  height: 40px;
+  margin-right: auto;
+  border-radius: 0.4rem;
+  transition: 200ms ease-in-out;
 }
 
 .backdrop {
     position: fixed;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: end;
+
     top: 0;
     bottom: 0;
     left: 0;
     width: 100%;
     background-color: var(--backdrop-color);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
     z-index: 103;
     border-radius: 15px;
 }

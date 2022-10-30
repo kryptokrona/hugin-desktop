@@ -1,16 +1,16 @@
 <script>
-import { fade } from 'svelte/transition'
-import { boards, misc, user, userAvatar } from '$lib/stores/user.js'
-import { onMount } from 'svelte'
-import Share from '/src/components/dashboard/Share.svelte'
-import Funds from '/src/components/dashboard/Funds.svelte'
-import EditName from '/src/components/dashboard/EditName.svelte'
-import CreateRoom from '/src/components/dashboard/CreateRoom.svelte'
-import { layoutState } from '$lib/stores/layout-state.js'
-import FillButton from '$components/buttons/FillButton.svelte'
-import { openURL } from '$lib/utils/utils.js'
+    import {fade} from 'svelte/transition'
+    import {boards, misc, user, userAvatar} from '$lib/stores/user.js'
+    import {onMount} from 'svelte'
+    import Share from '/src/components/dashboard/Share.svelte'
+    import Funds from '/src/components/dashboard/Funds.svelte'
+    import EditName from '/src/components/dashboard/EditName.svelte'
+    import CreateRoom from '/src/components/dashboard/CreateRoom.svelte'
+    import {layoutState} from '$lib/stores/layout-state.js'
+    import FillButton from '$components/buttons/FillButton.svelte'
+    import {openURL} from '$lib/utils/utils.js'
 
-let avatar
+    let avatar
 let myBoards = []
 let date = new Date()
 let hrs = date.getHours()
