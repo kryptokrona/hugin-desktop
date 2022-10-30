@@ -2375,7 +2375,7 @@ async function optimizeMessages(nbrOfTxs) {
         networkHeight
     )
     console.log('inputs', inputs.length)
-    if (inputs.length > 17) {
+    if (inputs.length > 25) {
         return
     }
     let subWallets = js_wallet.subWallets.subWallets
@@ -2383,14 +2383,14 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
     })
-    if (txs > 1 && inputs.length > 9) {
+    if (txs > 1 && inputs.length > 20) {
         console.log('Already have incoming inputs, aborting..')
         return
     }
     let payments = []
     let i = 0
     /* User payment */
-    while (i <= 49) {
+    while (i <= 150) {
         payments.push([subWallet, 1000])
         console.log(payments.length)
         i += 1
