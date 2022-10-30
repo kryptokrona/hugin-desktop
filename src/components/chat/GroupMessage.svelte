@@ -48,7 +48,7 @@ async function checkreply(reply) {
     }
     thisreply = await window.api.getGroupReply(reply)
     //Add extra number to avoid collision for keys in Svelte each loop
-    thisreply.hash = thisreply.hash + '1337'
+    thisreply.hash = thisreply.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
     return thisreply
 }
 
