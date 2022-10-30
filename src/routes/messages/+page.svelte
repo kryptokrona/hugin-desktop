@@ -106,6 +106,16 @@ $: active_contact
 
 //Send message to store and DB
 const sendMsg = (e) => {
+
+    if (e.detail.text.length > 477) {
+        $notify.errors.push({
+            message: 'Message is too long',
+            name: 'Error',
+            hash: parseInt(Date.now()),
+        })
+        $notify.errors = $notify.errors
+        return
+    }
     console.log('Sending message')
     let offChain = false
     let msg = e.detail.text

@@ -60,6 +60,16 @@ window.api.receive('sent_group', (data) => {
 
 //Send message to store and DB
 function sendGroupMsg(e) {
+
+    if (e.detail.text.length > 477) {
+        $notify.errors.push({
+            message: 'Message is too long',
+            name: 'Error',
+            hash: parseInt(Date.now()),
+        })
+        $notify.errors = $notify.errors
+        return
+    }
     console.log('wanna send this', e)
     let msg = e.detail.text
     let myaddr = $user.huginAddress.substring(0, 99)
