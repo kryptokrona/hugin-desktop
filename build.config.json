@@ -17,6 +17,7 @@
         }
     },
     "files": [
+        "src/sdp.cjs",
         "src/electron.cjs",
         "src/preload.cjs",
         {
