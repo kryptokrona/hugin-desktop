@@ -1,5 +1,5 @@
-import { derived, writable } from 'svelte/store'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
+import {derived, writable} from 'svelte/store'
+import {get_avatar} from '$lib/utils/hugin-utils.js'
 
 //Default values
 export const user = writable({
@@ -16,7 +16,7 @@ export const user = writable({
 
 export const boards = writable({
     addBoard: false,
-    replyTo: { reply: false },
+    replyTo: {reply: false},
     thisBoard: null,
     boardsArray: ['Home'],
     newBoards: [],
@@ -24,7 +24,7 @@ export const boards = writable({
 
 export const groups = writable({
     addGroup: false,
-    replyTo: { reply: false },
+    replyTo: {reply: false},
     thisGroup: {
         name: 'Private groups',
         chat: 'verysecretkeyinchat',
@@ -36,7 +36,7 @@ export const groups = writable({
 
 export const rtc_groups = writable({
     addGroup: false,
-    replyTo: { reply: false },
+    replyTo: {reply: false},
 })
 
 export const misc = writable({
@@ -46,6 +46,8 @@ export const misc = writable({
     networkBlockCount: null,
     balance: [0, 0],
     node: '',
+    version: '',
+    loading: false,
 })
 
 export const webRTC = writable({

@@ -348,6 +348,7 @@ let my_boards = []
 
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
+    mainWindow.webContents.send('version', app.getVersion())
     startCheck()
     if (dev) {
         console.log('Running in development')

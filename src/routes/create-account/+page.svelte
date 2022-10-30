@@ -1,11 +1,11 @@
 <script>
-import { fade } from 'svelte/transition'
-import { misc, user } from '$lib/stores/user.js'
-import FillButton from '/src/components/buttons/FillButton.svelte'
-import { goto } from '$app/navigation'
-import NodeSelector from '$components/popups/NodeSelector.svelte'
+    import {fade} from 'svelte/transition'
+    import {misc, user} from '$lib/stores/user.js'
+    import FillButton from '/src/components/buttons/FillButton.svelte'
+    import {goto} from '$app/navigation'
+    import NodeSelector from '$components/popups/NodeSelector.svelte'
 
-let mnemonic = ''
+    let mnemonic = ''
 let blockHeight
 let password = ''
 let confirmPassword = ''
@@ -41,21 +41,8 @@ const handleLogin = (e) => {
 
     $user.username = username
 
-    user.update((oldData) => {
-        return {
-            ...oldData,
-            loading: true,
-        }
-    })
-
     window.api.send('create-account', accountData)
     console.log('Creating user account', accountData)
-
-    username = ''
-    password = ''
-    step = 1
-
-    goto('/dashboard')
 }
 
 $: {
@@ -68,6 +55,16 @@ function createAcc() {
     $user.restore = false
     step = 1
 }
+
+window.api.receive('wallet-started', async () => {
+    await goto('/dashboard')
+    $misc.loading = false
+    $user.loggedIn = true
+    username = ''
+    password = ''
+    step = 1
+})
+
 </script>
 
 <svelte:window on:keyup|preventDefault="{enter}" />

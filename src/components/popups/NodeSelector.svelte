@@ -1,10 +1,11 @@
 <script>
-import FillButton from '$components/buttons/FillButton.svelte'
-import { nodelist } from '$lib/stores/nodes.js'
-import { fade } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
+    import FillButton from '$components/buttons/FillButton.svelte'
+    import {nodelist} from '$lib/stores/nodes.js'
+    import {fade} from 'svelte/transition'
+    import {createEventDispatcher} from 'svelte'
+    import {misc} from "$lib/stores/user.js";
 
-let nodeInput = ''
+    let nodeInput = ''
 let selectedNode
 
 const dispatch = new createEventDispatcher()
@@ -30,7 +31,7 @@ function chooseNode(node, i) {
 }
 </script>
 
-<div in:fade|local out:fade|local class="wrapper">
+<div in:fade class="wrapper">
     <h1>Pick a node</h1>
     <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}" />
     <div class="node-list">
@@ -54,6 +55,7 @@ function chooseNode(node, i) {
             disabled="{!(nodeInput.length > 0)}"
             enabled="{nodeInput.length > 0}"
             on:click="{connectTo}"
+            loading={$misc.loading}
         />
     </div>
 </div>

@@ -1,288 +1,211 @@
 <script>
-import { fade, fly } from 'svelte/transition'
-import FillButton from '/src/components/buttons/FillButton.svelte'
-import { groups, misc, user } from '$lib/stores/user.js'
-import { onMount } from 'svelte'
-import { goto } from '$app/navigation'
-import { messages } from '$lib/stores/messages.js'
-import HuginArt from '/src/components/HuginArt.svelte'
-import { openURL } from '$lib/utils/utils.js'
+    import {fade} from 'svelte/transition'
+    import FillButton from '/src/components/buttons/FillButton.svelte'
+    import {groups, misc, user} from '$lib/stores/user.js'
+    import {onMount} from 'svelte'
+    import {goto} from '$app/navigation'
+    import toast, {Toaster} from 'svelte-french-toast'
+    import ArrowRight from "$components/icons/ArrowRight.svelte";
+    import {Moon} from "svelte-loading-spinners";
 
-let wallet
-let walletName
-let myPassword = ''
-let data
-let thisWallet
-let loginStatus = true
-let errorMessage = 'Wrong password'
-let enableLogin = false
+    let wallet
+    let myPassword = ''
+    let data
+    let thisWallet
+    let enableLogin = false
 
-onMount(() => {
-    window.api.send('app', true)
+    onMount(() => {
+        window.api.send('app', true)
+        window.api.receive('version', version => {
+            $misc.version = version
+        })
 
-    $user.username = window.localStorage.getItem('userName')
+        $user.username = window.localStorage.getItem('userName')
+        if (!$user.username) $user.username = 'Anon'
 
-    if (!$user.username) $user.username = 'Anon'
+        window.api.receive('wallet-exist', async (data, walletName) => {
+            wallet = data
+            if (walletName === undefined) return
+            console.log('wallet exists', walletName)
+            thisWallet = walletName[0]
+        })
 
-    window.api.receive('wallet-exist', async (data, walletName) => {
-        wallet = data
-        if (walletName === undefined) return
-        console.log('wallet exists', walletName)
-        thisWallet = walletName[0]
     })
-})
 
-window.api.receive('login-failed', async () => {
-    console.log('failed login')
-    loginStatus = false
-    misc.update((oldData) => {
-        return {
-            ...oldData,
-            loading: false,
+    window.api.receive('login-failed', async () => {
+        toast.error('Wrong password', {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+        myPassword = ''
+        $misc.loading = false
+    })
+
+    //Handle login, sets logeged in to true and gets user address
+    const handleLogin = () => {
+        $misc.loading = true
+        let accountData = {
+            thisWallet: thisWallet,
+            myPassword: myPassword,
         }
-    })
-})
-
-//Handle login, sets logeged in to true and gets user address
-const handleLogin = async () => {
-    loginStatus = true
-    let accountData = {
-        thisWallet: thisWallet,
-        myPassword: myPassword,
+        window.api.send('login', accountData)
     }
-    console.log('data', accountData)
 
-    misc.update((oldData) => {
-        return {
-            ...oldData,
-            loading: true,
-        }
+    window.api.receive('wallet-started', async (node, my_groups) => {
+
+        console.log('Got wallet started')
+        //Set chosen node from last startup in store
+        $misc.node = node.node + ':' + node.port
+
+        console.log('adding groups', my_groups)
+        $groups.groupArray = my_groups
+
+        myPassword = ''
+        await goto('/dashboard')
+        $user.loggedIn = true
     })
 
-    window.api.send('login', accountData)
-}
-
-let node
-const switchNode = () => {
-    window.api.switchNode(node)
-    user.update((oldData) => {
-        return {
-            ...oldData,
-            node: node,
-        }
-    })
-}
-
-$: myPassword
-
-window.api.receive('wallet-started', async (node, my_groups) => {
-    //Set contacts to store
-    user.update((data) => {
-        return {
-            ...data,
-            loggedIn: true,
-        }
+    //Sets our own address in svelte store
+    window.api.receive('addr', async (huginAddr) => {
+        console.log('Addr incoming')
+        $user.huginAddress = huginAddr
     })
 
-    //Set chosen node from last startup in store
-    misc.update((oldData) => {
-        return {
-            ...oldData,
-            node: node.node + ':' + node.port,
-        }
-    })
-
-    console.log('adding groups', my_groups)
-    groups.update((oldData) => {
-        return {
-            ...oldData,
-            groupArray: my_groups,
-        }
-    })
-
-    //Get messages and save to a svelte store variable.
-    messages.set(await window.api.getMessages((res) => {}))
-
-    //Go to dashboard if login was successful
-    goto('/dashboard')
-    myPassword = ''
-})
-
-//Sets our own address in svelte store
-window.api.receive('addr', async (huginAddr) => {
-    console.log('Addr incoming')
-    user.update((data) => {
-        return {
-            ...data,
-            huginAddress: huginAddr,
-        }
-    })
-})
-
-$: {
-    if (myPassword.length > 1) {
-        //Enable add button
-        enableLogin = true
-    } else {
-        enableLogin = false
+    $: {
+        enableLogin = myPassword.length > 1
     }
-}
 
-const enter = (e) => {
-    if (enableLogin && e.keyCode === 13) {
-        handleLogin()
-        enableLogin = false
+    const enter = (e) => {
+        if (enableLogin && e.keyCode === 13) {
+            handleLogin()
+            enableLogin = false
+        }
     }
-}
 
-function goTo(restore) {
-    if (restore) {
-        $user.restore = true
-    } else {
-        $user.restore = false
+    const goTo = restore => {
+        $user.restore = !!restore
+        goto('/create-account')
     }
-    goto('/create-account')
-}
+
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}" />
-<div class="wrapper" in:fade out:fade="{{ duration: 200 }}">
-    {#if wallet}
+<svelte:window on:keyup|preventDefault="{enter}"/>
+<Toaster/>
+
+{#if wallet}
+    <div class="wrapper" in:fade>
         <div class="login-wrapper">
+            <h1>Hugin</h1>
+            <div class="field">
+                <input placeholder="Password..." type="password" bind:value="{myPassword}"/>
+                <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
+                    {#if $misc.loading}
+                        <Moon color="#000000" size="20" unit="px"/>
+                    {:else}
+                        <ArrowRight/>
+                    {/if}
+                </button>
+            </div>
+            <p style="color: white; opacity: 30%">v{$misc.version}</p>
+        </div>
+    </div>
+{:else}
+
+    <div in:fade class="wrapper">
+        <div class="init">
+            <h1>Hugin</h1>
             <div>
-                <h2 class="title">Sign into your account</h2>
-                <input type="password" placeholder="Password" bind:value="{myPassword}" />
-                <FillButton text="Log in" enabled="{enableLogin}" on:click="{handleLogin}" />
+                <FillButton disabled="{false}" text="Create Account" on:click="{() => goTo(false)}"/>
+                <FillButton disabled="{false}" text="Restore Account" on:click="{() => goTo(true)}"/>
             </div>
+            <p style="color: white; opacity: 30%">v{$misc.version}</p>
         </div>
-        <div in:fade class="hero">
-            <div></div>
-            <div>
-                <HuginArt />
-                <div in:fly="{{ y: 100 }}" class="socials">
-                    <p on:click="{() => openURL('https://github.com/kryptokrona/hugin-desktop')}">
-                        Github
-                    </p>
-                    <p
-                        on:click="{() =>
-                            openURL('https://github.com/kryptokrona/hugin-desktop/issues')}"
-                    >
-                        Support
-                    </p>
-                    <p on:click="{() => openURL('https://hugin.chat')}">Website</p>
-                </div>
-            </div>
-            <div></div>
-        </div>
-    {:else}
-        <div in:fade class="hero">
-            <div></div>
-            <div class="center">
-                <HuginArt />
-                <FillButton
-                    disabled="{false}"
-                    text="Create Account"
-                    on:click="{() => goTo(false)}"
-                />
-                <FillButton
-                    disabled="{false}"
-                    text="Restore Account"
-                    on:click="{() => goTo(true)}"
-                />
-            </div>
-            <div></div>
-        </div>
-    {/if}
-    {#if !loginStatus}
-        <p class="error">{errorMessage}</p>
-    {/if}
-</div>
+    </div>
+
+{/if}
 
 <style lang="scss">
-.wrapper {
-    display: flex;
-    height: 100vh;
-    color: #fff;
-    z-index: 3;
-}
 
-.login-wrapper {
+  .wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    color: #fff;
+  }
+
+  .login-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .init {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100vh;
+    gap: 2rem;
 
     div {
-        max-width: 200px;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
-}
+  }
 
-.title {
-    width: 200px;
-    margin-top: 0;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.hero {
+  .field {
     display: flex;
-    flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    height: 100vh;
-    z-index: 3;
-
-    .center {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 2rem;
-        align-items: center;
-    }
-}
-
-.socials {
-    display: flex;
-    gap: 55px;
-    cursor: pointer;
-}
-
-.show {
-    display: block;
-}
-
-input {
-    margin: 0 auto;
-    max-width: 700px;
-    width: 100%;
-    height: 48px;
-    padding: 0 15px;
-    border-radius: 0.5rem;
-    transition: 200ms ease-in-out;
+    padding: 0 6px 0 10px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
-    color: var(--text-color);
-    font-size: 1.1rem;
+    border-radius: 8px;
+    transition: 100ms ease-in-out;
 
-    &:focus {
-        outline: none;
+    &:focus-within {
+      border: 1px solid #404040;
     }
-}
 
-.error {
-    color: red;
-}
+    input {
+      margin: 0 auto;
+      width: 200px;
+      height: 48px;
+      transition: 200ms ease-in-out;
+      color: var(--text-color);
+      background-color: transparent;
+      border: none;
+      font-size: 1.1rem;
 
-a {
-    cursor: pointer;
-    font-family: 'Roboto Mono';
-    color: white;
-}
+      &:focus {
+        outline: none;
+      }
+    }
+
+    button {
+      border: none;
+      background-color: #252525;
+      height: 36px;
+      width: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 100ms ease-in-out;
+
+      &:hover {
+        background: #303030;
+      }
+    }
+  }
+
+  .enableLogin {
+    background-color: #3fd782 !important;
+  }
+
 </style>
