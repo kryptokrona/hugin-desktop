@@ -4,15 +4,17 @@
     import {groups, misc, user} from '$lib/stores/user.js'
     import {onMount} from 'svelte'
     import {goto} from '$app/navigation'
-    import toast, {Toaster} from 'svelte-french-toast'
+    import toast from 'svelte-french-toast'
     import ArrowRight from "$components/icons/ArrowRight.svelte";
     import {Moon} from "svelte-loading-spinners";
+    import NodeSelector from "$components/popups/NodeSelector.svelte";
 
     let wallet
     let myPassword = ''
     let data
     let thisWallet
     let enableLogin = false
+    let nodeFailed
 
     onMount(() => {
         window.api.send('app', true)
@@ -23,7 +25,8 @@
         $user.username = window.localStorage.getItem('userName')
         if (!$user.username) $user.username = 'Anon'
 
-        window.api.receive('wallet-exist', async (data, walletName) => {
+        window.api.receive('wallet-exist', async (data, walletName, node) => {
+            $misc.node = node
             wallet = data
             if (walletName === undefined) return
             console.log('wallet exists', walletName)
@@ -42,14 +45,24 @@
     })
 
     //Handle login, sets logeged in to true and gets user address
-    const handleLogin = () => {
+    const handleLogin = (e) => {
         $misc.loading = true
         let accountData = {
+            node: $misc.node.node,
+            port: $misc.node.port,
             thisWallet: thisWallet,
             myPassword: myPassword,
         }
         window.api.send('login', accountData)
     }
+
+    window.api.receive('node-not-ok', () => {
+        setTimeout(() => {
+            nodeFailed = true
+        }, 500)
+        myPassword = ''
+        $misc.loading = false
+    })
 
     window.api.receive('wallet-started', async (node, my_groups) => {
 
@@ -87,10 +100,23 @@
         goto('/create-account')
     }
 
+    const setNode = (e) => {
+        if(e.detail.node) {
+            $misc.node = { node: e.detail.node.split(':')[0], port: parseInt(e.detail.node.split(':')[1]) }
+            nodeFailed = false
+        }
+    }
+
 </script>
 
 <svelte:window on:keyup|preventDefault="{enter}"/>
-<Toaster/>
+
+
+{#if nodeFailed}
+    <div class="backdrop">
+        <NodeSelector on:connect={(e) => setNode(e)} on:back={() => nodeFailed = false}/>
+    </div>
+{/if}
 
 {#if wallet}
     <div class="wrapper" in:fade>
@@ -206,6 +232,19 @@
 
   .enableLogin {
     background-color: #3fd782 !important;
+  }
+
+  .backdrop {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--backgound-color);
+    z-index: 103;
   }
 
 </style>

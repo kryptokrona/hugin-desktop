@@ -18,6 +18,7 @@
     import Notification from '/src/components/popups/Notification.svelte'
     import {appUpdateState} from '$lib/stores/updater-state.js'
     import UpdatePopup from '$components/popups/UpdatePopup.svelte'
+    import toast, {Toaster} from "svelte-french-toast";
 
     let ready = false
     let myVideo = false
@@ -294,6 +295,13 @@
         }
     })
 
+    window.api.receive('node-not-ok', () => {
+        toast.error('Could not connect to node', {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+    })
+
     //APP UPDATE PROGRESS
     window.api.receive('update-progress', (progress) => {
         $appUpdateState.step = 2
@@ -305,7 +313,7 @@
 </script>
 
 <TrafficLights/>
-
+<Toaster/>
 {#if ready}
 
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}

@@ -331,8 +331,10 @@ const database = new sqlite3.Database(dbPath, (err) => {
 })
 
 let daemon
+let nodeUrl
+let nodePort
+//node will contain {node: nodeUrl, port: nodePort}
 let node
-let ports
 
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
@@ -418,20 +420,42 @@ ipcMain.on('install-update', async (e, data) => {
     autoUpdater.quitAndInstall()
 })
 
+const checkNodeStatus = async (node) => {
+    try {
+        const req = await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
+        if (!req.ok) return false
+
+        const res = await req.json()
+
+        if (res.status === 'OK') return true
+    } catch (e) {
+        console.log(e)
+    }
+}
+
 async function startCheck() {
     if (fs.existsSync(userDataDir + '/misc.db')) {
         await db.read()
         let walletName = db.data.walletNames
         console.log('walletname', walletName)
-        mainWindow.webContents.send('wallet-exist', true, walletName)
         createTables()
-        node = db.data.node.node
-        ports = db.data.node.port
-        let mynode = { node: node, port: ports }
-        daemon = new WB.Daemon(node, ports)
+        nodeUrl = db.data.node.node
+        nodePort = db.data.node.port
+        let node = { node: nodeUrl, port: nodePort }
+        console.log('START NODE', node)
+        mainWindow.webContents.send('wallet-exist', true, walletName, node)
+        daemon = new WB.Daemon(nodeUrl, nodePort)
 
         ipcMain.on('login', async (event, data) => {
-            startWallet(data, mynode)
+            console.log('LOG IN USING ', data)
+            nodeUrl = data.node
+            nodePort = data.port
+            node = { node: nodeUrl, port: nodePort }
+            db.data.node.node = nodeUrl
+            db.data.node.port = nodePort
+            db.data.node = node
+            await db.write()
+            startWallet(data, node)
         })
     } else {
         //No wallet found, probably first start
@@ -451,12 +475,13 @@ async function createTables() {
     groupsTable()
 }
 
-async function startWallet(data, mynode) {
+const startWallet = async (data, node) => {
     let walletName = data.thisWallet
     let password = data.myPassword
+
     console.log('Starting this wallet', walletName)
     console.log('password', password)
-    start_js_wallet(walletName, password, mynode)
+    start_js_wallet(walletName, password, node)
 }
 
 const welcomeAddress =
@@ -692,13 +717,15 @@ function firstContact() {
 
 ipcMain.on('create-account', async (e, accountData) => {
     //Create welcome message
-    welcomeMessage()
     console.log('accdata', accountData)
     let walletName = accountData.walletName
     let myPassword = accountData.password
-    node = accountData.node
-    ports = accountData.port
-    daemon = new WB.Daemon(node, ports)
+    nodeUrl = accountData.node
+    nodePort = accountData.port
+    let node = { node: nodeUrl, port: nodePort }
+
+    welcomeMessage()
+    daemon = new WB.Daemon(nodeUrl, nodePort)
 
     if (!accountData.blockheight) {
         accountData.blockheight = 1
@@ -727,13 +754,13 @@ ipcMain.on('create-account', async (e, accountData) => {
         node: { node: '', port: '' },
     }
     //Saving node
-    let mynode = { node: node, port: ports }
-    db.data.node = mynode
+    db.data.node = node
     //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
     console.log('creating dbs...')
-    start_js_wallet(walletName, myPassword, mynode)
+
+    start_js_wallet(walletName, myPassword, node)
 })
 
 async function loadGroups() {
@@ -829,7 +856,14 @@ async function openWalletFromFile(walletName, password) {
     return js_wallet
 }
 
-async function start_js_wallet(walletName, password, mynode) {
+async function start_js_wallet(walletName, password, node) {
+    let nodeOnline = await checkNodeStatus(node)
+
+    if (!nodeOnline) {
+        mainWindow.webContents.send('node-not-ok')
+        return
+    }
+
     js_wallet = await logIntoWallet(walletName, password)
 
     if (js_wallet === 'Wrong password') {
@@ -913,7 +947,7 @@ async function start_js_wallet(walletName, password, mynode) {
         }
     )
 
-    mainWindow.webContents.send('wallet-started', mynode, my_groups)
+    mainWindow.webContents.send('wallet-started', node, my_groups)
     console.log('Started wallet')
     await sleep(2000)
     console.log('Loading Sync')
@@ -1002,7 +1036,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
     mainWindow.webContents.send('sync', 'Syncing')
     try {
         const resp = await fetch(
-            'http://' + node + ':' + ports.toString() + '/get_pool_changes_lite',
+            'http://' + nodeUrl + ':' + nodePort.toString() + '/get_pool_changes_lite',
             {
                 method: 'POST',
                 body: JSON.stringify({ knownTxsIds: known_pool_txs }),
@@ -1870,17 +1904,19 @@ ipcMain.on('openLink', (e, url) => {
 })
 
 //SWITCH NODE
-ipcMain.on('switchNode', async (e, newNode) => {
-    console.log(`Switching node to ${newNode}`)
-    node = newNode.split(':')[0]
-    ports = parseInt(newNode.split(':')[1])
+ipcMain.on('switchNode', async (e, node) => {
+    console.log(`Switching node to ${node}`)
+    nodeUrl = node.split(':')[0]
+    nodePort = parseInt(node.split(':')[1])
 
-    const daemon = new WB.Daemon(node, ports)
+    const daemon = new WB.Daemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
 
-    let mynode = { node: node, port: ports }
-    db.data.node = mynode
-    db.write()
+    node = { node: nodeUrl, port: nodePort }
+    db.data.node.node = nodeUrl
+    db.data.node.port = nodePort
+    db.data.node = node
+    await db.write()
 })
 
 ipcMain.on('sendTx', (e, tx) => {
