@@ -22,7 +22,6 @@
     import Updater from "$components/updater/Updater.svelte";
 
 
-
     let ready = false
     let myVideo = false
     let peerVideo = true
@@ -186,6 +185,13 @@
             })
         })
 
+        window.api.receive('node-not-ok', () => {
+            toast.error('Could not connect to node', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+        })
+
         window.api.receive('node-sync-data', (data) => {
             misc.update((current) => {
                 return {
@@ -307,14 +313,6 @@
             //Do nothing
         }
     })
-
-    window.api.receive('node-not-ok', () => {
-        toast.error('Could not connect to node', {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
-    })
-
     //APP UPDATE PROGRESS
     window.api.receive('update-progress', (progress) => {
         $appUpdateState.step = 2
