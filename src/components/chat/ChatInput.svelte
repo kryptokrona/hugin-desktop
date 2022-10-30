@@ -1,20 +1,30 @@
 <script>
-    import {createEventDispatcher, onMount} from 'svelte'
+    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import SendIcon from '/src/components/icons/SendIcon.svelte'
     import {boards, webRTC} from '$lib/stores/user.js'
     import {page} from '$app/stores'
     import {user} from '$lib/stores/user'
-    import 'emoji-picker-element';
     import Emoji from "$components/icons/Emoji.svelte";
+
+    import 'emoji-picker-element';
+    import {sleep} from "$lib/utils/utils.js";
 
     let off_chain
     const dispatch = createEventDispatcher()
     export let rtc = false
 
     let openEmoji;
-    onMount(() => {
-        let emojiPicker = document.querySelector('emoji-picker')
+    let emojiPicker
+
+    onMount(async () => {
+        await sleep(200)
+        emojiPicker = document.querySelector('emoji-picker')
         emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
+    })
+
+    onDestroy(() => {
+        emojiPicker = ''
+        window.api.removeAllListeners("emoji-picker");
     })
 
     const enter = (e) => {
