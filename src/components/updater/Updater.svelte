@@ -1,10 +1,9 @@
 <script>
 import { fade, fly } from 'svelte/transition'
-import { appUpdateState } from '$lib/stores/updater-state.js'
 import FillButton from '$components/buttons/FillButton.svelte'
-import { formatBytes } from '$lib/utils/utils'
-import Close from "$components/icons/Close.svelte";
+import { formatBytes } from '$lib/utils/utils.js'
 import {misc} from "$lib/stores/user.js";
+import {appUpdateState} from "$components/updater/update-store.js";
 </script>
 
 <div class="backdrop" in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}">
