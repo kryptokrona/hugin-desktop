@@ -325,6 +325,7 @@
 
 <TrafficLights/>
 <Toaster/>
+<div class="shine"></div>
 {#if ready}
 
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
