@@ -406,6 +406,7 @@ async function startPeer1(stream, video, contact) {
         stream: stream,
         trickle: false,
         wrtc: wrtc,
+        config: { iceServers: [{ urls: 'stun:stun.bahnhof.net:3478' }, { urls: 'stun:stun.ipfire.org:3478' }] },
         offerOptions: {
             offerToReceiveVideo: true,
             offerToReceiveAudio: true,
