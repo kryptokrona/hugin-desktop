@@ -73,9 +73,9 @@
         console.log('adding groups', my_groups)
         $groups.groupArray = my_groups
 
-        myPassword = ''
         await goto('/dashboard')
         $user.loggedIn = true
+        myPassword = ''
     })
 
     //Sets our own address in svelte store
@@ -119,6 +119,7 @@
 {/if}
 
 {#if wallet}
+
     <div class="wrapper" in:fade>
         <div class="login-wrapper">
             <h1>Hugin</h1>
@@ -135,7 +136,8 @@
             <p style="color: white; opacity: 30%">v{$misc.version}</p>
         </div>
     </div>
-{:else}
+
+{:else if !wallet}
 
     <div in:fade class="wrapper">
         <div class="init">
@@ -146,6 +148,12 @@
             </div>
             <p style="color: white; opacity: 30%">v{$misc.version}</p>
         </div>
+    </div>
+
+{:else}
+
+    <div class="wrapper">
+        <Moon color="#ffffff" size="30" unit="px"/>
     </div>
 
 {/if}
