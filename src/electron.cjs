@@ -2277,7 +2277,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     let payload_hex = toHex(JSON.stringify(payload_box))
     //Choose subwallet with message inputs
     let messageWallet = js_wallet.subWallets.getAddresses()[1]
-
+    
     if (!off_chain) {
         let result = await js_wallet.sendTransactionAdvanced(
             [[address, 1000]], // destinations,
@@ -2371,7 +2371,7 @@ async function optimizeMessages(nbrOfTxs) {
     messageAddress.push(subWallet)
 
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(
-        messageAddress,
+        js_wallet.subWallets.getAddresses(),
         networkHeight
     )
     console.log('inputs', inputs.length)
