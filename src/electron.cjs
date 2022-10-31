@@ -2367,9 +2367,6 @@ async function optimizeMessages(nbrOfTxs) {
 
     const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus()
 
-    let messageAddress = []
-    messageAddress.push(subWallet)
-
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(
         js_wallet.subWallets.getAddresses(),
         networkHeight
