@@ -52,7 +52,16 @@
         console.log('webRTC call ', $webRTC.call)
     }
 
+    let startAnimation
     onMount(async () => {
+        ready = true
+        startAnimation = true
+        setTimeout(() => {
+            startAnimation = false
+        }, 1001)
+
+
+
         window.process = {
             ...window.process,
             env: {DEBUG: undefined},
@@ -71,8 +80,6 @@
 
             $user.activeChat = $user.contacts[my_contacts.length - 1]
         })
-
-        ready = true
 
         //Handle incoming call
         window.api.receive('call-incoming', async (msg, chat, group = false) => {
@@ -325,8 +332,12 @@
 
 <TrafficLights/>
 <Toaster/>
-<div class="shine"></div>
+
 {#if ready}
+
+    {#if startAnimation}
+        <div class="shine"></div>
+    {/if}
 
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
         <VideoGrid/>
