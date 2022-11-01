@@ -1,12 +1,13 @@
 <script>
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { user } from '$lib/stores/user.js'
-import AddCircle from '/src/components/icons/AddCircle.svelte'
-import Contact from '/src/components/chat/Contact.svelte'
-import { layoutState } from '$lib/stores/layout-state.js'
-import { fade } from 'svelte/transition'
+    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+    import {user} from '$lib/stores/user.js'
+    import AddCircle from '/src/components/icons/AddCircle.svelte'
+    import Contact from '/src/components/chat/Contact.svelte'
+    import {layoutState} from '$lib/stores/layout-state.js'
+    import {fade} from 'svelte/transition'
+    import {flip} from 'svelte/animate'
 
-const dispatch = createEventDispatcher()
+    const dispatch = createEventDispatcher()
 
 let filterArr = []
 let nickname
@@ -126,13 +127,15 @@ $: filterArr
         <AddCircle on:click="{() => dispatch('open')}" />
     </div>
     <div class="list-wrapper">
-        {#each filterArr as message}
+        {#each filterArr as message (message.chat)}
+            <div animate:flip="{{duration: 250}}">
             <Contact
                 on:openRename="{(e) => dispatch('openRename')}"
                 on:rename="{(a) => dispatch('rename', a)}"
                 contact="{message}"
                 on:thisContact="{(e) => sendConversation(e.detail.contact)}"
             />
+            </div>
         {/each}
     </div>
 </div>

@@ -1,10 +1,10 @@
 <script>
-import { createEventDispatcher } from 'svelte'
-import { fade } from 'svelte/transition'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { user, webRTC } from '$lib/stores/user.js'
+    import {createEventDispatcher} from 'svelte'
+    import {fade} from 'svelte/transition'
+    import {get_avatar} from '$lib/utils/hugin-utils.js'
+    import {user, webRTC} from '$lib/stores/user.js'
 
-export let contact
+    export let contact
 let thisCall = false
 
 $: if ($webRTC.active) {
@@ -33,8 +33,8 @@ const rename = () => {
 
 <div
     class="card"
-    in:fade="{{ duration: 100 }}"
-    out:fade="{{ duration: 100 }}"
+    in:fade
+    out:fade
     class:rgb="{thisCall}"
     class:active="{contact.chat === $user.activeChat.chat}"
     on:click="{() => printThis(contact)}"
@@ -63,6 +63,7 @@ const rename = () => {
     width: 100%;
     color: var(--title-color);
     border-bottom: 1px solid var(--border-color);
+  background-color: var(--backgound-color);
     transition: 200ms ease-in-out;
     cursor: pointer;
     opacity: 0.9;
