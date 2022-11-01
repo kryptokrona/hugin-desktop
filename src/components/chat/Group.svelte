@@ -1,10 +1,10 @@
 <script>
-import { createEventDispatcher } from 'svelte'
-import { fade } from 'svelte/transition'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { groups } from '$lib/stores/user.js'
+    import {createEventDispatcher} from 'svelte'
+    import {fade} from 'svelte/transition'
+    import {get_avatar} from '$lib/utils/hugin-utils.js'
+    import {groups} from '$lib/stores/user.js'
 
-export let group
+    export let group
 const dispatch = createEventDispatcher()
 
 const printThis = (contact) => {
@@ -14,8 +14,8 @@ const printThis = (contact) => {
 
 <div
     class="card"
-    in:fade="{{ duration: 100 }}"
-    out:fade="{{ duration: 100 }}"
+    in:fade
+    out:fade
     class:active="{$groups.thisGroup.key === group.key}"
     on:click="{(e) => printThis(group)}"
 >
@@ -41,6 +41,7 @@ const printThis = (contact) => {
     width: 100%;
     color: var(--title-color);
     border-bottom: 1px solid var(--border-color);
+  background-color: var(--backgound-color);
     transition: 200ms ease-in-out;
     cursor: pointer;
     opacity: 0.9;

@@ -1,16 +1,17 @@
 <script>
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { fade } from 'svelte/transition'
-import { groupMessages } from '$lib/stores/groupmsgs.js'
-import { groups } from '$lib/stores/user.js'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
-import Group from '/src/components/chat/Group.svelte'
-import Plus from '/src/components/icons/Plus.svelte'
-import RemoveGroup from '/src/components/chat/RemoveGroup.svelte'
-import { layoutState } from '$lib/stores/layout-state.js'
-import { sleep } from '$lib/utils/utils.js'
+    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+    import {fade} from 'svelte/transition'
+    import {groupMessages} from '$lib/stores/groupmsgs.js'
+    import {groups} from '$lib/stores/user.js'
+    import {get_avatar} from '$lib/utils/hugin-utils.js'
+    import Group from '/src/components/chat/Group.svelte'
+    import Plus from '/src/components/icons/Plus.svelte'
+    import RemoveGroup from '/src/components/chat/RemoveGroup.svelte'
+    import {layoutState} from '$lib/stores/layout-state.js'
+    import {sleep} from '$lib/utils/utils.js'
+    import {flip} from 'svelte/animate'
 
-const dispatch = createEventDispatcher()
+    const dispatch = createEventDispatcher()
 let activeHugins = []
 let contacts = []
 let msgkey
@@ -196,8 +197,10 @@ $: groupName = $groups.thisGroup.name
         </div>
     {:else}
         <div class="list-wrapper">
-            {#each $groups.groupArray as group}
-                <Group group="{group}" on:print="{() => printGroup(group)}" />
+            {#each $groups.groupArray as group (group.key)}
+                <div animate:flip="{{duration: 250}}">
+                    <Group group="{group}" on:print="{() => printGroup(group)}" />
+                </div>
             {/each}
         </div>
     {/if}
@@ -225,7 +228,6 @@ $: groupName = $groups.thisGroup.name
 .list-wrapper {
     display: flex;
     flex-direction: column;
-    align-items: center;
     width: 100%;
     height: calc(100% - 103px);
     overflow: scroll;
