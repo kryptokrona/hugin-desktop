@@ -859,7 +859,6 @@ async function openWalletFromFile(walletName, password) {
 
 async function start_js_wallet(walletName, password, node) {
     let nodeOnline = await checkNodeStatus(node)
-
     if (!nodeOnline) {
         mainWindow.webContents.send('node-not-ok')
         return
@@ -1348,6 +1347,8 @@ async function saveGroupMessage(msg, hash, time, offchain) {
     let timestamp = sanitizeHtml(time)
     let nick = sanitizeHtml(msg.n)
     let txHash = sanitizeHtml(hash)
+    let exists = await groupMessageExists(timestamp)
+    if (exists) return
 
     if (nick === '') {
         nick = 'Anonymous'
@@ -1659,7 +1660,6 @@ async function printBoard(board = false) {
 
 //Get original messsage from a chosen reply hash
 async function getReply(reply = false) {
-    console.log('Get reply', reply)
     let thisReply
     return new Promise((resolve, reject) => {
         let sql = `SELECT
@@ -1694,7 +1694,6 @@ async function getReply(reply = false) {
 
 //Get original messsage from a chosen reply hash
 async function getGroupReply(reply) {
-    console.log('Get reply', reply)
     let thisReply
     return new Promise((resolve, reject) => {
         let sql = `SELECT
@@ -1765,13 +1764,16 @@ async function getReplies(hash = false) {
 
 //Saves private message
 async function saveMessage(msg, hash, offchain = false) {
+    
     let torrent
     let text
     let sent = msg.sent
     let addr = sanitizeHtml(msg.from)
     let timestamp = sanitizeHtml(msg.t)
     let key = sanitizeHtml(msg.k)
-    console.log('msg', msg)
+
+    let exists = await messageExists(timestamp)
+    if (exists) return
 
     let group_call = false
 
@@ -1867,6 +1869,51 @@ async function getContacts() {
             }
         )
     })
+}
+
+async function messageExists(time) {
+    let exists = false
+    return new Promise((resolve, reject) => {
+        const messageExists = 
+        `SELECT *
+        FROM messages
+        WHERE timestamp = ${time}
+        `
+        database.each(
+            messageExists,
+            (err, row) => {
+                if (row) {
+                    exists = true
+                }
+            },
+            () => {
+                resolve(exists)
+            }
+        )
+    })
+}
+
+async function groupMessageExists(time) {
+    let exists = false
+    return new Promise((resolve, reject) => {
+        const groupMessageExists = 
+        `SELECT *
+        FROM groupmessages
+        WHERE time = ${time}
+        `
+        database.each(
+            groupMessageExists,
+            (err, row) => {
+                if (row) {
+                    exists = true
+                }
+            },
+            () => {
+                resolve(exists)
+            }
+        )
+    })
+
 }
 
 ipcMain.handle('createGroup', async () => {
