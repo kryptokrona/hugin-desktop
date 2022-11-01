@@ -11,6 +11,11 @@ const config = {
             prependData: `@import 'src/lib/theme/global.scss';`,
         },
     }),
+    vitePlugin: {
+        experimental: {
+            inspector: true
+        }
+    },
     onwarn: (warning, handler) => {
         const { code } = warning
         if (
