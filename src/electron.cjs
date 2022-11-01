@@ -2356,7 +2356,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
             optimizeMessages()
         } else {
             let error = {
-                message: `Failed to send message. `,
+                message: `Failed to send`,
                 name: 'Error',
                 hash: Date.now(),
             }
