@@ -2,8 +2,12 @@
     //Global CSS
     import '/src/lib/theme/global.scss'
 
+    //Import window apis
+    import '$lib/window-api/notifications.js'
+    import '$lib/window-api/node.js'
+
     //Stores
-    import {boards, groups, misc, notify, user, webRTC} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC} from '$lib/stores/user.js'
     import {messages} from '$lib/stores/messages.js'
 
     import {onMount} from 'svelte'
@@ -17,7 +21,7 @@
     import VideoGrid from '$components/webrtc/VideoGrid.svelte'
     import {page} from '$app/stores'
     import Notification from '/src/components/popups/Notification.svelte'
-    import toast, {Toaster} from "svelte-french-toast";
+    import {Toaster} from "svelte-french-toast";
     import {appUpdateState} from "$components/updater/update-store.js";
     import Updater from "$components/updater/Updater.svelte";
 
@@ -112,15 +116,6 @@
             }
         })
 
-        //Handle sync status
-        window.api.receive('sync', (data) => {
-            misc.update((current) => {
-                return {
-                    ...current,
-                    syncState: data,
-                }
-            })
-        })
 
         window.api.receive('rec-off', (data) => {
             //This is for logging SDP for calls, to look for bugs etc during parse and expand phase
@@ -183,32 +178,6 @@
             })
         })
 
-        window.api.receive('node', async (node) => {
-            misc.update((current) => {
-                return {
-                    ...current,
-                    node: node,
-                }
-            })
-        })
-
-        window.api.receive('node-not-ok', () => {
-            toast.error('Could not connect to node', {
-                position: 'top-right',
-                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-            })
-        })
-
-        window.api.receive('node-sync-data', (data) => {
-            misc.update((current) => {
-                return {
-                    ...current,
-                    walletBlockCount: data.walletBlockCount,
-                    networkBlockCount: data.networkBlockCount,
-                    localDaemonBlockCount: data.localDaemonBlockCount,
-                }
-            })
-        })
 
         const saveToStore = (data) => {
             messages.update((current) => {
@@ -221,17 +190,6 @@
             endThisCall()
         })
 
-        window.api.receive('error_msg', async (error) => {
-            console.log('Error', error)
-            $notify.errors.push(error)
-            $notify.errors = $notify.errors
-        })
-
-        window.api.receive('sent_tx', async (data) => {
-            console.log('sent', data)
-            $notify.success.push(data)
-            $notify.success = $notify.success
-        })
 
         window.api.receive('group_invited_contact', async (data) => {
             console.log('***** GROUP INVITED ****', data)
