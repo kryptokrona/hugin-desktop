@@ -280,9 +280,11 @@ async function addEmoji() {
         await filterEmojis.forEach(function (b) {
             if (!a.react && b.reply == a.hash) {
                 a.react = []
+                b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
                 a.react.push(b)
                 console.log()
             } else if (b.reply == a.hash) {
+                b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
                 a.react.push(b)
             }
         })
