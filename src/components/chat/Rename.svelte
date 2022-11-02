@@ -79,14 +79,13 @@ const remove = () => {
     {:else}
     <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
-            <h3 in:fade>Rename</h3>
-            <Button 
+            <FillButton 
                 disabled="{false}" 
                 text="Rename" 
                 on:click="{() => rename = true}" />
-            <h3 in:fade>Remove</h3>
-            <Button 
-                disabled="{false}" 
+            <FillButton 
+                disabled="{false}"
+                red="{true}"
                 text="Remove" 
                 on:click="{remove}" />
         </div>

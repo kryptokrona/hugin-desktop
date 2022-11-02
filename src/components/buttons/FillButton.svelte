@@ -7,9 +7,10 @@
     export let info = false
     export let disabled
     export let loading
+    export let red = false
 </script>
 
-<button disabled="{disabled}" on:click class:enabled class:info class:border_rgb="{rgb}">
+<button disabled="{disabled}" class:red={red} on:click class:enabled class:info class:border_rgb="{rgb}">
     {#if loading}
         <Moon color="#000000" size="20" unit="px"/>
         {:else}
@@ -39,6 +40,10 @@
     &:hover {
       background-color: var(--card-border);
     }
+  }
+
+  .red {
+    background-color: var(--warn-color);
   }
 
   .enabled {
