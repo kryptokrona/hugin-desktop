@@ -179,18 +179,27 @@ const WINDOW_API = {
     addBoard: async (board) => {
         ipcRenderer.send('addBoard', board)
     },
+
     removeBoard: async (board) => {
         ipcRenderer.send('removeBoard', board)
     },
+
     addGroup: async (grp) => {
         ipcRenderer.send('addGroup', grp)
     },
+
     removeGroup: async (grp) => {
         ipcRenderer.send('removeGroup', grp)
     },
+
     createGroup: async () => {
         return await ipcRenderer.invoke('createGroup')
     },
+
+    removeContact: async (contact) => {
+        ipcRenderer.send('removeContact', contact)
+    },
+    
     removeAllListeners: (channel) => {
         console.log('want to remove', channel)
         console.log('removed')

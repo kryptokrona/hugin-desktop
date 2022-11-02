@@ -1146,7 +1146,9 @@ ipcMain.on('removeGroup', async (e, grp) => {
 })
 
 ipcMain.on('removeContact', async (e, contact) => {
-    removeContact(contact)
+    await removeContact(contact)
+    await removeMessages(contact)
+    mainWindow.webContents.send('sent')
 })
 
 //Listens for event from frontend and saves contact and nickname.

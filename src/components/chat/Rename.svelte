@@ -4,13 +4,14 @@ import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher } from 'svelte'
 import FillButton from '/src/components/buttons/FillButton.svelte'
 import { user } from '$lib/stores/user.js'
+import Button from '../buttons/Button.svelte'
 
 const dispatch = createEventDispatcher()
 
 let enableAddButton = false
 let text = ''
 let name = 'Change'
-
+let rename = false
 export let this_contact
 
 const enter = (e) => {
@@ -19,6 +20,8 @@ const enter = (e) => {
         enableAddButton = false
     }
 }
+
+$: console.log($user.rename)
 
 $: {
     if (text.length > 0) {
@@ -35,7 +38,10 @@ const renameContact = (board) => {
     dispatch('rename', {
         text: text,
     })
+    closeRename()
+}
 
+const closeRename = () => {
     user.update((a) => {
         return {
             ...a,
@@ -43,11 +49,18 @@ const renameContact = (board) => {
         }
     })
 }
+
+const remove = () => {
+    window.api.removeContact($user.rename.chat)
+    dispatch('openRename')
+    closeRename()
+}
 </script>
 
 <svelte:window on:keyup|preventDefault="{enter}" />
 
 <div on:click|self in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="backdrop">
+    {#if rename}
     <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="field">
         <input
             placeholder="Rename {$user.rename.name}"
@@ -63,6 +76,22 @@ const renameContact = (board) => {
             on:click="{() => renameContact(text)}"
         />
     </div>
+    {:else}
+    <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
+        <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
+            <h3 in:fade>Rename</h3>
+            <Button 
+                disabled="{false}" 
+                text="Rename" 
+                on:click="{() => rename = true}" />
+            <h3 in:fade>Remove</h3>
+            <Button 
+                disabled="{false}" 
+                text="Remove" 
+                on:click="{remove}" />
+        </div>
+    </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -116,4 +145,18 @@ input {
     z-index: 103;
     border-radius: 15px;
 }
+
+.card {
+    background-color: var(--backgound-color);
+    border: 1px solid var(--card-border);
+    padding: 20px;
+    border-radius: 8px;
+    width: 250px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
 </style>

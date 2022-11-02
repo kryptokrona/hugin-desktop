@@ -211,6 +211,7 @@ const hideModal = () => {
 {#if toggleRename}
     <Rename
         on:rename="{(a) => renameContact(a)}"
+        on:openRename="{openRename}"
         this_contact="{contact}"
         on:click="{openRename}"
     />
