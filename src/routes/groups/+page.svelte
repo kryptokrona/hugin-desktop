@@ -265,8 +265,10 @@ async function updateReactions(msg) {
     reactionsFixed = fixedGroups.map(function (r) {
         if (r.hash == msg.reply && !r.react) {
             r.react = []
+            msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
             r.react.push(msg)
         } else if (r.hash == msg.reply && r.react) {
+            msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
             r.react.push(msg)
         }
         return r
@@ -331,7 +333,7 @@ function addHash(data) {
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="group_chat_window">
-            {#each fixedGroups as message (message.hash)}
+            {#each fixedGroups as message, i (message.hash + i.toString())}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupMsg(e)}"
                     on:replyTo="{(e) => replyToMessage(message.hash, message.name)}"
