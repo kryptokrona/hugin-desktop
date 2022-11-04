@@ -56,7 +56,6 @@ const addGroup = (g) => {
     }
     if (error) {
         $notify.errors = $notify.errors
-        console.log($notify.errors)
         return
     }
     // Dispatch the inputted data

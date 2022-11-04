@@ -43,8 +43,6 @@ window.api.receive('groupMsg', () => {
 })
 
 const sendPM = (user) => {
-    console.log('User', user)
-    console.log
 }
 
 const printGroup = async (grp) => {
