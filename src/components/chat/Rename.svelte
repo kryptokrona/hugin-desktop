@@ -21,8 +21,6 @@ const enter = (e) => {
     }
 }
 
-$: console.log($user.rename)
-
 $: {
     if (text.length > 0) {
         //Enable add button

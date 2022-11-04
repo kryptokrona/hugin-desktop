@@ -12,13 +12,13 @@
     import SendTransaction from '/src/components/finance/SendTransaction.svelte'
 
     let chat
-let active_contact
-let savedMsg = []
-let key
-let contact
-let box
-let chatWindow
-let dragover = false
+    let active_contact
+    let savedMsg = []
+    let key
+    let contact
+    let box
+    let chatWindow
+    let dragover = false
 
 //Get messages on mount.
 onMount(async () => {
@@ -50,7 +50,6 @@ onDestroy(() => {
 
 //Prints conversation from active contact
 const printConversation = (active) => {
-    console.log('printing conversation messages', active)
     chat = active.chat
     key = active.key
     active_contact = chat + key
@@ -65,7 +64,6 @@ const handleAddChat = (e) => {
     let addContact = e.detail.chat + e.detail.key
     //Send contact to backend and to saveContact()
     window.api.addChat(addContact, e.detail.name, true)
-    console.log('event', e.detail)
     //Add input to message arr
     let newMessage = e.detail
 
@@ -94,7 +92,6 @@ const saveToStore = (data) => {
 
 //Listen for new message private messages saved in DB
 window.api.receive('newMsg', async (data) => {
-    console.log('new message', data)
     console.log('userchat', $user.activeChat.chat)
 
     if (data.chat === $user.activeChat.chat) {

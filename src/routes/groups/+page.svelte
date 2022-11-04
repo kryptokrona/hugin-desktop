@@ -42,8 +42,6 @@ onDestroy(() => {
 window.api.receive('groupMsg', (data) => {
     if (data.address === $user.huginAddress.substring(0, 99)) return
     //*TODO*//Keep logs to experiment with toast popups
-    console.log('Group message', data.g)
-    console.log('This group', $groups.thisGroup)
 
     if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') {
         //Push new message to store
@@ -54,7 +52,6 @@ window.api.receive('groupMsg', (data) => {
 })
 
 window.api.receive('sent_group', (data) => {
-    console.log('hash', data)
     addHash(data)
 })
 
@@ -70,7 +67,6 @@ function sendGroupMsg(e) {
         $notify.errors = $notify.errors
         return
     }
-    console.log('wanna send this', e)
     let msg = e.detail.text
     let myaddr = $user.huginAddress.substring(0, 99)
     let time = Date.now()
@@ -100,7 +96,6 @@ function sendGroupMsg(e) {
         hash: time,
     }
     window.api.sendGroupMessage(sendMsg)
-    console.log('wanna send this', sendMsg)
     printBoardMessage(myGroupMessage)
     replyExit()
     scrollDown()
@@ -122,7 +117,6 @@ const printBoardMessage = (groupMsg) => {
         groupMsg.message.length > 0 &&
         !(groupMsg.reply.length === 64 && containsOnlyEmojis(groupMsg.message))
     ) {
-        console.log('pushin')
         fixedGroups.unshift(groupMsg)
     }
     groupMessages.update((current) => {
@@ -134,11 +128,8 @@ const printBoardMessage = (groupMsg) => {
 //Reactive, updates thisGroup.
 $: thisGroup = $groups.thisGroup.key
 
-$: console.log('thisGroup', $groups.thisGroup)
-
 //Exit reply mode
 const replyExit = () => {
-    console.log('reply exit')
     replyto = false
     groups.update((data) => {
         return {
@@ -186,7 +177,6 @@ const openAddGroup = () => {
 }
 //Adds new board to groArray and prints that board, its probably empty.
 const addNewGroup = (e) => {
-    console.log('adding group', e)
     let group = e.detail
     if (group.length < 32) return
     openAddGroup()
@@ -203,7 +193,6 @@ const addNewGroup = (e) => {
         h: parseInt(Date.now()),
     }
     window.api.addGroup(add)
-    console.log('adding', add)
 
     printGroup(group)
 }
@@ -284,7 +273,6 @@ async function addEmoji() {
                 a.react = []
                 b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
                 a.react.push(b)
-                console.log()
             } else if (b.reply == a.hash) {
                 b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
                 a.react.push(b)

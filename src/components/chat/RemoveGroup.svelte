@@ -15,7 +15,6 @@ let key = ''
 let avatar = get_avatar($groups.thisGroup.key)
 
 const remove = async () => {
-    console.log('remove')
     dispatch('remove')
 }
 </script>
