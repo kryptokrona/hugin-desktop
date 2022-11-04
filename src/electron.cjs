@@ -1717,7 +1717,6 @@ async function getGroupReply(reply) {
             sql,
             (err, row) => {
                 thisReply = row
-                console.log(thisReply)
                 if (err) {
                     console.log('Error', err)
                 }
