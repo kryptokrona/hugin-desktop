@@ -2,9 +2,9 @@
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher } from 'svelte'
-import Button from '/src/components/buttons/Button.svelte'
 import { groups } from '$lib/stores/user'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
+import FillButton from '../buttons/FillButton.svelte'
 
 const dispatch = createEventDispatcher()
 
@@ -23,7 +23,7 @@ const remove = async () => {
 <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
     <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
         <h3 in:fade>Remove group?</h3>
-        <Button disabled="{false}" text="Remove" on:click="{remove}" />
+        <FillButton disabled="{false}" red={true} text="Remove" on:click="{remove}" />
     </div>
 </div>
 
