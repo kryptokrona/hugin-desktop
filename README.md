@@ -93,7 +93,7 @@ being awesome contributors to this project. **We'd like to take a moment to reco
 
 [<img src="https://avatars.githubusercontent.com/u/64911460?v=4?size=72" alt="n9lsjr" width="72">](https://github.com/n9lsjr)
 [<img src="https://avatars.githubusercontent.com/u/36674091?v=4?size=72" alt="Swepool" width="72">](https://github.com/Swepool)
-[<img src="https://avatars.githubusercontent.com/u/33717111?v=4?size=72" alt="mjovanc" width="72">](https://github.com/mjovanc)
+[<img src="https://avatars.githubusercontent.com/u/33717111?v=4?size=72" alt="c1phx" width="72">](https://github.com/c1phx)
 [<img src="https://avatars.githubusercontent.com/u/3246908?v=4?size=72" alt="f-r00t" width="72">](https://github.com/f-r00t)
 
 # License
