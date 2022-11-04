@@ -1,7 +1,7 @@
 <script>
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import SendIcon from '/src/components/icons/SendIcon.svelte'
-    import {boards, webRTC} from '$lib/stores/user.js'
+    import {boards, webRTC, groups} from '$lib/stores/user.js'
     import {page} from '$app/stores'
     import {user} from '$lib/stores/user'
     import Emoji from "$components/icons/Emoji.svelte";
@@ -15,7 +15,7 @@
 
     let openEmoji;
     let emojiPicker
-
+    let focus
     onMount(async () => {
         await sleep(200)
         emojiPicker = document.querySelector('emoji-picker')
@@ -71,6 +71,10 @@
         }
     }
 
+    $: if ($groups.replyTo.reply) {
+      focus.focus()
+    }
+
 </script>
 
 <svelte:window on:keyup|preventDefault="{enter}"/>
@@ -78,7 +82,7 @@
 <div class="wrapper" class:rtc class:border-bottom="{$page.url.pathname === '/boards'}"
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <input type="text" placeholder="Message.." bind:value="{messageInput}" on:click={() => openEmoji = false}/>
+    <input type="text" placeholder="Message.." bind:this="{focus}" bind:value="{messageInput}" on:click={() => openEmoji = false}/>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="position: relative; display: flex:">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
