@@ -16,6 +16,7 @@
     let openEmoji;
     let emojiPicker
     let focus
+
     onMount(async () => {
         await sleep(200)
         emojiPicker = document.querySelector('emoji-picker')
@@ -62,12 +63,9 @@
         enableSend = !!messageInput
     }
 
-    $: console.log('offchain', off_chain)
-
     $: {
         if ($user.activeChat) {
             off_chain = $webRTC.call.some((a) => a.chat == $user.activeChat.chat && a.connected)
-            console.log('offchain', off_chain)
         }
     }
 
