@@ -4,9 +4,13 @@ import { get_board_icon } from '$lib/utils/hugin-utils.js'
 import { fade } from 'svelte/transition'
 
 export let board
+
 let board_post_count
 let poster_count
 let this_board = []
+
+$: board_post_count
+$: poster_count
 
 $: if ($boards.newBoards.length) {
     this_board = $boards.newBoards.filter((a) => a.board === board.board)
@@ -21,9 +25,6 @@ $: if (this_board.length) {
     poster_count = active_posters.length
 }
 
-$: board_post_count
-
-$: poster_count
 </script>
 
 <div class="card" in:fade="{{ duration: 150 }}">
