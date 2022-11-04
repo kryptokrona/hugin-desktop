@@ -9,13 +9,13 @@
     import 'emoji-picker-element';
     import {sleep} from "$lib/utils/utils.js";
 
-    let off_chain
     const dispatch = createEventDispatcher()
     export let rtc = false
 
     let openEmoji;
     let emojiPicker
     let focus
+    let off_chain
 
     onMount(async () => {
         await sleep(200)
