@@ -69,7 +69,7 @@
         }
     }
 
-    $: if ($groups.replyTo.reply) {
+    $: if ($groups.replyTo.reply && $page.url.pathname === '/groups') {
         focus.focus()
     }
 
