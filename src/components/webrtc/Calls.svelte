@@ -470,7 +470,6 @@ async function startPeer1(stream, video, contact) {
 }
 
 const answerCall = (msg, contact, key, offchain = false) => {
-    console.log('APPLE', msg, contact, key)
 
     let video = false
     if (msg.substring(0, 1) === 'Δ') {
