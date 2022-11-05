@@ -11,10 +11,10 @@
     import {openURL} from '$lib/utils/utils.js'
 
     let avatar
-let myBoards = []
-let date = new Date()
-let hrs = date.getHours()
-let greet
+    let myBoards = []
+    let date = new Date()
+    let hrs = date.getHours()
+    let greet
 
 onMount(async () => {
     $layoutState.showFaucetButton = window.localStorage.getItem('faucet')
