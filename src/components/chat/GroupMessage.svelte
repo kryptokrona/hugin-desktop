@@ -12,10 +12,9 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 
 export let msg
 export let msgFrom
-export let board
+export let group
 export let reply = ''
 export let myMsg
-export let signature
 export let timestamp
 export let nickname = 'Anonymous'
 export let hash

@@ -329,7 +329,6 @@ function addHash(data) {
                     reply="{message.reply}"
                     msg="{message.message}"
                     myMsg="{message.sent}"
-                    signature="{message.signature}"
                     group="{message.grp}"
                     nickname="{message.name}"
                     msgFrom="{message.address}"
