@@ -298,7 +298,6 @@ function addHash(data) {
 function containsOnlyEmojis(text) {
     const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
     const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '')
-    console.log(onlyEmojis.length === visibleChars.length)
     return onlyEmojis.length === visibleChars.length
 }
 

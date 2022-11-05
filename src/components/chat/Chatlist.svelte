@@ -102,8 +102,6 @@ function sendConversation(message) {
     printConversations()
 }
 
-$: console.log('active chat now', $user.activeChat)
-
 function readMessage(e) {
     console.log('reading this')
 

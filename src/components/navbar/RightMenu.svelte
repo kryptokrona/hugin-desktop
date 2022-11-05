@@ -44,8 +44,6 @@ $: {
     }
 }
 
-$: console.log('active chat', $user.activeChat)
-
 //Starts any call
 const startCall = async (contact, calltype) => {
     console.log(contact, calltype)
