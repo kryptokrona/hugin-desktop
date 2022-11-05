@@ -7,7 +7,6 @@ import AddToCall from '../icons/AddToCall.svelte'
 let open
 let changed
 let audioDevices = $webRTC.devices.filter((a) => a.kind == 'audioinput')
-$: console.log('devices', $webRTC.devices)
 
 function invite(contact) {
     buttonGlow()
@@ -65,6 +64,7 @@ const buttonGlow = () => {
 }
 
 $: if (open) window.api.checkSources()
+
 </script>
 
 <div style="display: flex; flex-direction: column">
