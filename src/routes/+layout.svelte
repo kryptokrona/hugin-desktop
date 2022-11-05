@@ -244,13 +244,7 @@
     }
 
     $: errors = $notify.errors
-
-    $: console.log('Unread?', $notify.unread)
-
-    $: console.log('path', $page.url.pathname)
-
-    $: console.log('this gr', $groups.thisGroup)
-
+    
     //APP UPDATER
     window.api.receive('updater', (data) => {
         data = data.toString()
