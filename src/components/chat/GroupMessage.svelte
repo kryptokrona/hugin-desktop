@@ -75,6 +75,11 @@ const reactTo = (e) => {
     })
 }
 
+const showActions = (address) => {
+    console.log('show actions')
+    window.api.send('block', address)
+}
+
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
@@ -145,6 +150,9 @@ $: if (message.react) {
                 <div class="actions">
                     <EmojiSelector on:emoji="{reactTo}" />
                     <ReplyArrow on:click="{replyTo}" />
+                    <div class="dots" on:click={() => showActions(msgFrom)}>
+                        <p>:</p>
+                    </div>
                 </div>
             </div>
             <p class:rtc style="user-select: text;">{msg}</p>

@@ -348,6 +348,7 @@ let known_keys = []
 let known_pool_txs = []
 let myPassword
 let my_boards = []
+let block_list = []
 
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
@@ -474,6 +475,7 @@ async function createTables() {
     boardsSubscriptionsTable()
     groupMessageTable()
     groupsTable()
+    blockListTable()
 }
 
 const startWallet = async (data, node) => {
@@ -506,6 +508,8 @@ function contactsTable() {
         }
     )
 }
+
+
 
 function knownTxsTable() {
     const knownTxTable = `
@@ -623,6 +627,23 @@ function groupMessageTable() {
         (resolve, reject) => {
             database.run(groupTable, (err) => {})
             console.log('created group Table')
+        },
+        () => {
+            resolve()
+        }
+    )
+}
+
+function blockListTable() {
+    const blockList = `
+                  CREATE TABLE IF NOT EXISTS blocklist (
+                     address TEXT,
+                     UNIQUE (address)
+                 )`
+    return new Promise(
+        (resolve, reject) => {
+            database.run(blockList, (err) => {})
+            console.log('created block list Table')
         },
         () => {
             resolve()
@@ -815,6 +836,25 @@ async function loadKnownTxs() {
     })
 }
 
+async function loadBlockList() {
+    const blockList = []
+    return new Promise((resolve, reject) => {
+        const getBlockList = `SELECT * FROM blocklist`
+        database.each(
+            getBlockList,
+            (err, blocked) => {
+                if (err) {
+                }
+                blockList.push(blocked)
+            },
+            () => {
+                resolve(blockList)
+            }
+        )
+    })
+}
+
+
 async function logIntoWallet(walletName, password) {
     let parsed_wallet
     let json_wallet = await openWallet(walletName, password)
@@ -883,7 +923,8 @@ async function start_js_wallet(walletName, password, node) {
     let checkedTxs
     let knownTxsIds = await loadKnownTxs()
     let my_groups = await getGroups()
-
+    block_list = await loadBlockList()
+    console.log('Block list:', block_list)
     //Save backup wallet to file
     await saveWalletToFile(js_wallet, walletName, password)
 
@@ -1079,7 +1120,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
                         console.log('group', group)
                         message = JSON.parse(group)
                         if (message.sb) {
-                            decryptGroupMessage(message, thisHash)
+                            await decryptGroupMessage(message, thisHash)
                         }
                         saveHash(thisHash)
                         console.log('Caught undefined null message, continue')
@@ -1123,6 +1164,14 @@ async function backgroundSyncMessages(checkedTxs = false) {
         console.log('Sync error')
     }
 }
+
+ipcMain.on('unblock', async (e, address) => {
+    unBlockContact(address)
+})
+
+ipcMain.on('block', async (e, contact) => {
+    blockContact(contact)
+})
 
 //Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
 ipcMain.on('addBoard', async (e, board) => {
@@ -1226,6 +1275,30 @@ async function removeMessages(contact) {
         chat = ?`,
         [contact]
     )
+}
+
+async function blockContact(address) {
+    database.run(
+        `REPLACE INTO blocklist
+      (address)
+        VALUES
+          (?)`,
+        [address]
+    )
+
+    console.log('Blocked contact', address)
+}
+
+async function unBlockContact(address) {
+    database.run(
+        `DELETE FROM
+        blocklist
+      WHERE
+        address = ?`,
+        [address]
+    )
+
+    console.log('Removed from block list', address)
 }
 
 //Saves contact and nickname to db.
@@ -2072,6 +2145,7 @@ async function sendGroupsMessage(message, offchain = false) {
             known_pool_txs.push(result.transactionHash)
             optimizeMessages()
         } else {
+            mainWindow.webContents.send('optimized', false)
             let error = {
                 message: 'Failed to send',
                 name: 'Error',
@@ -2159,6 +2233,8 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
     )
 
     if (!verified) return
+    console.log('block list', block_list)
+    if (block_list.some(a => a.address === from)) return
 
     payload_json.sent = false
 
@@ -2356,6 +2432,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
             saveMessage(sentMsg, result.transactionHash)
             optimizeMessages()
         } else {
+            mainWindow.webContents.send('optimized', false)
             let error = {
                 message: `Failed to send`,
                 name: 'Error',
@@ -2419,8 +2496,10 @@ async function optimizeMessages(nbrOfTxs) {
         js_wallet.subWallets.getAddresses(),
         networkHeight
     )
+
     console.log('inputs', inputs.length)
-    if (inputs.length > 7) {
+    if (inputs.length > 12) {
+        mainWindow.webContents.send('optimized', true)
         return
     }
     let subWallets = js_wallet.subWallets.subWallets
@@ -2428,7 +2507,7 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
     })
-    if (txs > 1 && inputs.length > 5) {
+    if (txs > 1 && inputs.length > 12) {
         console.log('Already have incoming inputs, aborting..')
         return
     }
@@ -2456,6 +2535,7 @@ async function optimizeMessages(nbrOfTxs) {
     )
 
     if (result.success) {
+        mainWindow.webContents.send('optimized', true)
         let sent = {
             message: 'Your wallet is optimizing',
             name: 'Optimizing',
@@ -2464,9 +2544,19 @@ async function optimizeMessages(nbrOfTxs) {
         }
         mainWindow.webContents.send('sent_tx', sent)
         console.log('optimize completed')
+        return true
     } else {
-        console.log('optimize failed')
+        mainWindow.webContents.send('optimized', false)
+        let error = {
+            message: 'Optimize failed',
+            name: 'Optimizing wallet failed',
+            hash: parseInt(Date.now()),
+            key: mainWallet,
+        }
+        mainWindow.webContents.send('error_msg', sent)
+        return false
     }
+
 }
 
 async function sendTx(tx) {
@@ -2507,6 +2597,10 @@ async function sendTx(tx) {
         mainWindow.webContents.send('error_msg', error)
     }
 }
+
+ipcMain.on('optimize', async (e) => {
+    optimizeMessages()
+})
 
 ipcMain.handle('getMessages', async (data) => {
     return await getMessages()
