@@ -7,7 +7,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet} from '$lib/stores/user.js'
     import {messages} from '$lib/stores/messages.js'
 
     import {onMount} from 'svelte'
@@ -244,7 +244,7 @@
     }
 
     $: errors = $notify.errors
-    
+
     //APP UPDATER
     window.api.receive('updater', (data) => {
         data = data.toString()
@@ -279,6 +279,10 @@
         $appUpdateState.dataDownloaded = progress.transferred
         $appUpdateState.downloadSize = progress.total
         $appUpdateState.downloadSpeed = progress.bytesPerSecond
+    })
+
+    window.api.receive('optimized', (data) => {
+        $messageWallet.optimized = data
     })
 </script>
 

@@ -85,6 +85,10 @@ export const transactions = writable({
     send: false,
 })
 
+export const messageWallet = writable({
+    optimized: false
+})
+
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
         return get_avatar($user.huginAddress.substring(0, 99))

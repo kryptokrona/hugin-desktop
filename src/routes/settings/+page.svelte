@@ -1,6 +1,6 @@
 <script>
 import { fade } from 'svelte/transition'
-import { misc } from '$lib/stores/user.js'
+import { misc, messageWallet } from '$lib/stores/user.js'
 import { onDestroy, onMount } from 'svelte'
 import Button from '/src/components/buttons/Button.svelte'
 import FillButton from '/src/components/buttons/FillButton.svelte'
@@ -19,6 +19,7 @@ let privateViewKey = ''
 let enableConnect = false
 let showKeys = false
 let showMnemonic = false
+let optimizing
 
 onMount(async () => {
     getHeight()
@@ -93,6 +94,12 @@ const connectToNode = (e) => {
     window.api.switchNode($misc.node)
 }
 
+const optimizeMessages = () => {
+    window.api.send('optimize')
+}
+
+$: optimizing = $messageWallet.optimized
+
 $: {
     seedPhrase
     status
@@ -114,6 +121,12 @@ $: {
                 disabled="{false}"
                 on:click="{() => window.api.send('check-new-release')}"
             />
+            <FillButton
+            text="Optimize"
+            disabled="{optimizing}"
+            red="{optimizing}"
+            on:click="{optimizeMessages}"
+        />
         </div>
     </div>
 
