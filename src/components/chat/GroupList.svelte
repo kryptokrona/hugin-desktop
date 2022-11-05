@@ -85,7 +85,6 @@ async function printGroups() {
     })
 
     filterActiveHugins($groupMessages)
-    console.log('Printing conversations', newArray)
 }
 
 const removeGroup = async () => {
@@ -110,7 +109,6 @@ const removeGroup = async () => {
         $groups.thisGroup = nogroup
     }
     $groups.removeGroup = false
-    console.log('want to print', $groups.thisGroup)
     dispatch('removeGroup')
 }
 
@@ -119,7 +117,6 @@ function readMessage(e) {
 
     groupArray = groupArray.map(function (a) {
         if (e.new && a.key == e.key) {
-            console.log('reading this', a)
             a.new = false
         }
         return a
@@ -135,14 +132,11 @@ async function checkNew() {
     let filterNew = []
     newArray.forEach(function (a) {
         groupArray.some(function (b) {
-            console.log('checking?')
             if (b.new && a.chat === b.chat) {
-                console.log('old new, keep new', b)
                 a.new = true
             }
         })
         filterNew.push(a)
-        console.log('pushin')
     })
 
     return filterNew

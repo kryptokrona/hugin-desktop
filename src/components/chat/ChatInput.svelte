@@ -70,7 +70,7 @@
     }
 
     $: if ($groups.replyTo.reply) {
-      focus.focus()
+        focus.focus()
     }
 
 </script>

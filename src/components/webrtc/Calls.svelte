@@ -185,7 +185,6 @@ async function sendInviteNotification(contact, contact_address) {
 async function checkSources() {
     let stream = $webRTC.myStream
     let devices = await navigator.mediaDevices.enumerateDevices()
-    console.log('devices', devices)
     $webRTC.devices = devices
 }
 

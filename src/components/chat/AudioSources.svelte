@@ -5,7 +5,6 @@ import { webRTC } from '$lib/stores/user.js'
 let open
 let changed
 let audioDevices = $webRTC.devices.filter((a) => a.kind == 'audioinput')
-$: console.log('devices', $webRTC.devices)
 
 function pickSource(src) {
     console.log('pick', src)
