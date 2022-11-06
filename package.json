@@ -23,7 +23,7 @@
     "start": "vite start"
   },
   "build": {
-    "publish": 4
+    "publish": [
       {
         "provider": "github",
         "owner": "kryptokrona",
