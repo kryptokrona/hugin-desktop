@@ -18,14 +18,14 @@ $: if (reacts.length) filterReactions = reacts.filter((a) => a.message == thisRe
 
 $: if (filterReactions.length > 0) {
     let reactor = {}
-    filterReactors = filterReactions.filter((r) => !reactor[r.key] && (reactor[r.key] = true))
-    reactCount = filterReactors.length
+    filterReactors = filterReactions.filter((r) => !reactor[r.address] && (reactor[r.address] = true))
+    reactCount = filterReactions.length
 }
 
 const sendReaction = () => {
     dispatch('sendReaction', {
         msg: thisReaction.message,
-        brd: thisReaction.board,
+        grp: thisReaction.group,
         reply: thisReaction.reply,
     })
 }

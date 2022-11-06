@@ -253,8 +253,8 @@ async function printGroup(group) {
 }
 
 async function updateReactions(msg) {
-    let reactionsFixed
-    reactionsFixed = fixedGroups.slice(-50).map(function (r) {
+
+    fixedGroups.some(function (r) {
         if (r.hash == msg.reply && !r.react) {
             r.react = []
             msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
@@ -263,9 +263,8 @@ async function updateReactions(msg) {
             msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
             r.react.push(msg)
         }
-        return r
     })
-    fixedGroups = reactionsFixed
+    fixedGroups = fixedGroups
 }
 
 async function addEmoji() {
