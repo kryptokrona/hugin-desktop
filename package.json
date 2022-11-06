@@ -2,7 +2,7 @@
   "name": "hugin-messenger",
   "author": "Kryptokrona Developers",
   "productName": "Hugin Messenger",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "private": true,
   "description": "A messenger app built on top of the kryptokrona blockchain",
   "main": "src/electron.cjs",
@@ -23,7 +23,7 @@
     "start": "vite start"
   },
   "build": {
-    "publish": [
+    "publish": 4
       {
         "provider": "github",
         "owner": "kryptokrona",
