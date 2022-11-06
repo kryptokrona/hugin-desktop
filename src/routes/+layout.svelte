@@ -21,9 +21,10 @@
     import VideoGrid from '$components/webrtc/VideoGrid.svelte'
     import {page} from '$app/stores'
     import Notification from '/src/components/popups/Notification.svelte'
-    import {Toaster} from "svelte-french-toast";
+    import toast, {Toaster} from "svelte-french-toast";
     import {appUpdateState} from "$components/updater/update-store.js";
     import Updater from "$components/updater/Updater.svelte";
+    import OptimizeToast from 'src/components/custom-toasts/OptimizeToast.svelte'
 
 
     let ready = false
@@ -282,6 +283,12 @@
     })
 
     window.api.receive('optimized', (data) => {
+        if (!data) {
+            toast.error(OptimizeToast, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+        }
         $messageWallet.optimized = data
     })
 
