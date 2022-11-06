@@ -24,7 +24,7 @@
     import toast, {Toaster} from "svelte-french-toast";
     import {appUpdateState} from "$components/updater/update-store.js";
     import Updater from "$components/updater/Updater.svelte";
-    import OptimizeToast from 'src/components/custom-toasts/OptimizeToast.svelte'
+    import OptimizeToast from '../components/custom-toasts/OptimizeToast.svelte'
 
 
     let ready = false
