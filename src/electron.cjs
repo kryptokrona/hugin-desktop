@@ -2487,7 +2487,6 @@ async function optimizeMessages(nbrOfTxs) {
             console.log('my addresses updated', js_wallet.subWallets.getAddresses())
         }
     }
-    console.log('Have two addresses now', js_wallet.subWallets.getAddresses())
 
     let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
 
