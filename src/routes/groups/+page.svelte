@@ -8,21 +8,23 @@
     import {onDestroy, onMount} from 'svelte'
     import AddGroup from '/src/components/chat/AddGroup.svelte'
     import {page} from '$app/stores'
+    import InfiniteScroll from "svelte-infinite-scroll";
 
     let boardMsgs = []
-let replyto = ''
-let reply_exit_icon = 'x'
-let active
-let replyColor
-let nickname
-let noMsgs = false
-let filterBoards = []
-let filterEmojis = []
-let fixedGroups = []
-let react = false
-let unreadMsgs = []
-let replyTrue = false
-let chatWindow
+    let replyto = ''
+    let reply_exit_icon = 'x'
+    let active
+    let replyColor
+    let nickname
+    let noMsgs = false
+    let filterBoards = []
+    let filterEmojis = []
+    let fixedGroups = []
+    let react = false
+    let unreadMsgs = []
+    let replyTrue = false
+    let chatWindow
+    let scrollGroups = []
 
 onMount(async () => {
     chatWindow = document.getElementById('group_chat_window')
@@ -227,6 +229,7 @@ async function checkReactions() {
 async function printGroup(group) {
     console.log('Printing group', group)
     fixedGroups = []
+    scrollGroups = []
     noMsgs = false
     groups.update((data) => {
         return {
@@ -251,7 +254,7 @@ async function printGroup(group) {
 
 async function updateReactions(msg) {
     let reactionsFixed
-    reactionsFixed = fixedGroups.map(function (r) {
+    reactionsFixed = fixedGroups.slice(-50).map(function (r) {
         if (r.hash == msg.reply && !r.react) {
             r.react = []
             msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
@@ -266,16 +269,21 @@ async function updateReactions(msg) {
 }
 
 async function addEmoji() {
+
+    let emojis = filterEmojis
     //Check for replies and message hash that match and then adds reactions to the messages.
     filterBoards.forEach(async function (a) {
-        await filterEmojis.forEach(function (b) {
+        emojis.forEach(function (b) {
             if (!a.react && b.reply == a.hash) {
                 a.react = []
                 b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
                 a.react.push(b)
+                emojis.pop(b)
+
             } else if (b.reply == a.hash) {
                 b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
                 a.react.push(b)
+                emojis.pop(b)
             }
         })
         fixedGroups.push(a)
@@ -290,14 +298,13 @@ function containsOnlyEmojis(text) {
     return onlyEmojis.length === visibleChars.length
 }
 
-$: fixedGroups
 //Reactive depending on user.addBoard boolean, displays AddBoard component.
 $: wantToAdd = $groups.addGroup
 
 $: replyTrue = $groups.replyTo.reply
 
 function addHash(data) {
-    fixedGroups.some(function (a) {
+    fixedGroups.slice(-10).some(function (a) {
         if (a.hash === data.time) {
             a.hash = data.hash
         }
@@ -305,6 +312,21 @@ function addHash(data) {
 
     fixedGroups = fixedGroups
 }
+
+    // let pageNum = 0;
+    // let scrollGroups = []
+    
+    // $:
+    //     scrollGroups = [
+    //     ...scrollGroups,
+    //     ...fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1)
+    //     ];
+    
+    // function loadMoreMessages() {
+    //     pageNum++
+    //     console.log('want to load more')
+    // }
+
 </script>
 
 {#if wantToAdd}
@@ -335,6 +357,7 @@ function addHash(data) {
                     hash="{message.hash}"
                 />
             {/each}
+            <!-- <InfiniteScroll reverse={true} threshold={10} on:loadMore={() => loadMoreMessages()} /> -->
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">

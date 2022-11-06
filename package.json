@@ -64,6 +64,7 @@
     "sqlite3": "^5.0.8",
     "svelte-emoji-selector": "^1.0.1",
     "svelte-file-dropzone": "^1.0.0",
+    "svelte-infinite-scroll": "^2.0.1",
     "svelte-french-toast": "^1.0.3",
     "svelte-loading-spinners": "^0.1.7",
     "tweetnacl": "^1.0.3",

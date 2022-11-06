@@ -1686,7 +1686,7 @@ async function printGroup(group = false) {
         ${group ? 'WHERE grp = "' + group + '"' : ''}
         ORDER BY
             time
-        ASC`
+        DESC`
         database.each(
             getGroup,
             (err, row) => {
@@ -2628,8 +2628,7 @@ ipcMain.handle('getGroups', async (e) => {
 })
 
 ipcMain.handle('printGroup', async (e, grp) => {
-    let resp = await printGroup(grp)
-    return resp.reverse()
+    return await printGroup(grp)
 })
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
