@@ -638,6 +638,7 @@ function blockListTable() {
     const blockList = `
                   CREATE TABLE IF NOT EXISTS blocklist (
                      address TEXT,
+                     name TEXT,
                      UNIQUE (address)
                  )`
     return new Promise(
@@ -988,7 +989,7 @@ async function start_js_wallet(walletName, password, node) {
         }
     )
 
-    mainWindow.webContents.send('wallet-started', node, my_groups)
+    mainWindow.webContents.send('wallet-started', node, my_groups, block_list)
     console.log('Started wallet')
     await sleep(2000)
     console.log('Loading Sync')
@@ -1166,11 +1167,15 @@ async function backgroundSyncMessages(checkedTxs = false) {
 }
 
 ipcMain.on('unblock', async (e, address) => {
-    unBlockContact(address)
+    await unBlockContact(address)
+    block_list = await loadBlockList()
+    mainWindow.webContents.send('update-blocklist', block_list)
 })
 
-ipcMain.on('block', async (e, contact) => {
-    blockContact(contact)
+ipcMain.on('block', async (e, contact, name) => {
+    await blockContact(contact, name)
+    block_list = await loadBlockList()
+    mainWindow.webContents.send('update-blocklist', block_list)
 })
 
 //Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
@@ -1277,15 +1282,14 @@ async function removeMessages(contact) {
     )
 }
 
-async function blockContact(address) {
+async function blockContact(address, name) {
     database.run(
         `REPLACE INTO blocklist
-      (address)
+      (address, name)
         VALUES
-          (?)`,
-        [address]
+          (?, ?)`,
+        [address, name]
     )
-
     console.log('Blocked contact', address)
 }
 
@@ -2553,7 +2557,7 @@ async function optimizeMessages(nbrOfTxs) {
             hash: parseInt(Date.now()),
             key: mainWallet,
         }
-        mainWindow.webContents.send('error_msg', sent)
+        mainWindow.webContents.send('error_msg', error)
         return false
     }
 

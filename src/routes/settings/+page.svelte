@@ -1,11 +1,12 @@
 <script>
 import { fade } from 'svelte/transition'
-import { misc, messageWallet } from '$lib/stores/user.js'
+import { misc, messageWallet, groups } from '$lib/stores/user.js'
 import { onDestroy, onMount } from 'svelte'
 import Button from '/src/components/buttons/Button.svelte'
 import FillButton from '/src/components/buttons/FillButton.svelte'
 import NodeSelector from '$components/popups/NodeSelector.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
+import { get_avatar } from '$lib/utils/hugin-utils'
 
 let networkHeight = ''
 let walletHeight = ''
@@ -19,7 +20,7 @@ let privateViewKey = ''
 let enableConnect = false
 let showKeys = false
 let showMnemonic = false
-let optimizing
+let contacts = false
 
 onMount(async () => {
     getHeight()
@@ -80,11 +81,19 @@ const getPrivateKeys = async () => {
 const toWallet = () => {
     wallet = true
     node = false
+    contacts = false
 }
 
 const toNode = () => {
     wallet = false
     node = true
+    contacts = false
+}
+
+const toContacts = () => {
+    wallet = false
+    node = false
+    contacts = true
 }
 
 const connectToNode = (e) => {
@@ -97,8 +106,6 @@ const connectToNode = (e) => {
 const optimizeMessages = () => {
     window.api.send('optimize')
 }
-
-$: optimizing = $messageWallet.optimized
 
 $: {
     seedPhrase
@@ -116,6 +123,7 @@ $: {
         <div style="width: 500px; display: flex; gap: 1rem">
             <FillButton text="Node" enabled="{false}" disabled="{false}" on:click="{toNode}" />
             <FillButton text="Wallet" enabled="{false}" disabled="{false}" on:click="{toWallet}" />
+            <FillButton text="Contacts" enabled="{false}" disabled="{false}" on:click="{toContacts}" />
             <FillButton
                 text="Check updates"
                 disabled="{false}"
@@ -123,8 +131,8 @@ $: {
             />
             <FillButton
             text="Optimize"
-            disabled="{optimizing}"
-            red="{optimizing}"
+            disabled="{$messageWallet.optimized}"
+            red="{$messageWallet.optimized}"
             on:click="{optimizeMessages}"
         />
         </div>
@@ -215,6 +223,28 @@ $: {
                         {seedPhrase}
                     </p>
                 {/if}
+            </div>
+        </div>
+    {/if}
+
+    {#if contacts}
+        <div class="settings" in:fade>
+            <div class="inner blocklist">
+                <div class="list-wrapper">
+                    <h3>Block list</h3>
+                    {#each $groups.blockList as blocked (blocked.address)}
+                        <div class="card">
+                            <img
+                                class="avatar"
+                                src="data:image/png;base64,{get_avatar(blocked.address)}"
+                                alt=""
+                            />
+                            <p class="name">{blocked.name}</p>
+                            <br />
+                            <p class="unblock" on:click={() => window.api.send('unblock', blocked.address)}>Unblock</p>
+                        </div>
+                    {/each}
+                </div>
             </div>
         </div>
     {/if}
@@ -309,4 +339,62 @@ p {
     width: 100%;
     justify-content: center;
 }
+
+.address {
+    font-family: "Roboto Mono";
+    font-size: 15px;
+}
+
+.name {
+    font-size: 15px;
+}
+
+.card {
+    display: flex;
+    height: 80px;
+    padding: 1rem;
+    width: 100%;
+    color: var(--title-color);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--backgound-color);
+    transition: 200ms ease-in-out;
+    cursor: pointer;
+    opacity: 0.9;
+
+    &:hover {
+        color: white;
+        opacity: 1;
+        border-bottom: 1px solid transparent;
+    }
+}
+
+.blocklist {
+    width: 50%;
+    height: 500px;
+
+}
+
+.list-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: calc(100% - 103px);
+    overflow: scroll;
+}
+
+.list-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.unblock {
+    font-family: "Roboto Mono";
+    color: var(--success-color);
+    cursor: pointer;
+    opacity: 0.85;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
 </style>

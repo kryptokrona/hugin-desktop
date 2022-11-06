@@ -284,6 +284,10 @@
     window.api.receive('optimized', (data) => {
         $messageWallet.optimized = data
     })
+
+    window.api.receive('update-blocklist', (block_list) => {
+        $groups.blockList = block_list
+    })
 </script>
 
 <TrafficLights/>

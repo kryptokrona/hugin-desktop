@@ -9,6 +9,8 @@ import Time from 'svelte-time'
 import ReplyArrow from '/src/components/icons/ReplyArrow.svelte'
 import RepliedArrow from '/src/components/icons/RepliedArrow.svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
+import Dots from '../icons/Dots.svelte'
+import FillButton from '../buttons/FillButton.svelte'
 
 export let msg
 export let msgFrom
@@ -27,6 +29,7 @@ let has_reaction = false
 let reactions = []
 let react = false
 let replyMessage = false
+let showUserActions = false
 
 const dispatch = createEventDispatcher()
 
@@ -75,9 +78,13 @@ const reactTo = (e) => {
     })
 }
 
-const showActions = (address) => {
-    console.log('show actions')
-    window.api.send('block', address)
+const toggleActions = () => {
+    showUserActions = !showUserActions
+}
+
+const blockContact = (address) => {
+    window.api.send('block', msgFrom, nickname)
+    showUserActions = false
 }
 
 $: if ($groups.replyTo.reply == false) {
@@ -147,12 +154,19 @@ $: if (message.react) {
                         >
                     </h5>
                 </div>
+                <div class="user_actions" class:show={showUserActions}>
+                    <div class="list">
+                        <FillButton 
+                            red={true} 
+                            text="Block" 
+                            disabled={false}
+                            on:click={blockContact} />
+                    </div>
+                </div>
                 <div class="actions">
                     <EmojiSelector on:emoji="{reactTo}" />
                     <ReplyArrow on:click="{replyTo}" />
-                    <div class="dots" on:click={() => showActions(msgFrom)}>
-                        <p>:</p>
-                    </div>
+                    <Dots on:click="{toggleActions}"/>
                 </div>
             </div>
             <p class:rtc style="user-select: text;">{msg}</p>
@@ -175,6 +189,7 @@ $: if (message.react) {
 </div>
 
 <style lang="scss">
+    
 .message {
     display: flex;
     flex-direction: column;
@@ -189,12 +204,13 @@ $: if (message.react) {
         justify-content: space-between;
     }
 
+
     &:hover {
         background-color: var(--card-background);
-
+        
         .actions {
-            opacity: 100%;
-        }
+                opacity: 100%;
+            }
     }
 }
 
@@ -217,6 +233,13 @@ p {
     transition: 100ms ease-in-out;
     cursor: pointer;
     opacity: 0;
+}
+
+.user_actions {
+    display: flex;
+    display: none;
+    position: absolute;
+    
 }
 
 .reply_avatar {
@@ -273,5 +296,40 @@ p {
 
 .min {
     font-size: 0.65rem;
+}
+
+.actions {
+    display: flex; 
+    flex-direction: row;
+}
+
+.list {
+    position: absolute;
+    bottom: 85px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 120px;
+    padding: 5px;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    border-radius: 0.4rem;
+
+    div {
+        text-align: center;
+        border-radius: 5px;
+        padding: 10px;
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--card-border);
+        }
+    }
+}
+
+.show {
+    display: flex;
+    position: relative;
+    bottom: -120px;
 }
 </style>

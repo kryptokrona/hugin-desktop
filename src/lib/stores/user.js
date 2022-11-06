@@ -32,6 +32,7 @@ export const groups = writable({
         msg: 'Click the add icon',
     },
     groupArray: [],
+    blockList: []
 })
 
 export const rtc_groups = writable({

@@ -64,13 +64,12 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async (node, my_groups) => {
+    window.api.receive('wallet-started', async (node, my_groups, block_list) => {
 
         console.log('Got wallet started')
         //Set chosen node from last startup in store
         $misc.node = node.node + ':' + node.port
-
-        console.log('adding groups', my_groups)
+        $groups.blockList = block_list
         $groups.groupArray = my_groups
 
         await goto('/dashboard')

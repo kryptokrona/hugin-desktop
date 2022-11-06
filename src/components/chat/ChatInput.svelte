@@ -96,6 +96,7 @@
 </div>
 
 <style lang="scss">
+  
   .wrapper {
     height: 73px;
     padding: 1rem;
