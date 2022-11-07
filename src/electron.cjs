@@ -2490,18 +2490,15 @@ async function optimizeMessages(nbrOfTxs) {
 
     let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
 
-    console.log('got main address', mainWallet)
-    console.log('got sub address', subWallet)
-
     const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus()
 
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(
-        js_wallet.subWallets.getAddresses(),
+        [subWallet],
         networkHeight
     )
 
     console.log('inputs', inputs.length)
-    if (inputs.length > 12) {
+    if (inputs.length > 11) {
         mainWindow.webContents.send('optimized', true)
         return
     }
@@ -2510,7 +2507,7 @@ async function optimizeMessages(nbrOfTxs) {
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
     })
-    if (txs > 1 && inputs.length > 12) {
+    if (txs > 1 && inputs.length > 8) {
         console.log('Already have incoming inputs, aborting..')
         return
     }
