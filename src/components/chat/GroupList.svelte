@@ -12,15 +12,15 @@
     import {flip} from 'svelte/animate'
 
     const dispatch = createEventDispatcher()
-let activeHugins = []
-let contacts = []
-let msgkey
-let newArray = []
-let groupArray = []
+    let activeHugins = []
+    let contacts = []
+    let msgkey
+    let newArray = []
+    let groupArray = []
 
-//Get message updates and trigger filter
-let group = ''
-let groupName
+    //Get message updates and trigger filter
+    let group = ''
+    let groupName
 onMount( async () => {
     await printGroups()
     if ($groups.thisGroup.key.length !== 64) {
@@ -59,11 +59,10 @@ function filterActiveHugins(arr) {
 }
 
 $: activeHugins
-$: groupArray = $groups.groupArray
-
 //Print our conversations from DBs
 async function printGroups() {
     newArray = await window.api.getGroups()
+    
     if (groupArray.length) {
         if (
             newArray[0].timestamp != groupArray[0].timestamp &&
@@ -84,6 +83,8 @@ async function printGroups() {
             groupArray: my_groups,
         }
     })
+
+    groupArray = my_groups
 
     filterActiveHugins($groupMessages)
 }
@@ -190,7 +191,7 @@ $: groupName = $groups.thisGroup.name
         </div>
     {:else}
         <div class="list-wrapper">
-            {#each $groups.groupArray as group (group.key)}
+            {#each groupArray as group (group.key)}
                 <div animate:flip="{{duration: 250}}">
                     <Group group="{group}" on:print="{() => printGroup(group)}" />
                 </div>
