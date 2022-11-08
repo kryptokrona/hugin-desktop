@@ -313,13 +313,18 @@ function addHash(data) {
 }
 
     // let pageNum = 0;
-    // let scrollGroups = []
-    
-    // $:
+
+    // let size = 20
+    // $: console.log('scrollgroups', scrollGroups)
+    // $: console.log('scroll', fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1))
+    // $: {
+    //     console.log('reacting to scroll?')
     //     scrollGroups = [
     //     ...scrollGroups,
-    //     ...fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1)
+        
+    //     ...fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1),
     //     ];
+    // }
     
     // function loadMoreMessages() {
     //     pageNum++
@@ -356,7 +361,7 @@ function addHash(data) {
                     hash="{message.hash}"
                 />
             {/each}
-            <!-- <InfiniteScroll reverse={true} threshold={10} on:loadMore={() => loadMoreMessages()} /> -->
+            <!-- <InfiniteScroll reverse={true} threshold={20} on:loadMore={() => loadMoreMessages()} /> -->
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">
@@ -443,6 +448,7 @@ p {
     display: flex;
     flex-direction: column-reverse;
     overflow: auto;
+    padding-bottom: 10px;
 
     &::-webkit-scrollbar {
         display: none;
