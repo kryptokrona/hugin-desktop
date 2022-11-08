@@ -43,6 +43,8 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
+const Store = require('electron-store');
+
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
 
@@ -350,10 +352,13 @@ let myPassword
 let my_boards = []
 let block_list = []
 
+
+
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
     mainWindow.webContents.send('version', app.getVersion())
     startCheck()
+    
     if (dev) {
         console.log('Running in development')
         mainWindow.openDevTools()
@@ -435,7 +440,16 @@ const checkNodeStatus = async (node) => {
     }
 }
 
+const store = new Store();
+
 async function startCheck() {
+
+    store.set({
+        wallet: {
+            optimized: false
+        }
+    });
+
     if (fs.existsSync(userDataDir + '/misc.db')) {
         await db.read()
         let walletName = db.data.walletNames
@@ -2477,7 +2491,8 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
     }
 }
 
-async function optimizeMessages(nbrOfTxs) {
+async function optimizeMessages() {
+
     console.log('optimize')
     console.log('my addresses', js_wallet.subWallets.getAddresses())
     if (js_wallet.subWallets.getAddresses().length === 1) {
@@ -2497,11 +2512,17 @@ async function optimizeMessages(nbrOfTxs) {
         networkHeight
     )
 
+
     console.log('inputs', inputs.length)
     if (inputs.length > 11) {
         mainWindow.webContents.send('optimized', true)
         return
     }
+
+    if (store.get('wallet.optimized')) {
+        return
+    }
+
     let subWallets = js_wallet.subWallets.subWallets
     let txs
     subWallets.forEach((value, name) => {
@@ -2536,8 +2557,17 @@ async function optimizeMessages(nbrOfTxs) {
 
     if (result.success) {
         mainWindow.webContents.send('optimized', true)
+        
+        store.set({
+            wallet: {
+                optimized: true
+            }
+        });
+
+        resetOptimizeTimer()
+
         let sent = {
-            message: 'Your wallet is optimizing',
+            message: 'Your wallet is creating message inputs, please wait',
             name: 'Optimizing',
             hash: parseInt(Date.now()),
             key: mainWallet,
@@ -2546,6 +2576,13 @@ async function optimizeMessages(nbrOfTxs) {
         console.log('optimize completed')
         return true
     } else {
+
+        store.set({
+            wallet: {
+                optimized: false
+            }
+        });
+        
         mainWindow.webContents.send('optimized', false)
         let error = {
             message: 'Optimize failed',
@@ -2596,6 +2633,15 @@ async function sendTx(tx) {
         }
         mainWindow.webContents.send('error_msg', error)
     }
+}
+
+async function resetOptimizeTimer() {
+    await sleep(600 * 1000)
+    store.set({
+        wallet: {
+            optimized: false
+        }
+    });
 }
 
 ipcMain.on('optimize', async (e) => {
