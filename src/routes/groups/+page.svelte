@@ -448,7 +448,7 @@ p {
     display: flex;
     flex-direction: column-reverse;
     overflow: auto;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
 
     &::-webkit-scrollbar {
         display: none;
