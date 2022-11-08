@@ -23,8 +23,9 @@ let group = ''
 let groupName
 onMount( async () => {
     await printGroups()
-    if ($groups.thisGroup.key !== 64) {
+    if ($groups.thisGroup.key.length !== 64) {
         printGroup($groups.groupArray[0])
+        return
     }
     printGroup($groups.thisGroup)
 })
@@ -47,7 +48,7 @@ const sendPM = (user) => {
 
 const printGroup = async (grp) => {
     dispatch('printGroup', grp)
-    await sleep(200)
+    await sleep(150)
     readMessage(grp)
 }
 
