@@ -16,9 +16,11 @@
     let emojiPicker
     let focus
     let off_chain
-
+    let mount = false
+    
     onMount(async () => {
         await sleep(200)
+        mount = true
         emojiPicker = document.querySelector('emoji-picker')
         emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
     })
@@ -69,7 +71,7 @@
         }
     }
 
-    $: if ($groups.replyTo.reply && $page.url.pathname === '/groups') {
+    $: if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
         focus.focus()
     }
 
