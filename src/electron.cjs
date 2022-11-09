@@ -2512,9 +2512,8 @@ async function optimizeMessages() {
         networkHeight
     )
 
-
     console.log('inputs', inputs.length)
-    if (inputs.length > 11) {
+    if (inputs.length > 16) {
         mainWindow.webContents.send('optimized', true)
         return
     }
@@ -2528,10 +2527,7 @@ async function optimizeMessages() {
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
     })
-    if (txs > 1 && inputs.length > 8) {
-        console.log('Already have incoming inputs, aborting..')
-        return
-    }
+    
     let payments = []
     let i = 0
     /* User payment */
