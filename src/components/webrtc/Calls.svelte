@@ -202,6 +202,9 @@ async function changeVideoSource(device, oldSrc, chat) {
             a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current)
         })
     }
+    //Stop old track
+    let old = current.getVideoTracks()[0]
+    old.stop()
     //Remove old track
     current.removeTrack(current.getVideoTracks()[0])
     //Update stream
@@ -770,7 +773,6 @@ function endCall(peer, stream, contact) {
         caller.myStream.getTracks().forEach(function (track) {
             track.stop()
         })
-        caller.peer.destroy()
         console.log('$webRTC.call.length ', $webRTC.call.length)
         if ($webRTC.call.length < 2) {
             $webRTC.myStream.getTracks().forEach(function (track) {
@@ -778,6 +780,7 @@ function endCall(peer, stream, contact) {
                 track.stop()
             })
         }
+        caller.peer.destroy()
     } catch (e) {
         console.log('error', e)
     }
