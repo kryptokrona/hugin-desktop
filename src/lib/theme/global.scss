@@ -345,7 +345,9 @@ code {
     color: white !important;
     padding: 10px !important;
     z-index: 99999;
-}
+    position: fixed !important;
+    left: 400px !important;
+}   
 
 .svelte-emoji-picker__search > input {
     width: 90% !important;
@@ -359,7 +361,7 @@ code {
     opacity: 50%;
     border: none;
     transition: 100ms ease-in-out;
-
+    margin-right: -5px;
     &:hover {
         opacity: 100%;
     }
