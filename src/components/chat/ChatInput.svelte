@@ -14,24 +14,24 @@
 
     let openEmoji;
     let emojiPicker
-    let focus
+    let messageField
     let off_chain
     let mount = false
-    
+
     onMount(async () => {
-        await sleep(200)
         mount = true
+        await sleep(900)
         emojiPicker = document.querySelector('emoji-picker')
         emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
     })
 
     onDestroy(() => {
         emojiPicker = ''
-        window.api.removeAllListeners("emoji-picker");
+        window.api.removeAllListeners("emoji-click");
     })
 
     const enter = (e) => {
-        if (messageInput && e.keyCode === 13) {
+        if (messageInput && e.keyCode === 13) 
             sendMsg()
         }
     }
@@ -72,7 +72,7 @@
     }
 
     $: if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
-        focus.focus()
+        messageField.focus()
     }
 
 </script>
@@ -82,7 +82,7 @@
 <div class="wrapper" class:rtc class:border-bottom="{$page.url.pathname === '/boards'}"
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <input type="text" placeholder="Message.." bind:this="{focus}" bind:value="{messageInput}" on:click={() => openEmoji = false}/>
+    <input type="text" placeholder="Message.." bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}/>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="position: relative; display: flex:">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
