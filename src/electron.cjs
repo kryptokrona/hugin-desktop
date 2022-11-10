@@ -2091,6 +2091,52 @@ ipcMain.on('create-room', async (e, type) => {
     mainWindow.webContents.send('start-room', type)
 })
 
+async function encryptMessage(message, messageKey, sealed = false) {
+
+    let timestamp = Date.now()
+    let my_address = await js_wallet.getPrimaryAddress()
+    const addr = await Address.fromAddress(my_address)
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
+    let xkr_private_key = privateSpendKey
+    let box
+    
+    if (sealed) {
+    
+    let signature = await xkrUtils.signMessage(message, xkr_private_key)
+    let payload_json = {
+        from: my_address,
+        k: Buffer.from(getKeyPair().publicKey).toString('hex'),
+        msg: message,
+        s: signature,
+    }
+    let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
+    box = new naclSealed.sealedbox(
+        payload_json_decoded,
+        nonceFromTimestamp(timestamp),
+        hexToUint(messageKey)
+    )
+    } else if (!sealed) {
+        console.log('Has history, not using sealedbox')
+        let payload_json = { from: my_address, msg: message }
+
+        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
+
+        box = nacl.box(
+            payload_json_decoded,
+            nonceFromTimestamp(timestamp),
+            hexToUint(messageKey),
+            getKeyPair().secretKey
+        )
+    }
+
+    //Box object
+    let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp }
+    // Convert json to hex
+    let payload_hex = toHex(JSON.stringify(payload_box))
+
+    return payload_hex
+}
+
 async function sendGroupsMessage(message, offchain = false) {
     console.log('Send group msg', message, offchain)
     const my_address = message.k
@@ -2141,12 +2187,12 @@ async function sendGroupsMessage(message, offchain = false) {
 
     if (!offchain) {
         let result = await js_wallet.sendTransactionAdvanced(
-            [[my_address, 1000]], // destinations,
+            [[subWallet, 1000]], // destinations,
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
             [subWallet], // subWalletsToTakeFrom
-            subWallet, // changeAddress
+            undefined, // changeAddress
             true, // relayToNetwork
             false, // sneedAll
             Buffer.from(payload_encrypted_hex, 'hex')
@@ -2171,6 +2217,7 @@ async function sendGroupsMessage(message, offchain = false) {
             }
             mainWindow.webContents.send('error_msg', error)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
+            optimizeMessages()
         }
     } else if (offchain) {
         //Generate a random hash
@@ -2337,13 +2384,16 @@ async function sendBoardMessage(message) {
 
 async function sendMessage(message, receiver, off_chain = false, group = false) {
     let has_history
-    console.log('address', receiver.length)
+
+    //Assert address length
     if (receiver.length !== 163) {
         return
     }
+    //Split address
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
-    //receiver.substring(99,163);
+
+    //Check history
     if (known_keys.indexOf(messageKey) > -1) {
         console.log('I know this contact?')
         has_history = true
@@ -2356,78 +2406,37 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
         return
     }
 
-    let my_address = await js_wallet.getPrimaryAddress()
-
-    let my_addresses = await js_wallet.getAddresses()
-
     try {
         let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
-        //console.log('bal', munlockedBalance, mlockedBalance);
 
         if (munlockedBalance < 11 && mlockedBalance > 0) {
-            log
             return
         }
     } catch (err) {
         return
     }
-
+    
     let timestamp = Date.now()
-
-    // History has been asserted, continue sending message
-
-    let box
+    let payload_hex
 
     if (!has_history) {
-        //console.log('No history found..');
-        // payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp};
-        const addr = await Address.fromAddress(my_address)
-        const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
-        let xkr_private_key = privateSpendKey
-        let signature = await xkrUtils.signMessage(message, xkr_private_key)
-        let payload_json = {
-            from: my_address,
-            k: Buffer.from(getKeyPair().publicKey).toString('hex'),
-            msg: message,
-            s: signature,
-        }
-        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
-        box = new naclSealed.sealedbox(
-            payload_json_decoded,
-            nonceFromTimestamp(timestamp),
-            hexToUint(messageKey)
-        )
+        payload_hex = await encryptMessage(message, messageKey, true)
     } else {
-        //console.log('Has history, not using sealedbox');
-        // Convert message data to json
-        let payload_json = { from: my_address, msg: message }
-
-        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
-
-        box = nacl.box(
-            payload_json_decoded,
-            nonceFromTimestamp(timestamp),
-            hexToUint(messageKey),
-            getKeyPair().secretKey
-        )
+        payload_hex = await encryptMessage(message, messageKey, false)
     }
 
-    let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp }
-
-    // let payload_box = {"box":Buffer.from(box).toString('hex'), "t":timestamp, "key":Buffer.from(getKeyPair().publicKey).toString('hex')};
-    // Convert json to hex
-    let payload_hex = toHex(JSON.stringify(payload_box))
+    console.log('Payload hex', payload_hex)
     //Choose subwallet with message inputs
     let messageWallet = js_wallet.subWallets.getAddresses()[1]
     
     if (!off_chain) {
         let result = await js_wallet.sendTransactionAdvanced(
-            [[address, 1000]], // destinations,
+            [[messageWallet, 1000]], // destinations,
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
             [messageWallet], // subWalletsToTakeFrom
-            messageWallet, // changeAddresss
+            undefined, // changeAddresss
             true, // relayToNetwork
             false, // sneedAll
             Buffer.from(payload_hex, 'hex')
@@ -2462,6 +2471,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
             mainWindow.webContents.send('error_msg', error)
         }
     } else if (off_chain) {
+        //Offchain messages
         let randomKey = await createGroup()
         let sentMsg = Buffer.from(payload_hex, 'hex')
         console.log('sending rtc message')
@@ -2472,6 +2482,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
         if (group) {
             messageArray.push('group')
         }
+
         mainWindow.webContents.send('rtc_message', messageArray)
         //Do not save invite message.
         try {
@@ -2812,11 +2823,6 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
     }
 })
 
-let emitCall
-let awaiting_callback
-let active_calls = []
-let callback
-
 function parse_sdp(sdp) {
     let ice_ufrag = ''
     let ice_pwd = ''
@@ -2943,8 +2949,6 @@ function parseCall(msg, sender, sent, emitCall = true, group = false) {
             return msg
     }
 }
-
-let stream
 
 ipcMain.on('expand-sdp', (e, data, address) => {
     console.log('INCOMING EXPAND SDP', address)
