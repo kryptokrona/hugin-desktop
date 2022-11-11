@@ -2,21 +2,21 @@
     import {fade} from 'svelte/transition'
     import FillButton from '/src/components/buttons/FillButton.svelte'
     import {groups, misc, user} from '$lib/stores/user.js'
-    import {onMount} from 'svelte'
+    import {onMount, onDestroy} from 'svelte'
     import {goto} from '$app/navigation'
     import toast from 'svelte-french-toast'
-    import ArrowRight from "$components/icons/ArrowRight.svelte";
     import {Moon} from "svelte-loading-spinners";
     import NodeSelector from "$components/popups/NodeSelector.svelte";
 
     let wallet
-    let myPassword = ''
-    let data
-    let thisWallet
-    let enableLogin = false
     let nodeFailed
 
     onMount(() => {
+        if ($user.started) {
+            wallet = true
+            goto('/login')
+        return
+        }
         window.api.send('app', true)
         window.api.receive('version', version => {
             $misc.version = version
@@ -26,41 +26,23 @@
         if (!$user.username) $user.username = 'Anon'
 
         window.api.receive('wallet-exist', async (data, walletName, node) => {
+            console.log('node? wallet exist', node)
             $misc.node = node
             wallet = data
+            if (wallet) {
+                await goto('/login')
+            }
             if (walletName === undefined) return
             console.log('wallet exists', walletName)
-            thisWallet = walletName[0]
+            $user.thisWallet = walletName[0]
         })
 
     })
-
-    window.api.receive('login-failed', async () => {
-        toast.error('Wrong password', {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
-        myPassword = ''
-        $misc.loading = false
-    })
-
-    //Handle login, sets logeged in to true and gets user address
-    const handleLogin = (e) => {
-        $misc.loading = true
-        let accountData = {
-            node: $misc.node.node,
-            port: $misc.node.port,
-            thisWallet: thisWallet,
-            myPassword: myPassword,
-        }
-        window.api.send('login', accountData)
-    }
 
     window.api.receive('node-not-ok', () => {
         setTimeout(() => {
             nodeFailed = true
         }, 500)
-        myPassword = ''
         $misc.loading = false
     })
 
@@ -68,13 +50,10 @@
 
         console.log('Got wallet started')
         //Set chosen node from last startup in store
-        $misc.node = node.node + ':' + node.port
+        $misc.node = {node: node.node, port: parseInt(node.port)}
         $groups.blockList = block_list
         $groups.groupArray = my_groups
-
-        await goto('/dashboard')
-        $user.loggedIn = true
-        myPassword = ''
+        loginSuccess()
     })
 
     //Sets our own address in svelte store
@@ -83,15 +62,11 @@
         $user.huginAddress = huginAddr
     })
 
-    $: {
-        enableLogin = myPassword.length > 1
-    }
-
-    const enter = (e) => {
-        if (enableLogin && e.keyCode === 13) {
-            handleLogin()
-            enableLogin = false
-        }
+    const loginSuccess = async () => {
+        console.log('login success')
+        await goto('/dashboard')
+        $user.loggedIn = true
+        $user.started = true
     }
 
     const goTo = restore => {
@@ -108,8 +83,6 @@
 
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}"/>
-
 
 {#if nodeFailed}
     <div class="backdrop">
@@ -117,26 +90,7 @@
     </div>
 {/if}
 
-{#if wallet}
-
-    <div class="wrapper" in:fade>
-        <div class="login-wrapper">
-            <h1>Hugin</h1>
-            <div class="field">
-                <input placeholder="Password..." type="password" bind:value="{myPassword}"/>
-                <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
-                    {#if $misc.loading}
-                        <Moon color="#000000" size="20" unit="px"/>
-                    {:else}
-                        <ArrowRight/>
-                    {/if}
-                </button>
-            </div>
-            <p style="color: white; opacity: 30%">v{$misc.version}</p>
-        </div>
-    </div>
-
-{:else if !wallet}
+{#if wallet == false}
 
     <div in:fade class="wrapper">
         <div class="init">
@@ -149,7 +103,7 @@
         </div>
     </div>
 
-{:else}
+{:else if wallet == undefined}
 
     <div class="wrapper">
         <Moon color="#ffffff" size="30" unit="px"/>
