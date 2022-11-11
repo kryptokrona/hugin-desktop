@@ -1,65 +1,65 @@
 <script>
-  import {fade} from 'svelte/transition'
-  import { misc, user} from '$lib/stores/user.js'
-  import {Moon} from "svelte-loading-spinners";
-  import ArrowRight from "$components/icons/ArrowRight.svelte";
-  import {goto} from '$app/navigation'
-  import { onDestroy, onMount } from 'svelte'
-  import toast from 'svelte-french-toast'
+import {fade} from 'svelte/transition'
+import { misc, user} from '$lib/stores/user.js'
+import {Moon} from "svelte-loading-spinners";
+import ArrowRight from "$components/icons/ArrowRight.svelte";
+import {goto} from '$app/navigation'
+import { onDestroy, onMount } from 'svelte'
+import toast from 'svelte-french-toast'
 
-  let myPassword = ""
-  let enableLogin = false
+let myPassword = ""
+let enableLogin = false
 
-  onMount(() => {
-    $misc.loading = false
-  })
-
-  onDestroy(() => {
-    window.api.removeAllListeners('login-failed')
-    window.api.removeAllListeners('login-success')
+onMount(() => {
+  $misc.loading = false
 })
-  $: {
-      enableLogin = myPassword.length > 1
-  }
 
-  const enter = (e) => {
-      if (enableLogin && e.keyCode === 13) {
-          handleLogin()
-          enableLogin = false
-      }
-  }
+onDestroy(() => {
+  window.api.removeAllListeners('login-failed')
+  window.api.removeAllListeners('login-success')
+})
+$: {
+    enableLogin = myPassword.length > 1
+}
 
-  //Handle login, sets logeged in to true and gets user address
-  const handleLogin = async (e) => {
-      if (!$user.started) {
-          $misc.loading = true
-      }
-      let accountData = {
-          node: $misc.node.node,
-          port: $misc.node.port,
-          thisWallet: $user.thisWallet,
-          myPassword: myPassword,
-      }
-    window.api.send('login', accountData)
-  }
+const enter = (e) => {
+    if (enableLogin && e.keyCode === 13) {
+        handleLogin()
+        enableLogin = false
+    }
+}
 
-  const loginSuccess = async () => {
-      await goto('/dashboard')
-      $user.loggedIn = true
-      $misc.loading = false
-  }
+//Handle login, sets logeged in to true and gets user address
+const handleLogin = async (e) => {
+    if (!$user.started) {
+        $misc.loading = true
+    }
+    let accountData = {
+        node: $misc.node.node,
+        port: $misc.node.port,
+        thisWallet: $user.thisWallet,
+        myPassword: myPassword,
+    }
+  window.api.send('login', accountData)
+}
 
-  window.api.receive('login-success', async () => {
-        loginSuccess()
-  })
+const loginSuccess = async () => {
+    await goto('/dashboard')
+    $user.loggedIn = true
+    $misc.loading = false
+}
 
-  window.api.receive('login-failed', async () => {
-      toast.error('Wrong password', {
-          position: 'top-right',
-          style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-      })
-      $misc.loading = false
-  })
+window.api.receive('login-success', async () => {
+      loginSuccess()
+})
+
+window.api.receive('login-failed', async () => {
+    toast.error('Wrong password', {
+        position: 'top-right',
+        style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+    })
+    $misc.loading = false
+})
 
 </script>
 
