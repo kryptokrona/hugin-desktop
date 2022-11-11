@@ -252,12 +252,12 @@ const welcomeMessage = () => {
 }
 
 const firstContact = () => {
-    const firstContact = `INSERT INTO contacts (address, key, name)
+    const first_Contact = `INSERT INTO contacts (address, key, name)
                           VALUES (?, ?, ?)`
     return new Promise(
         (resolve, reject) => {
             database.run(
-                firstContact,
+                first_Contact,
                 [
                     welcomeAddress,
                     '133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f',
@@ -1024,4 +1024,4 @@ const saveThisContact = (addr, key, name) => {
 
 
 
-module.exports = {saveHash, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, removeBoard, loadBlockList, getConversation, getConversations, loadKnownTxs, getMyBoardList, getBoardMsgs, getMessages, getReplies, getGroupReply, getReply, printGroup, printBoard, saveMsg, saveBoardMessage, saveThisContact, groupMessageExists, messageExists, getContacts}
+module.exports = {saveHash, addBoard, firstContact, welcomeMessage, welcomeBoardMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, removeBoard, loadBlockList, getConversation, getConversations, loadKnownTxs, getMyBoardList, getBoardMsgs, getMessages, getReplies, getGroupReply, getReply, printGroup, printBoard, saveMsg, saveBoardMessage, saveThisContact, groupMessageExists, messageExists, getContacts}
