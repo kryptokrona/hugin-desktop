@@ -449,6 +449,7 @@ ipcMain.on('install-update', async (e, data) => {
 })
 
 const checkNodeStatus = async (node) => {
+
     try {
         const req = await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
         if (!req.ok) return false
@@ -603,20 +604,17 @@ async function openWalletFromFile(walletName, password) {
 }
 
 async function verifyPassword(password) {
-        let check = await checkPass(password, hashed_pass)
-        console.log('chech', check)
-        if (check) {
-            mainWindow.webContents.send('login-success')
-            return true
-        } else {
-            mainWindow.webContents.send('login-failed')
-            return false
-        }
-
+    let check = await checkPass(password, hashed_pass)
+    if (check) {
+        mainWindow.webContents.send('login-success')
+        return true
+    } else {
+        mainWindow.webContents.send('login-failed')
+        return false
+    }
 }
 
 async function start_js_wallet(walletName, password, node) {
-
     let nodeOnline = await checkNodeStatus(node)
     if (!nodeOnline) {
         mainWindow.webContents.send('node-not-ok')
@@ -652,7 +650,6 @@ async function start_js_wallet(walletName, password, node) {
     let knownTxsIds = await loadKnownTxs()
     let my_groups = await getGroups()
     block_list = await loadBlockList()
-    console.log('Block list:', block_list)
     //Save backup wallet to file
     await saveWalletToFile(js_wallet, walletName, password)
 
@@ -934,9 +931,8 @@ async function saveContact(hugin_address, nickname = false, first = false) {
 
 let crypto = new Crypto()
 
-async function hashPassword(pass, session) {
-   let hash = await crypto.cn_fast_hash(toHex(pass))
-   return hash
+async function hashPassword(pass) {
+   return await crypto.cn_fast_hash(toHex(pass))
 }
 
 async function checkPass(pass, oldHash) {
@@ -1259,7 +1255,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
     )
 
     if (!verified) return
-    console.log('block list', block_list)
     if (block_list.some(a => a.address === from)) return
 
     payload_json.sent = false
