@@ -9,6 +9,7 @@
     import AddGroup from '/src/components/chat/AddGroup.svelte'
     import {page} from '$app/stores'
     import InfiniteScroll from "svelte-infinite-scroll";
+    import BlockContact from '/src/components/chat/BlockContact.svelte'
 
     let boardMsgs = []
     let replyto = ''
@@ -335,6 +336,10 @@ function addHash(data) {
 
 {#if wantToAdd}
     <AddGroup on:click="{openAddGroup}" on:addGroup="{(e) => addNewGroup(e)}" />
+{/if}
+
+{#if $user.block}
+    <BlockContact />
 {/if}
 
 <main in:fade="{{ duration: 350 }}">
