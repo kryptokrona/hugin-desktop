@@ -9,6 +9,7 @@ import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores.js'
 import { layoutState } from '$lib/stores/layout-state.js'
 import AlphaIcon from '$components/icons/AlphaIcon.svelte'
+import Logout from '../icons/Logout.svelte'
 
 let sync
 let avatar
@@ -27,6 +28,7 @@ const handleLogout = () => {
             loggedIn: false,
         }
     })
+     goto("/login")
 }
 
 const messagesRouteAndMenu = () => {
@@ -70,7 +72,9 @@ const groupRouteAndMenu = () => {
         <div on:click="{() => goto('/settings')}" class="button">
             <SettingsIcon />
         </div>
-        <!-- <a class='button' href="/" on:click={handleLogout}><img class="icon" src={logoutIcon} alt="logout"></a> -->
+        <a class='button' href="/" on:click={handleLogout}>
+            <Logout/>
+        </a>
         <XkrLogo grey="{true}" />
         <div
             on:click="{() =>
