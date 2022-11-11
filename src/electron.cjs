@@ -31,7 +31,39 @@ const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
 const {expand_sdp_answer, expand_sdp_offer} = require("./sdp.cjs")
-
+const {
+    loadDB,
+    saveHash,
+    loadGroups, 
+    loadKeys, 
+    getGroups, 
+    saveGroupMsg, 
+    unBlockContact, 
+    blockContact, 
+    removeMessages, 
+    removeContact, 
+    removeGroup, 
+    addGroup, 
+    removeBoard, 
+    loadBlockList, 
+    getConversation, 
+    getConversations, 
+    loadKnownTxs, 
+    getMyBoardList, 
+    getBoardMsgs, 
+    getMessages, 
+    getReplies, 
+    getGroupReply, 
+    getReply, 
+    printGroup, 
+    printBoard, 
+    saveMsg, 
+    saveBoardMessage, 
+    saveThisContact, 
+    groupMessageExists, 
+    messageExists, 
+    getContacts
+} = require("./Database.cjs")
 const {
     Address,
     AddressPrefix,
@@ -325,13 +357,12 @@ function sleep(ms) {
 const userDataDir = app.getPath('userData')
 const appPath = app.getAppPath()
 const downloadDir = app.getPath('downloads')
-
 const dbPath = userDataDir + '/SQLmessages.db'
-const database = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.log('Err', err)
-    }
-})
+
+function startDatabase() {
+    loadDB(userDataDir, dbPath)
+
+}
 
 let daemon
 let nodeUrl
@@ -358,7 +389,7 @@ ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
     mainWindow.webContents.send('version', app.getVersion())
     startCheck()
-    
+    startDatabase()
     if (dev) {
         console.log('Running in development')
         mainWindow.openDevTools()
@@ -454,7 +485,6 @@ async function startCheck() {
         await db.read()
         let walletName = db.data.walletNames
         console.log('walletname', walletName)
-        createTables()
         nodeUrl = db.data.node.node
         nodePort = db.data.node.port
         let node = { node: nodeUrl, port: nodePort }
@@ -476,20 +506,8 @@ async function startCheck() {
     } else {
         //No wallet found, probably first start
         console.log('wallet not found')
-        createTables()
         mainWindow.webContents.send('wallet-exist', false)
     }
-}
-
-async function createTables() {
-    boardMessageTable()
-    messagesTable()
-    knownTxsTable()
-    contactsTable()
-    boardsSubscriptionsTable()
-    groupMessageTable()
-    groupsTable()
-    blockListTable()
 }
 
 const startWallet = async (data, node) => {
@@ -504,253 +522,6 @@ const startWallet = async (data, node) => {
 const welcomeAddress =
     'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
 
-function contactsTable() {
-    const contactsTable = `
-                    CREATE TABLE IF NOT EXISTS contacts (
-                       address TEXT,
-                       key TEXT,
-                       name TEXT,
-                       UNIQUE (key)
-                   )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(contactsTable, (err) => {})
-            console.log('created contacts Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-
-
-function knownTxsTable() {
-    const knownTxTable = `
-                  CREATE TABLE IF NOT EXISTS knownTxs (
-                     hash TEXT,
-                     UNIQUE (hash)
-                 )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(knownTxTable, (err) => {})
-            console.log('created Known TX Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function boardMessageTable() {
-    const boardTable = `
-                CREATE TABLE IF NOT EXISTS boards (
-                     message TEXT,
-                     key TEXT,
-                     signature TEXT,
-                     board TEXT,
-                     time TEXT,
-                     name TEXT,
-                     reply TEXT,
-                     poll TEXT,
-                     thread TEXT,
-                     hash TEXT UNIQUE,
-                     sent BOOLEAN
-                    )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(boardTable, (err) => {})
-            console.log('created Board Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function messagesTable() {
-    const messageTable = `
-                CREATE TABLE IF NOT EXISTS messages (
-                   msg TEXT,
-                   chat TEXT,
-                   sent BOOLEAN,
-                   timestamp TEXT,
-                   UNIQUE (timestamp)
-               )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(messageTable, (err) => {})
-            console.log('created Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function boardsSubscriptionsTable() {
-    const subscriptionTable = `
-            CREATE TABLE IF NOT EXISTS subscription (
-              board TEXT,
-              UNIQUE (board)
-          )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(subscriptionTable, (err) => {})
-            console.log('created subscription Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function groupsTable() {
-    const groupsTable = `
-            CREATE TABLE IF NOT EXISTS pgroups (
-              key TEXT,
-              name TEXT,
-              UNIQUE (key)
-          )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(groupsTable, (err) => {})
-            console.log('created groups Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function groupMessageTable() {
-    const groupTable = `
-            CREATE TABLE IF NOT EXISTS groupmessages (
-              message TEXT,
-              address TEXT,
-              signature TEXT,
-              grp TEXT,
-              time TEXT,
-              name TEXT,
-              thread TEXT,
-              reply TEXT,
-              hash TEXT UNIQUE,
-              sent BOOLEAN
-            )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(groupTable, (err) => {})
-            console.log('created group Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function blockListTable() {
-    const blockList = `
-                  CREATE TABLE IF NOT EXISTS blocklist (
-                     address TEXT,
-                     name TEXT,
-                     UNIQUE (address)
-                 )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(blockList, (err) => {})
-            console.log('created block list Table')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function welcomeBoardMessage() {
-    let sent = false
-    const boardMessage = `INSERT INTO boards  (
-            message,
-            key,
-            signature,
-            board,
-            time,
-            name,
-            reply,
-            hash,
-            sent
-           )
-        VALUES
-            (? ,?, ?, ?, ?, ?, ?, ?, ?)`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(
-                boardMessage,
-                [
-                    'Welcome to Hugin',
-                    'SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc',
-                    'lol',
-                    'Home',
-                    '1650919475',
-                    'Hugin Messenger',
-                    '',
-                    'b80a4dc4fa60bf26dd31161702a165e43295adc1895f7333ad9eeeb819e20936',
-                    sent,
-                ],
-                (err) => {
-                    console.log('Error creating msg', err)
-                }
-            )
-            console.log('created board msg')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function welcomeMessage() {
-    const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp)
-                          VALUES (?, ?, ?, ?)`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(
-                huginMessage,
-                ['Welcome to hugin', welcomeAddress, false, '1650919475320'],
-                (err) => {
-                    console.log('Error creating msg', err)
-                }
-            )
-            console.log('created welcome msg')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-function firstContact() {
-    const firstContact = `INSERT INTO contacts (address, key, name)
-                          VALUES (?, ?, ?)`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(
-                firstContact,
-                [
-                    welcomeAddress,
-                    '133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f',
-                    'Hugin',
-                ],
-                (err) => {
-                    console.log('Error creating contact msg', err)
-                }
-            )
-            console.log('created first contact msg')
-        },
-        () => {
-            resolve()
-        }
-    )
-}
 
 ipcMain.on('create-account', async (e, accountData) => {
     //Create welcome message
@@ -799,75 +570,6 @@ ipcMain.on('create-account', async (e, accountData) => {
 
     start_js_wallet(walletName, myPassword, node)
 })
-
-async function loadGroups() {
-    const rows = []
-    return new Promise((resolve, reject) => {
-        const getAllGroups = `SELECT * FROM pgroups`
-        database.each(
-            getAllGroups,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                rows.push(row)
-            },
-            () => {
-                resolve(rows)
-            }
-        )
-    })
-}
-
-async function loadKeys(start = false) {
-    //Load known public keys from db and push them to known_keys
-    let contacts = await getContacts()
-    if (start) {
-        contacts.forEach(function (keys) {
-            known_keys.push(keys.key)
-        })
-    }
-
-    return contacts
-}
-
-async function loadKnownTxs() {
-    //Load known txs from db and then load them in to known_pool_txs
-    const knownTransactions = []
-    return new Promise((resolve, reject) => {
-        const getAllknownTxs = `SELECT * FROM knownTxs`
-        database.each(
-            getAllknownTxs,
-            (err, txs) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                knownTransactions.push(txs)
-            },
-            () => {
-                resolve(knownTransactions)
-            }
-        )
-    })
-}
-
-async function loadBlockList() {
-    const blockList = []
-    return new Promise((resolve, reject) => {
-        const getBlockList = `SELECT * FROM blocklist`
-        database.each(
-            getBlockList,
-            (err, blocked) => {
-                if (err) {
-                }
-                blockList.push(blocked)
-            },
-            () => {
-                resolve(blockList)
-            }
-        )
-    })
-}
 
 
 async function logIntoWallet(walletName, password) {
@@ -927,7 +629,8 @@ async function start_js_wallet(walletName, password, node) {
     }
 
     //Load known public keys and contacts
-    let myContacts = await loadKeys((start = true))
+    let [myContacts, keys] = await loadKeys((start = true))
+    known_keys = keys
     mainWindow.webContents.send('contacts', myContacts)
     await sleep(300)
 
@@ -1225,100 +928,6 @@ ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
     saveContact(hugin_address, nickname, first)
 })
 
-async function addBoard(brd) {
-    database.run(
-        `REPLACE INTO subscription
-      (board)
-        VALUES
-          (?)`,
-        [brd]
-    )
-
-    console.log('saved board', brd)
-}
-
-async function removeBoard(brd) {
-    database.run(
-        `DELETE FROM
-        subscription
-      WHERE
-        board = ?`,
-        [brd]
-    )
-
-    console.log('removed brd', brd)
-}
-
-async function addGroup(group) {
-    console.log('adding', group)
-    database.run(
-        `REPLACE INTO pgroups
-      (key, name)
-        VALUES
-          (?, ?)`,
-        [group.k, group.n]
-    )
-
-    console.log('saved group', group)
-}
-
-async function removeGroup(group) {
-    database.run(
-        `DELETE FROM
-        pgroups
-      WHERE
-        key = ?`,
-        [group]
-    )
-
-    console.log('removed brd', group)
-}
-
-async function removeContact(contact) {
-    database.run(
-        `DELETE FROM
-        contacts
-      WHERE
-        address = ?`,
-        [contact]
-    )
-
-    console.log('removed contact', contact)
-}
-
-async function removeMessages(contact) {
-    database.run(
-        `DELETE FROM
-        messages
-      WHERE
-        chat = ?`,
-        [contact]
-    )
-}
-
-async function blockContact(address, name) {
-    database.run(
-        `REPLACE INTO blocklist
-      (address, name)
-        VALUES
-          (?, ?)`,
-        [address, name]
-    )
-    console.log('Blocked contact', address)
-}
-
-async function unBlockContact(address) {
-    database.run(
-        `DELETE FROM
-        blocklist
-      WHERE
-        address = ?`,
-        [address]
-    )
-
-    console.log('Removed from block list', address)
-}
-
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname = false, first = false) {
     console.log('huginadress', hugin_address)
@@ -1341,13 +950,8 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     }
     console.log('Pushing this to known keys ', known_keys)
     mainWindow.webContents.send('saved-addr', hugin_address)
-    database.run(
-        `REPLACE INTO contacts
-         (address, key, name)
-      VALUES
-          (?, ?, ?)`,
-        [addr, key, name]
-    )
+
+    saveThisContact(addr, key, name)
 
     if (first) {
         saveMessage({
@@ -1363,67 +967,10 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     }
 }
 
-//Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
-async function saveHash(txHash) {
-    if (txHash == undefined || txHash.length < 64) {
-        console.log('caught undefined hash')
-        return
-    }
-
-    database.run(
-        `REPLACE INTO knownTxs (
-                 hash
-               )
-               VALUES
-                   ( ? )`,
-        [txHash]
-    )
-    console.log('saved hash')
-}
 
 //Saves board message.
 async function saveBoardMsg(msg, hash, follow = false) {
-    return
-    let to_board = sanitizeHtml(msg.brd)
-    let text = sanitizeHtml(msg.m)
-    let addr = sanitizeHtml(msg.k)
-    let reply = sanitizeHtml(msg.r)
-    let sig = sanitizeHtml(msg.s)
-    let timestamp = sanitizeHtml(msg.t)
-    let nick = sanitizeHtml(msg.n)
-    let txHash = sanitizeHtml(hash)
-    if (nick === '') {
-        nick = 'Anonymous'
-    }
-
-    let message = {
-        message: text,
-        key: addr,
-        signature: sig,
-        board: to_board,
-        time: timestamp,
-        name: nick,
-        reply: reply,
-        hash: txHash,
-        sent: msg.sent,
-    }
-
-    database.run(
-        `REPLACE INTO boards  (
-               message,
-               key,
-               signature,
-               board,
-               time,
-               name,
-               reply,
-               hash,
-               sent
-              )
-           VALUES
-               (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
-        [text, addr, sig, to_board, timestamp, nick, reply, txHash, msg.sent]
-    )
+    saveBoardMessage(msg, hash)
     saveHash(hash)
     if (msg.sent || !follow) return
     //Send new board message to frontend.
@@ -1432,52 +979,10 @@ async function saveBoardMsg(msg, hash, follow = false) {
 }
 
 async function saveGroupMessage(msg, hash, time, offchain) {
-    let group = sanitizeHtml(msg.g)
-    let text = sanitizeHtml(msg.m)
-    let addr = sanitizeHtml(msg.k)
-    let reply = sanitizeHtml(msg.r)
-    let sig = sanitizeHtml(msg.s)
-    let timestamp = sanitizeHtml(time)
-    let nick = sanitizeHtml(msg.n)
-    let txHash = sanitizeHtml(hash)
-    let exists = await groupMessageExists(timestamp)
-    if (exists) return
 
-    if (nick === '') {
-        nick = 'Anonymous'
-    }
-
-    let message = {
-        message: text,
-        address: addr,
-        signature: sig,
-        group: group,
-        time: timestamp,
-        name: nick,
-        reply: reply,
-        hash: txHash,
-        sent: msg.sent,
-    }
+    let message = await saveGroupMsg(msg, hash, time, offchain)
 
     if (!offchain) {
-        database.run(
-            `REPLACE INTO groupmessages  (
-        message,
-        address,
-        signature,
-        grp,
-        time,
-        name,
-        reply,
-        hash,
-        sent
-              )
-           VALUES
-               (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
-            [text, addr, sig, group, timestamp, nick, reply, txHash, msg.sent]
-        )
-        saveHash(hash)
-
         //Send new board message to frontend.
         mainWindow.webContents.send('groupMsg', message)
         mainWindow.webContents.send('newGroupMessage', message)
@@ -1489,370 +994,6 @@ async function saveGroupMessage(msg, hash, time, offchain) {
     }
 }
 
-//Get all messages from db
-async function getMessages() {
-    const rows = []
-    return new Promise((resolve, reject) => {
-        const getAllMessages = `SELECT * FROM messages`
-        database.each(
-            getAllMessages,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                rows.push(row)
-            },
-            () => {
-                resolve(rows)
-            }
-        )
-    })
-}
-
-//Get all boardmessages from db.
-async function getBoardMsgs() {
-    const allBoards = []
-    return new Promise((resolve, reject) => {
-        const getAllBrds = `SELECT * FROM boards`
-        database.each(
-            getAllBrds,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                allBoards.unshift(row)
-            },
-            () => {
-                resolve(allBoards)
-            }
-        )
-    })
-}
-
-//Get one message from every unique board sorted by latest timestmap.
-async function getMyBoardList() {
-    const myBoards = []
-    return new Promise((resolve, reject) => {
-        const getMyBoards = `
-          SELECT *
-          FROM subscription
-          `
-        database.each(
-            getMyBoards,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                myBoards.push(row.board)
-            },
-            () => {
-                resolve(myBoards)
-            }
-        )
-    })
-}
-
-//Get one message from every unique user sorted by latest timestmap.
-async function getGroups() {
-    let my_groups = await loadGroups()
-    let name
-    let newRow
-    let key
-    const myGroups = []
-    return new Promise((resolve, reject) => {
-        const getMyGroups = `
-          SELECT *
-          FROM groupmessages D
-          WHERE time = (SELECT MAX(time) FROM groupmessages WHERE grp = D.grp)
-          ORDER BY
-              time
-          ASC
-          `
-        database.each(
-            getMyGroups,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                my_groups.some(function (chat) {
-                    if (chat.key === row.grp) {
-                        name = chat.name
-                        key = chat.key
-                        newRow = {
-                            name: name,
-                            msg: row.message,
-                            chat: row.grp,
-                            timestamp: row.time,
-                            sent: row.sent,
-                            key: key,
-                            hash: row.hash,
-                            nick: row.name,
-                        }
-                        myGroups.push(newRow)
-                    }
-                })
-            },
-            () => {
-                resolve(myGroups)
-            }
-        )
-    })
-}
-
-//Get one message from every unique user sorted by latest timestmap.
-async function getConversations() {
-    let contacts = await getContacts()
-
-    //Remove Hugin welcome message and contact if new contact was added.
-    if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
-        removeContact(welcomeAddress)
-        removeMessages(welcomeAddress)
-    }
-
-    let name
-    let newRow
-    let key
-    const myConversations = []
-    return new Promise((resolve, reject) => {
-        const getMyConversations = `
-          SELECT *
-          FROM messages D
-          WHERE timestamp = (SELECT MAX(timestamp) FROM messages WHERE chat = D.chat)
-          ORDER BY
-              timestamp
-          ASC
-          `
-        database.each(
-            getMyConversations,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                contacts.some(function (chat) {
-                    if (chat.address == row.chat) {
-                        name = chat.name
-                        key = chat.key
-                        newRow = {
-                            name: name,
-                            msg: row.msg,
-                            chat: row.chat,
-                            timestamp: row.timestamp,
-                            sent: row.sent,
-                            key: key,
-                        }
-                        myConversations.push(newRow)
-                    }
-                })
-            },
-            () => {
-                resolve(myConversations)
-            }
-        )
-    })
-}
-
-//Get a chosen conversation from the reciepients xkr address.
-async function getConversation(chat = false) {
-    const thisConversation = []
-    return new Promise((resolve, reject) => {
-        const getChat = `SELECT
-            msg,
-            chat,
-            sent,
-            timestamp
-        FROM
-            messages
-        ${chat ? 'WHERE chat = "' + chat + '"' : ''}
-        ORDER BY
-            timestamp
-        ASC`
-        database.each(
-            getChat,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                thisConversation.push(row)
-            },
-            () => {
-                resolve(thisConversation)
-            }
-        )
-    })
-}
-
-//Print a chosen group from the shared key.
-async function printGroup(group = false) {
-    const thisGroup = []
-    return new Promise((resolve, reject) => {
-        const getGroup = `SELECT
-          message,
-          address,
-          signature,
-          grp,
-          time,
-          name,
-          reply,
-          hash,
-          sent
-        FROM
-            groupmessages
-        ${group ? 'WHERE grp = "' + group + '"' : ''}
-        ORDER BY
-            time
-        DESC`
-        database.each(
-            getGroup,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                thisGroup.push(row)
-            },
-            () => {
-                resolve(thisGroup)
-            }
-        )
-    })
-}
-
-//Get all messages from a specific board from db
-async function printBoard(board = false) {
-    const boardArray = []
-    return new Promise((resolve, reject) => {
-        const getBoard = `SELECT
-               message,
-               key,
-               signature,
-               board,
-               time,
-               name,
-               reply,
-               hash,
-               sent
-        FROM boards
-        ${board ? 'WHERE board = "' + board + '"' : ''}
-        ORDER BY
-            time
-        ASC`
-        database.each(
-            getBoard,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                boardArray.push(row)
-            },
-            () => {
-                boardArray.reverse()
-                resolve(boardArray)
-            }
-        )
-    })
-}
-
-//Get original messsage from a chosen reply hash
-async function getReply(reply = false) {
-    let thisReply
-    return new Promise((resolve, reject) => {
-        let sql = `SELECT
-             message,
-             key,
-             signature,
-             board,
-             time,
-             name,
-             reply,
-             hash,
-             sent
-      FROM boards
-      ${reply ? 'WHERE hash = "' + reply + '"' : ''}
-      ORDER BY
-          time
-      ASC`
-        database.each(
-            sql,
-            (err, row) => {
-                thisReply = row
-                if (err) {
-                    console.log('Error', err)
-                }
-            },
-            () => {
-                resolve(thisReply)
-            }
-        )
-    })
-}
-
-//Get original messsage from a chosen reply hash
-async function getGroupReply(reply) {
-    let thisReply
-    return new Promise((resolve, reject) => {
-        let sql = `SELECT
-             message,
-             address,
-             signature,
-             grp,
-             time,
-             name,
-             reply,
-             hash,
-             sent
-      FROM groupmessages
-      ${reply ? 'WHERE hash = "' + reply + '"' : ''}
-      ORDER BY
-          time
-      ASC`
-        database.each(
-            sql,
-            (err, row) => {
-                thisReply = row
-                if (err) {
-                    console.log('Error', err)
-                }
-            },
-            () => {
-                resolve(thisReply)
-            }
-        )
-    })
-}
-
-//Get all replies to a specific post
-async function getReplies(hash = false) {
-    const replies = []
-    return new Promise((resolve, reject) => {
-        let sql = `SELECT
-               message,
-               key,
-               signature,
-               board,
-               time,
-               name,
-               reply,
-               hash,
-               sent
-        FROM boards
-        ${hash ? 'WHERE r = "' + hash + '"' : ''}
-        ORDER BY
-            time
-        ASC`
-        database.each(
-            sql,
-            (err, row) => {
-                console.log(row)
-                if (err) {
-                    console.log('Error', err)
-                }
-                replies.push(row)
-            },
-            () => {
-                resolve(replies)
-            }
-        )
-    })
-}
 
 //Saves private message
 async function saveMessage(msg, hash, offchain = false) {
@@ -1905,15 +1046,8 @@ async function saveMessage(msg, hash, offchain = false) {
         message = 'File uploaded'
         torrent = magnetLinks[0]
     }
-    console.log('Saving message', message, addr, sent, timestamp)
-    //Save to DB
-    database.run(
-        `REPLACE INTO messages
-            (msg, chat, sent, timestamp)
-         VALUES
-             (?, ?, ?, ?)`,
-        [message, addr, sent, timestamp]
-    )
+
+    saveMsg(message, addr, sent, timestamp)
 
     if (!offchain) {
         saveHash(hash)
@@ -1941,72 +1075,6 @@ async function saveMessage(msg, hash, offchain = false) {
     mainWindow.webContents.send('privateMsg', newMsg)
 }
 
-//Get all contacts from db
-async function getContacts() {
-    const myContactList = []
-    return new Promise((resolve, reject) => {
-        const getMyContacts = `SELECT * FROM contacts`
-        database.each(
-            getMyContacts,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                let newRow = row
-                newRow.chat = row.address
-                myContactList.push(newRow)
-            },
-            () => {
-                resolve(myContactList)
-            }
-        )
-    })
-}
-
-async function messageExists(time) {
-    let exists = false
-    return new Promise((resolve, reject) => {
-        const messageExists = 
-        `SELECT *
-        FROM messages
-        WHERE timestamp = ${time}
-        `
-        database.each(
-            messageExists,
-            (err, row) => {
-                if (row) {
-                    exists = true
-                }
-            },
-            () => {
-                resolve(exists)
-            }
-        )
-    })
-}
-
-async function groupMessageExists(time) {
-    let exists = false
-    return new Promise((resolve, reject) => {
-        const groupMessageExists = 
-        `SELECT *
-        FROM groupmessages
-        WHERE time = ${time}
-        `
-        database.each(
-            groupMessageExists,
-            (err, row) => {
-                if (row) {
-                    exists = true
-                }
-            },
-            () => {
-                resolve(exists)
-            }
-        )
-    })
-
-}
 
 ipcMain.handle('createGroup', async () => {
     return await createGroup()
@@ -2308,79 +1376,79 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
     return [payload_json, tx.t, hash]
 }
 
-async function sendBoardMessage(message) {
-    console.log('sending board', message)
-    let reply = message.r
-    let to_board = message.brd
-    let my_address = message.k
-    let nickname = message.n
-    let msg = message.m
-    try {
-        let timestamp = parseInt(Date.now() / 1000)
-        let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
-        let xkr_private_key = privateSpendKey
-        let signature = await xkrUtils.signMessage(msg, xkr_private_key)
+// async function sendBoardMessage(message) {
+//     console.log('sending board', message)
+//     let reply = message.r
+//     let to_board = message.brd
+//     let my_address = message.k
+//     let nickname = message.n
+//     let msg = message.m
+//     try {
+//         let timestamp = parseInt(Date.now() / 1000)
+//         let [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
+//         let xkr_private_key = privateSpendKey
+//         let signature = await xkrUtils.signMessage(msg, xkr_private_key)
 
-        let payload_json = {
-            m: msg,
-            k: my_address,
-            s: signature,
-            brd: to_board,
-            t: timestamp,
-            n: nickname,
-        }
+//         let payload_json = {
+//             m: msg,
+//             k: my_address,
+//             s: signature,
+//             brd: to_board,
+//             t: timestamp,
+//             n: nickname,
+//         }
 
-        if (reply) {
-            payload_json.r = reply
-        }
+//         if (reply) {
+//             payload_json.r = reply
+//         }
 
-        payload_hex = toHex(JSON.stringify(payload_json))
+//         payload_hex = toHex(JSON.stringify(payload_json))
 
-        let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
+//         let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
 
-        let result = await js_wallet.sendTransactionAdvanced(
-            [[subWallet, 1000]], // destinations,
-            3, // mixin
-            { fixedFee: 1000, isFixedFee: true }, // fee
-            undefined, //paymentID
-            [subWallet], // subWalletsToTakeFrom
-            undefined, // changeAddress
-            true, // relayToNetwork
-            false, // sneedAll
-            Buffer.from(payload_hex, 'hex')
-        )
+//         let result = await js_wallet.sendTransactionAdvanced(
+//             [[subWallet, 1000]], // destinations,
+//             3, // mixin
+//             { fixedFee: 1000, isFixedFee: true }, // fee
+//             undefined, //paymentID
+//             [subWallet], // subWalletsToTakeFrom
+//             undefined, // changeAddress
+//             true, // relayToNetwork
+//             false, // sneedAll
+//             Buffer.from(payload_hex, 'hex')
+//         )
 
-        if (result.success) {
-            console.log(
-                `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
-                    result.fee
-                )}`
-            )
-            mainWindow.webContents.send('sent_board', {
-                hash: result.transactionHash,
-                time: message.t,
-            })
-            known_pool_txs.push(result.transactionHash)
-            const sentMsg = payload_json
-            sentMsg.sent = true
-            sentMsg.type = 'board'
-            saveBoardMsg(sentMsg, result.transactionHash)
-        } else {
-            let error = {
-                message: 'Failed to send',
-                name: 'Error',
-                hash: Date.now(),
-            }
-            mainWindow.webContents.send('error_msg', error)
-            console.log(`Failed to send transaction: ${result.error.toString()}`)
-        }
-    } catch (err) {
-        mainWindow.webContents.send('error_msg')
-        console.log('Error', err)
-    }
+//         if (result.success) {
+//             console.log(
+//                 `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
+//                     result.fee
+//                 )}`
+//             )
+//             mainWindow.webContents.send('sent_board', {
+//                 hash: result.transactionHash,
+//                 time: message.t,
+//             })
+//             known_pool_txs.push(result.transactionHash)
+//             const sentMsg = payload_json
+//             sentMsg.sent = true
+//             sentMsg.type = 'board'
+//             saveBoardMsg(sentMsg, result.transactionHash)
+//         } else {
+//             let error = {
+//                 message: 'Failed to send',
+//                 name: 'Error',
+//                 hash: Date.now(),
+//             }
+//             mainWindow.webContents.send('error_msg', error)
+//             console.log(`Failed to send transaction: ${result.error.toString()}`)
+//         }
+//     } catch (err) {
+//         mainWindow.webContents.send('error_msg')
+//         console.log('Error', err)
+//     }
 
-    optimizeMessages()
-}
+//     optimizeMessages()
+// }
 
 async function sendMessage(message, receiver, off_chain = false, group = false) {
     let has_history
