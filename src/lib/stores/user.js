@@ -12,6 +12,8 @@ export const user = writable({
     addChat: false,
     rename: false,
     transactions: [],
+    block: false,
+    started: false,
 })
 
 export const boards = writable({
@@ -88,6 +90,10 @@ export const transactions = writable({
 
 export const messageWallet = writable({
     optimized: false
+})
+
+export const beam = writable({
+    active: []
 })
 
 export const userAvatar = derived(user, ($user) => {
