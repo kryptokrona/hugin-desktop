@@ -62,7 +62,11 @@ const {
     saveThisContact, 
     groupMessageExists, 
     messageExists, 
-    getContacts
+    getContacts, 
+    firstContact, 
+    welcomeMessage, 
+    welcomeBoardMessage,
+    addBoard
 } = require("./Database.cjs")
 const {
     Address,
@@ -76,7 +80,6 @@ const {
 } = require('kryptokrona-utils')
 
 const Store = require('electron-store');
-
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
 
@@ -324,18 +327,6 @@ async function download(link) {
     console.log('log log')
 }
 
-ipcMain.on('download', async (e, link) => {
-    console.log('ipcmain downloading')
-    return
-    download(link)
-})
-
-ipcMain.on('upload', async (e, filename, path, address) => {
-    console.log('ipcmain uploading')
-    return
-    upload(filename, path, address)
-})
-
 function upload(filename, path, address) {
     let client = new WebTorrent({ maxConns: 1 })
     console.log('uploading', filename)
@@ -382,8 +373,7 @@ let known_pool_txs = []
 let myPassword
 let my_boards = []
 let block_list = []
-
-
+let hashed_pass = ""
 
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
@@ -587,7 +577,6 @@ async function logIntoWallet(walletName, password) {
         )
         if (error) {
             console.log('Failed to open wallet: ' + error.toString())
-            mainWindow.webContents.send('login-failed')
             return 'Wrong password'
         }
         return js_wallet
@@ -608,25 +597,46 @@ async function openWalletFromFile(walletName, password) {
     )
     if (error) {
         console.log('Failed to open wallet: ' + error.toString())
-        mainWindow.webContents.send('login-failed')
         return 'Wrong password'
     }
     return js_wallet
 }
 
+async function verifyPassword(password) {
+        let check = await checkPass(password, hashed_pass)
+        console.log('chech', check)
+        if (check) {
+            mainWindow.webContents.send('login-success')
+            return true
+        } else {
+            mainWindow.webContents.send('login-failed')
+            return false
+        }
+
+}
+
 async function start_js_wallet(walletName, password, node) {
+
     let nodeOnline = await checkNodeStatus(node)
     if (!nodeOnline) {
         mainWindow.webContents.send('node-not-ok')
         return
     }
 
+    if (hashed_pass.length) {
+        console.log('wallet started already')
+        await verifyPassword(password)
+        return
+    }
+
     js_wallet = await logIntoWallet(walletName, password)
 
     if (js_wallet === 'Wrong password') {
-        console.log('A', js_wallet)
+        mainWindow.webContents.send('login-failed')
         return
     }
+    
+    hashed_pass = await hashPassword(password)
 
     //Load known public keys and contacts
     let [myContacts, keys] = await loadKeys((start = true))
@@ -883,51 +893,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
     }
 }
 
-ipcMain.on('unblock', async (e, address) => {
-    await unBlockContact(address)
-    block_list = await loadBlockList()
-    mainWindow.webContents.send('update-blocklist', block_list)
-})
-
-ipcMain.on('block', async (e, contact, name) => {
-    await blockContact(contact, name)
-    block_list = await loadBlockList()
-    mainWindow.webContents.send('update-blocklist', block_list)
-})
-
-//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
-ipcMain.on('addBoard', async (e, board) => {
-    my_boards.push(board)
-    addBoard(board)
-})
-
-ipcMain.on('removeBoard', async (e, board) => {
-    my_boards.pop(board)
-    removeBoard(board)
-})
-
-//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
-ipcMain.on('addGroup', async (e, grp) => {
-    addGroup(grp)
-    saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
-})
-
-ipcMain.on('removeGroup', async (e, grp) => {
-    removeGroup(grp)
-})
-
-ipcMain.on('removeContact', async (e, contact) => {
-    await removeContact(contact)
-    await removeMessages(contact)
-    mainWindow.webContents.send('sent')
-})
-
-//Listens for event from frontend and saves contact and nickname.
-ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
-    console.log('addchat first', first)
-    saveContact(hugin_address, nickname, first)
-})
-
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname = false, first = false) {
     console.log('huginadress', hugin_address)
@@ -967,6 +932,18 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     }
 }
 
+let crypto = new Crypto()
+
+async function hashPassword(pass, session) {
+   let hash = await crypto.cn_fast_hash(toHex(pass))
+   return hash
+}
+
+async function checkPass(pass, oldHash) {
+    let passHash = await hashPassword(pass)
+    if (oldHash === passHash) return true
+    return false
+}
 
 //Saves board message.
 async function saveBoardMsg(msg, hash, follow = false) {
@@ -1074,90 +1051,6 @@ async function saveMessage(msg, hash, offchain = false) {
     mainWindow.webContents.send('newMsg', newMsg)
     mainWindow.webContents.send('privateMsg', newMsg)
 }
-
-
-ipcMain.handle('createGroup', async () => {
-    return await createGroup()
-})
-
-ipcMain.handle('getPrivateKeys', async () => {
-    const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys()
-    return [spendKey, viewKey]
-})
-
-ipcMain.handle('getMnemonic', async () => {
-    return await js_wallet.getMnemonicSeed()
-})
-
-//Gets n transactions per page to view in frontend
-ipcMain.handle('getTransactions', async (e, startIndex) => {
-    let startFrom = startIndex
-    const showPerPage = 10
-    const allTx = await js_wallet.getTransactions()
-    const pages = Math.ceil(allTx.length / showPerPage)
-    const pageTx = []
-    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
-        pageTx.push({
-            hash: tx.hash,
-            amount: WB.prettyPrintAmount(tx.totalAmount()),
-            time: tx.timestamp,
-        })
-    }
-
-    return { pageTx, pages }
-})
-
-ipcMain.on('openLink', (e, url) => {
-    shell.openExternal(url)
-})
-
-//SWITCH NODE
-ipcMain.on('switchNode', async (e, node) => {
-    console.log(`Switching node to ${node}`)
-    nodeUrl = node.split(':')[0]
-    nodePort = parseInt(node.split(':')[1])
-
-    const daemon = new WB.Daemon(nodeUrl, nodePort)
-    await js_wallet.swapNode(daemon)
-
-    node = { node: nodeUrl, port: nodePort }
-    db.data.node.node = nodeUrl
-    db.data.node.port = nodePort
-    db.data.node = node
-    await db.write()
-})
-
-ipcMain.on('sendTx', (e, tx) => {
-    sendTx(tx)
-})
-
-ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp) => {
-    sendMessage(msg, receiver, off_chain, grp)
-    console.log(msg, receiver, off_chain)
-})
-
-ipcMain.on('sendBoardMsg', (e, msg) => {
-    sendBoardMessage(msg)
-})
-
-ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
-    sendGroupsMessage(msg, offchain)
-})
-
-ipcMain.on('answerCall', (e, msg, contact, key, offchain = false) => {
-    console.log('Answer call', msg, contact, key, offchain)
-    mainWindow.webContents.send('answer-call', msg, contact, key, offchain)
-})
-
-ipcMain.on('endCall', async (e, peer, stream, contact) => {
-    mainWindow.webContents.send('endCall', peer, stream, contact)
-})
-
-ipcMain.on('start_group_call', async (e, contacts) => {})
-
-ipcMain.on('create-room', async (e, type) => {
-    mainWindow.webContents.send('start-room', type)
-})
 
 async function encryptMessage(message, messageKey, sealed = false) {
 
@@ -1718,6 +1611,148 @@ async function resetOptimizeTimer() {
         }
     });
 }
+
+
+ipcMain.on('download', async (e, link) => {
+    console.log('ipcmain downloading')
+    return
+    download(link)
+})
+
+ipcMain.on('upload', async (e, filename, path, address) => {
+    console.log('ipcmain uploading')
+    return
+    upload(filename, path, address)
+})
+
+ipcMain.on('unblock', async (e, address) => {
+    await unBlockContact(address)
+    block_list = await loadBlockList()
+    mainWindow.webContents.send('update-blocklist', block_list)
+})
+
+ipcMain.on('block', async (e, contact, name) => {
+    await blockContact(contact, name)
+    block_list = await loadBlockList()
+    mainWindow.webContents.send('update-blocklist', block_list)
+})
+
+//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
+ipcMain.on('addBoard', async (e, board) => {
+    my_boards.push(board)
+    addBoard(board)
+})
+
+ipcMain.on('removeBoard', async (e, board) => {
+    my_boards.pop(board)
+    removeBoard(board)
+})
+
+//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
+ipcMain.on('addGroup', async (e, grp) => {
+    addGroup(grp)
+    saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
+})
+
+ipcMain.on('removeGroup', async (e, grp) => {
+    removeGroup(grp)
+})
+
+ipcMain.on('removeContact', async (e, contact) => {
+    await removeContact(contact)
+    await removeMessages(contact)
+    mainWindow.webContents.send('sent')
+})
+
+//Listens for event from frontend and saves contact and nickname.
+ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
+    console.log('addchat first', first)
+    saveContact(hugin_address, nickname, first)
+})
+
+
+ipcMain.handle('createGroup', async () => {
+    return await createGroup()
+})
+
+ipcMain.handle('getPrivateKeys', async () => {
+    const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys()
+    return [spendKey, viewKey]
+})
+
+ipcMain.handle('getMnemonic', async () => {
+    return await js_wallet.getMnemonicSeed()
+})
+
+//Gets n transactions per page to view in frontend
+ipcMain.handle('getTransactions', async (e, startIndex) => {
+    let startFrom = startIndex
+    const showPerPage = 10
+    const allTx = await js_wallet.getTransactions()
+    const pages = Math.ceil(allTx.length / showPerPage)
+    const pageTx = []
+    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
+        pageTx.push({
+            hash: tx.hash,
+            amount: WB.prettyPrintAmount(tx.totalAmount()),
+            time: tx.timestamp,
+        })
+    }
+
+    return { pageTx, pages }
+})
+
+ipcMain.on('openLink', (e, url) => {
+    shell.openExternal(url)
+})
+
+//SWITCH NODE
+ipcMain.on('switchNode', async (e, node) => {
+    console.log(`Switching node to ${node}`)
+    nodeUrl = node.split(':')[0]
+    nodePort = parseInt(node.split(':')[1])
+
+    const daemon = new WB.Daemon(nodeUrl, nodePort)
+    await js_wallet.swapNode(daemon)
+
+    node = { node: nodeUrl, port: nodePort }
+    db.data.node.node = nodeUrl
+    db.data.node.port = nodePort
+    db.data.node = node
+    await db.write()
+})
+
+ipcMain.on('sendTx', (e, tx) => {
+    sendTx(tx)
+})
+
+ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp) => {
+    sendMessage(msg, receiver, off_chain, grp)
+    console.log(msg, receiver, off_chain)
+})
+
+ipcMain.on('sendBoardMsg', (e, msg) => {
+    sendBoardMessage(msg)
+})
+
+ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
+    sendGroupsMessage(msg, offchain)
+})
+
+ipcMain.on('answerCall', (e, msg, contact, key, offchain = false) => {
+    console.log('Answer call', msg, contact, key, offchain)
+    mainWindow.webContents.send('answer-call', msg, contact, key, offchain)
+})
+
+ipcMain.on('endCall', async (e, peer, stream, contact) => {
+    mainWindow.webContents.send('endCall', peer, stream, contact)
+})
+
+ipcMain.on('start_group_call', async (e, contacts) => {})
+
+ipcMain.on('create-room', async (e, type) => {
+    mainWindow.webContents.send('start-room', type)
+})
 
 ipcMain.on('optimize', async (e) => {
     optimizeMessages()
