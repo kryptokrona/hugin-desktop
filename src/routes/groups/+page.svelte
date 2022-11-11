@@ -1,31 +1,31 @@
 <script>
-    import {fade} from 'svelte/transition'
-    import ChatInput from '/src/components/chat/ChatInput.svelte'
-    import {groupMessages} from '$lib/stores/groupmsgs.js'
-    import GroupMessage from '/src/components/chat/GroupMessage.svelte'
-    import GroupList from '/src/components/chat/GroupList.svelte'
-    import {groups, notify, user} from '$lib/stores/user.js'
-    import {onDestroy, onMount} from 'svelte'
-    import AddGroup from '/src/components/chat/AddGroup.svelte'
-    import {page} from '$app/stores'
-    import InfiniteScroll from "svelte-infinite-scroll";
-    import BlockContact from '/src/components/chat/BlockContact.svelte'
+import {fade} from 'svelte/transition'
+import ChatInput from '/src/components/chat/ChatInput.svelte'
+import {groupMessages} from '$lib/stores/groupmsgs.js'
+import GroupMessage from '/src/components/chat/GroupMessage.svelte'
+import GroupList from '/src/components/chat/GroupList.svelte'
+import {groups, notify, user} from '$lib/stores/user.js'
+import {onDestroy, onMount} from 'svelte'
+import AddGroup from '/src/components/chat/AddGroup.svelte'
+import {page} from '$app/stores'
+import InfiniteScroll from "svelte-infinite-scroll";
+import BlockContact from '/src/components/chat/BlockContact.svelte'
 
-    let boardMsgs = []
-    let replyto = ''
-    let reply_exit_icon = 'x'
-    let active
-    let replyColor
-    let nickname
-    let noMsgs = false
-    let filterBoards = []
-    let filterEmojis = []
-    let fixedGroups = []
-    let react = false
-    let unreadMsgs = []
-    let replyTrue = false
-    let chatWindow
-    let scrollGroups = []
+let boardMsgs = []
+let replyto = ''
+let reply_exit_icon = 'x'
+let active
+let replyColor
+let nickname
+let noMsgs = false
+let filterBoards = []
+let filterEmojis = []
+let fixedGroups = []
+let react = false
+let unreadMsgs = []
+let replyTrue = false
+let chatWindow
+let scrollGroups = []
 
 onMount(async () => {
     chatWindow = document.getElementById('group_chat_window')
