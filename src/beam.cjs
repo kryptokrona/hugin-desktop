@@ -35,7 +35,7 @@ const beamEvent = async (beam, chat, key) => {
 
     active_beams.push({key, chat: chat.substring(0,99), beam})
     console.log('Beam event active beams',active_beams)
-
+    mainWindow.webContents.send('new-beam', beam.key, chat.substring(0,99))
     beam.on('remote-address', function ({ host, port }) {
         if (!host) console.log('Could not find the host')
         else console.log('Connected to DHT with' + host + ':' + port)
