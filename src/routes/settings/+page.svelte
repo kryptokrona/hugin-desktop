@@ -152,7 +152,7 @@ $: {
             <div class="nodestatus">
                 <h2>Selected Node</h2>
                 <h4>Address</h4>
-                <p class="nodeinfo">{$misc.node}</p>
+                <p class="nodeinfo">{$misc.node.node}</p>
 
                 <div class="status">
                     <h4>Status</h4>
