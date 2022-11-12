@@ -1477,7 +1477,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
     }
 }
 
-async function optimizeMessages() {
+async function optimizeMessages(force = false) {
 
     console.log('optimize')
     console.log('my addresses', js_wallet.subWallets.getAddresses())
@@ -1499,7 +1499,7 @@ async function optimizeMessages() {
     )
 
     console.log('inputs', inputs.length)
-    if (inputs.length > 16) {
+    if (inputs.length > 16 && !force) {
         mainWindow.webContents.send('optimized', true)
         return
     }
@@ -1766,7 +1766,7 @@ ipcMain.on('create-room', async (e, type) => {
 })
 
 ipcMain.on('optimize', async (e) => {
-    optimizeMessages()
+    optimizeMessages(force = true)
 })
 
 ipcMain.handle('getMessages', async (data) => {
