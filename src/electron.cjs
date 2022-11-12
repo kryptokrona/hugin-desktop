@@ -67,7 +67,7 @@ const {
     welcomeMessage, 
     welcomeBoardMessage,
     addBoard
-} = require("./Database.cjs")
+} = require("./database.cjs")
 const {
     Address,
     AddressPrefix,
