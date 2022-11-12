@@ -79,7 +79,7 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
-const {newBeam, endBea, sendBeamMessage} = require("./beam.cjs")
+const {newBeam, endBeam, sendBeamMessage} = require("./beam.cjs")
 
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
@@ -421,11 +421,9 @@ ipcMain.on("end-beam", async (e, link, chat) => {
   });
 
 ipcMain.on("beam", async (e, link, chat) => {
-    console.log("ipcmain start beam");
-    let msg = await newBeam(link, chat);
-    if (!msg) return
-    console.log('sending beeam invite')
-    sendMessage(msg.msg, msg.chat, false)
+    let beamMessage = await newBeam(link, chat, getXKRKeypair());
+    if (!beamMessage) return
+    sendMessage(beamMessage.msg, beamMessage.chat, false)
     
   });
 

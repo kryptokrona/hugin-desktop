@@ -6,21 +6,18 @@ let active_beams = []
 let chat_keys
 
 const newBeam = async (key, chat, xkr_keys) => {
-    let beam
     //If we want to switch key set for decryption or add session key. 
     //The beam is already encrypted. We add Hugin encryption inside.
     setKeys(xkr_keys)
-    startBeam(key, chat)
-  
+    return await startBeam(key, chat)
 }
 
 const setKeys = (xkr) => {
     chat_keys = xkr
 }
 
-const startBeam = (key, chat) => {
+const startBeam = async (key, chat) => {
     //Create new or join existing beam and start beamEvent()
-    try {
         if (key === "new") {
             beam = new Hyperbeam()
             console.log('Beam key', beam.key)
@@ -32,10 +29,6 @@ const startBeam = (key, chat) => {
             beamEvent(beam, chat, key)
             return false
         }
-    } catch (e) {
-        console.log('Error creating beam')
-        return false
-    }
 }
 
 const beamEvent = async (beam, chat, key) => {
