@@ -149,7 +149,7 @@
             }
             new_messages = true
             data.key = data.address
-            new_message_sound.play()
+            board_message_sound.play()
             $notify.new.push(data)
             console.log('notif', $notify.new)
             $notify.new = $notify.new
