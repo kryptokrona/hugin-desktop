@@ -658,11 +658,12 @@ async function start_js_wallet(walletName, password, node) {
     let [myContacts, keys] = await loadKeys((start = true))
     known_keys = keys
     mainWindow.webContents.send('contacts', myContacts)
+    //Sleep 300ms
     await sleep(300)
-
-    /* Start wallet sync process */
+    //Disable wallet optimization
+    await js_wallet.enableAutoOptimization(false)
+    //Start wallet sync process
     await js_wallet.start()
-    js_wallet.enableAutoOptimization(false)
     //Load known pool txs from db.
     let checkedTxs
     let knownTxsIds = await loadKnownTxs()
