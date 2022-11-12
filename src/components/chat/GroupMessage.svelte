@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
-import { groups, rtc_groups, webRTC } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
 import Reaction from '/src/components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
@@ -80,11 +80,10 @@ const reactTo = (e) => {
 
 const toggleActions = () => {
     showUserActions = !showUserActions
-}
-
-const blockContact = (address) => {
-    window.api.send('block', msgFrom, nickname)
-    showUserActions = false
+    $user.block = {
+        address: msgFrom,
+        name: nickname
+    }
 }
 
 $: if ($groups.replyTo.reply == false) {
@@ -153,15 +152,6 @@ $: if (message.react) {
                             >| <Time relative timestamp="{parseInt(message.time)}" /></span
                         >
                     </h5>
-                </div>
-                <div class="user_actions" class:show={showUserActions}>
-                    <div class="list">
-                        <FillButton 
-                            red={true} 
-                            text="Block" 
-                            disabled={false}
-                            on:click={blockContact} />
-                    </div>
                 </div>
                 <div class="actions">
                     <EmojiSelector on:emoji="{reactTo}" />

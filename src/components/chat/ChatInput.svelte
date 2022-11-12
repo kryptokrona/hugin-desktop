@@ -1,7 +1,7 @@
 <script>
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import SendIcon from '/src/components/icons/SendIcon.svelte'
-    import {boards, webRTC, groups} from '$lib/stores/user.js'
+    import {boards, webRTC, groups, beam} from '$lib/stores/user.js'
     import {page} from '$app/stores'
     import {user} from '$lib/stores/user'
     import Emoji from "$components/icons/Emoji.svelte";
@@ -17,10 +17,11 @@
     let messageField
     let off_chain
     let mount = false
+    let activeBeam = false
 
     onMount(async () => {
         mount = true
-        await sleep(900)
+        await sleep(1000)
         emojiPicker = document.querySelector('emoji-picker')
         emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
     })
@@ -55,6 +56,7 @@
         dispatch('message', {
             text: messageInput,
             offChain: off_chain,
+            beam: activeBeam
         })
         //Reset input field
         messageInput = ''
@@ -73,6 +75,13 @@
 
     $: if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
         messageField.focus()
+    }
+    
+    $: {
+      if ($beam.active.length) {
+        activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
+        console.log("Beam active", activeBeam);
+      }
     }
 
 </script>

@@ -1,7 +1,7 @@
 <script>
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
-import { boards, groups, notify, transactions, user, webRTC } from '$lib/stores/user.js'
+import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/stores/user.js'
 
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
@@ -19,6 +19,7 @@ import VideoSlash from '/src/components/icons/VideoSlash.svelte'
 import { layoutState, videoGrid } from '$lib/stores/layout-state.js'
 import ListButton from '$components/icons/ListButton.svelte'
 import Exit from '$components/icons/Exit.svelte'
+import Lightning from '../icons/Lightning.svelte'
 
 const dispatch = createEventDispatcher()
 let contact
@@ -166,6 +167,16 @@ function copyThis(copy) {
 const openRemove = () => {
     $groups.removeGroup = !$groups.removeGroup
 }
+
+function newBeam() {
+    window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
+    $beam.active.push({
+      chat: $user.activeChat.chat,
+      connected: false,
+    })
+    $beam.active = $beam.active
+  }
+  
 </script>
 
 <div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length}">
@@ -244,6 +255,9 @@ const openRemove = () => {
                     {/if}
                 </div>
             {/if}
+            <div class="button" on:click={newBeam}>
+                <Lightning/>
+            </div>
         </div>
         <div class="draggable"></div>
     {/if}

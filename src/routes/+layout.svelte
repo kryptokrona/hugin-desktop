@@ -7,7 +7,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam} from '$lib/stores/user.js'
     import {messages} from '$lib/stores/messages.js'
 
     import {onMount} from 'svelte'
@@ -219,8 +219,6 @@
             $notify.success = $notify.success
             $webRTC.joining = data.key
         })
-
-        $: console.log('Contact joining call ', $webRTC.joining)
     })
 
     function removeErrors(e) {
@@ -295,6 +293,34 @@
     window.api.receive('update-blocklist', (block_list) => {
         $groups.blockList = block_list
     })
+
+    window.api.receive('new-beam', async (key, chat) => {
+        let data = {
+            message: "New beam activated",
+            key: chat,
+            name: "Hyperbeam",
+            hash: Date.now()
+        }
+        $notify.success.push(data)
+        $notify.success = $notify.success
+    })
+
+    window.api.receive('beam-connected', (addr)  => {
+		console.log('beam addr inc', addr)
+		console.log('beam active?',  $beam.active)
+		let update = $beam.active.map(a => {
+			if (a.chat == addr) {
+				a.connected = true
+			}
+			return a
+		})
+		console.log('Updated', update)
+		$beam.active = update
+	})
+    window.api.receive('login-success', ()  => {
+        $user.loggedIn = true
+    })
+
 </script>
 
 <TrafficLights/>

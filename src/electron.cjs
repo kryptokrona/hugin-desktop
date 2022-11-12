@@ -79,6 +79,8 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
+const {newBeam, endBea, sendBeamMessage} = require("./beam.cjs")
+
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
@@ -296,6 +298,8 @@ app.whenReady().then(() => {
     tray.setIgnoreDoubleClickEvents(true)
 })
 
+
+
 async function download(link) {
     let client = new WebTorrent()
 
@@ -410,6 +414,20 @@ ipcMain.on('app', (data) => {
             })
     }
 })
+
+ipcMain.on("end-beam", async (e, link, chat) => {
+    console.log("end beam");
+    endBeam(chat);
+  });
+
+ipcMain.on("beam", async (e, link, chat) => {
+    console.log("ipcmain start beam");
+    let msg = await newBeam(link, chat, wallet);
+    if (!msg) return
+    console.log('sending beeam invite')
+    sendMessage(msg.msg, msg.chat, false)
+    
+  });
 
 ipcMain.on('check-new-release', () => {
     console.log('checking if new release')
@@ -1337,8 +1355,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
 //     optimizeMessages()
 // }
-
-async function sendMessage(message, receiver, off_chain = false, group = false) {
+const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this) => {
     let has_history
 
     //Assert address length
@@ -1438,7 +1455,9 @@ async function sendMessage(message, receiver, off_chain = false, group = false) 
         if (group) {
             messageArray.push('group')
         }
-
+        if (beam_this) {
+            sendBeamMessage(sendMsg, address)
+        }
         mainWindow.webContents.send('rtc_message', messageArray)
         //Do not save invite message.
         try {
@@ -1500,11 +1519,8 @@ async function optimizeMessages() {
     /* User payment */
     while (i <= 49) {
         payments.push([subWallet, 1000])
-        console.log(payments.length)
         i += 1
     }
-
-    console.log('addresses', payments)
 
     let result = await js_wallet.sendTransactionAdvanced(
         payments, // destinations,
@@ -1721,9 +1737,9 @@ ipcMain.on('sendTx', (e, tx) => {
     sendTx(tx)
 })
 
-ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp) => {
-    sendMessage(msg, receiver, off_chain, grp)
-    console.log(msg, receiver, off_chain)
+ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
+    sendMessage(msg, receiver, off_chain, grp, beam)
+    console.log(msg, receiver, off_chain, grp, beam)
 })
 
 ipcMain.on('sendBoardMsg', (e, msg) => {

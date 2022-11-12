@@ -1,24 +1,24 @@
 <script>
-    import {fade} from 'svelte/transition'
-    import {onDestroy, onMount} from 'svelte'
-    import {messages} from '$lib/stores/messages.js'
-    import ChatBubble from '/src/components/chat/ChatBubble.svelte'
-    import ChatInput from '/src/components/chat/ChatInput.svelte'
-    import ChatList from '/src/components/chat/ChatList.svelte'
-    import AddChat from '/src/components/chat/AddChat.svelte'
-    import {boards, notify, transactions, user} from '$lib/stores/user.js'
-    import Rename from '/src/components/chat/Rename.svelte'
-    import BackDrop from '/src/components/popups/BackDrop.svelte'
-    import SendTransaction from '/src/components/finance/SendTransaction.svelte'
+import {fade} from 'svelte/transition'
+import {onDestroy, onMount} from 'svelte'
+import {messages} from '$lib/stores/messages.js'
+import ChatBubble from '/src/components/chat/ChatBubble.svelte'
+import ChatInput from '/src/components/chat/ChatInput.svelte'
+import ChatList from '/src/components/chat/ChatList.svelte'
+import AddChat from '/src/components/chat/AddChat.svelte'
+import {boards, notify, transactions, user} from '$lib/stores/user.js'
+import Rename from '/src/components/chat/Rename.svelte'
+import BackDrop from '/src/components/popups/BackDrop.svelte'
+import SendTransaction from '/src/components/finance/SendTransaction.svelte'
 
-    let chat
-    let active_contact
-    let savedMsg = []
-    let key
-    let contact
-    let box
-    let chatWindow
-    let dragover = false
+let chat
+let active_contact
+let savedMsg = []
+let key
+let contact
+let box
+let chatWindow
+let dragover = false
 
 //Get messages on mount.
 onMount(async () => {
@@ -115,6 +115,7 @@ const sendMsg = (e) => {
     }
     console.log('Sending message')
     let offChain = false
+    let beam = false
     let msg = e.detail.text
     let myaddr = $user.huginAddress.substring(0, 99)
     let myMessage = {
@@ -127,7 +128,11 @@ const sendMsg = (e) => {
     if (e.detail.offChain) {
         offChain = true
     }
-    window.api.sendMsg(msg, active_contact, offChain)
+    if (e.detail.beam) {
+      beam = true
+      offChain = true;
+    }
+    window.api.sendMsg(msg, active_contact, offChain, beam)
     printMessage(myMessage)
     console.log('Message sent')
 }

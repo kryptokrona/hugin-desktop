@@ -17,8 +17,8 @@ const WINDOW_API = {
         ipcRenderer.send('addChat', hugin, name, first)
     },
     // HANDLE MESSAGES
-    sendMsg: (msg, address, offChain, grp = false) => {
-        ipcRenderer.send('sendMsg', msg, address, offChain, grp)
+    sendMsg: (msg, address, offChain, grp = false, beam) => {
+        ipcRenderer.send('sendMsg', msg, address, offChain, grp, beam)
     },
     sendBoardMsg: (msg) => {
         ipcRenderer.send('sendBoardMsg', msg)
@@ -117,9 +117,15 @@ const WINDOW_API = {
     upload: async (filename, path, address) => {
         ipcRenderer.send('upload', filename, path, address)
     },
+
     download: async (link) => {
         ipcRenderer.send('download', link)
     },
+
+    createBeam: async (key, chat) => {
+        ipcRenderer.send('beam', key, chat)
+    },
+
     //HANDLE NODES
     getNodes: async () => {
         ipcRenderer.send('getNodes')
@@ -204,6 +210,10 @@ const WINDOW_API = {
         console.log('want to remove', channel)
         console.log('removed')
         ipcRenderer.removeAllListeners(channel)
+    },
+     //HANDLE ADDRESS
+     checkPass: async (pass, hash) => {
+        await ipcRenderer.invoke('check-pass', pass, hash)
     },
 }
 
