@@ -18,8 +18,10 @@
     },
     "files": [
         "src/sdp.cjs",
+        "src/database.cjs",
         "src/electron.cjs",
         "src/preload.cjs",
+        "src/beam.cjs",
         {
             "from": "build",
             "to": ""
