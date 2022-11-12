@@ -1356,7 +1356,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
 //     optimizeMessages()
 // }
-const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this) => {
+const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
     let has_history
 
     //Assert address length
