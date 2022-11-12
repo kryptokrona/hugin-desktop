@@ -422,7 +422,7 @@ ipcMain.on("end-beam", async (e, link, chat) => {
 
 ipcMain.on("beam", async (e, link, chat) => {
     console.log("ipcmain start beam");
-    let msg = await newBeam(link, chat, wallet);
+    let msg = await newBeam(link, chat);
     if (!msg) return
     console.log('sending beeam invite')
     sendMessage(msg.msg, msg.chat, false)
