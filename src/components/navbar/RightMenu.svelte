@@ -45,6 +45,13 @@ $: {
     }
 }
 
+//This chat
+$: thisChat = $user.activeChat
+
+//Beam reactive button states
+$: activeBeam = $beam.active.some(a => a.chat === thisChat.chat)
+$: connectedBeam = $beam.active.some(a => a.chat === thisChat.chat && a.connected === true)
+
 //Starts any call
 const startCall = async (contact, calltype) => {
     console.log(contact, calltype)
@@ -175,8 +182,8 @@ function newBeam() {
       connected: false,
     })
     $beam.active = $beam.active
-  }
-  
+}
+
 </script>
 
 <div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length}">
@@ -255,7 +262,7 @@ function newBeam() {
                     {/if}
                 </div>
             {/if}
-            <div class="button" on:click={newBeam}>
+            <div class="button" class:shiny={activeBeam} class:border_rgb={connectedBeam} on:click={newBeam}>
                 <Lightning/>
             </div>
         </div>
@@ -431,5 +438,10 @@ function newBeam() {
 
 .hide {
     display: none !important;
+}
+
+.shiny {
+    box-shadow: 0 0 10px white;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0) 1%, rgba(255, 255, 255, 0.2) 9%, rgba(255, 255, 255, 0) 100%);
 }
 </style>
