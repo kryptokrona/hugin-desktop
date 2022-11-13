@@ -317,12 +317,8 @@
         $user.loggedIn = true
     })
 
-    window.api.receive('active-beams', (active)  => {
-        $active.beams = active
-    })
-
     window.api.receive('stop-beam', (active)  => {
-        $active.beams = active
+        $beam.active = active
         toast.error('Beam disconnected', {
                 position: 'top-right',
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
