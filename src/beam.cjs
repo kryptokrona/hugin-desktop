@@ -32,8 +32,8 @@ const startBeam = async (key, chat, sender) => {
 }
 
 const beamEvent = async (beam, chat, key, sender) => {
-    let addr = chat.substring(0,99)
 
+    let addr = chat.substring(0,99)
     active_beams.push({key, chat: addr, beam})
     console.log('Beam event active beams',active_beams)
     sender('new-beam', {key, chat: addr})
@@ -86,7 +86,7 @@ const decryptMessage = async (str, msgKey, sender) => {
     let decrypted_message = await extraDataToMessage(str, [msgKey], chat_keys)
     let address = sanitizeHtml(decrypted_message.from)
     let timestamp = sanitizeHtml(decrypted_message.t)
-    let message = sanitizeHtml(decrypted_message.m)
+    let message = sanitizeHtml(decrypted_message.msg)
     let sent = false
 
     let newMsg = {
@@ -97,6 +97,8 @@ const decryptMessage = async (str, msgKey, sender) => {
         offchain: true,
         beam: true,
     }
+
+    console.log('beam ', newMsg)
 
     sender('newMsg', newMsg)
     sender('privateMsg', newMsg)
