@@ -1453,6 +1453,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         let messageArray = []
         messageArray.push(sendMsg)
         messageArray.push(address)
+        saveMsg(message, addr, sent, timestamp)
         if (group) {
             messageArray.push('group')
         }
@@ -1829,7 +1830,7 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
         const cameraAccess = systemPreferences.askForMediaAccess('camera')
         const microphoneAccess = systemPreferences.askForMediaAccess('microphone')
     }
-    console.log('CALL STARTEeeeeeeeeeeeeD')
+    console.log('CALL STARTED')
 
     console.log('contact', contact + calltype)
     mainWindow.webContents.send('start-call', contact, calltype)
