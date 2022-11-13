@@ -262,8 +262,8 @@ function newBeam() {
                     {/if}
                 </div>
             {/if}
-            <div class="button" class:shiny={activeBeam} class:border_rgb={connectedBeam} on:click={newBeam}>
-                <Lightning/>
+            <div class="button" on:click={newBeam}>
+                <Lightning connected={connectedBeam} connecting={activeBeam} />
             </div>
         </div>
         <div class="draggable"></div>
