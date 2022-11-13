@@ -231,6 +231,10 @@ function newBeam() {
                 on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}"
             />
 
+            <div class="button" on:click={newBeam}>
+                <Lightning connected={connectedBeam} connecting={activeBeam} />
+            </div>
+
             <button class="button">
                 {#if thisCall && !video}
                     <CallSlash on:click="{() => endCall()}" />
@@ -262,9 +266,7 @@ function newBeam() {
                     {/if}
                 </div>
             {/if}
-            <div class="button" on:click={newBeam}>
-                <Lightning connected={connectedBeam} connecting={activeBeam} />
-            </div>
+
         </div>
         <div class="draggable"></div>
     {/if}
