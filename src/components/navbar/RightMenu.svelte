@@ -231,7 +231,11 @@ function newBeam() {
                 on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}"
             />
 
-            <div class="button" on:click={newBeam}>
+            <div class="button" on:click={() => {
+                if (connectedBeam) {
+                    window.api.send('end-beam', $user.activeChat.chat)
+                } else newBeam()}
+                }>
                 <Lightning connected={connectedBeam} connecting={activeBeam} />
             </div>
 
