@@ -33,5 +33,6 @@
 
     .green {
       stroke: var(--success-color);
+      fill: var(--success-color);
     }
     </style>
