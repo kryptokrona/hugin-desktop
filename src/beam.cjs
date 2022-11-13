@@ -32,10 +32,11 @@ const startBeam = async (key, chat, sender) => {
 }
 
 const beamEvent = async (beam, chat, key, sender) => {
+    let addr = chat.substring(0,99)
 
-    active_beams.push({key, chat: chat.substring(0,99), beam})
+    active_beams.push({key, chat: addr, beam})
     console.log('Beam event active beams',active_beams)
-    sender('new-beam', {key, chat: chat.substring(0,99)})
+    sender('new-beam', {key, chat: addr})
     beam.on('remote-address', function ({ host, port }) {
         if (!host) console.log('Could not find the host')
         else console.log('Connected to DHT with' + host + ':' + port)
@@ -55,7 +56,7 @@ const beamEvent = async (beam, chat, key, sender) => {
         if (str === "Start") return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
-        decryptMessage(str, msgKey, hash, sender)
+        decryptMessage(str, msgKey, sender)
     })
 
     beam.on('end', () => {
@@ -80,29 +81,26 @@ const beamEvent = async (beam, chat, key, sender) => {
     }
 }
 
-const decryptMessage = async (str, msgKey, hash, sender) => {
+const decryptMessage = async (str, msgKey, sender) => {
 
     let decrypted_message = await extraDataToMessage(str, [msgKey], chat_keys)
+    let address = sanitizeHtml(decrypted_message.from)
+    let timestamp = sanitizeHtml(decrypted_message.t)
+    let message = sanitizeHtml(decrypted_message.m)
+    let sent = false
 
     let newMsg = {
         msg: message,
-        chat: addr,
-        sent: sent,
+        chat: address,
+        sent: false,
         timestamp: timestamp,
         offchain: true,
         beam: true,
     }
 
-    if (sent) {
-        //If sent, update conversation list
-        mainWindow.webContents.send('sent', newMsg)
-        return
-    }
-    //Send message to front end
-    console.log('sending newmessage')
     sender('newMsg', newMsg)
     sender('privateMsg', newMsg)
-    saveMsg(decrypted_message, hash, true)
+    saveMsg(message, address, sent, timestamp)
 }
 
 const sendBeamMessage = async (message, to) => {
