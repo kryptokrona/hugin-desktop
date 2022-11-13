@@ -132,7 +132,7 @@ const sendMsg = (e) => {
       beam = true
       offChain = true;
     }
-    window.api.sendMsg(msg, active_contact, offChain, beam)
+    window.api.sendMsg(msg, active_contact, offChain, false, beam)
     printMessage(myMessage)
     console.log('Message sent')
 }

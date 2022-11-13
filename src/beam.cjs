@@ -80,12 +80,13 @@ const beamEvent = async (beam, chat, key, sender) => {
     }
 }
 
-const decryptMessage = async (message, msgKey) => {
+const decryptMessage = async (str, msgKey) => {
     let decrypted_message = await extraDataToMessage(str, msgKey, chat_keys)
     saveMessage(decrypted_message, hash, true)
 }
 
 const sendBeamMessage = async (message, to) => {
+    console.log('want to sent beammsg', message)
     let contact = active_beams.find(a => a.chat === to)
     console.log('Beam message to', contact)
     contact.beam.write(message)
