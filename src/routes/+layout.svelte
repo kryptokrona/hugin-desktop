@@ -294,15 +294,11 @@
         $groups.blockList = block_list
     })
 
-    window.api.receive('new-beam', async (key, chat) => {
-        let data = {
-            message: "New beam activated",
-            key: chat,
-            name: "Hyperbeam",
-            hash: Date.now()
-        }
-        $notify.success.push(data)
-        $notify.success = $notify.success
+    window.api.receive('new-beam', async (beamData) => {
+        toast.success(`New beam activated`, {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
     })
 
     window.api.receive('beam-connected', (addr)  => {
