@@ -232,7 +232,7 @@ function newBeam() {
             />
 
             <div class="button" on:click={() => {
-                if (connectedBeam) {
+                if (connectedBeam || activeBeam) {
                     window.api.send('end-beam', $user.activeChat.chat)
                 } else newBeam()}
                 }>

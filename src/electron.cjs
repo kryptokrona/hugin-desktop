@@ -415,7 +415,7 @@ ipcMain.on('app', (data) => {
     }
 })
 
-ipcMain.on("end-beam", async (e, link, chat) => {
+ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
     endBeam(chat);
   });
@@ -1360,7 +1360,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
     let has_history
-
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -1417,7 +1416,6 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
             false, // sneedAll
             Buffer.from(payload_hex, 'hex')
         )
-
         let sentMsg = {
             msg: message,
             k: messageKey,

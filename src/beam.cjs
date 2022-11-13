@@ -114,12 +114,13 @@ const sendBeamMessage = async (message, to) => {
 
 
 const endBeam = async (contact) => {
+    console.log('ending beam with', contact)
     let active = active_beams.find(a => a.chat === contact)
     if (!active) return
-    contact.beam.end()
+    active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)
     active_beams = filter
-    console.log('Active beams endBeam', active_beams)
+    console.log('Active beams', active_beams)
 }
 
 module.exports = {endBeam, newBeam, sendBeamMessage}
