@@ -235,21 +235,23 @@ function newBeam() {
                 <Lightning connected={connectedBeam} connecting={activeBeam} />
             </div>
 
-            <button class="button">
-                {#if thisCall && !video}
-                    <CallSlash on:click="{() => endCall()}" />
-                {:else}
-                    <CallIcon on:click="{() => startCall(contact, false)}" />
-                {/if}
-            </button>
+            {#if !connectedBeam }
+                <button class="button">
+                    {#if thisCall && !video}
+                        <CallSlash on:click="{() => endCall()}"/>
+                    {:else}
+                        <CallIcon on:click="{() => startCall(contact, false)}"/>
+                    {/if}
+                </button>
 
-            <button class="button">
-                {#if thisCall && video}
-                    <VideoSlash on:click="{() => endCall()}" />
-                {:else if !thisCall}
-                    <VideoIcon menu="{true}" on:click="{() => startCall(contact, true)}" />
-                {/if}
-            </button>
+                <button class="button">
+                    {#if thisCall && video}
+                        <VideoSlash on:click="{() => endCall()}"/>
+                    {:else if !thisCall}
+                        <VideoIcon menu="{true}" on:click="{() => startCall(contact, true)}"/>
+                    {/if}
+                </button>
+            {/if}
 
             {#if $page.url.pathname === '/messages'}
                 <div on:click="{() => sendMoney(contact)}" class="button">
