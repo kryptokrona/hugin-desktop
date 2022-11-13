@@ -5,37 +5,37 @@ const { saveMessage } = require('./database.cjs')
 let active_beams = []
 let chat_keys
 
-const newBeam = async (key, chat, xkr_keys) => {
+const newBeam = async (key, chat, xkr_keys, sender) => {
     //If we want to switch key set for decryption or add session key. 
     //The beam is already encrypted. We add Hugin encryption inside.
     setKeys(xkr_keys)
-    return await startBeam(key, chat)
+    return await startBeam(key, chat, sender)
 }
 
 const setKeys = (xkr) => {
     chat_keys = xkr
 }
 
-const startBeam = async (key, chat) => {
+const startBeam = async (key, chat, sender) => {
     //Create new or join existing beam and start beamEvent()
         if (key === "new") {
             beam = new Hyperbeam()
             console.log('Beam key', beam.key)
             beam.write('Start')
-            beamEvent(beam, chat, key)
+            beamEvent(beam, chat, key, sender)
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
             beam = new Hyperbeam(key)
-            beamEvent(beam, chat, key)
+            beamEvent(beam, chat, key, sender)
             return false
         }
 }
 
-const beamEvent = async (beam, chat, key) => {
+const beamEvent = async (beam, chat, key, sender) => {
 
     active_beams.push({key, chat: chat.substring(0,99), beam})
     console.log('Beam event active beams',active_beams)
-    mainWindow.webContents.send('new-beam', beam.key, chat.substring(0,99))
+    sender('new-beam', {key, chat: chat.substring(0,99)})
     beam.on('remote-address', function ({ host, port }) {
         if (!host) console.log('Could not find the host')
         else console.log('Connected to DHT with' + host + ':' + port)
@@ -44,7 +44,7 @@ const beamEvent = async (beam, chat, key) => {
 
     beam.on('connected', function () {
         console.log('Beam connected to peer')
-        mainWindow.webContents.send('beam-connected', chat.substring(0,99))
+        sender('beam-connected', chat.substring(0,99))
     })
     
     //Incoming message

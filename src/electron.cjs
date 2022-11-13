@@ -421,7 +421,7 @@ ipcMain.on("end-beam", async (e, link, chat) => {
   });
 
 ipcMain.on("beam", async (e, link, chat) => {
-    let beamMessage = await newBeam(link, chat, getXKRKeypair());
+    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, false)
     
@@ -463,6 +463,10 @@ ipcMain.on('download-update', (e) => {
 ipcMain.on('install-update', async (e, data) => {
     autoUpdater.quitAndInstall()
 })
+
+const sender = (channel, data) => {
+	mainWindow.webContents.send(channel, data)
+}
 
 const checkNodeStatus = async (node) => {
 
