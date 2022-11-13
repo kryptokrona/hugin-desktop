@@ -1,7 +1,7 @@
 const Hyperbeam = require('hyperbeam')
 const { extraDataToMessage } = require('hugin-crypto')
 const { saveMsg } = require('./database.cjs')
-
+const sanitizeHtml = require('sanitize-html')
 let active_beams = []
 let chat_keys
 
