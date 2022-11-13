@@ -1450,7 +1450,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         //Offchain messages
         let randomKey = await createGroup()
         let sentMsg = Buffer.from(payload_hex, 'hex')
-        console.log('sending rtc message')
+        console.log('sending offchain message')
         let sendMsg = randomKey + '99' + sentMsg
         let messageArray = []
         messageArray.push(sendMsg)
@@ -1459,7 +1459,9 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
             messageArray.push('group')
         }
         if (beam_this) {
+            console.log('beam this')
             sendBeamMessage(sendMsg, address)
+            return
         }
         mainWindow.webContents.send('rtc_message', messageArray)
         //Do not save invite message.

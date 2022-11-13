@@ -1,6 +1,6 @@
 const Hyperbeam = require('hyperbeam')
 const { extraDataToMessage } = require('hugin-crypto')
-const { saveMessage } = require('./database.cjs')
+const { saveMsg } = require('./database.cjs')
 
 let active_beams = []
 let chat_keys
@@ -26,7 +26,7 @@ const startBeam = async (key, chat, sender) => {
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
             beam = new Hyperbeam(key)
-            beamEvent(beam, chat, key, sender)
+            beamEvent(beam, chat, beam.key, sender)
             return false
         }
 }
@@ -55,7 +55,7 @@ const beamEvent = async (beam, chat, key, sender) => {
         if (str === "Start") return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
-        decryptMessage(message, msgKey)
+        decryptMessage(str, msgKey, hash, sender)
     })
 
     beam.on('end', () => {
@@ -80,9 +80,29 @@ const beamEvent = async (beam, chat, key, sender) => {
     }
 }
 
-const decryptMessage = async (str, msgKey) => {
-    let decrypted_message = await extraDataToMessage(str, msgKey, chat_keys)
-    saveMessage(decrypted_message, hash, true)
+const decryptMessage = async (str, msgKey, hash, sender) => {
+
+    let decrypted_message = await extraDataToMessage(str, [msgKey], chat_keys)
+
+    let newMsg = {
+        msg: message,
+        chat: addr,
+        sent: sent,
+        timestamp: timestamp,
+        offchain: true,
+        beam: true,
+    }
+
+    if (sent) {
+        //If sent, update conversation list
+        mainWindow.webContents.send('sent', newMsg)
+        return
+    }
+    //Send message to front end
+    console.log('sending newmessage')
+    sender('newMsg', newMsg)
+    sender('privateMsg', newMsg)
+    saveMsg(decrypted_message, hash, true)
 }
 
 const sendBeamMessage = async (message, to) => {
