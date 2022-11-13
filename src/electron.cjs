@@ -417,7 +417,7 @@ ipcMain.on('app', (data) => {
 
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
-    endBeam(chat);
+    endBeam(chat, sender);
   });
 
 ipcMain.on("beam", async (e, link, chat) => {
