@@ -14,11 +14,13 @@ export let ownMsg
 export let torrent
 export let files
 export let timestamp
+
 let file
+let oldInvite = false
 let beamInvite = false
+let address = $user.huginAddress.substring(0, 99)
 
 const dispatch = createEventDispatcher()
-let address = $user.huginAddress.substring(0, 99)
 
 $: if (files) {
     file = files[0]
@@ -36,6 +38,10 @@ $: {
 }
 
 $: if (message.substring(0,7) == "BEAM://") {
+    if (Date.now() - timestamp >= 1000 * 1000) {
+        oldInvite = true
+    }
+
     beamInvite = true
   }
 
@@ -98,7 +104,7 @@ $: if (message.substring(0,7) == "BEAM://") {
                         {#each files as image}{/each}
                     </div>
                     {:else if beamInvite}
-                        <p in:fade class="message">'Started hyperchat'</p>
+                        <p in:fade class="message">Hyperbeam started</p>
                 {:else}
                     <p class="message">{message}</p>
                 {/if}
@@ -127,8 +133,10 @@ $: if (message.substring(0,7) == "BEAM://") {
                         <p>{file.name}</p>
                         {#each files as image}{/each}
                     </div>
-                {:else if beamInvite}
+                {:else if beamInvite && !oldInvite}
                     <FillButton text="Join beam" disabled={false} on:click={joinBeam} />
+                    {:else if oldInvite}
+                    <p in:fade class="message">Hyperbeam started</p>
                 {:else}
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}

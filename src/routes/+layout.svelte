@@ -157,6 +157,9 @@
 
         window.api.receive('privateMsg', async (data) => {
             console.log('newmsg in layout', data)
+            if (data.message.substring(0,7) == "BEAM://") [
+                data.message = "Hyperbeam started"
+            ]
             if (data.chat !== $user.activeChat.chat) {
                 new_message_sound.play()
             }
