@@ -67,6 +67,11 @@ const beamEvent = async (beam, chat, key, sender) => {
         sender('stop-beam', active_beams)
     })
 
+    beam.on('error', function (e) {
+        endBeam(addr)
+        sender('stop-beam', addr)
+      })
+
     process.once('SIGINT', () => {
         if (!beam.connected) closeASAP()
         else beam.end()
@@ -121,7 +126,6 @@ const endBeam = async (contact, sender) => {
     active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)
     active_beams = filter
-    sender('stop-beam', active_beams)
     console.log('Active beams', active_beams)
 }
 

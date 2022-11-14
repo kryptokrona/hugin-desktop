@@ -323,8 +323,9 @@
         $user.loggedIn = true
     })
 
-    window.api.receive('stop-beam', (active)  => {
-        $beam.active = active
+    window.api.receive('stop-beam', (addr)  => {
+        let filter = $beam.active.filter(a => a.chat !== addr)
+        $beam.active = filter
         toast.error('Beam disconnected', {
                 position: 'top-right',
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
