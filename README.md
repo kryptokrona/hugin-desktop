@@ -48,14 +48,16 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 -   Web: https://hugin.chat
 -   GitHub: https://github.com/kryptokrona
--   Hugin: projectdevelopment board on Hugin Messenger
--   It is HIGHLY recommended to join our board on Hugin Messenger if you want to contribute to stay up to date on what is happening on the project.
+-   Hugin: XKR group on `2977d5ca9b173c0f9f137f1be6823dd2cdd8f953bd84e6d3e5e4571539644531` 
+-   It is HIGHLY recommended to join our group on Hugin Messenger if you want to contribute to stay up to date on what is happening on the project.
 
 # Technologies
 
--   Electron
--   Svelte
--   WebRTC
+- Node 16 (16.16.0 currently)
+- Electron
+- Svelte
+- WebRTC
+- Hypercore Protocol
 
 # Usage
 
