@@ -112,7 +112,7 @@ const sendBeamMessage = async (message, to) => {
 
 const endBeam = async (contact, sender) => {
     let active = active_beams.find(a => a.chat === contact)
-    sender('stop-beam', addr)
+    sender('stop-beam', contact)
     if (!active) return
     active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)

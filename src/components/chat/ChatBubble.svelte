@@ -14,7 +14,7 @@ export let ownMsg
 export let torrent
 export let files
 export let timestamp
-
+export let beamMsg = false
 let file
 let oldInvite = false
 let beamInvite = false
@@ -81,7 +81,7 @@ $: if (message.substring(0,7) === "BEAM://") {
 {:else}
     <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
     {#if ownMsg}
-        <div class="wrapper">
+        <div class="wrapper" class:beam={beamMsg}>
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -111,7 +111,7 @@ $: if (message.substring(0,7) === "BEAM://") {
             </div>
         </div>
     {:else}
-        <div class="wrapper">
+        <div class="wrapper" class:beam={beamMsg}>
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -205,5 +205,9 @@ $: if (message.substring(0,7) === "BEAM://") {
     opacity: 80%;
     font-weight: 400;
     font-size: 0.75rem;
+}
+
+.beam {
+    box-shadow: 0 0 10px white;
 }
 </style>
