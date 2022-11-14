@@ -1,11 +1,16 @@
 <script>
-    import {createEventDispatcher} from 'svelte'
-    import {fade} from 'svelte/transition'
-    import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import {user, webRTC} from '$lib/stores/user.js'
+import {createEventDispatcher} from 'svelte'
+import {fade} from 'svelte/transition'
+import {get_avatar} from '$lib/utils/hugin-utils.js'
+import {user, webRTC} from '$lib/stores/user.js'
 
-    export let contact
+export let contact
 let thisCall = false
+let beamInvite = false
+
+$: if (contact.msg.substring(0,7) === "BEAM://") {
+    beamInvite = true
+}
 
 $: if ($webRTC.active) {
     thisCall = $webRTC.call.some((a) => a.chat === contact.chat)
@@ -51,7 +56,12 @@ const rename = () => {
     />
     <div class="content">
         <h4>{contact.name}</h4>
+        
+        {#if !beamInvite}
         <p>{contact.msg}</p>
+        {:else if beamInvite}
+        <p>Hyperbeam started</p>
+        {/if}
     </div>
 </div>
 
