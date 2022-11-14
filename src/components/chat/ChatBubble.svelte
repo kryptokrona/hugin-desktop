@@ -37,7 +37,7 @@ $: {
     }
 }
 
-$: if (message.substring(0,7) == "BEAM://") {
+$: if (message.substring(0,7) === "BEAM://") {
     if (Date.now() - timestamp >= 1000 * 1000) {
         oldInvite = true
     }

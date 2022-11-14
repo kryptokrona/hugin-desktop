@@ -1453,7 +1453,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         let messageArray = []
         messageArray.push(sendMsg)
         messageArray.push(address)
-        saveMsg(message, addr, sent, timestamp)
+        saveMsg(message, address, true, timestamp)
         if (group) {
             messageArray.push('group')
         }
