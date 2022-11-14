@@ -99,29 +99,24 @@ const decryptMessage = async (str, msgKey, sender) => {
         beam: true,
     }
 
-    console.log('beam ', newMsg)
-
     sender('newMsg', newMsg)
     sender('privateMsg', newMsg)
     saveMsg(message, address, sent, timestamp)
 }
 
 const sendBeamMessage = async (message, to) => {
-    console.log('want to sent beammsg', message)
     let contact = active_beams.find(a => a.chat === to)
-    console.log('Beam message to', contact)
     contact.beam.write(message)
 }
 
 
 const endBeam = async (contact, sender) => {
-    console.log('ending beam with', contact)
     let active = active_beams.find(a => a.chat === contact)
+    sender('stop-beam', addr)
     if (!active) return
     active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)
     active_beams = filter
-    sender('stop-beam', addr)
     console.log('Active beams', active_beams)
 }
 
