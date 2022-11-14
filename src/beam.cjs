@@ -60,16 +60,11 @@ const beamEvent = async (beam, chat, key, sender) => {
     })
 
     beam.on('end', () => {
-        beam.end()
-        let filter = active_beams.filter(a => a.chat !== addr)
-        active_beams = filter
-        console.log('Active beams', active_beams)
-        sender('stop-beam', active_beams)
+        endBeam(addr, sender)
     })
 
     beam.on('error', function (e) {
-        endBeam(addr)
-        sender('stop-beam', addr)
+        endBeam(addr, sender)
       })
 
     process.once('SIGINT', () => {
@@ -126,6 +121,7 @@ const endBeam = async (contact, sender) => {
     active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)
     active_beams = filter
+    sender('stop-beam', addr)
     console.log('Active beams', active_beams)
 }
 
