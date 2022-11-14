@@ -254,7 +254,7 @@ const hideModal = () => {
                         ownMsg="{message.sent}"
                         msgFrom="{message.chat}"
                         timestamp="{message.timestamp}"
-                        beam="{message.beam}"
+                        beamMsg="{message.beam}"
                     />
                 {/each}
             </div>
