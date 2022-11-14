@@ -1,10 +1,10 @@
 <script>
-    import {createEventDispatcher} from 'svelte'
-    import {fade} from 'svelte/transition'
-    import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import {groups} from '$lib/stores/user.js'
+import {createEventDispatcher} from 'svelte'
+import {fade} from 'svelte/transition'
+import {get_avatar} from '$lib/utils/hugin-utils.js'
+import {groups} from '$lib/stores/user.js'
 
-    export let group
+export let group
 const dispatch = createEventDispatcher()
 
 const printThis = (contact) => {
