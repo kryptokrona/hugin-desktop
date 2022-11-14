@@ -83,7 +83,7 @@
 
 </script>
 
-
+<main>
 {#if nodeFailed}
     <div class="backdrop">
         <NodeSelector on:connect={(e) => setNode(e)} on:back={() => nodeFailed = false}/>
@@ -110,9 +110,16 @@
     </div>
 
 {/if}
-
+</main>
 <style lang="scss">
-
+    
+  main {
+      display: flex;
+      margin-left: 85px;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 3;
+  }
   .wrapper {
     display: flex;
     justify-content: center;
