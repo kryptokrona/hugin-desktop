@@ -18,6 +18,7 @@ const setKeys = (xkr) => {
 
 const startBeam = async (key, chat, sender) => {
     //Create new or join existing beam and start beamEvent()
+    try {
         if (key === "new") {
             beam = new Hyperbeam()
             console.log('Beam key', beam.key)
@@ -29,9 +30,13 @@ const startBeam = async (key, chat, sender) => {
             beamEvent(beam, chat, beam.key, sender)
             return false
         }
+    } catch (e) {
+        console.log('Error', e)
+        return "Error"
+    }
 }
 
-const beamEvent = async (beam, chat, key, sender) => {
+const beamEvent = (beam, chat, key, sender) => {
 
     let addr = chat.substring(0,99)
     active_beams.push({key, chat: addr, beam})
@@ -107,13 +112,13 @@ const decryptMessage = async (str, msgKey, sender) => {
     saveMsg(message, address, sent, timestamp)
 }
 
-const sendBeamMessage = async (message, to) => {
+const sendBeamMessage = (message, to) => {
     let contact = active_beams.find(a => a.chat === to)
     contact.beam.write(message)
 }
 
 
-const endBeam = async (contact, sender) => {
+const endBeam = (contact, sender) => {
     let active = active_beams.find(a => a.chat === contact)
     if (!active) return
     sender('stop-beam', contact)
@@ -123,7 +128,7 @@ const endBeam = async (contact, sender) => {
     console.log('Active beams', active_beams)
 }
 
-const checkIfOnline = async (addr) => {
+const checkIfOnline = (addr) => {
 
     let interval = setInterval(ping, 10 * 1000)
     function ping() {

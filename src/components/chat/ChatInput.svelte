@@ -81,6 +81,8 @@
       if ($beam.active.length) {
         activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
         console.log("Beam active", activeBeam);
+      } else {
+        activeBeam = false
       }
     }
 
