@@ -422,10 +422,7 @@ ipcMain.on("end-beam", async (e, chat) => {
 
 ipcMain.on("beam", async (e, link, chat) => {
     let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
-    if (beamMessage === "Error") {
-        console.log('Beam DHT error')
-        sender('stop-beam', chat.substring(0,99))
-    }
+    if (beamMessage === "Error") return
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, false)
     

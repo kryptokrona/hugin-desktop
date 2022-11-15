@@ -31,7 +31,8 @@ const startBeam = async (key, chat, sender) => {
             return false
         }
     } catch (e) {
-        console.log('Error', e)
+        console.log('Beam DHT error', e)
+        sender('stop-beam', chat.substring(0,99))
         return "Error"
     }
 }
