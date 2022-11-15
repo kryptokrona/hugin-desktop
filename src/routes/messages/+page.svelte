@@ -118,20 +118,25 @@ const sendMsg = (e) => {
     let beam = false
     let msg = e.detail.text
     let myaddr = $user.huginAddress.substring(0, 99)
+
+    if (e.detail.offChain) {
+        offChain = true
+    }
+    
+    if (e.detail.beam) {
+      beam = true
+      offChain = true;
+    }
+
     let myMessage = {
         chat: chat,
         msg: msg,
         sent: true,
         timestamp: Date.now(),
+        beam: beam
     }
+
     saveToStore(myMessage)
-    if (e.detail.offChain) {
-        offChain = true
-    }
-    if (e.detail.beam) {
-      beam = true
-      offChain = true;
-    }
     window.api.sendMsg(msg, active_contact, offChain, false, beam)
     printMessage(myMessage)
     console.log('Message sent')
