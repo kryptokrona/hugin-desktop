@@ -45,6 +45,7 @@ const beamEvent = async (beam, chat, key, sender) => {
 
     beam.on('connected', function () {
         console.log('Beam connected to peer')
+        checkIfOnline(addr)
         sender('beam-connected', chat.substring(0,99))
     })
     
@@ -54,6 +55,7 @@ const beamEvent = async (beam, chat, key, sender) => {
         const str = new TextDecoder().decode(data);
         console.log('string', str)
         if (str === "Start") return
+        if (str === "Ping") return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
         decryptMessage(str, msgKey, sender)
@@ -64,6 +66,7 @@ const beamEvent = async (beam, chat, key, sender) => {
     })
 
     beam.on('error', function (e) {
+        console.log('Beam error')
         endBeam(addr, sender)
       })
 
@@ -112,12 +115,26 @@ const sendBeamMessage = async (message, to) => {
 
 const endBeam = async (contact, sender) => {
     let active = active_beams.find(a => a.chat === contact)
-    sender('stop-beam', contact)
     if (!active) return
+    sender('stop-beam', contact)
     active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)
     active_beams = filter
     console.log('Active beams', active_beams)
+}
+
+const checkIfOnline = async (addr) => {
+
+    let interval = setInterval(ping, 10 * 1000)
+    function ping() {
+        let active = active_beams.find(a => a.chat === addr)
+        if (!active) {
+            clearInterval(interval)
+            return
+        } else {
+            active.beam.write('Ping')
+        }
+    }
 }
 
 module.exports = {endBeam, newBeam, sendBeamMessage}
