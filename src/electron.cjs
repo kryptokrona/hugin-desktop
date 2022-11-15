@@ -1453,7 +1453,6 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         let messageArray = []
         messageArray.push(sendMsg)
         messageArray.push(address)
-        saveMsg(message, address, true, timestamp)
         if (group) {
             messageArray.push('group')
         }
@@ -1466,17 +1465,18 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         //Do not save invite message.
         try {
             if (message.msg.invite) {
+                return
             }
         } catch (e) {
             console.log('payload', messageArray)
-            let saveMsg = {
+            let saveThisMessage = {
                 msg: message,
                 k: messageKey,
                 sent: true,
                 t: timestamp,
                 chat: address,
             }
-            saveMessage(saveMsg, randomKey, true)
+            saveMessage(saveThisMessage, randomKey, true)
         }
     }
 }
