@@ -34,37 +34,37 @@ const {expand_sdp_answer, expand_sdp_offer} = require("./sdp.cjs")
 const {
     loadDB,
     saveHash,
-    loadGroups, 
-    loadKeys, 
-    getGroups, 
-    saveGroupMsg, 
-    unBlockContact, 
-    blockContact, 
-    removeMessages, 
-    removeContact, 
-    removeGroup, 
-    addGroup, 
-    removeBoard, 
-    loadBlockList, 
-    getConversation, 
-    getConversations, 
-    loadKnownTxs, 
-    getMyBoardList, 
-    getBoardMsgs, 
-    getMessages, 
-    getReplies, 
-    getGroupReply, 
-    getReply, 
-    printGroup, 
-    printBoard, 
-    saveMsg, 
-    saveBoardMessage, 
-    saveThisContact, 
-    groupMessageExists, 
-    messageExists, 
-    getContacts, 
-    firstContact, 
-    welcomeMessage, 
+    loadGroups,
+    loadKeys,
+    getGroups,
+    saveGroupMsg,
+    unBlockContact,
+    blockContact,
+    removeMessages,
+    removeContact,
+    removeGroup,
+    addGroup,
+    removeBoard,
+    loadBlockList,
+    getConversation,
+    getConversations,
+    loadKnownTxs,
+    getMyBoardList,
+    getBoardMsgs,
+    getMessages,
+    getReplies,
+    getGroupReply,
+    getReply,
+    printGroup,
+    printBoard,
+    saveMsg,
+    saveBoardMessage,
+    saveThisContact,
+    groupMessageExists,
+    messageExists,
+    getContacts,
+    firstContact,
+    welcomeMessage,
     welcomeBoardMessage,
     addBoard
 } = require("./database.cjs")
@@ -425,7 +425,7 @@ ipcMain.on("beam", async (e, link, chat) => {
     if (beamMessage === "Error") return
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, false)
-    
+
   });
 
 ipcMain.on('check-new-release', () => {
@@ -654,7 +654,7 @@ async function start_js_wallet(walletName, password, node) {
         mainWindow.webContents.send('login-failed')
         return
     }
-    
+
     hashed_pass = await hashPassword(password)
 
     //Load known public keys and contacts
@@ -992,7 +992,7 @@ async function saveGroupMessage(msg, hash, time, offchain) {
 
 //Saves private message
 async function saveMessage(msg, hash, offchain = false) {
-    
+
     let torrent
     let text
     let sent = msg.sent
@@ -1078,9 +1078,9 @@ async function encryptMessage(message, messageKey, sealed = false) {
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     let xkr_private_key = privateSpendKey
     let box
-    
+
     if (sealed) {
-    
+
     let signature = await xkrUtils.signMessage(message, xkr_private_key)
     let payload_json = {
         from: my_address,
@@ -1391,7 +1391,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
     } catch (err) {
         return
     }
-    
+
     let timestamp = Date.now()
     let payload_hex
 
@@ -1404,7 +1404,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
     console.log('Payload hex', payload_hex)
     //Choose subwallet with message inputs
     let messageWallet = js_wallet.subWallets.getAddresses()[1]
-    
+
     if (!off_chain) {
         let result = await js_wallet.sendTransactionAdvanced(
             [[messageWallet, 1000]], // destinations,
@@ -1518,7 +1518,7 @@ async function optimizeMessages(force = false) {
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
     })
-    
+
     let payments = []
     let i = 0
     /* User payment */
@@ -1541,7 +1541,7 @@ async function optimizeMessages(force = false) {
 
     if (result.success) {
         mainWindow.webContents.send('optimized', true)
-        
+
         store.set({
             wallet: {
                 optimized: true
@@ -1566,7 +1566,7 @@ async function optimizeMessages(force = false) {
                 optimized: false
             }
         });
-        
+
         mainWindow.webContents.send('optimized', false)
         let error = {
             message: 'Optimize failed',
@@ -1978,24 +1978,17 @@ function parse_sdp(sdp) {
             port = candidate[5]
             type = candidate[7]
 
-            let hexa = ip.split('.').map(function (h) {
-                return h.toString(16)
-            })
-
-            let ip_hex = btoa(String.fromCharCode.apply(String, hexa))
-            console.log('IP CODED', ip_hex)
-
             if (type == 'srflx') {
-                ip_hex = '!' + ip_hex
+                ip = '!' + ip
             } else {
-                ip_hex = '?' + ip_hex
+                ip = '?' + ip
             }
 
-            if (!ips.includes(ip_hex)) {
-                ips = ips.concat(ip_hex)
+            if (!ips.includes(ip)) {
+                ips = ips.concat(ip)
             }
 
-            let indexedport = port + ips.indexOf(ip_hex).toString()
+            let indexedport = port + ips.indexOf(ip).toString()
 
             prts = prts.concat(en.encode(parseInt(indexedport)))
         } else if (line.includes('a=ssrc:')) {
