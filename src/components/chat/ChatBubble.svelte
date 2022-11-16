@@ -1,13 +1,14 @@
 <script>
-import { fade } from 'svelte/transition'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { user, beam } from '$lib/stores/user.js'
-import Button from '/src/components/buttons/Button.svelte'
-import { createEventDispatcher } from 'svelte'
-import Time from 'svelte-time'
-import FillButton from '../buttons/FillButton.svelte'
+    import {fade} from 'svelte/transition'
+    import {get_avatar} from '$lib/utils/hugin-utils.js'
+    import {beam, user} from '$lib/stores/user.js'
+    import Button from '/src/components/buttons/Button.svelte'
+    import {createEventDispatcher} from 'svelte'
+    import Time from 'svelte-time'
+    import FillButton from '../buttons/FillButton.svelte'
+    import Lightning from "$components/icons/Lightning.svelte";
 
-export let message
+    export let message
 export let handleType
 export let msgFrom
 export let ownMsg
@@ -81,7 +82,7 @@ $: if (message.substring(0,7) === "BEAM://") {
 {:else}
     <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
     {#if ownMsg}
-        <div class="wrapper" class:beam={beamMsg}>
+        <div class="wrapper">
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -90,13 +91,18 @@ $: if (message.substring(0,7) === "BEAM://") {
                 />
             </div>
             <div class="content">
-                <div style="display: flex; gap: 1rem">
+                <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class="nickname">
                         {$user.username}
                         <span class="time">
                             | <Time relative timestamp="{parseInt(timestamp)}" /></span
                         >
                     </p>
+                    {#if beamMsg}
+                        <div style="opacity: 50%">
+                            <Lightning size="16" fill='#f5f5f5'/>
+                        </div>
+                    {/if}
                 </div>
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
@@ -104,14 +110,14 @@ $: if (message.substring(0,7) === "BEAM://") {
                         {#each files as image}{/each}
                     </div>
                     {:else if beamInvite}
-                        <p in:fade class="message">Hyperbeam started</p>
+                        <p in:fade class="message">Started a beam ⚡️</p>
                 {:else}
                     <p class="message">{message}</p>
                 {/if}
             </div>
         </div>
     {:else}
-        <div class="wrapper" class:beam={beamMsg}>
+        <div class="wrapper">
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -120,24 +126,34 @@ $: if (message.substring(0,7) === "BEAM://") {
                 />
             </div>
             <div class="content">
-                <div style="display: flex; gap: 1rem">
+                <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class="nickname">
                         {$user.activeChat.name}
                         <span class="time">
-                            | <Time relative timestamp="{parseInt(timestamp)}" /></span
+                            | <Time relative timestamp="{parseInt(timestamp)}"/></span
                         >
                     </p>
+                    {#if beamMsg}
+                        <div style="opacity: 50%">
+                            <Lightning size="16" fill='#f5f5f5'/>
+                        </div>
+                    {/if}
                 </div>
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
                         <p>{file.name}</p>
                         {#each files as image}{/each}
                     </div>
+
                 {:else if beamInvite && !oldInvite}
-                    <FillButton text="Join beam" disabled={false} on:click={joinBeam} />
+                    <p class="message">{$user.activeChat.name} would like to star a beam ⚡️</p>
+                    <div style="margin-top: 1rem">
+                        <FillButton text="Join beam" disabled={false} on:click={joinBeam}/>
+                    </div>
                     {:else if oldInvite}
-                    <p in:fade class="message">Hyperbeam started</p>
+                    <p in:fade class="message">Started a beam ⚡️</p>
                 {:else}
+
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}
             </div>
@@ -173,18 +189,19 @@ $: if (message.substring(0,7) === "BEAM://") {
 }
 
 .content {
-    display: flex;
-    flex-direction: column;
-    padding-left: 1rem;
-    justify-content: center;
-    gap: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  padding-left: 1rem;
+  justify-content: center;
+  width: 100%;
+  gap: 0.25rem;
 
-    .nickname {
-        margin: 0;
-        word-break: break-word;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 600;
-    }
+  .nickname {
+    margin: 0;
+    word-break: break-word;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+  }
 
     .message {
         margin: 0;
