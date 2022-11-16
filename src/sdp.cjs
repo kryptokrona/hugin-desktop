@@ -792,7 +792,7 @@ let decode_ip = (ip, type) => {
 
     console.log('decoded ip', decoded_ip)
 
-    return type + decoded_ip.slice(0, -1)
+    return type + ip;
 }
 
 module.exports = {expand_sdp_answer, expand_sdp_offer}

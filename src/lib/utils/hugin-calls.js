@@ -40,23 +40,17 @@ function parse_sdp(sdp) {
             port = candidate[5]
             type = candidate[7]
 
-            let hexa = ip.split('.').map(function (h) {
-                return h.toString(16)
-            })
-
-            let ip_hex = btoa(String.fromCharCode.apply(String, hexa))
-
             if (type == 'srflx') {
-                ip_hex = '!' + ip_hex
+                ip_hex = '!' + ip
             } else {
-                ip_hex = '?' + ip_hex
+                ip_hex = '?' + ip
             }
 
-            if (!ips.includes(ip_hex)) {
-                ips = ips.concat(ip_hex)
+            if (!ips.includes(ip)) {
+                ips = ips.concat(ip)
             }
 
-            let indexedport = port + ips.indexOf(ip_hex).toString()
+            let indexedport = port + ips.indexOf(ip).toString()
 
             ports = ports.concat(en.encode(parseInt(indexedport)))
         } else if (line.includes('a=ssrc:')) {
