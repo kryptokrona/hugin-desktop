@@ -1986,7 +1986,7 @@ function parseCall(msg, sender, sent, emitCall = true, group = false) {
 
 ipcMain.on('expand-sdp', (e, data, address) => {
     console.log('INCOMING EXPAND SDP', address)
-    let recovered_data = expand_sdp_offer(data)
+    let recovered_data = expand_sdp_offer(data, true)
     console.log('TYPE EXPAND_O', recovered_data)
     let expanded_data = []
     expanded_data.push(recovered_data)
