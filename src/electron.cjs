@@ -30,7 +30,7 @@ const WebTorrent = require('webtorrent')
 const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
-const {expand_sdp_answer, expand_sdp_offer} = require("./sdp.cjs")
+const {expand_sdp_answer, expand_sdp_offer, parse_sdp} = require("./sdp.cjs")
 const {
     loadDB,
     saveHash,
@@ -1942,84 +1942,6 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
     }
 })
 
-function parse_sdp(sdp) {
-    let ice_ufrag = ''
-    let ice_pwd = ''
-    let fingerprint = ''
-    let ips = []
-    let prts = []
-    let ssrcs = []
-    let msid = ''
-    let ip
-    let port
-
-    let lines = sdp.sdp.split('\n').map((l) => l.trim()) // split and remove trailing CR
-    lines.forEach(function (line) {
-        if (line.includes('a=fingerprint:') && fingerprint == '') {
-            let parts = line.substr(14).split(' ')
-            let hex = line
-                .substr(22)
-                .split(':')
-                .map(function (h) {
-                    return parseInt(h, 16)
-                })
-
-            fingerprint = btoa(String.fromCharCode.apply(String, hex))
-
-            console.log('BASED64', fingerprint)
-        } else if (line.includes('a=ice-ufrag:') && ice_ufrag == '') {
-            ice_ufrag = line.substr(12)
-        } else if (line.includes('a=ice-pwd:') && ice_pwd == '') {
-            ice_pwd = line.substr(10)
-        } else if (line.includes('a=candidate:')) {
-            let candidate = line.substr(12).split(' ')
-
-            ip = candidate[4]
-            port = candidate[5]
-            type = candidate[7]
-
-            if (type == 'srflx') {
-                ip = '!' + ip
-            } else {
-                ip = '?' + ip
-            }
-
-            if (!ips.includes(ip)) {
-                ips = ips.concat(ip)
-            }
-
-            let indexedport = port + ips.indexOf(ip).toString()
-
-            prts = prts.concat(en.encode(parseInt(indexedport)))
-        } else if (line.includes('a=ssrc:')) {
-            let ssrc = en.encode(line.substr(7).split(' ')[0])
-
-            if (!ssrcs.includes(ssrc)) {
-                ssrcs = ssrcs.concat(ssrc)
-            }
-        } else if (line.includes('a=msid-semantic:')) {
-            msid = line.substr(16).split(' ')[2]
-            console.log('msid', msid)
-        }
-    })
-
-    return (
-        ice_ufrag +
-        ',' +
-        ice_pwd +
-        ',' +
-        fingerprint +
-        ',' +
-        ips.join('&') +
-        ',' +
-        prts.join('&') +
-        ',' +
-        ssrcs.join('&') +
-        ',' +
-        msid
-    )
-}
-
 function parseCall(msg, sender, sent, emitCall = true, group = false) {
     console.log('🤤🤤🤤🤤🤤🤤', sender, msg)
     switch (msg.substring(0, 1)) {
@@ -2077,12 +1999,12 @@ ipcMain.on('get-sdp', (e, data) => {
 
     if (data.type == 'offer') {
         console.log('Offer', data.type, data.contact, data.video)
-        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data)
+        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
         let recovered_data = expand_sdp_offer(parsed_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     } else if (data.type == 'answer') {
         console.log('Answerrrrrrrr', data.type, data.contact, data.video)
-        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data)
+        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
         console.log('parsed data really cool sheet:', parsed_data)
         let recovered_data = expand_sdp_answer(parsed_data)
         //Send expanded recovered data to front end for debugging etc, this can be removed

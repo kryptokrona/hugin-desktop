@@ -1,6 +1,10 @@
 const en = require('int-encoder')
+const Store = require('electron-store');
+const settings = new Store();
 
-const expand_sdp_offer = (compressed_string) => {
+
+
+const expand_sdp_offer = (compressed_string, incoming = false) => {
     let type = compressed_string.substring(0, 1)
 
     let split = compressed_string.split(',')
@@ -52,6 +56,15 @@ const expand_sdp_offer = (compressed_string) => {
         let ip_index = port.slice(-1)
         if (i == 1) {
             current_internal = port.substring(0, port.length - 1)
+        }
+        if (ips[ip_index].length > 20 && incoming) {
+            
+            settings.set({
+                incoming: {
+                    ipv6: true
+                }
+            });
+
         }
         if (ips[ip_index].substring(0, 1) == '!') {
             external_ip = ips[ip_index].substring(1)
@@ -745,6 +758,100 @@ a=max-message-size:262144
     return { type: 'answer', sdp: sdp }
 }
 
+const parse_sdp = (sdp, answr = false) => {
+    let ice_ufrag = ''
+    let ice_pwd = ''
+    let fingerprint = ''
+    let ips = []
+    let prts = []
+    let ssrcs = []
+    let msid = ''
+    let ip
+    let port
+
+    let lines = sdp.sdp.split('\n').map((l) => l.trim()) // split and remove trailing CR
+    lines.forEach(function (line) {
+        if (line.includes('a=fingerprint:') && fingerprint == '') {
+            let ipv6 = false
+            let parts = line.substr(14).split(' ')
+            let hex = line
+                .substr(22)
+                .split(':')
+                .map(function (h) {
+                    return parseInt(h, 16)
+                })
+
+            fingerprint = btoa(String.fromCharCode.apply(String, hex))
+
+            console.log('BASED64', fingerprint)
+        } else if (line.includes('a=ice-ufrag:') && ice_ufrag == '') {
+            ice_ufrag = line.substr(12)
+        } else if (line.includes('a=ice-pwd:') && ice_pwd == '') {
+            ice_pwd = line.substr(10)
+        } else if (line.includes('a=candidate:')) {
+            let candidate = line.substr(12).split(' ')
+
+            ip = candidate[4]
+            port = candidate[5]
+            type = candidate[7]
+
+            if (type == 'srflx') {
+                ip = '!' + ip
+            } else {
+                ip = '?' + ip
+            }
+
+            if (ip.length > 20 && answr) {
+                ipv6 = true
+            }
+
+            if (settings.get('incoming.ipv6') && answr && ip.length < 20 && ivp6) {
+              return
+            }
+
+            if (!ips.includes(ip)) {
+                ips = ips.concat(ip)
+            }
+
+            let indexedport = port + ips.indexOf(ip).toString()
+
+            prts = prts.concat(en.encode(parseInt(indexedport)))
+        } else if (line.includes('a=ssrc:')) {
+            let ssrc = en.encode(line.substr(7).split(' ')[0])
+
+            if (!ssrcs.includes(ssrc)) {
+                ssrcs = ssrcs.concat(ssrc)
+            }
+        } else if (line.includes('a=msid-semantic:')) {
+            msid = line.substr(16).split(' ')[2]
+            console.log('msid', msid)
+        }
+    })
+
+    //Reset incoming ipv6 settings
+    settings.set({
+        incoming: {
+            ipv6: false
+        }
+    });
+
+    return (
+        ice_ufrag +
+        ',' +
+        ice_pwd +
+        ',' +
+        fingerprint +
+        ',' +
+        ips.join('&') +
+        ',' +
+        prts.join('&') +
+        ',' +
+        ssrcs.join('&') +
+        ',' +
+        msid
+    )
+}
+
 let decode_fingerprint = (fingerprint) => {
     console.log('fingerprint', fingerprint)
     let decoded_fingerprint = ''
@@ -798,4 +905,4 @@ let decode_ip = (ip, type) => {
     // return type + ip;
 }
 
-module.exports = {expand_sdp_answer, expand_sdp_offer}
+module.exports = {expand_sdp_answer, expand_sdp_offer, parse_sdp}
