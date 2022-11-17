@@ -120,12 +120,9 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
         $webRTC.call.unshift(call)
     }
 
-    console.log('STARTING call!!!', $webRTC.call)
-
     if ($webRTC.call.some(a => a.type == "room")) {
         let active = $webRTC.call.find(a => a.type === "room")
         let stream = active.myStream
-        console.log('this stream already active!', active)
         gotMedia(stream, contact, isVideo, false)
         let filter = $webRTC.call.filter(a => a.type !== "room")
         $webRTC.call = filter
@@ -134,8 +131,6 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
     if ($webRTC.initiator) {
         await sendInviteNotification(contact, contact_address)
     }
-
-    return
 
     console.log('XKR Address', contact_address)
     console.log('Hugin Address', contact)
