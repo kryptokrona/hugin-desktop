@@ -60,7 +60,7 @@ const rename = () => {
         {#if !beamInvite}
         <p>{contact.msg}</p>
         {:else if beamInvite}
-        <p>Hyperbeam started</p>
+        <p>Started a beam ⚡️</p>
         {/if}
     </div>
 </div>
