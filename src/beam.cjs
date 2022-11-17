@@ -21,7 +21,6 @@ const startBeam = async (key, chat, sender) => {
     try {
         if (key === "new") {
             beam = new Hyperbeam()
-            console.log('Beam key', beam.key)
             beam.write('Start')
             beamEvent(beam, chat, beam.key, sender)
             return {msg:"BEAM://" + beam.key, chat: chat}
@@ -41,7 +40,6 @@ const beamEvent = (beam, chat, key, sender) => {
 
     let addr = chat.substring(0,99)
     active_beams.push({key, chat: addr, beam})
-    console.log('Beam event active beams',active_beams)
     sender('new-beam', {key, chat: addr})
     beam.on('remote-address', function ({ host, port }) {
         if (!host) console.log('Could not find the host')
@@ -59,7 +57,6 @@ const beamEvent = (beam, chat, key, sender) => {
     beam.on('data', async (data) => {
         console.log('data', data )
         const str = new TextDecoder().decode(data);
-        console.log('string', str)
         if (str === "Start") return
         if (str === "Ping") return
         let hash = str.substring(0,64)
