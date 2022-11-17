@@ -1460,16 +1460,15 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         if (beam_this) {
             console.log('beam this')
             sendBeamMessage(sendMsg, address)
-            return
+        } else {
+            mainWindow.webContents.send('rtc_message', messageArray)
         }
-        mainWindow.webContents.send('rtc_message', messageArray)
         //Do not save invite message.
         try {
             if (message.msg.invite) {
                 return
             }
         } catch (e) {
-            console.log('payload', messageArray)
             let saveThisMessage = {
                 msg: message,
                 k: messageKey,
