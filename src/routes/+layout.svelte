@@ -302,12 +302,12 @@
         })
     })
 
-    window.api.receive('beam-connected', (addr)  => {
-		console.log('beam addr inc', addr)
-		console.log('beam active?',  $beam.active)
+    window.api.receive('beam-connected', (data)  => {
+        let [address, key] = data
 		let update = $beam.active.map(a => {
-			if (a.chat == addr) {
+			if (a.chat == address) {
 				a.connected = true
+                a.key = key
 			}
 			return a
 		})
