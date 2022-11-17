@@ -26,12 +26,6 @@ function invite(contact) {
     //Hide contact window
     open = false
 
-    if ($webRTC.call[0].type === 'room' && $webRTC.call.length === 1) {
-        $webRTC.call.forEach((a) => {
-            window.api.endCall('peer', 'stream', a.chat)
-        })
-    }
-
     //Add callobject to store
     let call = {
         msg: 'outgoing',
