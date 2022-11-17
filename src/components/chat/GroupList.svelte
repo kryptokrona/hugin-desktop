@@ -43,9 +43,6 @@ window.api.receive('groupMsg', () => {
     printGroups()
 })
 
-const sendPM = (user) => {
-}
-
 const printGroup = async (grp) => {
     dispatch('printGroup', grp)
     await sleep(150)
@@ -62,12 +59,12 @@ $: activeHugins
 //Print our conversations from DBs
 async function printGroups() {
     newArray = await window.api.getGroups()
-    
+
     if (groupArray.length) {
         if (
-            newArray[0].timestamp != groupArray[0].timestamp &&
-            newArray[0].sent == 0 &&
-            $groups.thisGroup.key != newArray[0].chat
+            newArray[0].timestamp !== groupArray[0].timestamp &&
+            newArray[0].sent === 0 &&
+            $groups.thisGroup.key !== newArray[0].chat
         ) {
             newArray[0].new = true
         }
@@ -118,7 +115,7 @@ function readMessage(e) {
     console.log('reading this')
 
     groupArray = groupArray.map(function (a) {
-        if (e.new && a.key == e.key) {
+        if (e.new && a.key === e.key) {
             a.new = false
         }
         return a
@@ -143,12 +140,7 @@ async function checkNew() {
 
     return filterNew
 }
-
-function copyThis(copy) {
-    navigator.clipboard.writeText(copy)
-}
-
-const addGroup = () => {
+    const addGroup = () => {
     $groups.addGroup = true
 }
 
@@ -177,7 +169,7 @@ $: groupName = $groups.thisGroup.name
         <div class="list-wrapper">
             {#each activeHugins as user}
                 {#if user.address !== user.grp}
-                    <div class="card" on:click="{(e) => sendPM(user)}">
+                    <div class="card" on:click="{() => sendPM(user)}">
                         <img
                             class="avatar"
                             src="data:image/png;base64,{get_avatar(user.address)}"

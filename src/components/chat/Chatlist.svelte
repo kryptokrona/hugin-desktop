@@ -39,7 +39,7 @@ window.api.receive('newMsg', () => {
 //Listen for sent message to update conversation list
 window.api.receive('saved-addr', async (data) => {
     await printConversations()
-    let sender = filterArr.find((a) => a.chat == data.substring(0, 99))
+    let sender = filterArr.find((a) => a.chat === data.substring(0, 99))
     sendConversation(sender)
 })
 
@@ -106,7 +106,7 @@ function readMessage(e) {
     console.log('reading this')
 
     filterArr = filterArr.map(function (a) {
-        if (e.new && a.chat == e.chat) {
+        if (e.new && a.chat === e.chat) {
             console.log('reading this', a)
             a.new = false
         }
@@ -128,7 +128,7 @@ $: filterArr
         {#each filterArr as message (message.chat)}
             <div animate:flip="{{duration: 250}}">
             <Contact
-                on:openRename="{(e) => dispatch('openRename')}"
+                on:openRename="{() => dispatch('openRename')}"
                 on:rename="{(a) => dispatch('rename', a)}"
                 contact="{message}"
                 on:thisContact="{(e) => sendConversation(e.detail.contact)}"
