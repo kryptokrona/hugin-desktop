@@ -114,26 +114,29 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
     // spilt input to addr and pubkey
 
     let contact_address = contact.substring(0, 99)
-
     if (invite) {
         let call = { chat: contact_address, type: 'invite' }
         $webRTC.call.unshift(call)
     }
 
+    //If we have an active room, use that stream instead of creating a new one.
     if ($webRTC.call.some(a => a.type == "room")) {
-        let active = $webRTC.call.find(a => a.type === "room")
-        let stream = active.myStream
-        gotMedia(stream, contact, isVideo, false)
+        let stream = $webRTC.myStream
         let filter = $webRTC.call.filter(a => a.type !== "room")
         $webRTC.call = filter
+        gotMedia(stream, contact, isVideo, false)
+        return
     }
 
     if ($webRTC.initiator) {
-        await sendInviteNotification(contact, contact_address)
+        sendInviteNotification(contact, contact_address)
     }
 
-    console.log('XKR Address', contact_address)
-    console.log('Hugin Address', contact)
+     if ($webRTC.call.some(a => a.peerVideo)) {
+        let activeStream = $webRTC.myStream
+        gotMedia(activeStream, contact, isVideo, false)
+        return
+    }
 
     console.log('Starting call..')
 
@@ -174,9 +177,10 @@ async function shareScreen(id) {
 $: {
     console.log('My Audio/Video devices', $webRTC.devices)
     console.log('Active Camera', $webRTC.cameraId)
+    console.log('Active Camera', $webRTC.call)
 }
 
-async function sendInviteNotification(contact, contact_address) {
+function sendInviteNotification(contact, contact_address) {
     let callList = $webRTC.call.filter((a) => a.chat !== contact_address)
     //Notify other users in the call about the invite.
     let msg = {
