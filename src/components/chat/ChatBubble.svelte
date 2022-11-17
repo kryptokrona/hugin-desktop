@@ -20,6 +20,7 @@ let file
 let oldInvite = false
 let beamInvite = false
 let address = $user.huginAddress.substring(0, 99)
+let beamConnected = false
 
 const dispatch = createEventDispatcher()
 
@@ -58,9 +59,14 @@ $: if (message.substring(0,7) === "BEAM://") {
     $beam.active.push({
       chat: $user.activeChat.chat,
       connected: false,
+      key: key
     })
     $beam.active = $beam.active
   }
+
+  $: console.log('beam connected?', beamConnected)
+
+  $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59))
   
 </script>
 
@@ -111,7 +117,9 @@ $: if (message.substring(0,7) === "BEAM://") {
                     </div>
                     {:else if beamInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
-                {:else}
+                    {:else if beamConnected}
+                        <p>Beam connected!!</p>
+                    {:else}
                     <p class="message">{message}</p>
                 {/if}
             </div>
@@ -145,15 +153,16 @@ $: if (message.substring(0,7) === "BEAM://") {
                         {#each files as image}{/each}
                     </div>
 
-                {:else if beamInvite && !oldInvite}
+                {:else if beamInvite && !oldInvite && !beamConnected}
                     <p class="message">{$user.activeChat.name} would like to star a beam ⚡️</p>
                     <div style="margin-top: 1rem">
                         <FillButton text="Join beam" disabled={false} on:click={joinBeam}/>
                     </div>
                     {:else if oldInvite}
                     <p in:fade class="message">Started a beam ⚡️</p>
-                {:else}
-
+                    {:else if beamConnected}
+                    <p>Beam connected!!</p>
+                    {:else}
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}
             </div>

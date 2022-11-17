@@ -180,6 +180,7 @@ function newBeam() {
     $beam.active.push({
       chat: $user.activeChat.chat,
       connected: false,
+      key: undefined,
     })
     $beam.active = $beam.active
 }

@@ -23,11 +23,11 @@ const startBeam = async (key, chat, sender) => {
             beam = new Hyperbeam()
             console.log('Beam key', beam.key)
             beam.write('Start')
-            beamEvent(beam, chat, key, sender)
+            beamEvent(beam, chat, beam.key, sender)
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
             beam = new Hyperbeam(key)
-            beamEvent(beam, chat, beam.key, sender)
+            beamEvent(beam, chat, key, sender)
             return false
         }
     } catch (e) {
@@ -52,7 +52,7 @@ const beamEvent = (beam, chat, key, sender) => {
     beam.on('connected', function () {
         console.log('Beam connected to peer')
         checkIfOnline(addr)
-        sender('beam-connected', chat.substring(0,99))
+        sender('beam-connected', [chat.substring(0,99), beam.key])
     })
     
     //Incoming message
