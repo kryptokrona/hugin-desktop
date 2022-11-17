@@ -15,11 +15,25 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    name: "Build: ${{ matrix.config.name }}"
+    runs-on: ${{ matrix.config.os }}
 
     strategy:
+      fail-fast: false # set to true when ready
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        config:
+          - {
+            name: "Windows Latest",
+            os: windows-latest
+          }
+          - {
+            name: "Ubuntu Latest",
+            os: ubuntu-latest
+          }
+          - {
+            name: "macOS Latest",
+            os: macos-latest,
+          }
 
     steps:
       - name: Check out Git repository
@@ -40,3 +54,34 @@ jobs:
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ github.event.comment.body }}
+          regex: '```typescript([\s\S]*)```'
+          flags: gm>
+
+#      - name: "Upload ${{ matrix.config.name }} Artifact"
+#        uses: actions/upload-artifact@v3
+#        if: matrix.config.os == 'windows-latest'
+#        with:
+#          name: windows-latest-build
+#          path: |
+#            dist/Hugin Messenger Setup.exe
+#
+#      - name: "Upload ${{ matrix.config.name }} Artifact"
+#        uses: actions/upload-artifact@v3
+#        if: matrix.config.os == 'ubuntu-latest'
+#        with:
+#          name: ubuntu-latest-build
+#          path: |
+#            dist/Hugin Messenger Setup
+#
+#      - name: "Upload ${{ matrix.config.name }} Artifact"
+#        uses: actions/upload-artifact@v3
+#        if: matrix.config.os == 'macos-latest'
+#        with:
+#          name: macos-latest-build
+#          path: |
+#            dist/Hugin Messenger Setup.dmg
