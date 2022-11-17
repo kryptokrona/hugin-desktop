@@ -1,0 +1,14 @@
+name: Hugin Desktop Main Pipeline
+
+env:
+  GITHUB_REGISTRY: 'ghcr.io'
+  GITHUB_OWNER: 'kryptokrona'
+
+on:
+  push:
+    branches:
+      - main # switch to main later
+    paths-ignore:
+      - '*.md'
+      - '.run/**'
+      - '.github/ISSUE_TEMPLATE/**'
