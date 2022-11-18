@@ -75,12 +75,12 @@ jobs:
         if: matrix.config.os == 'macos-latest'
         run: npm run build:mac-$PLATFORM
 
-      - uses: actions-ecosystem/action-regex-match@v2
-        id: regex-match
-        with:
-          text: ${{ github.event.comment.body }}
-          regex: '```typescript([\s\S]*)```'
-          flags: gm>
+#      - uses: actions-ecosystem/action-regex-match@v2
+#        id: regex-match
+#        with:
+#          text: ${{ github.event.comment.body }}
+#          regex: '```typescript([\s\S]*)```'
+#          flags: gm>
 
 #      - name: "Upload ${{ matrix.config.name }} Artifact"
 #        uses: actions/upload-artifact@v3
