@@ -3,6 +3,7 @@ name: Hugin Desktop Main Pipeline
 env:
   GITHUB_REGISTRY: 'ghcr.io'
   GITHUB_OWNER: 'kryptokrona'
+  GH_TOKEN: ${{ secrets.HUGIN_DESKTOP_SECRET }}
 
 on:
   push:
