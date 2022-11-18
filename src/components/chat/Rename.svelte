@@ -2,7 +2,7 @@
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher } from 'svelte'
-import FillButton from '/src/components/buttons/FillButton.svelte'
+import FillButton from '$components/buttons/FillButton.svelte'
 import { user } from '$lib/stores/user.js'
 import Button from '../buttons/Button.svelte'
 
@@ -77,14 +77,14 @@ const remove = () => {
     {:else}
     <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
-            <FillButton 
-                disabled="{false}" 
-                text="Rename" 
+            <FillButton
+                disabled="{false}"
+                text="Rename"
                 on:click="{() => rename = true}" />
-            <FillButton 
+            <FillButton
                 disabled="{false}"
                 red="{true}"
-                text="Remove" 
+                text="Remove"
                 on:click="{remove}" />
         </div>
     </div>

@@ -3,11 +3,11 @@ import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import { boards } from '$lib/stores/user.js'
-import Reaction from '/src/components/chat/Reaction.svelte'
+import Reaction from '$components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
-import ReplyArrow from '/src/components/icons/ReplyArrow.svelte'
-import RepliedArrom from '/src/components/icons/RepliedArrow.svelte'
+import ReplyArrow from '$components/icons/ReplyArrow.svelte'
+import RepliedArrom from '$components/icons/RepliedArrow.svelte'
 
 export let msg
 export let msgFrom

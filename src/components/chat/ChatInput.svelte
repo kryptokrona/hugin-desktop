@@ -1,6 +1,6 @@
 <script>
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
-    import SendIcon from '/src/components/icons/SendIcon.svelte'
+    import SendIcon from '$components/icons/SendIcon.svelte'
     import {boards, webRTC, groups, beam} from '$lib/stores/user.js'
     import {page} from '$app/stores'
     import {user} from '$lib/stores/user'
@@ -76,7 +76,7 @@
     $: if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
         messageField.focus()
     }
-    
+
     $: {
       if ($beam.active.length) {
         activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
@@ -109,7 +109,7 @@
 </div>
 
 <style lang="scss">
-  
+
   .wrapper {
     height: 73px;
     padding: 1rem;
