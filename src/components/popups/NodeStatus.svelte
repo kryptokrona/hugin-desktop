@@ -1,7 +1,7 @@
 <script>
 // Copyright (c) 2022, The Kryptokrona Developers
 import { fade, fly } from 'svelte/transition'
-import Close from '/src/components/icons/Close.svelte'
+import Close from '$components/icons/Close.svelte'
 import { misc } from '$lib/stores/user.js'
 
 let progress

@@ -2,7 +2,7 @@
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {beam, user} from '$lib/stores/user.js'
-    import Button from '/src/components/buttons/Button.svelte'
+    import Button from '$components/buttons/Button.svelte'
     import {createEventDispatcher} from 'svelte'
     import Time from 'svelte-time'
     import FillButton from '../buttons/FillButton.svelte'
@@ -65,7 +65,7 @@ $: if (message.substring(0,7) === "BEAM://") {
   }
 
   $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59))
-  
+
 </script>
 
 {#if torrent}

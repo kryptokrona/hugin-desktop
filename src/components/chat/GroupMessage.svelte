@@ -3,11 +3,11 @@ import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
-import Reaction from '/src/components/chat/Reaction.svelte'
+import Reaction from '$components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
-import ReplyArrow from '/src/components/icons/ReplyArrow.svelte'
-import RepliedArrow from '/src/components/icons/RepliedArrow.svelte'
+import ReplyArrow from '$components/icons/ReplyArrow.svelte'
+import RepliedArrow from '$components/icons/RepliedArrow.svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '../icons/Dots.svelte'
 import FillButton from '../buttons/FillButton.svelte'
@@ -179,7 +179,7 @@ $: if (message.react) {
 </div>
 
 <style lang="scss">
-    
+
 .message {
     display: flex;
     flex-direction: column;
@@ -197,7 +197,7 @@ $: if (message.react) {
 
     &:hover {
         background-color: var(--card-background);
-        
+
         .actions {
                 opacity: 100%;
             }
@@ -229,7 +229,7 @@ p {
     display: flex;
     display: none;
     position: absolute;
-    
+
 }
 
 .reply_avatar {
@@ -289,7 +289,7 @@ p {
 }
 
 .actions {
-    display: flex; 
+    display: flex;
     flex-direction: row;
 }
 

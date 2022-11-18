@@ -1,9 +1,9 @@
 <script>
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
-import GroupMessage from '/src/components/chat/GroupMessage.svelte'
+import GroupMessage from '$components/chat/GroupMessage.svelte'
 import { onDestroy, onMount } from 'svelte'
 import { rtc_groups, user, webRTC } from '$lib/stores/user.js'
-import ChatInput from '/src/components/chat/ChatInput.svelte'
+import ChatInput from '$components/chat/ChatInput.svelte'
 //Use for filesharing later
 import { videoGrid } from '$lib/stores/layout-state.js'
 

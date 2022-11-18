@@ -6,8 +6,8 @@ import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { notify, user, webRTC } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
-import CallIcon from '/src/components/icons/CallIcon.svelte'
-import CallSlash from '/src/components/icons/CallSlash.svelte'
+import CallIcon from '$components/icons/CallIcon.svelte'
+import CallSlash from '$components/icons/CallSlash.svelte'
 
 export let paused = false
 export let thisCall
