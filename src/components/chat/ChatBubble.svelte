@@ -64,8 +64,6 @@ $: if (message.substring(0,7) === "BEAM://") {
     $beam.active = $beam.active
   }
 
-  $: console.log('beam connected?', beamConnected)
-
   $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59))
   
 </script>
