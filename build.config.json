@@ -1,6 +1,6 @@
 {
     "appId": "com.electron.hugin",
-    "productName": "HuginMessenger",
+    "productName": "Hugin Messenger",
     "artifactName": "${productName}.${ext}",
     "directories": {
         "output": "dist"
