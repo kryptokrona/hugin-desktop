@@ -79,8 +79,11 @@ jobs:
         id: regex-match
         with:
           text: ${{ github.event.comment.body }}
-          regex: '```^(\S.*)\.dmg$```'
-          flags: gm>
+          regex: '(.*)\.[^.]*$'
+
+      - name: Test
+        run: |
+          echo "${{ steps.regex-match.outputs.match }}"
 
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
