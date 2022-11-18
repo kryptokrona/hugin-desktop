@@ -56,6 +56,12 @@ const toggleAudio = () => {
 }
 
 const toggleVideo = () => {
+    if ($webRTC.screenshare) {
+        let camera = $webRTC.cameraId
+        window.api.changeSource(camera)
+        $webRTC.screenshare = false
+        return
+    }
     video = !video
     $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
 }

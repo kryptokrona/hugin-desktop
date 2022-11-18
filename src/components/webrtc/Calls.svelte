@@ -195,7 +195,6 @@ function sendInviteNotification(contact, contact_address) {
 }
 
 async function checkSources() {
-    let stream = $webRTC.myStream
     let devices = await navigator.mediaDevices.enumerateDevices()
     $webRTC.devices = devices
 }
@@ -204,8 +203,8 @@ async function changeVideoSource(device, oldSrc, chat) {
     let current = $webRTC.myStream
     //Set video boolean to stop video
     $webRTC.video = false
-    //Set peer
-    let peer = $webRTC.call[0].peer
+    //Check if we have an peer
+    let peer = $webRTC.call.some(a => a.peer)
     //Add new track to current stream
     current.addTrack(device.getVideoTracks()[0])
     //Replace track
@@ -223,6 +222,8 @@ async function changeVideoSource(device, oldSrc, chat) {
     $webRTC.myStream = current
     //Set video boolean to play video
     $webRTC.video = true
+    if ($webRTC.screenshare) return
+    $webRTC.cameraId = device.deviceId
 }
 
 async function changeAudioSource(device, oldSrc, chat) {
