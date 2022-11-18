@@ -1,54 +1,25 @@
 <script>
     import {fade} from 'svelte/transition'
-    import {boards, misc, user, userAvatar} from '$lib/stores/user.js'
+    import {user} from '$lib/stores/user.js'
     import {onMount} from 'svelte'
-    import Share from '/src/components/dashboard/Share.svelte'
-    import Funds from '/src/components/dashboard/Funds.svelte'
-    import EditName from '/src/components/dashboard/EditName.svelte'
-    import CreateRoom from '/src/components/dashboard/CreateRoom.svelte'
+    import Share from './components/Share.svelte'
+    import Funds from './components/Funds.svelte'
+    import EditName from './components/EditName.svelte'
+    import CreateRoom from './components/CreateRoom.svelte'
     import {layoutState} from '$lib/stores/layout-state.js'
     import FillButton from '$components/buttons/FillButton.svelte'
     import {openURL} from '$lib/utils/utils.js'
 
-    let avatar
-    let myBoards = []
     let date = new Date()
     let hrs = date.getHours()
     let greet
 
 onMount(async () => {
-    $layoutState.showFaucetButton = window.localStorage.getItem('faucet')
-
-    console.log('FAUCET BTN', $layoutState.showFaucetButton)
-    //Set boardsarray to store
-    myBoards = await window.api.getMyBoards()
-    let filterBoards = myBoards.filter((a) => a !== 'Home')
-    console.log(filterBoards)
-    filterBoards.unshift('Home')
-
-    boards.update((data) => {
-        return {
-            ...data,
-            boardsArray: filterBoards,
-        }
-    })
-
-    misc.update((oldData) => {
-        return {
-            ...oldData,
-            loading: false,
-        }
-    })
-
     if (hrs < 12) greet = 'Good Morning'
     else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'
     else if (hrs >= 17 && hrs <= 24) greet = 'Good Evening'
 })
 
-$: {
-    myBoards = $boards.boardsArray
-    avatar = $userAvatar
-}
 </script>
 
 <main in:fade>
