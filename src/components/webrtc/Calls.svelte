@@ -203,11 +203,11 @@ async function changeVideoSource(device, oldSrc, chat) {
     let current = $webRTC.myStream
     //Set video boolean to stop video
     $webRTC.video = false
-    //Check if we have an peer
+    //Check if we have an active peer
     let peer = $webRTC.call.some(a => a.peer)
     //Add new track to current stream
     current.addTrack(device.getVideoTracks()[0])
-    //Replace track
+    //Replace track for all peers
     if (peer) {
         $webRTC.call.forEach((a) => {
             a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current)
@@ -375,28 +375,12 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
 
     console.log('This call', $webRTC.call[0])
     checkSources()
-    let video_codecs = window.RTCRtpSender.getCapabilities('video')
-    let audio_codecs = window.RTCRtpSender.getCapabilities('audio')
-    let custom_codecs = []
-
-    let codec
-    // for (codec in video_codecs.codecs) {
-    //   let this_codec = video_codecs.codecs[codec];
-    //   console.log('this codec', this_codec)
-    //   if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
-    //     custom_codecs.push(this_codec);
-    //   }
-
-    // }
-
-    let transceiverList = peer1._pc.getTransceivers()
 
     if (video) {
         //Set defauklt camera id in store
         let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
         $webRTC.cameraId = camera[0].deviceId
         // select the desired transceiver
-        transceiverList[1].setCodecPreferences(custom_codecs)
     }
     $webRTC.active = true
 
@@ -506,30 +490,13 @@ const answerCall = (msg, contact, key, offchain = false) => {
         $videoGrid.showVideoGrid = true
 
         let peer2 = await startPeer2(stream, video)
-        //Check codecs
-        let custom_codecs = []
-        let video_codecs = window.RTCRtpSender.getCapabilities('video')
-        let audio_codecs = window.RTCRtpSender.getCapabilities('audio')
-        let codec
-        // for (codec in video_codecs.codecs) {
-        //   let this_codec = video_codecs.codecs[codec];
-        //   console.log('this codec', this_codec)
-        //   if (this_codec.mimeType === "video/H264" && this_codec.sdpFmtpLine.substring(0, 5) === "level" || this_codec.mimeType === "video/VP9") {
-        //     custom_codecs.push(this_codec);
-        //   }
-        //   console.log(custom_codecs);
-        // }
-
-        // select the desired transceiver
-        let transceivers = peer2._pc.getTransceivers()
+        
         if (video) {
             //Set defauklt camera id in store
             let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
             $webRTC.cameraId = camera[0].deviceId
-            transceivers[1].setCodecPreferences(custom_codecs)
         }
 
-        console.log('codec set')
         //Set webRTC store update for call
         $webRTC.call[0].peer = peer2
         $webRTC.myStream = stream
