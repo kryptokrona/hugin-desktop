@@ -14,11 +14,11 @@ const config = {
     },
     resolve: {
         alias: {
-            $lib: path.resolve('./src/lib'),
-            $components: path.resolve('./src/components'),
+            $lib: path.resolve('/src/lib'),
+            $components: path.resolve('/src/components'),
         },
     },
-    root: './',
+    root: '/',
 }
 
 export default config

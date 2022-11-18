@@ -2,14 +2,14 @@
 import {fade} from 'svelte/transition'
 import {onDestroy, onMount} from 'svelte'
 import {messages} from '$lib/stores/messages.js'
-import ChatBubble from '/src/components/chat/ChatBubble.svelte'
-import ChatInput from '/src/components/chat/ChatInput.svelte'
-import ChatList from '/src/components/chat/ChatList.svelte'
-import AddChat from '/src/components/chat/AddChat.svelte'
+import ChatBubble from '$components/chat/ChatBubble.svelte'
+import ChatInput from '$components/chat/ChatInput.svelte'
+import ChatList from '$components/chat/ChatList.svelte'
+import AddChat from '$components/chat/AddChat.svelte'
 import {boards, notify, transactions, user} from '$lib/stores/user.js'
-import Rename from '/src/components/chat/Rename.svelte'
-import BackDrop from '/src/components/popups/BackDrop.svelte'
-import SendTransaction from '/src/components/finance/SendTransaction.svelte'
+import Rename from '$components/chat/Rename.svelte'
+import BackDrop from '$components/popups/BackDrop.svelte'
+import SendTransaction from '$components/finance/SendTransaction.svelte'
 
 let chat
 let active_contact
@@ -122,7 +122,7 @@ const sendMsg = (e) => {
     if (e.detail.offChain) {
         offChain = true
     }
-    
+
     if (e.detail.beam) {
       beam = true
       offChain = true;
