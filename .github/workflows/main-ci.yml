@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: "Build: ${{ matrix.config.name }}"
+    name: "Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}"
     runs-on: ${{ matrix.config.os }}
 
     strategy:
@@ -24,16 +24,27 @@ jobs:
         config:
           - {
             name: "Windows Latest",
-            os: windows-latest
+            os: windows-latest,
+            platform: x64
           }
           - {
             name: "Ubuntu Latest",
-            os: ubuntu-latest
+            os: ubuntu-latest,
+            platform: x64
+          }
+          - {
+            name: "macOS-11",
+            os: macos-11,
+            platform: x64
           }
           - {
             name: "macOS Latest",
             os: macos-latest,
+            platform: arm64
           }
+
+    env:
+      PLATFORM: ${{ matrix.config.platform }}
 
     steps:
       - name: Check out Git repository
@@ -44,16 +55,21 @@ jobs:
         with:
           node-version: 16.16.0
 
-      - name: Build Electron app
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.HUGIN_DESKTOP_SECRET }}
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.os == 'windows-latest'
+        run: npm run build
 
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.os == 'ubuntu-latest'
+        run: npm run build:linux-$PLATFORM
+
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.os == 'macos-11'
+        run: npm run build:mac-$PLATFORM
+
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.os == 'macos-latest'
+        run: npm run build:mac-$PLATFORM
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: regex-match
