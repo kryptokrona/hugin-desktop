@@ -75,33 +75,33 @@ jobs:
         if: matrix.config.os == 'macos-latest'
         run: npm run build:mac-$PLATFORM
 
-#      - uses: actions-ecosystem/action-regex-match@v2
-#        id: regex-match
-#        with:
-#          text: ${{ github.event.comment.body }}
-#          regex: '```typescript([\s\S]*)```'
-#          flags: gm>
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ github.event.comment.body }}
+          regex: '```^(\S.*)\.dmg$```'
+          flags: gm>
 
-#      - name: "Upload ${{ matrix.config.name }} Artifact"
-#        uses: actions/upload-artifact@v3
-#        if: matrix.config.os == 'windows-latest'
-#        with:
-#          name: windows-latest-build
-#          path: |
-#            dist/Hugin Messenger Setup.exe
-#
-#      - name: "Upload ${{ matrix.config.name }} Artifact"
-#        uses: actions/upload-artifact@v3
-#        if: matrix.config.os == 'ubuntu-latest'
-#        with:
-#          name: ubuntu-latest-build
-#          path: |
-#            dist/Hugin Messenger Setup
-#
-#      - name: "Upload ${{ matrix.config.name }} Artifact"
-#        uses: actions/upload-artifact@v3
-#        if: matrix.config.os == 'macos-latest'
-#        with:
-#          name: macos-latest-build
-#          path: |
-#            dist/Hugin Messenger Setup.dmg
+      - name: "Upload ${{ matrix.config.name }} Artifact"
+        uses: actions/upload-artifact@v3
+        if: matrix.config.os == 'windows-latest'
+        with:
+          name: windows-latest-build
+          path: |
+            dist/${{ steps.regex-match.outputs.group0 }}.exe
+
+      - name: "Upload ${{ matrix.config.name }} Artifact"
+        uses: actions/upload-artifact@v3
+        if: matrix.config.os == 'ubuntu-latest'
+        with:
+          name: ubuntu-latest-build
+          path: |
+            dist/${{ steps.regex-match.outputs.group0 }}
+
+      - name: "Upload ${{ matrix.config.name }} Artifact"
+        uses: actions/upload-artifact@v3
+        if: matrix.config.os == 'macos-latest'
+        with:
+          name: macos-latest-build
+          path: |
+            dist/${{ steps.regex-match.outputs.group0 }}.dmg
