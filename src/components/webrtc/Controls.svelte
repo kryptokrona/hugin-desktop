@@ -7,7 +7,7 @@ import Screenshare from '$components/icons/Screenshare.svelte'
 import CallSlash from '$components/icons/CallSlash.svelte'
 import MessageIcon from '$components/icons/MessageIcon.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
-import { webRTC } from '$lib/stores/user.js'
+import { webRTC, rtc_groups } from '$lib/stores/user.js'
 import VideoSources from '$components/chat/VideoSources.svelte'
 import Contacts from '/src/components/chat/Contacts.svelte'
 import { onDestroy, onMount } from 'svelte'
@@ -65,6 +65,12 @@ const toggleVideo = () => {
     video = !video
     $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
 }
+
+const showMessages = () => {
+    $rtc_groups.unread = []
+    $rtc_groups.unread =  $rtc_groups.unread
+    $videoGrid.showChat = !$videoGrid.showChat
+}
 </script>
 
 <div class="wrapper layered-shadow">
@@ -110,7 +116,7 @@ const toggleVideo = () => {
         <HideVideoGrid />
     </div>
     <div>
-        <div class="icon" on:click="{() => ($videoGrid.showChat = !$videoGrid.showChat)}">
+        <div class="icon" on:click="{() => showMessages()}">
             <MessageIcon />
         </div>
     </div>

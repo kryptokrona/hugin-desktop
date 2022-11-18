@@ -35,6 +35,10 @@ onDestroy(() => {
 
 //Listens for new messages from backend
 window.api.receive('groupRtcMsg', (data) => {
+    if (!$videoGrid.showChat) {
+        $rtc_groups.unread.push(data)
+        $rtc_groups.unread = $rtc_groups.unread
+    }
     if (data.k === $user.huginAddress.substring(0, 99)) return
     console.log('Group rtc message', data.group)
     console.log('This group rtc key', $webRTC.groupCall)

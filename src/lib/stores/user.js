@@ -40,6 +40,7 @@ export const groups = writable({
 export const rtc_groups = writable({
     addGroup: false,
     replyTo: {reply: false},
+    unread: []
 })
 
 export const misc = writable({

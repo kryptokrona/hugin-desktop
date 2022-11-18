@@ -41,7 +41,6 @@ let isTalking = false
 
 $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.chat)) {
     isTalking = true
-    console.log('Is talking', call.chat)
 } else {
     isTalking = false
 }

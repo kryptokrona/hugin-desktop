@@ -1,10 +1,12 @@
 <script>
 import { page } from '$app/stores'
 import { fade } from 'svelte/transition'
-import { notify } from '$lib/stores/user.js'
+import { notify, rtc_groups } from '$lib/stores/user.js'
+import { videoGrid } from '$lib/stores/layout-state.js'
 
 let thispage
 let unread = false
+let rtc_unread = false
 $: thispage = $page.url.pathname === '/messages'
 
 $: if ($notify.unread.some((a) => a.type === 'message')) {
@@ -12,6 +14,13 @@ $: if ($notify.unread.some((a) => a.type === 'message')) {
 } else {
     unread = false
 }
+
+$: if (!$videoGrid.showChat && $rtc_groups.unread.length && $videoGrid.showVideoGrid) {
+    unread = true
+} else {
+    unread = false
+}
+
 </script>
 
 {#if thispage}
@@ -19,7 +28,7 @@ $: if ($notify.unread.some((a) => a.type === 'message')) {
 {/if}
 
 {#if unread}
-    <div class="unread" in:fade></div>
+    <div class="unread" class:grid={$videoGrid.showVideoGrid && !$videoGrid.showChat} in:fade></div>
 {/if}
 
 <svg
@@ -93,5 +102,9 @@ svg {
     width: 5px;
     left: 2px;
     box-shadow: 0 0 10px white;
+}
+
+.grid {
+    left: 94% !important;
 }
 </style>
