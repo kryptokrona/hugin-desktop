@@ -1,15 +1,15 @@
 <script>
 import { misc, user, userAvatar } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
-import GroupIcon from '/src/components/icons/GroupIcon.svelte'
-import MessageIcon from '/src/components/icons/MessageIcon.svelte'
-import SettingsIcon from '/src/components/icons/SettingsIcon.svelte'
-import XkrLogo from '/src/components/icons/XkrLogo.svelte'
+import GroupIcon from '$components/icons/GroupIcon.svelte'
+import MessageIcon from '$components/icons/MessageIcon.svelte'
+import SettingsIcon from '$components/icons/SettingsIcon.svelte'
+import XkrLogo from '$components/icons/XkrLogo.svelte'
 import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores.js'
 import { layoutState } from '$lib/stores/layout-state.js'
 import AlphaIcon from '$components/icons/AlphaIcon.svelte'
-import Logout from '../icons/Logout.svelte'
+import Logout from '$components/icons/Logout.svelte'
 
 let sync
 let avatar

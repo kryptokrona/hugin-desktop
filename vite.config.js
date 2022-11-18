@@ -16,9 +16,10 @@ const config = {
         alias: {
             $lib: path.resolve('/src/lib'),
             $components: path.resolve('/src/components'),
+            $routes: path.resolve('/src/routes'),
         },
     },
-    root: '/',
+    // root: '/',
 }
 
 export default config

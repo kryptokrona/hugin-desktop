@@ -1,6 +1,6 @@
 <script>
     import {fade} from 'svelte/transition'
-    import FillButton from '/src/components/buttons/FillButton.svelte'
+    import FillButton from '$components/buttons/FillButton.svelte'
     import {groups, misc, user} from '$lib/stores/user.js'
     import {onMount} from 'svelte'
     import {goto} from '$app/navigation'
@@ -111,7 +111,7 @@
 {/if}
 </main>
 <style lang="scss">
-    
+
   main {
       display: flex;
       height: 100vh;
