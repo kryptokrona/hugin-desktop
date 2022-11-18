@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import {misc, user} from '$lib/stores/user.js'
-    import FillButton from '/src/components/buttons/FillButton.svelte'
+    import FillButton from '$components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
     import NodeSelector from '$components/popups/NodeSelector.svelte'
 
