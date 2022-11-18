@@ -75,23 +75,13 @@ jobs:
         if: matrix.config.os == 'macos-latest'
         run: npm run build:mac-$PLATFORM
 
-      - uses: actions-ecosystem/action-regex-match@v2
-        id: regex-match
-        with:
-          text: ${{ github.event.comment.body }}
-          regex: '(.*)\.[^.]*$'
-
-      - name: Test
-        run: |
-          echo "${{ steps.regex-match.outputs.match }}"
-
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
         if: matrix.config.os == 'windows-latest'
         with:
           name: windows-latest-build
           path: |
-            dist/${{ steps.regex-match.outputs.group0 }}.exe
+            dist/HuginMessenger.exe
 
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
@@ -99,7 +89,7 @@ jobs:
         with:
           name: ubuntu-latest-build
           path: |
-            dist/${{ steps.regex-match.outputs.group0 }}
+            dist/HuginMessenger
 
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
@@ -107,4 +97,4 @@ jobs:
         with:
           name: macos-latest-build
           path: |
-            dist/${{ steps.regex-match.outputs.group0 }}.dmg
+            dist/HuginMessenger.dmg
