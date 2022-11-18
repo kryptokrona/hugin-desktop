@@ -1,0 +1,64 @@
+name: Hugin Desktop Pull Request Pipeline
+
+on: [ pull_request ]
+
+jobs:
+  build:
+    name: "Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}"
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        config:
+          - {
+            name: "Windows Latest",
+            os: windows-latest,
+            platform: x64
+          }
+          - {
+            name: "Ubuntu Latest",
+            os: ubuntu-latest,
+            platform: x64
+          }
+          - {
+            name: "macOS-11",
+            os: macos-11,
+            platform: x64
+          }
+          - {
+            name: "macOS Latest",
+            os: macos-latest,
+            platform: arm64
+          }
+
+    env:
+      PLATFORM: ${{ matrix.config.platform }}
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.16.0
+
+      - name: Install dependencies
+        run: npm install --quiet
+
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.os == 'windows-latest'
+        run: npm run build
+
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.os == 'ubuntu-latest'
+        run: npm run build:linux-$PLATFORM
+
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.name == 'macOS-11'
+        run: npm run build:mac-$PLATFORM
+
+      - name: Build ${{ matrix.config.name }}
+        if: matrix.config.name == 'macOS Latest'
+        run: npm run build:mac-$PLATFORM
