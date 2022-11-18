@@ -1,6 +1,6 @@
 <script>
     //Global CSS
-    import '/src/lib/theme/global.scss'
+    import '$lib/theme/global.scss'
 
     //Import window apis
     import '$lib/window-api/notifications.js'
@@ -11,20 +11,20 @@
     import {messages} from '$lib/stores/messages.js'
 
     import {onMount} from 'svelte'
-    import LeftMenu from '../components/navbar/LeftMenu.svelte'
-    import RightMenu from '/src/components/navbar/RightMenu.svelte'
-    import IncomingCall from '/src/components/webrtc/IncomingCall.svelte'
-    import Webrtc from '/src/components/webrtc/Calls.svelte'
+    import LeftMenu from '$components/navbar/LeftMenu.svelte'
+    import RightMenu from '$components/navbar/RightMenu.svelte'
+    import IncomingCall from '$components/webrtc/IncomingCall.svelte'
+    import Webrtc from '$components/webrtc/Calls.svelte'
     import TrafficLights from '$components/TrafficLights.svelte'
-    import CallerMenu from '/src/components/webrtc/CallerMenu.svelte'
-    import PeerAudio from '/src/components/webrtc/PeerAudio.svelte'
+    import CallerMenu from '$components/webrtc/CallerMenu.svelte'
+    import PeerAudio from '$components/webrtc/PeerAudio.svelte'
     import VideoGrid from '$components/webrtc/VideoGrid.svelte'
     import {page} from '$app/stores'
-    import Notification from '/src/components/popups/Notification.svelte'
+    import Notification from '$components/popups/Notification.svelte'
     import toast, {Toaster} from "svelte-french-toast";
     import {appUpdateState} from "$components/updater/update-store.js";
     import Updater from "$components/updater/Updater.svelte";
-    import OptimizeToast from '../components/custom-toasts/OptimizeToast.svelte'
+    import OptimizeToast from '$components/custom-toasts/OptimizeToast.svelte'
 
 
     let ready = false

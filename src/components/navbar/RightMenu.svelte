@@ -5,21 +5,21 @@ import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/s
 
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
-import SimpleAdd from '/src/components/icons/SimpleAdd.svelte'
-import PayIcon from '/src/components/icons/PayIcon.svelte'
-import MicIcon from '/src/components/icons/MicIcon.svelte'
-import MuteIcon from '/src/components/icons/MuteIcon.svelte'
-import HomeIcon from '/src/components/icons/HomeIcon.svelte'
-import Lock from '../icons/Lock.svelte'
+import SimpleAdd from '$components/icons/SimpleAdd.svelte'
+import PayIcon from '$components/icons/PayIcon.svelte'
+import MicIcon from '$components/icons/MicIcon.svelte'
+import MuteIcon from '$components/icons/MuteIcon.svelte'
+import HomeIcon from '$components/icons/HomeIcon.svelte'
+import Lock from '$components/icons/Lock.svelte'
 
-import CallIcon from '/src/components/icons/CallIcon.svelte'
-import CallSlash from '/src/components/icons/CallSlash.svelte'
-import VideoIcon from '/src/components/icons/VideoIcon.svelte'
-import VideoSlash from '/src/components/icons/VideoSlash.svelte'
+import CallIcon from '$components/icons/CallIcon.svelte'
+import CallSlash from '$components/icons/CallSlash.svelte'
+import VideoIcon from '$components/icons/VideoIcon.svelte'
+import VideoSlash from '$components/icons/VideoSlash.svelte'
 import { layoutState, videoGrid } from '$lib/stores/layout-state.js'
 import ListButton from '$components/icons/ListButton.svelte'
 import Exit from '$components/icons/Exit.svelte'
-import Lightning from '../icons/Lightning.svelte'
+import Lightning from '$components/icons/Lightning.svelte'
 
 const dispatch = createEventDispatcher()
 let contact
