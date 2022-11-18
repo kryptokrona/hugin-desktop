@@ -2,8 +2,10 @@
 
     //TODO move in to a store or seperate group file
 
+    import {goto} from "$app/navigation";
+
     const groups = [
-        {name: 'Random1', key: '123'},
+        {name: 'test', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
         {name: 'Random2', key: '123'},
         {name: 'Random3', key: '123'},
         {name: 'Random4', key: '123'},
@@ -13,8 +15,23 @@
         {name: 'Random8', key: '123'},
     ]
 
-    const joinGroup = (group) => {
-        console.log('want to join ', group)
+
+    const addNewGroup = (group) => {
+        if (group.length < 32) return
+        let data = {
+            m: 'Added group',
+            n: group.name,
+            hash: Date.now() * 2,
+            t: Date.now().toString(),
+            s: '',
+            k: group.key,
+            sent: false,
+            r: '',
+            g: group.key,
+            h: parseInt(Date.now()),
+        }
+        window.api.addGroup(data)
+        goto('/groups')
     }
 
 </script>
@@ -27,7 +44,7 @@
         {#each groups as group}
             <div class="row">
                 <p>{group.name}</p>
-                <button on:click={() => joinGroup(group)}>Join</button>
+                <button on:click={() => addNewGroup(group)}>Join</button>
             </div>
         {/each}
     </div>
