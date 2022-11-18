@@ -18,8 +18,16 @@
 
 </script>
 
-<slot/>
+<main>
+    <slot/>
+</main>
 
 <style lang="scss">
+
+  main {
+    height: 100vh;
+    margin: 0 20px 0 95px;
+    padding: 15px 20px;
+  }
 
 </style>

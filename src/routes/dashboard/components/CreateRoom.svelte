@@ -1,7 +1,7 @@
 <script>
-import { goto } from '$app/navigation'
+    import {goto} from '$app/navigation'
 
-const createRoom = () => {
+    const createRoom = () => {
     let video = true
     console.log('creating room..')
     window.api.createRoom(video)
@@ -23,7 +23,6 @@ const createRoom = () => {
     flex-direction: column;
     gap: 1rem;
     cursor: pointer;
-    margin-top: 3rem;
     height: 100%;
     margin-right: 1rem;
 

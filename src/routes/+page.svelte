@@ -2,9 +2,8 @@
     import {fade} from 'svelte/transition'
     import FillButton from '/src/components/buttons/FillButton.svelte'
     import {groups, misc, user} from '$lib/stores/user.js'
-    import {onMount, onDestroy} from 'svelte'
+    import {onMount} from 'svelte'
     import {goto} from '$app/navigation'
-    import toast from 'svelte-french-toast'
     import {Moon} from "svelte-loading-spinners";
     import NodeSelector from "$components/popups/NodeSelector.svelte";
 
@@ -115,7 +114,6 @@
     
   main {
       display: flex;
-      margin-left: 85px;
       height: 100vh;
       overflow: hidden;
       z-index: 3;

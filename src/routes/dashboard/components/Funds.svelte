@@ -56,7 +56,7 @@ async function getBalance() {
 
 <style lang="scss">
 .cards {
-    margin-top: 3rem;
+    height: 100%;
     display: grid;
     grid-gap: 1rem;
     width: 100%;
@@ -71,6 +71,7 @@ async function getBalance() {
         border: 1px solid var(--card-border);
         border-radius: 0.4rem;
         grid-column: span 6 / span 6;
+      height: 100px;
 
         p {
             margin: 0;

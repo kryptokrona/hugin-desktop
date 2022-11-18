@@ -154,7 +154,6 @@
 <style lang="scss">
   main {
     height: 100vh;
-    width: 100%;
     padding: 4rem;
     display: flex;
     justify-content: center;
