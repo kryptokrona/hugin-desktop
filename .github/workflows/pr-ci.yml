@@ -1,18 +1,6 @@
-name: Hugin Desktop Main Pipeline
+name: Hugin Desktop Pull Request Pipeline
 
-env:
-  GITHUB_REGISTRY: 'ghcr.io'
-  GITHUB_OWNER: 'kryptokrona'
-  GH_TOKEN: ${{ secrets.HUGIN_DESKTOP_SECRET }}
-
-on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '*.md'
-      - '.run/**'
-      - '.github/ISSUE_TEMPLATE/**'
+on: [ pull_request ]
 
 jobs:
   build:
@@ -74,35 +62,3 @@ jobs:
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.name == 'macOS Latest'
         run: npm run build:mac-$PLATFORM
-
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.os == 'windows-latest'
-        with:
-          name: windows-latest-build
-          path: |
-            dist/Hugin Messenger.exe
-
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.os == 'ubuntu-latest'
-        with:
-          name: ubuntu-latest-build
-          path: |
-            dist/Hugin Messenger
-
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.name == 'macOS-11'
-        with:
-          name: macos-latest-build
-          path: |
-            dist/Hugin Messenger.dmg
-
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.name == 'macOS Latest'
-        with:
-          name: macos-latest-build
-          path: |
-            dist/Hugin Messenger.dmg
