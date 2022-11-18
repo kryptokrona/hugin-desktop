@@ -1,14 +1,14 @@
 <script>
 import { fade } from 'svelte/transition'
-import BoardWindow from '/src/components/chat/BoardWindow.svelte'
-import ChatInput from '/src/components/chat/ChatInput.svelte'
+import BoardWindow from '$components/chat/BoardWindow.svelte'
+import ChatInput from '$components/chat/ChatInput.svelte'
 import { boardMessages } from '$lib/stores/boardmsgs.js'
-import BoardMessage from '/src/components/chat/BoardMessage.svelte'
-import BoardStats from '/src/components/chat/BoardStats.svelte'
+import BoardMessage from '$components/chat/BoardMessage.svelte'
+import BoardStats from '$components/chat/BoardStats.svelte'
 import { boards, notify, user } from '$lib/stores/user.js'
 import { onDestroy, onMount } from 'svelte'
-import AddBoard from '/src/components/chat/AddBoard.svelte'
-import RightMenu from '/src/components/navbar/RightMenu.svelte'
+import AddBoard from '$components/chat/AddBoard.svelte'
+import RightMenu from '$components/navbar/RightMenu.svelte'
 import { page } from '$app/stores'
 
 let boardMsgs = []

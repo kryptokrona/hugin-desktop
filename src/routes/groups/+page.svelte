@@ -1,15 +1,15 @@
 <script>
 import {fade} from 'svelte/transition'
-import ChatInput from '/src/components/chat/ChatInput.svelte'
+import ChatInput from '$components/chat/ChatInput.svelte'
 import {groupMessages} from '$lib/stores/groupmsgs.js'
-import GroupMessage from '/src/components/chat/GroupMessage.svelte'
-import GroupList from '/src/components/chat/GroupList.svelte'
+import GroupMessage from '$components/chat/GroupMessage.svelte'
+import GroupList from '$components/chat/GroupList.svelte'
 import {groups, notify, user} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
-import AddGroup from '/src/components/chat/AddGroup.svelte'
+import AddGroup from '$components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
-import BlockContact from '/src/components/chat/BlockContact.svelte'
+import BlockContact from '$components/chat/BlockContact.svelte'
 
 let boardMsgs = []
 let replyto = ''
@@ -322,11 +322,11 @@ function addHash(data) {
     //     console.log('reacting to scroll?')
     //     scrollGroups = [
     //     ...scrollGroups,
-        
+
     //     ...fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1),
     //     ];
     // }
-    
+
     // function loadMoreMessages() {
     //     pageNum++
     //     console.log('want to load more')

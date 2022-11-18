@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { misc, messageWallet, groups } from '$lib/stores/user.js'
 import { onDestroy, onMount } from 'svelte'
-import Button from '/src/components/buttons/Button.svelte'
+import Button from '$components/buttons/Button.svelte'
 import FillButton from '/src/components/buttons/FillButton.svelte'
 import NodeSelector from '$components/popups/NodeSelector.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
