@@ -4,7 +4,7 @@ import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher } from 'svelte'
 import FillButton from '$components/buttons/FillButton.svelte'
 import { user } from '$lib/stores/user.js'
-import Button from '../buttons/Button.svelte'
+import Button from '$components/buttons/Button.svelte'
 
 const dispatch = createEventDispatcher()
 
