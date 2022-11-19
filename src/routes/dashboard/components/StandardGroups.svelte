@@ -3,21 +3,19 @@
     //TODO move in to a store or seperate group file
 
     import {goto} from "$app/navigation";
+    import Button from "$components/buttons/Button.svelte"
 
-    const groups = [
-        {name: 'test', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
-        {name: 'Random2', key: '123'},
-        {name: 'Random3', key: '123'},
-        {name: 'Random4', key: '123'},
-        {name: 'Random5', key: '123'},
-        {name: 'Random6', key: '123'},
-        {name: 'Random7', key: '123'},
-        {name: 'Random8', key: '123'},
+    let groups = [
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
     ]
+
+    $: groups
 
 
     const addNewGroup = (group) => {
         if (group.length < 32) return
+        groups.filter(a => a.key !== group.key)
         let data = {
             m: 'Added group',
             n: group.name,
@@ -44,7 +42,7 @@
         {#each groups as group}
             <div class="row">
                 <p>{group.name}</p>
-                <button on:click={() => addNewGroup(group)}>Join</button>
+                <Button text="Join" disabled={false} on:click={() => addNewGroup(group)}/>
             </div>
         {/each}
     </div>

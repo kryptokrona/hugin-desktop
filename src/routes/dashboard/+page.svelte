@@ -8,6 +8,7 @@
     import FillButton from '$components/buttons/FillButton.svelte'
     import {openURL} from '$lib/utils/utils.js'
     import StandardGroups from "./components/StandardGroups.svelte";
+    import CreateRoom from './components/CreateRoom.svelte'
 
     let date = new Date()
     let hrs = date.getHours()
@@ -44,6 +45,7 @@
 </div>
 <div class="grid" style="margin-top: 20px">
     <StandardGroups/>
+    <CreateRoom />
 </div>
 
 
