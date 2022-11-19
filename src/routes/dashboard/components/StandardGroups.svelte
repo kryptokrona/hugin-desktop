@@ -9,13 +9,9 @@
         {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
         {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
     ]
-
-    $: groups
-
-
+    
     const addNewGroup = (group) => {
         if (group.length < 32) return
-        groups.filter(a => a.key !== group.key)
         let data = {
             m: 'Added group',
             n: group.name,
