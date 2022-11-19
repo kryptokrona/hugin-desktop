@@ -2,7 +2,7 @@
 import { createEventDispatcher, onMount } from 'svelte'
 import { fade } from 'svelte/transition'
 import { boards } from '$lib/stores/user.js'
-import ActiveBoard from './ActiveBoard.svelte'
+import ActiveBoard from '$components/chat/ActiveBoard.svelte'
 
 const dispatch = createEventDispatcher()
 let active_boards = []
