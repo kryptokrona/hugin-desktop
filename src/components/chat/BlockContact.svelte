@@ -3,26 +3,26 @@
     import { fade, fly } from 'svelte/transition'
     import { createEventDispatcher } from 'svelte'
     import { user } from '$lib/stores/user'
-    import FillButton from '../buttons/FillButton.svelte'
+    import FillButton from '$components/buttons/FillButton.svelte'
 
     const blockContact = () => {
         window.api.send('block', $user.block.address, $user.block.name)
         $user.block = false
     }
     </script>
-    
+
     <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click={() => $user.block = false}>
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
             <h3 in:fade>Block contact?</h3>
-            
-                <FillButton 
-                    red={true} 
-                    text="Block" 
+
+                <FillButton
+                    red={true}
+                    text="Block"
                     disabled={false}
                     on:click={blockContact} />
         </div>
     </div>
-    
+
     <style lang="scss">
     .backdrop {
         position: fixed;
@@ -36,12 +36,12 @@
         background-color: var(--backdrop-color);
         z-index: 103;
     }
-    
+
     h3 {
         margin: 0;
         color: var(--title-color);
     }
-    
+
     .card {
         background-color: var(--backgound-color);
         border: 1px solid var(--card-border);
@@ -54,11 +54,10 @@
         justify-content: space-between;
         align-items: center;
     }
-    
+
     p {
         font-size: 12px;
         color: white;
         font-family: 'Montserrat';
     }
     </style>
-    

@@ -9,8 +9,8 @@ import Time from 'svelte-time'
 import ReplyArrow from '$components/icons/ReplyArrow.svelte'
 import RepliedArrow from '$components/icons/RepliedArrow.svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
-import Dots from '../icons/Dots.svelte'
-import FillButton from '../buttons/FillButton.svelte'
+import Dots from '$components/icons/Dots.svelte'
+import FillButton from '$components/buttons/FillButton.svelte'
 
 export let msg
 export let msgFrom

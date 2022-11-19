@@ -5,7 +5,7 @@
     import Button from '$components/buttons/Button.svelte'
     import {createEventDispatcher} from 'svelte'
     import Time from 'svelte-time'
-    import FillButton from '../buttons/FillButton.svelte'
+    import FillButton from '$components/buttons/FillButton.svelte'
     import Lightning from "$components/icons/Lightning.svelte";
 
     export let message
