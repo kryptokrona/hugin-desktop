@@ -513,10 +513,12 @@ const saveMsg = (message, addr, sent, timestamp) => {
 
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
 const saveHash = (txHash) => {
-    if (txHash == undefined || txHash.length < 64) {
+    if (txHash == undefined) {
         console.log('caught undefined hash')
         return
     }
+
+    if (txHash.length !== 64) return
 
     database.run(
         `REPLACE INTO knownTxs (

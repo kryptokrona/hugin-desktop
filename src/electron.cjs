@@ -817,7 +817,8 @@ async function openWallet(walletName, password) {
 async function backgroundSyncMessages(checkedTxs = false) {
     if (checkedTxs) {
         console.log('First start, push knownTxs db to known pool txs')
-        known_pool_txs = checkedTxs
+        known_pool_txs = checkedTxs.slice(checkedTxs.length - 100, checkedTxs.length - 1)
+        console.log('known-pools', known_pool_txs)
     }
 
     console.log('Background syncing...')
