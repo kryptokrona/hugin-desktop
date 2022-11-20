@@ -74,7 +74,7 @@
 <style lang="scss">
   .wrapper {
     grid-column: span 6 / span 6;
-    height: calc(60% - 113px);
+    height: calc(60% - 100px);
 
     .header {
       display: flex;
