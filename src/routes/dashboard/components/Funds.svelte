@@ -56,7 +56,7 @@
 
 <style lang="scss">
   .cards {
-    height: 40%;
+    height: 240px;
     display: grid;
     width: 100%;
     grid-template-columns: repeat(12, minmax(0, 1fr));

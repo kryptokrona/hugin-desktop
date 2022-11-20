@@ -8,6 +8,18 @@
     let groups = [
         {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
         {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
+        {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},
+        {name: 'Programming1', key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0'},
     ]
     
     const addNewGroup = (group) => {
@@ -50,7 +62,7 @@
     grid-column: span 6 / span 6;
     position: relative;
     width: 100%;
-    height: calc(60% - 113px);
+    height: calc(100% );
     border-right: 1px solid var(--border-color);
 
     h3 {
@@ -70,7 +82,7 @@
 
   .list {
     overflow: scroll;
-    height: calc(100%);
+    height: calc(100% - 415px);
 
     &::-webkit-scrollbar {
       display: none;
