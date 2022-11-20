@@ -1,7 +1,6 @@
 {
     "appId": "com.electron.hugin",
     "productName": "Hugin Messenger",
-    "artifactName": "${productName}.${ext}",
     "directories": {
         "output": "dist"
     },
@@ -25,7 +24,11 @@
         ]
     },
     "files": [
-        "src/backend/*",
+        "src/backend/electron.cjs",
+        "src/backend/beam.cjs",
+        "src/backend/database.cjs",
+        "src/backend/preload.cjs",
+        "src/backend/sdp.cjs",
         {
             "from": "build",
             "to": ""
