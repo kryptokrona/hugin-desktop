@@ -74,7 +74,7 @@
 <style lang="scss">
   .wrapper {
     grid-column: span 6 / span 6;
-    height: calc(60% - 100px);
+    height: calc(60% - 70px);
 
     .header {
       display: flex;
@@ -93,7 +93,6 @@
       --thumbBG: #3337;
       scrollbar-width: thin;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
-      height: 100%;
     }
 
     .transactions::-webkit-scrollbar {
