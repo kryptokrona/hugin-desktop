@@ -2,9 +2,9 @@
 import { fade } from 'svelte/transition'
 import { misc, messageWallet, groups } from '$lib/stores/user.js'
 import { onDestroy, onMount } from 'svelte'
-import Button from '$components/buttons/Button.svelte'
-import FillButton from '$components/buttons/FillButton.svelte'
-import NodeSelector from '$components/popups/NodeSelector.svelte'
+import Button from '$lib/components/buttons/Button.svelte'
+import FillButton from '$lib/components/buttons/FillButton.svelte'
+import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
 import { get_avatar } from '$lib/utils/hugin-utils'
 

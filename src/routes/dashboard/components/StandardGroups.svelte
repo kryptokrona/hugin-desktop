@@ -3,7 +3,7 @@
     //TODO move in to a store or seperate group file
 
     import {goto} from "$app/navigation";
-    import Button from "$components/buttons/Button.svelte"
+    import Button from "$lib/components/buttons/Button.svelte"
 
     let groups = [
         {name: 'Hugin', key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8'},

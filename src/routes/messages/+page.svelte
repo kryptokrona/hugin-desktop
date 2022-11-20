@@ -2,14 +2,14 @@
 import {fade} from 'svelte/transition'
 import {onDestroy, onMount} from 'svelte'
 import {messages} from '$lib/stores/messages.js'
-import ChatBubble from '$components/chat/ChatBubble.svelte'
-import ChatInput from '$components/chat/ChatInput.svelte'
-import ChatList from '$components/chat/ChatList.svelte'
-import AddChat from '$components/chat/AddChat.svelte'
+import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
+import ChatInput from '$lib/components/chat/ChatInput.svelte'
+import ChatList from '$lib/components/chat/ChatList.svelte'
+import AddChat from '$lib/components/chat/AddChat.svelte'
 import {boards, notify, transactions, user} from '$lib/stores/user.js'
-import Rename from '$components/chat/Rename.svelte'
-import BackDrop from '$components/popups/BackDrop.svelte'
-import SendTransaction from '$components/finance/SendTransaction.svelte'
+import Rename from '$lib/components/chat/Rename.svelte'
+import BackDrop from '$lib/components/popups/BackDrop.svelte'
+import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 
 let chat
 let active_contact

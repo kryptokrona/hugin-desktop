@@ -1,8 +1,8 @@
 <script>
-import Pen from '$components/icons/Pen.svelte'
+import Pen from '$lib/components/icons/Pen.svelte'
 import { user } from '$lib/stores/user.js'
 import { fade, fly } from 'svelte/transition'
-import FillButton from '$components/buttons/FillButton.svelte'
+import FillButton from '$lib/components/buttons/FillButton.svelte'
 
 let open
 let username

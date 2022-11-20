@@ -2,7 +2,7 @@
 import {fade} from 'svelte/transition'
 import { misc, user} from '$lib/stores/user.js'
 import {Moon} from "svelte-loading-spinners";
-import ArrowRight from "$components/icons/ArrowRight.svelte";
+import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
 import {goto} from '$app/navigation'
 import { onDestroy, onMount } from 'svelte'
 import toast from 'svelte-french-toast'
