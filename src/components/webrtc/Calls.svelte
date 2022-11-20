@@ -199,7 +199,7 @@ async function checkSources() {
     $webRTC.devices = devices
 }
 
-async function changeVideoSource(device, oldSrc, chat) {
+async function changeVideoSource(device, id) {
     let current = $webRTC.myStream
     //Set video boolean to stop video
     $webRTC.video = false
@@ -223,7 +223,7 @@ async function changeVideoSource(device, oldSrc, chat) {
     //Set video boolean to play video
     $webRTC.video = true
     if ($webRTC.screenshare) return
-    $webRTC.cameraId = device.deviceId
+    $webRTC.cameraId = id
 }
 
 async function changeAudioSource(device, oldSrc, chat) {
@@ -268,7 +268,7 @@ async function changeCamera(video, id, chat) {
                 },
             })
             .then(function (device) {
-                changeVideoSource(device)
+                changeVideoSource(device, id)
             })
             .catch((e) => {
                 console.log('error', e)
@@ -490,7 +490,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
         $videoGrid.showVideoGrid = true
 
         let peer2 = await startPeer2(stream, video)
-        
+
         if (video) {
             //Set defauklt camera id in store
             let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
