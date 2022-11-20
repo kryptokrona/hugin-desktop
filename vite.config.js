@@ -14,7 +14,6 @@ const config = {
     },
     resolve: {
         alias: {
-            $components: path.resolve('src/components'),
             $routes: path.resolve('src/routes'),
         },
         preserveSymlinks: true
