@@ -17,6 +17,13 @@
             "NSCameraUsageDescription": "Please give us access to your camera"
         }
     },
+    "linux": {
+        "icon": "build/icon.png",
+        "target": [
+            "deb",
+            "snap"
+        ]
+    },
     "files": [
         "src/backend/*",
         {
@@ -24,5 +31,7 @@
             "to": ""
         }
     ],
-    "extraResources": ["bin/*"]
+    "extraResources": [
+        "bin/*"
+    ]
 }
