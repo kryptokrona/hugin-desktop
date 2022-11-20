@@ -72,7 +72,7 @@ const groupRouteAndMenu = () => {
         <div on:click="{() => goto('/settings')}" class="button">
             <SettingsIcon />
         </div>
-        <a class='button' href="/static" on:click={handleLogout}>
+        <a class='button' href="/" on:click={handleLogout}>
             <Logout/>
         </a>
         <XkrLogo grey="{true}" />
