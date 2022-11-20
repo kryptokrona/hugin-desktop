@@ -1,9 +1,9 @@
 <script>
     import {fade} from 'svelte/transition'
     import {misc, user} from '$lib/stores/user.js'
-    import FillButton from '$components/buttons/FillButton.svelte'
+    import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
-    import NodeSelector from '$components/popups/NodeSelector.svelte'
+    import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
 
     let mnemonic = ''
     let blockHeight

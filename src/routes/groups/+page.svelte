@@ -1,15 +1,15 @@
 <script>
 import {fade} from 'svelte/transition'
-import ChatInput from '$components/chat/ChatInput.svelte'
+import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {groupMessages} from '$lib/stores/groupmsgs.js'
-import GroupMessage from '$components/chat/GroupMessage.svelte'
-import GroupList from '$components/chat/GroupList.svelte'
+import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
+import GroupList from '$lib/components/chat/GroupList.svelte'
 import {groups, notify, user} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
-import AddGroup from '$components/chat/AddGroup.svelte'
+import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
-import BlockContact from '$components/chat/BlockContact.svelte'
+import BlockContact from '$lib/components/chat/BlockContact.svelte'
 
 let boardMsgs = []
 let replyto = ''

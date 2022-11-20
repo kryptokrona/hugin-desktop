@@ -1,11 +1,11 @@
 <script>
     import {fade} from 'svelte/transition'
-    import FillButton from '$components/buttons/FillButton.svelte'
+    import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {groups, misc, user} from '$lib/stores/user.js'
     import {onMount} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
-    import NodeSelector from "$components/popups/NodeSelector.svelte";
+    import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 
     let wallet
     let nodeFailed
