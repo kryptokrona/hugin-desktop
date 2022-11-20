@@ -37,7 +37,7 @@
     <div class="list">
         {#each groups as group}
             <div class="row">
-                <p>{group.name}</p>
+                <p style="font-size: 1rem">{group.name}</p>
                 <Button text="Join" disabled={false} on:click={() => addNewGroup(group)}/>
             </div>
         {/each}
@@ -49,22 +49,28 @@
   .card {
     grid-column: span 6 / span 6;
     position: relative;
-    background-color: var(--card-background);
-    border: 1px solid var(--card-border);
-    border-radius: 0.4rem;
     width: 100%;
-    height: 300px;
+    height: calc(60% - 113px);
+    border-right: 1px solid var(--border-color);
+
+    h3 {
+      font-weight: 800;
+    }
+
+    p {
+      opacity: 80%;
+    }
   }
 
   .header {
     border-bottom: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 2rem;
     height: 50px;
   }
 
   .list {
     overflow: scroll;
-    height: calc(100% - 50px);
+    height: calc(100%);
 
     &::-webkit-scrollbar {
       display: none;
@@ -75,14 +81,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 1rem;
+    padding: 0 2rem;
     height: 50px;
 
     border-bottom: 1px solid var(--border-color);
 
-    &:last-child {
-      border-bottom: none;
-    }
   }
 
 </style>
