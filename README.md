@@ -36,13 +36,14 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 # Table of Contents
 
--   [Development resources](#development-resources)
--   [Technologies](#technologies)
--   [Usage](#usage)
--   [Contribute](#contribute)
-    -   [Pull Request](#pull-request)
--   [Contributors](#contributors)
--   [License](#license)
+- [Table of Contents](#table-of-contents)
+- [Development Resources](#development-resources)
+- [Technologies](#technologies)
+- [Usage](#usage)
+- [Contribute](#contribute)
+  - [Pull Request](#pull-request)
+- [Contributors](#contributors)
+- [License](#license)
 
 # Development Resources
 
@@ -97,6 +98,7 @@ being awesome contributors to this project. **We'd like to take a moment to reco
 [<img src="https://avatars.githubusercontent.com/u/36674091?v=4?size=72" alt="Swepool" width="72">](https://github.com/Swepool)
 [<img src="https://avatars.githubusercontent.com/u/33717111?v=4?size=72" alt="mjovanc" width="72">](https://github.com/mjovanc)
 [<img src="https://avatars.githubusercontent.com/u/3246908?v=4?size=72" alt="f-r00t" width="72">](https://github.com/f-r00t)
+[<img src="https://avatars.githubusercontent.com/u/114196072?v=4?size=72" alt="softx01" width="72">](https://github.com/softx01)
 
 # License
 
