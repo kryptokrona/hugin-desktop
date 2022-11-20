@@ -654,7 +654,7 @@ async function start_js_wallet(walletName, password, node) {
         mainWindow.webContents.send('login-failed')
         return
     }
-
+    
     hashed_pass = await hashPassword(password)
 
     //Load known public keys and contacts
@@ -667,6 +667,7 @@ async function start_js_wallet(walletName, password, node) {
     await js_wallet.enableAutoOptimization(false)
     //Start wallet sync process
     await js_wallet.start()
+
     //Load known pool txs from db.
     let checkedTxs
     let knownTxsIds = await loadKnownTxs()
@@ -683,6 +684,7 @@ async function start_js_wallet(walletName, password, node) {
         //Push one test hash to the array if this is a new account, this should be empty?
         checkedTxs = []
     }
+
     my_boards = await getMyBoardList()
 
     const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
@@ -695,13 +697,14 @@ async function start_js_wallet(walletName, password, node) {
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
+        let synced = networkBlockCount - walletBlockCount <= 2
+        if (!synced) return
         optimizeMessages()
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
 
         console.log('transaction', transaction)
         mainWindow.webContents.send('new-message', transaction.toJSON())
     })
-
     //Get primary address and fuse it with our message key to create our hugin address
     let myAddress
     let msgKey
@@ -731,6 +734,7 @@ async function start_js_wallet(walletName, password, node) {
                 console.log('///////******** SAVING WALLET *****\\\\\\\\')
                 await saveWallet(js_wallet, walletName, password)
             } else if (!synced) {
+            
             }
         }
     )
