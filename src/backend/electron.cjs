@@ -823,7 +823,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
     if (checkedTxs) {
         console.log('First start, push knownTxs db to known pool txs')
         known_pool_txs = checkedTxs.slice(checkedTxs.length - 100, checkedTxs.length - 1)
-        console.log('known-pools', known_pool_txs)
     }
 
     console.log('Background syncing...')
@@ -1713,9 +1712,15 @@ ipcMain.handle('getTransactions', async (e, startIndex) => {
     const pages = Math.ceil(allTx.length / showPerPage)
     const pageTx = []
     for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
+        let amount = WB.prettyPrintAmount(tx.totalAmount())
+        tx.transfers.forEach (function(value) {
+            if (value === -1000) {
+                amount = -0.01000
+            }
+          })
         pageTx.push({
             hash: tx.hash,
-            amount: WB.prettyPrintAmount(tx.totalAmount()),
+            amount: amount.toString(),
             time: tx.timestamp,
         })
     }
