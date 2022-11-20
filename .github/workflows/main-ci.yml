@@ -1,8 +1,8 @@
 name: Hugin Desktop Main Pipeline
 
 env:
-  GITHUB_REGISTRY: 'ghcr.io'
-  GITHUB_OWNER: 'kryptokrona'
+  GITHUB_REGISTRY: "ghcr.io"
+  GITHUB_OWNER: "kryptokrona"
   GH_TOKEN: ${{ secrets.HUGIN_DESKTOP_SECRET }}
 
 on:
@@ -10,9 +10,9 @@ on:
     branches:
       - main
     paths-ignore:
-      - '*.md'
-      - '.run/**'
-      - '.github/ISSUE_TEMPLATE/**'
+      - "*.md"
+      - ".run/**"
+      - ".github/ISSUE_TEMPLATE/**"
 
 jobs:
   build:
@@ -23,26 +23,10 @@ jobs:
       fail-fast: true
       matrix:
         config:
-          - {
-            name: "Windows Latest",
-            os: windows-latest,
-            platform: x64
-          }
-          - {
-            name: "Ubuntu Latest",
-            os: ubuntu-latest,
-            platform: x64
-          }
-          - {
-            name: "macOS-11",
-            os: macos-11,
-            platform: x64
-          }
-          - {
-            name: "macOS Latest",
-            os: macos-latest,
-            platform: arm64
-          }
+          - { name: "Windows Latest", os: windows-latest, platform: x64 }
+          - { name: "Ubuntu Latest", os: ubuntu-latest, platform: x64 }
+          - { name: "macOS-11", os: macos-11, platform: x64 }
+          - { name: "macOS Latest", os: macos-latest, platform: arm64 }
 
     env:
       PLATFORM: ${{ matrix.config.platform }}
@@ -83,13 +67,21 @@ jobs:
           path: |
             dist/Hugin Messenger.exe
 
-      - name: "Upload ${{ matrix.config.name }} Artifact"
+      - name: "Upload ${{ matrix.config.name }} Deb Artifact"
         uses: actions/upload-artifact@v3
         if: matrix.config.os == 'ubuntu-latest'
         with:
-          name: ubuntu-latest-build
+          name: ubuntu-latest-build-deb
           path: |
-            dist/Hugin Messenger
+            dist/Hugin Messenger.deb
+
+      - name: "Upload ${{ matrix.config.name }} Snap Artifact"
+        uses: actions/upload-artifact@v3
+        if: matrix.config.os == 'ubuntu-latest'
+        with:
+          name: ubuntu-latest-build-snap
+          path: |
+            dist/Hugin Messenger.snap
 
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
