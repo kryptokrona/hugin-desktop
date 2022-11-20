@@ -627,6 +627,7 @@ async function openWalletFromFile(walletName, password) {
 async function verifyPassword(password) {
     let check = await checkPass(password, hashed_pass)
     if (check) {
+        await sleep(1000)
         mainWindow.webContents.send('login-success')
         return true
     } else {

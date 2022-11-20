@@ -9,6 +9,7 @@ import toast from 'svelte-french-toast'
 
 let myPassword = ""
 let enableLogin = false
+let loadSpin
 
 onMount(() => {
   $misc.loading = false
@@ -31,6 +32,7 @@ const enter = (e) => {
 
 //Handle login, sets logeged in to true and gets user address
 const handleLogin = async (e) => {
+    loadSpin = true
     if (!$user.started) {
         $misc.loading = true
     }
@@ -43,14 +45,11 @@ const handleLogin = async (e) => {
   window.api.send('login', accountData)
 }
 
-const loginSuccess = async () => {
+window.api.receive('login-success', async () => {
     await goto('/dashboard')
+    loadSpin = false
     $user.loggedIn = true
     $misc.loading = false
-}
-
-window.api.receive('login-success', async () => {
-      loginSuccess()
 })
 
 window.api.receive('login-failed', async () => {
@@ -59,6 +58,7 @@ window.api.receive('login-failed', async () => {
         style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
     })
     $misc.loading = false
+    loadSpin = false
 })
 
 </script>
@@ -71,7 +71,7 @@ window.api.receive('login-failed', async () => {
         <div class="field">
             <input placeholder="Password..." type="password" bind:value="{myPassword}"/>
             <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
-                {#if $misc.loading}
+                {#if loadSpin}
                     <Moon color="#000000" size="20" unit="px"/>
                 {:else}
                     <ArrowRight/>
