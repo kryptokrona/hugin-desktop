@@ -1,9 +1,9 @@
 <script>
 import { user } from '$lib/stores/user.js'
 import { onMount } from 'svelte'
-import Share from '$components/Share.svelte'
-import Funds from '$components/Funds.svelte'
-import EditName from '$components/EditName.svelte'
+import Share from '$routes/dashboard/components/Share.svelte'
+import Funds from '$routes/dashboard/components/Funds.svelte'
+import EditName from '$routes/dashboard/components/EditName.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
 import FillButton from '$components/buttons/FillButton.svelte'
 import { openURL } from '$lib/utils/utils.js'
