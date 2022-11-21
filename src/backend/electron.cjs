@@ -30,7 +30,7 @@ const WebTorrent = require('webtorrent')
 const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
-const {expand_sdp_answer, expand_sdp_offer, parse_sdp} = require("./sdp.cjs")
+const { expand_sdp_answer, expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
 const {
     loadDB,
     saveHash,
@@ -79,7 +79,7 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
-const {newBeam, endBeam, sendBeamMessage} = require("./beam.cjs")
+const { newBeam, endBeam, sendBeamMessage } = require("./beam.cjs")
 
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
@@ -194,7 +194,7 @@ function createWindow() {
         x: windowState.x,
         y: windowState.y,
         width: windowState.width,
-        height: windowState.height,
+        height: windowState.height
     })
 
     windowState.manage(mainWindow)
@@ -418,7 +418,7 @@ ipcMain.on('app', (data) => {
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
     endBeam(chat, sender);
-  });
+});
 
 ipcMain.on("beam", async (e, link, chat) => {
     let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
@@ -426,7 +426,7 @@ ipcMain.on("beam", async (e, link, chat) => {
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, false)
 
-  });
+});
 
 ipcMain.on('check-new-release', () => {
     console.log('checking if new release')
@@ -466,7 +466,7 @@ ipcMain.on('install-update', async (e, data) => {
 })
 
 const sender = (channel, data) => {
-	mainWindow.webContents.send(channel, data)
+    mainWindow.webContents.send(channel, data)
 }
 
 const checkNodeStatus = async (node) => {
@@ -553,10 +553,10 @@ ipcMain.on('create-account', async (e, accountData) => {
     const [js_wallet, error] =
         accountData.mnemonic.length > 0
             ? await WB.WalletBackend.importWalletFromSeed(
-                  daemon,
-                  accountData.blockheight,
-                  accountData.mnemonic
-              )
+                daemon,
+                accountData.blockheight,
+                accountData.mnemonic
+            )
             : [await WB.WalletBackend.createWallet(daemon), null]
 
     //Create Hugin welcome contact
@@ -655,7 +655,7 @@ async function start_js_wallet(walletName, password, node) {
         mainWindow.webContents.send('login-failed')
         return
     }
-    
+
     hashed_pass = await hashPassword(password)
 
     //Load known public keys and contacts
@@ -735,7 +735,7 @@ async function start_js_wallet(walletName, password, node) {
                 console.log('///////******** SAVING WALLET *****\\\\\\\\')
                 await saveWallet(js_wallet, walletName, password)
             } else if (!synced) {
-            
+
             }
         }
     )
@@ -959,7 +959,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
 let crypto = new Crypto()
 
 async function hashPassword(pass) {
-   return await crypto.cn_fast_hash(toHex(pass))
+    return await crypto.cn_fast_hash(toHex(pass))
 }
 
 async function checkPass(pass, oldHash) {
@@ -1086,19 +1086,19 @@ async function encryptMessage(message, messageKey, sealed = false) {
 
     if (sealed) {
 
-    let signature = await xkrUtils.signMessage(message, xkr_private_key)
-    let payload_json = {
-        from: my_address,
-        k: Buffer.from(getKeyPair().publicKey).toString('hex'),
-        msg: message,
-        s: signature,
-    }
-    let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
-    box = new naclSealed.sealedbox(
-        payload_json_decoded,
-        nonceFromTimestamp(timestamp),
-        hexToUint(messageKey)
-    )
+        let signature = await xkrUtils.signMessage(message, xkr_private_key)
+        let payload_json = {
+            from: my_address,
+            k: Buffer.from(getKeyPair().publicKey).toString('hex'),
+            msg: message,
+            s: signature,
+        }
+        let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
+        box = new naclSealed.sealedbox(
+            payload_json_decoded,
+            nonceFromTimestamp(timestamp),
+            hexToUint(messageKey)
+        )
     } else if (!sealed) {
         console.log('Has history, not using sealedbox')
         let payload_json = { from: my_address, msg: message }
@@ -1713,11 +1713,11 @@ ipcMain.handle('getTransactions', async (e, startIndex) => {
     const pageTx = []
     for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
         let amount = WB.prettyPrintAmount(tx.totalAmount())
-        tx.transfers.forEach (function(value) {
+        tx.transfers.forEach(function (value) {
             if (value === -1000) {
                 amount = -0.01000
             }
-          })
+        })
         pageTx.push({
             hash: tx.hash,
             amount: amount.toString(),
@@ -1774,7 +1774,7 @@ ipcMain.on('endCall', async (e, peer, stream, contact) => {
     mainWindow.webContents.send('endCall', peer, stream, contact)
 })
 
-ipcMain.on('start_group_call', async (e, contacts) => {})
+ipcMain.on('start_group_call', async (e, contacts) => { })
 
 ipcMain.on('create-room', async (e, type) => {
     mainWindow.webContents.send('start-room', type)
