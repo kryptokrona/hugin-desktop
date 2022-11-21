@@ -1,6 +1,7 @@
 {
     "appId": "com.electron.hugin",
     "productName": "Hugin Messenger",
+    "artifactName": "${productName}-${arch}.${ext}",
     "directories": {
         "output": "dist"
     },
@@ -17,7 +18,7 @@
         }
     },
     "linux": {
-        "icon": "build/icon.png",
+        "icon": "bin/icon.png",
         "target": [
             "deb",
             "snap"

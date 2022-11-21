@@ -1,6 +1,10 @@
 ![hugin](https://user-images.githubusercontent.com/36674091/198717153-c46bdb04-f3b4-45c0-ace4-0f9a41675911.png)
 
+
 <p>
+<a href="https://github.com/kryptokrona/hugin-desktop/actions/workflows/main-ci.yml">
+    <img src="https://github.com/kryptokrona/hugin-desktop/actions/workflows/main-ci.yml/badge.svg">
+</a>
 <a href="https://chat.kryptokrona.se">
     <img src="https://img.shields.io/discord/562673808582901793?label=Discord&logo=Discord&logoColor=white&style=flat">
 </a>

@@ -65,7 +65,7 @@ jobs:
         with:
           name: windows-latest
           path: |
-            dist/Hugin Messenger.exe
+            dist/Hugin Messenger-x64.exe
 
       - name: "Upload ${{ matrix.config.name }} Deb Artifact"
         uses: actions/upload-artifact@v3
@@ -73,7 +73,7 @@ jobs:
         with:
           name: ubuntu-latest-deb
           path: |
-            dist/Hugin Messenger.deb
+            dist/Hugin Messenger-amd64.deb
 
       - name: "Upload ${{ matrix.config.name }} Snap Artifact"
         uses: actions/upload-artifact@v3
@@ -81,7 +81,7 @@ jobs:
         with:
           name: ubuntu-latest-snap
           path: |
-            dist/Hugin Messenger.snap
+            dist/Hugin Messenger-amd64.snap
 
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
@@ -89,7 +89,7 @@ jobs:
         with:
           name: macos-11
           path: |
-            dist/Hugin Messenger.dmg
+            dist/Hugin Messenger-x64.dmg
 
       - name: "Upload ${{ matrix.config.name }} Artifact"
         uses: actions/upload-artifact@v3
@@ -97,4 +97,4 @@ jobs:
         with:
           name: macos-latest
           path: |
-            dist/Hugin Messenger.dmg
+            dist/Hugin Messenger-arm64.dmg
