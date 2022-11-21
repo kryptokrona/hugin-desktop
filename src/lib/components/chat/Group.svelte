@@ -7,7 +7,8 @@ import {groups} from '$lib/stores/user.js'
 export let group
 const dispatch = createEventDispatcher()
 
-const printThis = (contact) => {
+const printThis = (group) => {
+    if (group.key === $groups.thisGroup.key) return
     dispatch('print')
 }
 </script>

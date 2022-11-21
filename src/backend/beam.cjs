@@ -59,12 +59,6 @@ const beamEvent = (beam, chat, key, sender) => {
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
-        //If not JSON, return
-        try {
-            let check = JSON.parse(str)
-        } catch (err) {
-            return
-        }
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
         decryptMessage(str, msgKey, sender)
