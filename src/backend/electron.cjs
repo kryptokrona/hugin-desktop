@@ -869,16 +869,15 @@ async function backgroundSyncMessages(checkedTxs = false) {
                     message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
                     if (!message || message === undefined) {
                         let group = trimExtra(thisExtra)
-                        console.log('group', group)
+                        console.log('Box', group)
                         message = JSON.parse(group)
                         if (message.sb) {
-                            await decryptGroupMessage(message, thisHash)
+                             decryptGroupMessage(message, thisHash)
                         }
                         saveHash(thisHash)
                         console.log('Caught undefined null message, continue')
                         continue
                     }
-
                     message.sent = false
                     //console.log("message type", message.type);
                     if (message.brd) {
@@ -896,7 +895,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
                         //     saveBoardMsg(message, thisHash, false)
                         //     continue;
                         //   }
-                        saveHash(thisHash)
                         //saveBoardMsg(message, thisHash, true);
                     } else if (message.type === 'sealedbox' || 'box') {
                         console.log('Saving Message')
@@ -921,7 +919,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
 async function saveContact(hugin_address, nickname = false, first = false) {
     console.log('huginadress', hugin_address)
     console.log(first)
-    let contacts = await getContacts()
 
     let name
     if (!nickname) {
