@@ -11,7 +11,6 @@
         "gatekeeperAssess": false,
         "entitlements": "bin/entitlements.mac.plist",
         "entitlementsInherit": "bin/entitlements.mac.inherit.plist",
-        "icon": ,
         "type": "development",
         "extendInfo": {
             "NSMicrophoneUsageDescription": "Please give us access to your microphone",
