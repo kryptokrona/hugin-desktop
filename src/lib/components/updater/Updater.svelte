@@ -10,7 +10,7 @@ import {appUpdateState} from "$lib/components/updater/update-store.js";
     <div class="card layered-shadow" in:fly="{{ x: 100 }}" out:fly="{{ x: 100 }}">
 
         <div class="header">
-            <img src="/icon.png" height="48px" width="48px" alt="" />
+            <img src="/icons/icon.png" height="48px" width="48px" alt="" />
             <h2>Hugin updater</h2>
         </div>
 
