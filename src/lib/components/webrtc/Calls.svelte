@@ -750,13 +750,6 @@ function endCall(peer, stream, contact) {
     console.log('this peer?', peer)
     console.log(' ending this caller', caller)
     try {
-        console.log('$webRTC.call.length ', $webRTC.call.length)
-        if ($webRTC.call.length < 2) {
-            $webRTC.myStream.getTracks().forEach(function (track) {
-                console.log('track stopped')
-                track.stop()
-            })
-        }
         caller.peer.destroy()
     } catch (e) {
         console.log('error', e)
@@ -788,6 +781,13 @@ function endCall(peer, stream, contact) {
         console.log('Already got a audio call open, return')
         $webRTC.myVideo = false
         return
+    }
+
+    if ($webRTC.call.length === 0) {
+            $webRTC.myStream.getTracks().forEach(function (track) {
+                console.log('track stopped')
+                track.stop()
+            })
     }
 
     //
