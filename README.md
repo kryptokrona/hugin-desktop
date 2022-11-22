@@ -39,7 +39,9 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - [Table of Contents](#table-of-contents)
 - [Development Resources](#development-resources)
 - [Technologies](#technologies)
-- [Usage](#usage)
+- [Getting Started](#getting-started)
+  - [Build](#build)
+- [CI/CD](#cicd)
 - [Contribute](#contribute)
   - [Pull Request](#pull-request)
 - [Contributors](#contributors)
@@ -49,7 +51,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 -   Web: https://hugin.chat
 -   GitHub: https://github.com/kryptokrona
--   Hugin: XKR group on `2977d5ca9b173c0f9f137f1be6823dd2cdd8f953bd84e6d3e5e4571539644531` 
+-   Hugin: hugin group on `20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8` 
 -   It is HIGHLY recommended to join our group on Hugin Messenger if you want to contribute to stay up to date on what is happening on the project.
 
 # Technologies
@@ -60,7 +62,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - WebRTC
 - Hypercore Protocol
 
-# Usage
+# Getting Started
 
 > \*Feel free to substitute `npm` with `pnpm` or `yarn`.
 
@@ -68,7 +70,27 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 | ------- | ----------------- |
 | Install | · `npm install`   |
 | Develop | · `npm run dev`   |
-| Build   | · `npm run build` |
+
+
+## Build
+To build a target we have the following options:
+
+
+|                          |                             |
+|--------------------------|-----------------------------|
+| macOS Apple Silicon (M1) | · `npm run build:mac-arm64` |
+| macOS Intel (x64)        | · `npm run build:mac-x64`   |
+| Windows                  | · `npm run build`           |
+| Linux                    | · `npm run build:linux-x64` |
+
+# CI/CD
+
+This project is automatically built, tested and deployed using GitHub Actions. We have two pipelines:
+
+- **Main Pipeline** - This is the pipeline that runs the code merged into our main branch.
+- **Pull Request Pipeline** - This is the pipeline that runs each time a pull request come in so the reviewer has some help evaluating if the code is good enough to be merged.
+
+The Main Pipeline do everything the Pull Request Pipeline does in addition to building and publishing artifacts of different architectures and OS.
 
 # Contribute
 
