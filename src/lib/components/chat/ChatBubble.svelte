@@ -64,7 +64,7 @@ $: if (message.substring(0,7) === "BEAM://") {
     $beam.active = $beam.active
   }
 
-  $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59))
+  $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
 
 </script>
 
@@ -116,7 +116,7 @@ $: if (message.substring(0,7) === "BEAM://") {
                     {:else if beamInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p>Beam connected!!</p>
+                        <p in:fade>Beam connected ⚡️</p>
                     {:else}
                     <p class="message">{message}</p>
                 {/if}
@@ -159,7 +159,7 @@ $: if (message.substring(0,7) === "BEAM://") {
                     {:else if oldInvite}
                     <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                    <p>Beam connected!!</p>
+                    <p in:fade>Beam connected ⚡️</p>
                     {:else}
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}
