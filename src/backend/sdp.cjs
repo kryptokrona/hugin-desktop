@@ -772,7 +772,7 @@ const parse_sdp = (sdp, answr = false) => {
     let lines = sdp.sdp.split('\n').map((l) => l.trim()) // split and remove trailing CR
     lines.forEach(function (line) {
         if (line.includes('a=fingerprint:') && fingerprint == '') {
-            let ipv6 = false
+            
             let parts = line.substr(14).split(' ')
             let hex = line
                 .substr(22)
@@ -800,6 +800,8 @@ const parse_sdp = (sdp, answr = false) => {
             } else {
                 ip = '?' + ip
             }
+            
+            let ipv6 = false
 
             if (ip.length > 20 && answr) {
                 ipv6 = true
