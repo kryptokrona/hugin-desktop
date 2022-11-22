@@ -3,9 +3,11 @@
     //TODO move in to a store or seperate group file
 
     import {goto} from "$app/navigation";
+    import {groups} from "$lib/stores/user.js";
     import Button from "$lib/components/buttons/Button.svelte"
+    import {get_avatar} from "$lib/utils/hugin-utils.js";
 
-    let groups = [
+    let standardGroups = [
         { name: 'Hugin',           key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8' },
         { name: 'Programming',     key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0' },
         { name: 'Gaming',          key: 'aab2b5493d95074e03090501a1cbc34955c29d4f0bfe5eed76445b2f049031b2' },
@@ -43,10 +45,19 @@
         <h3>Recommended groups</h3>
     </div>
     <div class="list">
-        {#each groups as group}
+        {#each standardGroups as group}
             <div class="row">
+                <img
+                  class="avatar"
+                  src="data:image/png;base64,{get_avatar(group.key)}"
+                  alt=""
+                />
                 <p style="font-size: 1rem">{group.name}</p>
+              {#if $groups.groupArray.some(a => a.key !== group.key)}
                 <Button text="Join" disabled={false} on:click={() => addNewGroup(group)}/>
+              {:else}
+                <Button text="Joined" disabled={false} on:click={() => addNewGroup(group)}/>
+              {/if}
             </div>
         {/each}
     </div>
@@ -58,7 +69,7 @@
     grid-column: span 6 / span 6;
     position: relative;
     width: 100%;
-    height: calc(100% );
+    height: calc(100%);
     border-right: 1px solid var(--border-color);
 
     h3 {
@@ -91,9 +102,7 @@
     align-items: center;
     padding: 0 2rem;
     height: 50px;
-
     border-bottom: 1px solid var(--border-color);
-
   }
 
 </style>
