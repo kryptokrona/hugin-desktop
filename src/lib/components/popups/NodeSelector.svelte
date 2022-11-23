@@ -1,46 +1,45 @@
 <script>
-    import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import { nodelist } from '$lib/stores/nodes.js'
-    import { fade } from 'svelte/transition'
-    import { createEventDispatcher } from 'svelte'
-    import { misc } from "$lib/stores/user.js";
+  import FillButton from '$lib/components/buttons/FillButton.svelte'
+  import {nodelist} from '$lib/stores/nodes.js'
+  import {fade} from 'svelte/transition'
+  import {createEventDispatcher} from 'svelte'
+  import {misc} from "$lib/stores/user.js";
 
-    let nodeInput = ''
-let selectedNode
+  let nodeInput = ''
+  let selectedNode
 
-const dispatch = new createEventDispatcher()
+  const dispatch = new createEventDispatcher()
 
-const back = () => {
+  const back = () => {
     dispatch('back')
-}
+  }
 
-const auto = () => {
+  const auto = () => {
     const randomNode = $nodelist[Math.floor(Math.random() * $nodelist.length)];
     nodeInput = `${randomNode.url}:${randomNode.port}`
-    console.log(randomNode)
-}
+  }
 
-const connectTo = () => {
+  const connectTo = () => {
     dispatch('connect', {
-        node: nodeInput,
+      node: nodeInput,
     })
-}
+  }
 
-function chooseNode(node, i) {
+  function chooseNode(node, i) {
     nodeInput = `${node.url}:${node.port}`
     selectedNode = i
-}
+  }
 </script>
 
 <div in:fade class="wrapper">
     <h1>Pick a node</h1>
-    <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}" />
+    <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}"/>
     <div class="node-list">
         {#each $nodelist as node, i}
             <div
-                class="node-card"
-                class:selected="{selectedNode === i}"
-                on:click="{() => {
+                    class="node-card"
+                    class:selected="{selectedNode === i}"
+                    on:click="{() => {
                     chooseNode(node, i)
                 }}"
             >
@@ -49,36 +48,36 @@ function chooseNode(node, i) {
         {/each}
     </div>
     <div class="button_wrapper">
-        <FillButton text="Back" disabled="{false}" on:click="{back}" />
-        <FillButton text="Auto" disabled="{false}" on:click="{auto}" />
+        <FillButton text="Back" disabled="{false}" on:click="{back}"/>
+        <FillButton text="Auto" disabled="{false}" on:click="{auto}"/>
         <FillButton
-            text="Connect"
-            disabled="{!(nodeInput.length > 0)}"
-            enabled="{nodeInput.length > 0}"
-            on:click="{connectTo}"
-            loading={$misc.loading}
+                text="Connect"
+                disabled="{!(nodeInput.length > 0)}"
+                enabled="{nodeInput.length > 0}"
+                on:click="{connectTo}"
+                loading={$misc.loading}
         />
     </div>
 </div>
 
 <style lang="scss">
-.wrapper {
+  .wrapper {
     display: flex;
     flex-direction: column;
     gap: 2rem;
     justify-content: center;
     align-items: center;
     max-width: 840px;
-}
+  }
 
-.node-list {
+  .node-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: center;
-}
+  }
 
-.node-card {
+  .node-card {
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
     padding: 0.75rem;
@@ -86,16 +85,16 @@ function chooseNode(node, i) {
     cursor: pointer;
 
     p {
-        margin: 0;
-        font-size: 0.75rem;
+      margin: 0;
+      font-size: 0.75rem;
     }
-}
+  }
 
-.selected {
+  .selected {
     background-color: var(--success-color);
-}
+  }
 
-input {
+  input {
     margin: 0 auto;
     max-width: 700px;
     width: 100%;
@@ -109,14 +108,14 @@ input {
     font-size: 1.1rem;
 
     &:focus {
-        outline: none;
+      outline: none;
     }
-}
+  }
 
-.button_wrapper {
+  .button_wrapper {
     display: flex;
     gap: 1rem;
     width: 400px;
     justify-content: center;
-}
+  }
 </style>
