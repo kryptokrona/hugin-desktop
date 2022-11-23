@@ -1,9 +1,9 @@
 <script>
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {nodelist} from '$lib/stores/nodes.js'
-    import {fade} from 'svelte/transition'
-    import {createEventDispatcher} from 'svelte'
-    import {misc} from "$lib/stores/user.js";
+    import { nodelist } from '$lib/stores/nodes.js'
+    import { fade } from 'svelte/transition'
+    import { createEventDispatcher } from 'svelte'
+    import { misc } from "$lib/stores/user.js";
 
     let nodeInput = ''
 let selectedNode
@@ -15,8 +15,9 @@ const back = () => {
 }
 
 const auto = () => {
-    //Handle auto select
-    nodeInput = 'blocksum.org:11898'
+    const randomNode = $nodelist[Math.floor(Math.random() * $nodelist.length)];
+    nodeInput = `${randomNode.url}:${randomNode.port}`
+    console.log(randomNode)
 }
 
 const connectTo = () => {
