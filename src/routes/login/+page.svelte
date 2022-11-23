@@ -6,10 +6,13 @@ import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
 import {goto} from '$app/navigation'
 import { onDestroy, onMount } from 'svelte'
 import toast from 'svelte-french-toast'
+import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
+import {layoutState} from "$lib/stores/layout-state.js";
 
 let myPassword = ""
 let enableLogin = false
 let loadSpin
+let errNode
 
 onMount(() => {
   $misc.loading = false
@@ -32,13 +35,21 @@ const enter = (e) => {
 
 //Handle login, sets logeged in to true and gets user address
 const handleLogin = async (e) => {
+    let node
+    let port
+
+   if(e.detail.node) {
+       node = e.detail.node.split(':')[0]
+       port = parseInt(e.detail.node.split(':')[1])
+   }
+
     loadSpin = true
     if (!$user.started) {
         $misc.loading = true
     }
     let accountData = {
-        node: $misc.node.node,
-        port: $misc.node.port,
+        node: node ?? $misc.node.node,
+        port: port ?? $misc.node.port,
         thisWallet: $user.thisWallet,
         myPassword: myPassword,
     }
@@ -47,7 +58,7 @@ const handleLogin = async (e) => {
 
 window.api.receive('login-success', async () => {
     await goto('/dashboard')
-    loadSpin = false
+    $layoutState.showNodeSelector = false
     $user.loggedIn = true
     $misc.loading = false
 })
@@ -66,20 +77,24 @@ window.api.receive('login-failed', async () => {
 <svelte:window on:keyup|preventDefault="{enter}"/>
 
 <div class="wrapper" in:fade>
-    <div class="login-wrapper">
-        <h1>Hugin</h1>
-        <div class="field">
-            <input placeholder="Password..." type="password" bind:value="{myPassword}"/>
-            <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
-                {#if loadSpin}
-                    <Moon color="#000000" size="20" unit="px"/>
-                {:else}
-                    <ArrowRight/>
-                {/if}
-            </button>
+    {#if $layoutState.showNodeSelector}
+        <NodeSelector on:back="{() => (errNode = false)}" on:connect="{(e) => handleLogin(e)}"/>
+        {:else }
+        <div class="login-wrapper">
+            <h1>Hugin</h1>
+            <div class="field">
+                <input placeholder="Password..." type="password" bind:value="{myPassword}"/>
+                <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
+                    {#if loadSpin}
+                        <Moon color="#000000" size="20" unit="px"/>
+                    {:else}
+                        <ArrowRight/>
+                    {/if}
+                </button>
+            </div>
+            <p style="color: white; opacity: 30%">v{$misc.version}</p>
         </div>
-        <p style="color: white; opacity: 30%">v{$misc.version}</p>
-    </div>
+    {/if}
 </div>
 
 <style lang="scss">

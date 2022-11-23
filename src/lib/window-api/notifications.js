@@ -1,5 +1,6 @@
 import {browser} from "$app/environment";
 import toast from "svelte-french-toast";
+import {layoutState} from "$lib/stores/layout-state.js";
 
 
 if (browser) {
@@ -16,6 +17,12 @@ if (browser) {
         toast.error('Could not connect to node', {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+        layoutState.update(current => {
+            return {
+                ...current,
+                showNodeSelector: true,
+            }
         })
     })
 
