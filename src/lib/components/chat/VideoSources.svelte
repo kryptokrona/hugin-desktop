@@ -76,6 +76,7 @@ $: if (open) window.api.checkSources()
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
+    z-index: 999;
 
     div {
         text-align: center;
