@@ -895,6 +895,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
                         //     saveBoardMsg(message, thisHash, false)
                         //     continue;
                         //   }
+
                         //saveBoardMsg(message, thisHash, true);
                     } else if (message.type === 'sealedbox' || 'box') {
                         console.log('Saving Message')
@@ -917,7 +918,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
 
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname = false, first = false) {
-    console.log('huginadress', hugin_address)
     console.log(first)
 
     let name
@@ -1099,7 +1099,6 @@ async function encryptMessage(message, messageKey, sealed = false) {
     } else if (!sealed) {
         console.log('Has history, not using sealedbox')
         let payload_json = { from: my_address, msg: message }
-
         let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
 
         box = nacl.box(
