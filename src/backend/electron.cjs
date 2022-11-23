@@ -869,7 +869,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
                     message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
                     if (!message || message === undefined) {
                         let group = trimExtra(thisExtra)
-                        console.log('Box', group)
                         message = JSON.parse(group)
                         if (message.sb) {
                              decryptGroupMessage(message, thisHash)
