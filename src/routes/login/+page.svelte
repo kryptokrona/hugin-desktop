@@ -12,10 +12,16 @@ import {layoutState} from "$lib/stores/layout-state.js";
 let myPassword = ""
 let enableLogin = false
 let loadSpin
-let errNode
+let errNode = false
+let passwordField
 
-onMount(() => {
+$: if (errNode) {
+  $layoutState.showNodeSelector = true
+}
+
+onMount(async () => {
   $misc.loading = false
+  passwordField.focus()
 })
 
 onDestroy(() => {
@@ -35,8 +41,8 @@ const enter = (e) => {
 
 //Handle login, sets logeged in to true and gets user address
 const handleLogin = async (e) => {
-    let node
-    let port
+    let node = $misc.node.node
+    let port = $misc.node.port
 
    if(e.detail.node) {
        node = e.detail.node.split(':')[0]
@@ -48,8 +54,8 @@ const handleLogin = async (e) => {
         $misc.loading = true
     }
     let accountData = {
-        node: node ?? $misc.node.node,
-        port: port ?? $misc.node.port,
+        node: node,
+        port: port,
         thisWallet: $user.thisWallet,
         myPassword: myPassword,
     }
@@ -79,11 +85,11 @@ window.api.receive('login-failed', async () => {
 <div class="wrapper" in:fade>
     {#if $layoutState.showNodeSelector}
         <NodeSelector on:back="{() => (errNode = false)}" on:connect="{(e) => handleLogin(e)}"/>
-        {:else }
-        <div class="login-wrapper">
+    {/if}
+        <div class="login-wrapper" class:hide={$layoutState.showNodeSelector}>
             <h1>Hugin</h1>
             <div class="field">
-                <input placeholder="Password..." type="password" bind:value="{myPassword}"/>
+                <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
                 <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
                         <Moon color="#000000" size="20" unit="px"/>
@@ -94,7 +100,6 @@ window.api.receive('login-failed', async () => {
             </div>
             <p style="color: white; opacity: 30%">v{$misc.version}</p>
         </div>
-    {/if}
 </div>
 
 <style lang="scss">
@@ -192,6 +197,10 @@ window.api.receive('login-failed', async () => {
     width: 100%;
     background-color: var(--backgound-color);
     z-index: 103;
+  }
+
+  .hide {
+    display: none;
   }
 </style>
 
