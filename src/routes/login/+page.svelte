@@ -8,6 +8,7 @@ import { onDestroy, onMount } from 'svelte'
 import toast from 'svelte-french-toast'
 import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 import {layoutState} from "$lib/stores/layout-state.js";
+import { sleep } from '$lib/utils/utils'
 
 let myPassword = ""
 let enableLogin = false
@@ -21,6 +22,7 @@ $: if (errNode) {
 
 onMount(async () => {
   $misc.loading = false
+  await sleep(200)
   passwordField.focus()
 })
 
