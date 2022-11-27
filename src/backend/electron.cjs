@@ -1218,7 +1218,6 @@ async function sendGroupsMessage(message, offchain = false) {
 }
 
 async function decryptGroupMessage(tx, hash, group_key = false) {
-    console.log(tx)
 
     let decryptBox = false
     let offchain = false
@@ -1239,8 +1238,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
         let possibleKey = groups[i].key
 
         i += 1
-
-        console.log('Trying key: ' + possibleKey)
 
         try {
             decryptBox = nacl.secretbox.open(
