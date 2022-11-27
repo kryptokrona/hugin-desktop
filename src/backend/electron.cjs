@@ -1222,7 +1222,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
     let decryptBox = false
     let offchain = false
     let groups = await loadGroups()
-    console.log('group key', group_key)
     if (group_key.length === 64) {
         let msg = tx
         tx = JSON.parse(trimExtra(msg))
