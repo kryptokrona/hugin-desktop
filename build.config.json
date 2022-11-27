@@ -1,7 +1,6 @@
 {
     "appId": "com.electron.hugin",
     "productName": "Hugin Messenger",
-    "artifactName": "${productName}-${os}-${arch}.${ext}",
     "directories": {
         "output": "dist"
     },
