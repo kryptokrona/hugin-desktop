@@ -28,7 +28,7 @@ $: {
 
 const enter = (e) => {
     if (enableLogin && e.keyCode === 13) {
-        handleLogin()
+        handleLogin(e)
         enableLogin = false
     }
 }
