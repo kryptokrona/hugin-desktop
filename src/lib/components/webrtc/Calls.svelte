@@ -376,7 +376,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
     console.log('This call', $webRTC.call[0])
     checkSources()
 
-    if (video) {
+    if (video && !$webRTC.cameraId ) {
         //Set defauklt camera id in store
         let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
         $webRTC.cameraId = camera[0].deviceId
