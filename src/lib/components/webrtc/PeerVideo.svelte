@@ -2,12 +2,12 @@
 //To handle true and false, or in this case show and hide.
 import { fade } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { audioLevel } from '$lib/stores/user.js'
-
+import { audioLevel, user } from '$lib/stores/user.js'
 let peerVideo = document.getElementById('peerVideo')
 let peerStream
 let window_max = false
 let window_medium = false
+let contact
 export let call
 
 const dispatch = createEventDispatcher()
@@ -18,6 +18,7 @@ onMount(() => {
     console.log('before', call.peerStream)
     peerVideo.srcObject = call.peerStream
     console.log('peerVideo call', call)
+    contact = $user.contacts.find(a => a.chat === call.chat)
     playVideo()
 })
 
@@ -36,7 +37,6 @@ const playVideo = () => {
 onDestroy(() => {
     peerVideo.pause()
 })
-
 let isTalking = false
 
 $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.chat)) {
@@ -51,6 +51,7 @@ $: window_max
 
 <div class="card" class:talking="{isTalking}">
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
+    <div class="name">{contact.name}</div>
 </div>
 
 <style lang="scss">
@@ -123,5 +124,20 @@ p {
     max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.name {
+    left: 10px;
+    top: 90%;
+    border-radius: 5px;
+    height: 25px;
+    padding: 5px;
+    line-height: 15px;
+    font-family: "Montserrat";
+    width: fit-content;
+    background: white;
+    position: relative;
+    opacity: 0.6;
+    color: black;
 }
 </style>

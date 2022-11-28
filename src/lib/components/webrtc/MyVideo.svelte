@@ -2,7 +2,7 @@
 //To handle true and false, or in this case show and hide.
 import { fade } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { webRTC } from '$lib/stores/user.js'
+import { webRTC, user } from '$lib/stores/user.js'
 
 let myVideo = document.getElementById('myVideo')
 let video = false
@@ -87,6 +87,7 @@ $: window_medium
         playsinline
         autoplay
         bind:this="{myVideo}"></video>
+        <div class="name">{$user.username}</div>
 </div>
 
 <style lang="scss">
@@ -187,5 +188,20 @@ p {
     top: 250px;
     width: 50px;
     height: 50px;
+}
+
+.name {
+    left: 10px;
+    top: 90%;
+    border-radius: 5px;
+    height: 25px;
+    padding: 5px;
+    line-height: 15px;
+    font-family: "Montserrat";
+    width: fit-content;
+    background: white;
+    position: relative;
+    opacity: 0.6;
+    color: black;
 }
 </style>
