@@ -491,7 +491,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
 
         let peer2 = await startPeer2(stream, video)
 
-        if (video) {
+        if (video && !$webRTC.cameraId) {
             //Set defauklt camera id in store
             let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
             $webRTC.cameraId = camera[0].deviceId
