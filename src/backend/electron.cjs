@@ -917,7 +917,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
 
 //Saves contact and nickname to db.
 async function saveContact(hugin_address, nickname = false, first = false) {
-    console.log(first)
 
     let name
     if (!nickname) {
@@ -926,7 +925,6 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     } else {
         name = nickname
     }
-    console.log('known_keys', known_keys)
     let addr = hugin_address.substring(0, 99)
     let key = hugin_address.substring(99, 163)
 
@@ -948,7 +946,6 @@ async function saveContact(hugin_address, nickname = false, first = false) {
             t: Date.now(),
         })
         known_keys.pop(key)
-        console.log('known_keys poped', known_keys)
     }
 }
 
@@ -983,7 +980,6 @@ async function saveGroupMessage(msg, hash, time, offchain) {
         mainWindow.webContents.send('groupMsg', message)
         mainWindow.webContents.send('newGroupMessage', message)
     } else if (offchain) {
-        console.log('group?', message)
         if (message.message === 'ᛊNVITᛊ') return
         console.log('Not saving offchain message')
         mainWindow.webContents.send('groupRtcMsg', message)
@@ -1117,7 +1113,6 @@ async function encryptMessage(message, messageKey, sealed = false) {
 }
 
 async function sendGroupsMessage(message, offchain = false) {
-    console.log('Send group msg', message, offchain)
     const my_address = message.k
 
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
@@ -1178,7 +1173,6 @@ async function sendGroupsMessage(message, offchain = false) {
         )
 
         if (result.success) {
-            console.log(result)
             message_json.sent = true
             saveGroupMessage(message_json, result.transactionHash, timestamp)
             mainWindow.webContents.send('sent_group', {
@@ -1944,7 +1938,6 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
 })
 
 function parseCall(msg, sender, sent, emitCall = true, group = false) {
-    console.log('🤤🤤🤤🤤🤤🤤', sender, msg)
     switch (msg.substring(0, 1)) {
         case 'Δ':
         // Fall through
@@ -1974,7 +1967,6 @@ function parseCall(msg, sender, sent, emitCall = true, group = false) {
                     chat: sender,
                 }
                 mainWindow.webContents.send('got-callback', callerdata)
-                console.log('got sdp', msg)
             }
 
             return 'Call answered'
@@ -1986,9 +1978,7 @@ function parseCall(msg, sender, sent, emitCall = true, group = false) {
 }
 
 ipcMain.on('expand-sdp', (e, data, address) => {
-    console.log('INCOMING EXPAND SDP', address)
     let recovered_data = expand_sdp_offer(data, true)
-    console.log('TYPE EXPAND_O', recovered_data)
     let expanded_data = []
     expanded_data.push(recovered_data)
     expanded_data.push(address)
@@ -1999,12 +1989,10 @@ ipcMain.on('get-sdp', (e, data) => {
     console.log('get-sdp', data.type, data.contact, data.video)
 
     if (data.type == 'offer') {
-        console.log('Offer', data.type, data.contact, data.video)
         let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
         let recovered_data = expand_sdp_offer(parsed_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     } else if (data.type == 'answer') {
-        console.log('Answerrrrrrrr', data.type, data.contact, data.video)
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
         console.log('parsed data really cool sheet:', parsed_data)
         let recovered_data = expand_sdp_answer(parsed_data)
