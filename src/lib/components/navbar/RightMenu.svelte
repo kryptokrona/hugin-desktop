@@ -42,6 +42,8 @@ $: {
         active_contact = $user.activeChat
         contact = $user.activeChat.chat + $user.activeChat.key
         avatar = get_avatar(active_contact.chat)
+    } else {
+        $user.activeChat = $user.contacts[0]
     }
 }
 
