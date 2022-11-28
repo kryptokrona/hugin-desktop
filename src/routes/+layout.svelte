@@ -82,8 +82,6 @@
             console.log('contacts!', my_contacts)
             //Set contacts to store
             $user.contacts = my_contacts
-
-            $user.activeChat = $user.contacts[my_contacts.length - 1]
         })
 
         //Handle incoming call
@@ -139,7 +137,6 @@
         })
 
         window.api.receive('newGroupMessage', (data) => {
-            console.log('data group', data.group)
             if (data.address == $user.huginAddress.substring(0, 99)) return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') return
             if ($page.url.pathname !== '/groups') {
