@@ -17,7 +17,7 @@ onMount(async () => {
     newArray = await window.api.getConversations()
     filterArr = newArray
     if ($user.activeChat) return
-    sendConversation(newArray[0])
+    sendConversation(filterArr[0])
 })
 
 onDestroy(() => {
