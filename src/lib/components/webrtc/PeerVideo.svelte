@@ -7,7 +7,6 @@ let peerVideo = document.getElementById('peerVideo')
 let peerStream
 let window_max = false
 let window_medium = false
-let contact
 export let call
 
 const dispatch = createEventDispatcher()
@@ -18,9 +17,12 @@ onMount(() => {
     console.log('before', call.peerStream)
     peerVideo.srcObject = call.peerStream
     console.log('peerVideo call', call)
-    contact = $user.contacts.find(a => a.chat === call.chat)
     playVideo()
 })
+
+async function setName() {
+    return $user.contacts.find(a => a.chat === call.chat)
+}
 
 //When a user clicks answer
 const pauseVideo = () => {
@@ -51,7 +53,9 @@ $: window_max
 
 <div class="card" class:talking="{isTalking}">
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
+    {#await setName() then contact}
     <div class="name">{contact.name}</div>
+    {/await}
 </div>
 
 <style lang="scss">
