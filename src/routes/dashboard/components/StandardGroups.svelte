@@ -20,6 +20,8 @@
         { name: 'Finland',         key: '6e0861b7e3bcb3c83040d6003f2cd407bb249959f5c6c0959ac1de4f91f6e756' },
     ]
 
+    $: groupSuggestions = standardGroups.filter(a => !$groups.groupArray.map(b=>b.key).includes(a.key))
+
     const addNewGroup = (group) => {
         if (group.length < 32) return
         let data = {
@@ -45,7 +47,7 @@
         <h3>Recommended groups</h3>
     </div>
     <div class="list">
-        {#each standardGroups as group}
+        {#each groupSuggestions as group}
             <div class="row">
                 <img
                   class="avatar"
