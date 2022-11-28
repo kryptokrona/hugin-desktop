@@ -5,7 +5,7 @@
     import {page} from '$app/stores'
     import {user} from '$lib/stores/user.js'
     import Emoji from "$lib/components/icons/Emoji.svelte";
-
+    import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
     import 'emoji-picker-element';
     import {sleep} from "$lib/utils/utils.js";
 
@@ -74,6 +74,15 @@
     }
 
     $: if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
+        fieldFocus()
+    }
+
+    $: if ($videoGrid.showChat && $videoGrid.showVideoGrid) {
+        fieldFocus()
+    }
+
+    async function fieldFocus() {
+        await sleep(200)
         messageField.focus()
     }
 
