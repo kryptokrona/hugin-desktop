@@ -1769,6 +1769,11 @@ ipcMain.on('optimize', async (e) => {
     optimizeMessages(force = true)
 })
 
+ipcMain.on('rescan', async (e) => {
+    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
+    js_wallet.reset(networkHeight - 10000)
+})
+
 ipcMain.handle('getMessages', async (data) => {
     return await getMessages()
 })

@@ -107,6 +107,10 @@ const optimizeMessages = () => {
     window.api.send('optimize')
 }
 
+const reScan = () => {
+    window.api.send('rescan')
+}
+
 $: {
     seedPhrase
     status
@@ -135,6 +139,7 @@ $: {
             red="{$messageWallet.optimized}"
             on:click="{optimizeMessages}"
         />
+            <FillButton text="Rescan" enabled="{false}" disabled="{false}" on:click="{reScan}" />
         </div>
     </div>
 
