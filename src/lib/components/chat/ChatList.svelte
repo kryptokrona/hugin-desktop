@@ -50,14 +50,11 @@ async function checkNew() {
     newArray.forEach(function (a) {
         filterArr.some(function (b) {
             if (b.new && a.chat === b.chat) {
-                console.log('old new, keep new', b)
                 a.new = true
             }
         })
         filterNew.push(a)
     })
-
-    console.log('conversations filtered and set', filterNew)
 
     return filterNew
 }
@@ -78,7 +75,6 @@ async function printConversations() {
 
     let conversations = await checkNew()
     $user.contacts = conversations
-    console.log('conv', conversations)
 
     console.log('Printing conversations')
     filterArr = conversations
@@ -103,11 +99,9 @@ function sendConversation(message) {
 }
 
 function readMessage(e) {
-    console.log('reading this')
 
     filterArr = filterArr.map(function (a) {
         if (e.new && a.chat === e.chat) {
-            console.log('reading this', a)
             a.new = false
         }
         return a

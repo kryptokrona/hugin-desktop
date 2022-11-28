@@ -28,7 +28,6 @@ function hideNotification(id) {
     })
 }
 
-$: console.log('notifications', $notify)
 </script>
 
 {#if !error && !success}

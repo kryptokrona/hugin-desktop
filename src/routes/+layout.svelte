@@ -223,23 +223,19 @@
     })
 
     function removeErrors(e) {
-        console.log(' remove this', e)
 
         if ($notify.success.some((a) => a.hash === e.detail.hash)) {
             let filterArr = $notify.success.filter((a) => a.hash !== e.detail.hash)
-            console.log('filtered', filterArr)
             $notify.success = filterArr
             return
         }
 
         let filterArr = $notify.errors.filter((a) => a.hash !== e.detail.hash)
-        console.log('filtered', filterArr)
         $notify.errors = filterArr
     }
 
     function removeNotification(e) {
         let filterArr = $notify.new.filter((a) => a.hash !== e.detail.hash)
-        console.log('filtered', filterArr)
         $notify.new = filterArr
     }
 

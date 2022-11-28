@@ -207,8 +207,6 @@ const WINDOW_API = {
     },
     
     removeAllListeners: (channel) => {
-        console.log('want to remove', channel)
-        console.log('removed')
         ipcRenderer.removeAllListeners(channel)
     },
      //HANDLE ADDRESS
