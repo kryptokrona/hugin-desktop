@@ -698,7 +698,8 @@ async function start_js_wallet(walletName, password, node) {
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
-        let synced = networkBlockCount - walletBlockCount <= 2
+        const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
+        let synced = network_height - wallet_count <= 2
         if (!synced) return
         optimizeMessages()
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
@@ -871,7 +872,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
                         let group = trimExtra(thisExtra)
                         message = JSON.parse(group)
                         if (message.sb) {
-                             decryptGroupMessage(message, thisHash)
+                             await decryptGroupMessage(message, thisHash)
                         }
                         saveHash(thisHash)
                         console.log('Caught undefined null message, continue')
@@ -1375,7 +1376,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
     try {
         let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
 
-        if (munlockedBalance < 11 && mlockedBalance > 0) {
+        if (munlockedBalance < 11 && mlockedBalance > 0 && !beam_this) {
             return
         }
     } catch (err) {
