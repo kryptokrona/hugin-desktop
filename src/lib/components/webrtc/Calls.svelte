@@ -197,6 +197,12 @@ function sendInviteNotification(contact, contact_address) {
 async function checkSources() {
     let devices = await navigator.mediaDevices.enumerateDevices()
     $webRTC.devices = devices
+    if (!$webRTC.cameraId ) {
+        //Set defauklt camera id in store
+        let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
+        $webRTC.cameraId = camera[0].deviceId
+        // select the desired transceiver
+    }
 }
 
 async function changeVideoSource(device, id) {
@@ -370,18 +376,10 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
     //Set webRTC store update for call
     $webRTC.call[0].peer = peer1
     $webRTC.call[0].screen_stream = screen_stream
-    $webRTC.call[0].myStream = stream
     $webRTC.call[0].video = video
 
     console.log('This call', $webRTC.call[0])
     checkSources()
-
-    if (video && !$webRTC.cameraId ) {
-        //Set defauklt camera id in store
-        let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
-        $webRTC.cameraId = camera[0].deviceId
-        // select the desired transceiver
-    }
     $webRTC.active = true
 
     peer1.on('stream', (peerStream) => {
@@ -491,21 +489,12 @@ const answerCall = (msg, contact, key, offchain = false) => {
 
         let peer2 = await startPeer2(stream, video)
 
-        if (video && !$webRTC.cameraId) {
-            //Set defauklt camera id in store
-            let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
-            $webRTC.cameraId = camera[0].deviceId
-        }
-
+        checkSources()
         //Set webRTC store update for call
         $webRTC.call[0].peer = peer2
         $webRTC.myStream = stream
-        $webRTC.call[0].myStream = stream
         $webRTC.active = true
         $webRTC.call[0].video = video
-
-        $webRTC.myStream = stream
-        $webRTC.active = true
 
         if (video) {
             $webRTC.myVideo = true
