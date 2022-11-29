@@ -70,6 +70,7 @@ const showMessages = () => {
     $rtc_groups.unread = []
     $rtc_groups.unread =  $rtc_groups.unread
     $videoGrid.showChat = !$videoGrid.showChat
+    $videoGrid.multiView = true
 }
 </script>
 

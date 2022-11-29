@@ -73,11 +73,12 @@ const resize = (size) => {
      //Medium is fullscreen
     //Reset size one step if maxsize is set
     if (thisWindow.size === 2  && size == 'medium') {
-      size = 'min'
+        return
     }
       //Reset size one step if minsize is set
-    if (thisWindow.size === 3 && size == 'min') {
-      size = 'medium'
+    if (thisWindow.size === 1 && size == 'min') {
+        $videoGrid.multiView = true
+        return
     }
     //Size switch
     switch (size) {
