@@ -54,7 +54,7 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
-$:  {
+$: if ($videoGrid.peerVideos.length) {
     console.log('****** Checking Window ******')
     //Update this size according to other videowindow sizes
     //We only have two modes for this test
