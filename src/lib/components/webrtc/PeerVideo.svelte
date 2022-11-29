@@ -54,7 +54,7 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
-$: if ($videoGrid.peerVideos.length) {
+$: if (windowCheck) {
     console.log('****** Checking Window ******')
     //Update this size according to other videowindow sizes
     //We only have two modes for this test
@@ -62,12 +62,6 @@ $: if ($videoGrid.peerVideos.length) {
     if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat)) {
         thisWindow.size = 0
         $videoGrid.hideMyVideo = true
-    }
-
-    //Test to reset all videos to same size
-    if ($videoGrid.peerVideos.some(a => a.size === 1 && a.chat !== call.chat)) {
-        thisWindow.size = 1
-        $videoGrid.hideMyVideo = false
     }
 
     //If min size, set hideMyVideo
@@ -94,10 +88,13 @@ $: if ($videoGrid.peerVideos.length) {
     console.log('myVideo state', $videoGrid.hideMyVideo)
 }
 
-//Multiview reset test
-$: if ($videoGrid.multiView) {
-    thisWindow.size = 1
-    $videoGrid.hideMyVideo = false
+
+$: if (thisWindow) {
+    //Multiview reset test
+    if ($videoGrid.multiView) {
+        thisWindow.size = 1
+        $videoGrid.hideMyVideo = false
+    }
 }
 
 const resize = (size) => {
