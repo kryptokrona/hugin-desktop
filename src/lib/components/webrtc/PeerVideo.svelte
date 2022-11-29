@@ -3,10 +3,13 @@
 import { fade } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { audioLevel, user } from '$lib/stores/user.js'
+import Minus from '../icons/Minus.svelte'
+import Plus from '../icons/Plus.svelte'
+import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 let peerVideo = document.getElementById('peerVideo')
 let peerStream
-let window_max = false
-let window_medium = false
+let thisWindow = false
+let windowCheck = false
 export let call
 
 const dispatch = createEventDispatcher()
@@ -16,8 +19,12 @@ onMount(() => {
     console.log('peerVideo call', call)
     console.log('before', call.peerStream)
     peerVideo.srcObject = call.peerStream
-    console.log('peerVideo call', call)
+    $videoGrid.peerVideos.push({chat: call.chat, size: 1})
+    $videoGrid.peerVideos = $videoGrid.peerVideos
+    thisWindow = $videoGrid.peerVideos.find(a => a.chat === call.chat)
+    console.log('This window', thisWindow)
     playVideo()
+    windowCheck = true
 })
 
 async function setName() {
@@ -47,15 +54,81 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
-$: window_medium
-$: window_max
+$: if (windowCheck) {
+
+    //Update this size according to other videowindow sizes
+
+    //If somone is in fullscreen, set this to min // or hide??
+    if ($videoGrid.peerVideos.some(a => a.size === 3)) {
+        thisWindow.size = 0
+        //Hide?
+    }
+    if ($videoGrid.peerVideos.some(a => a.size === 2)) {
+        thisWindow.size = 2
+    }
+    if ($videoGrid.peerVideos.some(a => a.size === 1)) {
+        thisWindow.size = 1
+    }
+
+    //If min size, set hideMyVideo
+    if (thisWindow.size === 1) {
+        $videoGrid.hideMyVideo = false
+    } else {
+        $videoGrid.hideMyVideo = true
+    }
+
+    //Update size in peerVideos
+    $videoGrid.peerVideos.find(function (a) 
+    { 
+        if (a.chat === call.chat) 
+            {
+            a.size = thisWindow.size
+            }
+    })
+
+    $videoGrid.peerVideos = $videoGrid.peerVideos
+    console.log('**** Checking Video grid stats ***** ')
+    console.log('this window size', thisWindow.size)
+    console.log('these peervideos', $videoGrid.peerVideos)
+    console.log('myVideo state', $videoGrid.hideMyVideo)
+}
+
+const resize = (size) => {
+     //Right now we only have two modes, medium and min
+     //Medium is fullscreen
+    windowCheck = false
+    if (thisWindow.size === 2  && size == 'medium') {
+      size = 'min'
+    }
+    if (thisWindow.size === 3 && size == 'min') {
+      size = 'medium'
+    }
+    switch (size) {
+      case 'min':
+      $videoGrid.hideMyVideo = false
+      thisWindow.size = 1
+      break;
+      case 'medium':
+      $videoGrid.hideMyVideo = true
+      thisWindow.size = 2
+    }
+    windowCheck = true
+  }
+
+
 </script>
 
-<div class="card" class:talking="{isTalking}">
+<div class="card" class:talking="{isTalking}" class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
     {#await setName() then contact}
     <div class="name">{contact.name}</div>
     {/await}
+    <div class="fade">
+        <div class="toggles">
+          <Minus on:click={()=> resize('min')}/>
+          <Plus on:click={()=> resize('medium')}/>
+        </div>
+      </div>
 </div>
 
 <style lang="scss">
@@ -144,4 +217,44 @@ p {
     opacity: 0.6;
     color: black;
 }
+
+.fade {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      bottom: 0;
+      width: 100%;
+      height: 100px;
+      z-index: 501;
+      opacity: 1;
+      transition: 200ms ease-in-out;
+      border-radius: 0 0 10px 10px;
+    
+    &:hover {
+        .fade {
+        opacity: 100%;
+        background-image: linear-gradient(180deg, #00000000, #000000);
+        pointer-events: visible;
+      }
+    }
+    .toggles {
+      display: flex;
+      width: 100%;
+      justify-content: space-evenly;
+      align-items: center;
+    }
+
+}
+
+.max {
+    width: 95%;
+    height: 95%;
+}
+
+.hide {
+    display: none;
+}
+
+
 </style>

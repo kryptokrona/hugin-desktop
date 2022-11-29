@@ -3,6 +3,7 @@
 import { fade } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { webRTC, user } from '$lib/stores/user.js'
+import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 
 let myVideo = document.getElementById('myVideo')
 let video = false
@@ -78,7 +79,7 @@ $: window_medium
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card">
+<div class="card" class:hide={$videoGrid.hideMyVideo}>
     <video
         on:click="{playVideo}"
         muted
@@ -158,12 +159,6 @@ p {
     text-overflow: ellipsis;
 }
 
-.hide {
-    width: 60px !important;
-    height: 50px;
-    transition: 0.3s;
-}
-
 .toggleVideo {
     width: 60px !important;
     transition: 0.3s;
@@ -203,5 +198,9 @@ p {
     position: relative;
     opacity: 0.6;
     color: black;
+}
+
+.hide {
+    display: none;
 }
 </style>

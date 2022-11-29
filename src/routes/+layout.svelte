@@ -84,6 +84,8 @@
             $user.contacts = my_contacts
         })
 
+    })
+
         //Handle incoming call
         window.api.receive('call-incoming', async (msg, chat, group = false) => {
             console.log('chat', chat)
@@ -217,7 +219,6 @@
             $notify.success = $notify.success
             $webRTC.joining = data.key
         })
-    })
 
     function removeErrors(e) {
 
