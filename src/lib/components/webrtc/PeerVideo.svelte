@@ -54,44 +54,14 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
-$: if (windowCheck) {
-    console.log('****** Checking Window ******')
-    //Update this size according to other videowindow sizes
-    //We only have two modes for this test
-    //If some peerVideo is set to fullscreen, hide this and myVideo
-    if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat)) {
+$: {
+    console.log('This window reactive')
+    if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
         thisWindow.size = 0
         $videoGrid.hideMyVideo = true
     }
-
-    //If min size, set hideMyVideo
-    if (thisWindow.size === 1) {
-        $videoGrid.hideMyVideo = false
-    } else {
-        $videoGrid.hideMyVideo = true
-    }
-
-    //Update size in peerVideos
-    $videoGrid.peerVideos.find(function (a) 
-    { 
-        if (a.chat === call.chat) 
-            {
-            console.log(' find update size', thisWindow.size)
-            a.size = thisWindow.size
-            }
-    })
-
-    $videoGrid.peerVideos = $videoGrid.peerVideos
-    console.log('**** Checking Video grid stats ***** ')
-    console.log('this window size', thisWindow.size)
-    console.log('these peervideos', $videoGrid.peerVideos)
-    console.log('myVideo state', $videoGrid.hideMyVideo)
-}
-
-
-$: if (thisWindow) {
     //Multiview reset test
-    if ($videoGrid.multiView) {
+    if ($videoGrid.multiView && thisWindow.size !== 1) {
         thisWindow.size = 1
         $videoGrid.hideMyVideo = false
     }
@@ -119,6 +89,17 @@ const resize = (size) => {
       $videoGrid.hideMyVideo = true
       thisWindow.size = 2
     }
+
+    $videoGrid.peerVideos.some(function (a) 
+     { 
+         if (a.chat === call.chat) 
+             {
+             console.log(' find update size', thisWindow.size)
+             a.size = thisWindow.size
+            }
+    })
+
+    $videoGrid.peerVideos = $videoGrid.peerVideos
     console.log('Updating resize thiswindow', thisWindow.size)
   }
 
