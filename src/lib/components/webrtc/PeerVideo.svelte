@@ -54,20 +54,20 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
-$: if (windowCheck) {
-
+$:  {
+    console.log('****** Checking Window ******')
     //Update this size according to other videowindow sizes
-
-    //If somone is in fullscreen, set this to min // or hide??
-    if ($videoGrid.peerVideos.some(a => a.size === 3)) {
+    //We only have two modes for this test
+    //If some peerVideo is set to fullscreen, hide this and myVideo
+    if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat)) {
         thisWindow.size = 0
-        //Hide?
+        $videoGrid.hideMyVideo = true
     }
-    if ($videoGrid.peerVideos.some(a => a.size === 2)) {
-        thisWindow.size = 2
-    }
-    if ($videoGrid.peerVideos.some(a => a.size === 1)) {
+
+    //Test to reset all videos to same size
+    if ($videoGrid.peerVideos.some(a => a.size === 1 && a.chat !== call.chat)) {
         thisWindow.size = 1
+        $videoGrid.hideMyVideo = false
     }
 
     //If min size, set hideMyVideo
@@ -82,6 +82,7 @@ $: if (windowCheck) {
     { 
         if (a.chat === call.chat) 
             {
+            console.log(' find update size', thisWindow.size)
             a.size = thisWindow.size
             }
     })
@@ -93,16 +94,25 @@ $: if (windowCheck) {
     console.log('myVideo state', $videoGrid.hideMyVideo)
 }
 
+//Multiview reset test
+$: if ($videoGrid.multiView) {
+    thisWindow.size = 1
+    $videoGrid.hideMyVideo = false
+}
+
 const resize = (size) => {
+    $videoGrid.multiView = false
      //Right now we only have two modes, medium and min
      //Medium is fullscreen
-    windowCheck = false
+    //Reset size one step if maxsize is set
     if (thisWindow.size === 2  && size == 'medium') {
       size = 'min'
     }
+      //Reset size one step if minsize is set
     if (thisWindow.size === 3 && size == 'min') {
       size = 'medium'
     }
+    //Size switch
     switch (size) {
       case 'min':
       $videoGrid.hideMyVideo = false
@@ -112,13 +122,15 @@ const resize = (size) => {
       $videoGrid.hideMyVideo = true
       thisWindow.size = 2
     }
-    windowCheck = true
+    console.log('Updating resize thiswindow', thisWindow.size)
   }
+
+  $: thisWindow
 
 
 </script>
 
-<div class="card" class:talking="{isTalking}" class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+<div class="card" class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
     {#await setName() then contact}
     <div class="name">{contact.name}</div>
@@ -256,5 +268,9 @@ p {
     display: none;
 }
 
+.min {
+    width: 47.652% !important;
+    height: 47.652% !important;
+}
 
 </style>

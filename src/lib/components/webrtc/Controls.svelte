@@ -108,6 +108,9 @@ const showMessages = () => {
         <div class="icon">
             <Contacts />
         </div>
+        <div class="icon" on:click={()=> ($videoGrid.multiView = true)}>
+            <p>Reset window</p>
+        </div>
         <!-- <div class="icon">
             <AudioSources />
         </div> -->
