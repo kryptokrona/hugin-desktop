@@ -54,18 +54,18 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
-$: {
-    console.log('This window reactive')
-    if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
-        thisWindow.size = 0
-        $videoGrid.hideMyVideo = true
+$:  if (thisWindow && windowCheck) {
+        console.log('This window reactive')
+        if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
+            thisWindow.size = 0
+            $videoGrid.hideMyVideo = true
+        }
+        //Multiview reset test
+        if ($videoGrid.multiView && thisWindow.size !== 1) {
+            thisWindow.size = 1
+            $videoGrid.hideMyVideo = false
+        }
     }
-    //Multiview reset test
-    if ($videoGrid.multiView && thisWindow.size !== 1) {
-        thisWindow.size = 1
-        $videoGrid.hideMyVideo = false
-    }
-}
 
 const resize = (size) => {
     $videoGrid.multiView = false
@@ -75,11 +75,12 @@ const resize = (size) => {
     if (thisWindow.size === 2  && size == 'medium') {
         return
     }
-      //Reset size one step if minsize is set
-    if (thisWindow.size === 1 && size == 'min') {
+      //Reset size to multiview if we minimize one fullscreen
+    if (thisWindow.size === 2 && size == 'min') {
         $videoGrid.multiView = true
         return
     }
+    
     //Size switch
     switch (size) {
       case 'min':
