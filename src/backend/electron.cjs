@@ -688,13 +688,7 @@ async function start_js_wallet(walletName, password, node) {
 
     my_boards = await getMyBoardList()
 
-    const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
-    mainWindow.webContents.send('sync', 'Not syncing')
-    mainWindow.webContents.send('node-sync-data', {
-        walletBlockCount,
-        localDaemonBlockCount,
-        networkBlockCount,
-    })
+    sendNodeInfo()
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
@@ -782,6 +776,18 @@ async function start_js_wallet(walletName, password, node) {
             console.log(err)
         }
     }
+}
+
+function sendNodeInfo() {
+
+    const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
+    mainWindow.webContents.send('sync', 'Not syncing')
+    mainWindow.webContents.send('node-sync-data', {
+        walletBlockCount,
+        localDaemonBlockCount,
+        networkBlockCount,
+    })
+    
 }
 
 async function encryptWallet(wallet, pass) {

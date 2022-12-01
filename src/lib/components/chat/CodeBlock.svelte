@@ -1,5 +1,6 @@
 <script lang="typescript">
     import Highlight from "svelte-highlight";
+    import typescript from "svelte-highlight/languages/typescript";
     import javascript from "svelte-highlight/languages/javascript";
     import github from "svelte-highlight/styles/github";
     import monokai from "svelte-highlight/styles/monokai";
@@ -11,7 +12,7 @@
     {@html monokai}
   </svelte:head>
   
-  <Highlight language={javascript} code={code} />
+  <Highlight language={typescript} code={code} />
 
   <style>
     .c {
