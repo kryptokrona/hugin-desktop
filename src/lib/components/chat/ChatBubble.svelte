@@ -1,4 +1,4 @@
-<script>
+<script lang="typescript">
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {beam, user} from '$lib/stores/user.js'
@@ -7,22 +7,25 @@
     import Time from 'svelte-time'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import Lightning from "$lib/components/icons/Lightning.svelte";
+    import { containsOnlyEmojis } from '$lib/utils/utils'
+    import CodeBlock from './CodeBlock.svelte'
 
-    export let message
-export let handleType
-export let msgFrom
-export let ownMsg
-export let torrent
-export let files
-export let timestamp
-export let beamMsg = false
-let file
-let oldInvite = false
-let beamInvite = false
-let address = $user.huginAddress.substring(0, 99)
-let beamConnected = false
-
-const dispatch = createEventDispatcher()
+    export let message: string
+    export let msgFrom: boolean
+    export let ownMsg: boolean
+    export let torrent: boolean
+    export let files: any
+    export let timestamp: number
+    export let beamMsg = false
+    
+    let file: any
+    let oldInvite = false
+    let beamInvite = false
+    let address = $user.huginAddress.substring(0, 99)
+    let beamConnected = false
+    let codeBlock = false
+    let  emojiMessage = false
+    const dispatch = createEventDispatcher()
 
 $: if (files) {
     file = files[0]
@@ -46,6 +49,18 @@ $: if (message.substring(0,7) === "BEAM://") {
 
     beamInvite = true
   }
+
+//Code block
+$: if (message.startsWith("```") && message.endsWith("```")) {
+    message = message.slice(3,-3)
+    codeBlock = true
+}
+
+  
+//Code block
+$: if (containsOnlyEmojis(message)) {
+    emojiMessage = true
+}
 
   const downloadTorrent = () => {
     console.log("downloading torrent");
@@ -117,6 +132,8 @@ $: if (message.substring(0,7) === "BEAM://") {
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
                         <p in:fade>Beam connected ⚡️</p>
+                    {:else if codeBlock}
+                        <CodeBlock code={message} />
                     {:else}
                     <p class="message">{message}</p>
                 {/if}
@@ -160,6 +177,8 @@ $: if (message.substring(0,7) === "BEAM://") {
                     <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
                     <p in:fade>Beam connected ⚡️</p>
+                    {:else if codeBlock}
+                    <CodeBlock code={message} />
                     {:else}
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}
@@ -234,4 +253,5 @@ $: if (message.substring(0,7) === "BEAM://") {
 .beam {
     box-shadow: 0 0 10px white;
 }
+
 </style>
