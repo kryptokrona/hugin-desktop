@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script>
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {beam, user} from '$lib/stores/user.js'
@@ -10,15 +10,15 @@
     import { containsOnlyEmojis } from '$lib/utils/utils'
     import CodeBlock from './CodeBlock.svelte'
 
-    export let message: string
-    export let msgFrom: boolean
-    export let ownMsg: boolean
-    export let torrent: boolean
-    export let files: any
-    export let timestamp: number
+    export let message
+    export let msgFrom
+    export let ownMsg
+    export let torrent
+    export let files
+    export let timestamp
     export let beamMsg = false
     
-    let file: any
+    let file
     let oldInvite = false
     let beamInvite = false
     let address = $user.huginAddress.substring(0, 99)
