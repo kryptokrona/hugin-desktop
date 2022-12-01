@@ -45,3 +45,10 @@ export const formatBytes = (bytes, decimals = 2) => {
 
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
+
+//Checks for messages that only coinatins emojis.
+export const containsOnlyEmojis = (text) => {
+    const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
+    const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '')
+    return onlyEmojis.length === visibleChars.length
+}
