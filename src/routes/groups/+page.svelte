@@ -10,6 +10,7 @@ import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
+import { containsOnlyEmojis } from '$lib/utils/utils'
 
 let boardMsgs = []
 let replyto = ''
@@ -289,13 +290,6 @@ async function addEmoji() {
         fixedGroups.push(a)
     })
     fixedGroups = fixedGroups
-}
-
-//Checks for messages that only coinatins emojis.
-function containsOnlyEmojis(text) {
-    const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
-    const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '')
-    return onlyEmojis.length === visibleChars.length
 }
 
 //Reactive depending on user.addBoard boolean, displays AddBoard component.
