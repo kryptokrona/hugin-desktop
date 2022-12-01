@@ -24,7 +24,8 @@
     let address = $user.huginAddress.substring(0, 99)
     let beamConnected = false
     let codeBlock = false
-    let  emojiMessage = false
+    let emojiMessage = false
+    let lang = "js"
     const dispatch = createEventDispatcher()
 
 $: if (files) {
@@ -50,9 +51,23 @@ $: if (message.substring(0,7) === "BEAM://") {
     beamInvite = true
   }
 
+let codeMessage
 //Code block
 $: if (message.startsWith("```") && message.endsWith("```")) {
-    message = message.slice(3,-3)
+    checkCodeLang(message)
+}
+
+
+function checkCodeLang(msg) {
+    let codeMsg = msg.slice(3,-3)
+    //The first two letters after ``` indicates code lang
+    if (codeMsg.startsWith("ts") || codeMsg.startsWith("js") ) {
+        codeMessage = codeMsg.slice(2)
+        lang = codeMsg.slice(0,2)
+    } else {
+        lang = "js"
+        codeMessage = codeMsg
+    }
     codeBlock = true
 }
 
@@ -133,7 +148,7 @@ $: if (containsOnlyEmojis(message)) {
                     {:else if beamConnected}
                         <p in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
-                        <CodeBlock code={message} />
+                        <CodeBlock lang={lang} code={codeMessage} />
                     {:else}
                     <p class="message">{message}</p>
                 {/if}
@@ -178,7 +193,7 @@ $: if (containsOnlyEmojis(message)) {
                     {:else if beamConnected}
                     <p in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
-                    <CodeBlock code={message} />
+                    <CodeBlock lang={lang} code={codeMessage} />
                     {:else}
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}

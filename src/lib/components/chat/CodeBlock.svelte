@@ -4,15 +4,32 @@
     import javascript from "svelte-highlight/languages/javascript";
     import github from "svelte-highlight/styles/github";
     import monokai from "svelte-highlight/styles/monokai";
-    export let code:string
+    import vs2015 from "svelte-highlight/styles/vs2015";
+    export let code: string
+    export let style: boolean = false
+    export let lang: string
+    let language:any
+    let codeStyle:any = vs2015
 
+    $: if (style) {
+      codeStyle = style
+    }
+
+    $: if (lang == "js") {
+      language = javascript
+    }
+
+    $: if (lang == "ts") {
+      language = typescript
+    }
+    
   </script>
   
   <svelte:head>
-    {@html monokai}
+    {@html codeStyle}
   </svelte:head>
   
-  <Highlight language={typescript} code={code} />
+  <Highlight language={language} code={code} />
 
   <style>
     .c {
