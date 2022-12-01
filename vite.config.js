@@ -5,7 +5,7 @@ import * as path from 'path'
 const config = {
     plugins: [sveltekit()],
     optimizeDeps: {
-        include: ['dayjs/plugin/relativeTime.js'],
+        include: ['dayjs/plugin/relativeTime.js', "highlight.js", "highlight.js/lib/core"],
     },
     server: {
         fs: {

@@ -254,7 +254,6 @@ const hideModal = () => {
                         on:download="{() => download(message.msg)}"
                         files="{message.file}"
                         torrent="{message.magnet}"
-                        handleType="{message.sent}"
                         message="{message.msg}"
                         ownMsg="{message.sent}"
                         msgFrom="{message.chat}"
