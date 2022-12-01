@@ -31,10 +31,17 @@
         window.api.removeAllListeners("emoji-click");
     })
 
-    const enter = (e) => {
-        if (messageInput && e.keyCode === 13) {
-            sendMsg()
-        }
+    let shiftKey
+    const keyup = (e) => {
+      if(e.key === 'Shift') shiftKey = false
+        if (messageInput && !shiftKey && e.key === 'Enter') {
+             sendMsg()
+         }
+      autosize()
+    }
+
+    const keydown = (e) => {
+      if(e.key === 'Shift') shiftKey = true
     }
 
     //This handles the emojis, lets fork the repo and make a darker theme.
@@ -60,6 +67,7 @@
         })
         //Reset input field
         messageInput = ''
+      messageField.style.cssText = 'height: 40px';
     }
 
     //Checks if input is empty
@@ -95,14 +103,20 @@
       }
     }
 
+    function autosize(){
+      console.log(messageField.scrollHeight)
+        messageField.style.cssText = 'height:auto';
+        messageField.style.cssText = 'height:' + messageField.scrollHeight + 'px';
+    }
+
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}"/>
+<svelte:window on:keyup="{keyup}" on:keydown="{keydown}"/>
 
-<div class="wrapper" class:rtc class:border-bottom="{$page.url.pathname === '/boards'}"
+<div class="wrapper" class:rtc
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <input type="text" placeholder="Message.." bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}/>
+    <textarea rows="1" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false} autofocus></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="position: relative; display: flex:">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
@@ -120,7 +134,6 @@
 <style lang="scss">
 
   .wrapper {
-    height: 73px;
     padding: 1rem;
     width: 100%;
     display: flex;
@@ -128,6 +141,7 @@
   }
 
   .border-top {
+    cursor: grab;
     border-bottom: 1px solid transparent;
     border-top: 1px solid var(--border-color);
   }
@@ -137,14 +151,20 @@
     border-top: 1px solid transparent;
   }
 
-  input {
-    width: inherit;
+  textarea {
+    overflow: auto;
+    box-sizing: padding-box;
     background-color: rgba(255, 255, 255, 0.1);
     border: none;
     border-radius: 8px 0 0 8px;
     color: #ffffff;
+    display:block;
+    width: inherit;
     padding: 10px 15px;
-    margin: 0;
+    font-size: 14px;
+    min-height: 40px;
+    resize: none;
+    max-height: 260px;
 
     &:focus {
       outline: none;
