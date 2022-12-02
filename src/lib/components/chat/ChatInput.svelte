@@ -57,7 +57,7 @@
   }
 
   //Input data to dispatch
-  let messageInput
+  let messageInput = ""
 
   //To handle button disabled enabled
   let enableSend = false
@@ -72,15 +72,23 @@
       offChain: off_chain,
       beam: activeBeam
     })
-    //Reset input field
-    messageField.style.cssText = 'height:auto';
-    messageField.style.cssText = 'height: 40px';
+    resetInputHeight()
     messageInput = ''
   }
 
   //Checks if input is empty
   $: {
     enableSend = !!messageInput
+  }
+
+  $: if (messageInput.length < 2) resetInputHeight()
+  
+
+  const resetInputHeight = () => {
+     //Reset input field
+    if (!messageField) return
+    messageField.style.cssText = 'height:auto';
+    messageField.style.cssText = 'height: 40px';
   }
 
   $: {
@@ -175,11 +183,16 @@
     min-height: 40px;
     resize: none;
     max-height: 260px;
+    font-family: "Montserrat";
 
     &:focus {
       outline: none;
     }
   }
+
+  textarea::-webkit-scrollbar {
+    display: none;
+}
 
   .button {
     display: flex;
