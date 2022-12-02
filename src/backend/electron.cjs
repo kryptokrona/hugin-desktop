@@ -865,6 +865,11 @@ async function backgroundSyncMessages(checkedTxs = false) {
                 let thisExtra = transactions[transaction].transactionPrefixInfo.extra
                 let thisHash = transactions[transaction].transactionPrefixInfotxHash
 
+                if (thisExtra.length > 7000) {
+                    known_pool_txs.push(thisHash)
+                    continue;
+                }
+
                 if (known_pool_txs.indexOf(thisHash) === -1) {
                     known_pool_txs.push(thisHash)
                 } else {
