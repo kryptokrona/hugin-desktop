@@ -28,10 +28,11 @@
   <svelte:head>
     {@html codeStyle}
   </svelte:head>
-  
+  <div class="code">
   <Highlight language={language} code={code} />
+</div>
 
-  <style>
+  <style lang="scss">
     .c {
       overflow: visible;
     }
@@ -79,6 +80,12 @@
     pre {
       margin: 0;
     }
+
+    .code {
+      display: flex;
+      width: 100%;
+    }
+    
     code {
       --base: #282c34;
       display: block;
@@ -88,9 +95,14 @@
       background: var(--base);
       background: #002451;
       color: white;
-      font-family: "Fira code", monospace;
+      font-family: "Montserrat";
       font-size: 0.9em;
     }
+
+    pre code.hljs {
+      white-space: pre-wrap;
+    }
+    
     code :global(.hljs-comment),
     code :global(.hljs-quote) {
       color: #7285b7;

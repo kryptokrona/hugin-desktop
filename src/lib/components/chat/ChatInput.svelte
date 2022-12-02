@@ -35,7 +35,9 @@
   const keyup = (e) => {
     if (e.key === 'Shift') shiftKey = false
     if (messageInput && !shiftKey && e.key === 'Enter') {
-      sendMsg()
+      let msg = messageInput.trim()
+      sendMsg(msg)
+      return false
     }
     if(shiftKey && e.key ==='Enter') {
       autosize()
@@ -61,16 +63,19 @@
   let enableSend = false
 
   //Dispatches the input data to parent and resets input.
-  const sendMsg = () => {
+  const sendMsg = (msg = false) => {
+    if (msg) {
+      messageInput = msg
+    }
     dispatch('message', {
       text: messageInput,
       offChain: off_chain,
       beam: activeBeam
     })
     //Reset input field
-    messageInput = ''
     messageField.style.cssText = 'height:auto';
     messageField.style.cssText = 'height: 40px';
+    messageInput = ''
   }
 
   //Checks if input is empty
@@ -121,8 +126,7 @@
 <div class="wrapper" class:rtc
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <textarea rows="1" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}
-              autofocus></textarea>
+    <textarea rows="1" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false} autofocus></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="position: relative; display: flex:">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
