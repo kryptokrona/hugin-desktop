@@ -62,7 +62,7 @@ function checkCodeLang(msg) {
     let codeMsg = msg.slice(3,-3)
     //The first two letters after ``` indicates code lang
     if (codeMsg.startsWith("ts") || codeMsg.startsWith("js") ) {
-        codeMessage = codeMsg.slice(2)
+        codeMessage = codeMsg.slice(2).trim()
         lang = codeMsg.slice(0,2)
     } else {
         lang = "js"
@@ -251,6 +251,7 @@ $: if (containsOnlyEmojis(message)) {
         font-weight: 400;
         color: var(--text-color);
         font-size: 15px;
+        user-select: all;
     }
 }
 
