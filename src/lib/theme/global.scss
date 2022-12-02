@@ -383,6 +383,14 @@ code {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.2);
 }
 
+ code :global(.hljs) {
+      white-space: pre-wrap !important;
+    }
+
+    pre code.hljs {
+        white-space: pre-wrap;
+      }
+
 .shine {
     width:200%;
     height:200%;
