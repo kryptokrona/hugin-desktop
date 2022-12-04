@@ -227,7 +227,7 @@ window.api.receive('sent_rtc_group', (data) => {
 </script>
 
 <!-- {#if $webRTC.call.length > 1} -->
-<div class="chat layered-shadow" in:fade="{{ duration: 250 }}" class:show="{!$videoGrid.showChat}">
+<div class="chat layered-shadow" in:fade="{{ duration: 250 }}" class:hide="{!$videoGrid.showChat}">
     <div class="outer" id="chat_window">
         <!--    <div class="fade"></div>-->
         <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
@@ -313,7 +313,7 @@ p {
     max-width: 330px;
 }
 
-.show {
+.hide {
     display: flex !important;
     margin-right: 0px;
     transition: all 0.3s ease-in-out;
