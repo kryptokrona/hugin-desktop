@@ -78,6 +78,7 @@ $: console.log('video calls', videoCalls)
     z-index: 9999;
     transition: all 500ms ease-in-out;
     border-radius: 15px;
+    overflow: hidden;
 }
 
 .video-wrapper {

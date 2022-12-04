@@ -6,6 +6,8 @@ import { rtc_groups, user, webRTC } from '$lib/stores/user.js'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 //Use for filesharing later
 import { videoGrid } from '$lib/stores/layout-state.js'
+import { containsOnlyEmojis } from '$lib/utils/utils'
+import { fade } from 'svelte/transition'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -209,14 +211,6 @@ async function addEmoji() {
     fixedRtcGroups = fixedRtcGroups
 }
 
-//Checks for messages that only coinatins emojis.
-function containsOnlyEmojis(text) {
-    const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
-    const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '')
-    console.log(onlyEmojis.length === visibleChars.length)
-    return onlyEmojis.length === visibleChars.length
-}
-
 function addHash(data) {
     fixedRtcGroups.some(function (a) {
         if (a.hash === data.time) {
@@ -233,7 +227,7 @@ window.api.receive('sent_rtc_group', (data) => {
 </script>
 
 <!-- {#if $webRTC.call.length > 1} -->
-<div class="chat layered-shadow" class:hide="{!$videoGrid.showChat}">
+<div class="chat layered-shadow" in:fade="{{ duration: 250 }}" class:show="{!$videoGrid.showChat}">
     <div class="outer" id="chat_window">
         <!--    <div class="fade"></div>-->
         <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
@@ -273,9 +267,6 @@ window.api.receive('sent_rtc_group', (data) => {
     border-radius: 0.4rem;
     overflow: hidden;
     transition: all 300ms ease-in-out;
-}
-
-.hide {
     margin-right: -370px;
 }
 
@@ -320,5 +311,11 @@ window.api.receive('sent_rtc_group', (data) => {
 
 p {
     max-width: 330px;
+}
+
+.show {
+    display: flex !important;
+    margin-right: 0px;
+    transition: all 0.3s ease-in-out;
 }
 </style>

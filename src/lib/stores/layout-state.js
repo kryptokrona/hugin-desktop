@@ -14,5 +14,5 @@ export const videoGrid = writable({
     showVideoGrid: true,
     peerVideos: [],
     hideMyVideo: false,
-    multiView: false,
+    multiView: true,
 })
