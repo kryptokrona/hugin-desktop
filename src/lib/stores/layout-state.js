@@ -11,8 +11,8 @@ export const layoutState = writable({
 
 export const videoGrid = writable({
     showChat: false,
-    showVideoGrid: true,
+    showVideoGrid: false,
     peerVideos: [],
     hideMyVideo: false,
-    multiView: true,
+    multiView: false,
 })
