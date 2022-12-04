@@ -72,6 +72,11 @@ const showMessages = () => {
     $videoGrid.showChat = !$videoGrid.showChat
     $videoGrid.multiView = true
 }
+
+const hideGrid = () => {
+    $videoGrid.showVideoGrid = false
+    $videoGrid.showChat = false
+}
 </script>
 
 <div class="wrapper layered-shadow">
@@ -109,14 +114,11 @@ const showMessages = () => {
         <div class="icon">
             <Contacts />
         </div>
-        <div class="icon" on:click={()=> ($videoGrid.multiView = true)}>
-            <p>Reset window</p>
-        </div>
         <!-- <div class="icon">
             <AudioSources />
         </div> -->
     </div>
-    <div class="icon" on:click="{() => ($videoGrid.showVideoGrid = false)}">
+    <div class="icon" on:click="{() => hideGrid()}">
         <HideVideoGrid />
     </div>
     <div>
