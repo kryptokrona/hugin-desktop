@@ -5,6 +5,13 @@
         "output": "dist"
     },
     "mac": {
+        "target": {
+            "target": "default",
+            "arch": [
+                "x64",
+                "arm64"
+            ]
+        },
         "category": "",
         "hardenedRuntime": true,
         "gatekeeperAssess": false,
