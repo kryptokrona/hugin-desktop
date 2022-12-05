@@ -49,6 +49,11 @@ const toggleAudio = () => {
     toggle = !toggle
     $webRTC.myStream.getTracks().forEach((track) => (track.enabled = !track.enabled))
 }
+
+const showGrid = () => {
+    $videoGrid.showVideoGrid = true
+    $videoGrid.showChat = false
+}
 </script>
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
@@ -75,7 +80,7 @@ const toggleAudio = () => {
             <div on:click="{endCall}">
                 <CallSlash />
             </div>
-            <div on:click="{() => ($videoGrid.showVideoGrid = true)}">
+            <div on:click="{() => showGrid()}">
                 <ShowVideoMenu />
             </div>
         </div>
