@@ -36,8 +36,7 @@
   const keyup = (e) => {
     if (e.key === 'Shift') shiftKey = false
     if (messageInput && !shiftKey && e.key === 'Enter') {
-      let msg = messageInput.trim()
-      sendMsg(msg)
+      sendMsg()
       return false
     }
     if(shiftKey && e.key ==='Enter') {
@@ -64,12 +63,11 @@
   let enableSend = false
 
   //Dispatches the input data to parent and resets input.
-  const sendMsg = (msg = false) => {
-    if (msg) {
-      messageInput = msg
-    }
+  const sendMsg = () => {
+    //Trim spaces
+    let msg = messageInput.trim()
     dispatch('message', {
-      text: messageInput,
+      text: msg,
       offChain: off_chain,
       beam: activeBeam
     })
