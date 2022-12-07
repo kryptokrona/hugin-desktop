@@ -58,11 +58,14 @@ $:  if (thisWindow && windowCheck) {
         console.log('This window reactive')
         if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
             thisWindow.size = 0
+            $videoGrid.showChat = false
             $videoGrid.hideMyVideo = true
+            
         }
         //Multiview reset test
         if ($videoGrid.multiView && thisWindow.size !== 1) {
             thisWindow.size = 1
+            $videoGrid.showChat = false
             $videoGrid.hideMyVideo = false
         }
     }
