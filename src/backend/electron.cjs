@@ -85,6 +85,7 @@ const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
 
+const crypto = new Crypto()
 const xkrUtils = new CryptoNote()
 const hexToUint = (hexString) =>
     new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
@@ -826,6 +827,28 @@ async function openWallet(walletName, password) {
     }
 }
 
+//Checks the message for a view tag
+async function checkMessage(extra) {
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
+    try {
+    let rawExtra = trimExtra(extra)
+    let parsed_box = JSON.parse(rawExtra)
+        if (parsed_box.vt) {
+            let derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
+            let hashDerivation = await crypto.cn_fast_hash(derivation)
+            let possibleTag = hashDerivation.substring(0,1)
+            let view_tag = parsed_box.vt
+            if (possibleTag === view_tag) {
+                console.log('**** FOUND VIEWTAG ****')
+                return true
+            }
+        }
+    } catch (err) {
+        console.log('No box or viewtag')
+    }
+    return false
+}
+
 async function backgroundSyncMessages(checkedTxs = false) {
     if (checkedTxs) {
         console.log('First start, push knownTxs db to known pool txs')
@@ -878,6 +901,14 @@ async function backgroundSyncMessages(checkedTxs = false) {
                 }
                 let message
                 if (thisExtra !== undefined && thisExtra.length > 200) {
+                   
+                    let checkTag = await checkMessage(thisExtra)
+
+                    if (checKTag) {
+                        console.log('Found a possible message to me')
+                        //TODO try decrypt extradata to message here? else try check if its a group message
+                    }
+
                     message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
                     if (!message || message === undefined) {
                         let group = trimExtra(thisExtra)
@@ -960,8 +991,6 @@ async function saveContact(hugin_address, nickname = false, first = false) {
         known_keys.pop(key)
     }
 }
-
-let crypto = new Crypto()
 
 async function hashPassword(pass) {
     return await crypto.cn_fast_hash(toHex(pass))
@@ -1079,14 +1108,21 @@ async function saveMessage(msg, hash, offchain = false) {
     mainWindow.webContents.send('privateMsg', newMsg)
 }
 
-async function encryptMessage(message, messageKey, sealed = false) {
+async function encryptMessage(message, messageKey, sealed = false, toAddr) {
 
     let timestamp = Date.now()
     let my_address = await js_wallet.getPrimaryAddress()
-    const addr = await Address.fromAddress(my_address)
+    const addr = await Address.fromAddress(toAddr)
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     let xkr_private_key = privateSpendKey
     let box
+
+    //Create the view tag using a one time private key and the receiver view key
+    const keys = await crypto.generateKeys();
+    const toKey = addr.m_keys.m_viewKeys.m_publicKey
+    const outDerivation = await crypto.generateKeyDerivation(toKey, keys.private_key);
+    const hashDerivation = await crypto.cn_fast_hash(outDerivation)
+    const viewTag = hashDerivation.substring(0,1)
 
     if (sealed) {
 
@@ -1117,8 +1153,9 @@ async function encryptMessage(message, messageKey, sealed = false) {
     }
 
     //Box object
-    let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp }
+    let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp, txKey: keys.public_key, vt: viewTag  }
     // Convert json to hex
+
     let payload_hex = toHex(JSON.stringify(payload_box))
 
     return payload_hex
@@ -1398,12 +1435,11 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
     let payload_hex
 
     if (!has_history) {
-        payload_hex = await encryptMessage(message, messageKey, true)
+        payload_hex = await encryptMessage(message, messageKey, true, address)
     } else {
-        payload_hex = await encryptMessage(message, messageKey, false)
+        payload_hex = await encryptMessage(message, messageKey, false, address)
     }
-
-    console.log('Payload hex', payload_hex)
+    
     //Choose subwallet with message inputs
     let messageWallet = js_wallet.subWallets.getAddresses()[1]
 
