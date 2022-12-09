@@ -831,13 +831,13 @@ async function openWallet(walletName, password) {
 async function checkMessage(extra) {
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     try {
-    let rawExtra = trimExtra(extra)
-    let parsed_box = JSON.parse(rawExtra)
+    const rawExtra = trimExtra(extra)
+    const parsed_box = JSON.parse(rawExtra)
         if (parsed_box.vt) {
-            let derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
-            let hashDerivation = await crypto.cn_fast_hash(derivation)
-            let possibleTag = hashDerivation.substring(0,1)
-            let view_tag = parsed_box.vt
+            const derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
+            const hashDerivation = await crypto.cn_fast_hash(derivation)
+            const possibleTag = hashDerivation.substring(0,1)
+            const view_tag = parsed_box.vt
             if (possibleTag === view_tag) {
                 console.log('**** FOUND VIEWTAG ****')
                 return true
@@ -904,7 +904,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
                    
                     let checkTag = await checkMessage(thisExtra)
 
-                    if (checKTag) {
+                    if (checkTag) {
                         console.log('Found a possible message to me')
                         //TODO try decrypt extradata to message here? else try check if its a group message
                     }
