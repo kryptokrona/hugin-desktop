@@ -416,56 +416,6 @@ ipcMain.on('app', (data) => {
     }
 })
 
-ipcMain.on("end-beam", async (e, chat) => {
-    console.log("end beam");
-    endBeam(chat, sender);
-});
-
-ipcMain.on("beam", async (e, link, chat) => {
-    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
-    if (beamMessage === "Error") return
-    if (!beamMessage) return
-    sendMessage(beamMessage.msg, beamMessage.chat, false)
-
-});
-
-ipcMain.on('check-new-release', () => {
-    console.log('checking if new release')
-    autoUpdater.checkForUpdates()
-})
-
-autoUpdater.on('checking-for-update', () => {
-    mainWindow.webContents.send('updater', 'checking')
-})
-
-autoUpdater.on('update-available', () => {
-    mainWindow.webContents.send('updater', 'available')
-})
-
-autoUpdater.on('update-not-available', () => {
-    mainWindow.webContents.send('updater', 'not-available')
-})
-
-autoUpdater.on('download-progress', (progress) => {
-    mainWindow.webContents.send('update-progress', progress)
-})
-
-autoUpdater.on('error', (err) => {
-    mainWindow.webContents.send('updater', err)
-})
-
-autoUpdater.on('update-downloaded', () => {
-    mainWindow.webContents.send('updater', 'downloaded')
-})
-
-ipcMain.on('download-update', (e) => {
-    autoUpdater.downloadUpdate()
-})
-
-ipcMain.on('install-update', async (e, data) => {
-    autoUpdater.quitAndInstall()
-})
-
 const sender = (channel, data) => {
     mainWindow.webContents.send(channel, data)
 }
@@ -683,7 +633,6 @@ async function start_js_wallet(walletName, password, node) {
             return knownTX.hash
         })
     } else {
-        //Push one test hash to the array if this is a new account, this should be empty?
         checkedTxs = []
     }
 
@@ -815,7 +764,6 @@ function saveWalletToFile(wallet, walletName, password) {
 }
 
 async function openWallet(walletName, password) {
-    console.log('Open wallet', walletName)
     let json_wallet
 
     try {
@@ -1244,9 +1192,7 @@ async function sendGroupsMessage(message, offchain = false) {
     } else if (offchain) {
         //Generate a random hash
         let randomKey = await createGroup()
-
         let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
-        console.log('sending group rtc message')
         let sendMsg = randomKey + '99' + sentMsg
         let messageArray = [sendMsg]
         mainWindow.webContents.send('rtc_message', messageArray, true)
@@ -1254,9 +1200,6 @@ async function sendGroupsMessage(message, offchain = false) {
             hash: randomKey,
             time: message.t,
         })
-        console.log('payload', messageArray)
-        //let saveMsg = { msg: message, k: messageKey, sent: true, t: timestamp, chat: address };
-        //saveMessageSQL(saveMsg, randomKey, true);
     }
 }
 
@@ -1487,7 +1430,6 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         //Offchain messages
         let randomKey = await createGroup()
         let sentMsg = Buffer.from(payload_hex, 'hex')
-        console.log('sending offchain message')
         let sendMsg = randomKey + '99' + sentMsg
         let messageArray = []
         messageArray.push(sendMsg)
@@ -1496,7 +1438,6 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
             messageArray.push('group')
         }
         if (beam_this) {
-            console.log('beam this')
             sendBeamMessage(sendMsg, address)
         } else {
             mainWindow.webContents.send('rtc_message', messageArray)
@@ -1665,6 +1606,63 @@ async function resetOptimizeTimer() {
     });
 }
 
+function parseCall(msg, sender, sent, emitCall = true, group = false) {
+    switch (msg.substring(0, 1)) {
+        case 'Δ':
+        // Fall through
+        case 'Λ':
+            // Call offer
+            if (emitCall) {
+                // Start ringing sequence
+                console.log('sent?', sent)
+                if (!sent) {
+                    console.log('call  incoming')
+                    mainWindow.webContents.send('call-incoming', msg, sender, group)
+                    // Handle answer/decline here
+                }
+                console.log('call incoming')
+            }
+            return `${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
+            break
+        case 'δ':
+        // Fall through
+        case 'λ':
+            // Answer
+            if (sent) return 'Call answered'
+            if (emitCall) {
+                let callback = JSON.stringify(expand_sdp_answer(msg))
+                let callerdata = {
+                    data: callback,
+                    chat: sender,
+                }
+                mainWindow.webContents.send('got-callback', callerdata)
+            }
+
+            return 'Call answered'
+
+            break
+        default:
+            return msg
+    }
+}
+
+//BEAM
+
+ipcMain.on("beam", async (e, link, chat) => {
+    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
+    if (beamMessage === "Error") return
+    if (!beamMessage) return
+    sendMessage(beamMessage.msg, beamMessage.chat, false)
+
+});
+
+
+ipcMain.on("end-beam", async (e, chat) => {
+    console.log("end beam");
+    endBeam(chat, sender);
+});
+
+//TORRENTS
 
 ipcMain.on('download', async (e, link) => {
     console.log('ipcmain downloading')
@@ -1676,6 +1674,26 @@ ipcMain.on('upload', async (e, filename, path, address) => {
     console.log('ipcmain uploading')
     return
     upload(filename, path, address)
+})
+
+//GROUPS
+
+ipcMain.handle('getGroups', async (e) => {
+    let groups = await getGroups()
+    return groups.reverse()
+})
+
+ipcMain.handle('printGroup', async (e, grp) => {
+    return await printGroup(grp)
+})
+
+ipcMain.handle('getGroupReply', async (e, data) => {
+    return await getGroupReply(data)
+})
+
+
+ipcMain.handle('createGroup', async () => {
+    return await createGroup()
 })
 
 ipcMain.on('unblock', async (e, address) => {
@@ -1690,6 +1708,31 @@ ipcMain.on('block', async (e, contact, name) => {
     mainWindow.webContents.send('update-blocklist', block_list)
 })
 
+
+ipcMain.on('addGroup', async (e, grp) => {
+    addGroup(grp)
+    saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
+})
+
+ipcMain.on('removeGroup', async (e, grp) => {
+    removeGroup(grp)
+})
+
+
+//BOARDS
+
+//Listens for ipc call from RightMenu board picker and prints any board chosen
+ipcMain.handle('printBoard', async (e, board) => {
+    return await printBoard(board)
+})
+
+ipcMain.handle('getAllBoards', async () => {
+    return await getBoardMsgs()
+})
+
+ipcMain.handle('getMyBoards', async () => {
+    return await getMyBoardList()
+})
 //Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
 ipcMain.on('addBoard', async (e, board) => {
     my_boards.push(board)
@@ -1701,20 +1744,25 @@ ipcMain.on('removeBoard', async (e, board) => {
     removeBoard(board)
 })
 
-//Adds board to my_boards array so backgroundsync is up to date wich boards we are following.
-ipcMain.on('addGroup', async (e, grp) => {
-    addGroup(grp)
-    saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
+ipcMain.handle('getReply', async (e, data) => {
+    return await getReply(data)
 })
 
-ipcMain.on('removeGroup', async (e, grp) => {
-    removeGroup(grp)
+
+//PRIVATE MESSAGES
+
+ipcMain.handle('getConversations', async (e) => {
+    let contacts = await getConversations()
+    return contacts.reverse()
 })
 
-ipcMain.on('removeContact', async (e, contact) => {
-    await removeContact(contact)
-    await removeMessages(contact)
-    mainWindow.webContents.send('sent')
+ipcMain.handle('getMessages', async (data) => {
+    return await getMessages()
+})
+
+ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
+    sendMessage(msg, receiver, off_chain, grp, beam)
+    console.log(msg, receiver, off_chain, grp, beam)
 })
 
 //Listens for event from frontend and saves contact and nickname.
@@ -1724,48 +1772,20 @@ ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
 })
 
 
-ipcMain.handle('createGroup', async () => {
-    return await createGroup()
+ipcMain.on('removeContact', async (e, contact) => {
+    await removeContact(contact)
+    await removeMessages(contact)
+    mainWindow.webContents.send('sent')
 })
 
-ipcMain.handle('getPrivateKeys', async () => {
-    const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys()
-    return [spendKey, viewKey]
+
+//NODE
+
+ipcMain.handle('getHeight', async () => {
+    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
+    return { walletHeight, networkHeight }
 })
 
-ipcMain.handle('getMnemonic', async () => {
-    return await js_wallet.getMnemonicSeed()
-})
-
-//Gets n transactions per page to view in frontend
-ipcMain.handle('getTransactions', async (e, startIndex) => {
-    let startFrom = startIndex
-    const showPerPage = 10
-    const allTx = await js_wallet.getTransactions()
-    const pages = Math.ceil(allTx.length / showPerPage)
-    const pageTx = []
-    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
-        let amount = WB.prettyPrintAmount(tx.totalAmount())
-        tx.transfers.forEach(function (value) {
-            if (value === -1000) {
-                amount = -0.01000
-            }
-        })
-        pageTx.push({
-            hash: tx.hash,
-            amount: amount.toString(),
-            time: tx.timestamp,
-        })
-    }
-
-    return { pageTx, pages }
-})
-
-ipcMain.on('openLink', (e, url) => {
-    shell.openExternal(url)
-})
-
-//SWITCH NODE
 ipcMain.on('switchNode', async (e, node) => {
     console.log(`Switching node to ${node}`)
     nodeUrl = node.split(':')[0]
@@ -1781,22 +1801,8 @@ ipcMain.on('switchNode', async (e, node) => {
     await db.write()
 })
 
-ipcMain.on('sendTx', (e, tx) => {
-    sendTx(tx)
-})
 
-ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
-    sendMessage(msg, receiver, off_chain, grp, beam)
-    console.log(msg, receiver, off_chain, grp, beam)
-})
-
-ipcMain.on('sendBoardMsg', (e, msg) => {
-    sendBoardMessage(msg)
-})
-
-ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
-    sendGroupsMessage(msg, offchain)
-})
+//CALLS
 
 ipcMain.on('answerCall', (e, msg, contact, key, offchain = false) => {
     console.log('Answer call', msg, contact, key, offchain)
@@ -1813,66 +1819,7 @@ ipcMain.on('create-room', async (e, type) => {
     mainWindow.webContents.send('start-room', type)
 })
 
-ipcMain.on('optimize', async (e) => {
-    optimizeMessages(force = true)
-})
-
-ipcMain.on('rescan', async (e) => {
-    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
-    js_wallet.reset(networkHeight - 10000)
-})
-
-ipcMain.handle('getMessages', async (data) => {
-    return await getMessages()
-})
-
-ipcMain.handle('getReply', async (e, data) => {
-    return await getReply(data)
-})
-
-ipcMain.handle('getGroupReply', async (e, data) => {
-    return await getGroupReply(data)
-})
-
-ipcMain.handle('getConversations', async (e) => {
-    let contacts = await getConversations()
-    return contacts.reverse()
-})
-
-ipcMain.handle('getGroups', async (e) => {
-    let groups = await getGroups()
-    return groups.reverse()
-})
-
-ipcMain.handle('printGroup', async (e, grp) => {
-    return await printGroup(grp)
-})
-
-//Listens for ipc call from RightMenu board picker and prints any board chosen
-ipcMain.handle('printBoard', async (e, board) => {
-    return await printBoard(board)
-})
-
-ipcMain.handle('getAllBoards', async () => {
-    return await getBoardMsgs()
-})
-
-ipcMain.handle('getMyBoards', async () => {
-    return await getMyBoardList()
-})
-
-ipcMain.handle('getBalance', async () => {
-    return await js_wallet.getBalance()
-})
-
-ipcMain.handle('getAddress', async () => {
-    return js_wallet.getAddresses()
-})
-
-ipcMain.handle('getHeight', async () => {
-    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
-    return { walletHeight, networkHeight }
-})
+//CALL USER MEDIA
 
 ipcMain.on('startCall', async (e, contact, calltype) => {
     if (process.platform === 'darwin') {
@@ -1915,6 +1862,69 @@ ipcMain.on('change-audio-src', async (e, id) => {
 ipcMain.on('check-srcs', async (e, src) => {
     mainWindow.webContents.send('check-src', src)
 })
+
+
+//WALLET
+
+//Rescan wallet //TODO add height
+ipcMain.on('rescan', async (e) => {
+    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
+    js_wallet.reset(networkHeight - 10000)
+})
+
+//Optimize messages
+ipcMain.on('optimize', async (e) => {
+    optimizeMessages(force = true)
+})
+
+ipcMain.on('sendTx', (e, tx) => {
+    sendTx(tx)
+})
+
+ipcMain.handle('getPrivateKeys', async () => {
+    const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys()
+    return [spendKey, viewKey]
+})
+
+ipcMain.handle('getMnemonic', async () => {
+    return await js_wallet.getMnemonicSeed()
+})
+
+//Gets n transactions per page to view in frontend
+ipcMain.handle('getTransactions', async (e, startIndex) => {
+    let startFrom = startIndex
+    const showPerPage = 10
+    const allTx = await js_wallet.getTransactions()
+    const pages = Math.ceil(allTx.length / showPerPage)
+    const pageTx = []
+    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
+        let amount = WB.prettyPrintAmount(tx.totalAmount())
+        tx.transfers.forEach(function (value) {
+            if (value === -1000) {
+                amount = -0.01000
+            }
+        })
+        pageTx.push({
+            hash: tx.hash,
+            amount: amount.toString(),
+            time: tx.timestamp,
+        })
+    }
+
+    return { pageTx, pages }
+})
+
+
+ipcMain.handle('getBalance', async () => {
+    return await js_wallet.getBalance()
+})
+
+ipcMain.handle('getAddress', async () => {
+    return js_wallet.getAddresses()
+})
+
+
+//WEBRTC MESSAGES //TODO CREATE FUNCS
 
 ipcMain.on('decrypt_message', async (e, message) => {
     console.log('message to decrypt??', message)
@@ -1990,45 +2000,12 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
     }
 })
 
-function parseCall(msg, sender, sent, emitCall = true, group = false) {
-    switch (msg.substring(0, 1)) {
-        case 'Δ':
-        // Fall through
-        case 'Λ':
-            // Call offer
-            if (emitCall) {
-                // Start ringing sequence
-                console.log('sent?', sent)
-                if (!sent) {
-                    console.log('call  incoming')
-                    mainWindow.webContents.send('call-incoming', msg, sender, group)
-                    // Handle answer/decline here
-                }
-                console.log('call incoming')
-            }
-            return `${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
-            break
-        case 'δ':
-        // Fall through
-        case 'λ':
-            // Answer
-            if (sent) return 'Call answered'
-            if (emitCall) {
-                let callback = JSON.stringify(expand_sdp_answer(msg))
-                let callerdata = {
-                    data: callback,
-                    chat: sender,
-                }
-                mainWindow.webContents.send('got-callback', callerdata)
-            }
 
-            return 'Call answered'
+//MISC
 
-            break
-        default:
-            return msg
-    }
-}
+ipcMain.on('openLink', (e, url) => {
+    shell.openExternal(url)
+})
 
 ipcMain.on('expand-sdp', (e, data, address) => {
     let recovered_data = expand_sdp_offer(data, true)
@@ -2054,3 +2031,46 @@ ipcMain.on('get-sdp', (e, data) => {
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     }
 })
+
+
+//UPDATES
+
+ipcMain.on('check-new-release', () => {
+    console.log('checking if new release')
+    autoUpdater.checkForUpdates()
+})
+
+autoUpdater.on('checking-for-update', () => {
+    mainWindow.webContents.send('updater', 'checking')
+})
+
+autoUpdater.on('update-available', () => {
+    mainWindow.webContents.send('updater', 'available')
+})
+
+autoUpdater.on('update-not-available', () => {
+    mainWindow.webContents.send('updater', 'not-available')
+})
+
+autoUpdater.on('download-progress', (progress) => {
+    mainWindow.webContents.send('update-progress', progress)
+})
+
+autoUpdater.on('error', (err) => {
+    mainWindow.webContents.send('updater', err)
+})
+
+autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('updater', 'downloaded')
+})
+
+ipcMain.on('download-update', (e) => {
+    autoUpdater.downloadUpdate()
+})
+
+ipcMain.on('install-update', async (e, data) => {
+    autoUpdater.quitAndInstall()
+})
+
+
+
