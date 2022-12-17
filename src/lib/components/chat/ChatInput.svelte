@@ -18,7 +18,7 @@
   let off_chain
   let mount = false
   let activeBeam = false
-  let to = "Contact"
+  let to = ""
 
   onMount(async () => {
     mount = true
@@ -36,6 +36,7 @@
   const keyup = (e) => {
     if (e.key === 'Shift') shiftKey = false
     if (messageInput && !shiftKey && e.key === 'Enter') {
+      e.preventDefault()
       sendMsg()
       return false
     }
@@ -46,6 +47,9 @@
 
   const keydown = (e) => {
     if (e.key === 'Shift') shiftKey = true
+    if (messageInput && !shiftKey && e.key === 'Enter') { 
+      e.preventDefault()
+    }
   }
 
   //This handles the emojis, lets fork the repo and make a darker theme.
@@ -134,11 +138,8 @@
 
     if ($page.url.pathname === '/messages') {
       to = $user.activeChat.name
-    } 
+    }
 
-    if ($videoGrid.showChat && $videoGrid.showVideoGrid) {
-      to = "Call chat"
-    } 
   }
 
 </script>
@@ -148,7 +149,7 @@
 <div class="wrapper" class:rtc
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false} autofocus></textarea>
+    <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="position: relative; display: flex:">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
