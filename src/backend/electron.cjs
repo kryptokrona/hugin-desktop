@@ -652,12 +652,8 @@ async function start_js_wallet(walletName, password, node) {
         mainWindow.webContents.send('new-message', transaction.toJSON())
     })
     //Get primary address and fuse it with our message key to create our hugin address
-    let myAddress
-    let msgKey
-    myAddress = await js_wallet.getPrimaryAddress()
-
-    console.log('XKR Address', myAddress)
-    msgKey = getMsgKey()
+    let myAddress = await js_wallet.getPrimaryAddress()
+    let msgKey = getMsgKey()
     console.log('Hugin Address', myAddress + msgKey)
 
     mainWindow.webContents.send('addr', myAddress + msgKey)
@@ -742,7 +738,6 @@ function sendNodeInfo() {
 
 async function encryptWallet(wallet, pass) {
     const encrypted_wallet = await wallet.encryptWalletToString(pass)
-
     return encrypted_wallet
 }
 
@@ -1200,6 +1195,71 @@ async function sendGroupsMessage(message, offchain = false) {
             hash: randomKey,
             time: message.t,
         })
+    }
+}
+
+async function decryptRtcMessage(message) {
+    let hash = message.substring(0, 64)
+    let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
+
+    if (newMsg) {
+        newMsg.sent = false
+    }
+
+    try {
+        if (newMsg.msg.msg) {
+            let group = newMsg.msg.msg
+            if (group.key.length !== 64) return
+
+            mainWindow.webContents.send('group-call', group)
+
+            if (group.type == 'invite') {
+                console.log('Group invite, thanks.')
+                return
+            }
+
+            let type = false
+            sleep(100)
+            if (group.type == true) {
+                type = true
+            }
+            group.invite.forEach((a) => {
+                console.log('Invited to call, joining...')
+                mainWindow.webContents.send('start-call', a, type, true)
+                sleep(1500)
+            })
+            return
+        }
+    } catch (e) {
+        console.log('Not an invite', e)
+    }
+
+    if (!newMsg) return
+
+    saveMessage(newMsg, hash, true)
+}
+
+async function decryptGroupRtcMessage(message, key) {
+    try {
+        let hash = message.substring(0, 64)
+        console.log('hash?', hash)
+        let [groupMessage, time, txHash] = await decryptGroupMessage(message, hash, key)
+
+        console.log('Group message', groupMessage)
+
+        if (!groupMessage) {
+            console.log('No group message')
+            return
+        }
+        if (groupMessage.m === 'ᛊNVITᛊ') {
+            if (groupMessage.r.length === 163) {
+                let invited = sanitizeHtml(groupMessage.r)
+                mainWindow.webContents.send('group_invited_contact', invited)
+                console.log('Invited')
+            }
+        }
+    } catch (e) {
+        console.log('Not an invite', e)
     }
 }
 
@@ -1678,6 +1738,10 @@ ipcMain.on('upload', async (e, filename, path, address) => {
 
 //GROUPS
 
+ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
+    sendGroupsMessage(msg, offchain)
+})
+
 ipcMain.handle('getGroups', async (e) => {
     let groups = await getGroups()
     return groups.reverse()
@@ -1720,6 +1784,10 @@ ipcMain.on('removeGroup', async (e, grp) => {
 
 
 //BOARDS
+
+ipcMain.on('sendBoardMsg', (e, msg) => {
+    sendBoardMessage(msg)
+})
 
 //Listens for ipc call from RightMenu board picker and prints any board chosen
 ipcMain.handle('printBoard', async (e, board) => {
@@ -1924,80 +1992,14 @@ ipcMain.handle('getAddress', async () => {
 })
 
 
-//WEBRTC MESSAGES //TODO CREATE FUNCS
+//WEBRTC MESSAGES
 
 ipcMain.on('decrypt_message', async (e, message) => {
-    console.log('message to decrypt??', message)
-    let hash = message.substring(0, 64)
-    let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
-    console.log('message decrypted? ', newMsg)
-
-    if (newMsg) {
-        newMsg.sent = false
-    }
-
-    try {
-        if (newMsg.msg.msg) {
-            let group = newMsg.msg.msg
-            console.log('group?', group)
-            console.log('Group key?', group.key)
-            console.log('Group key length?', group.key.length)
-
-            if (group.key.length !== 64) return
-
-            mainWindow.webContents.send('group-call', group)
-
-            if (group.type == 'invite') {
-                console.log('Got key', group.key)
-                console.log('Group invite, thanks.')
-                return
-            }
-
-            let type = false
-            sleep(100)
-            if (group.type == true) {
-                type = true
-            }
-            group.invite.forEach((a) => {
-                console.log('Invited to call, joining...')
-                mainWindow.webContents.send('start-call', a, type, true)
-                sleep(1500)
-            })
-            return
-        }
-    } catch (e) {
-        console.log('Not an invite', e)
-    }
-
-    if (!newMsg) return
-
-    saveMessage(newMsg, hash, true)
+    decryptRtcMessage(message)
 })
 
 ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
-    console.log('key?', key)
-
-    try {
-        let hash = message.substring(0, 64)
-        console.log('hash?', hash)
-        let [groupMessage, time, txHash] = await decryptGroupMessage(message, hash, key)
-
-        console.log('Group message', groupMessage)
-
-        if (!groupMessage) {
-            console.log('No group message')
-            return
-        }
-        if (groupMessage.m === 'ᛊNVITᛊ') {
-            if (groupMessage.r.length === 163) {
-                let invited = sanitizeHtml(groupMessage.r)
-                mainWindow.webContents.send('group_invited_contact', invited)
-                console.log('Invited')
-            }
-        }
-    } catch (e) {
-        console.log('Not an invite', e)
-    }
+    decryptGroupRtcMessage(message, key)
 })
 
 
