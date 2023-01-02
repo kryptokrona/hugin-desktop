@@ -1242,13 +1242,9 @@ async function decryptRtcMessage(message) {
 async function decryptGroupRtcMessage(message, key) {
     try {
         let hash = message.substring(0, 64)
-        console.log('hash?', hash)
         let [groupMessage, time, txHash] = await decryptGroupMessage(message, hash, key)
 
-        console.log('Group message', groupMessage)
-
         if (!groupMessage) {
-            console.log('No group message')
             return
         }
         if (groupMessage.m === 'ᛊNVITᛊ') {
@@ -1259,7 +1255,7 @@ async function decryptGroupRtcMessage(message, key) {
             }
         }
     } catch (e) {
-        console.log('Not an invite', e)
+        console.log('Not an invite')
     }
 }
 
