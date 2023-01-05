@@ -44,6 +44,9 @@ $:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
 
 $: if (openLink) {
     youtube = true
+    if (message.includes('&amp;list')) {
+        message = message.split('&amp;list')[0]
+    }
     embed_code = message.split('/').slice(-1)[0].split('=').slice(-1)[0];
 }
 
