@@ -9,6 +9,7 @@
     import Lightning from "$lib/components/icons/Lightning.svelte";
     import { containsOnlyEmojis } from '$lib/utils/utils'
     import CodeBlock from './CodeBlock.svelte'
+    import Youtube from "svelte-youtube-embed";
 
     export let message
     export let msgFrom
@@ -26,10 +27,24 @@
     let codeBlock = false
     let emojiMessage = false
     let lang = "js"
+    let youtube = false
+    let embed_code
+    let link = false
+    let openLink = false
+
     const dispatch = createEventDispatcher()
 
 $: if (files) {
     file = files[0]
+}
+
+$:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
+    link = true
+}
+
+$: if (openLink) {
+    youtube = true
+    embed_code = message.split('/').slice(-1)[0].split('=').slice(-1)[0];
 }
 
 $: {
@@ -96,6 +111,10 @@ $: if (containsOnlyEmojis(message)) {
 
   $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
 
+  function openEmbed() {
+    openLink = true
+  }
+
 </script>
 
 {#if torrent}
@@ -149,6 +168,10 @@ $: if (containsOnlyEmojis(message)) {
                         <p in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
+                    {:else if youtube}
+                        <Youtube id={embed_code} />
+                    {:else if link}
+                        <Button disabled="{false}" text={"Open link"} on:click={() => openEmbed()} />
                     {:else}
                     <p class="message">{message}</p>
                 {/if}
