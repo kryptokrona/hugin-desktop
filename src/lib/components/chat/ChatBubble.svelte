@@ -217,6 +217,10 @@ $: if (containsOnlyEmojis(message)) {
                     <p in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
                     <CodeBlock lang={lang} code={codeMessage} />
+                    {:else if youtube}
+                        <Youtube id={embed_code} />
+                    {:else if link}
+                        <Button disabled="{false}" text={"Open link"} on:click={() => openEmbed()} />
                     {:else}
                     <p class="message" style="user-select: text;">{message}</p>
                 {/if}
