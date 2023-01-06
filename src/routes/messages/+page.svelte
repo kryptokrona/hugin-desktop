@@ -103,7 +103,7 @@ $: active_contact
 //Send message to store and DB
 const sendMsg = (e) => {
 
-    if (e.detail.text.length > 477) {
+    if (e.detail.text.length > 777) {
         $notify.errors.push({
             message: 'Message is too long',
             name: 'Error',
