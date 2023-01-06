@@ -42,6 +42,14 @@ onMount(async () => {
     }
 
     scrollDown()
+
+    //Listen for new message private messages saved in DB
+    window.api.receive('newMsg', async (data) => {
+
+        if (data.chat === $user.activeChat.chat) {
+            printMessage(data)
+        }
+    })
 })
 
 onDestroy(() => {
@@ -89,15 +97,6 @@ const saveToStore = (data) => {
         return [...current, data]
     })
 }
-
-//Listen for new message private messages saved in DB
-window.api.receive('newMsg', async (data) => {
-    console.log('userchat', $user.activeChat.chat)
-
-    if (data.chat === $user.activeChat.chat) {
-        printMessage(data)
-    }
-})
 
 $: active_contact
 
@@ -236,7 +235,7 @@ const hideModal = () => {
     <SendTransaction on:click="{hideModal}" on:send="{(e) => sendTransaction(e)}" />
 {/if}
 
-<main in:fade="{{ duration: 350 }}" out:fade="{{ duration: 150 }}">
+<main in:fade="{{ duration: 350 }}">
     <ChatList
         on:openRename="{(a) => openRename(a)}"
         on:conversation="{(e) => printConversation(e.detail)}"
