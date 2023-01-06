@@ -28,9 +28,9 @@
   <svelte:head>
     {@html codeStyle}
   </svelte:head>
-  <div class="code">
+  <div class="code" style="user-select: text;">
   <Highlight language={language} code={code} />
-</div>
+  </div>
 
   <style lang="scss">
     .c {
