@@ -7,7 +7,7 @@
     import Time from 'svelte-time'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import Lightning from "$lib/components/icons/Lightning.svelte";
-    import { containsOnlyEmojis } from '$lib/utils/utils'
+    import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
     import CodeBlock from './CodeBlock.svelte'
     import Youtube from "svelte-youtube-embed";
 
@@ -29,8 +29,15 @@
     let lang = "js"
     let youtube = false
     let embed_code
-    let link = false
+    let youtubeLink = false
     let openLink = false
+    let link = false
+    let messageText
+    let messageLink
+    let geturl = new RegExp(
+              "(^|[ \t\r\n])((ftp|http|https|gopher|mailto|news|nntp|telnet|wais|file|prospero|aim|webcal):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
+             ,"g"
+           );
 
     const dispatch = createEventDispatcher()
 
@@ -38,10 +45,22 @@ $: if (files) {
     file = files[0]
 }
 
-$:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
+//Check for regular links and splits message and link
+$: if (message.match(geturl)) {
     link = true
+    messageLink = message.match(geturl)
+    messageText = message.replace(messageLink,'')
+    console.log(messageLink)
+    //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
+    messageLink = messageLink[0]
 }
 
+//Check for youtube links
+$:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
+    youtubeLink = true
+}
+
+//Open youtube links and check embed code
 $: if (openLink) {
     if (message.includes('&amp;list')) {
         message = message.split('&amp;list')[0]
@@ -50,6 +69,7 @@ $: if (openLink) {
     youtube = true
 }
 
+//Replace call info with message
 $: {
     switch (message.substring(0, 1)) {
         case 'Δ':
@@ -61,6 +81,7 @@ $: {
     }
 }
 
+//Check beam invite
 $: if (message.substring(0,7) === "BEAM://") {
     if (Date.now() - timestamp >= 1000 * 1000) {
         oldInvite = true
@@ -118,6 +139,10 @@ $: if (containsOnlyEmojis(message)) {
     openLink = true
   }
 
+  function openLinkMessage(url) {
+    openURL(url)
+  }
+
 </script>
 
 {#if torrent}
@@ -173,8 +198,11 @@ $: if (containsOnlyEmojis(message)) {
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
                         <Youtube id={embed_code} />
+                    {:else if youtubeLink}
+                        <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
                     {:else if link}
-                        <Button disabled="{false}" text={"Open link"} on:click={() => openEmbed()} />
+                        <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                        <p class="message" style="user-select: text;">{messageText}</p>
                     {:else}
                     <p class="message">{message}</p>
                 {/if}
@@ -209,23 +237,26 @@ $: if (containsOnlyEmojis(message)) {
                         {#each files as image}{/each}
                     </div>
 
-                {:else if beamInvite && !oldInvite && !beamConnected}
-                    <p class="message">{$user.activeChat.name} would like to star a beam ⚡️</p>
-                    <div style="margin-top: 1rem">
-                        <FillButton text="Join beam" disabled={false} on:click={joinBeam}/>
-                    </div>
+                    {:else if beamInvite && !oldInvite && !beamConnected}
+                        <p class="message">{$user.activeChat.name} would like to star a beam ⚡️</p>
+                        <div style="margin-top: 1rem">
+                            <FillButton text="Join beam" disabled={false} on:click={joinBeam}/>
+                        </div>
                     {:else if oldInvite}
-                    <p in:fade class="message">Started a beam ⚡️</p>
+                        <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                    <p in:fade>Beam connected ⚡️</p>
+                        <p in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
-                    <CodeBlock lang={lang} code={codeMessage} />
+                        <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
                         <Youtube id={embed_code} />
+                    {:else if youtubeLink}
+                        <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
                     {:else if link}
-                        <Button disabled="{false}" text={"Open link"} on:click={() => openEmbed()} />
+                        <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                        <p class="message" style="user-select: text;">{messageText}</p>
                     {:else}
-                    <p class="message" style="user-select: text;">{message}</p>
+                        <p class="message" style="user-select: text;">{message}</p>
                 {/if}
             </div>
         </div>
