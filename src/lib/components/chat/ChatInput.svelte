@@ -19,6 +19,7 @@
   let mount = false
   let activeBeam = false
   let to = ""
+  let shiftKey
 
   onMount(async () => {
     mount = true
@@ -32,7 +33,6 @@
     window.api.removeAllListeners("emoji-click");
   })
 
-  let shiftKey
   const keyup = (e) => {
     if (e.key === 'Shift') shiftKey = false
     if (messageInput && !shiftKey && e.key === 'Enter') {
