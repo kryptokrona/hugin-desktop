@@ -27,6 +27,7 @@
     let codeBlock = false
     let emojiMessage = false
     let lang = "js"
+    let codeMessage
     let youtube = false
     let embed_code
     let youtubeLink = false
@@ -41,106 +42,117 @@
 
     const dispatch = createEventDispatcher()
 
-$: if (files) {
-    file = files[0]
-}
-
-//Check for regular links and splits message and link
-$: if (message.match(geturl)) {
-    link = true
-    messageLink = message.match(geturl)
-    messageText = message.replace(messageLink,'')
-    //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
-    messageLink = messageLink[0]
-}
-
-//Check for youtube links
-$:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
-    youtubeLink = true
-}
-
-//Open youtube links and check embed code
-$: if (openLink) {
-    if (message.includes('&amp;list')) {
-        message = message.split('&amp;list')[0]
-    }
-    embed_code = message.split('/').slice(-1)[0].split('=').slice(-1)[0];
-    youtube = true
-}
-
-//Replace call info with message
-$: {
-    switch (message.substring(0, 1)) {
-        case 'Δ':
-        // Fall through
-        case 'Λ':
-            // Call offer
-            message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
-            break
-    }
-}
-
-//Check beam invite
-$: if (message.substring(0,7) === "BEAM://") {
-    if (Date.now() - timestamp >= 1000 * 1000) {
-        oldInvite = true
+    $: if (files) {
+        file = files[0]
     }
 
-    beamInvite = true
-  }
-
-let codeMessage
-//Code block
-$: if (message.startsWith("```") && message.endsWith("```")) {
-    checkCodeLang(message)
-}
-
-
-function checkCodeLang(msg) {
-    let codeMsg = msg.slice(3,-3)
-    //The first two letters after ``` indicates code lang
-    if (codeMsg.startsWith("ts") || codeMsg.startsWith("js") ) {
-        codeMessage = codeMsg.slice(2).trim()
-        lang = codeMsg.slice(0,2)
-    } else {
-        lang = "js"
-        codeMessage = codeMsg
+    //Check for regular links and splits message and link
+    $: if (message.match(geturl)) {
+        link = true
+        messageLink = message.match(geturl)
+        messageText = message.replace(messageLink,'')
+        //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
+        messageLink = messageLink[0]
     }
-    codeBlock = true
-}
 
-  
-//Code block
-$: if (containsOnlyEmojis(message)) {
-    emojiMessage = true
-}
+    //Check for youtube links
+    $:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
+        youtubeLink = true
+        if (ownMsg) checkLink()
+    }
 
-  const downloadTorrent = () => {
+    $: console.log('message', message)
+
+    //Replace call info with message
+    $: {
+        switch (message.substring(0, 1)) {
+            case 'Δ':
+            // Fall through
+            case 'Λ':
+                // Call offer
+                message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
+                break
+        }
+    }
+
+    //Check beam invite
+    $: if (message.substring(0,7) === "BEAM://") {
+        if (Date.now() - timestamp >= 1000 * 1000) {
+            oldInvite = true
+        }
+
+        beamInvite = true
+    }
+
+    //Code block
+    $: if (message.startsWith("```") && message.endsWith("```")) {
+        checkCodeLang(message)
+    }
+
+
+    function checkCodeLang(msg) {
+        let codeMsg = msg.slice(3,-3)
+        //The first two letters after ``` indicates code lang
+        if (codeMsg.startsWith("ts") || codeMsg.startsWith("js") ) {
+            codeMessage = codeMsg.slice(2).trim()
+            lang = codeMsg.slice(0,2)
+        } else {
+            lang = "js"
+            codeMessage = codeMsg
+        }
+        codeBlock = true
+    }
+
+    
+    //Code block
+    $: if (containsOnlyEmojis(message)) {
+        emojiMessage = true
+    }
+
+    const downloadTorrent = () => {
     console.log("downloading torrent");
     dispatch("download");
-  };
+    };
 
 
-  const joinBeam = () => {
-    let key = message.substring(7,59)
-    window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
-    $beam.active.push({
-      chat: $user.activeChat.chat,
-      connected: false,
-      key: key
-    })
-    $beam.active = $beam.active
-  }
+    const joinBeam = () => {
+        let key = message.substring(7,59)
+        window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
+        $beam.active.push({
+            chat: $user.activeChat.chat,
+            connected: false,
+            key: key
+        })
+        $beam.active = $beam.active
+    }
 
-  $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
+    $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
 
-  function openEmbed() {
-    openLink = true
-  }
+    function openEmbed() {
+        if (message.includes('&amp;list')) {
+            message = message.split('&amp;list')[0]
+            setEmbedCode()
+        }
+    }
 
-  function openLinkMessage(url) {
-    openURL(url)
-  }
+    function openLinkMessage(url) {
+        openURL(url)
+    }
+
+  
+    function checkLink() {
+        if (message.includes('&list')) {
+            console.log('slice link')
+            message = message.split('&list')[0]
+        }
+        setEmbedCode()
+    }
+
+    function setEmbedCode() {
+        embed_code = message.split('/').slice(-1)[0].split('=').slice(-1)[0];
+        youtube = true
+    }
+
 
 </script>
 
@@ -197,8 +209,6 @@ $: if (containsOnlyEmojis(message)) {
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
                         <Youtube id={embed_code} />
-                    {:else if youtubeLink}
-                        <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
                     {:else if link}
                         <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>
