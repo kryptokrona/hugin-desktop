@@ -214,7 +214,7 @@ $: if (openLink) {
                 <p style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
                 <p style="user-select: text;">{messageText}</p>
             {:else}
-            <p class:rtc style="user-select: text;">{msg}</p>
+                <p class:rtc style="user-select: text;">{msg}</p>
             {/if}
         </div>
 
