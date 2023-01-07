@@ -10,7 +10,9 @@ import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
 import RepliedArrow from '$lib/components/icons/RepliedArrow.svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
-import FillButton from '$lib/components/buttons/FillButton.svelte'
+import Button from '$lib/components/buttons/Button.svelte'
+import Youtube from "svelte-youtube-embed";
+import { openURL } from '$lib/utils/utils'
 
 export let msg
 export let msgFrom
@@ -30,17 +32,22 @@ let reactions = []
 let react = false
 let replyMessage = false
 let showUserActions = false
+let youtube = false
+let embed_code
+let youtubeLink = false
+let openLink = false
+let link = false
+let messageText
+let messageLink
+let geturl = new RegExp(
+            "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
+            ,"g"
+        );
 
 const dispatch = createEventDispatcher()
 
 let page
 let offchain = false
-
-$: if ($webRTC.groupCall && rtc) {
-    offchain = true
-} else {
-    offchain = false
-}
 
 async function checkreply(reply) {
     if (offchain) {
@@ -86,6 +93,15 @@ const toggleActions = () => {
     }
 }
 
+function openEmbed() {
+    openLink = true
+  }
+
+  function openLinkMessage(url) {
+    openURL(url)
+  }
+
+
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
@@ -109,6 +125,37 @@ $: if (message.react) {
     reactions = message.react.filter((a) => !thisemoji[a.message] && (thisemoji[a.message] = true))
     has_reaction = true
 }
+
+
+$: if ($webRTC.groupCall && rtc) {
+    offchain = true
+} else {
+    offchain = false
+}
+
+//Check for regular links and splits message and link
+$: if (msg.match(geturl)) {
+    link = true
+    messageLink = msg.match(geturl)
+    messageText = msg.replace(messageLink,'')
+    //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
+    messageLink = messageLink[0]
+}
+
+//Check for youtube links
+$:  if (msg.match(/youtu/) || msg.match(/y2u.be/)) {
+    youtubeLink = true
+}
+
+//Open youtube links and check embed code
+$: if (openLink) {
+    if (msg.includes('&amp;list')) {
+        msg = msg.split('&amp;list')[0]
+    }
+    embed_code = msg.split('/').slice(-1)[0].split('=').slice(-1)[0];
+    youtube = true
+}
+
 </script>
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
@@ -159,7 +206,16 @@ $: if (message.react) {
                     <Dots on:click="{toggleActions}"/>
                 </div>
             </div>
+            {#if youtube}
+                <Youtube id={embed_code} />
+            {:else if youtubeLink}
+                <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
+            {:else if link}
+                <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                <p class="message" style="user-select: text;">{messageText}</p>
+            {:else}
             <p class:rtc style="user-select: text;">{msg}</p>
+            {/if}
         </div>
 
         <div class="reactions">
