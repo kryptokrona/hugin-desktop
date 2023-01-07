@@ -50,7 +50,6 @@ $: if (message.match(geturl)) {
     link = true
     messageLink = message.match(geturl)
     messageText = message.replace(messageLink,'')
-    console.log(messageLink)
     //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
     messageLink = messageLink[0]
 }
