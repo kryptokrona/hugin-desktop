@@ -9,9 +9,8 @@
 
     const dispatch = createEventDispatcher()
 
-let filterArr = []
-let nickname
-let newArray
+    let filterArr = []
+    let newArray
 
 onMount(async () => {
     newArray = await window.api.getConversations()
@@ -61,7 +60,6 @@ async function checkNew() {
 
 //Print our conversations from DBs
 async function printConversations() {
-    console.log('Printing conversations start')
     newArray = await window.api.getConversations()
 
     //If it is not the same message and not our active chat, add unread boolean
@@ -75,8 +73,6 @@ async function printConversations() {
 
     let conversations = await checkNew()
     $user.contacts = conversations
-
-    console.log('Printing conversations')
     filterArr = conversations
 }
 
@@ -100,14 +96,14 @@ function sendConversation(message) {
 
 function readMessage(e) {
 
-    filterArr = filterArr.map(function (a) {
+    let readArray = filterArr.map(function (a) {
         if (e.new && a.chat === e.chat) {
             a.new = false
         }
         return a
     })
 
-    filterArr = filterArr
+    filterArr = readArray
 }
 
 $: filterArr
