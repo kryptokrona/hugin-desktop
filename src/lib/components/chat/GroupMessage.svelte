@@ -211,8 +211,8 @@ $: if (openLink) {
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
             {:else if link}
-                <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
-                <p class="message" style="user-select: text;">{messageText}</p>
+                <p style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                <p style="user-select: text;">{messageText}</p>
             {:else}
             <p class:rtc style="user-select: text;">{msg}</p>
             {/if}
