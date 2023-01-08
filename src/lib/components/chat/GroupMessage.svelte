@@ -154,6 +154,7 @@ $: if (openLink) {
     if (msg.includes('&amp;list')) {
         msg = msg.split('&amp;list')[0]
     }
+    setEmbedCode()
 }
 
 //Code block

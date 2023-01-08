@@ -125,12 +125,12 @@
     }
 
     $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
-
+    
     function openEmbed() {
         if (message.includes('&amp;list')) {
             message = message.split('&amp;list')[0]
-            setEmbedCode()
         }
+        setEmbedCode()
     }
 
     function openLinkMessage(url) {
