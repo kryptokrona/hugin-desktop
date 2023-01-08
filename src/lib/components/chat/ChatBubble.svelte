@@ -61,8 +61,6 @@
         if (ownMsg) checkLink()
     }
 
-    $: console.log('message', message)
-
     //Replace call info with message
     $: {
         switch (message.substring(0, 1)) {

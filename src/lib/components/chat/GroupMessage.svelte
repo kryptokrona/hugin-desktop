@@ -95,11 +95,11 @@ const toggleActions = () => {
 
 function openEmbed() {
     openLink = true
-  }
+}
 
-  function openLinkMessage(url) {
+function openLinkMessage(url) {
     openURL(url)
-  }
+}
 
 
 $: if ($groups.replyTo.reply == false) {
@@ -145,6 +145,7 @@ $: if (msg.match(geturl)) {
 //Check for youtube links
 $:  if (msg.match(/youtu/) || msg.match(/y2u.be/)) {
     youtubeLink = true
+    if (myMsg) checkLink()
 }
 
 //Open youtube links and check embed code
@@ -152,9 +153,19 @@ $: if (openLink) {
     if (msg.includes('&amp;list')) {
         msg = msg.split('&amp;list')[0]
     }
-    embed_code = msg.split('/').slice(-1)[0].split('=').slice(-1)[0];
-    youtube = true
 }
+
+function checkLink() {
+        if (msg.includes('&list')) {
+            msg = msg.split('&list')[0]
+        }
+    setEmbedCode()
+}
+
+function setEmbedCode() {
+        embed_code = msg.split('/').slice(-1)[0].split('=').slice(-1)[0];
+        youtube = true
+}     
 
 </script>
 
