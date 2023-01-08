@@ -90,6 +90,7 @@ function sendGroupMsg(e) {
         time: time,
         name: myName,
         hash: time,
+        sent: true
     }
     let sendMsg = {
         m: msg,
