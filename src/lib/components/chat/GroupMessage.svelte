@@ -12,7 +12,7 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { openURL } from '$lib/utils/utils'
+import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
 
 export let msg
 export let msgFrom
@@ -32,6 +32,7 @@ let reactions = []
 let react = false
 let replyMessage = false
 let showUserActions = false
+let emojiMessage = false
 let youtube = false
 let embed_code
 let youtubeLink = false
@@ -155,6 +156,11 @@ $: if (openLink) {
     }
 }
 
+//Code block
+$: if (containsOnlyEmojis(msg)) {
+    emojiMessage = true
+}
+
 function checkLink() {
         if (msg.includes('&list')) {
             msg = msg.split('&list')[0]
@@ -224,6 +230,8 @@ function setEmbedCode() {
             {:else if link}
                 <p style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
                 <p style="user-select: text;">{messageText}</p>
+            {:else if emojiMessage}
+                <p class="emoji">{msg}</p>
             {:else}
                 <p class:rtc style="user-select: text;">{msg}</p>
             {/if}
@@ -388,5 +396,9 @@ p {
     display: flex;
     position: relative;
     bottom: -120px;
+}
+
+.emoji {
+    font-size: 21px !important;
 }
 </style>

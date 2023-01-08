@@ -210,6 +210,8 @@
                     {:else if link}
                         <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>
+                    {:else if emojiMessage}
+                    <p class="message emoji">{message}</p>
                     {:else}
                     <p class="message">{message}</p>
                 {/if}
@@ -262,6 +264,8 @@
                     {:else if link}
                         <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>
+                    {:else if emojiMessage}
+                        <p class="message emoji">{message}</p>
                     {:else}
                         <p class="message" style="user-select: text;">{message}</p>
                 {/if}
@@ -336,6 +340,10 @@
 
 .beam {
     box-shadow: 0 0 10px white;
+}
+
+.emoji {
+    font-size: 21px !important;
 }
 
 </style>
