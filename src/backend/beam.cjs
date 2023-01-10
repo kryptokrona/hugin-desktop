@@ -65,7 +65,6 @@ const beamEvent = (beam, chat, key) => {
 
     //Incoming message
     beam.on('data', async (data) => {
-        console.log('data', data )
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
@@ -77,6 +76,7 @@ const beamEvent = (beam, chat, key) => {
     })
 
     beam.on('end', () => {
+        console.log('Beam ended on end event')
         endBeam(addr)
     })
 

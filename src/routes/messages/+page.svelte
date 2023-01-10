@@ -195,6 +195,12 @@ async function dropFile(e) {
 
     if (!$beam.active.some(a => a.chat === message.chat)) {
         window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
+        $beam.active.push({
+            chat: $user.activeChat.chat,
+            connected: false,
+            key: undefined,
+        })
+        $beam.active = $beam.active
         await sleep(300)
     }
     
