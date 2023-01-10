@@ -275,8 +275,8 @@ const checkDataMessage = (data, chat) => {
         sender('download-request', data)
         let file = localFiles.find(a => a.fileName === data.fileName)
         let size = file.size
-        sendFile(fileName, size, chat)
-        uploadReady(fileName, size, chat)
+        sendFile(data.fileName, size, chat)
+        uploadReady(data.fileName, size, chat)
         return true
     }
 
