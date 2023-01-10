@@ -1724,11 +1724,7 @@ ipcMain.on("end-beam", async (e, chat) => {
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
-<<<<<<< HEAD
     console.log('ipcmain downloading', from)
-=======
-    console.log('ipcmain downloading')
->>>>>>> afb71a631594ebc657f18b497134862c56afdd5f
     requestDownload(downloadDir, file, from)
     return
     download(link)
