@@ -155,9 +155,7 @@ const checkIfOnline = (addr) => {
 const sendFile = (fileName, size, contact) => {
     let active = active_beams.find(a => a.chat === contact)
     let file = localFiles.find(a => a.fileName === fileName)
-    console.log('Want to send, found file', file)
     let filePath = file.path
-    console.log('Want to send, got file path', file.path)
     const stream = createReadStream(filePath)
     const progressStream = progress({length: size, time: 100})
     progressStream.on('progress', async progress => {
@@ -173,14 +171,16 @@ const sendFile = (fileName, size, contact) => {
 }
 
 const downloadFile = (fileName, size, from) => {
+    
     let active = active_beams.find(a => a.chat === from)
     console.log('dir', downloadDirectory)
     const downloadPath = downloadDirectory + "/" + fileName
     console.log('Download path',downloadPath)
     const stream = createWriteStream(downloadPath);
     const progressStream = progress({length: size, time: 100});
-    progressStream.on("progress", (progress) => {
 
+    progressStream.on("progress", (progress) => {
+        
         sender('download-file-progress', {progress: progress.percentage, from})
         if (progress.percentage === 100) {
             console.log('File downloaded')
@@ -191,17 +191,8 @@ const downloadFile = (fileName, size, from) => {
 }
 
 const addLocalFile = (fileName, filePath, chat, fileSize) => {
-    console.log('file?', fileName)
     let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath}
     localFiles.push(file)
-    console.log(
-        'Got file in beam cjs', file
-    )
-
-    console.log(
-        'Got filepath in beam cjs', filePath
-    )
-
     let active = active_beams.find(a => a.chat === chat.substring(0,99))
     active.beam.write(JSON.stringify({type: 'remote-file-added', fileName}))
     sender('local-files', file)
@@ -219,9 +210,6 @@ const removeLocalFile = (fileName, chat) => {
 const addRemoteFile = (file, chat) => {
     file = {file, chat}
     remoteFiles.push(file)
-    console.log(
-        'adding rmote file form', chat
-    )
     sender('remote-files', remoteFiles)
 }
 
@@ -231,7 +219,6 @@ const removeRemoteFile = (fileName, chat) => {
 }
 
 const requestDownload = (downloadDir, file, from) => {
-    console.log('want to download from', from)
     downloadDirectory = downloadDir
     let active = active_beams.find(a => a.chat === from)
         active.beam.write(JSON.stringify({
@@ -242,12 +229,10 @@ const requestDownload = (downloadDir, file, from) => {
 
 function uploadReady(file, size, from) {
     let active = active_beams.find(a => a.chat === from)
-    console.log('upload ready this file', file)
         active.beam.write(JSON.stringify({
             type: 'upload-ready',
             fileName: file,
-            size: size,
-            requester: 'beam key'
+            size: size
     }))
 }
 
@@ -272,7 +257,6 @@ const checkDataMessage = (data, chat) => {
     }
 
     if (data.type === 'request-download') {
-        console.log('Request download message')
         sender('download-request', data)
         let file = localFiles.find(a => a.fileName === data.fileName)
         let size = file.size
@@ -282,7 +266,6 @@ const checkDataMessage = (data, chat) => {
     }
 
     if (data.type === 'upload-ready') {
-        console.log('upload ready, starting download', data)
         sender('downloading', data)
         downloadFile(data.fileName, data.size, chat)
         return true
