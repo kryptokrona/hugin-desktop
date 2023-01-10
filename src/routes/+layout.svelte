@@ -340,6 +340,7 @@
         )
     })
 
+<<<<<<< HEAD
     window.api.receive('remote-files', (data)  => {
         let from = $user.contacts.find(a => a.chat === data[0].chat)
         let file = data
@@ -354,6 +355,13 @@
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
+=======
+    window.api.receive('remote-files', (data)  => { 
+        console.log(
+            'Remote Files', data
+        )
+        $remoteFiles = data
+>>>>>>> afb71a631594ebc657f18b497134862c56afdd5f
     })
 
     window.api.receive('local-files', (data)  => { 

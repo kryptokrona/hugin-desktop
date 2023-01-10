@@ -62,7 +62,7 @@ const beamEvent = (beam, chat, key) => {
         checkIfOnline(addr)
         sender('beam-connected', [chat.substring(0,99), beam.key])
     })
-    
+
     //Incoming message
     beam.on('data', async (data) => {
         console.log('data', data )
@@ -290,4 +290,8 @@ const checkDataMessage = (data, chat) => {
     return false
 }
 
+<<<<<<< HEAD
 module.exports = {endBeam, newBeam, sendBeamMessage, downloadFile, sendFile, addLocalFile, requestDownload}
+=======
+module.exports = {endBeam, newBeam, sendBeamMessage, downloadFile, sendFile, addLocalFile, requestDownload}
+>>>>>>> afb71a631594ebc657f18b497134862c56afdd5f

@@ -734,7 +734,7 @@ function sendNodeInfo() {
         localDaemonBlockCount,
         networkBlockCount,
     })
-    
+
 }
 
 async function encryptWallet(wallet, pass) {
@@ -845,7 +845,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
                 }
                 let message
                 if (thisExtra !== undefined && thisExtra.length > 200) {
-                   
+
                     let checkTag = await checkMessage(thisExtra)
 
                     if (checkTag) {
@@ -1400,6 +1400,8 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
     let has_history
+    console.log('want to send message', message)
+
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -1417,7 +1419,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         has_history = false
     }
 
-    if (message.length == 0) {
+    if (message.length === 0) {
         return
     }
 
@@ -1439,7 +1441,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
     } else {
         payload_hex = await encryptMessage(message, messageKey, false, address)
     }
-    
+
     //Choose subwallet with message inputs
     let messageWallet = js_wallet.subWallets.getAddresses()[1]
 
@@ -1722,7 +1724,11 @@ ipcMain.on("end-beam", async (e, chat) => {
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
+<<<<<<< HEAD
     console.log('ipcmain downloading', from)
+=======
+    console.log('ipcmain downloading')
+>>>>>>> afb71a631594ebc657f18b497134862c56afdd5f
     requestDownload(downloadDir, file, from)
     return
     download(link)
