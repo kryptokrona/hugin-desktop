@@ -118,8 +118,8 @@ const WINDOW_API = {
         ipcRenderer.send('upload', filename, path, address, size)
     },
 
-    download: async (link) => {
-        ipcRenderer.send('download', link)
+    download: async (file, from) => {
+        ipcRenderer.send('download', file, from)
     },
 
     createBeam: async (key, chat) => {

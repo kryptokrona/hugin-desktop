@@ -69,7 +69,7 @@ const beamEvent = (beam, chat, key) => {
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
-        let file = checkDataMessage(data, chat.substring(0,99))
+        let file = checkDataMessage(str, chat.substring(0,99))
         if (file) return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
@@ -218,8 +218,12 @@ const removeLocalFile = (fileName, chat) => {
 }
 
 const addRemoteFile = (file, chat) => {
+    file = {file, chat}
     remoteFiles.push(file)
-    sender('remote-files', remoteFiles, chat)
+    console.log(
+        'adding rmote file form', chat
+    )
+    sender('remote-files', remoteFiles)
 }
 
 const removeRemoteFile = (fileName, chat) => {
@@ -228,6 +232,7 @@ const removeRemoteFile = (fileName, chat) => {
 }
 
 const requestDownload = (downloadDir, file, from) => {
+    console.log('want to download from', from)
     downloadDirectory = downloadDir
     let active = active_beams.find(a => a.chat === from)
         active.beam.write(JSON.stringify({
@@ -251,6 +256,7 @@ function uploadReady(file, size, from) {
 const checkDataMessage = (data, chat) => {
     console.log('Data message incoming', data)
     console.log('From ', chat)
+    data = JSON.parse(data)
     
     sender('incoming-data', data)
 

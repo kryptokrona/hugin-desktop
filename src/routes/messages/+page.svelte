@@ -221,6 +221,7 @@ const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
+
 </script>
 
 {#if toggleRename}

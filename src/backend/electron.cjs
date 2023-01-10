@@ -1400,8 +1400,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
     let has_history
-    console.log('want to send message', message)
-    return
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -1724,7 +1722,7 @@ ipcMain.on("end-beam", async (e, chat) => {
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
-    console.log('ipcmain downloading')
+    console.log('ipcmain downloading', from)
     requestDownload(downloadDir, file, from)
     return
     download(link)

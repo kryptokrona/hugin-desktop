@@ -109,7 +109,7 @@
 
     const downloadFile = () => {
     console.log("downloading file");
-    window.api.send('download', filename, $user.activeChat.chat)
+    window.api.download(filename, $user.activeChat.chat)
     };
 
 

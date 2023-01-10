@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
 import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/stores/user.js'
-
+import {remoteFiles, localFiles} from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import SimpleAdd from '$lib/components/icons/SimpleAdd.svelte'
@@ -188,6 +188,20 @@ function newBeam() {
     $beam.active = $beam.active
 }
 
+let incoming_file = false
+
+$: if ($remoteFiles.length && $remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
+    incoming_file = true
+}
+
+const downloadFile = () => {
+    console.log("downloading file from !!!!", $remoteFiles[0].chat);
+    console.log('want to download')
+    window.api.download($remoteFiles[0].file, $remoteFiles[0].chat)
+};
+
+
+
 </script>
 
 <div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length}">
@@ -276,6 +290,12 @@ function newBeam() {
                     {/if}
                 </div>
             {/if}
+
+            {#if incoming_file}
+            <div class="button" on:click="{downloadFile}">
+                    <Lightning connecting={true} />
+            </div>
+             {/if}
 
         </div>
         <div class="draggable"></div>
