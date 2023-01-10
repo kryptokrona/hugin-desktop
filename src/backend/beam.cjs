@@ -15,7 +15,7 @@ let downloadDirectory
 let sender
 
 const newBeam = async (key, chat, xkr_keys, ipc) => {
-    //If we want to switch key set for decryption or add session key. 
+    //If we want to switch key set for decryption or add session key.
     //The beam is already encrypted. We add Hugin encryption inside.
     setKeys(xkr_keys)
     sender = ipc
@@ -62,14 +62,14 @@ const beamEvent = (beam, chat, key) => {
         checkIfOnline(addr)
         sender('beam-connected', [chat.substring(0,99), beam.key])
     })
-    
+
     //Incoming message
     beam.on('data', async (data) => {
         console.log('data', data )
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
-        let file = checkDataMessage(data, chat.substring(0,99))
+        let file = checkDataMessage(str, chat.substring(0,99))
         if (file) return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
@@ -251,7 +251,7 @@ function uploadReady(file, size, from) {
 const checkDataMessage = (data, chat) => {
     console.log('Data message incoming', data)
     console.log('From ', chat)
-    
+
     sender('incoming-data', data)
 
     if (data.type === 'remote-file-added') {

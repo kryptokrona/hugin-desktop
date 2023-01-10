@@ -1419,7 +1419,7 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
         has_history = false
     }
 
-    if (message.length == 0) {
+    if (message.length === 0) {
         return
     }
 
