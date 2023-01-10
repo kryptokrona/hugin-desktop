@@ -245,7 +245,7 @@ function uploadReady(file, size, from) {
     console.log('upload ready this file', file)
         active.beam.write(JSON.stringify({
             type: 'upload-ready',
-            file: file,
+            fileName: file,
             size: size,
             requester: 'beam key'
     }))
