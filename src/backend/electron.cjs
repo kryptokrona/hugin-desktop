@@ -79,7 +79,7 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
-const { newBeam, endBeam, sendBeamMessage } = require("./beam.cjs")
+const { newBeam, endBeam, sendBeamMessage, downloadFile, sendFile, addLocalFile, requestDownload } = require("./beam.cjs")
 
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
@@ -451,6 +451,7 @@ async function startCheck() {
         nodeUrl = db.data.node.node
         nodePort = db.data.node.port
         let node = { node: nodeUrl, port: nodePort }
+        node = { node: "privacymine.net", port: 11898}
         console.log('START NODE', node)
         mainWindow.webContents.send('wallet-exist', true, walletName, node)
         daemon = new WB.Daemon(nodeUrl, nodePort)
@@ -1399,6 +1400,8 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
     let has_history
+    console.log('want to send message', message)
+    return
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -1715,19 +1718,22 @@ ipcMain.on("beam", async (e, link, chat) => {
 
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
-    endBeam(chat, sender);
+    endBeam(chat);
 });
 
-//TORRENTS
+//FILES
 
-ipcMain.on('download', async (e, link) => {
+ipcMain.on('download', async (e, file, from) => {
     console.log('ipcmain downloading')
+    requestDownload(downloadDir, file, from)
     return
     download(link)
 })
 
-ipcMain.on('upload', async (e, filename, path, address) => {
-    console.log('ipcmain uploading')
+ipcMain.on('upload', async (e, filename, path, address, fileSize) => {
+    console.log('ipcmain uploading', )
+    addLocalFile(filename, path, address, fileSize)
+    console.log('Local file added return test.')
     return
     upload(filename, path, address)
 })
@@ -1735,6 +1741,7 @@ ipcMain.on('upload', async (e, filename, path, address) => {
 //GROUPS
 
 ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
+    return
     sendGroupsMessage(msg, offchain)
 })
 
@@ -2002,6 +2009,7 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
 //MISC
 
 ipcMain.on('openLink', (e, url) => {
+    console.log('url', url)
     shell.openExternal(url)
 })
 

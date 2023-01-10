@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import Highlight from "svelte-highlight";
     import typescript from "svelte-highlight/languages/typescript";
     import javascript from "svelte-highlight/languages/javascript";

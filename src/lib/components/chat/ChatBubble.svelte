@@ -15,7 +15,7 @@
     export let msgFrom
     export let ownMsg
     export let torrent
-    export let files
+    export let files = false
     export let timestamp
     export let beamMsg = false
     
@@ -88,7 +88,7 @@
     }
 
 
-    function checkCodeLang(msg) {
+    const checkCodeLang = (msg) => {
         let codeMsg = msg.slice(3,-3)
         //The first two letters after ``` indicates code lang
         if (codeMsg.startsWith("ts") || codeMsg.startsWith("js") ) {
@@ -107,9 +107,9 @@
         emojiMessage = true
     }
 
-    const downloadTorrent = () => {
-    console.log("downloading torrent");
-    dispatch("download");
+    const downloadFile = () => {
+    console.log("downloading file");
+    window.api.send('download', filename, $user.activeChat.chat)
     };
 
 
@@ -125,28 +125,27 @@
     }
 
     $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
-    
-    function openEmbed() {
+
+    const openEmbed = () => {
         if (message.includes('&amp;list')) {
             message = message.split('&amp;list')[0]
         }
         setEmbedCode()
     }
 
-    function openLinkMessage(url) {
+    const openLinkMessage = (url) =>{
         openURL(url)
     }
 
   
-    function checkLink() {
+    const checkLink = () => {
         if (message.includes('&list')) {
-            console.log('slice link')
             message = message.split('&list')[0]
         }
         setEmbedCode()
     }
 
-    function setEmbedCode() {
+    const setEmbedCode = () => {
         embed_code = message.split('/').slice(-1)[0].split('=').slice(-1)[0];
         youtube = true
     }
@@ -166,7 +165,7 @@
             <h5>{$user.activeChat.name}</h5>
         </div>
         <div class="bubble from" in:fade="{{ duration: 150 }}">
-            <Button text="Download" disabled="{false}" on:click="{downloadTorrent}" />
+            <Button text="Download" disabled="{false}" on:click="{downloadFile}" />
         </div>
     </div>
 {:else}

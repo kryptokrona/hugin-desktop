@@ -8,6 +8,7 @@
 
     //Stores
     import {boards, groups, notify, user, webRTC, messageWallet, beam} from '$lib/stores/user.js'
+    import {remoteFiles, localFiles} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
 
     import {onMount} from 'svelte'
@@ -326,6 +327,56 @@
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
             })
     })
+
+    window.api.receive('incoming-data', (data)  => { 
+        console.log(
+            'Incoming data', data
+        )
+    })
+
+    window.api.receive('download-request', (data)  => { 
+        console.log(
+            'Download request', data
+        )
+    })
+
+    window.api.receive('remote-files', (data)  => { 
+        console.log(
+            'Remote Files', data
+        )
+        $remoteFiles = data
+    })
+
+    window.api.receive('local-files', (data)  => { 
+        console.log(
+            'Local files', data
+        )
+        $localFiles = data
+        toast.success(`Uploading file ${data.fileName}`, {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+    })
+
+    window.api.receive('downloading', (data)  => { 
+        console.log(
+            'Downloading', data
+        )
+    })
+
+    window.api.receive('download-file-progress', (data)  => { 
+        console.log(
+            'Progress', data
+        )
+    })
+
+    window.api.receive('upload-file-progress', (data)  => { 
+        console.log(
+            'Progress', data
+        )
+    })
+
+
 
 </script>
 
