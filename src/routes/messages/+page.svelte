@@ -6,10 +6,12 @@ import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import ChatList from '$lib/components/chat/ChatList.svelte'
 import AddChat from '$lib/components/chat/AddChat.svelte'
-import {boards, notify, transactions, user} from '$lib/stores/user.js'
+import {boards, notify, transactions, user, beam} from '$lib/stores/user.js'
 import Rename from '$lib/components/chat/Rename.svelte'
 import BackDrop from '$lib/components/popups/BackDrop.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
+import Dropzone from "svelte-file-dropzone";
+import { sleep } from '$lib/utils/utils'
 
 let chat
 let active_contact
@@ -19,6 +21,8 @@ let contact
 let box
 let chatWindow
 let dragover = false
+let toggleRename = false
+let wantToAdd = false
 
 //Get messages on mount.
 onMount(async () => {
@@ -142,7 +146,6 @@ const sendMsg = (e) => {
 }
 
 //Default value should be false to hide the AddChat form.
-let wantToAdd = false
 const openAdd = () => {
     wantToAdd = !wantToAdd
 }
@@ -150,15 +153,12 @@ const openAdd = () => {
 $: savedMsg
 
 function renameContact(e) {
-    console.log('contac', e)
     let thisContact = $user.rename.chat + $user.rename.key
     //Send contact to backend and overwrite our old contact
-    console.log(' want to add', thisContact)
     window.api.addChat(thisContact, e.detail.text, false)
     toggleRename = false
 }
 
-let toggleRename = false
 const openRename = (a) => {
     console.log('rename open!')
     toggleRename = !toggleRename
@@ -171,33 +171,42 @@ const download = (link) => {
 
 async function dropFile(e) {
     dragover = false
-
     const { acceptedFiles, fileRejections } = e.detail
     let filename = acceptedFiles[0].name
     let path = acceptedFiles[0].path
+    let size = acceptedFiles[0].size
+
     if (fileRejections.length) {
         console.log('rejected file')
+        return
     }
-    let address = $user.activeChat.chat + $user.activeChat.key
-    console.log(acceptedFiles)
+    let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
+    console.log('Accedped files',acceptedFiles)
 
     let message = {
         chat: $user.activeChat.chat,
         msg: '',
         sent: true,
-        t: Date.now(),
+        timestamp: Date.now(),
         file: acceptedFiles,
     }
     printMessage(message)
     saveToStore(message)
-    window.api.upload(filename, path, address)
+
+    if (!$beam.active.some(a => a.chat === message.chat)) {
+        window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
+        await sleep(300)
+    }
+    
+    console.log('filename and path upload', filename, path)
+    window.api.upload(filename, path, toHuginAddress, size)
 }
 
-function test() {
+function drag() {
     dragover = true
 }
 
-function fest() {
+function nodrag() {
     dragover = false
 }
 
@@ -244,15 +253,13 @@ const hideModal = () => {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
-          on:drop={dropFile}> -->
+        <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
         <div class="outer" id="chat_window">
             <div class="inner">
                 {#each savedMsg as message}
                     <ChatBubble
                         on:download="{() => download(message.msg)}"
                         files="{message.file}"
-                        torrent="{message.magnet}"
                         message="{message.msg}"
                         ownMsg="{message.sent}"
                         msgFrom="{message.chat}"
@@ -262,7 +269,7 @@ const hideModal = () => {
                 {/each}
             </div>
         </div>
-        <!-- </Dropzone> -->
+        </Dropzone>
         <ChatInput on:message="{sendMsg}" />
     </div>
 </main>

@@ -114,8 +114,8 @@ const WINDOW_API = {
         ipcRenderer.send('expand-sdp', data, address)
     },
 
-    upload: async (filename, path, address) => {
-        ipcRenderer.send('upload', filename, path, address)
+    upload: async (filename, path, address, size) => {
+        ipcRenderer.send('upload', filename, path, address, size)
     },
 
     download: async (link) => {

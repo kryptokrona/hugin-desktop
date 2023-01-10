@@ -94,15 +94,6 @@ const toggleActions = () => {
     }
 }
 
-function openEmbed() {
-    openLink = true
-}
-
-function openLinkMessage(url) {
-    openURL(url)
-}
-
-
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
@@ -162,17 +153,26 @@ $: if (containsOnlyEmojis(msg)) {
     emojiMessage = true
 }
 
-function checkLink() {
+const checkLink = () => {
         if (msg.includes('&list')) {
             msg = msg.split('&list')[0]
         }
     setEmbedCode()
 }
 
-function setEmbedCode() {
+const setEmbedCode = () => {
         embed_code = msg.split('/').slice(-1)[0].split('=').slice(-1)[0];
         youtube = true
-}     
+}
+
+const openEmbed = () => {
+    openLink = true
+}
+
+const openLinkMessage = (url) => {
+    openURL(url)
+}
+
 
 </script>
 
