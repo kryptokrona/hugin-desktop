@@ -174,7 +174,6 @@ const sendFile = (fileName, size, contact) => {
 
 const downloadFile = (fileName, size, from) => {
     let active = active_beams.find(a => a.chat === from)
-    console.log('THIS split file name?', fileName.split("\\")[fileName.split("\\").length - 1])
     console.log('dir', downloadDirectory)
     const downloadPath = downloadDirectory + "/" + fileName
     console.log('Download path',downloadPath)
