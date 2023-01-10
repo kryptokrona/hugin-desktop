@@ -173,9 +173,7 @@ const sendFile = (fileName, size, contact) => {
 const downloadFile = (fileName, size, from) => {
     
     let active = active_beams.find(a => a.chat === from)
-    console.log('dir', downloadDirectory)
     const downloadPath = downloadDirectory + "/" + fileName
-    console.log('Download path',downloadPath)
     const stream = createWriteStream(downloadPath);
     const progressStream = progress({length: size, time: 100});
 
