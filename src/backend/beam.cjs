@@ -193,7 +193,7 @@ const downloadFile = (fileName, size, from) => {
 
 const addLocalFile = (fileName, filePath, chat, fileSize) => {
     console.log('file?', fileName)
-    let file = {fileName: fileName, chat: chat, size: fileSize}
+    let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath}
     localFiles.push(file)
     console.log(
         'Got file in beam cjs', file
