@@ -253,8 +253,6 @@ function uploadReady(file, size, from) {
 
 
 const checkDataMessage = (data, chat) => {
-    console.log('Data message incoming', data)
-    console.log('From ', chat)
     try {
         data = JSON.parse(data)
     } catch {
