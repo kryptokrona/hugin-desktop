@@ -255,7 +255,11 @@ function uploadReady(file, size, from) {
 const checkDataMessage = (data, chat) => {
     console.log('Data message incoming', data)
     console.log('From ', chat)
-    data = JSON.parse(data)
+    try {
+        data = JSON.parse(data)
+    } catch {
+        return true
+    }
     
     sender('incoming-data', data)
 
