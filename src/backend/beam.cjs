@@ -4,7 +4,7 @@ const { extraDataToMessage } = require('hugin-crypto')
 const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
-const {existsSync, mkdirSync, createWriteStream, createReadStream} = require("fs");
+const {createWriteStream, createReadStream} = require("fs");
 
 let active_beams = []
 let chat_keys
@@ -224,7 +224,7 @@ const requestDownload = (downloadDir, file, from) => {
     }))
 }
 
-function uploadReady(file, size, from) {
+const uploadReady = (file, size, from) => {
     let active = active_beams.find(a => a.chat === from)
         active.beam.write(JSON.stringify({
             type: 'upload-ready',
