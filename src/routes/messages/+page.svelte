@@ -274,8 +274,7 @@ const hideModal = () => {
                     />
                 {/each}
             </div>
-            
-        </Dropzone>
+            </Dropzone>
         </div>
         <ChatInput on:message="{sendMsg}" />
     </div>
