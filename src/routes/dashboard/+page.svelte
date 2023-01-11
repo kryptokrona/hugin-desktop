@@ -9,7 +9,6 @@
     import {openURL} from '$lib/utils/utils.js'
     import StandardGroups from '$routes/dashboard/components/StandardGroups.svelte'
     import Transactions from "$routes/dashboard/components/Transactions.svelte";
-import CreateRoom from './components/CreateRoom.svelte'
 
     let date = new Date()
     let hrs = date.getHours()
@@ -48,8 +47,8 @@ import CreateRoom from './components/CreateRoom.svelte'
 <Funds/>
 <div class="grid">
     <StandardGroups/>
-    <!-- <Transactions/> -->
-    <CreateRoom/>
+    <Transactions/>
+    <!-- <CreateRoom/> -->
 </div>
 
 <style lang="scss">
@@ -73,4 +72,5 @@ import CreateRoom from './components/CreateRoom.svelte'
     display: flex;
     gap: 1rem;
   }
+  
 </style>
