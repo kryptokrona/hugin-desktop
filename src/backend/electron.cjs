@@ -79,7 +79,7 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
-const { newBeam, endBeam, sendBeamMessage, downloadFile, sendFile, addLocalFile, requestDownload } = require("./beam.cjs")
+const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload } = require("./beam.cjs")
 
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
@@ -1724,24 +1724,16 @@ ipcMain.on("end-beam", async (e, chat) => {
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
-    console.log('ipcmain downloading', from)
     requestDownload(downloadDir, file, from)
-    return
-    download(link)
 })
 
 ipcMain.on('upload', async (e, filename, path, address, fileSize) => {
-    console.log('ipcmain uploading', )
     addLocalFile(filename, path, address, fileSize)
-    console.log('Local file added return test.')
-    return
-    upload(filename, path, address)
 })
 
 //GROUPS
 
 ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
-    return
     sendGroupsMessage(msg, offchain)
 })
 

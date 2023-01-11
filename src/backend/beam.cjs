@@ -272,4 +272,4 @@ const checkDataMessage = (data, chat) => {
     return false
 }
 
-module.exports = {endBeam, newBeam, sendBeamMessage, downloadFile, sendFile, addLocalFile, requestDownload}
+module.exports = {endBeam, newBeam, sendBeamMessage, addLocalFile, requestDownload}
