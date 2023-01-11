@@ -259,8 +259,8 @@ const hideModal = () => {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
         <div class="outer" id="chat_window">
+            <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner">
                 {#each savedMsg as message}
                     <ChatBubble
@@ -274,8 +274,9 @@ const hideModal = () => {
                     />
                 {/each}
             </div>
-        </div>
+            
         </Dropzone>
+        </div>
         <ChatInput on:message="{sendMsg}" />
     </div>
 </main>
