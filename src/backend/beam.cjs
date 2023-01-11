@@ -3,7 +3,6 @@ const Hyperbeam = require('hyperbeam')
 const { extraDataToMessage } = require('hugin-crypto')
 const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
-const crypto = require("hypercore-crypto");
 const progress = require("progress-stream");
 const {existsSync, mkdirSync, createWriteStream, createReadStream} = require("fs");
 
@@ -241,8 +240,6 @@ const checkDataMessage = (data, chat) => {
     } catch {
         return true
     }
-    
-    sender('incoming-data', data)
 
     if (data.type === 'remote-file-added') {
         addRemoteFile(data.fileName, chat)

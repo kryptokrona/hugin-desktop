@@ -328,12 +328,6 @@
             })
     })
 
-    window.api.receive('incoming-data', (data)  => { 
-        console.log(
-            'Incoming data', data
-        )
-    })
-
     window.api.receive('download-request', (data)  => { 
         console.log(
             'Download request', data

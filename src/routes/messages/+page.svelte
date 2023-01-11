@@ -175,12 +175,12 @@ async function dropFile(e) {
     let filename = acceptedFiles[0].name
     let path = acceptedFiles[0].path
     let size = acceptedFiles[0].size
+    let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
 
     if (fileRejections.length) {
         console.log('rejected file')
         return
     }
-    let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
     console.log('Accedped files',acceptedFiles)
 
     let message = {
@@ -194,7 +194,7 @@ async function dropFile(e) {
     saveToStore(message)
 
     if (!$beam.active.some(a => a.chat === message.chat)) {
-        window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
+        window.api.createBeam("new", toHuginAddress)
         $beam.active.push({
             chat: $user.activeChat.chat,
             connected: false,
@@ -204,7 +204,6 @@ async function dropFile(e) {
         await sleep(300)
     }
     
-    console.log('filename and path upload', filename, path)
     window.api.upload(filename, path, toHuginAddress, size)
 }
 
