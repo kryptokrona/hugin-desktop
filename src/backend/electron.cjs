@@ -84,7 +84,6 @@ const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload } = req
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
-
 const crypto = new Crypto()
 const xkrUtils = new CryptoNote()
 const hexToUint = (hexString) =>
@@ -1592,7 +1591,9 @@ async function optimizeMessages(force = false) {
             name: 'Optimizing',
             hash: parseInt(Date.now()),
             key: mainWallet,
+            optimized: true
         }
+
         mainWindow.webContents.send('sent_tx', sent)
         console.log('optimize completed')
         return true
@@ -1730,6 +1731,21 @@ ipcMain.on('download', async (e, file, from) => {
 ipcMain.on('upload', async (e, filename, path, address, fileSize) => {
     addLocalFile(filename, path, address, fileSize)
 })
+
+//TOAST NOTIFY
+ipcMain.on('error-notify-message-main', async (e, error) => {
+    mainWindow.webContents.send('error-notify-message', error)
+})
+
+ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => {
+    //Optional channel, maybe useful?
+    if (!channel) {
+        mainWindow.webContents.send('success-notify-message', notify)
+        return
+    }
+    mainWindow.webContents.send(channel, notify)
+})
+
 
 //GROUPS
 
