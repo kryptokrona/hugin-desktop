@@ -213,6 +213,14 @@ const WINDOW_API = {
      checkPass: async (pass, hash) => {
         await ipcRenderer.invoke('check-pass', pass, hash)
     },
+
+     errorMessage: async (errorMessage) => {
+        ipcRenderer.send('error-notify-message-main', errorMessage)
+    },
+
+    successMessage: async (channel, successMessage) => {
+        ipcRenderer.send('success-notify-message-main', channel, successMessage)
+    },
 }
 
 contextBridge.exposeInMainWorld('api', WINDOW_API)
