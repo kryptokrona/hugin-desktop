@@ -100,7 +100,6 @@ const beamEvent = (beam, chat, key) => {
 }
 
 const decryptMessage = async (str, msgKey) => {
-
     let decrypted_message = await extraDataToMessage(str, [msgKey], chat_keys)
     let address = sanitizeHtml(decrypted_message.from)
     let timestamp = sanitizeHtml(decrypted_message.t)
@@ -170,7 +169,6 @@ const sendFile = (fileName, size, contact) => {
 }
 
 const downloadFile = (fileName, size, from) => {
-    
     let active = active_beams.find(a => a.chat === from)
     const downloadPath = downloadDirectory + "/" + fileName
     const stream = createWriteStream(downloadPath);
@@ -196,7 +194,6 @@ const addLocalFile = (fileName, filePath, chat, fileSize) => {
 }
 
 const removeLocalFile = (fileName, chat) => {
-
     let active = active_beams.find(a => a.chat === chat)
     localFiles = localFiles.filter(x => x.fileName !== fileName)
     active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
