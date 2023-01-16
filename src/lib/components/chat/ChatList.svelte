@@ -9,14 +9,14 @@
 
     const dispatch = createEventDispatcher()
 
-    let filterArr = []
+    let chatList = []
     let newArray
 
 onMount(async () => {
-    newArray = await window.api.getConversations()
-    filterArr = newArray
+    newArray = await getConversations()
+    chatList = newArray
     if ($user.activeChat) return
-    sendConversation(filterArr[0])
+    sendConversation(chatList[0])
 })
 
 onDestroy(() => {
@@ -38,33 +38,21 @@ window.api.receive('newMsg', () => {
 //Listen for sent message to update conversation list
 window.api.receive('saved-addr', async (data) => {
     await printConversations()
-    let sender = filterArr.find((a) => a.chat === data.substring(0, 99))
+    let sender = chatList.find((a) => a.chat === data.substring(0, 99))
     sendConversation(sender)
 })
 
-async function checkNew() {
-    console.log('Checking new chatlist')
-
-    let filterNew = []
-    newArray.forEach(function (a) {
-        filterArr.some(function (b) {
-            if (b.new && a.chat === b.chat) {
-                a.new = true
-            }
-        })
-        filterNew.push(a)
-    })
-
-    return filterNew
+const getConversations = async () => {
+    return await window.api.getConversations()
 }
 
 //Print our conversations from DBs
-async function printConversations() {
-    newArray = await window.api.getConversations()
+const printConversations = async () => {
+    newArray = await getConversations()
 
     //If it is not the same message and not our active chat, add unread boolean
     if (
-        newArray[0].timestamp !== filterArr[0].timestamp &&
+        newArray[0].timestamp !== chatList[0].timestamp &&
         newArray[0].sent === 0 &&
         $user.activeChat.chat !== newArray[0].chat
     ) {
@@ -73,11 +61,11 @@ async function printConversations() {
 
     let conversations = await checkNew()
     $user.contacts = conversations
-    filterArr = conversations
+    chatList = conversations
 }
 
 //Dispatches the clicked conversation to parent
-function sendConversation(message) {
+const sendConversation = (message) => {
     console.log('sending conversation')
     readMessage(message)
     let chat = message.chat
@@ -94,19 +82,36 @@ function sendConversation(message) {
     printConversations()
 }
 
-function readMessage(e) {
+const checkNew = async () => {
+    console.log('Checking new chatlist')
 
-    let readArray = filterArr.map(function (a) {
+    let filterNew = []
+    newArray.forEach(function (a) {
+        chatList.some(function (b) {
+            if (b.new && a.chat === b.chat) {
+                a.new = true
+            }
+        })
+        filterNew.push(a)
+    })
+
+    return filterNew
+}
+
+const readMessage = (e) => {
+
+    let readArray = chatList.map(function (a) {
         if (e.new && a.chat === e.chat) {
             a.new = false
         }
         return a
     })
 
-    filterArr = readArray
+    chatList = readArray
 }
 
-$: filterArr
+
+$: chatList
 </script>
 
 <div class="wrapper" class:hide="{$layoutState.hideChatList === true}">
@@ -115,7 +120,7 @@ $: filterArr
         <AddCircle on:click="{() => dispatch('open')}" />
     </div>
     <div class="list-wrapper">
-        {#each filterArr as message (message.chat)}
+        {#each chatList as message (message.chat)}
             <div animate:flip="{{duration: 250}}">
             <Contact
                 on:openRename="{() => dispatch('openRename')}"
