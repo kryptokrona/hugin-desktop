@@ -18,7 +18,6 @@ let active_contact
 let savedMsg = []
 let key
 let contact
-let box
 let chatWindow
 let dragover = false
 let toggleRename = false
@@ -107,20 +106,13 @@ $: active_contact
 //Send message to store and DB
 const sendMsg = (e) => {
 
-    if (e.detail.text.length > 777) {
-        $notify.errors.push({
-            message: 'Message is too long',
-            name: 'Error',
-            hash: parseInt(Date.now()),
-        })
-        $notify.errors = $notify.errors
-        return
-    }
-    console.log('Sending message')
     let offChain = false
     let beam = false
     let msg = e.detail.text
-    let myaddr = $user.huginAddress.substring(0, 99)
+    let error = checkErr(e)
+    if (error) return
+
+    console.log('Sending message')
 
     if (e.detail.offChain) {
         offChain = true
@@ -143,6 +135,16 @@ const sendMsg = (e) => {
     window.api.sendMsg(msg, active_contact, offChain, false, beam)
     printMessage(myMessage)
     console.log('Message sent')
+}
+
+const checkErr = (e) => {
+    let error = false
+    if (e.detail.text.length > 10) error = "Message is too long"
+    if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
+    if (!error) return false
+
+    window.api.errorMessage(error)
+    return true
 }
 
 //Default value should be false to hide the AddChat form.
@@ -226,6 +228,7 @@ const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
+
 
 </script>
 

@@ -59,12 +59,7 @@ $: connectedBeam = $beam.active.some(a => a.chat === thisChat.chat && a.connecte
 const startCall = async (contact, calltype) => {
     console.log(contact, calltype)
     if (!videoInput && calltype) {
-        $notify.errors.push({
-            message: 'You have no video device',
-            name: 'Error',
-            hash: parseInt(Date.now()),
-        })
-        $notify.errors = $notify.errors
+        window.api.errorMessage('You have no video device')
         return
     }
     if ($webRTC.call.length >= 1) {
@@ -164,13 +159,7 @@ function copyThis(copy) {
         key = $user.activeChat.chat
     }
 
-    $notify.success.push({
-        message: msg,
-        name: name,
-        hash: Date.now(),
-        key: key,
-    })
-    $notify.success = $notify.success
+    window.api.successMessage(msg)
     navigator.clipboard.writeText(copy)
 }
 

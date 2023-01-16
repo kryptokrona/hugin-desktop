@@ -1,3 +1,5 @@
+import { user } from '$lib/stores/user.js'
+
 export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1)
 }
@@ -51,4 +53,28 @@ export const containsOnlyEmojis = (text) => {
     const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
     const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '')
     return onlyEmojis.length === visibleChars.length
+}
+
+export const checkWait = async (data) => {
+    
+    if (data.name === "Optimizing" && data.optimized) {
+
+        user.update((a) => {
+            return {
+                ...a,
+                wait: true,
+            }
+        })
+
+        //Wait 3 minutes
+        await sleep(180 * 1000)
+
+        user.update((a) => {
+            return {
+                ...a,
+                wait: false,
+            }
+        })
+    }
+
 }

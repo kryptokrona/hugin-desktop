@@ -35,7 +35,6 @@
     let showCallerMenu = false
     let new_messages = false
     let board_message_sound
-    let errors = []
     let new_message_sound
     let incomingCalls = []
     const closePopup = () => {
@@ -209,36 +208,15 @@
                 console.log('**** DONT KNOW THIS CONTACT. ADD ?? ****')
             }
 
-            $notify.success.push({
-                message: 'Invited to call',
-                name: name,
-                hash: Date.now(),
-                key: key,
-                type: 'success',
-            })
-
-            $notify.success = $notify.success
+            window.api.successMessage('A new friend was invited to call')
             $webRTC.joining = data.key
         })
 
-    function removeErrors(e) {
-
-        if ($notify.success.some((a) => a.hash === e.detail.hash)) {
-            let filterArr = $notify.success.filter((a) => a.hash !== e.detail.hash)
-            $notify.success = filterArr
-            return
-        }
-
-        let filterArr = $notify.errors.filter((a) => a.hash !== e.detail.hash)
-        $notify.errors = filterArr
-    }
 
     function removeNotification(e) {
         let filterArr = $notify.new.filter((a) => a.hash !== e.detail.hash)
         $notify.new = filterArr
     }
-
-    $: errors = $notify.errors
 
     //APP UPDATER
     window.api.receive('updater', (data) => {
@@ -381,6 +359,7 @@
 
 
 
+
 </script>
 
 <TrafficLights/>
@@ -427,26 +406,11 @@
         </div>
     {/if}
 
-    {#if $notify.errors.length > 0 && $user.loggedIn}
-        <div class="notifs">
-            {#each errors as error}
-                <Notification message="{error}" error="{true}" on:hide="{removeErrors}"/>
-            {/each}
-        </div>
-    {/if}
 
     {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
         <div class="notifs">
             {#each $notify.new as notif}
                 <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
-            {/each}
-        </div>
-    {/if}
-
-    {#if $notify.success.length > 0 && $user.loggedIn}
-        <div class="notifs">
-            {#each $notify.success as success}
-                <Notification message="{success}" success="{true}" on:hide="{removeErrors}"/>
             {/each}
         </div>
     {/if}

@@ -34,15 +34,7 @@ function invite(contact) {
         video: video,
     }
     //Invite notification
-    let invite = {
-        message: `Invited to call...`,
-        name: contact.name,
-        key: contact.chat,
-        hash: Date.now(),
-    }
-    //Update store
-    $notify.success.push(invite)
-    $notify.success = $notify.success
+    window.api.successMessage(`${contact.name} invited to call`)
     $webRTC.call.unshift(call)
 
     //Start call

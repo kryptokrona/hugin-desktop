@@ -12,18 +12,12 @@ import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
 import { containsOnlyEmojis } from '$lib/utils/utils'
 
-let boardMsgs = []
 let replyto = ''
 let reply_exit_icon = 'x'
-let active
-let replyColor
-let nickname
 let noMsgs = false
 let filterBoards = []
 let filterEmojis = []
 let fixedGroups = []
-let react = false
-let unreadMsgs = []
 let replyTrue = false
 let chatWindow
 let scrollGroups = []
@@ -60,23 +54,26 @@ window.api.receive('sent_group', (data) => {
     addHash(data)
 })
 
-//Send message to store and DB
-function sendGroupMsg(e) {
+const checkErr = (e) => {
+    let error = false
+    if (e.detail.text.length > 10) error = "Message is too long"
+    if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
+    if (!error) return false
 
-    if (e.detail.text.length > 477) {
-        $notify.errors.push({
-            message: 'Message is too long',
-            name: 'Error',
-            hash: parseInt(Date.now()),
-        })
-        $notify.errors = $notify.errors
-        return
-    }
+    window.api.errorMessage(error)
+    return true
+}
+
+//Send message to store and DB
+const sendGroupMsg = async (e) => {
+    let error = checkErr(e)
+    if (error) return
     let msg = e.detail.text
     let myaddr = $user.huginAddress.substring(0, 99)
     let time = Date.now()
     let myName = $user.username
     let group = thisGroup
+
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply

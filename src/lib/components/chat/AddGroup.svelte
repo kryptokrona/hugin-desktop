@@ -35,44 +35,35 @@ $: {
     }
 }
 
-// Dispatch the inputted data
-const addGroup = (g) => {
+const checkError = () => {
     let error = false
+    let errorMessage
     if ($groups.groupArray.some((g) => g.name === name)) {
-        $notify.errors.push({
-            message: 'Group name already exists',
-            name: 'Error',
-            hash: parseInt(Date.now()),
-        })
+        errorMessage = 'Group name already exists',
         error = true
     }
     if ($groups.groupArray.some((g) => g.key === key)) {
-        $notify.errors.push({
-            message: 'This group key already exists',
-            name: 'Error',
-            hash: Date.now(),
-        })
+        errorMessage =  'This group key already exists',
         error = true
     }
     if (error) {
-        $notify.errors = $notify.errors
-        return
+        window.api.errorMessage(errorMessage)
+        return true
     }
+    return false
+}
+
+// Dispatch the inputted data
+const addGroup = async () => {
+    let error = checkError()
+    if (error) return
     // Dispatch the inputted data
     dispatch('addGroup', {
         key: key,
         name: name,
     })
 
-    $notify.success.push({
-        message: 'Joined group',
-        name: name,
-        hash: Date.now(),
-        key: key,
-        type: 'success',
-    })
-
-    $notify.success = $notify.success
+    window.api.successMessage('Joined group')
 
     key = ''
     enableAddGroupButton = false

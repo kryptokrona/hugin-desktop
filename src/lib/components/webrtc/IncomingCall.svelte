@@ -49,12 +49,8 @@ const handleAnswer = async () => {
     }
     //If video call incoming and no video device is plugged in
     if (thisCall.msg.substring(0, 1) == 'Δ' && !video) {
-        $notify.errors.push({
-            message: 'You have no video device',
-            name: 'Error',
-            hash: parseInt(Date.now()),
-        })
-        $notify.errors = $notify.errors
+        let errMessage = 'You have no video device'
+        window.api.errorMessage(errMessage)
         return
     }
     console.log('offchain?', offchain)
