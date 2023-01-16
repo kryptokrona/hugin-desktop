@@ -27,12 +27,7 @@ export const boards = writable({
 export const groups = writable({
     addGroup: false,
     replyTo: {reply: false},
-    thisGroup: {
-        name: 'Private groups',
-        chat: 'verysecretkeyinchat',
-        key: 'verysecretkeyinchat',
-        msg: 'Click the add icon',
-    },
+    thisGroup: {key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false},
     groupArray: [],
     blockList: []
 })
