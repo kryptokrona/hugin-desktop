@@ -11,27 +11,27 @@
     import {sleep} from '$lib/utils/utils.js'
     import {flip} from 'svelte/animate'
 
-    const dispatch = createEventDispatcher()
-    let activeHugins = []
-    let contacts = []
-    let msgkey
-    let newArray = []
-    let groupArray = []
 
-    //Get message updates and trigger filter
+    let activeHugins = []
+    let newArray = []
+    let groupList = []
     let group = ''
     let groupName
+
+    const dispatch = createEventDispatcher()
+    const nogroup = {
+            nick: 'No contacts',
+            chat: 'Hugin Groups',
+            key: 'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
+            msg: 'Click the + icon',
+            name: 'Private groups',
+        }
+
+    
 onMount( async () => {
     await printGroups()
-    if ($groups.thisGroup.key.length !== 64) {
-        printGroup($groups.groupArray[0])
-        return
-    }
-    printGroup($groups.thisGroup)
+    checkGroup()
 })
-$: if ($groups.thisGroup.key) {
-    group = $groups.thisGroup.key
-}
 
 onDestroy(() => {
     window.api.removeAllListeners('groupMsg')
@@ -43,6 +43,34 @@ window.api.receive('groupMsg', () => {
     printGroups()
 })
 
+//Check active group status
+const checkGroup = () => {
+    //If we have an active group
+    if ($groups.thisGroup.chat) {
+        printGroup($groups.thisGroup)
+        return
+    }
+    //If we have groups but no active, print the first.
+    if ($groups.groupArray.length && !$groups.thisGroup.chat) {
+        $groups.thisGroup = $groups.groupArray[0]
+        printGroup($groups.thisGroup)
+        return
+    }
+    //IF we have no groups and no active group. Set default
+    if (!$groups.thisGroup.group) {
+        setEmptyGroup()
+        printGroup(nogroup)
+        return
+    }
+}
+
+//Display empty group for new accounts
+const setEmptyGroup = () => {
+    $groups.groupArray.push(nogroup)
+    groupList = $groups.groupArray
+}
+
+//Print chosen group key
 const printGroup = async (grp) => {
     dispatch('printGroup', grp)
     await sleep(150)
@@ -55,14 +83,13 @@ function filterActiveHugins(arr) {
     activeHugins = arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
 }
 
-$: activeHugins
 //Print our conversations from DBs
 async function printGroups() {
     newArray = await window.api.getGroups()
 
-    if (groupArray.length) {
+    if (groupList.length) {
         if (
-            newArray[0].timestamp !== groupArray[0].timestamp &&
+            newArray[0].timestamp !== groupList[0].timestamp &&
             newArray[0].sent === 0 &&
             $groups.thisGroup.key !== newArray[0].chat
         ) {
@@ -72,8 +99,6 @@ async function printGroups() {
 
     let my_groups = await checkNew()
 
-    console.log('conv', my_groups)
-
     groups.update((current) => {
         return {
             ...current,
@@ -81,56 +106,51 @@ async function printGroups() {
         }
     })
 
-    groupArray = my_groups
+    groupList = my_groups
 
     filterActiveHugins($groupMessages)
 }
 
+//Remove active group
 const removeGroup = async () => {
     console.log($groups.thisGroup.key)
     window.api.removeGroup($groups.thisGroup.key)
     let filter = $groups.groupArray.filter((a) => a.key !== $groups.thisGroup.key)
     $groups.groupArray = filter
-    console.log('array', $groups.groupArray)
-    await printGroups()
+
     if ($groups.groupArray.length) {
         $groups.thisGroup = $groups.groupArray[0]
+        await printGroups()
     } else {
         $groups.groupArray = []
-        let nogroup = {
-            nick: 'No contacts',
-            chat: 'verysecretkeyinchat',
-            key: 'verysecretkeyinchat',
-            msg: 'Click the add icon',
-            name: 'Private groups',
-        }
-        $groups.groupArray.push(nogroup)
+        setEmptyGroup()
         $groups.thisGroup = nogroup
     }
     $groups.removeGroup = false
     dispatch('removeGroup')
 }
 
+//Read message
 function readMessage(e) {
-    console.log('reading this')
 
-    groupArray = groupArray.map(function (a) {
+    groupList = groupList.map(function (a) {
         if (e.new && a.key === e.key) {
             a.new = false
         }
         return a
     })
 
-    groupArray = groupArray
+    groupList = groupList
     filterActiveHugins($groupMessages)
 }
 
-$: groupArray
+$: groupList
 
+//Check new messages
 async function checkNew() {
     let filterNew = []
     newArray.forEach(function (a) {
-        groupArray.some(function (b) {
+        groupList.some(function (b) {
             if (b.new && a.chat === b.chat) {
                 a.new = true
             }
@@ -140,11 +160,24 @@ async function checkNew() {
 
     return filterNew
 }
-    const addGroup = () => {
+
+
+//Add group
+const addGroup = () => {
     $groups.addGroup = true
 }
 
+//Set group key
+$: if ($groups.thisGroup.key) {
+    group = $groups.thisGroup.key
+}
+
+//This group name
 $: groupName = $groups.thisGroup.name
+
+//Active hugins
+$: activeHugins
+
 </script>
 
 {#if $groups.removeGroup}
@@ -183,7 +216,7 @@ $: groupName = $groups.thisGroup.name
         </div>
     {:else}
         <div class="list-wrapper">
-            {#each groupArray as group (group.key)}
+            {#each groupList as group (group.key)}
                 <div animate:flip="{{duration: 250}}">
                     <Group group="{group}" on:print="{() => printGroup(group)}" />
                 </div>
