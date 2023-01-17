@@ -64,10 +64,9 @@ const printConversation = (active) => {
     chat = active.chat
     key = active.key
     active_contact = chat + key
+    savedMsg = $messages.filter((x) => x.chat === chat)
     let active_chat = { chat: chat, key: key, name: active.name }
     $user.activeChat = active_chat
-    savedMsg = []
-    savedMsg = $messages.filter((x) => x.chat === chat)
     scrollDown()
 }
 //Chat to add
@@ -266,7 +265,7 @@ const hideModal = () => {
         <div class="outer" id="chat_window">
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner">
-                {#each savedMsg as message}
+                {#each savedMsg as message, i (message.timestamp + i.toString())}
                     <ChatBubble
                         on:download="{() => download(message.msg)}"
                         files="{message.file}"
