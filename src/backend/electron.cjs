@@ -450,8 +450,6 @@ async function startCheck() {
         nodeUrl = db.data.node.node
         nodePort = db.data.node.port
         let node = { node: nodeUrl, port: nodePort }
-        node = { node: "privacymine.net", port: 11898}
-        console.log('START NODE', node)
         mainWindow.webContents.send('wallet-exist', true, walletName, node)
         daemon = new WB.Daemon(nodeUrl, nodePort)
 
@@ -906,7 +904,6 @@ async function saveContact(hugin_address, nickname = false, first = false) {
 
     let name
     if (!nickname) {
-        console.log('no nickname')
         name = 'Anon'
     } else {
         name = nickname
@@ -965,7 +962,6 @@ async function saveGroupMessage(msg, hash, time, offchain) {
         mainWindow.webContents.send('newGroupMessage', message)
     } else if (offchain) {
         if (message.message === 'ᛊNVITᛊ') return
-        console.log('Not saving offchain message')
         mainWindow.webContents.send('groupRtcMsg', message)
     }
 }
@@ -986,7 +982,6 @@ async function saveMessage(msg, hash, offchain = false) {
 
     let group_call = false
 
-    console.log('Msg incoming')
     if (offchain) {
         group_call = true
     }
@@ -1121,7 +1116,6 @@ async function sendGroupsMessage(message, offchain = false) {
     group = message.g
 
     if (group.length !== 64) {
-        console.log('wrong key size', group)
         return
     }
 
@@ -1399,8 +1393,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
     let has_history
-    console.log('want to send message', message)
-
     //Assert address length
     if (receiver.length !== 163) {
         return
