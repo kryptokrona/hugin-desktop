@@ -512,12 +512,10 @@ const saveMsg = (message, addr, sent, timestamp) => {
 }
 
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
-const saveHash = (txHash) => {
-    if (txHash == undefined) {
-        console.log('caught undefined hash')
-        return
-    }
+const saveHash = async (txHash) => {
 
+    if (await knownTxExists(txHash)) return
+    if (txHash == undefined) return
     if (txHash.length !== 64) return
 
     database.run(
@@ -967,7 +965,30 @@ const getContacts = async () => {
     })
 }
 
-const messageExists = (time) => {
+
+const knownTxExists = async (hash) => {
+    let exists = false
+    return new Promise((resolve, reject) => {
+        const hashExists = 
+        `SELECT *
+        FROM knownTxs
+        WHERE hash = ${hash}
+        `
+        database.each(
+            hashExists,
+            (err, row) => {
+                if (row) {
+                    exists = true
+                }
+            },
+            () => {
+                resolve(exists)
+            }
+        )
+    })
+}
+
+const messageExists = async (time) => {
     let exists = false
     return new Promise((resolve, reject) => {
         const messageExists = 
@@ -989,7 +1010,7 @@ const messageExists = (time) => {
     })
 }
 
-const groupMessageExists = (time) => {
+const groupMessageExists = async (time) => {
     let exists = false
     return new Promise((resolve, reject) => {
         const groupMessageExists = 

@@ -436,7 +436,6 @@ const checkNodeStatus = async (node) => {
 const store = new Store();
 
 async function startCheck() {
-
     store.set({
         wallet: {
             optimized: false
@@ -444,26 +443,11 @@ async function startCheck() {
     });
 
     if (fs.existsSync(userDataDir + '/misc.db')) {
-        await db.read()
-        let walletName = db.data.walletNames
-        console.log('walletname', walletName)
-        nodeUrl = db.data.node.node
-        nodePort = db.data.node.port
-        let node = { node: nodeUrl, port: nodePort }
-        mainWindow.webContents.send('wallet-exist', true, walletName, node)
-        daemon = new WB.Daemon(nodeUrl, nodePort)
-
+        loadHugin()
         ipcMain.on('login', async (event, data) => {
-            console.log('LOG IN USING ', data)
-            nodeUrl = data.node
-            nodePort = data.port
-            node = { node: nodeUrl, port: nodePort }
-            db.data.node.node = nodeUrl
-            db.data.node.port = nodePort
-            db.data.node = node
-            await db.write()
-            startWallet(data, node)
+          loadAccount(data)
         })
+
     } else {
         //No wallet found, probably first start
         console.log('wallet not found')
@@ -471,12 +455,19 @@ async function startCheck() {
     }
 }
 
+async function loadHugin() {
+    await db.read()
+    let walletName = db.data.walletNames
+    nodeUrl = db.data.node.node
+    nodePort = db.data.node.port
+    let node = { node: nodeUrl, port: nodePort }
+    mainWindow.webContents.send('wallet-exist', true, walletName, node)
+    daemon = new WB.Daemon(nodeUrl, nodePort)
+}
+
 const startWallet = async (data, node) => {
     let walletName = data.thisWallet
     let password = data.myPassword
-
-    console.log('Starting this wallet', walletName)
-    console.log('password', password)
     start_js_wallet(walletName, password, node)
 }
 
@@ -484,9 +475,22 @@ const welcomeAddress =
     'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
 
 
-ipcMain.on('create-account', async (e, accountData) => {
-    //Create welcome message
-    console.log('accdata', accountData)
+    ipcMain.on('create-account', async (e, accountData) => {
+        createAccount(accountData)
+    })
+
+async function loadAccount(data) {
+    nodeUrl = data.node
+    nodePort = data.port
+    node = { node: nodeUrl, port: nodePort }
+    db.data.node.node = nodeUrl
+    db.data.node.port = nodePort
+    db.data.node = node
+    await db.write()
+    startWallet(data, node)
+}
+ //Create welcome message
+async function createAccount(accountData) {
     let walletName = accountData.walletName
     let myPassword = accountData.password
     nodeUrl = accountData.node
@@ -530,7 +534,8 @@ ipcMain.on('create-account', async (e, accountData) => {
     console.log('creating dbs...')
 
     start_js_wallet(walletName, myPassword, node)
-})
+
+}
 
 
 async function logIntoWallet(walletName, password) {
@@ -769,7 +774,7 @@ async function openWallet(walletName, password) {
 }
 
 //Checks the message for a view tag
-async function checkMessage(extra) {
+async function checkForViewTag(extra) {
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     try {
     const rawExtra = trimExtra(extra)
@@ -790,13 +795,57 @@ async function checkMessage(extra) {
     return false
 }
 
-async function backgroundSyncMessages(checkedTxs = false) {
-    if (checkedTxs) {
-        console.log('First start, push knownTxs db to known pool txs')
-        known_pool_txs = checkedTxs.slice(checkedTxs.length - 100, checkedTxs.length - 1)
+//Validate extradata, here we can add more conditions
+function validateExtra(thisExtra, thisHash) {
+    //Extra too long
+    if (thisExtra.length > 7000) {
+        known_pool_txs.push(thisHash)
+        saveHash(thisHash)
+        return false;
     }
+    //Check if known tx
+    if (known_pool_txs.indexOf(thisHash) === -1) {
+        known_pool_txs.push(thisHash)
+        return true
+    } else {
+        //Tx already known
+        return false
+    }
+}
 
+ async function checkForGroupMessage(thisExtra, thisHash) {
+    try {
+    let group = trimExtra(thisExtra)
+    let message = JSON.parse(group)
+    if (message.sb) {
+            decryptGroupMessage(message, thisHash)
+            saveHash(thisHash)
+            return true
+    }
+    } catch {
+        
+    }
+    
+    return false
+}
+
+//Set known pool txs on start
+function setKnownPoolTxs(checkedTxs) {
+    //Here we can adjust number of known we send to the node
+    known_pool_txs = checkedTxs.slice(checkedTxs.length - 100, checkedTxs.length - 1)
+    //Can't send undefined to node, it wont respond
+    let known = known_pool_txs.filter(a => a !== undefined)
+    //Remove potential undefined hash to avoid sync error
+    return known
+}
+
+async function backgroundSyncMessages(checkedTxs = false) {
     console.log('Background syncing...')
+    if (checkedTxs) {
+        //First start, set known pool txs
+        known_pool_txs = await setKnownPoolTxs(checkedTxs)
+    }
+    
     mainWindow.webContents.send('sync', 'Syncing')
     try {
         const resp = await fetch(
@@ -815,7 +864,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
         json = JSON.parse(json)
 
         let transactions = json.addedTxs
-        let transaction
         //Try clearing known pool txs from checked
         known_pool_txs = known_pool_txs.filter((n) => !json.deletedTxsIds.includes(n))
         if (transactions.length === 0) {
@@ -823,79 +871,45 @@ async function backgroundSyncMessages(checkedTxs = false) {
             console.log('No incoming messages...')
             return
         }
-
-        for (transaction in transactions) {
-            try {
-                let thisExtra = transactions[transaction].transactionPrefixInfo.extra
-                let thisHash = transactions[transaction].transactionPrefixInfotxHash
-
-                if (thisExtra.length > 7000) {
-                    known_pool_txs.push(thisHash)
-                    continue;
-                }
-
-                if (known_pool_txs.indexOf(thisHash) === -1) {
-                    known_pool_txs.push(thisHash)
-                } else {
-                    console.log('This transaction is already known', thisHash)
-                    continue
-                }
-                let message
-                if (thisExtra !== undefined && thisExtra.length > 200) {
-
-                    let checkTag = await checkMessage(thisExtra)
-
-                    if (checkTag) {
-                        console.log('Found a possible message to me')
-                        //TODO try decrypt extradata to message here? else try check if its a group message
-                    }
-
-                    message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
-                    if (!message || message === undefined) {
-                        let group = trimExtra(thisExtra)
-                        message = JSON.parse(group)
-                        if (message.sb) {
-                             await decryptGroupMessage(message, thisHash)
-                        }
-                        saveHash(thisHash)
-                        console.log('Caught undefined null message, continue')
-                        continue
-                    }
-                    message.sent = false
-                    //console.log("message type", message.type);
-                    if (message.brd) {
-                        //   message.type = "board";
-                        //   if (my_boards.indexOf(message.brd) == -1) {
-                        //     if (message.brd == "Home") {
-                        //       saveHash(thisHash)
-                        //       continue;
-                        //     }
-                        //     console.log("Not my board");
-                        //     sanitizeHtml(message.brd)
-                        //     sanitizeHtml(message.k)
-                        //     let newBoard = {board: message.brd, address: message.k}
-                        //     mainWindow.webContents.send('newBoard', newBoard)
-                        //     saveBoardMsg(message, thisHash, false)
-                        //     continue;
-                        //   }
-
-                        //saveBoardMsg(message, thisHash, true);
-                    } else if (message.type === 'sealedbox' || 'box') {
-                        console.log('Saving Message')
-                        // await saveMsg(message);
-                        saveMessage(message, thisHash)
-                    }
-
-                    console.log('Transaction checked')
-                    saveHash(thisHash)
-                }
-            } catch (err) {
-                console.log(err)
-            }
-        }
+        decryptHuginMessages(transactions)
     } catch (err) {
         console.log(err)
         console.log('Sync error')
+    }
+}
+
+async function decryptHuginMessages(transactions) {
+
+    for (let transaction in transactions) {
+        try {
+            let thisExtra = transactions[transaction].transactionPrefixInfo.extra
+            let thisHash = transactions[transaction].transactionPrefixInfotxHash
+            if (!validateExtra(thisExtra, thisHash)) continue
+            if (thisExtra !== undefined && thisExtra.length > 200) {
+
+                //Check for viewtag
+                let checkTag = await checkForViewTag(thisExtra)
+                if (checkTag) {
+                     //TODO try decrypt extradata to message here? else try check if its a group message
+                    console.log('Found a possible message to me')
+                }
+                //Check for group message
+                if (await checkForGroupMessage(thisExtra, thisHash)) continue
+
+                let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
+
+                if (message.type === 'sealedbox' || 'box') {
+                    console.log('Saving Message')
+                    message.sent = false
+                    saveMessage(message, thisHash)
+                }
+                
+                saveHash(thisHash)
+                console.log('Transaction checked')
+            }
+        } catch (err) {
+            console.log(err)
+        }
     }
 }
 
@@ -977,8 +991,7 @@ async function saveMessage(msg, hash, offchain = false) {
     let timestamp = sanitizeHtml(msg.t)
     let key = sanitizeHtml(msg.k)
 
-    let exists = await messageExists(timestamp)
-    if (exists) return
+    if (await messageExists(timestamp)) return
 
     let group_call = false
 
@@ -1101,13 +1114,9 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
 
 async function sendGroupsMessage(message, offchain = false) {
     const my_address = message.k
-
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
-
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
-
     const timestamp = parseInt(Date.now())
-
     const nonce = nonceFromTimestamp(timestamp)
 
     let group
@@ -1133,9 +1142,7 @@ async function sendGroupsMessage(message, offchain = false) {
     }
 
     let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
-
     const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json))
-
     const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group))
 
     const payload_encrypted = {
