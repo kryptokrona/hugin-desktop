@@ -10,24 +10,14 @@ import { containsOnlyEmojis } from '$lib/utils/utils'
 import { fade } from 'svelte/transition'
 
 let replyto = ''
-let reply_exit_icon = 'x'
-let active
-let replyColor
-let nickname
-let noMsgs = false
 let filterRtcGroup = []
 let filterEmojis = []
 let fixedRtcGroups = []
-let react = false
-let unreadMsgs = []
-let replyTrue = false
 let chatWindow
-let groupKey = ''
-let join = false
 
 onMount(async () => {
     chatWindow = document.getElementById('chat_window')
-    console.log('mounting video grid')
+    console.log('mounting video grid chat')
     checkReactions()
 })
 
