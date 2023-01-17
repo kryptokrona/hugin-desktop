@@ -14,11 +14,11 @@
     export let message
     export let msgFrom
     export let ownMsg
-    export let torrent
     export let files = false
     export let timestamp
     export let beamMsg = false
     
+    let torrent = false
     let file
     let oldInvite = false
     let beamInvite = false
@@ -78,7 +78,6 @@
         if (Date.now() - timestamp >= 1000 * 1000) {
             oldInvite = true
         }
-
         beamInvite = true
     }
 
@@ -197,8 +196,8 @@
                     <div class="file" in:fade="{{ duration: 150 }}">
                         <p>{file.name}</p>
                         {#each files as image}{/each}
-                    </div>
-                    {:else if beamInvite}
+                    </div>|
+                    {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
                         <p in:fade>Beam connected ⚡️</p>
