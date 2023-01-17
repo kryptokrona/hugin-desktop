@@ -455,8 +455,7 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
     let timestamp = sanitizeHtml(time)
     let nick = sanitizeHtml(msg.n)
     let txHash = sanitizeHtml(hash)
-    let exists = await groupMessageExists(timestamp)
-    if (exists) return
+    if (await groupMessageExists(timestamp)) return
 
     if (nick === '') {
         nick = 'Anonymous'
