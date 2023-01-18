@@ -795,7 +795,6 @@ async function checkForViewTag(extra) {
             }
         }
     } catch (err) {
-        console.log('No box or viewtag')
     }
     return false
 }
@@ -818,6 +817,7 @@ function validateExtra(thisExtra, thisHash) {
     }
 }
 
+//Checks if hugin message is from a group
  async function checkForGroupMessage(thisExtra, thisHash) {
     try {
     let group = trimExtra(thisExtra)
@@ -839,14 +839,14 @@ function setKnownPoolTxs(checkedTxs) {
     known_pool_txs = checkedTxs.slice(checkedTxs.length - 100, checkedTxs.length - 1)
     //Can't send undefined to node, it wont respond
     let known = known_pool_txs.filter(a => a !== undefined)
-    //Remove potential undefined hash to avoid sync error
     return known
 }
 
 async function backgroundSyncMessages(checkedTxs = false) {
     console.log('Background syncing...')
+    
+    //First start, set known pool txs
     if (checkedTxs) {
-        //First start, set known pool txs
         known_pool_txs = await setKnownPoolTxs(checkedTxs)
     }
     
@@ -878,7 +878,7 @@ async function backgroundSyncMessages(checkedTxs = false) {
         decryptHuginMessages(transactions)
     } catch (err) {
         console.log(err)
-        console.log('Sync error')
+        mainWindow.webContents.send('sync', 'Error')
     }
 }
 
@@ -971,9 +971,7 @@ async function saveBoardMsg(msg, hash, follow = false) {
 }
 
 async function saveGroupMessage(msg, hash, time, offchain) {
-
     let message = await saveGroupMsg(msg, hash, time, offchain)
-
     if (!offchain) {
         //Send new board message to frontend.
         mainWindow.webContents.send('groupMsg', message)
@@ -987,7 +985,6 @@ async function saveGroupMessage(msg, hash, time, offchain) {
 
 //Saves private message
 async function saveMessage(msg, hash, offchain = false) {
-
     let torrent
     let text
     let sent = msg.sent
@@ -1064,7 +1061,6 @@ async function saveMessage(msg, hash, offchain = false) {
 }
 
 async function encryptMessage(message, messageKey, sealed = false, toAddr) {
-
     let timestamp = Date.now()
     let my_address = await js_wallet.getPrimaryAddress()
     const addr = await Address.fromAddress(toAddr)
@@ -1265,7 +1261,6 @@ async function decryptGroupRtcMessage(message, key) {
 }
 
 async function decryptGroupMessage(tx, hash, group_key = false) {
-
     let decryptBox = false
     let offchain = false
     let groups = await loadGroups()
@@ -1522,19 +1517,14 @@ const sendMessage = async (message, receiver, off_chain = false, group = false, 
 }
 
 async function optimizeMessages(force = false) {
-
-    console.log('optimize')
-    console.log('my addresses', js_wallet.subWallets.getAddresses())
     if (js_wallet.subWallets.getAddresses().length === 1) {
         const [address, error] = await js_wallet.addSubWallet()
-        if (!error) {
-            console.log(`Created subwallet with address of ${address}`)
-            console.log('my addresses updated', js_wallet.subWallets.getAddresses())
+        if (error) {
+           return 
         }
     }
 
     let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
-
     const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus()
 
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(
