@@ -30,7 +30,18 @@ const WebTorrent = require('webtorrent')
 const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
-const { expand_sdp_answer, expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
+const { 
+    expand_sdp_answer, 
+    expand_sdp_offer, 
+    parse_sdp } = require("./sdp.cjs")
+const {
+    sleep, 
+    trimExtra, 
+    fromHex, 
+    nonceFromTimestamp, 
+    createGroup, 
+    hexToUint, 
+    toHex } = require("./utils.cjs")
 const {
     loadDB,
     saveHash,
@@ -80,96 +91,50 @@ const {
 } = require('kryptokrona-utils')
 
 const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload } = require("./beam.cjs")
-
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
 const crypto = new Crypto()
 const xkrUtils = new CryptoNote()
-const hexToUint = (hexString) =>
-    new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
+const userDataDir = app.getPath('userData')
+const appPath = app.getAppPath()
+const downloadDir = app.getPath('downloads')
+const dbPath = userDataDir + '/SQLmessages.db'
+const serveURL = serve({ directory: '.' })
+const port = process.env.PORT || 5173
+const dev = !app.isPackaged
 
-function getXKRKeypair() {
-    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
-    return { privateSpendKey: privateSpendKey, privateViewKey: privateViewKey }
-}
+let mainWindow
+let daemon
+let nodeUrl
+let nodePort
+//node will contain {node: nodeUrl, port: nodePort}
+let node
 
-function getKeyPair() {
-    // return new Promise((resolve) => setTimeout(resolve, ms));
-    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
-    let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33))
-    let keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
-    return keyPair
-}
+//Create misc.db
+const file = join(userDataDir, 'misc.db')
+const adapter = new JSONFile(file)
+const db = new Low(adapter)
+const store = new Store()
 
-function getMsgKey() {
-    const naclPubKey = getKeyPair().publicKey
-    return Buffer.from(naclPubKey).toString('hex')
-}
 
-async function createGroup() {
-    return await Buffer.from(nacl.randomBytes(32)).toString('hex')
-}
+const welcomeAddress =
+    'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
 
-function toHex(str, hex) {
-    try {
-        hex = unescape(encodeURIComponent(str))
-            .split('')
-            .map(function (v) {
-                return v.charCodeAt(0).toString(16)
-            })
-            .join('')
-    } catch (e) {
-        hex = str
-        //console.log('invalid text input: ' + str)
-    }
-    return hex
-}
-
-function nonceFromTimestamp(tmstmp) {
-    let nonce = hexToUint(String(tmstmp))
-
-    while (nonce.length < nacl.box.nonceLength) {
-        let tmp_nonce = Array.from(nonce)
-
-        tmp_nonce.push(0)
-
-        nonce = Uint8Array.from(tmp_nonce)
-    }
-
-    return nonce
-}
-
-function fromHex(hex, str) {
-    try {
-        str = decodeURIComponent(hex.replace(/(..)/g, '%$1'))
-    } catch (e) {
-        str = hex
-        // console.log('invalid hex input: ' + hex)
-    }
-    return str
-}
-
-function trimExtra(extra) {
-    try {
-        let payload = fromHex(extra.substring(66))
-        let payload_json = JSON.parse(payload)
-        return fromHex(extra.substring(66))
-    } catch (e) {
-        return fromHex(Buffer.from(extra.substring(78)).toString())
-    }
-}
+let js_wallet
+let walletName
+let known_keys = []
+let known_pool_txs = []
+let myPassword
+let my_boards = []
+let block_list = []
+let hashed_pass = ""
 
 try {
     require('electron-reloader')(module)
 } catch (e) {
     console.error(e)
 }
-
-const serveURL = serve({ directory: '.' })
-const port = process.env.PORT || 5173
-const dev = !app.isPackaged
-let mainWindow
 
 function createWindow() {
     let windowState = windowStateManager({
@@ -298,87 +263,6 @@ app.whenReady().then(() => {
     tray.setIgnoreDoubleClickEvents(true)
 })
 
-
-
-async function download(link) {
-    let client = new WebTorrent()
-
-    let thisLink = link
-    console.log('download', thisLink)
-    client.add(thisLink, { path: downloadDir }, function (torrent) {
-        console.log('Download started', torrent)
-        // Got torrent metadata!
-        torrent.on('download', function (bytes) {
-            console.log('just downloaded: ' + bytes)
-            console.log('total downloaded: ' + torrent.downloaded)
-            console.log('download speed: ' + torrent.downloadSpeed)
-            console.log('progress: ' + torrent.progress)
-        })
-
-        console.log('log log')
-        torrent.on('done', function (bytes) {
-            console.log('torrent finished downloading')
-
-            torrent.files.forEach(function (file) {
-                console.log('file', file)
-                setTimeout(function () {
-                    client.destroy()
-                }, 60000)
-            })
-        })
-    })
-
-    console.log('log log')
-}
-
-function upload(filename, path, address) {
-    let client = new WebTorrent({ maxConns: 1 })
-    console.log('uploading', filename)
-    console.log('from ', path)
-    client.seed(path, function (torrent) {
-        console.log('upload this', torrent)
-        console.log('Client is seeding ' + torrent.magnetURI)
-        torrent.files.forEach(function (file) {
-            console.log('file', file)
-        })
-        sendMessage(torrent.magnetURI.split('&tr')[0], address)
-    })
-}
-
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-const userDataDir = app.getPath('userData')
-const appPath = app.getAppPath()
-const downloadDir = app.getPath('downloads')
-const dbPath = userDataDir + '/SQLmessages.db'
-
-function startDatabase() {
-    loadDB(userDataDir, dbPath)
-
-}
-
-let daemon
-let nodeUrl
-let nodePort
-//node will contain {node: nodeUrl, port: nodePort}
-let node
-
-//Create misc.db
-const file = join(userDataDir, 'misc.db')
-const adapter = new JSONFile(file)
-const db = new Low(adapter)
-
-let js_wallet
-let walletName
-let known_keys = []
-let known_pool_txs = []
-let myPassword
-let my_boards = []
-let block_list = []
-let hashed_pass = ""
-
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
     mainWindow.webContents.send('version', app.getVersion())
@@ -415,8 +299,32 @@ ipcMain.on('app', (data) => {
     }
 })
 
+
+function startDatabase() {
+    loadDB(userDataDir, dbPath)
+
+}
+
 const sender = (channel, data) => {
     mainWindow.webContents.send(channel, data)
+}
+
+function getXKRKeypair() {
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
+    return { privateSpendKey: privateSpendKey, privateViewKey: privateViewKey }
+}
+
+function getKeyPair() {
+    // return new Promise((resolve) => setTimeout(resolve, ms));
+    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
+    let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33))
+    let keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
+    return keyPair
+}
+
+function getMsgKey() {
+    const naclPubKey = getKeyPair().publicKey
+    return Buffer.from(naclPubKey).toString('hex')
 }
 
 const checkNodeStatus = async (node) => {
@@ -432,8 +340,6 @@ const checkNodeStatus = async (node) => {
         console.log(e)
     }
 }
-
-const store = new Store();
 
 async function startCheck() {
     store.set({
@@ -470,14 +376,6 @@ const startWallet = async (data, node) => {
     let password = data.myPassword
     start_js_wallet(walletName, password, node)
 }
-
-const welcomeAddress =
-    'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
-
-
-    ipcMain.on('create-account', async (e, accountData) => {
-        createAccount(accountData)
-    })
 
 async function loadAccount(data) {
     nodeUrl = data.node
@@ -962,6 +860,7 @@ async function checkPass(pass, oldHash) {
 
 //Saves board message.
 async function saveBoardMsg(msg, hash, follow = false) {
+    return
     saveBoardMessage(msg, hash)
     saveHash(hash)
     if (msg.sent || !follow) return
@@ -2008,6 +1907,10 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
 
 
 //MISC
+
+ipcMain.on('create-account', async (e, accountData) => {
+    createAccount(accountData)
+})
 
 ipcMain.on('openLink', (e, url) => {
     console.log('url', url)
