@@ -628,9 +628,18 @@ async function start_js_wallet(walletName, password, node) {
     let knownTxsIds = await loadKnownTxs()
     let my_groups = await getGroups()
     block_list = await loadBlockList()
-    //Save backup wallet to file
-    await saveWalletToFile(js_wallet, walletName, password)
+    my_boards = await getMyBoardList()
 
+    //Save backup wallet to file
+    saveWalletToFile(js_wallet, walletName, password)
+
+    //Get primary address and fuse it with our message key to create our hugin address
+    let myAddress = await js_wallet.getPrimaryAddress()
+    let msgKey = getMsgKey()
+    console.log('Hugin Address', myAddress + msgKey)
+
+    mainWindow.webContents.send('addr', myAddress + msgKey)
+    
     if (knownTxsIds.length > 0) {
         checkedTxs = knownTxsIds.map(function (knownTX) {
             return knownTX.hash
@@ -639,27 +648,12 @@ async function start_js_wallet(walletName, password, node) {
         checkedTxs = []
     }
 
-    my_boards = await getMyBoardList()
-
     sendNodeInfo()
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
-        const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
-        let synced = network_height - wallet_count <= 2
-        if (!synced) return
-        optimizeMessages()
-        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
-
-        console.log('transaction', transaction)
-        mainWindow.webContents.send('new-message', transaction.toJSON())
+        incomingTx(transaction)
     })
-    //Get primary address and fuse it with our message key to create our hugin address
-    let myAddress = await js_wallet.getPrimaryAddress()
-    let msgKey = getMsgKey()
-    console.log('Hugin Address', myAddress + msgKey)
-
-    mainWindow.webContents.send('addr', myAddress + msgKey)
 
     js_wallet.on('createdtx', async (tx) => {
         console.log('***** outgoing *****', tx)
@@ -727,6 +721,18 @@ async function start_js_wallet(walletName, password, node) {
     }
 }
 
+function incomingTx(transaction) {
+    const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
+        let synced = network_height - wallet_count <= 2
+        if (!synced) return
+        optimizeMessages()
+        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
+
+        console.log('transaction', transaction)
+        mainWindow.webContents.send('new-message', transaction.toJSON())
+
+}
+
 function sendNodeInfo() {
 
     const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
@@ -746,7 +752,6 @@ async function encryptWallet(wallet, pass) {
 
 async function saveWallet(wallet, walletName, password) {
     let my_wallet = await encryptWallet(wallet, password)
-
     let wallet_json = JSON.stringify(my_wallet)
 
     try {
@@ -825,7 +830,6 @@ function validateExtra(thisExtra, thisHash) {
     } catch {
         
     }
-    
     return false
 }
 
