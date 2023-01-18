@@ -14,6 +14,7 @@ let filterRtcGroup = []
 let filterEmojis = []
 let fixedRtcGroups = []
 let chatWindow
+let noMsgs
 
 onMount(async () => {
     chatWindow = document.getElementById('chat_window')
