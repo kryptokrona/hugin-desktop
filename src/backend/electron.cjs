@@ -788,26 +788,24 @@ async function decryptHuginMessages(transactions) {
             let thisHash = transactions[transaction].transactionPrefixInfotxHash
             if (!validateExtra(thisExtra, thisHash)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
-
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
                      //TODO try decrypt extradata to message here? else try check if its a group message
                     console.log('Found a possible message to me')
                 }
+                //Save hash as checked
+                saveHash(thisHash)
                 //Check for group message
                 if (await checkForGroupMessage(thisExtra, thisHash)) continue
 
                 let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
+                if (!message) continue
 
-                if (message.type === 'sealedbox' || 'box') {
-                    console.log('Saving Message')
+                if (message && message.type === 'sealedbox' || 'box') {
                     message.sent = false
                     saveMessage(message, thisHash)
                 }
-                
-                saveHash(thisHash)
-                console.log('Transaction checked')
             }
         } catch (err) {
             console.log(err)
@@ -898,6 +896,7 @@ async function saveMessage(msg, hash, offchain = false) {
     if (offchain) {
         group_call = true
     }
+
     //Checking if private msg is a call
     text = await parseCall(msg.msg, addr, sent, true, group_call)
 
@@ -1296,7 +1295,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
 //     optimizeMessages()
 // }
-const sendMessage = async (message, receiver, off_chain = false, group = false, beam_this = false) => {
+async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
     let has_history
     //Assert address length
     if (receiver.length !== 163) {
@@ -1605,7 +1604,6 @@ ipcMain.on("beam", async (e, link, chat) => {
     if (beamMessage === "Error") return
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, false)
-
 });
 
 
