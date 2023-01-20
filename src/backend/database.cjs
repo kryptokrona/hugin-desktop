@@ -494,7 +494,6 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
            (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
         [text, addr, sig, group, timestamp, nick, reply, txHash, msg.sent]
     )
-    saveHash(hash)
 
     return message
 }
