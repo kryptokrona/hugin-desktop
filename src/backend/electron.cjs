@@ -26,7 +26,6 @@ const sanitizeHtml = require('sanitize-html')
 const en = require('int-encoder')
 const sqlite3 = require('sqlite3').verbose()
 const Peer = require('simple-peer')
-const WebTorrent = require('webtorrent')
 const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
@@ -882,7 +881,6 @@ async function saveGroupMessage(msg, hash, time, offchain) {
 
 //Saves private message
 async function saveMessage(msg, hash, offchain = false) {
-    let torrent
     let text
     let sent = msg.sent
     let addr = sanitizeHtml(msg.from)
@@ -924,21 +922,13 @@ async function saveMessage(msg, hash, offchain = false) {
         default:
             message = message
     }
-    let magnetLinks = /(magnet:\?[^\s\"]*)/gim.exec(text)
-    if (magnetLinks) {
-        message = 'File uploaded'
-        torrent = magnetLinks[0]
-    }
 
     saveMsg(message, addr, sent, timestamp)
 
     if (!offchain) {
         saveHash(hash)
     }
-    //New message object
-    if (magnetLinks && !sent) {
-        message = torrent
-    }
+
     let newMsg = {
         msg: message,
         chat: addr,
