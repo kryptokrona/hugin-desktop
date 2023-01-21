@@ -524,7 +524,6 @@ const saveHash = async (txHash) => {
                    ( ? )`,
         [txHash]
     )
-    console.log('saved hash')
 }
 
 const addBoard = (brd) => {
