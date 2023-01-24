@@ -439,7 +439,6 @@ async function createAccount(accountData) {
 async function logIntoWallet(walletName, password) {
     let parsed_wallet
     let json_wallet = await openWallet(walletName, password)
-    console.log('Opened, want to log in, json_wallet')
     try {
         //Try parse json wallet
         parsed_wallet = JSON.parse(json_wallet)
@@ -477,7 +476,6 @@ async function openWalletFromFile(walletName, password) {
 }
 
 async function verifyPassword(password) {
-    let check = await checkPass(password, hashed_pass)
     if (await checkPass(password, hashed_pass)) {
         await sleep(1000)
         mainWindow.webContents.send('login-success')
