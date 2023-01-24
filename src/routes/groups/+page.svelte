@@ -236,7 +236,7 @@ async function printGroup(group) {
     groups.update((data) => {
         return {
             ...data,
-            thisGroup: { key: group.key, name: group.name },
+            thisGroup: { key: group.key, name: group.name, chat: true},
         }
     })
     //Load boardMessages from db

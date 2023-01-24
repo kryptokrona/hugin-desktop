@@ -57,7 +57,7 @@ const checkGroup = () => {
         return
     }
     //IF we have no groups and no active group. Set default
-    if (!$groups.thisGroup.group) {
+    if (!$groups.thisGroup.chat) {
         setEmptyGroup()
         printGroup(nogroup)
         return
