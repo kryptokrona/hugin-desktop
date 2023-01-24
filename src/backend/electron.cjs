@@ -386,7 +386,7 @@ async function loadAccount(data) {
     await db.write()
     startWallet(data, node)
 }
- //Create welcome message
+ //Create account
 async function createAccount(accountData) {
     let walletName = accountData.walletName
     let myPassword = accountData.password
@@ -394,7 +394,6 @@ async function createAccount(accountData) {
     nodePort = accountData.port
     let node = { node: nodeUrl, port: nodePort }
 
-    welcomeMessage()
     daemon = new WB.Daemon(nodeUrl, nodePort)
 
     if (!accountData.blockheight) {
@@ -409,6 +408,8 @@ async function createAccount(accountData) {
             )
             : [await WB.WalletBackend.createWallet(daemon), null]
 
+    //Create welcome PM message
+    welcomeMessage()
     //Create Hugin welcome contact
     firstContact()
     //Create Boards welcome message
@@ -668,7 +669,6 @@ async function openWallet(walletName, password) {
 
     try {
         json_wallet = await files.readFile(userDataDir + '/' + walletName + '.json')
-        console.log('json wallet file?', json_wallet)
         return json_wallet
     } catch (err) {
         console.log('Json wallet error, try backup wallet file', err)
@@ -677,11 +677,11 @@ async function openWallet(walletName, password) {
 
 //Checks the message for a view tag
 async function checkForViewTag(extra) {
-    const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     try {
     const rawExtra = trimExtra(extra)
     const parsed_box = JSON.parse(rawExtra)
         if (parsed_box.vt) {
+            const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
             const derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
             const hashDerivation = await crypto.cn_fast_hash(derivation)
             const possibleTag = hashDerivation.substring(0,1)
@@ -714,6 +714,15 @@ function validateExtra(thisExtra, thisHash) {
     }
 }
 
+async function checkForPrivateMessage(thisExtra, thisHash) {
+    let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
+    if (!message) return false
+    if (message && message.type === 'sealedbox' || 'box') {
+        message.sent = false
+        saveMessage(message, thisHash)
+        return true
+    }
+}
 //Checks if hugin message is from a group
  async function checkForGroupMessage(thisExtra, thisHash) {
     try {
@@ -790,21 +799,14 @@ async function decryptHuginMessages(transactions) {
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
-                     //TODO try decrypt extradata to message here? else try check if its a group message
                     console.log('Found a possible message to me')
+                    await checkForPrivateMessage(thisExtra, thisHash)
+                    continue
                 }
-                //Save hash as checked
-                saveHash(thisHash)
+                //Check for private message //TODO remove this when viewtags are active
+                if (await checkForPrivateMessage(thisExtra, thisHash)) continue
                 //Check for group message
                 if (await checkForGroupMessage(thisExtra, thisHash)) continue
-
-                let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
-                if (!message) continue
-
-                if (message && message.type === 'sealedbox' || 'box') {
-                    message.sent = false
-                    saveMessage(message, thisHash)
-                }
             }
         } catch (err) {
             console.log(err)
@@ -934,7 +936,6 @@ async function saveMessage(msg, hash, offchain = false) {
         chat: addr,
         sent: sent,
         timestamp: timestamp,
-        magnet: magnetLinks,
         offchain: offchain,
     }
     if (sent) {
@@ -994,7 +995,6 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
     //Box object
     let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp, txKey: keys.public_key, vt: viewTag  }
     // Convert json to hex
-
     let payload_hex = toHex(JSON.stringify(payload_box))
 
     return payload_hex
@@ -1152,6 +1152,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
     let decryptBox = false
     let offchain = false
     let groups = await loadGroups()
+    
     if (group_key.length === 64) {
         let msg = tx
         tx = JSON.parse(trimExtra(msg))
@@ -1294,7 +1295,6 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     //Split address
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
-
     //Check history
     if (known_keys.indexOf(messageKey) > -1) {
         console.log('I know this contact?')
