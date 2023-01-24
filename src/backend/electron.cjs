@@ -478,7 +478,7 @@ async function openWalletFromFile(walletName, password) {
 
 async function verifyPassword(password) {
     let check = await checkPass(password, hashed_pass)
-    if (check) {
+    if (await checkPass(password, hashed_pass)) {
         await sleep(1000)
         mainWindow.webContents.send('login-success')
         return true
@@ -488,25 +488,34 @@ async function verifyPassword(password) {
     }
 }
 
-async function start_js_wallet(walletName, password, node) {
+async function login(walletName, password) {
+    js_wallet = await logIntoWallet(walletName, password)
+    if (js_wallet === 'Wrong password') {
+        mainWindow.webContents.send('login-failed')
+        return false
+    }
+    return true
+}
+
+async function checkNodeAndPassword(password, node) {
     let nodeOnline = await checkNodeStatus(node)
     if (!nodeOnline) {
         mainWindow.webContents.send('node-not-ok')
-        return
+        return false
     }
-
+    //If we are already logged in
     if (hashed_pass.length) {
-        console.log('wallet started already')
         await verifyPassword(password)
-        return
+        return false
     }
+    return true
+}
 
-    js_wallet = await logIntoWallet(walletName, password)
+async function start_js_wallet(walletName, password, node) {
+    
+    if (!await checkNodeAndPassword(password, node)) return
 
-    if (js_wallet === 'Wrong password') {
-        mainWindow.webContents.send('login-failed')
-        return
-    }
+    if (!await login(walletName, password)) return
 
     hashed_pass = await hashPassword(password)
 
