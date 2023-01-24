@@ -186,30 +186,31 @@ const downloadFile = (fileName, size, from) => {
 }
 
 const addLocalFile = (fileName, filePath, chat, fileSize) => {
-    let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath}
-    localFiles.push(file)
     let active = active_beams.find(a => a.chat === chat.substring(0,99))
+    if (!active) return
+    let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath}
+    localFiles.unshift(file)
     active.beam.write(JSON.stringify({type: 'remote-file-added', fileName}))
-    sender('local-files', file)
+    sender('local-files',  {localFiles, chat})
 }
 
 const removeLocalFile = (fileName, chat) => {
     let active = active_beams.find(a => a.chat === chat)
+    if (!active) return
     localFiles = localFiles.filter(x => x.fileName !== fileName)
     active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
-
-    sender('local-files', localFiles)
+    sender('local-files', {localFiles, chat})
 }
 
 const addRemoteFile = (file, chat) => {
     file = {file, chat}
-    remoteFiles.push(file)
-    sender('remote-files', remoteFiles)
+    remoteFiles.unshift(file)
+    sender('remote-files', {remoteFiles, chat})
 }
 
 const removeRemoteFile = (fileName, chat) => {
     remoteFiles = remoteFiles.filter(x => x.fileName !== fileName)
-    sender('remote-files', remoteFiles, chat)
+    sender('remote-files', {remoteFiles, chat})
 }
 
 const requestDownload = (downloadDir, file, from) => {
@@ -232,34 +233,44 @@ const uploadReady = (file, size, from) => {
 
 
 const checkDataMessage = (data, chat) => {
+
     try {
         data = JSON.parse(data)
     } catch {
         return true
     }
 
+    let fileName
+    let size
+
+    if ('fileName' in data) {
+        fileName = sanitizeHtml(data.fileName)
+        size = parseInt(sanitizeHtml(data.size))
+    }
+
     if (data.type === 'remote-file-added') {
-        addRemoteFile(data.fileName, chat)
+        addRemoteFile(fileName, chat)
         return true
     }
 
     if (data.type === 'remote-file-removed') {
-        removeRemoteFile(data.fileName, chat)
+        removeRemoteFile(fileName, chat)
         return true
     }
 
     if (data.type === 'request-download') {
-        sender('download-request', data)
-        let file = localFiles.find(a => a.fileName === data.fileName)
-        let size = file.size
-        sendFile(data.fileName, size, chat)
-        uploadReady(data.fileName, size, chat)
+        sender('download-request', fileName)
+        let file = localFiles.find(a => a.fileName === fileName)
+        if (!file) return true
+        size = file.size
+        sendFile(fileName, size, chat)
+        uploadReady(fileName, size, chat)
         return true
     }
 
     if (data.type === 'upload-ready') {
-        sender('downloading', data)
-        downloadFile(data.fileName, data.size, chat)
+        sender('downloading', fileName)
+        downloadFile(fileName, size, chat)
         return true
     }
 
