@@ -4,11 +4,11 @@ const sanitizeHtml = require('sanitize-html')
 let database
 //CREATE DB
 const loadDB = (userDataDir, dbPath) => {
-     database = new sqlite3.Database(dbPath, (err) => {
-        if (err) {
-            console.log('Err', err)
-        }
-    })
+    database = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.log('Err', err)
+    }
+})
     createTables()
 }
 
@@ -498,15 +498,27 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
     return message
 }
 
-const saveMsg = (message, addr, sent, timestamp) => {
+const saveMsg = async (message, addr, sent, timestamp, offchain) => {
     //Save to DB
-    database.run(
-        `REPLACE INTO messages
-            (msg, chat, sent, timestamp)
-         VALUES
-             (?, ?, ?, ?)`,
-        [message, addr, sent, timestamp]
-    )
+    if (!offchain) {
+        database.run(
+            `REPLACE INTO messages
+                (msg, chat, sent, timestamp)
+            VALUES
+                (?, ?, ?, ?)`,
+            [message, addr, sent, timestamp]
+        )
+        
+        let newMsg = {
+            msg: message,
+            chat: addr,
+            sent: sent,
+            timestamp: timestamp,
+            offchain: offchain,
+        }
+    }
+
+    return newMsg
 }
 
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
