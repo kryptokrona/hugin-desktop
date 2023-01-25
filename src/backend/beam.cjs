@@ -190,16 +190,16 @@ const addLocalFile = (fileName, filePath, chat, fileSize) => {
     if (!active) return
     let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath}
     localFiles.unshift(file)
-    active.beam.write(JSON.stringify({type: 'remote-file-added', fileName}))
     sender('local-files',  {localFiles, chat})
+    active.beam.write(JSON.stringify({type: 'remote-file-added', fileName}))
 }
 
 const removeLocalFile = (fileName, chat) => {
     let active = active_beams.find(a => a.chat === chat)
-    if (!active) return
-    localFiles = localFiles.filter(x => x.fileName !== fileName)
-    active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
     sender('local-files', {localFiles, chat})
+    localFiles = localFiles.filter(x => x.fileName !== fileName)
+    if (!active) return
+    active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
 }
 
 const addRemoteFile = (file, chat) => {
