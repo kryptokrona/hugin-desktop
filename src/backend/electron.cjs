@@ -910,17 +910,6 @@ async function saveMessage(msg, offchain = false) {
         await saveContact(hugin)
     }
 
-    //Call offer message
-    switch (message.substring(0, 1)) {
-        case 'Δ':
-        // Fall through
-        case 'Λ':
-            message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
-            break
-        default:
-            message = message
-    }
-
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
 
     if (sent) {

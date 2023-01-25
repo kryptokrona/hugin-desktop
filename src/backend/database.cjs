@@ -499,6 +499,19 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
 }
 
 const saveMsg = async (message, addr, sent, timestamp, offchain) => {
+
+    
+    //Call offer message
+    switch (message.substring(0, 1)) {
+        case 'Δ':
+        // Fall through
+        case 'Λ':
+            message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
+            break
+        default:
+            message = message
+    }
+    
     //Save to DB
     if (!offchain) {
         database.run(
@@ -509,6 +522,7 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
             [message, addr, sent, timestamp]
         )
     }
+    
         
     let newMsg = {
         msg: message,
