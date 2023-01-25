@@ -510,13 +510,13 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
         )
     }
         
-        let newMsg = {
-            msg: message,
-            chat: addr,
-            sent: sent,
-            timestamp: timestamp,
-            offchain: offchain,
-        }
+    let newMsg = {
+        msg: message,
+        chat: addr,
+        sent: sent,
+        timestamp: timestamp,
+        offchain: offchain,
+    }
 
     return newMsg
 }
