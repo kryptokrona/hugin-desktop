@@ -721,12 +721,12 @@ function validateExtra(thisExtra, thisHash) {
     }
 }
 
-async function checkForPrivateMessage(thisExtra, thisHash) {
+async function checkForPrivateMessage(thisExtra) {
     let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
     if (!message) return false
     if (message && message.type === 'sealedbox' || 'box') {
         message.sent = false
-        saveMessage(message, thisHash)
+        saveMessage(message)
         return true
     }
 }
@@ -737,7 +737,6 @@ async function checkForPrivateMessage(thisExtra, thisHash) {
     let message = JSON.parse(group)
     if (message.sb) {
             decryptGroupMessage(message, thisHash)
-            saveHash(thisHash)
             return true
     }
     } catch {
@@ -803,10 +802,10 @@ async function decryptHuginMessages(transactions) {
             let thisHash = transactions[transaction].transactionPrefixInfotxHash
             if (!validateExtra(thisExtra, thisHash)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
+                saveHash(thisHash)
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
-                    console.log('Found a possible message to me')
                     await checkForPrivateMessage(thisExtra, thisHash)
                     continue
                 }
@@ -889,24 +888,15 @@ async function saveGroupMessage(msg, hash, time, offchain) {
 
 
 //Saves private message
-async function saveMessage(msg, hash, offchain = false) {
-    let text
+async function saveMessage(msg, offchain = false) {
     let sent = msg.sent
     let addr = sanitizeHtml(msg.from)
     let timestamp = sanitizeHtml(msg.t)
     let key = sanitizeHtml(msg.k)
 
     if (await messageExists(timestamp)) return
-
-    let group_call = false
-
-    if (offchain) {
-        group_call = true
-    }
-
     //Checking if private msg is a call
-    text = await parseCall(msg.msg, addr, sent, true, group_call)
-
+    let text = await parseCall(msg.msg, addr, sent, offchain)
     let message = sanitizeHtml(text)
 
     //If sent set chat to chat instead of from
@@ -916,12 +906,11 @@ async function saveMessage(msg, hash, offchain = false) {
 
     //New message from unknown contact
     if (msg.type === 'sealedbox' && !sent) {
-        console.log('Saving key', key)
         let hugin = addr + key
         await saveContact(hugin)
     }
 
-    // Call offer message
+    //Call offer message
     switch (message.substring(0, 1)) {
         case 'Δ':
         // Fall through
@@ -932,26 +921,14 @@ async function saveMessage(msg, hash, offchain = false) {
             message = message
     }
 
-    saveMsg(message, addr, sent, timestamp)
+    let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
 
-    if (!offchain) {
-        saveHash(hash)
-    }
-
-    let newMsg = {
-        msg: message,
-        chat: addr,
-        sent: sent,
-        timestamp: timestamp,
-        offchain: offchain,
-    }
     if (sent) {
         //If sent, update conversation list
         mainWindow.webContents.send('sent', newMsg)
         return
     }
     //Send message to front end
-    console.log('sending newmessage')
     mainWindow.webContents.send('newMsg', newMsg)
     mainWindow.webContents.send('privateMsg', newMsg)
 }
@@ -1068,6 +1045,7 @@ async function sendGroupsMessage(message, offchain = false) {
                 time: message.t,
             })
             known_pool_txs.push(result.transactionHash)
+            saveHash(result.transactionHash)
             optimizeMessages()
         } else {
             mainWindow.webContents.send('optimized', false)
@@ -1132,7 +1110,7 @@ async function decryptRtcMessage(message) {
 
     if (!newMsg) return
 
-    saveMessage(newMsg, hash, true)
+    saveMessage(newMsg, true)
 }
 
 async function decryptGroupRtcMessage(message, key) {
@@ -1194,14 +1172,8 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
     }
 
     const message_dec = naclUtil.encodeUTF8(decryptBox)
-
     const payload_json = JSON.parse(message_dec)
-
-    console.log(key)
-    console.log(payload_json)
-
     const from = payload_json.k
-
     const this_addr = await Address.fromAddress(from)
 
     const verified = await xkrUtils.verifyMessageSignature(
@@ -1358,12 +1330,13 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
         }
         if (result.success) {
             known_pool_txs.push(result.transactionHash)
+            saveHash(result.transactionHash)
             console.log(
                 `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
                     result.fee
                 )}`
             )
-            saveMessage(sentMsg, result.transactionHash)
+            saveMessage(sentMsg)
             optimizeMessages()
         } else {
             mainWindow.webContents.send('optimized', false)
@@ -1406,7 +1379,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
                 t: timestamp,
                 chat: address,
             }
-            saveMessage(saveThisMessage, randomKey, true)
+            saveMessage(saveThisMessage, true)
         }
     }
 }
@@ -1554,22 +1527,18 @@ async function resetOptimizeTimer() {
     });
 }
 
-function parseCall(msg, sender, sent, emitCall = true, group = false) {
+function parseCall(msg, sender, sent, group = false) {
     switch (msg.substring(0, 1)) {
         case 'Δ':
         // Fall through
         case 'Λ':
             // Call offer
-            if (emitCall) {
-                // Start ringing sequence
-                console.log('sent?', sent)
                 if (!sent) {
                     console.log('call  incoming')
                     mainWindow.webContents.send('call-incoming', msg, sender, group)
                     // Handle answer/decline here
                 }
                 console.log('call incoming')
-            }
             return `${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
             break
         case 'δ':
