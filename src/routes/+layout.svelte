@@ -313,15 +313,8 @@
     })
 
     window.api.receive('remote-files', (data)  => {
-        let from = $user.contacts.find(a => a.chat === data[0].chat)
-        let file = data
-        console.log(
-            'Remote Files', file
-        )
-        $remoteFiles = data
-        console.log('remote files pushed', $remoteFiles)
-        $remoteFiles = $remoteFiles
-        console.log('remote files agen', $remoteFiles)
+        let from = $user.contacts.find(a => a.chat === data.chat)
+        $remoteFiles = data.remoteFiles
         toast.success(`New file incoming from ${from.name}`, {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
@@ -330,10 +323,10 @@
 
     window.api.receive('local-files', (data)  => { 
         console.log(
-            'Local files', data
+            'Local files n data', data
         )
-        $localFiles = data
-        toast.success(`Uploading file ${data.fileName}`, {
+        $localFiles = data.localFiles
+        toast.success(`Uploading file ${data.localFiles[0].fileName}`, {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
