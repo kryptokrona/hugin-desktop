@@ -508,6 +508,7 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
                 (?, ?, ?, ?)`,
             [message, addr, sent, timestamp]
         )
+    }
         
         let newMsg = {
             msg: message,
@@ -516,7 +517,6 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
             timestamp: timestamp,
             offchain: offchain,
         }
-    }
 
     return newMsg
 }
