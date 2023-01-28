@@ -12,6 +12,8 @@ import BackDrop from '$lib/components/popups/BackDrop.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
 import { sleep } from '$lib/utils/utils'
+import FileViewer from '$lib/components/popups/FileViewer.svelte'
+import { fileSettings } from '$lib/stores/files.js'
 
 let chat
 let active_contact
@@ -25,7 +27,6 @@ let wantToAdd = false
 
 //Get messages on mount.
 onMount(async () => {
-    messages.set(await window.api.getMessages((res) => {}))
 
     chatWindow = document.getElementById('chat_window')
 
@@ -42,6 +43,8 @@ onMount(async () => {
     //If we have an active chat in store we show that conversation
     if ($user.activeChat) {
         printConversation($user.activeChat)
+    } else {
+        printConversation($user.contacts[0])
     }
 
     scrollDown()
@@ -132,7 +135,7 @@ const sendMsg = (e) => {
 
     saveToStore(myMessage)
     window.api.sendMsg(msg, active_contact, offChain, false, beam)
-    printMessage(myMessage)
+    //printMessage(myMessage)
     console.log('Message sent')
 }
 
@@ -152,7 +155,7 @@ const openAdd = () => {
     wantToAdd = !wantToAdd
 }
 
-$: savedMsg
+$: savedMsg = $messages.filter((x) => x.chat === chat)
 
 function renameContact(e) {
     let thisContact = $user.rename.chat + $user.rename.key
@@ -178,7 +181,9 @@ async function dropFile(e) {
     let path = acceptedFiles[0].path
     let size = acceptedFiles[0].size
     let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
-
+    let time = Date.now()
+    acceptedFiles[0].time = time
+    
     if (fileRejections.length) {
         console.log('rejected file')
         return
@@ -189,7 +194,7 @@ async function dropFile(e) {
         chat: $user.activeChat.chat,
         msg: '',
         sent: true,
-        timestamp: Date.now(),
+        timestamp: time,
         file: acceptedFiles,
     }
     printMessage(message)
@@ -206,8 +211,10 @@ async function dropFile(e) {
         await sleep(300)
     }
     
-    window.api.upload(filename, path, toHuginAddress, size)
+    window.api.upload(filename, path, $user.activeChat.chat, size, time)
 }
+
+$: console.log('Messages update?', $messages)
 
 function drag() {
     dragover = true
@@ -231,6 +238,13 @@ const hideModal = () => {
 
 
 </script>
+
+{#if $fileSettings.showFiles}
+    <FileViewer
+        on:click="{() => ($fileSettings.showFiles = false)}"
+        on:remove="{(e) => window.api.removeLocalFile(e.detail)}"
+    />
+{/if}
 
 {#if toggleRename}
     <Rename
