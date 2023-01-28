@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
 import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/stores/user.js'
-import {remoteFiles, localFiles} from '$lib/stores/files.js'
+import {remoteFiles, localFiles, fileSettings} from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import SimpleAdd from '$lib/components/icons/SimpleAdd.svelte'
@@ -178,16 +178,19 @@ function newBeam() {
 }
 
 let incoming_file = false
+let shared_files = false
 
-$: if ($remoteFiles.length && $remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
+$: if ($remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
     incoming_file = true
+} else {
+    incoming_file = false
 }
 
-const downloadFile = () => {
-    console.log("downloading file from !!!!", $remoteFiles[0].chat);
-    console.log('want to download')
-    window.api.download($remoteFiles[0].file, $remoteFiles[0].chat)
-};
+$: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
+    shared_files = true
+} else {
+    shared_files = false
+}
 
 
 
@@ -281,10 +284,16 @@ const downloadFile = () => {
             {/if}
 
             {#if incoming_file}
-            <div class="button" on:click="{downloadFile}">
-                    <Lightning connecting={true} />
+            <div class="button" on:click="{() => console.log('LoL!')}">
+                    <Lightning connected={true} />
             </div>
              {/if}
+
+             <!-- {#if shared_files }
+             <div class="button" on:click="{() => $fileSettings.showFiles = !$fileSettings.showFiles}">
+                     <Lightning connected={true} />
+             </div>
+              {/if} -->
 
         </div>
         <div class="draggable"></div>
