@@ -114,16 +114,24 @@ const WINDOW_API = {
         ipcRenderer.send('expand-sdp', data, address)
     },
 
-    upload: async (filename, path, address, size) => {
-        ipcRenderer.send('upload', filename, path, address, size)
+    upload: async (filename, path, address, size, time) => {
+        ipcRenderer.send('upload', filename, path, address, size, time)
     },
 
     download: async (file, from) => {
         ipcRenderer.send('download', file, from)
     },
 
+    removeLocalFile: async (fileName, chat, time) => {
+        ipcRenderer.send('remove-local-file', fileName, chat, time)
+    },
+
     createBeam: async (key, chat) => {
         ipcRenderer.send('beam', key, chat)
+    },
+
+    getImage: async (path) => {
+        return await ipcRenderer.invoke('get-image', path)
     },
 
     //HANDLE NODES
