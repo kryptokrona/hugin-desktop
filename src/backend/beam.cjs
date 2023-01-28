@@ -5,6 +5,7 @@ const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
+const { sleep } = require('./utils.cjs');
 
 let active_beams = []
 let chat_keys
@@ -40,6 +41,7 @@ const startBeam = async (key, chat) => {
         }
     } catch (e) {
         console.log('Beam DHT error', e)
+        errorMessage(`Failed to start beam`)
         sender('stop-beam', chat.substring(0,99))
         return "Error"
     }
@@ -67,8 +69,7 @@ const beamEvent = (beam, chat, key) => {
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
-        let file = checkDataMessage(str, chat.substring(0,99))
-        if (file) return
+        if (checkDataMessage(str, chat.substring(0,99))) return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
         decryptMessage(str, msgKey)
@@ -152,65 +153,96 @@ const checkIfOnline = (addr) => {
 
 const sendFile = (fileName, size, contact) => {
     let active = active_beams.find(a => a.chat === contact)
-    let file = localFiles.find(a => a.fileName === fileName)
+    let file = localFiles.find(a => a.fileName === fileName && a.chat === contact)
+    if (!file) {
+        errorMessage(`Can't find the file, try share it again`)
+        return
+    }
+    if (!active) {
+        errorMessage(`Can't send file, beam no longer active`)
+        return
+    }
+    try {
     let filePath = file.path
     const stream = createReadStream(filePath)
     const progressStream = progress({length: size, time: 100})
     progressStream.on('progress', async progress => {
 
-        sender('upload-file-progress', {progress: progress.percentage, contact})
+        sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time})
 
         if(progress.percentage === 100) {
             console.log('File uploaded')
+            removeLocalFile(fileName, contact)
         }
     })
 
     stream.pipe(progressStream).pipe(active.beam)
+
+    } catch (err) {
+        errorMessage(`Something went wrong uploading the file`)
+    }
 }
 
-const downloadFile = (fileName, size, from) => {
-    let active = active_beams.find(a => a.chat === from)
+const downloadFile = (fileName, size, chat) => {
+    let active = active_beams.find(a => a.chat === chat)
+    if (!active) {
+        errorMessage(`Can't download file, beam no longer active`)
+        return
+    }
+    let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat)
+    if (!file) {
+        errorMessage(`File is no longer shared`)
+        return
+    }
+    try {
+    sender('downloading', {fileName, chat, size})
     const downloadPath = downloadDirectory + "/" + fileName
     const stream = createWriteStream(downloadPath);
     const progressStream = progress({length: size, time: 100});
-
     progressStream.on("progress", (progress) => {
         
-        sender('download-file-progress', {progress: progress.percentage, from})
+        sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath})
         if (progress.percentage === 100) {
             console.log('File downloaded')
         }
     });
 
     active.beam.pipe(progressStream).pipe(stream);
+
+    } catch (err) {
+        errorMessage(`Something went wrong downloading the file`)
+    }
 }
 
-const addLocalFile = (fileName, filePath, chat, fileSize) => {
+const addLocalFile = async (fileName, filePath, chat, fileSize, time) => {
     let active = active_beams.find(a => a.chat === chat.substring(0,99))
     if (!active) return
-    let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath}
+    let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath, time: time}
     localFiles.unshift(file)
     sender('local-files',  {localFiles, chat})
+    sender('uploading', {fileName, chat, size: fileSize, time })
     active.beam.write(JSON.stringify({type: 'remote-file-added', fileName}))
 }
 
-const removeLocalFile = (fileName, chat) => {
+const removeLocalFile = (fileName, chat, time) => {
     let active = active_beams.find(a => a.chat === chat)
+    localFiles = localFiles.filter(x => x.fileName !== fileName && x.time !== time)
     sender('local-files', {localFiles, chat})
-    localFiles = localFiles.filter(x => x.fileName !== fileName)
-    if (!active) return
+    console.log('File rmeoved')
+    if (!active) errorMessage(`Beam not active`)
     active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
 }
 
-const addRemoteFile = (file, chat) => {
-    file = {file, chat}
+const addRemoteFile = async (fileName, chat, size) => {
+    let time = Date.now()
+    file = {fileName, chat, size, time}
     remoteFiles.unshift(file)
-    sender('remote-files', {remoteFiles, chat})
+    sender('remote-file-added', {remoteFiles, chat})
 }
 
 const removeRemoteFile = (fileName, chat) => {
     remoteFiles = remoteFiles.filter(x => x.fileName !== fileName)
-    sender('remote-files', {remoteFiles, chat})
+    sender('remote-file-removed', {remoteFiles, chat})
 }
 
 const requestDownload = (downloadDir, file, from) => {
@@ -249,7 +281,7 @@ const checkDataMessage = (data, chat) => {
     }
 
     if (data.type === 'remote-file-added') {
-        addRemoteFile(fileName, chat)
+        addRemoteFile(fileName, size, chat)
         return true
     }
 
@@ -260,7 +292,8 @@ const checkDataMessage = (data, chat) => {
 
     if (data.type === 'request-download') {
         sender('download-request', fileName)
-        let file = localFiles.find(a => a.fileName === fileName)
+        let file = localFiles.find(a => a.fileName === fileName && a.chat === chat)
+        if (!file) errorMessage(`Beam not active`)
         if (!file) return true
         size = file.size
         sendFile(fileName, size, chat)
@@ -269,7 +302,6 @@ const checkDataMessage = (data, chat) => {
     }
 
     if (data.type === 'upload-ready') {
-        sender('downloading', fileName)
         downloadFile(fileName, size, chat)
         return true
     }
@@ -277,4 +309,8 @@ const checkDataMessage = (data, chat) => {
     return false
 }
 
-module.exports = {endBeam, newBeam, sendBeamMessage, addLocalFile, requestDownload}
+const errorMessage = (message) => {
+    sender('error-notify-message', message)
+}
+
+module.exports = {endBeam, newBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile}
