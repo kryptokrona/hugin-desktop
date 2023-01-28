@@ -9,12 +9,14 @@
     import {openURL} from '$lib/utils/utils.js'
     import StandardGroups from '$routes/dashboard/components/StandardGroups.svelte'
     import Transactions from "$routes/dashboard/components/Transactions.svelte";
-
+    import {messages} from '$lib/stores/messages.js'
+    
     let date = new Date()
     let hrs = date.getHours()
     let greet
 
     onMount(async () => {
+        if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
         if (hrs < 12) greet = 'Good Morning'
         else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'
         else if (hrs >= 17 && hrs <= 24) greet = 'Good Evening'
