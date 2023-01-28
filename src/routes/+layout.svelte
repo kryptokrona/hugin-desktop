@@ -8,7 +8,7 @@
 
     //Stores
     import {boards, groups, notify, user, webRTC, messageWallet, beam} from '$lib/stores/user.js'
-    import {remoteFiles, localFiles} from '$lib/stores/files.js'
+    import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
 
     import {onMount} from 'svelte'
@@ -26,7 +26,9 @@
     import {appUpdateState} from "$lib/components/updater/update-store.js";
     import Updater from "$lib/components/updater/Updater.svelte";
     import OptimizeToast from '$lib/components/custom-toasts/OptimizeToast.svelte'
-
+    import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
+    import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
+import { sleep } from '$lib/utils/utils'
 
     let ready = false
     let myVideo = false
@@ -312,44 +314,131 @@
         )
     })
 
-    window.api.receive('remote-files', (data)  => {
+    window.api.receive('remote-file-added', (data)  => {
         let from = $user.contacts.find(a => a.chat === data.chat)
+        let newFile = data.remoteFiles[0]
+        let incomingFile = {
+            chat: data.chat,
+            file: [newFile],
+            timestamp: newFile.time,
+            msg: `Incoming file: ${newFile.fileName}`,
+            sent: false,
+            beam: true
+        }
+        saveToStore(incomingFile)
         $remoteFiles = data.remoteFiles
-        toast.success(`New file incoming from ${from.name}`, {
+        toast.success(`New file shared by ${from.name}`, {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
     })
 
-    window.api.receive('local-files', (data)  => { 
+    window.api.receive('remote-files', (data)  => {
+        let from = $user.contacts.find(a => a.chat === data.chat)
+        $remoteFiles = data.remoteFiles
+        toast.success(`New file shared by ${from.name}`, {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+    })
+
+    window.api.receive('local-files', async (data)  => { 
         console.log(
             'Local files n data', data
         )
         $localFiles = data.localFiles
-        toast.success(`Uploading file ${data.localFiles[0].fileName}`, {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
+        console.log('4lcocalfiles', $localFiles)
+        // toast.success(`Uploading file ${data.localFiles[0].fileName}`, {
+        //     position: 'top-right',
+        //     style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        // })
+    })
+
+    window.api.receive('uploading', (data)  => { 
+        setUploadStatus(data)
     })
 
     window.api.receive('downloading', (data)  => { 
         console.log(
             'Downloading', data
         )
+        setDownloadStatus(data)
     })
 
     window.api.receive('download-file-progress', (data)  => { 
         console.log(
             'Progress', data
         )
+        updateDownloadProgress(data)
     })
 
     window.api.receive('upload-file-progress', (data)  => { 
-        console.log(
-            'Progress', data
-        )
+        updateUploadProgress(data)
     })
 
+    const updateUploadProgress = async (data) => {
+        const thisAddr = data.chat
+        const thisFile = data.fileName
+        $upload = $upload.map(a => { 
+            if (a.chat === thisAddr && a.fileName === thisFile && a.time === data.time) 
+            {
+            a.progress = data.progress
+            }
+            return a
+        })
+    }
+
+    const updateDownloadProgress = async (data) => {
+        const thisAddr = data.chat
+        const thisFile = data.fileName
+        $download = $download.map(a => { 
+            if (a.chat === thisAddr && a.fileName === thisFile) 
+            {
+            a.progress = data.progress
+            }
+            return a
+        })
+
+        if (data.progress === 100) {
+            toast.success(`${thisFile} finished downloading`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+        }
+    }
+
+    const setDownloadStatus = (data) => {
+        let file = $remoteFiles.find(a => a.fileName === data.fileName && a.chat === data.chat)
+        file.progress = 0
+        $download.unshift(file)
+        $download =  $download
+        console.log('Download store', $download)
+        toast(DownloadToast, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+                duration: 1000 * 18000,
+                file: data.fileName,
+                chat: data.chat,
+                done: false,
+                time: file.time
+        })
+    }
+    const setUploadStatus = (data) => {
+        let file = $localFiles.find(a => a.fileName === data.fileName && a.chat === data.chat && data.time === a.time)
+        file.progress = 0
+        $upload.unshift(file)
+        $upload =  $upload
+        console.log('Upload store', $upload)
+        toast(UploadToast, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+                duration: 1000 * 18000,
+                file: data.fileName,
+                chat: data.chat,
+                done: false,
+                time: file.time
+        })
+    }
 
 
 
