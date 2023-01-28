@@ -29,6 +29,7 @@ const Peer = require('simple-peer')
 const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
+const {createWriteStream, createReadStream} = require("fs");
 const { 
     expand_sdp_answer, 
     expand_sdp_offer, 
@@ -89,7 +90,7 @@ const {
     Transaction,
 } = require('kryptokrona-utils')
 
-const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload } = require("./beam.cjs")
+const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile } = require("./beam.cjs")
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
@@ -632,14 +633,12 @@ function incomingTx(transaction) {
         if (!synced) return
         optimizeMessages()
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
-
         console.log('transaction', transaction)
         mainWindow.webContents.send('new-message', transaction.toJSON())
 
 }
 
 function sendNodeInfo() {
-
     const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
     mainWindow.webContents.send('sync', 'Not syncing')
     mainWindow.webContents.send('node-sync-data', {
@@ -703,6 +702,31 @@ async function checkForViewTag(extra) {
     return false
 }
 
+//Try decrypt extra data
+async function checkForPrivateMessage(thisExtra) {
+    let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
+    if (!message) return false
+    if (message && message.type === 'sealedbox' || 'box') {
+        message.sent = false
+        saveMessage(message)
+        return true
+    }
+}
+//Checks if hugin message is from a group
+async function checkForGroupMessage(thisExtra, thisHash) {
+    try {
+    let group = trimExtra(thisExtra)
+    let message = JSON.parse(group)
+    if (message.sb) {
+            decryptGroupMessage(message, thisHash)
+            return true
+    }
+    } catch {
+        
+    }
+    return false
+}
+
 //Validate extradata, here we can add more conditions
 function validateExtra(thisExtra, thisHash) {
     //Extra too long
@@ -719,30 +743,6 @@ function validateExtra(thisExtra, thisHash) {
         //Tx already known
         return false
     }
-}
-
-async function checkForPrivateMessage(thisExtra) {
-    let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
-    if (!message) return false
-    if (message && message.type === 'sealedbox' || 'box') {
-        message.sent = false
-        saveMessage(message)
-        return true
-    }
-}
-//Checks if hugin message is from a group
- async function checkForGroupMessage(thisExtra, thisHash) {
-    try {
-    let group = trimExtra(thisExtra)
-    let message = JSON.parse(group)
-    if (message.sb) {
-            decryptGroupMessage(message, thisHash)
-            return true
-    }
-    } catch {
-        
-    }
-    return false
 }
 
 //Set known pool txs on start
@@ -762,7 +762,12 @@ async function backgroundSyncMessages(checkedTxs = false) {
         known_pool_txs = await setKnownPoolTxs(checkedTxs)
     }
     
-    mainWindow.webContents.send('sync', 'Syncing')
+    let transactions = await fetchHuginMessages()
+    if (!transactions) return
+    decryptHuginMessages(transactions)
+}
+
+async function fetchHuginMessages() {
     try {
         const resp = await fetch(
             'http://' + nodeUrl + ':' + nodePort.toString() + '/get_pool_changes_lite',
@@ -785,12 +790,14 @@ async function backgroundSyncMessages(checkedTxs = false) {
         if (transactions.length === 0) {
             console.log('Empty array...')
             console.log('No incoming messages...')
-            return
+            return false
         }
-        decryptHuginMessages(transactions)
-    } catch (err) {
-        console.log(err)
+        
+        return transactions
+
+    } catch (e) {
         mainWindow.webContents.send('sync', 'Error')
+        return false
     }
 }
 
@@ -806,7 +813,7 @@ async function decryptHuginMessages(transactions) {
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
-                    await checkForPrivateMessage(thisExtra, thisHash)
+                    //await checkForPrivateMessage(thisExtra, thisHash)
                     continue
                 }
                 //Check for private message //TODO remove this when viewtags are active
@@ -1256,6 +1263,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
     let has_history
+    return
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -1573,9 +1581,51 @@ ipcMain.on('download', async (e, file, from) => {
     requestDownload(downloadDir, file, from)
 })
 
-ipcMain.on('upload', async (e, filename, path, address, fileSize) => {
-    addLocalFile(filename, path, address, fileSize)
+ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
+    addLocalFile(filename, path, address, fileSize, time)
 })
+
+ipcMain.on('remove-local-file', async (e, filename, address, time) => {
+    removeLocalFile(filename, address, time)
+})
+
+
+ipcMain.handle('get-image', async (e, path) => {
+    return await load_file(path)
+})
+
+//Check if it is an image with allowed type
+async function checkImageType(path) {
+    let types = ['.png','.jpg','.gif', '.jpeg'];
+    for (a in types) {
+        if (path.endsWith(types[a])) {
+            return true
+        } else {
+            continue
+        }
+    }
+    return false
+}
+
+async function load_file(path) {
+    let imgArray = []
+    if (await checkImageType(path)) {
+        //Read the file as an image
+        return new Promise((resolve, reject) => {
+            const stream = createReadStream(path)
+                stream.on('data', (data) => { 
+                    imgArray.push(data)
+                })
+                stream.on('end', () => {
+                    resolve(Buffer.concat(imgArray))
+                })
+        })
+    } else {
+        return "File"
+    }
+    
+
+}
 
 //TOAST NOTIFY
 ipcMain.on('error-notify-message-main', async (e, error) => {
