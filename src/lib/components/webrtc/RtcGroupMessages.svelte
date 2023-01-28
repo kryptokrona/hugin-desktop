@@ -192,7 +192,6 @@ async function addEmoji() {
             if (!a.react && b.reply == a.hash) {
                 a.react = []
                 a.react.push(b)
-                console.log()
             } else if (b.reply == a.hash) {
                 a.react.push(b)
             }
