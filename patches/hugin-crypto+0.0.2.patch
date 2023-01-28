@@ -1,0 +1,66 @@
+diff --git a/node_modules/hugin-crypto/index.js b/node_modules/hugin-crypto/index.js
+index 234afdb..196420b 100644
+--- a/node_modules/hugin-crypto/index.js
++++ b/node_modules/hugin-crypto/index.js
+@@ -6,8 +6,6 @@ nacl.util = require('tweetnacl-util');
+ 
+ const naclSealed = require('tweetnacl-sealed-box');
+ 
+-
+-
+ const {
+     Address,
+     AddressPrefix,
+@@ -126,10 +124,17 @@ async function encryptBox(message, xkr_keypair, recipient_pubkey, timestamp) {
+ 
+ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+   // Takes raw extra data from the blockchain and converts it to a message
++  let tx
++  try {
+   extra = trimExtra(extra);
+-  let tx = JSON.parse(extra);
++  tx = JSON.parse(extra);
++  } catch (err) {
++    return false
++  }
++
+   let keyPair = convertXKRKeypairToNaCl(xkr_keypair);
+   let message_type = undefined;
++
+   if (tx.box) {
+ 
+    // Encrypted box was found
+@@ -169,7 +174,6 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+         message_type = 'box';
+       }
+     } catch (err) {
+-      console.log(err);
+       continue;
+     }
+ 
+@@ -177,7 +181,6 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+   }
+ 
+    if (!decryptBox) {
+-
+      return false;
+    }
+ 
+@@ -234,17 +237,7 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+ 
+  } else if (tx.brd) {
+ 
+-   // Public board message
+-   let message_json = tx;
+-
+-  let this_addr = await Address.fromAddress(message_json.k);
+-  let verified = await xkrUtils.verifyMessageSignature(message_json.m, this_addr.spend.publicKey, message_json.s);
+-  if (!verified) {
+     return false;
+-  } else {
+-    return message_json;
+-  }
+-
+ 
+   }
+ 
