@@ -3,23 +3,23 @@
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {beam, user} from '$lib/stores/user.js'
     import Button from '$lib/components/buttons/Button.svelte'
-    import {createEventDispatcher} from 'svelte'
+    import {createEventDispatcher, onMount} from 'svelte'
     import Time from 'svelte-time'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import Lightning from "$lib/components/icons/Lightning.svelte";
     import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
     import CodeBlock from './CodeBlock.svelte'
     import Youtube from "svelte-youtube-embed";
-
+    import { download, upload } from '$lib/stores/files'
     export let message
     export let msgFrom
     export let ownMsg
     export let files = false
     export let timestamp
     export let beamMsg = false
-    
+    const dispatch = createEventDispatcher()
     let torrent = false
-    let file
+    let file = false
     let oldInvite = false
     let beamInvite = false
     let address = $user.huginAddress.substring(0, 99)
@@ -35,16 +35,43 @@
     let link = false
     let messageText
     let messageLink
+    let image = ""
+    let uploadDone = false
+    let downloadDone = false
+    let downloading = false
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
              ,"g"
            );
 
-    const dispatch = createEventDispatcher()
+    onMount( async () => 
+    {
+        if (files)
+        {
+            file = files[0]
+            if (!ownMsg) return
+            image = await getImage(file)
+        }
+    })
 
-    $: if (files) {
-        file = files[0]
+    $: {
+        if (file && ownMsg)
+        {
+            uploadDone = $upload.some(a => file.name === a.fileName && file.time === a.time && a.progress === 100)
+        }
     }
+    $: {
+        if (file && !ownMsg)
+        {
+            downloadDone = $download.some(a => file.name === a.fileName && file.time === a.time && a.progress === 100)
+            if (downloadDone) 
+            {
+                image = getImage(file)
+            }
+        }
+    }
+
+    $: downloading = $download.some(a => file.name === a.fileName && file.time === a.time)
 
     //Check for regular links and splits message and link
     $: if (message.match(geturl)) {
@@ -106,14 +133,15 @@
         emojiMessage = true
     }
 
-    const downloadFile = () => {
-    console.log("downloading file");
-    window.api.download(filename, $user.activeChat.chat)
-    };
+    // const downloadFile = () => {
+    // console.log("downloading file");
+    // window.api.download(filename, $user.activeChat.chat)
+    // };
 
 
     const joinBeam = () => {
         let key = message.substring(7,59)
+        if (key === "new") return
         window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
         $beam.active.push({
             chat: $user.activeChat.chat,
@@ -149,6 +177,17 @@
         youtube = true
     }
 
+    async function getImage(file) {
+        let arr = await window.api.getImage(file.path)
+        if (arr === "File") return arr
+        let blob = new Blob( [ arr ] );
+        let imageUrl = URL.createObjectURL( blob );
+        return imageUrl
+    }
+
+    const downloadFile = () => {
+        console.log('Download')
+    }
 
 </script>
 
@@ -194,8 +233,22 @@
                 </div>
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
+                        {#if !uploadDone}
+                        <p class="message">Sending file</p>
+                        {:else if uploadDone}
+                        <p class="message done" in:fade>File sent</p>
+                        {/if}
+                        {#if image === "File"}
                         <p>{file.name}</p>
-                        {#each files as image}{/each}
+                        {:else if image === "File not found"}
+                        <p class="message error">File not found</p>
+                        {/if}
+                            <img
+                                in:fade="{{ duration: 150 }}"
+                                src="{image}"
+                                alt=""
+                            />
+
                     </div>|
                     {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
@@ -240,8 +293,25 @@
                 </div>
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
-                        <p>{file.name}</p>
-                        {#each files as image}{/each}
+                        {#if !downloadDone && !downloading}
+                            <Button on:click={downloadFile} enabled="true" text="Download file {file.fileName}"/>
+                        {:else if !downloadDone && downloading}
+                            <p class="message">Downloading file</p>
+                        {:else if downloadDone}
+                            <p class="message done" in:fade>File downloaded</p>
+                            {#if image === "File"}
+                            <p>{file.name}</p>
+                            {/if}
+                            {#if image === "File not found"}
+                            <p class="message error">File not found</p>
+                            {/if}
+                            <img
+                                in:fade="{{ duration: 150 }}"
+                                src="{image}"
+                                alt=""
+                            />
+                        {/if}
+                       
                     </div>
 
                     {:else if beamInvite && !oldInvite && !beamConnected}
@@ -342,6 +412,18 @@
 
 .emoji {
     font-size: 21px !important;
+}
+
+img {
+    max-width: 50%;
+}
+
+.done {
+    color: var(--success-color) !important;
+}
+
+.error {
+    color: var(--warn-color) !important; 
 }
 
 </style>
