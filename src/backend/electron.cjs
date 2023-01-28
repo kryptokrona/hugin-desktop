@@ -1263,7 +1263,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 // }
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
     let has_history
-    return
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -1611,6 +1610,7 @@ async function load_file(path) {
     let imgArray = []
     if (await checkImageType(path)) {
         //Read the file as an image
+        try {
         return new Promise((resolve, reject) => {
             const stream = createReadStream(path)
                 stream.on('data', (data) => { 
@@ -1620,6 +1620,9 @@ async function load_file(path) {
                     resolve(Buffer.concat(imgArray))
                 })
         })
+        } catch (err) {
+            return "File not found"
+        }
     } else {
         return "File"
     }

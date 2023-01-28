@@ -228,7 +228,6 @@ const removeLocalFile = (fileName, chat, time) => {
     let active = active_beams.find(a => a.chat === chat)
     localFiles = localFiles.filter(x => x.fileName !== fileName && x.time !== time)
     sender('local-files', {localFiles, chat})
-    console.log('File rmeoved')
     if (!active) errorMessage(`Beam not active`)
     active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
 }
@@ -242,7 +241,7 @@ const addRemoteFile = async (fileName, chat, size) => {
 
 const removeRemoteFile = (fileName, chat) => {
     remoteFiles = remoteFiles.filter(x => x.fileName !== fileName)
-    sender('remote-file-removed', {remoteFiles, chat})
+    sender('remote-files', {remoteFiles, chat})
 }
 
 const requestDownload = (downloadDir, file, from) => {
