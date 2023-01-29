@@ -214,7 +214,7 @@ const downloadFile = (fileName, size, chat) => {
     }
 }
 
-const addLocalFile = async (fileName, filePath, chat, fileSize, time) => {
+const addLocalFile = (fileName, filePath, chat, fileSize, time) => {
     let active = active_beams.find(a => a.chat === chat.substring(0,99))
     if (!active) return
     let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath, time: time}
@@ -232,7 +232,7 @@ const removeLocalFile = (fileName, chat, time) => {
     active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
 }
 
-const addRemoteFile = async (fileName, chat, size) => {
+const addRemoteFile = (fileName, chat, size) => {
     let time = Date.now()
     file = {fileName, chat, size, time}
     remoteFiles.unshift(file)
@@ -244,17 +244,17 @@ const removeRemoteFile = (fileName, chat) => {
     sender('remote-files', {remoteFiles, chat})
 }
 
-const requestDownload = (downloadDir, file, from) => {
+const requestDownload = (downloadDir, file, chat) => {
     downloadDirectory = downloadDir
-    let active = active_beams.find(a => a.chat === from)
+    let active = active_beams.find(a => a.chat === chat)
         active.beam.write(JSON.stringify({
             type: "request-download",
             fileName: file,
     }))
 }
 
-const uploadReady = (file, size, from) => {
-    let active = active_beams.find(a => a.chat === from)
+const uploadReady = (file, size, chat) => {
+    let active = active_beams.find(a => a.chat === chat)
         active.beam.write(JSON.stringify({
             type: 'upload-ready',
             fileName: file,
@@ -280,7 +280,7 @@ const checkDataMessage = (data, chat) => {
     }
 
     if (data.type === 'remote-file-added') {
-        addRemoteFile(fileName, size, chat)
+        addRemoteFile(fileName, chat, size)
         return true
     }
 
