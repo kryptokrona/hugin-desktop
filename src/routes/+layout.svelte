@@ -336,10 +336,6 @@ import { sleep } from '$lib/utils/utils'
     window.api.receive('remote-files', (data)  => {
         let from = $user.contacts.find(a => a.chat === data.chat)
         $remoteFiles = data.remoteFiles
-        toast.success(`New file shared by ${from.name}`, {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
     })
 
     window.api.receive('local-files', async (data)  => { 
@@ -347,11 +343,7 @@ import { sleep } from '$lib/utils/utils'
             'Local files n data', data
         )
         $localFiles = data.localFiles
-        console.log('4lcocalfiles', $localFiles)
-        // toast.success(`Uploading file ${data.localFiles[0].fileName}`, {
-        //     position: 'top-right',
-        //     style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        // })
+        console.log('lcocalfiles', $localFiles)
     })
 
     window.api.receive('uploading', (data)  => { 
@@ -394,6 +386,7 @@ import { sleep } from '$lib/utils/utils'
         $download = $download.map(a => { 
             if (a.chat === thisAddr && a.fileName === thisFile) 
             {
+            a.path = data.path
             a.progress = data.progress
             }
             return a
