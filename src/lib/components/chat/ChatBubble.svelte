@@ -54,24 +54,18 @@
         }
     })
 
-    $: {
-        if (file && ownMsg)
+    $: if (file && ownMsg)
         {
-            uploadDone = $upload.some(a => file.name === a.fileName && file.time === a.time && a.progress === 100)
+            uploadDone = $upload.some(a => file.fileName === a.fileName && file.time === a.time && a.progress === 100)
         }
-    }
-    $: {
-        if (file && !ownMsg)
-        {
-            downloadDone = $download.some(a => file.name === a.fileName && file.time === a.time && a.progress === 100)
-            if (downloadDone) 
-            {
-                image = getImage(file)
-            }
-        }
-    }
 
-    $: downloading = $download.some(a => file.name === a.fileName && file.time === a.time)
+    $: if (file && !ownMsg)
+        {
+            downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
+            downloadDone = $download.some(a => file.fileName === a.fileName && file.time === a.time && a.progress === 100)
+        }
+
+    
 
     //Check for regular links and splits message and link
     $: if (message.match(geturl)) {
@@ -177,7 +171,11 @@
         youtube = true
     }
 
-    async function getImage(file) {
+    async function getImage(file, load = false) {
+        console.log('get file', file)
+        if (load) {
+            file = $download.find(a => a.fileName === file.fileName && a.time === file.time)
+        }
         let arr = await window.api.getImage(file.path)
         if (arr === "File") return arr
         let blob = new Blob( [ arr ] );
@@ -294,22 +292,24 @@
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
                         {#if !downloadDone && !downloading}
-                            <Button on:click={downloadFile} enabled="true" text="Download file {file.fileName}"/>
+                            <Button on:click={downloadFile}/>
                         {:else if !downloadDone && downloading}
                             <p class="message">Downloading file</p>
                         {:else if downloadDone}
                             <p class="message done" in:fade>File downloaded</p>
-                            {#if image === "File"}
+                            {#await getImage(file, true) then thisImage}
+                            {#if thisImage === "File"}
                             <p>{file.name}</p>
                             {/if}
-                            {#if image === "File not found"}
+                            {#if thisImage === "File not found"}
                             <p class="message error">File not found</p>
                             {/if}
                             <img
                                 in:fade="{{ duration: 150 }}"
-                                src="{image}"
+                                src="{thisImage}"
                                 alt=""
                             />
+                            {/await}
                         {/if}
                        
                     </div>

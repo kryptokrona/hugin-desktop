@@ -1,5 +1,5 @@
 diff --git a/node_modules/hugin-crypto/index.js b/node_modules/hugin-crypto/index.js
-index 234afdb..196420b 100644
+index 234afdb..e05bdc2 100644
 --- a/node_modules/hugin-crypto/index.js
 +++ b/node_modules/hugin-crypto/index.js
 @@ -6,8 +6,6 @@ nacl.util = require('tweetnacl-util');
@@ -46,21 +46,26 @@ index 234afdb..196420b 100644
       return false;
     }
  
-@@ -234,17 +237,7 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+@@ -232,20 +235,7 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+      return false;
+    }
  
-  } else if (tx.brd) {
- 
+- } else if (tx.brd) {
+-
 -   // Public board message
 -   let message_json = tx;
 -
 -  let this_addr = await Address.fromAddress(message_json.k);
 -  let verified = await xkrUtils.verifyMessageSignature(message_json.m, this_addr.spend.publicKey, message_json.s);
 -  if (!verified) {
-     return false;
+-    return false;
 -  } else {
 -    return message_json;
 -  }
 -
+-
+-  }
++ } 
++ return false
  
-   }
- 
+ }
