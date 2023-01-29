@@ -56,7 +56,7 @@
 
     $: if (file && ownMsg)
         {
-            uploadDone = $upload.some(a => file.fileName === a.fileName && file.time === a.time && a.progress === 100)
+            uploadDone = $upload.some(a => file.name === a.fileName && file.time === a.time && a.progress === 100)
         }
 
     $: if (file && !ownMsg)
@@ -127,10 +127,9 @@
         emojiMessage = true
     }
 
-    // const downloadFile = () => {
-    // console.log("downloading file");
-    // window.api.download(filename, $user.activeChat.chat)
-    // };
+    const downloadFile = (file) => {
+        window.api.download(file.fileName, $user.activeChat.chat)
+    };
 
 
     const joinBeam = () => {
@@ -172,7 +171,6 @@
     }
 
     async function getImage(file, load = false) {
-        console.log('get file', file)
         if (load) {
             file = $download.find(a => a.fileName === file.fileName && a.time === file.time)
         }
@@ -181,10 +179,6 @@
         let blob = new Blob( [ arr ] );
         let imageUrl = URL.createObjectURL( blob );
         return imageUrl
-    }
-
-    const downloadFile = () => {
-        console.log('Download')
     }
 
 </script>
@@ -292,7 +286,7 @@
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
                         {#if !downloadDone && !downloading}
-                            <Button on:click={downloadFile}/>
+                            <Button on:click={downloadFile(file)}/>
                         {:else if !downloadDone && downloading}
                             <p class="message">Downloading file</p>
                         {:else if downloadDone}
@@ -397,6 +391,9 @@
 
 .file {
     background: none !important;
+    img {
+        max-width: 50%;
+    }
 }
 
 .time {
@@ -412,10 +409,6 @@
 
 .emoji {
     font-size: 21px !important;
-}
-
-img {
-    max-width: 50%;
 }
 
 .done {
