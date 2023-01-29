@@ -286,7 +286,7 @@
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
                         {#if !downloadDone && !downloading}
-                            <Button on:click={downloadFile(file)}/>
+                            <Button on:click={downloadFile(file)} enabled={true} text="Download file {file.fileName}"/>
                         {:else if !downloadDone && downloading}
                             <p class="message">Downloading file</p>
                         {:else if downloadDone}
