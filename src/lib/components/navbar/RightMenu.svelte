@@ -283,11 +283,11 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                 </div>
             {/if}
 
-            {#if incoming_file}
+            <!-- {#if incoming_file}
             <div class="button" on:click="{() => console.log('LoL!')}">
                     <Lightning connected={true} />
             </div>
-             {/if}
+            {/if} -->
 
              <!-- {#if shared_files }
              <div class="button" on:click="{() => $fileSettings.showFiles = !$fileSettings.showFiles}">
