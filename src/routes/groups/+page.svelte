@@ -11,6 +11,7 @@ import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
 import { containsOnlyEmojis } from '$lib/utils/utils'
+import Loader from '$lib/components/popups/Loader.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -345,6 +346,11 @@ function addHash(data) {
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="group_chat_window">
+            {#if fixedGroups.length === 0}
+                <div>
+                    <Loader/>
+                </div>
+            {/if}
             {#each fixedGroups as message (message.hash)}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupMsg(e)}"
