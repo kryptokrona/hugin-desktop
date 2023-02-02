@@ -5,13 +5,13 @@ import { Moon } from 'svelte-loading-spinners'
 </script>
 
 <div
-    in:fade|local="{{ duration: 100 }}"
+    in:fade|local="{{ duration: 150 }}"
     out:fade|local="{{ delay: 300, duration: 170 }}"
     class="backdrop"
     on:click|self
 >
     <div class="card" in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}">
-        <p in:fade="{{ duration: 170 }}">Loading Account...</p>
+        <p in:fade="{{ duration: 170 }}">Loading</p>
         <Moon color="var(--title-color)" size="30" unit="px" />
     </div>
 </div>
@@ -28,9 +28,9 @@ import { Moon } from 'svelte-loading-spinners'
     justify-content: space-between;
     align-items: center;
 
-    @media only screen and (max-width: 1000px) {
-        max-width: 100%;
-    }
+    // @media only screen and (max-width: 1000px) {
+    //     max-width: 100%;
+    // }
 }
 
 p {
@@ -41,7 +41,7 @@ p {
 }
 
 .backdrop {
-    position: fixed;
+    position: absolute;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -52,6 +52,7 @@ p {
     background-color: var(--backgound-color);
     z-index: 103;
     border-radius: 15px;
+    margin-bottom: 100px;
 }
 
 .wrapper {
