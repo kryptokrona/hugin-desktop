@@ -1,7 +1,7 @@
 <script>
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { createEventDispatcher } from 'svelte'
+import { createEventDispatcher, onMount } from 'svelte'
 import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
@@ -49,14 +49,26 @@ const dispatch = createEventDispatcher()
 
 let page
 let offchain = false
+let thisReply = false
+let replyError = false
+
+onMount( async () => {
+        if (reply.length === 64) 
+        {
+        thisReply = await checkreply(reply)
+        replyMessage = true
+        if (thisReply) return
+        replyError = true
+        }
+})
 
 async function checkreply(reply) {
     if (offchain) {
         let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
-        thisreply = group_reply
-        return thisreply
+        return group_reply
     }
-    thisreply = await window.api.getGroupReply(reply)
+    let thisreply = await window.api.getGroupReply(reply)
+    if (!thisreply) return false
     //Add extra number to avoid collision for keys in Svelte each loop
     thisreply.hash = thisreply.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
     return thisreply
@@ -107,10 +119,6 @@ $: if ($rtc_groups.replyTo.reply == false) {
 }
 
 $: reactions
-
-$: if (reply.length === 64) {
-    replyMessage = true
-}
 
 $: if (message.react) {
     let thisemoji = {}
@@ -181,17 +189,17 @@ const openLinkMessage = (url) => {
 <div class="message" id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}">
     <div>
         {#if replyMessage}
-            {#await checkreply(reply) then thisreply}
+            {#if thisReply}
                 <div class="reply">
                     <div style="display: flex; gap: 10px; align-items: center">
                         <RepliedArrow />
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <p class="reply_nickname">{thisreply.name}</p>
-                            <p>{thisreply.message}</p>
+                            <p class="reply_nickname">{thisReply.name}</p>
+                            <p>{thisReply.message}</p>
                         </div>
                     </div>
                 </div>
-            {:catch error}
+            {:else if replyError}
                 <div in:fade="{{ duration: 150 }}" class="reply">
                     <img
                         class="reply_avatar"
@@ -204,7 +212,7 @@ const openLinkMessage = (url) => {
                     <br />
                     <p style="color: red">This reply is not in the mempool</p>
                 </div>
-            {/await}
+            {/if}
         {/if}
     </div>
     <div>
