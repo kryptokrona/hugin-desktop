@@ -36,6 +36,7 @@
         "src/backend/database.cjs",
         "src/backend/preload.cjs",
         "src/backend/sdp.cjs",
+        "src/backend/utils.cjs",
         {
             "from": "build",
             "to": ""
