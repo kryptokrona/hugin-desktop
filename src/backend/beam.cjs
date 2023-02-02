@@ -292,7 +292,7 @@ const checkDataMessage = (data, chat) => {
     if (data.type === 'request-download') {
         sender('download-request', fileName)
         let file = localFiles.find(a => a.fileName === fileName && a.chat === chat)
-        if (!file) errorMessage(`Beam not active`)
+        if (!file) errorMessage(`Can't upload the file`)
         if (!file) return true
         size = file.size
         sendFile(fileName, size, chat)
