@@ -20,14 +20,14 @@ $: {
     }
 }
 
-const enter = (e: KeyboardEvent) => {
+const enter = (e) => {
     if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
         addBoard(text)
     }
 }
 
 // Dispatch the inputted data
-const addBoard = (board: String) => {
+const addBoard = (board) => {
     // Dispatch the inputted data
     dispatch('addBoard', {
         board: board,
