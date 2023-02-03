@@ -371,10 +371,12 @@ import { sleep } from '$lib/utils/utils'
     const updateUploadProgress = async (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
+        const done = data.done
         $upload = $upload.map(a => { 
             if (a.chat === thisAddr && a.fileName === thisFile && a.time === data.time) 
             {
             a.progress = data.progress
+            a.done = done
             }
             return a
         })
@@ -383,9 +385,11 @@ import { sleep } from '$lib/utils/utils'
     const updateDownloadProgress = async (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
+        const done = data.done
         $download = $download.map(a => { 
             if (a.chat === thisAddr && a.fileName === thisFile) 
             {
+            a.done = done
             a.path = data.path
             a.progress = data.progress
             }

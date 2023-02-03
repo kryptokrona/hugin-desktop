@@ -22,7 +22,7 @@ async function removeToast() {
 </script>
 
 <span>
-    {#if thisFile.progress === 100} 
+    {#if thisFile.progress === 100 || thisFile.done} 
     <p class="finish">UPLOADED</p>
     {:else}
     <p>UPLOADING</p>
