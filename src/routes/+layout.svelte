@@ -315,6 +315,7 @@ import { sleep } from '$lib/utils/utils'
     })
 
     window.api.receive('remote-file-added', (data)  => {
+        console.log('Remote file added', data)
         let from = $user.contacts.find(a => a.chat === data.chat)
         let newFile = data.remoteFiles[0]
         let incomingFile = {
@@ -375,7 +376,6 @@ import { sleep } from '$lib/utils/utils'
             if (a.chat === thisAddr && a.fileName === thisFile && a.time === data.time) 
             {
             a.progress = data.progress
-            a.done = done
             }
             return a
         })
