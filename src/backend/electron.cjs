@@ -1,17 +1,14 @@
-const windowStateManager = require('electron-window-state')
 const contextMenu = require('electron-context-menu')
 const {
     app,
     BrowserWindow,
     ipcMain,
-    ipcRenderer,
     Tray,
     Menu,
     nativeTheme,
     systemPreferences,
 } = require('electron')
 const serve = require('electron-serve')
-const path = require('path')
 const { join } = require('path')
 const { JSONFile, Low } = require('@commonify/lowdb')
 const fs = require('fs')
@@ -25,11 +22,9 @@ const { extraDataToMessage } = require('hugin-crypto')
 const sanitizeHtml = require('sanitize-html')
 const en = require('int-encoder')
 const sqlite3 = require('sqlite3').verbose()
-const Peer = require('simple-peer')
-const { desktopCapturer, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const notifier = require('node-notifier')
-const {createWriteStream, createReadStream} = require("fs");
+const {createReadStream} = require("fs");
 const { 
     expand_sdp_answer, 
     expand_sdp_offer, 
@@ -117,7 +112,6 @@ const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const store = new Store()
 
-
 const welcomeAddress =
     'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
 
@@ -137,6 +131,8 @@ try {
 }
 
 function createWindow() {
+    const windowStateManager = require('electron-window-state')
+    const path = require('path')
     let windowState = windowStateManager({
         defaultWidth: 1000,
         defaultHeight: 700,
@@ -372,9 +368,7 @@ async function loadHugin() {
 }
 
 const startWallet = async (data, node) => {
-    let walletName = data.thisWallet
-    let password = data.myPassword
-    start_js_wallet(walletName, password, node)
+    start_js_wallet(data.thisWallet, data.myPassword, node)
 }
 
 async function loadAccount(data) {
@@ -813,7 +807,7 @@ async function decryptHuginMessages(transactions) {
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
-                    //await checkForPrivateMessage(thisExtra, thisHash)
+                    await checkForPrivateMessage(thisExtra, thisHash)
                     continue
                 }
                 //Check for private message //TODO remove this when viewtags are active
@@ -1810,6 +1804,7 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
 })
 
 ipcMain.handle('shareScreen', async (e, start) => {
+const { desktopCapturer } = require('electron')
     desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
         for (const source of sources) {
             if (source.name === 'Entire Screen') {
@@ -1919,6 +1914,7 @@ ipcMain.on('create-account', async (e, accountData) => {
 })
 
 ipcMain.on('openLink', (e, url) => {
+    const {shell} = require('electron')
     console.log('url', url)
     shell.openExternal(url)
 })
