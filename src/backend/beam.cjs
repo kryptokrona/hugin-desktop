@@ -131,10 +131,10 @@ const endBeam = (contact) => {
     let active = active_beams.find(a => a.chat === contact)
     if (!active) return
     sender('stop-beam', contact)
-    let filter = active_beams.filter(a => a.chat !== contact)
-    active_beams = filter
     active.beam.end()
     active.beam.destroy()
+    let filter = active_beams.filter(a => a.chat !== contact)
+    active_beams = filter
     console.log('Active beams', active_beams)
 }
 
@@ -169,11 +169,10 @@ const sendFile = (fileName, size, contact) => {
     const progressStream = progress({length: size, time: 100})
     progressStream.on('progress', async progress => {
 
-        sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time, done: false})
+        sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time})
 
         if(progress.percentage === 100) {
             console.log('File uploaded')
-            sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time, done: true})
             removeLocalFile(fileName, contact)
         }
     })
@@ -203,9 +202,8 @@ const downloadFile = (fileName, size, chat) => {
     const progressStream = progress({length: size, time: 100});
     progressStream.on("progress", (progress) => {
         
-        sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath, done: false})
+        sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath})
         if (progress.percentage === 100) {
-            sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath, done: true})
         }
     });
 
@@ -216,14 +214,14 @@ const downloadFile = (fileName, size, chat) => {
     }
 }
 
-const addLocalFile = (fileName, filePath, chat, fileSize, time) => {
+const addLocalFile = (fileName, path, chat, size, time) => {
     let active = active_beams.find(a => a.chat === chat)
     if (!active) return
-    let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath, time: time}
+    let file = {fileName, chat, size, path, time}
     localFiles.unshift(file)
     sender('local-files',  {localFiles, chat})
-    sender('uploading', {fileName, chat, size: fileSize, time })
-    active.beam.write(JSON.stringify({type: 'remote-file-added', fileName, fileSize}))
+    sender('uploading', {fileName, chat, size, time })
+    active.beam.write(JSON.stringify({type: 'remote-file-added', fileName, size}))
 }
 
 const removeLocalFile = (fileName, chat, time) => {
@@ -231,7 +229,7 @@ const removeLocalFile = (fileName, chat, time) => {
     localFiles = localFiles.filter(x => x.fileName !== fileName && x.time !== time)
     sender('local-files', {localFiles, chat})
     if (!active) errorMessage(`Beam not active`)
-    active.beam.write(JSON.stringify({type: 'remote-file-removed', file}))
+    active.beam.write(JSON.stringify({type: 'remote-file-removed', fileName, chat}))
 }
 
 const addRemoteFile = (fileName, chat, size) => {
@@ -242,7 +240,7 @@ const addRemoteFile = (fileName, chat, size) => {
 }
 
 const removeRemoteFile = (fileName, chat) => {
-    remoteFiles = remoteFiles.filter(x => x.fileName !== fileName)
+    remoteFiles = remoteFiles.filter(x => x.fileName !== fileName && x.chat === chat)
     sender('remote-files', {remoteFiles, chat})
 }
 
@@ -269,7 +267,7 @@ const checkDataMessage = (data, chat) => {
     try {
         data = JSON.parse(data)
     } catch {
-        return true
+        return false
     }
 
     let fileName
