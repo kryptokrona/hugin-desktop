@@ -286,7 +286,7 @@
                 {#if files}
                     <div class="file" in:fade="{{ duration: 150 }}">
                         {#if !downloadDone && !downloading}
-                            <Button on:click={downloadFile(file)} enabled={true} text="Download file {file.fileName}"/>
+                            <Button on:click={downloadFile(file)} disabled={false} text="Download file {file.fileName}"/>
                         {:else if !downloadDone && downloading}
                             <p class="message">Downloading file</p>
                         {:else if downloadDone}
@@ -309,7 +309,7 @@
                     </div>
 
                     {:else if beamInvite && !oldInvite && !beamConnected}
-                        <p class="message">{$user.activeChat.name} would like to star a beam ⚡️</p>
+                        <p class="message">{$user.activeChat.name} would like to start a beam ⚡️</p>
                         <div style="margin-top: 1rem">
                             <FillButton text="Join beam" disabled={false} on:click={joinBeam}/>
                         </div>
