@@ -42,7 +42,7 @@ const startBeam = async (key, chat) => {
     } catch (e) {
         console.log('Beam DHT error', e)
         errorMessage(`Failed to start beam`)
-        sender('stop-beam', chat.substring(0,99))
+        sender('stop-beam', addr)
         return "Error"
     }
 }
@@ -61,7 +61,7 @@ const beamEvent = (beam, chat, key) => {
     beam.on('connected', function () {
         console.log('Beam connected to peer')
         checkIfOnline(addr)
-        sender('beam-connected', [chat.substring(0,99), beam.key])
+        sender('beam-connected', [addr, beam.key])
     })
 
     //Incoming message
@@ -69,15 +69,15 @@ const beamEvent = (beam, chat, key) => {
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
-        if (checkDataMessage(str, chat.substring(0,99))) return
+        if (checkDataMessage(data, addr)) return
         let hash = str.substring(0,64)
         let msgKey = chat.substring(99,163)
         decryptMessage(str, msgKey)
     })
 
     beam.on('end', () => {
-        console.log('Beam ended on end event')
-        endBeam(addr)
+        // console.log('Beam ended on end event')
+        // endBeam(addr)
     })
 
     beam.on('error', function (e) {
@@ -131,9 +131,10 @@ const endBeam = (contact) => {
     let active = active_beams.find(a => a.chat === contact)
     if (!active) return
     sender('stop-beam', contact)
-    active.beam.end()
     let filter = active_beams.filter(a => a.chat !== contact)
     active_beams = filter
+    active.beam.end()
+    active.beam.destroy()
     console.log('Active beams', active_beams)
 }
 
@@ -168,10 +169,11 @@ const sendFile = (fileName, size, contact) => {
     const progressStream = progress({length: size, time: 100})
     progressStream.on('progress', async progress => {
 
-        sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time})
+        sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time, done: false})
 
         if(progress.percentage === 100) {
             console.log('File uploaded')
+            sender('upload-file-progress', {progress: progress.percentage, chat: contact, fileName, time: file.time, done: true})
             removeLocalFile(fileName, contact)
         }
     })
@@ -201,9 +203,9 @@ const downloadFile = (fileName, size, chat) => {
     const progressStream = progress({length: size, time: 100});
     progressStream.on("progress", (progress) => {
         
-        sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath})
+        sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath, done: false})
         if (progress.percentage === 100) {
-            console.log('File downloaded')
+            sender('download-file-progress', {progress: progress.percentage, chat, path: downloadPath, done: true})
         }
     });
 
@@ -215,13 +217,13 @@ const downloadFile = (fileName, size, chat) => {
 }
 
 const addLocalFile = (fileName, filePath, chat, fileSize, time) => {
-    let active = active_beams.find(a => a.chat === chat.substring(0,99))
+    let active = active_beams.find(a => a.chat === chat)
     if (!active) return
     let file = {fileName: fileName, chat: chat, size: fileSize, path: filePath, time: time}
     localFiles.unshift(file)
     sender('local-files',  {localFiles, chat})
     sender('uploading', {fileName, chat, size: fileSize, time })
-    active.beam.write(JSON.stringify({type: 'remote-file-added', fileName}))
+    active.beam.write(JSON.stringify({type: 'remote-file-added', fileName, fileSize}))
 }
 
 const removeLocalFile = (fileName, chat, time) => {
@@ -264,7 +266,6 @@ const uploadReady = (file, size, chat) => {
 
 
 const checkDataMessage = (data, chat) => {
-
     try {
         data = JSON.parse(data)
     } catch {
