@@ -214,8 +214,6 @@ async function dropFile(e) {
     window.api.upload(filename, path, $user.activeChat.chat, size, time)
 }
 
-$: console.log('Messages update?', $messages)
-
 function drag() {
     dragover = true
 }
