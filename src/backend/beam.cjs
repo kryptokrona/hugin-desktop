@@ -34,7 +34,7 @@ const startBeam = async (key, chat, file = false) => {
             beam.write('Start')
             if (file) {
                 fileSender(beam, chat, beam.key)
-                return {chat, key: beam.key}
+                return {chat, key: beam.key, beam}
             }
             beamEvent(beam, chat, beam.key)
             return {msg:"BEAM://" + beam.key, chat: chat}
@@ -56,10 +56,17 @@ const startBeam = async (key, chat, file = false) => {
 }
 
 const fileSender = async (beam, chat, key) => {
+    console.log('Got filebema', beam)
     active_beams.push({beam, chat, key})
      beam.on('data', (data) => {
+        const str = new TextDecoder().decode(data);
+        if (str === "Start") return
         console.log('Got file data')
      })
+
+     beam.on('connected', function () {
+        console.log('Filebeam connected to peer')
+    })
 
      beam.on('error', function (e) {
         console.log('Beam error')
@@ -150,10 +157,11 @@ const sendBeamMessage = (message, to) => {
     active.beam.write(message)
 }
 
-const endFileBeam = (chat, key) => {
+const endFileBeam = async (chat, key) => {
     let file = active_beams.find(a => a.chat === chat && a.key === key)
     if (!file) return
     file.beam.end()
+    await sleep(2000)
     file.beam.destroy()
     let filter = active_beams.filter(a => a.key !== file.key)
     console.log('File beams cleared', filter)
@@ -166,7 +174,6 @@ const endBeam = (chat, file = false) => {
     if (!active) return
     sender('stop-beam', chat)
     active.beam.end()
-    active.beam.destroy()
     let filter = active_beams.filter(a => a.chat !== chat)
     active_beams = filter
     console.log('Active beams', active_beams)
@@ -223,6 +230,8 @@ const sendFile = async (fileName, size, chat, key) => {
 const downloadFile = async (fileName, size, chat) => {
     let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat)
     let active = await startBeam(file.key, chat, true)
+    console.log('Got activbe beam', active)
+    await sleep(2000)
     if (!active) {
         errorMessage(`Can't download file, beam no longer active`)
         return
@@ -242,7 +251,6 @@ const downloadFile = async (fileName, size, chat) => {
         if (progress.percentage === 100) {
         }
     });
-
     active.beam.pipe(progressStream).pipe(stream);
 
     } catch (err) {
@@ -254,8 +262,10 @@ const addLocalFile = async (fileName, path, chat, size, time) => {
     let active = active_beams.find(a => a.chat === chat)
     if (!active) return
     let fileBeam = await startBeam('new', chat, true)
+    console.log('Got filebeam', fileBeam)
     let file = {fileName, chat, size, path, time, key: fileBeam.key}
     localFiles.unshift(file)
+    fileBeam.beam.write('Start')
     sender('local-files',  {localFiles, chat})
     sender('uploading', {fileName, chat, size, time })
     await sleep(1000)
@@ -310,7 +320,7 @@ const checkDataMessage = (data, chat) => {
     } catch {
         return false
     }
-
+    
     let fileName
     let size
     let key
