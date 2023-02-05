@@ -158,7 +158,7 @@ import { sleep } from '$lib/utils/utils'
 
         window.api.receive('privateMsg', async (data) => {
             console.log('newmsg in layout', data)
-
+            if (data.chat === $user.huginAddress.substring(0, 99)) return
             if (data.chat !== $user.activeChat.chat) {
                 new_message_sound.play()
             }
