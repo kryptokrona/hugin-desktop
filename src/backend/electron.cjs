@@ -700,7 +700,7 @@ async function checkForViewTag(extra) {
 async function checkForPrivateMessage(thisExtra) {
     let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
     if (!message) return false
-    if (message && message.type === 'sealedbox' || 'box') {
+    if (message.type === 'sealedbox' || 'box') {
         message.sent = false
         saveMessage(message)
         return true
@@ -1536,14 +1536,12 @@ function parseCall(msg, sender, sent, group = false) {
         case 'λ':
             // Answer
             if (sent) return 'Call answered'
-            if (emitCall) {
                 let callback = JSON.stringify(expand_sdp_answer(msg))
                 let callerdata = {
                     data: callback,
                     chat: sender,
                 }
                 mainWindow.webContents.send('got-callback', callerdata)
-            }
 
             return 'Call answered'
 
@@ -1553,39 +1551,35 @@ function parseCall(msg, sender, sent, group = false) {
     }
 }
 
-//BEAM
+async function switchNode(node) {
+    console.log(`Switching node to ${node}`)
+    nodeUrl = node.split(':')[0]
+    nodePort = parseInt(node.split(':')[1])
 
-ipcMain.on("beam", async (e, link, chat) => {
-    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
-    if (beamMessage === "Error") return
-    if (!beamMessage) return
-    sendMessage(beamMessage.msg, beamMessage.chat, false)
-});
+    const daemon = new WB.Daemon(nodeUrl, nodePort)
+    await js_wallet.swapNode(daemon)
 
+    node = { node: nodeUrl, port: nodePort }
+    db.data.node.node = nodeUrl
+    db.data.node.port = nodePort
+    db.data.node = node
+    await db.write()
+}
+async function shareScreen(start) {
 
-ipcMain.on("end-beam", async (e, chat) => {
-    console.log("end beam");
-    endBeam(chat);
-});
-
-//FILES
-
-ipcMain.on('download', async (e, file, from) => {
-    requestDownload(downloadDir, file, from)
-})
-
-ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
-    addLocalFile(filename, path, address, fileSize, time)
-})
-
-ipcMain.on('remove-local-file', async (e, filename, address, time) => {
-    removeLocalFile(filename, address, time)
-})
-
-
-ipcMain.handle('get-image', async (e, path) => {
-    return await load_file(path)
-})
+const { desktopCapturer } = require('electron')
+    desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
+        for (const source of sources) {
+            if (source.name === 'Entire Screen') {
+            }
+            if (!start) {
+                mainWindow.webContents.send('screen-share', source.id)
+            }
+            return source.id
+        }
+        console.log('sources', sources)
+    })
+}
 
 //Check if it is an image with allowed type
 async function checkImageType(path) {
@@ -1619,10 +1613,41 @@ async function load_file(path) {
         }
     } else {
         return "File"
-    }
-    
-
+    }    
 }
+//BEAM
+
+ipcMain.on("beam", async (e, link, chat) => {
+    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
+    if (beamMessage === "Error") return
+    if (!beamMessage) return
+    sendMessage(beamMessage.msg, beamMessage.chat, false)
+});
+
+
+ipcMain.on("end-beam", async (e, chat) => {
+    console.log("end beam");
+    endBeam(chat);
+});
+
+//FILES
+
+ipcMain.on('download', async (e, file, from) => {
+    requestDownload(downloadDir, file, from)
+})
+
+ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
+    addLocalFile(filename, path, address, fileSize, time)
+})
+
+ipcMain.on('remove-local-file', async (e, filename, address, time) => {
+    removeLocalFile(filename, address, time)
+})
+
+
+ipcMain.handle('get-image', async (e, path) => {
+    return await load_file(path)
+})
 
 //TOAST NOTIFY
 ipcMain.on('error-notify-message-main', async (e, error) => {
@@ -1757,19 +1782,8 @@ ipcMain.handle('getHeight', async () => {
     return { walletHeight, networkHeight }
 })
 
-ipcMain.on('switchNode', async (e, node) => {
-    console.log(`Switching node to ${node}`)
-    nodeUrl = node.split(':')[0]
-    nodePort = parseInt(node.split(':')[1])
-
-    const daemon = new WB.Daemon(nodeUrl, nodePort)
-    await js_wallet.swapNode(daemon)
-
-    node = { node: nodeUrl, port: nodePort }
-    db.data.node.node = nodeUrl
-    db.data.node.port = nodePort
-    db.data.node = node
-    await db.write()
+ipcMain.on('switchNode', (e, node) => {
+    switchNode(node) 
 })
 
 
@@ -1804,18 +1818,7 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
 })
 
 ipcMain.handle('shareScreen', async (e, start) => {
-const { desktopCapturer } = require('electron')
-    desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
-        for (const source of sources) {
-            if (source.name === 'Entire Screen') {
-            }
-            if (!start) {
-                mainWindow.webContents.send('screen-share', source.id)
-            }
-            return source.id
-        }
-        console.log('sources', sources)
-    })
+shareScreen(start)
 })
 
 ipcMain.on('setCamera', async (e, contact, calltype) => {
