@@ -57,18 +57,18 @@ const startBeam = async (key, chat, file = false) => {
 
 const fileSender = async (beam, chat, key) => {
     active_beams.push({beam, chat, key})
-     beam.on('data', async (data) => {
+     beam.on('data', (data) => {
         console.log('Got file data')
      })
 
      beam.on('error', function (e) {
         console.log('Beam error')
-        endBeam(chat, key)
+        endFileBeam(chat, key)
       })
 
       beam.on('end', () => {
         console.log('File sent, end event')
-        endBeam(chat, key)
+        endFileBeam(chat, key)
     })
 }
 
@@ -90,7 +90,7 @@ const beamEvent = (beam, chat, key) => {
     })
 
     //Incoming message
-    beam.on('data', async (data) => {
+    beam.on('data', (data) => {
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
@@ -152,9 +152,10 @@ const sendBeamMessage = (message, to) => {
 
 const endFileBeam = (chat, key) => {
     let file = active_beams.find(a => a.chat === chat && a.key === key)
+    if (!file) return
     file.beam.end()
     file.beam.destroy()
-    let filter = active_beams.filter(a => a !== file)
+    let filter = active_beams.filter(a => a.key !== file.key)
     console.log('File beams cleared', filter)
     active_beams = filter
 }
@@ -162,12 +163,6 @@ const endFileBeam = (chat, key) => {
 
 const endBeam = (chat, file = false) => {
     let active = active_beams.find(a => a.chat === chat)
-
-    if (file) {
-        endFileBeam(chat, file)
-        return
-    }
-
     if (!active) return
     sender('stop-beam', chat)
     active.beam.end()
