@@ -34,7 +34,7 @@ const startBeam = async (key, chat, file = false) => {
             beam.write('Start')
             if (file) {
                 fileSender(beam, chat, beam.key)
-                return {chat, key: beam.key, beam}
+                return {chat, key: beam.key}
             }
             beamEvent(beam, chat, beam.key)
             return {msg:"BEAM://" + beam.key, chat: chat}
@@ -231,7 +231,6 @@ const downloadFile = async (fileName, size, chat) => {
     let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat)
     let active = await startBeam(file.key, chat, true)
     console.log('Got activbe beam', active)
-    await sleep(2000)
     if (!active) {
         errorMessage(`Can't download file, beam no longer active`)
         return
@@ -265,7 +264,6 @@ const addLocalFile = async (fileName, path, chat, size, time) => {
     console.log('Got filebeam', fileBeam)
     let file = {fileName, chat, size, path, time, key: fileBeam.key}
     localFiles.unshift(file)
-    fileBeam.beam.write('Start')
     sender('local-files',  {localFiles, chat})
     sender('uploading', {fileName, chat, size, time })
     await sleep(1000)
