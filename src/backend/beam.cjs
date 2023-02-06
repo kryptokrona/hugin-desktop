@@ -57,10 +57,12 @@ const startBeam = async (key, chat, file = false) => {
 
 const fileBeam = async (beam, chat, key, download = false) => {
     active_beams.push({beam, chat, key})
-     beam.on('connected', function () {
+     beam.on('connected', async () => {
         console.log('Filebeam connected to peer')
         if (!download) return
-        download()
+        console.log('Start download???', download)
+        await sleep(100)
+        startDownload(chat, key)
     })
 
     beam.on('data', (data) => {
@@ -80,19 +82,6 @@ const fileBeam = async (beam, chat, key, download = false) => {
         endFileBeam(chat, key)
     })
 
-    function download() {
-        console.log('Rquest download')
-        let downloadFile = remoteFiles.find(x => a.key === key && a.chat === chat)
-        let active = active_beams.find(a => a.key !== key && a.chat === chat)
-        console.log("Found first beam", active)
-        console.log('Downlad fle', downloadFile)
-        active.beam.write(JSON.stringify({
-            type: "request-download",
-            fileName: downloadFile.fileName,
-            key: downloadFile.key
-    }))
-
-    }
 }
 
 const beamEvent = (beam, chat, key) => {
@@ -316,6 +305,19 @@ const requestDownload = async (downloadDir, file, chat) => {
     let downloadBeam = await startBeam(download.key, chat, true)
     if (downloadBeam === "Error") errorMessage('Error creating download beam')
 }
+
+const startDownload = (chat, key) => {
+        console.log('Rquest download')
+        let downloadFile = remoteFiles.find(a => a.key === key && a.chat === chat)
+        let active = active_beams.find(a => a.key !== key && a.chat === chat)
+        console.log("Found first beam", active)
+        console.log('Downlad fle', downloadFile)
+        active.beam.write(JSON.stringify({
+            type: "request-download",
+            fileName: downloadFile.fileName,
+            key: downloadFile.key
+        }))
+    }
 
 const uploadReady = (file, size, chat, key) => {
     let active = active_beams.find(a => a.chat === chat && a.key !== key )
