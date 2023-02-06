@@ -31,11 +31,11 @@ const startBeam = async (key, chat, file = false) => {
     try {
         if (key === "new") {
             beam = new Hyperbeam()
-            beam.write('Start')
             if (file) {
                 fileSender(beam, chat, beam.key)
                 return {chat, key: beam.key}
             }
+            beam.write('Start')
             beamEvent(beam, chat, beam.key)
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
@@ -169,11 +169,13 @@ const endFileBeam = async (chat, key) => {
 }
 
 
-const endBeam = (chat, file = false) => {
+const endBeam = async (chat, file = false) => {
     let active = active_beams.find(a => a.chat === chat)
     if (!active) return
     sender('stop-beam', chat)
     active.beam.end()
+    await sleep(2000)
+    active.beam.destroy()
     let filter = active_beams.filter(a => a.chat !== chat)
     active_beams = filter
     console.log('Active beams', active_beams)
