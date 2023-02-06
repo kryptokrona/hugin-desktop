@@ -31,11 +31,11 @@ const startBeam = async (key, chat, file = false) => {
     try {
         if (key === "new") {
             beam = new Hyperbeam()
-            beam.write('Start')
             if (file) {
                 fileBeam(beam, chat, beam.key)
                 return {chat, key: beam.key}
             }
+            beam.write('Start')
             beamEvent(beam, chat, beam.key)
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
@@ -55,7 +55,7 @@ const startBeam = async (key, chat, file = false) => {
     }
 }
 
-const fileBeam = async (beam, chat, key, download = false) => {
+const fileBeam = (beam, chat, key, download = false) => {
     active_beams.push({beam, chat, key})
      beam.on('connected', async () => {
         console.log('Filebeam connected to peer')
@@ -63,12 +63,6 @@ const fileBeam = async (beam, chat, key, download = false) => {
         console.log('Start download???', download)
         await sleep(100)
         startDownload(chat, key)
-    })
-
-    beam.on('data', (data) => {
-        const str = new TextDecoder().decode(data);
-        console.log('Got start test data!', str)
-        if (str === "Start") return
     })
 
      beam.on('error', function (e) {
