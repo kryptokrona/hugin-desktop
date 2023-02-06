@@ -351,10 +351,7 @@ import { sleep } from '$lib/utils/utils'
         setUploadStatus(data)
     })
 
-    window.api.receive('downloading', (data)  => { 
-        console.log(
-            'Downloading', data
-        )
+    window.api.receive('downloading', (data)  => {
         setDownloadStatus(data)
     })
 
