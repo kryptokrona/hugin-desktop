@@ -56,13 +56,7 @@ const startBeam = async (key, chat, file = false) => {
 }
 
 const fileSender = async (beam, chat, key) => {
-    console.log('Got filebema', beam)
     active_beams.push({beam, chat, key})
-     beam.on('data', (data) => {
-        const str = new TextDecoder().decode(data);
-        if (str === "Start") return
-        console.log('Got file data')
-     })
 
      beam.on('connected', function () {
         console.log('Filebeam connected to peer')
@@ -263,7 +257,6 @@ const addLocalFile = async (fileName, path, chat, size, time) => {
     let active = active_beams.find(a => a.chat === chat)
     if (!active) return
     let fileBeam = await startBeam('new', chat, true)
-    console.log('Got filebeam', fileBeam)
     let file = {fileName, chat, size, path, time, key: fileBeam.key}
     localFiles.unshift(file)
     sender('local-files',  {localFiles, chat})
