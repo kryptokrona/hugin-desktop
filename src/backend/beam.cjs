@@ -31,11 +31,11 @@ const startBeam = async (key, chat, file = false) => {
     try {
         if (key === "new") {
             beam = new Hyperbeam()
+            beam.write('Start')
             if (file) {
                 fileBeam(beam, chat, beam.key)
                 return {chat, key: beam.key}
             }
-            beam.write('Start')
             beamEvent(beam, chat, beam.key)
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
@@ -56,13 +56,19 @@ const startBeam = async (key, chat, file = false) => {
 }
 
 const fileBeam = (beam, chat, key, download = false) => {
+
+    let start = false
     active_beams.push({beam, chat, key})
-     beam.on('connected', async () => {
-        console.log('Filebeam connected to peer')
-        if (!download) return
-        console.log('Start download???', download)
-        await sleep(100)
-        startDownload(chat, key)
+
+    beam.on('data', (data) => {
+        if (!start) {
+            const str = new TextDecoder().decode(data);
+            if (str === "Start") {
+                start = true
+                startDownload(chat, key)
+                return
+            }
+        }
     })
 
      beam.on('error', function (e) {
@@ -229,10 +235,8 @@ const sendFile = async (fileName, size, chat, key) => {
 }
 
 const downloadFile = async (fileName, size, chat, key) => {
-    console.log('Downloading file')
     let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
-    let active = active_beams.find(a => a.fileName === fileName && file.key === a.key && key)
-    console.log('Got download active beam', active.beam)
+    let active = active_beams.find(a => a.key === key)
     if (!active) {
         errorMessage(`Can't download file, beam no longer active`)
         return
@@ -304,8 +308,6 @@ const startDownload = (chat, key) => {
         console.log('Rquest download')
         let downloadFile = remoteFiles.find(a => a.key === key && a.chat === chat)
         let active = active_beams.find(a => a.key !== key && a.chat === chat)
-        console.log("Found first beam", active)
-        console.log('Downlad fle', downloadFile)
         active.beam.write(JSON.stringify({
             type: "request-download",
             fileName: downloadFile.fileName,
