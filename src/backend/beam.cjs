@@ -31,18 +31,18 @@ const startBeam = async (key, chat, file = false) => {
     try {
         if (key === "new") {
             beam = new Hyperbeam()
+            beam.write('Start')
             if (file) {
-                fileSender(beam, chat, beam.key)
+                fileBeam(beam, chat, beam.key)
                 return {chat, key: beam.key}
             }
-            beam.write('Start')
             beamEvent(beam, chat, beam.key)
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
             beam = new Hyperbeam(key)
             if (file) {
-                fileSender(beam, chat, key)
-                return {chat, key, beam}
+                fileBeam(beam, chat, key, true)
+                return true
             }
             beamEvent(beam, chat, key)
             return false
@@ -55,15 +55,23 @@ const startBeam = async (key, chat, file = false) => {
     }
 }
 
-const fileSender = async (beam, chat, key) => {
+const fileBeam = async (beam, chat, key, download = false) => {
     active_beams.push({beam, chat, key})
-
      beam.on('connected', function () {
         console.log('Filebeam connected to peer')
+        if (!download) return
+        download()
+    })
+
+    beam.on('data', (data) => {
+        const str = new TextDecoder().decode(data);
+        console.log('Got start test data!', str)
+        if (str === "Start") return
     })
 
      beam.on('error', function (e) {
-        console.log('Beam error')
+        console.log('Beam error', e)
+        errorMessage('Beam error, shutting down..')
         endFileBeam(chat, key)
       })
 
@@ -71,6 +79,20 @@ const fileSender = async (beam, chat, key) => {
         console.log('File sent, end event')
         endFileBeam(chat, key)
     })
+
+    function download() {
+        console.log('Rquest download')
+        let downloadFile = remoteFiles.find(x => a.key === key && a.chat === chat)
+        let active = active_beams.find(a => a.key !== key && a.chat === chat)
+        console.log("Found first beam", active)
+        console.log('Downlad fle', downloadFile)
+        active.beam.write(JSON.stringify({
+            type: "request-download",
+            fileName: downloadFile.fileName,
+            key: downloadFile.key
+    }))
+
+    }
 }
 
 const beamEvent = (beam, chat, key) => {
@@ -223,10 +245,11 @@ const sendFile = async (fileName, size, chat, key) => {
     }
 }
 
-const downloadFile = async (fileName, size, chat) => {
-    let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat)
-    let active = await startBeam(file.key, chat, true)
-    console.log('Got activbe beam', active)
+const downloadFile = async (fileName, size, chat, key) => {
+    console.log('Downloading file')
+    let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
+    let active = active_beams.find(a => a.fileName === fileName && file.key === a.key && key)
+    console.log('Got download active beam', active.beam)
     if (!active) {
         errorMessage(`Can't download file, beam no longer active`)
         return
@@ -285,24 +308,22 @@ const removeRemoteFile = (fileName, chat) => {
     sender('remote-files', {remoteFiles, chat})
 }
 
-const requestDownload = (downloadDir, file, chat) => {
+const requestDownload = async (downloadDir, file, chat) => {
     downloadDirectory = downloadDir
-    let active = active_beams.find(a => a.chat === chat)
-    let downloadFile = remoteFiles.find(x => x.fileName === file && x.chat === chat)
-    if (!active) return
-        active.beam.write(JSON.stringify({
-            type: "request-download",
-            fileName: file,
-            key: downloadFile.key
-    }))
+    let download = remoteFiles.find(a => a.fileName === file && a.chat === chat)
+    console.log('Found download file', download)
+    if (!download) return
+    let downloadBeam = await startBeam(download.key, chat, true)
+    if (downloadBeam === "Error") errorMessage('Error creating download beam')
 }
 
-const uploadReady = (file, size, chat) => {
-    let active = active_beams.find(a => a.chat === chat)
+const uploadReady = (file, size, chat, key) => {
+    let active = active_beams.find(a => a.chat === chat && a.key !== key )
         active.beam.write(JSON.stringify({
             type: 'upload-ready',
             fileName: file,
-            size: size
+            size: size,
+            key: key
     }))
 }
 
@@ -339,14 +360,16 @@ const checkDataMessage = (data, chat) => {
         if (!file) errorMessage(`Can't upload the file`)
         if (!file) return true
         sender('download-request', fileName)
+        console.log('Download request')
         size = file.size
+        uploadReady(fileName, size, chat, key)
         sendFile(fileName, size, chat, key)
-        uploadReady(fileName, size, chat)
         return true
     }
 
     if (data.type === 'upload-ready') {
-        downloadFile(fileName, size, chat)
+        console.log('upload ready!')
+        downloadFile(fileName, size, chat, key)
         return true
     }
 
