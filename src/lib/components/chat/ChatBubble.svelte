@@ -234,14 +234,14 @@
                         <p>{file.name}</p>
                         {:else if image === "File not found"}
                         <p class="message error">File not found</p>
-                        {/if}
+                        {:else}
                             <img
                                 in:fade="{{ duration: 150 }}"
                                 src="{image}"
                                 alt=""
                             />
-
-                    </div>|
+                        {/if}
+                    </div>
                     {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
@@ -294,15 +294,15 @@
                             {#await getImage(file, true) then thisImage}
                             {#if thisImage === "File"}
                             <p>{file.name}</p>
-                            {/if}
-                            {#if thisImage === "File not found"}
+                            {:else if thisImage === "File not found"}
                             <p class="message error">File not found</p>
-                            {/if}
+                            {:else}
                             <img
                                 in:fade="{{ duration: 150 }}"
-                                src="{thisImage}"
+                                src="{image}"
                                 alt=""
                             />
+                             {/if}
                             {/await}
                         {/if}
                        
