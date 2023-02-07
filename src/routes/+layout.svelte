@@ -7,7 +7,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc} from '$lib/stores/user.js'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
 
@@ -124,6 +124,12 @@ import { sleep } from '$lib/utils/utils'
             //This is for logging SDP for calls, to look for bugs etc during parse and expand phase
             console.log('Reconstructed offer expanded, testdata:', data)
         })
+
+        window.api.receive('switch-node', (data) => {
+           $misc.node = data
+           window.api.successMessage(`You switched node to ${data.node}`)
+        })
+
 
         window.api.receive('newBoardMessage', (data) => {
             if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
