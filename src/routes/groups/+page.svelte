@@ -222,7 +222,7 @@ async function checkReactions() {
     console.log('filter emoji ', filterEmojis)
     if (filterEmojis.length) {
         //Adding emojis to the correct message.
-        await addEmoji()
+        addEmoji()
     } else {
         fixedGroups = filterBoards
     }
@@ -270,7 +270,7 @@ async function updateReactions(msg) {
     fixedGroups = fixedGroups
 }
 
-async function addEmoji() {
+ function addEmoji() {
 
     let emojis = filterEmojis
     //Check for replies and message hash that match and then adds reactions to the messages.
@@ -346,7 +346,7 @@ function addHash(data) {
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="group_chat_window">
-            {#if fixedGroups.length === 0}
+            {#if fixedGroups.length === 0 && $groups.groupArray.length !== 0}
                 <div>
                     <Loader/>
                 </div>
