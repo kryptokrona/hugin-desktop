@@ -1553,6 +1553,7 @@ function parseCall(msg, sender, sent, group = false) {
 
 async function switchNode(node) {
     console.log(`Switching node to ${node}`)
+    mainWindow.webContents.send('switch-node', node)
     nodeUrl = node.split(':')[0]
     nodePort = parseInt(node.split(':')[1])
 
