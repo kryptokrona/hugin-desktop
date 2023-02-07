@@ -1553,14 +1553,12 @@ function parseCall(msg, sender, sent, group = false) {
 
 async function switchNode(node) {
     console.log(`Switching node to ${node}`)
-    mainWindow.webContents.send('switch-node', node)
     nodeUrl = node.split(':')[0]
     nodePort = parseInt(node.split(':')[1])
-
     const daemon = new WB.Daemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
-
     node = { node: nodeUrl, port: nodePort }
+    mainWindow.webContents.send('switch-node', node)
     db.data.node.node = nodeUrl
     db.data.node.port = nodePort
     db.data.node = node
@@ -1843,9 +1841,9 @@ ipcMain.on('check-srcs', async (e, src) => {
 //WALLET
 
 //Rescan wallet //TODO add height
-ipcMain.on('rescan', async (e) => {
+ipcMain.on('rescan', async (e, height) => {
     let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
-    js_wallet.reset(networkHeight - 10000)
+    js_wallet.rescan(height)
 })
 
 //Optimize messages
