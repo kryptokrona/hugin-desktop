@@ -42,9 +42,11 @@ const switchStream = async () => {
 
 //End call with all peers
 const endCall = () => {
+    hideGrid()
     $webRTC.call.forEach((a) => {
         window.api.endCall('peer', 'stream', a.chat)
     })
+    
     //We pause the ringtone and destroy the popup
 }
 
