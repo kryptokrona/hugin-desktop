@@ -7,6 +7,8 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
 import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
 import { layoutState } from '$lib/stores/layout-state.js'
 import { get_avatar } from '$lib/utils/hugin-utils'
+import RescanHeight from '$lib/components/popups/RescanHeight.svelte'
+import { js_wallet } from '$lib/stores/wallet.js'
 
 let networkHeight = ''
 let walletHeight = ''
@@ -107,10 +109,6 @@ const optimizeMessages = () => {
     window.api.send('optimize')
 }
 
-const reScan = () => {
-    window.api.send('rescan')
-}
-
 $: {
     seedPhrase
     status
@@ -121,6 +119,9 @@ $: {
 }
 </script>
 
+{#if $js_wallet.rescan}
+    <RescanHeight />
+ {/if}
 <main in:fade>
     <h1>Settings</h1>
     <div style="margin-top: 1rem">
@@ -139,7 +140,7 @@ $: {
             red="{$messageWallet.optimized}"
             on:click="{optimizeMessages}"
         />
-            <FillButton text="Rescan" enabled="{false}" disabled="{false}" on:click="{reScan}" />
+            <FillButton text="Rescan" enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
         </div>
     </div>
 
