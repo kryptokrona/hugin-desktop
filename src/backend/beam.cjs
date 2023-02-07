@@ -305,7 +305,6 @@ const requestDownload = async (downloadDir, file, chat) => {
 }
 
 const startDownload = (chat, key) => {
-        console.log('Rquest download')
         let downloadFile = remoteFiles.find(a => a.key === key && a.chat === chat)
         let active = active_beams.find(a => a.key !== key && a.chat === chat)
         active.beam.write(JSON.stringify({
@@ -337,10 +336,12 @@ const checkDataMessage = (data, chat) => {
     let size
     let key
 
-    if ('fileName' in data) {
+    if ('type' in data) {
         fileName = sanitizeHtml(data.fileName)
         size = parseInt(sanitizeHtml(data.size))
         key = sanitizeHtml(data.key)
+    } else {
+        return false
     }
 
     if (data.type === 'remote-file-added') {
