@@ -50,7 +50,7 @@ p {
     left: 0;
     width: 100%;
     background-color: var(--backgound-color);
-    z-index: 103;
+    z-index: 102;
     border-radius: 15px;
     margin-bottom: 100px;
 }
