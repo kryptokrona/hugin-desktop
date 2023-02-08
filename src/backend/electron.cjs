@@ -1840,9 +1840,8 @@ ipcMain.on('check-srcs', async (e, src) => {
 
 //WALLET
 
-//Rescan wallet //TODO add height
+//Rescan wallet
 ipcMain.on('rescan', async (e, height) => {
-    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
     js_wallet.rescan(height)
 })
 
