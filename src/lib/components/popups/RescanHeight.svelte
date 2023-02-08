@@ -1,11 +1,7 @@
 <script>
-//To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 import { js_wallet } from '$lib/stores/wallet.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
-
-const dispatch = createEventDispatcher()
 
 let enableButton = false
 let height
@@ -26,7 +22,7 @@ const keyDown = (e) => {
 
 const close = () => {
     $js_wallet.rescan = false
-    amount = ""
+    height = ""
 }
 
 const reScan = () => {
