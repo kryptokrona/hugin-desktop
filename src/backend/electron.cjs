@@ -1614,6 +1614,25 @@ async function load_file(path) {
         return "File"
     }    
 }
+
+function get_sdp(data) 
+{
+    if (data.type == 'offer') 
+    {
+        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
+        let recovered_data = expand_sdp_offer(parsed_data)
+        sendMessage(parsed_data, data.contact, data.offchain, data.group)
+    } 
+    else if (data.type == 'answer') 
+    {
+        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
+        console.log('parsed data really cool sheet:', parsed_data)
+        let recovered_data = expand_sdp_answer(parsed_data)
+        //Send expanded recovered data to front end for debugging etc, this can be removed
+        mainWindow.webContents.send('rec-off', recovered_data)
+        sendMessage(parsed_data, data.contact, data.offchain, data.group)
+    }
+}
 //BEAM
 
 ipcMain.on("beam", async (e, link, chat) => {
@@ -1817,7 +1836,7 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
 })
 
 ipcMain.handle('shareScreen', async (e, start) => {
-shareScreen(start)
+    shareScreen(start)
 })
 
 ipcMain.on('setCamera', async (e, contact, calltype) => {
@@ -1929,20 +1948,7 @@ ipcMain.on('expand-sdp', (e, data, address) => {
 })
 
 ipcMain.on('get-sdp', (e, data) => {
-    console.log('get-sdp', data.type, data.contact, data.video)
-
-    if (data.type == 'offer') {
-        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        let recovered_data = expand_sdp_offer(parsed_data)
-        sendMessage(parsed_data, data.contact, data.offchain, data.group)
-    } else if (data.type == 'answer') {
-        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        console.log('parsed data really cool sheet:', parsed_data)
-        let recovered_data = expand_sdp_answer(parsed_data)
-        //Send expanded recovered data to front end for debugging etc, this can be removed
-        mainWindow.webContents.send('rec-off', recovered_data)
-        sendMessage(parsed_data, data.contact, data.offchain, data.group)
-    }
+    get_sdp(data)
 })
 
 
