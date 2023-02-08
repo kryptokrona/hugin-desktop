@@ -10,7 +10,7 @@
     import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
     import CodeBlock from './CodeBlock.svelte'
     import Youtube from "svelte-youtube-embed";
-    import { download, upload } from '$lib/stores/files'
+    import { download, fileSettings, upload, fileViewer } from '$lib/stores/files'
     export let message
     export let msgFrom
     export let ownMsg
@@ -181,6 +181,11 @@
         return imageUrl
     }
 
+    const focusImage = (image) => {
+        $fileViewer.focusImage = file.path
+        $fileViewer.enhanceImage = true
+    }
+
 </script>
 
 {#if torrent}
@@ -235,11 +240,13 @@
                         {:else if image === "File not found"}
                         <p class="message error">File not found</p>
                         {:else}
+                        <div on:click={focusImage}>
                             <img
                                 in:fade="{{ duration: 150 }}"
                                 src="{image}"
                                 alt=""
                             />
+                        </div>
                         {/if}
                     </div>
                     {:else if beamInvite || oldInvite}
@@ -297,11 +304,13 @@
                             {:else if thisImage === "File not found"}
                             <p class="message error">File not found</p>
                             {:else}
-                            <img
-                                in:fade="{{ duration: 150 }}"
-                                src="{image}"
-                                alt=""
-                            />
+                            <div on:click={focusImage}>
+                                <img
+                                    in:fade="{{ duration: 150 }}"
+                                    src="{thisImage}"
+                                    alt=""
+                                />
+                            </div>
                              {/if}
                             {/await}
                         {/if}
@@ -337,6 +346,7 @@
 {/if}
 
 <style lang="scss">
+
 .wrapper {
     padding: 10px 20px;
     display: flex;
