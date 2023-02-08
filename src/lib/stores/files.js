@@ -11,3 +11,8 @@ export const download = writable([])
 export const fileSettings = writable({
     showFiles: false,
 })
+
+export const fileViewer = writable({
+    focusImage: "",
+    enhanceImage: false,
+})
