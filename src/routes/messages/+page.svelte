@@ -13,7 +13,8 @@ import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
 import { sleep } from '$lib/utils/utils'
 import FileViewer from '$lib/components/popups/FileViewer.svelte'
-import { fileSettings } from '$lib/stores/files.js'
+import { fileSettings, fileViewer } from '$lib/stores/files.js'
+import BigImage from '$lib/components/popups/BigImage.svelte'
 
 let chat
 let active_contact
@@ -237,11 +238,8 @@ const hideModal = () => {
 
 </script>
 
-{#if $fileSettings.showFiles}
-    <FileViewer
-        on:click="{() => ($fileSettings.showFiles = false)}"
-        on:remove="{(e) => window.api.removeLocalFile(e.detail)}"
-    />
+{#if $fileViewer.enhanceImage}
+    <BigImage />
 {/if}
 
 {#if toggleRename}
