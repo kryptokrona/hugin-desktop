@@ -402,7 +402,7 @@
 .file {
     background: none !important;
     img {
-        max-width: 50%;
+        max-width: 70%;
     }
 }
 
