@@ -57,6 +57,11 @@ onMount(async () => {
             printMessage(data)
         }
     })
+
+    window.api.receive('privateMsg', async (data) => {
+        scrollDown()
+    })
+
 })
 
 onDestroy(() => {
