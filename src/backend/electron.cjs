@@ -901,7 +901,7 @@ async function saveMessage(msg, offchain = false) {
     let message = sanitizeHtml(text)
 
     //If sent set chat to chat instead of from
-    if (msg.chat) {
+    if (msg.chat && sent) {
         addr = msg.chat
     }
 
@@ -1580,9 +1580,9 @@ const { desktopCapturer } = require('electron')
     })
 }
 
-//Check if it is an image with allowed type
-async function checkImageType(path) {
-    let types = ['.png','.jpg','.gif', '.jpeg'];
+//Check if it is an image or video with allowed type
+async function checkImageOrVideoType(path) {
+    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv'];
     for (a in types) {
         if (path.endsWith(types[a])) {
             return true
@@ -1595,7 +1595,7 @@ async function checkImageType(path) {
 
 async function load_file(path) {
     let imgArray = []
-    if (await checkImageType(path)) {
+    if (checkImageOrVideoType(path)) {
         //Read the file as an image
         try {
         return new Promise((resolve, reject) => {
@@ -1663,7 +1663,7 @@ ipcMain.on('remove-local-file', async (e, filename, address, time) => {
 })
 
 
-ipcMain.handle('get-image', async (e, path) => {
+ipcMain.handle('load-file', async (e, path) => {
     return await load_file(path)
 })
 

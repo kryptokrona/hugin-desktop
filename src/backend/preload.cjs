@@ -130,8 +130,8 @@ const WINDOW_API = {
         ipcRenderer.send('beam', key, chat)
     },
 
-    getImage: async (path) => {
-        return await ipcRenderer.invoke('get-image', path)
+    loadFile: async (path) => {
+        return await ipcRenderer.invoke('load-file', path)
     },
 
     //HANDLE NODES
