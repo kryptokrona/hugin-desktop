@@ -2,7 +2,7 @@
     import { onMount } from "svelte"
     import { upload, fileViewer } from '$lib/stores/files'
     import { fade } from "svelte/transition"
-    import VideoPlayer from "./VideoPlayer.svelte"
+    import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     export let file
     let uploadDone = false
     let image = ""
