@@ -106,7 +106,6 @@ input {
     left: 0;
     width: 100%;
     background-color: var(--backdrop-color);
-    backdrop-filter: blur(8px);
     z-index: 103;
     border-radius: 15px;
 }
