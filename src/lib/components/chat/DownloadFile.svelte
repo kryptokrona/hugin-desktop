@@ -4,6 +4,7 @@
     import Button from "../buttons/Button.svelte"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import { fade } from "svelte/transition"
+    import { user } from '$lib/stores/user.js'
 
     export let file
     let image = ""
@@ -14,7 +15,7 @@
 
     onMount(() =>
     {   
-        if (videoTypes.some(a => file.path.endsWith(a)))
+        if (videoTypes.some(a => file.fileName.endsWith(a)))
         {
             console.log('Found video format')
             video = true
