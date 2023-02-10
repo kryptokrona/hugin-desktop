@@ -185,9 +185,9 @@
                     {/if}
                 </div>
                 {#if files}
-
+                <div style="cursor: pointer">
                 <UploadFile file={files[0]} />
-
+                </div>
                     {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
@@ -231,8 +231,9 @@
                     {/if}
                 </div>
                 {#if files}
+                <div style="cursor: pointer">
                    <DownloadFile file={files[0]}/>
-
+                </div>
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <p class="message">{$user.activeChat.name} would like to start a beam ⚡️</p>
                         <div style="margin-top: 1rem">
