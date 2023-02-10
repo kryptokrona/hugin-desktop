@@ -41,46 +41,40 @@
              ,"g"
            );
 
-    //Check for regular links and splits message and link
-    $: if (message.match(geturl)) {
-        link = true
-        messageLink = message.match(geturl)
-        messageText = message.replace(messageLink,'')
-        //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
-        messageLink = messageLink[0]
-    }
+    onMount(() => {
+        checkMessageType()
+    })
 
-    //Check for youtube links
-    $:  if (message.match(/youtu/) || message.match(/y2u.be/)) {
-        youtubeLink = true
-        if (ownMsg) checkLink()
-    }
+    const checkMessageType = () => {
 
-    //Replace call info with message
-    $: {
-        switch (message.substring(0, 1)) {
-            case 'Δ':
-            // Fall through
-            case 'Λ':
-                // Call offer
-                message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
-                break
+        if (message.match(geturl)) {
+            link = true
+            messageLink = message.match(geturl)
+            messageText = message.replace(messageLink,'')
+            //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
+            messageLink = messageLink[0]
+        }
+
+        if (link && message.match(/youtu/) || message.match(/y2u.be/)) {
+            youtubeLink = true
+            if (ownMsg) checkLink()
+        }
+
+        if (message.substring(0,7) === "BEAM://") {
+            if (Date.now() - timestamp >= 1000 * 1000) {
+                oldInvite = true
+            }
+            beamInvite = true
+        }
+        
+        if (message.startsWith("```") && message.endsWith("```")) {
+            checkCodeLang(message)
+        }
+
+        if (containsOnlyEmojis(message)) {
+            emojiMessage = true
         }
     }
-
-    //Check beam invite
-    $: if (message.substring(0,7) === "BEAM://") {
-        if (Date.now() - timestamp >= 1000 * 1000) {
-            oldInvite = true
-        }
-        beamInvite = true
-    }
-
-    //Code block
-    $: if (message.startsWith("```") && message.endsWith("```")) {
-        checkCodeLang(message)
-    }
-
 
     const checkCodeLang = (msg) => {
         let codeMsg = msg.slice(3,-3)
@@ -95,12 +89,6 @@
         codeBlock = true
     }
 
-    
-    //Code block
-    $: if (containsOnlyEmojis(message)) {
-        emojiMessage = true
-    }
-
     const joinBeam = () => {
         let key = message.substring(7,59)
         if (key === "new") return
@@ -112,8 +100,6 @@
         })
         $beam.active = $beam.active
     }
-
-    $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
 
     const openEmbed = () => {
         if (message.includes('&amp;list')) {
@@ -128,16 +114,32 @@
 
   
     const checkLink = () => {
-        if (message.includes('&list')) {
-            message = message.split('&list')[0]
+        if (messageLink.includes('&list')) {
+            messageLink = messageLink.split('&list')[0]
         }
         setEmbedCode()
     }
 
     const setEmbedCode = () => {
-        embed_code = message.split('/').slice(-1)[0].split('=').slice(-1)[0];
+        embed_code = messageLink.split('/').slice(-1)[0].split('=').slice(-1)[0];
         youtube = true
     }
+
+    
+    $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
+
+    //Replace call info with message
+    $: {
+        switch (message.substring(0, 1)) {
+            case 'Δ':
+            // Fall through
+            case 'Λ':
+                // Call offer
+                message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
+                break
+        }
+    }
+
 
 
 </script>
@@ -193,6 +195,7 @@
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
+                        <p class="message">{messageText}</p>
                         <Youtube id={embed_code} />
                     {:else if link}
                         <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
@@ -242,6 +245,7 @@
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
+                        <p class="message">{messageText}</p>
                         <Youtube id={embed_code} />
                     {:else if youtubeLink}
                         <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
