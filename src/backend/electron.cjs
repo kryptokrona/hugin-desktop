@@ -1256,6 +1256,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 //     optimizeMessages()
 // }
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
+    return
     let has_history
     //Assert address length
     if (receiver.length !== 163) {
@@ -1582,7 +1583,7 @@ const { desktopCapturer } = require('electron')
 
 //Check if it is an image or video with allowed type
 async function checkImageOrVideoType(path) {
-    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv'];
+    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv'];
     for (a in types) {
         if (path.endsWith(types[a])) {
             return true
