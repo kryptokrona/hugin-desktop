@@ -1256,7 +1256,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 //     optimizeMessages()
 // }
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
-    return
     let has_history
     //Assert address length
     if (receiver.length !== 163) {
