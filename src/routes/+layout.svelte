@@ -362,9 +362,6 @@ import { sleep } from '$lib/utils/utils'
     })
 
     window.api.receive('download-file-progress', (data)  => { 
-        console.log(
-            'Progress', data
-        )
         updateDownloadProgress(data)
     })
 
