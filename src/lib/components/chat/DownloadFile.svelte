@@ -8,7 +8,7 @@
     export let file
     let image = ""
     let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv']
+    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv']
     let downloadDone = false
     let downloading = false
 
@@ -37,7 +37,7 @@
         let arr = await window.api.loadFile(file.path)
         if (arr === "File") return arr
         let blob = new Blob( [ arr ]);
-        image = URL.createObjectURL( blob );
+        let imageUrl = URL.createObjectURL( blob );
         return imageUrl
     }
 
