@@ -22,10 +22,10 @@
   let shiftKey
 
   onMount(async () => {
-    mount = true
     await sleep(1000)
     emojiPicker = document.querySelector('emoji-picker')
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
+    mount = true
   })
 
   onDestroy(() => {
