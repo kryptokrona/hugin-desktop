@@ -513,7 +513,6 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
     }
     
     //Save to DB
-    if (!offchain) {
         database.run(
             `REPLACE INTO messages
                 (msg, chat, sent, timestamp)
@@ -521,7 +520,6 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
                 (?, ?, ?, ?)`,
             [message, addr, sent, timestamp]
         )
-    }
     
         
     let newMsg = {

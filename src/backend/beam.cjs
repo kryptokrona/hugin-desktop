@@ -224,6 +224,8 @@ const sendFile = async (fileName, size, chat, key) => {
         if(progress.percentage === 100) {
             console.log('File uploaded')
             console.log('Done!')
+            let message = `Uploaded ${fileName}`
+            saveMsg(message, chat, true, file.time)
             return
         }
     })
@@ -255,6 +257,8 @@ const downloadFile = async (fileName, size, chat, key) => {
         
         sender('download-file-progress', {fileName, progress: progress.percentage, chat, path: downloadPath})
         if (progress.percentage === 100) {
+            let message = `Downloaded ${fileName}`
+            saveMsg(message, chat, false, file.time)
         }
     });
     active.beam.pipe(progressStream).pipe(stream);
