@@ -177,7 +177,7 @@ async function shareScreen(id) {
 $: {
     console.log('My Audio/Video devices', $webRTC.devices)
     console.log('Active Camera', $webRTC.cameraId)
-    console.log('Active Camera', $webRTC.call)
+    console.log('Active Calls', $webRTC.call)
 }
 
 function sendInviteNotification(contact, contact_address) {
