@@ -668,10 +668,6 @@ async function checkVolume(peer) {
         activeVoice: false,
     }
     $audioLevel.call.unshift(audioCall)
-
-    let caller = $user.contacts.find((a) => {
-        return a.chat === contact.chat
-    })
     $audioLevel.sensitivity = 0.001
     interval = setInterval(getAudioLevel, 300)
 
