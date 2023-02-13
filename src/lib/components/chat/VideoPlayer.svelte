@@ -1,7 +1,7 @@
 <script>
 import { sleep } from "$lib/utils/utils"
 import { onMount } from "svelte"
-	
+
 	export let src
 
 	// These values are bound to properties of the video
@@ -14,7 +14,7 @@ import { onMount } from "svelte"
 	let lastMouseDown;
 	let video
 
-	
+
     onMount(async () => {
         loadVideo(src)
     })
@@ -66,7 +66,7 @@ import { onMount } from "svelte"
         video.load();
     }
 
- 
+
 </script>
 
 <div>
@@ -144,5 +144,6 @@ import { onMount } from "svelte"
 
 	video {
 		width: 100%;
+		max-height: 70vh;
 	}
 </style>
