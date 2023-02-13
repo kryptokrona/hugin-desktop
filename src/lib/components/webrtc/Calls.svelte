@@ -56,42 +56,7 @@ window.api.receive('got-expanded', async (callData) => {
 })
 
 window.api.receive('rtc_message', (msg, to_group = false) => {
-    console.log('my active calls', $webRTC.call)
-
-    if (to_group) {
-        console.log('sending rtc group message')
-        let connected = $webRTC.call.filter((a) => a.connected == true)
-        connected.forEach((a) => {
-            console.log('sending to peer', a.peer)
-            let sendMsg = JSON.stringify(msg[0])
-            console.log('sending rtc', sendMsg)
-            a.peer.send(sendMsg)
-        })
-
-        return
-    }
-    //Address and messageobject
-    let [message, address] = msg
-    //Find who we are going to send to
-    let to = $webRTC.call.find((a) => a.chat == address)
-    console.log('sending rtc', message)
-    console.log('Message to route?', msg)
-    let sendMsg
-    if (msg.length === 3 && !to.connected) {
-        //Want to tunnel message through group inviter to the right address
-        sendMsg = JSON.stringify(message + address)
-        console.log('sendMsg tunnel', message, address)
-        //Here we should try send it to the first connected peer, maybe more
-        let tunnel = $webRTC.call[$webRTC.call.length - 1]
-        tunnel.peer.send(sendMsg)
-        return
-    } else {
-        console.log('sending', message)
-        console.log('to', to)
-        sendMsg = JSON.stringify(message)
-        to.peer.send(sendMsg)
-    }
-    console.log('sent')
+    sendRtcMessage(msg, to_group)
 })
 
 //Awaits msg answer with sdp from contact
@@ -105,8 +70,8 @@ window.api.receive('got-callback', (callerdata) => {
     console.log('Connecting to ...', callerdata.chat)
 })
 
+//Update device list on change
 navigator.mediaDevices.ondevicechange = () => {
-    console.log('device plugged in')
     checkSources()
 }
 
@@ -178,6 +143,44 @@ $: {
     console.log('My Audio/Video devices', $webRTC.devices)
     console.log('Active Camera', $webRTC.cameraId)
     console.log('Active Calls', $webRTC.call)
+}
+
+function sendRtcMessage(msg, to_group) {
+
+    if (to_group) {
+        console.log('sending rtc group message')
+        let connected = $webRTC.call.filter((a) => a.connected == true)
+        connected.forEach((a) => {
+            console.log('sending to peer', a.peer)
+            let sendMsg = JSON.stringify(msg[0])
+            console.log('sending rtc', sendMsg)
+            a.peer.send(sendMsg)
+        })
+
+        return
+    }
+    //Address and messageobject
+    let [message, address] = msg
+    //Find who we are going to send to
+    let to = $webRTC.call.find((a) => a.chat == address)
+    console.log('sending rtc', message)
+    console.log('Message to route?', msg)
+    let sendMsg
+    if (msg.length === 3 && !to.connected) {
+        //Want to tunnel message through group inviter to the right address
+        sendMsg = JSON.stringify(message + address)
+        console.log('sendMsg tunnel', message, address)
+        //Here we should try send it to the first connected peer, maybe more
+        let tunnel = $webRTC.call[$webRTC.call.length - 1]
+        tunnel.peer.send(sendMsg)
+        return
+    } else {
+        console.log('sending', message)
+        console.log('to', to)
+        sendMsg = JSON.stringify(message)
+        to.peer.send(sendMsg)
+    }
+    console.log('sent')
 }
 
 function sendInviteNotification(contact, contact_address) {
@@ -613,7 +616,6 @@ function sendAnswer(sdpOffer, address, peer, key, video, offchain = false, group
 }
 
 function checkMessage(event) {
-    console.log('RTC Message event', event)
     let message = JSON.parse(event.data)
     let parsedMsg = message.substring(0, message.length - 99)
     let addr = message.substring(message.length - 99)
