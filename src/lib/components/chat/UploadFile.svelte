@@ -30,7 +30,10 @@
 
     async function loadFile(file) {
         let arr = await window.api.loadFile(file.path)
-        if (arr === "File") return arr
+        if (arr === "File" || "File not found") {
+            image = arr
+            return
+        }
         let blob = new Blob( [ arr ]);
         image = URL.createObjectURL( blob );
     }

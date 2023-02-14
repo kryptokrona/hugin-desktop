@@ -36,7 +36,7 @@
     async function loadFile(file) {
         file = $download.find(a => a.fileName === file.fileName && a.time === file.time)
         let arr = await window.api.loadFile(file.path)
-        if (arr === "File") return arr
+        if (arr === "File" || "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
         return imageUrl
