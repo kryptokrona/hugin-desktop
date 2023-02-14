@@ -68,7 +68,7 @@
             beamInvite = true
         }
 
-        if (!ownMsg && message.substring(0,11) === "BEAMFILE://") {
+        if (message.substring(0,11) === "BEAMFILE://") {
             if (Date.now() - timestamp >= 1000 * 1000) {
                 oldInvite = true
             }
@@ -245,13 +245,14 @@
                    <DownloadFile file={files[0]}/>
                 </div>
                     {:else if beamInvite && !oldInvite && !beamConnected}
-                        <p class="message">{$user.activeChat.name} would like to start a beam ⚡️</p>
                         <div style="margin-top: 1rem">
                             {#if beamFile}
                             <p class="message">{$user.activeChat.name} is sharing files with you.</p>
+                            <br>
                             <FillButton text="⚡️ Connect" disabled={false} on:click={joinBeam}/>
                             {:else}
                             <p class="message">{$user.activeChat.name} has started a p2p chat.</p>
+                            <br>
                             <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
                             {/if}
                         </div>
