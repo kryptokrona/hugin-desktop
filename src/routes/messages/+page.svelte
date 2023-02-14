@@ -207,7 +207,7 @@ async function dropFile(e) {
     saveToStore(message)
 
     if (!$beam.active.some(a => a.chat === message.chat)) {
-        window.api.createBeam("new", toHuginAddress)
+        window.api.createBeam("new", toHuginAddress, true)
         $beam.active.push({
             chat: $user.activeChat.chat,
             connected: false,

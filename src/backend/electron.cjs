@@ -975,6 +975,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
 }
 
 async function sendGroupsMessage(message, offchain = false) {
+    return
     const my_address = message.k
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
@@ -1635,8 +1636,8 @@ function get_sdp(data)
 }
 //BEAM
 
-ipcMain.on("beam", async (e, link, chat) => {
-    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender);
+ipcMain.on("beam", async (e, link, chat, send = false) => {
+    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender, send);
     if (beamMessage === "Error") return
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, false)

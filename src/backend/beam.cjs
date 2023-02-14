@@ -14,19 +14,19 @@ let remoteFiles = []
 let downloadDirectory
 let sender
 
-const newBeam = async (key, chat, xkr_keys, ipc) => {
+const newBeam = async (key, chat, xkr_keys, ipc, send = false) => {
     //If we want to switch key set for decryption or add session key. 
     //The beam is already encrypted. We add Hugin encryption inside.
     setKeys(xkr_keys)
     sender = ipc
-    return await startBeam(key, chat)
+    return await startBeam(key, chat, false, send)
 }
 
 const setKeys = (xkr) => {
     chat_keys = xkr
 }
 
-const startBeam = async (key, chat, file = false) => {
+const startBeam = async (key, chat, file = false, send) => {
     //Create new or join existing beam and start beamEvent()
     try {
         if (key === "new") {
@@ -37,6 +37,7 @@ const startBeam = async (key, chat, file = false) => {
                 return {chat, key: beam.key}
             }
             beamEvent(beam, chat, beam.key)
+            if (send) return  {msg:"BEAMFILE://" + beam.key, chat: chat}
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
             if (key.length !== 52) return

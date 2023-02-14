@@ -36,6 +36,7 @@
     let link = false
     let messageText
     let messageLink
+    let beamFile = false
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
              ,"g"
@@ -66,6 +67,14 @@
             }
             beamInvite = true
         }
+
+        if (!ownMsg && message.substring(0,11) === "BEAMFILE://") {
+            if (Date.now() - timestamp >= 1000 * 1000) {
+                oldInvite = true
+            }
+            beamInvite = true
+            beamFile = true
+        }
         
         if (message.startsWith("```") && message.endsWith("```")) {
             checkCodeLang(message)
@@ -91,6 +100,7 @@
 
     const joinBeam = () => {
         let key = message.substring(7,59)
+        if (beamFile) key = message.substring(11,63)
         if (key === "new") return
         window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
         $beam.active.push({
@@ -237,7 +247,13 @@
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <p class="message">{$user.activeChat.name} would like to start a beam ⚡️</p>
                         <div style="margin-top: 1rem">
-                            <FillButton text="Join beam" disabled={false} on:click={joinBeam}/>
+                            {#if beamFile}
+                            <p class="message">{$user.activeChat.name} is sharing files with you.</p>
+                            <FillButton text="⚡️ Connect" disabled={false} on:click={joinBeam}/>
+                            {:else}
+                            <p class="message">{$user.activeChat.name} has started a p2p chat.</p>
+                            <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
+                            {/if}
                         </div>
                     {:else if oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
