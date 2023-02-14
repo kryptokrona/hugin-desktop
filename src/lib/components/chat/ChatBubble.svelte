@@ -59,6 +59,7 @@
         if (link && message.match(/youtu/) || message.match(/y2u.be/)) {
             youtubeLink = true
             if (ownMsg) checkLink()
+            return
         }
 
         if (message.substring(0,7) === "BEAM://") {
@@ -66,6 +67,7 @@
                 oldInvite = true
             }
             beamInvite = true
+            return
         }
 
         if (message.substring(0,11) === "BEAMFILE://") {
@@ -74,14 +76,17 @@
             }
             beamInvite = true
             beamFile = true
+            return
         }
         
         if (message.startsWith("```") && message.endsWith("```")) {
             checkCodeLang(message)
+            return
         }
 
         if (containsOnlyEmojis(message)) {
             emojiMessage = true
+            return
         }
     }
 
