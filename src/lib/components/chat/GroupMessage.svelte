@@ -162,16 +162,16 @@ $: if (containsOnlyEmojis(msg)) {
 }
 
 const checkLink = () => {
-        if (msg.includes('&list')) {
-            msg = msg.split('&list')[0]
+        if (messageLink.includes('&list')) {
+            messageLink = messageLink.split('&list')[0]
         }
-    setEmbedCode()
-}
+        setEmbedCode()
+    }
 
-const setEmbedCode = () => {
-        embed_code = msg.split('/').slice(-1)[0].split('=').slice(-1)[0];
+    const setEmbedCode = () => {
+        embed_code = messageLink.split('/').slice(-1)[0].split('=').slice(-1)[0];
         youtube = true
-}
+    }
 
 const openEmbed = () => {
     openLink = true
@@ -234,6 +234,7 @@ const openLinkMessage = (url) => {
             </div>
             {#if youtube}
                 <Youtube id={embed_code} />
+                <p style="user-select: text;">{messageText}</p>
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
             {:else if link}
