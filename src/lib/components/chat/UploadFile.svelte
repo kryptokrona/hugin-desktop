@@ -8,6 +8,7 @@
     let image = ""
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv']
+
     onMount( async () =>
     {   
         if (videoTypes.some(a => file.path.endsWith(a)))
@@ -16,7 +17,8 @@
             video = true
             return
         }
-        loadFile(file)
+
+        image = await loadFile(file)
     })
 
     $: {
@@ -30,12 +32,12 @@
 
     async function loadFile(file) {
         let arr = await window.api.loadFile(file.path)
-        if (arr === "File" || "File not found") {
+        if (arr === "File" || arr === "File not found") {
             image = arr
             return
         }
         let blob = new Blob( [ arr ]);
-        image = URL.createObjectURL( blob );
+        return URL.createObjectURL( blob );
     }
 
 

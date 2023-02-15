@@ -7,7 +7,6 @@
     import { user } from '$lib/stores/user.js'
 
     export let file
-    let image = ""
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv']
     let downloadDone = false
@@ -36,7 +35,7 @@
     async function loadFile(file) {
         file = $download.find(a => a.fileName === file.fileName && a.time === file.time)
         let arr = await window.api.loadFile(file.path)
-        if (arr === "File" || "File not found") return arr
+        if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
         return imageUrl

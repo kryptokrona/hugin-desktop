@@ -13,7 +13,7 @@ $: if (contact.msg.substring(0,7) === "BEAM://") {
 }
 
 $: if (contact.msg.substring(0,11) === "BEAMFILE://") { 
-    contact.msg = "File shared"
+    contact.msg = "File shared ⚡️"
 }
 
 $: if ($webRTC.active) {
