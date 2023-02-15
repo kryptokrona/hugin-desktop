@@ -40,7 +40,6 @@ const contactsTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(contactsTable, (err) => {})
-            console.log('created contacts Table')
         },
         () => {
             resolve()
@@ -57,7 +56,6 @@ const knownTxsTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(knownTxTable, (err) => {})
-            console.log('created Known TX Table')
         },
         () => {
             resolve()
@@ -83,7 +81,6 @@ const boardMessageTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(boardTable, (err) => {})
-            console.log('created Board Table')
         },
         () => {
             resolve()
@@ -103,7 +100,6 @@ function messagesTable() {
     return new Promise(
         (resolve, reject) => {
             database.run(messageTable, (err) => {})
-            console.log('created Table')
         },
         () => {
             resolve()
@@ -120,7 +116,6 @@ const boardsSubscriptionsTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(subscriptionTable, (err) => {})
-            console.log('created subscription Table')
         },
         () => {
             resolve()
@@ -138,7 +133,6 @@ const groupsTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(groupsTable, (err) => {})
-            console.log('created groups Table')
         },
         () => {
             resolve()
@@ -163,7 +157,6 @@ const groupMessageTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(groupTable, (err) => {})
-            console.log('created group Table')
         },
         () => {
             resolve()
@@ -181,7 +174,6 @@ const blockListTable = () => {
     return new Promise(
         (resolve, reject) => {
             database.run(blockList, (err) => {})
-            console.log('created block list Table')
         },
         () => {
             resolve()
@@ -711,7 +703,6 @@ const getMyBoardList = () => {
 //Get one message from every unique user sorted by latest timestmap.
 const getConversations = async () => {
     let contacts = await getContacts()
-
     //Remove Hugin welcome message and contact if new contact was added.
     if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
         removeContact(welcomeAddress)
