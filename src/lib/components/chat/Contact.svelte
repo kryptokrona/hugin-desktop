@@ -12,6 +12,10 @@ $: if (contact.msg.substring(0,7) === "BEAM://") {
     beamInvite = true
 }
 
+$: if (contact.msg.substring(0,11) === "BEAMFILE://") { 
+    contact.msg = "File shared"
+}
+
 $: if ($webRTC.active) {
     thisCall = $webRTC.call.some((a) => a.chat === contact.chat)
 } else {
