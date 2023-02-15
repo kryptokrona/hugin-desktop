@@ -6,7 +6,7 @@ import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import ChatList from '$lib/components/chat/ChatList.svelte'
 import AddChat from '$lib/components/chat/AddChat.svelte'
-import {boards, notify, transactions, user, beam} from '$lib/stores/user.js'
+import {boards, notify, transactions, user, beam, webRTC} from '$lib/stores/user.js'
 import Rename from '$lib/components/chat/Rename.svelte'
 import BackDrop from '$lib/components/popups/BackDrop.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
@@ -188,26 +188,29 @@ async function dropFile(e) {
     let size = acceptedFiles[0].size
     let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
     let time = Date.now()
+    let offchain = false
+    
     acceptedFiles[0].time = time
     
     if (fileRejections.length) {
         console.log('rejected file')
         return
     }
-    console.log('Accedped files',acceptedFiles)
 
     let message = {
         chat: $user.activeChat.chat,
         msg: '',
         sent: true,
         timestamp: time,
-        file: acceptedFiles,
+        file: acceptedFiles[0],
     }
     printMessage(message)
     saveToStore(message)
 
+    if ($webRTC.call.some(a => a.chat === $user.activeChat.chat)) offchain = true
+
     if (!$beam.active.some(a => a.chat === message.chat)) {
-        window.api.createBeam("new", toHuginAddress, true)
+        window.api.createBeam("new", toHuginAddress, true, offchain)
         $beam.active.push({
             chat: $user.activeChat.chat,
             connected: false,
@@ -216,7 +219,6 @@ async function dropFile(e) {
         $beam.active = $beam.active
         await sleep(300)
     }
-    
     window.api.upload(filename, path, $user.activeChat.chat, size, time)
 }
 

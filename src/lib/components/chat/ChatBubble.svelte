@@ -48,6 +48,8 @@
 
     const checkMessageType = () => {
 
+        if (files) return
+
         if (message.match(geturl)) {
             link = true
             messageLink = message.match(geturl)
@@ -201,7 +203,7 @@
                 </div>
                 {#if files}
                 <div style="cursor: pointer">
-                <UploadFile file={files[0]} />
+                <UploadFile file={files} />
                 </div>
                     {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
@@ -247,7 +249,7 @@
                 </div>
                 {#if files}
                 <div style="cursor: pointer">
-                   <DownloadFile file={files[0]}/>
+                   <DownloadFile file={files}/>
                 </div>
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <div style="margin-top: 1rem">

@@ -1630,11 +1630,11 @@ function get_sdp(data)
 }
 //BEAM
 
-ipcMain.on("beam", async (e, link, chat, send = false) => {
+ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
     let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender, send);
     if (beamMessage === "Error") return
     if (!beamMessage) return
-    sendMessage(beamMessage.msg, beamMessage.chat, false)
+    sendMessage(beamMessage.msg, beamMessage.chat, offchain)
 });
 
 

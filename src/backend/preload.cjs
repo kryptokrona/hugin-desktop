@@ -126,8 +126,8 @@ const WINDOW_API = {
         ipcRenderer.send('remove-local-file', fileName, chat, time)
     },
 
-    createBeam: async (key, chat, send) => {
-        ipcRenderer.send('beam', key, chat, send)
+    createBeam: async (key, chat, send, offchain) => {
+        ipcRenderer.send('beam', key, chat, send, offchain)
     },
 
     loadFile: async (path) => {
