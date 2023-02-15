@@ -55,11 +55,7 @@
                   alt=""
                 />
                 <p style="font-size: 1rem">{group.name}</p>
-              {#if $groups.groupArray.some(a => a.key !== group.key)}
                 <Button text="Join" disabled={false} on:click={() => addNewGroup(group)}/>
-              {:else}
-                <Button text="Joined" disabled={false} on:click={() => addNewGroup(group)}/>
-              {/if}
             </div>
         {/each}
     </div>
