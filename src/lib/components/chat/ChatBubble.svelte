@@ -249,7 +249,7 @@
                 </div>
                 {#if files}
                 <div style="cursor: pointer">
-                   <DownloadFile file={files}/>
+                   <DownloadFile file={files[0]}/>
                 </div>
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <div style="margin-top: 1rem">
