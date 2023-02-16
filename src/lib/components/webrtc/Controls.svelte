@@ -77,7 +77,6 @@ const showMessages = () => {
 
 const hideGrid = () => {
     $videoGrid.showVideoGrid = false
-    $videoGrid.showChat = false
 }
 </script>
 

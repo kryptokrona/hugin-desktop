@@ -258,7 +258,7 @@ window.api.receive('sent_rtc_group', (data) => {
     border-radius: 0.4rem;
     overflow: hidden;
     transition: all 300ms ease-in-out;
-    margin-right: 0px;
+    margin-right: -370px;
 }
 
 .fade {
@@ -305,6 +305,6 @@ p {
 }
 
 .show {
-    margin-right: -370px;
+    margin-right: 0;
 }
 </style>

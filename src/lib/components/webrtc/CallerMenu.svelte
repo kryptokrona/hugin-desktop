@@ -52,7 +52,6 @@ const toggleAudio = () => {
 
 const showGrid = () => {
     $videoGrid.showVideoGrid = true
-    $videoGrid.showChat = false
 }
 </script>
 
