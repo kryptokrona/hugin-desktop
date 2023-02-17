@@ -118,12 +118,12 @@ const resize = (size) => {
     {#await setName() then contact}
     <div class="name">{contact.name}</div>
     {/await}
-    <div class="fade">
+    <!-- <div class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
           <Plus on:click={()=> resize('medium')}/>
         </div>
-      </div>
+      </div> -->
 </div>
 
 <style lang="scss">
