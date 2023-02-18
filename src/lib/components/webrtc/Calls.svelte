@@ -717,29 +717,24 @@ async function checkMyVolume(peer) {}
 //End call
 function endCall(peer, stream, contact) {
     let caller = $webRTC.call.find((a) => a.chat === contact)
-    console.log('Want to end call with', contact)
 
     if (contact === undefined) {
         console.log('contact', contact)
         caller = $webRTC.call.find((e) => e.peer.channelName == peer.channelName)
     }
 
-    if (contact && peer == undefined) {
-        console.log('Call already ended')
-        return
-    }
+    if (contact && peer == undefined) return
 
-    if ($webRTC.call.length === 0) {
-        console.log('Call no longer active')
-        return
-    }
+    if ($webRTC.call.length === 0) return
+    
+    if (caller.peer !== undefined) {
 
-    console.log('this peer?', peer)
-    console.log(' ending this caller', caller)
-    try {
-        caller.peer.destroy()
-    } catch (e) {
-        console.log('error', e)
+        try {
+            caller.peer.destroy()
+        } catch (e) {
+            console.log('error', e)
+        }
+
     }
 
     let filter
