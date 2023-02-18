@@ -76,6 +76,7 @@ window.api.receive('login-failed', async () => {
         position: 'top-right',
         style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
     })
+    $layoutState.showNodeSelector = false
     $misc.loading = false
     loadSpin = false
 })
