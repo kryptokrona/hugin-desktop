@@ -322,14 +322,16 @@ const checkNodeStatus = async (node) => {
 
     try {
         const req = await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
-        if (!req.ok) return false
 
         const res = await req.json()
 
         if (res.status === 'OK') return true
     } catch (e) {
-        return false
+        console.log('Node error', e)
     }
+
+    mainWindow.webContents.send('node-not-ok')
+    return false
 }
 
 async function startCheck() {
@@ -492,7 +494,6 @@ async function checkNodeAndPassword(password, node) {
 
     let nodeOnline = await checkNodeStatus(node)
     if (!nodeOnline) {
-        mainWindow.webContents.send('node-not-ok')
         return false
     }
 
