@@ -282,7 +282,7 @@ const hideModal = () => {
         <div class="outer" id="chat_window">
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner">
-                {#each savedMsg as message, i (message.timestamp + i.toString())}
+                {#each savedMsg as message (message.timestamp)}
                     <ChatBubble
                         on:download="{() => download(message.msg)}"
                         files="{message.file}"
