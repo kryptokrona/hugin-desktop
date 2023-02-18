@@ -1073,7 +1073,7 @@ async function decryptRtcMessage(message) {
             let invite_key = sanitizeHtml(group.key)
             if (invite_key.length !== 64) return
 
-            mainWindow.webContents.send('group-call', group)
+            mainWindow.webContents.send('group-call', {invite_key, group})
 
             if (group.type == 'invite') {
                 console.log('Group invite, thanks.')

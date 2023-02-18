@@ -111,8 +111,8 @@ import { sleep } from '$lib/utils/utils'
         })
 
         window.api.receive('group-call', (data) => {
-            $webRTC.groupCall = data.key
-            if ($webRTC.groupCall && data.invite.length) {
+            $webRTC.groupCall = data.invite_key
+            if ($webRTC.groupCall && data.group.invite.length) {
                 //This is the first peer invited to a call
                 $webRTC.invited = true
             }
