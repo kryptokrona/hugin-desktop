@@ -328,7 +328,7 @@ const checkNodeStatus = async (node) => {
 
         if (res.status === 'OK') return true
     } catch (e) {
-        console.log(e)
+        return false
     }
 }
 
@@ -370,8 +370,6 @@ async function loadAccount(data) {
     nodeUrl = data.node
     nodePort = data.port
     node = { node: nodeUrl, port: nodePort }
-    db.data.node.node = nodeUrl
-    db.data.node.port = nodePort
     db.data.node = node
     await db.write()
     startWallet(data, node)
@@ -486,16 +484,18 @@ async function login(walletName, password) {
 }
 
 async function checkNodeAndPassword(password, node) {
+     //If we are already logged in
+     if (hashed_pass.length) {
+        verifyPassword(password)
+        return false
+    }
+
     let nodeOnline = await checkNodeStatus(node)
     if (!nodeOnline) {
         mainWindow.webContents.send('node-not-ok')
         return false
     }
-    //If we are already logged in
-    if (hashed_pass.length) {
-        await verifyPassword(password)
-        return false
-    }
+
     return true
 }
 
@@ -506,7 +506,8 @@ async function start_js_wallet(walletName, password, node) {
     if (!await login(walletName, password)) return
 
     hashed_pass = await hashPassword(password)
-
+    
+    pickNode(node.node + ":" + node.port.toString())
     //Load known public keys and contacts
     let [myContacts, keys] = await loadKeys((start = true))
     known_keys = keys
@@ -1065,33 +1066,39 @@ async function decryptRtcMessage(message) {
         newMsg.sent = false
     }
 
-    try {
-        if (newMsg.msg.msg) {
+    if (newMsg.msg.msg !== undefined) {
             let group = newMsg.msg.msg
-            if (group.key.length !== 64) return
+            if (group.key === undefined) return 
+            let invite_key = sanitizeHtml(group.key)
+            if (invite_key.length !== 64) return
 
-            mainWindow.webContents.send('group-call', group)
+            mainWindow.webContents.send('group-call', invite_key)
 
             if (group.type == 'invite') {
                 console.log('Group invite, thanks.')
                 return
             }
 
-            let type = false
             sleep(100)
-            if (group.type == true) {
-                type = true
+
+            let video = false
+            if (group.type === true) {
+                video = true
             }
-            group.invite.forEach((a) => {
+
+            let invite = true
+
+            group.invite.forEach((call) => {
                 console.log('Invited to call, joining...')
-                mainWindow.webContents.send('start-call', a, type, true)
+                mainWindow.webContents.send('start-call', call, video, invite)
                 sleep(1500)
             })
+
             return
+
+        } else {
+            console.log('Not an invite')
         }
-    } catch (e) {
-        console.log('Not an invite', e)
-    }
 
     if (!newMsg) return
 
@@ -1546,13 +1553,14 @@ function parseCall(msg, sender, sent, group = false) {
     }
 }
 
-async function switchNode(node) {
+async function pickNode(node) {
     console.log(`Switching node to ${node}`)
     nodeUrl = node.split(':')[0]
     nodePort = parseInt(node.split(':')[1])
+    node = { node: nodeUrl, port: nodePort }
+    if (!checkNodeStatus(node)) return
     const daemon = new WB.Daemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
-    node = { node: nodeUrl, port: nodePort }
     mainWindow.webContents.send('switch-node', node)
     db.data.node.node = nodeUrl
     db.data.node.port = nodePort
@@ -1796,7 +1804,7 @@ ipcMain.handle('getHeight', async () => {
 })
 
 ipcMain.on('switchNode', (e, node) => {
-    switchNode(node) 
+    pickNode(node) 
 })
 
 

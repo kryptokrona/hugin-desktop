@@ -127,7 +127,7 @@ import { sleep } from '$lib/utils/utils'
 
         window.api.receive('switch-node', (data) => {
            $misc.node = data
-           window.api.successMessage(`You switched node to ${data.node}`)
+           window.api.successMessage(`You are connected to ${data.node}`)
         })
 
 
