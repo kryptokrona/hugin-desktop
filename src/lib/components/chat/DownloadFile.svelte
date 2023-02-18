@@ -11,7 +11,7 @@
     let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv']
     let downloadDone = false
     let downloading = false
-
+    let thisFile
     onMount(() =>
     {   
         if (videoTypes.some(a => file.fileName.endsWith(a)))
@@ -24,22 +24,27 @@
 
    $: {
         downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
-        downloadDone = $download.some(a => file.fileName === a.fileName && file.time === a.time && a.progress === 100)
+        downloadDone = $download.some(a => downloading && a.progress === 100)
     }
 
+    $: if (downloadDone) {
+        loadFile(file)
+    }
+    
     const focusImage = (image) => {
         $fileViewer.focusImage = file.path
         $fileViewer.enhanceImage = true
     }
 
     async function loadFile(file) {
-        file = $download.find(a => a.fileName === file.fileName && a.time === file.time)
         let arr = await window.api.loadFile(file.path)
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
-        return imageUrl
+        thisFile = imageUrl
     }
+
+    $: thisFile
 
     
     const downloadFile = (file) => {
@@ -57,7 +62,6 @@
     {:else if downloadDone}
         <p class="message done" in:fade>File downloaded</p>
         {#if !video}
-            {#await loadFile(file, true) then thisFile}
                 {#if thisFile === "File"}
                 <p>{file.name}</p>
                 {:else if thisFile === "File not found"}
@@ -71,7 +75,6 @@
                     />
                 </div>
                 {/if}
-            {/await}
         {:else if video}
             <VideoPlayer src={file} />
         {/if}
