@@ -327,7 +327,7 @@ const checkNodeStatus = async (node) => {
 
         if (res.status === 'OK') return true
     } catch (e) {
-        console.log('Node error', e)
+        console.log('Node error')
     }
 
     mainWindow.webContents.send('node-not-ok')
@@ -1067,13 +1067,13 @@ async function decryptRtcMessage(message) {
         newMsg.sent = false
     }
 
-    if (newMsg.msg.msg !== undefined) {
+    if ('key' in newMsg.msg.msg) {
             let group = newMsg.msg.msg
             if (group.key === undefined) return 
             let invite_key = sanitizeHtml(group.key)
             if (invite_key.length !== 64) return
 
-            mainWindow.webContents.send('group-call', invite_key)
+            mainWindow.webContents.send('group-call', group)
 
             if (group.type == 'invite') {
                 console.log('Group invite, thanks.')
