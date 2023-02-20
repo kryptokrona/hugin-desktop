@@ -10,7 +10,7 @@
     export let file
 
     let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv']
+    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg']
     let downloadDone = false
     let downloading = false
     let thisFile
@@ -24,7 +24,7 @@
             return
         }
     })
-    
+
    $: {
         downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
         downloadDone = $download.some(a => downloading && a.progress === 100)
@@ -80,7 +80,7 @@
                 {:else if thisFile === "File not found"}
                 <p class="message error">File not found</p>
                 {:else}
-                <div on:click={focusImage}>
+                <div style="-webkit-user-drag: none;" on:click={focusImage}>
                     <img
                         in:fade="{{ duration: 150 }}"
                         src="{thisFile}"

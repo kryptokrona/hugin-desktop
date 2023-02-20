@@ -9,7 +9,7 @@
     let uploading = false
     let image = ""
     let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv']
+    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
 
     onMount( async () =>
     {   
@@ -64,7 +64,7 @@
         {#if video}
             <VideoPlayer src={file}/>
         {:else}
-        <div on:click={focusImage}>
+        <div style="-webkit-user-drag: none;" on:click={focusImage}>
             <img
                 in:fade="{{ duration: 150 }}"
                 src="{image}"
