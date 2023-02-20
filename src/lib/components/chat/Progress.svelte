@@ -1,17 +1,12 @@
 <script>
     import { download, upload } from '$lib/stores/files'
     export let file
-    export let send = false
-    let progress
-    let name
+    export let send
     
-    $: if (!send) progress = $download.find(a => a.fileName === file.fileName && a.chat === file.chat && a.time === file.time)
+    let name = send === true ? file.name : file.fileName
+    $: loader = send === true ? $upload : $download
+    $: progress = loader.find(a => a.fileName === name && a.chat === file.chat && file.time === a.time)
     
-    $: if (!send) name = file.fileName
-
-    $: if (send) progress = $upload.find(a => a.fileName === file.file && a.chat === file.chat && file.time === a.time)
-    
-    $: if (send) name = file.file
     
 </script>
 <div>
