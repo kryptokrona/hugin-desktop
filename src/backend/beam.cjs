@@ -40,7 +40,7 @@ const startBeam = async (key, chat, file = false, send) => {
             if (send) return  {msg:"BEAMFILE://" + beam.key, chat: chat}
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
-            if (key.length !== 52) return
+            if (key.length !== 52) return false
             beam = new Hyperbeam(key)
             if (file) {
                 fileBeam(beam, chat, key, true)

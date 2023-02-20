@@ -15,9 +15,8 @@
     let downloading = false
     let thisFile
     let clicked = false
-    
-    onMount(() =>
-    {   
+
+    onMount(() => {   
         if (videoTypes.some(a => file.fileName.endsWith(a)))
         {
             console.log('Found video format')
@@ -25,9 +24,7 @@
             return
         }
     })
-
-   
-
+    
    $: {
         downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
         downloadDone = $download.some(a => downloading && a.progress === 100)
