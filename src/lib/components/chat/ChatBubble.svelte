@@ -37,6 +37,7 @@
     let messageText
     let messageLink
     let beamFile = false
+    let clicked = false
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
              ,"g"
@@ -109,6 +110,7 @@
         let key = message.substring(7,59)
         if (beamFile) key = message.substring(11,63)
         if (key === "new") return
+        clicked = true
         window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
         $beam.active.push({
             chat: $user.activeChat.chat,
@@ -253,15 +255,18 @@
                 </div>
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <div style="margin-top: 1rem">
-                            {#if beamFile}
+                            {#if beamFile && !clicked}
                             <p class="message">{$user.activeChat.name} is sharing files with you.</p>
                             <br>
                             <FillButton text="⚡️ Connect" disabled={false} on:click={joinBeam}/>
-                            {:else}
+                            {:else if !beamFile}
                             <p class="message">{$user.activeChat.name} has started a p2p chat.</p>
                             <br>
                             <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
+                            {:else if clicked}
+                            <p class="message" in:fade>Connecting</p>
                             {/if}
+                            
                         </div>
                     {:else if oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
