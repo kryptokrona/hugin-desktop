@@ -5,13 +5,17 @@
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import { fade } from "svelte/transition"
     import { user } from '$lib/stores/user.js'
+    import Progress from "$lib/components/chat/Progress.svelte"
 
     export let file
+
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv']
     let downloadDone = false
     let downloading = false
     let thisFile
+    let clicked = false
+    
     onMount(() =>
     {   
         if (videoTypes.some(a => file.fileName.endsWith(a)))
@@ -21,6 +25,8 @@
             return
         }
     })
+
+   
 
    $: {
         downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
@@ -48,6 +54,7 @@
 
     
     const downloadFile = (file) => {
+        clicked = true
         window.api.download(file.fileName, $user.activeChat.chat)
     };
 
@@ -56,11 +63,20 @@
 
 <div class="file" in:fade="{{ duration: 150 }}">
     {#if !downloadDone && !downloading}
+         {#if !clicked}
         <Button on:click={downloadFile(file)} disabled={false} text="Download file {file.fileName}"/>
-    {:else if !downloadDone && downloading}
-        <p class="message">Downloading file</p>
-    {:else if downloadDone}
-        <p class="message done" in:fade>File downloaded</p>
+        {:else}
+        <p class="message finish" in:fade>Connecting</p>
+        {/if}
+    {:else if downloading}
+        {#if !downloadDone}
+        <p class="message" in:fade>Downloading</p>
+        {:else}
+        <p class="message finish"in:fade>Downloaded</p>
+        {/if}
+        <div in:fade>
+        <Progress file={file} send={false}/>
+        </div>
         {#if !video}
                 {#if thisFile === "File"}
                 <p>{file.name}</p>
@@ -110,4 +126,7 @@
     color: var(--warn-color) !important; 
 }
 
+.finish {
+    color: var(--success-color);
+}
 </style>
