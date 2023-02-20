@@ -2,11 +2,10 @@
     import { download, upload } from '$lib/stores/files'
     export let file
     export let send
-    
-    let name = send === true ? file.name : file.fileName
-    $: loader = send === true ? $upload : $download
+
+    let name = send ? file.name : file.fileName
+    $: loader = send ? $upload : $download
     $: progress = loader.find(a => a.fileName === name && a.chat === file.chat && file.time === a.time)
-    
     
 </script>
 <div>
@@ -33,7 +32,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    width: 70%;
     height: 5px;
     background-color: var(--input-background);
     border: 1px solid var(--input-border);
