@@ -1581,7 +1581,8 @@ const { desktopCapturer } = require('electron')
 
 //Check if it is an image or video with allowed type
 async function checkImageOrVideoType(path) {
-    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv'];
+    if (path === undefined) return false
+    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
     for (a in types) {
         if (path.endsWith(types[a])) {
             return true
