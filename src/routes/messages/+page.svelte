@@ -191,6 +191,7 @@ async function dropFile(e) {
     let offchain = false
     
     acceptedFiles[0].time = time
+    acceptedFiles[0].chat = $user.activeChat.chat
     
     if (fileRejections.length) {
         console.log('rejected file')
