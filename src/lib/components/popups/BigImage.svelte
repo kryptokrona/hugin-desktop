@@ -45,8 +45,7 @@ async function getImage(path) {
     justify-content: space-between;
     align-items: center;
     position: absolute;
-    padding: 0 10px;;
-    border: 1px solid var(--card-border);
+    padding: 0 10px;
     border-radius: 0.4rem;
 
     .btn {
