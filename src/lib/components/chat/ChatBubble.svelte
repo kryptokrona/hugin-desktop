@@ -210,7 +210,7 @@
                     {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p in:fade>Beam connected ⚡️</p>
+                        <p in:fade class="message">Beam connected ⚡️</p>
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
@@ -259,19 +259,18 @@
                             <p class="message">{$user.activeChat.name} is sharing files with you.</p>
                             <br>
                             <FillButton text="⚡️ Connect" disabled={false} on:click={joinBeam}/>
-                            {:else if !beamFile}
+                            {:else if !beamFile && !clicked}
                             <p class="message">{$user.activeChat.name} has started a p2p chat.</p>
                             <br>
                             <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
-                            {:else if clicked}
+                            {:else if clicked && !beamConnected}
                             <p class="message" in:fade>Connecting</p>
                             {/if}
-                            
                         </div>
                     {:else if oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p in:fade>Beam connected ⚡️</p>
+                        <p class="message" in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
