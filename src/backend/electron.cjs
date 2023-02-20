@@ -171,11 +171,6 @@ contextMenu({
     showLookUpSelection: false,
     showSearchWithGoogle: false,
     showCopyImage: false,
-    // prepend: (defaultActions, params, browserWindow) => [
-    //   {
-    //     label: "Make App 💻"
-    //   }
-    // ]
 })
 
 function loadVite(port) {
@@ -1088,10 +1083,13 @@ async function decryptRtcMessage(message) {
             }
 
             let invite = true
-
             group.invite.forEach((call) => {
+                let contact = sanitizeHtml(call)
+                if (contact.length !== 163) {
+                    mainWindow.webContents.send('error-notify-message', 'Error reading invite address')
+                }
                 console.log('Invited to call, joining...')
-                mainWindow.webContents.send('start-call', call, video, invite)
+                mainWindow.webContents.send('start-call', contact, video, invite)
                 sleep(1500)
             })
 
@@ -1360,11 +1358,10 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
             mainWindow.webContents.send('rtc_message', messageArray)
         }
         //Do not save invite message.
-        try {
-            if (message.msg.invite) {
-                return
-            }
-        } catch (e) {
+        if ('invite' in message.msg) {
+            return
+        } 
+        else {
             let saveThisMessage = {
                 msg: message,
                 k: messageKey,
@@ -1865,7 +1862,7 @@ ipcMain.on('check-srcs', async (e, src) => {
 
 //Rescan wallet
 ipcMain.on('rescan', async (e, height) => {
-    js_wallet.rescan(height)
+    js_wallet.rescan(parseInt(height))
 })
 
 //Optimize messages
