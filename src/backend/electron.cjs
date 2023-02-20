@@ -1560,8 +1560,6 @@ async function pickNode(node) {
     const daemon = new WB.Daemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
     mainWindow.webContents.send('switch-node', node)
-    db.data.node.node = nodeUrl
-    db.data.node.port = nodePort
     db.data.node = node
     await db.write()
 }
@@ -1587,8 +1585,6 @@ async function checkImageOrVideoType(path) {
     for (a in types) {
         if (path.endsWith(types[a])) {
             return true
-        } else {
-            continue
         }
     }
     return false
