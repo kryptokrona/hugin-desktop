@@ -47,13 +47,13 @@
 </script>
 
 <div class="file" in:fade="{{ duration: 150 }}">
-    {#if !uploadDone}
+    {#if !uploadDone && !uploading}
         <p in:fade class="message">Sending file</p>
-    {:else if !uploadDone && uploading}
-    <div in:fade>
-        <Progress file={file} send={true}/>
-    </div>
-    {:else if !uploadDone}
+    {:else if uploading}
+        <div in:fade>
+            <Progress file={file} send={true}/>
+        </div>
+    {:else if uploadDone}
         <p class="message done" in:fade>File sent</p>
     {/if}
     {#if image === "File"}
