@@ -38,6 +38,8 @@
     let messageLink
     let beamFile = false
     let clicked = false
+    let beam_key = ""
+
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
              ,"g"
@@ -93,6 +95,12 @@
         }
     }
 
+    $: {
+        if (beamInvite) {
+         beam_key = beamFile ? message.substring(11,63) : message.substring(7,59)
+        }
+    }
+
     const checkCodeLang = (msg) => {
         let codeMsg = msg.slice(3,-3)
         //The first two letters after ``` indicates code lang
@@ -107,8 +115,7 @@
     }
 
     const joinBeam = () => {
-        let key = message.substring(7,59)
-        if (beamFile) key = message.substring(11,63)
+        let key = beam_key
         if (key === "new") return
         clicked = true
         window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
@@ -145,7 +152,7 @@
     }
 
     
-    $: beamConnected = $beam.active.some(a => a.key == message.substring(7,59) && a.connected)
+    $: beamConnected = $beam.active.some(a => a.key == beam_key && a.connected)
 
     //Replace call info with message
     $: {
@@ -263,8 +270,8 @@
                             <p class="message">{$user.activeChat.name} has started a p2p chat.</p>
                             <br>
                             <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
-                            {:else if clicked && !beamConnected}
-                            <p class="message" in:fade>Connecting</p>
+                            {:else if clicked}
+                            <p class="message finish" in:fade>Connecting</p>
                             {/if}
                         </div>
                     {:else if oldInvite}
@@ -359,5 +366,10 @@
 .emoji {
     font-size: 21px !important;
 }
+
+.finish {
+    color: var(--success-color);
+}
+
 
 </style>
