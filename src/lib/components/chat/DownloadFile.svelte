@@ -31,7 +31,7 @@
     }
 
     $: if (downloadDone) {
-        loadFile(file)
+        loadFile()
     }
     
     const focusImage = (image) => {
@@ -39,16 +39,13 @@
         $fileViewer.enhanceImage = true
     }
 
-    async function loadFile(file) {
+    async function loadFile() {
         let arr = await window.api.loadFile(file.path)
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
         thisFile = imageUrl
     }
-
-    $: thisFile
-
     
     const downloadFile = (file) => {
         clicked = true
@@ -74,6 +71,7 @@
         <div in:fade>
         <Progress file={file} send={false}/>
         </div>
+        {:else if downloadDone}
         {#if !video}
                 {#if thisFile === "File"}
                 <p>{file.name}</p>
