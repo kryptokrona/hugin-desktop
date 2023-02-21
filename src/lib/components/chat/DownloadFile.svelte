@@ -31,7 +31,7 @@
     }
 
     $: if (downloadDone) {
-        loadFile()
+         if (!video) loadFile(file)
     }
     
     const focusImage = (image) => {
@@ -39,7 +39,7 @@
         $fileViewer.enhanceImage = true
     }
 
-    async function loadFile() {
+    async function loadFile(file) {
         let arr = await window.api.loadFile(file.path)
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
@@ -62,16 +62,12 @@
         {:else}
         <p class="message finish" in:fade>Connecting</p>
         {/if}
-    {:else if downloading}
-        {#if !downloadDone}
+    {:else if downloading && !downloadDone}
         <p class="message" in:fade>Downloading</p>
-        {:else}
-        <p class="message finish"in:fade>Downloaded</p>
-        {/if}
         <div in:fade>
         <Progress file={file} send={false}/>
         </div>
-        {:else if downloadDone}
+    {:else if downloadDone}
         {#if !video}
                 {#if thisFile === "File"}
                 <p>{file.name}</p>
@@ -90,7 +86,6 @@
             <VideoPlayer src={file} />
         {/if}
     {/if}
-   
 </div>
 
 <style lang="scss">
