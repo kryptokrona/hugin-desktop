@@ -22,6 +22,7 @@ let fixedGroups = []
 let replyTrue = false
 let chatWindow
 let scrollGroups = []
+const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 
 onMount(async () => {
     chatWindow = document.getElementById('group_chat_window')
@@ -346,7 +347,7 @@ function addHash(data) {
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="group_chat_window">
-            {#if fixedGroups.length === 0 && $groups.groupArray.length !== 0}
+            {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress)}
                 <div>
                     <Loader/>
                 </div>
