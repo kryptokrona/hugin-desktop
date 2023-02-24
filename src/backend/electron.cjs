@@ -676,7 +676,7 @@ async function checkForViewTag(extra) {
             const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
             const derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
             const hashDerivation = await crypto.cn_fast_hash(derivation)
-            const possibleTag = hashDerivation.substring(0,1)
+            const possibleTag = hashDerivation.substring(0,2)
             const view_tag = parsed_box.vt
             if (possibleTag === view_tag) {
                 console.log('**** FOUND VIEWTAG ****')
@@ -928,7 +928,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
     const toKey = addr.m_keys.m_viewKeys.m_publicKey
     const outDerivation = await crypto.generateKeyDerivation(toKey, keys.private_key);
     const hashDerivation = await crypto.cn_fast_hash(outDerivation)
-    const viewTag = hashDerivation.substring(0,1)
+    const viewTag = hashDerivation.substring(0,2)
 
     if (sealed) {
 
@@ -957,7 +957,6 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
             getKeyPair().secretKey
         )
     }
-
     //Box object
     let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp, txKey: keys.public_key, vt: viewTag  }
     // Convert json to hex
