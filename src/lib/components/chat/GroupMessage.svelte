@@ -150,8 +150,8 @@ $:  if (msg.match(/youtu/) || msg.match(/y2u.be/)) {
 
 //Open youtube links and check embed code
 $: if (openLink) {
-    if (msg.includes('&amp;list')) {
-        msg = msg.split('&amp;list')[0]
+    if (messageLink.includes('&amp;list')) {
+        messageLink = messageLink.split('&amp;list')[0]
     }
     setEmbedCode()
 }

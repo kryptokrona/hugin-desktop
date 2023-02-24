@@ -128,8 +128,8 @@
     }
 
     const openEmbed = () => {
-        if (message.includes('&amp;list')) {
-            message = message.split('&amp;list')[0]
+        if (messageLink.includes('&amp;list')) {
+            messageLink = messageLink.split('&amp;list')[0]
         }
         setEmbedCode()
     }
