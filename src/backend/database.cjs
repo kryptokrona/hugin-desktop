@@ -1046,7 +1046,13 @@ const groupMessageExists = async (time) => {
 }
 
 
-const saveThisContact = (addr, key, name) => {
+const saveThisContact = async (addr, key, name) => {
+
+    let contacts = await getContacts()
+    //Remove the old contact if we have the address saved
+    if (contacts.some((a) => a.address === addr)) {
+        removeContact(addr)
+    }
 
     database.run(
         `REPLACE INTO contacts
