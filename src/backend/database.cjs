@@ -1046,11 +1046,11 @@ const groupMessageExists = async (time) => {
 }
 
 
-const saveThisContact = async (addr, key, name) => {
+const saveThisContact = async (addr, key, name, first = false) => {
 
     let contacts = await getContacts()
     //Remove the old contact if we have the address saved
-    if (contacts.some((a) => a.address === addr)) {
+    if (first && contacts.some((a) => a.address === addr && a.key !== key)) {
         removeContact(addr)
     }
 

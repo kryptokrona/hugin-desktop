@@ -330,6 +330,7 @@ const checkNodeStatus = async (node) => {
 }
 
 async function startCheck() {
+   
     store.set({
         wallet: {
             optimized: false
@@ -828,10 +829,10 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     if (known_keys.indexOf(key) == -1) {
         known_keys.push(key)
     }
-    console.log('Pushing this to known keys ', known_keys)
+
     mainWindow.webContents.send('saved-addr', hugin_address)
 
-    saveThisContact(addr, key, name)
+    saveThisContact(addr, key, name, first)
 
     if (first) {
         saveMessage({
@@ -1562,6 +1563,7 @@ async function pickNode(node) {
     db.data.node = node
     await db.write()
 }
+
 async function shareScreen(start) {
 
 const { desktopCapturer } = require('electron')
@@ -1778,14 +1780,13 @@ ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
 
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
-    console.log('addchat first', first)
     saveContact(hugin_address, nickname, first)
 })
 
 
-ipcMain.on('removeContact', async (e, contact) => {
-    await removeContact(contact)
-    await removeMessages(contact)
+ipcMain.on('removeContact', (e, contact) => {
+    removeContact(contact)
+    removeMessages(contact)
     mainWindow.webContents.send('sent')
 })
 
