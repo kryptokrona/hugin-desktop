@@ -303,7 +303,7 @@ function getXKRKeypair() {
 function getKeyPair() {
     // return new Promise((resolve) => setTimeout(resolve, ms));
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
-    let secretKey = naclUtil.decodeUTF8(privateSpendKey.substring(1, 33))
+    let secretKey = hexToUint(privateSpendKey)
     let keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
     return keyPair
 }
@@ -572,7 +572,7 @@ async function start_js_wallet(walletName, password, node) {
 
     mainWindow.webContents.send('wallet-started', node, my_groups, block_list)
     console.log('Started wallet')
-    await sleep(2000)
+    await sleep(500)
     console.log('Loading Sync')
     //Load knownTxsIds to backgroundSyncMessages on startup
     backgroundSyncMessages(checkedTxs)
@@ -1390,7 +1390,7 @@ async function optimizeMessages(force = false) {
     )
 
     console.log('inputs', inputs.length)
-    if (inputs.length > 16 && !force) {
+    if (inputs.length > 25 && !force) {
         mainWindow.webContents.send('optimized', true)
         return
     }
