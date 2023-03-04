@@ -252,6 +252,19 @@ app.whenReady().then(() => {
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
     mainWindow.webContents.send('version', app.getVersion())
+    
+    console.log('App version update timestamp',store.get('db.versionDate'));
+
+    if (!store.get('db.update')) {
+        store.set({
+            db: {
+                versionDate: Date.now(),
+                update: true,
+                version: app.getVersion()
+            }
+        });
+    }
+    
     startCheck()
     startDatabase()
     if (dev) {
@@ -832,7 +845,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
 
     mainWindow.webContents.send('saved-addr', hugin_address)
 
-    saveThisContact(addr, key, name, first)
+    saveThisContact(addr, key, name)
 
     if (first) {
         saveMessage({
@@ -1256,27 +1269,33 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
 //     optimizeMessages()
 // }
+
+async function checkHistory(messageKey) {
+    //Check history
+    if (known_keys.indexOf(messageKey) > -1) {  
+        let [conv] = await getConversation()
+        if (parseInt(conv.timestamp) < parseInt(store.get("db.versionDate"))) return false
+        return true
+    } else {
+        known_keys.push(messageKey)
+        return false
+    }
+
+
+}
+
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
-    let has_history
     //Assert address length
     if (receiver.length !== 163) {
         return
     }
-    //Split address
-    let address = receiver.substring(0, 99)
-    let messageKey = receiver.substring(99, 163)
-    //Check history
-    if (known_keys.indexOf(messageKey) > -1) {
-        console.log('I know this contact?')
-        has_history = true
-    } else {
-        known_keys.push(messageKey)
-        has_history = false
-    }
-
     if (message.length === 0) {
         return
     }
+    //Split address and check history
+    let address = receiver.substring(0, 99)
+    let messageKey = receiver.substring(99, 163)
+    let has_history = checkHistory(messageKey)
 
     try {
         let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()

@@ -765,7 +765,7 @@ const getConversation = async (chat = false) => {
         ${chat ? 'WHERE chat = "' + chat + '"' : ''}
         ORDER BY
             timestamp
-        ASC`
+        DESC`
         database.each(
             getChat,
             (err, row) => {
@@ -1046,11 +1046,11 @@ const groupMessageExists = async (time) => {
 }
 
 
-const saveThisContact = async (addr, key, name, first = false) => {
+const saveThisContact = async (addr, key, name) => {
 
     let contacts = await getContacts()
-    //Remove the old contact if we have the address saved
-    if (first && contacts.some((a) => a.address === addr && a.key !== key)) {
+    //Remove the old contact key if we have the address saved, we assume the new key is valid since the message is signed.
+    if (contacts.some((a) => a.address === addr && a.key !== key)) {
         removeContact(addr)
     }
 
