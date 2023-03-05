@@ -347,7 +347,7 @@ function addHash(data) {
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="group_chat_window">
-            {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress)}
+            {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress) && !$groups.thisGroup.chat}
                 <div>
                     <Loader/>
                 </div>
