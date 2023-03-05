@@ -8,6 +8,7 @@
     import {get_avatar} from "$lib/utils/hugin-utils.js";
 
     let standardGroups = [
+        { name: 'Kryptokrona',     key: '33909fb89783fb15b5c2df50ff7107c112c3b232681f77814c024c909c07e932' },
         { name: 'Hugin',           key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8' },
         { name: 'Programming',     key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0' },
         { name: 'Gaming',          key: 'aab2b5493d95074e03090501a1cbc34955c29d4f0bfe5eed76445b2f049031b2' },
