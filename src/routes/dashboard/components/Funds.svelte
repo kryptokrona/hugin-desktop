@@ -50,7 +50,7 @@
     </div>
     <div class="card">
         <h4>Node status</h4>
-        <p>{$misc.syncState ? $misc.syncState : 'Loading'} </p>
+        <p class:synced={$misc.syncState}>{$misc.syncState ? $misc.syncState : 'Loading'} </p>
     </div>
 </div>
 
@@ -96,5 +96,9 @@
       background-color: #5ff281;
       height: 5px;
     }
+  }
+
+  .synced {
+    color: var(--success-color)
   }
 </style>
