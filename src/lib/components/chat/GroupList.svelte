@@ -161,6 +161,10 @@ async function checkNew() {
     return filterNew
 }
 
+function sendPM() {
+    // Add friend request here?
+}
+
 
 //Add group
 const addGroup = () => {
