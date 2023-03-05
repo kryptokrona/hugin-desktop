@@ -110,7 +110,7 @@
 
     {#if step === 1 && !$user.restore}
         <div in:fade class="wrapper">
-            <h2>Select you username</h2>
+            <h2>Enter your username</h2>
             <input type="text" spellcheck="false" placeholder="Username" bind:value="{username}"/>
 
             <div class="button_wrapper">
