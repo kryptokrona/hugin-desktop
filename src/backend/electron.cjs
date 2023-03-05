@@ -503,7 +503,7 @@ async function checkNodeAndPassword(password, node) {
 
     let nodeOnline = await checkNodeStatus(node)
     if (!nodeOnline) {
-        return false
+        mainWindow.webContents.send('error-notify-message', 'The node seems to be slow or offline, try another one.')
     }
 
     return true
@@ -718,7 +718,7 @@ async function checkForGroupMessage(thisExtra, thisHash) {
     let group = trimExtra(thisExtra)
     let message = JSON.parse(group)
     if (message.sb) {
-            decryptGroupMessage(message, thisHash)
+            await decryptGroupMessage(message, thisHash)
             return true
     }
     } catch {
@@ -1138,6 +1138,8 @@ async function decryptGroupRtcMessage(message, key) {
 }
 
 async function decryptGroupMessage(tx, hash, group_key = false) {
+
+    try {
     let decryptBox = false
     let offchain = false
     let groups = await loadGroups()
@@ -1186,14 +1188,18 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
         payload_json.s
     )
 
-    if (!verified) return
-    if (block_list.some(a => a.address === from)) return
+    if (!verified) return false
+    if (block_list.some(a => a.address === from)) return false
 
     payload_json.sent = false
 
     saveGroupMessage(payload_json, hash, tx.t, offchain)
 
     return [payload_json, tx.t, hash]
+
+    } catch {
+        return false
+    }
 }
 
 // async function sendBoardMessage(message) {
@@ -1295,7 +1301,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     //Split address and check history
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
-    let has_history = checkHistory(messageKey)
+    let has_history = await checkHistory(messageKey)
 
     try {
         let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
