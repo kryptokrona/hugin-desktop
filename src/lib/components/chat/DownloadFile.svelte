@@ -6,6 +6,7 @@
     import { fade } from "svelte/transition"
     import { user } from '$lib/stores/user.js'
     import Progress from "$lib/components/chat/Progress.svelte"
+    import { sleep } from "$lib/utils/utils"
 
     export let file
 
@@ -40,6 +41,7 @@
     }
 
     async function loadFile(file) {
+        await sleep(200)
         let arr = await window.api.loadFile(file.path)
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
