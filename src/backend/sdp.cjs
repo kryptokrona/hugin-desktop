@@ -3,7 +3,6 @@ const Store = require('electron-store');
 const settings = new Store();
 
 
-
 const expand_sdp_offer = (compressed_string, incoming = false) => {
     let type = compressed_string.substring(0, 1)
 
@@ -39,8 +38,6 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
         return en.decode(h)
     })
 
-    console.log('Pörts:', prts)
-
     let prio = 2122260223
 
     let tcp_prio = 1518280447
@@ -52,7 +49,6 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
     let current_internal = ''
     let port
     prts.forEach(function (port) {
-        console.log('checking in offer port', port)
         let ip_index = port.slice(-1)
         if (i == 1) {
             current_internal = port.substring(0, port.length - 1)
@@ -116,9 +112,6 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
     if (external_ip.length == 0) {
         external_id = ips[0].substring(1)
     }
-
-    console.log('candidates', candidates)
-    console.log('ports:', external_ports)
 
     console.log(external_ports.length / 3)
     console.log((external_ports.length / 3) * 2)
@@ -403,12 +396,6 @@ a=sctp-port:5000
 a=max-message-size:262144
 `
 
-    console.log('ice', ice_ufrag)
-    console.log('ice', ice_pwd)
-    console.log('fingerprint', fingerprint)
-    console.log('SRCS', ssrc)
-    console.log('MSID', msid)
-    console.log('candidates', candidates)
     return { type: 'offer', sdp: sdp }
 }
 
@@ -748,12 +735,6 @@ a=sctp-port:5000
 a=max-message-size:262144
 `
 
-    console.log('ice', ice_ufrag)
-    console.log('ice', ice_pwd)
-    console.log('fingerprint', fingerprint)
-    console.log('SRCS', ssrc)
-    console.log('MSID', msid)
-    console.log('candidates', candidates)
 
     return { type: 'answer', sdp: sdp }
 }
@@ -769,7 +750,7 @@ const parse_sdp = (sdp, answr = false) => {
     let ip
     let port
     let ipv6 = false
-    
+
     let lines = sdp.sdp.split('\n').map((l) => l.trim()) // split and remove trailing CR
     lines.forEach(function (line) {
         if (line.includes('a=fingerprint:') && fingerprint == '') {
@@ -807,7 +788,7 @@ const parse_sdp = (sdp, answr = false) => {
                 ipv6 = true
             }
 
-            if (settings.get('incoming.ipv6') && answr && ip.length < 20 && ivp6) {
+            if (settings.get('incoming.ipv6') && answr && ip.length < 20 && ipv6) {
               return
             }
 
@@ -887,24 +868,6 @@ let decode_fingerprint = (fingerprint) => {
 let decode_ip = (ip, type) => {
 
     return type + ip;
-
-    // let decoded_ip = ''
-    //
-    // let letters = atob(ip).split('')
-    // letters.forEach(function (letter) {
-    //     if (letter.length > 1) return
-    //     let piece = letter.charCodeAt(0).toString(16)
-    //
-    //     if (piece.length === 1) {
-    //         piece = '0' + piece
-    //     }
-    //
-    //     decoded_ip += parseInt(piece, 16) + '.'
-    // })
-    //
-    // console.log('decoded ip', decoded_ip)
-    //
-    // return type + ip;
 }
 
 module.exports = {expand_sdp_answer, expand_sdp_offer, parse_sdp}
