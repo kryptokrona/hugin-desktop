@@ -966,9 +966,11 @@ const getContacts = async () => {
                 if (err) {
                     console.log('Error', err)
                 }
+                
                 let newRow = row
                 newRow.chat = row.address
                 myContactList.push(newRow)
+                if (!row.key) myContactList.pop(newRow)
             },
             () => {
                 resolve(myContactList)
