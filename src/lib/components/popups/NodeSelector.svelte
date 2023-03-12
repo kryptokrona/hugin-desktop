@@ -14,8 +14,61 @@
     dispatch('back')
   }
 
-  const auto = () => {
-    const randomNode = $nodelist[Math.floor(Math.random() * $nodelist.length)];
+  const getBestNode = async (ssl=true) => {
+
+  let recommended_node = undefined;
+
+  let node_requests = [];
+  let ssl_nodes =[];
+  if (ssl) {
+      ssl_nodes = $nodelist.filter(node => {return node.ssl});
+  } else {
+      ssl_nodes =  $nodelist.filter(node => {return !node.ssl});
+  }
+
+  ssl_nodes = ssl_nodes.sort((a, b) => 0.5 - Math.random());
+
+  console.log(ssl_nodes);
+
+  let i = 0;
+
+  while (i < ssl_nodes.length) {
+
+    const controller = new AbortController();
+
+    const timeoutId = setTimeout(() => controller.abort(), 1000);
+
+
+    let this_node = ssl_nodes[i];
+
+    let nodeURL = `${this_node.ssl ? 'https://' : 'http://'}${this_node.url}:${this_node.port}/info`;
+    try {
+      const resp = await fetch(nodeURL, {
+         method: 'GET',
+         signal: controller.signal
+      });
+
+     if (resp.ok) {
+
+       recommended_node = this_node;
+       return(this_node);
+     }
+  } catch (e) {
+    console.log(e);
+  }
+  i++;
+}
+
+if (recommended_node == undefined) {
+  const recommended_non_ssl_node = await getBestNode(false);
+  return recommended_non_ssl_node;
+}
+
+}
+
+  const auto = async () => {
+    const randomNode = await getBestNode();
+
     nodeInput = `${randomNode.url}:${randomNode.port}`
   }
 
