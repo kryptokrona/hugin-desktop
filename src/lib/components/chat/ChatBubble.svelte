@@ -368,7 +368,7 @@
 }
 
 .finish {
-    color: var(--success-color);
+    color: var(--success-color) !important;
 }
 
 
