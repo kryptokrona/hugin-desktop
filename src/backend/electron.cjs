@@ -1074,9 +1074,10 @@ async function decryptRtcMessage(message) {
     if (newMsg) {
         newMsg.sent = false
     }
+    
+    let group = newMsg.msg.msg
 
-    if ('key' in newMsg.msg.msg) {
-            let group = newMsg.msg.msg
+    if (group && 'key' in group) {
             if (group.key === undefined) return 
             let invite_key = sanitizeHtml(group.key)
             if (invite_key.length !== 64) return
@@ -1383,7 +1384,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
             mainWindow.webContents.send('rtc_message', messageArray)
         }
         //Do not save invite message.
-        if ('invite' in message.msg) {
+        if (message.msg && 'invite' in message.msg) {
             return
         } 
         else {
