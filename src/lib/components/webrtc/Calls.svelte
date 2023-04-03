@@ -393,11 +393,11 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
         $webRTC.call[0].peerStream = peerStream
         if (video) {
             $webRTC.call[0].peerVideo = true
+            
+            $videoGrid.showVideoGrid = true
         } else {
             $webRTC.call[0].peerAudio = true
         }
-
-        $videoGrid.showVideoGrid = true
     })
 }
 
@@ -489,7 +489,6 @@ const answerCall = (msg, contact, key, offchain = false) => {
     console.log('Got media')
 
     async function gotMedia(stream) {
-        $videoGrid.showVideoGrid = true
 
         let peer2 = await startPeer2(stream, video)
 
@@ -502,6 +501,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
 
         if (video) {
             $webRTC.myVideo = true
+            $videoGrid.showVideoGrid = true
         }
 
         let group = false
