@@ -18,7 +18,7 @@ export function prettyNumbers(amount) {
         .padStart(5, '0')
     /* Makes our numbers thousand separated. https://stackoverflow.com/a/2901298/8737306 */
     const formatted = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-    return formatted + '.' + cents + ' ' + 'XKR'
+    return formatted + '.' + cents + ' ' + ''
 }
 
 export const openURL = (link) => {

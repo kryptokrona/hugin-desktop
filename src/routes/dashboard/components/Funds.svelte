@@ -29,11 +29,11 @@
 <div class="cards">
     <div class="card" style="border-right: 1px solid var(--border-color)">
         <h4>Balance</h4>
-        <p>{prettyNumbers($misc.balance[0])}</p>
+        <p class="balance">{prettyNumbers($misc.balance[0])}</p>
     </div>
     <div class="card">
         <h4>Locked</h4>
-        <p>{prettyNumbers($misc.balance[1])}</p>
+        <p class="balance">{prettyNumbers($misc.balance[1])}</p>
     </div>
     <div class="card" style="border-right: 1px solid var(--border-color)">
         <h4>Funds ratio</h4>
@@ -80,7 +80,9 @@
       }
     }
   }
-
+  .balance {
+    font-family: "Major Mono Display";
+  }
   .ratio {
     display: flex;
     border-radius: 10px;
