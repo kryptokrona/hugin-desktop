@@ -29,7 +29,8 @@ export const groups = writable({
     replyTo: {reply: false},
     thisGroup: {key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false},
     groupArray: [],
-    blockList: []
+    blockList: [],
+    activeHugins: []
 })
 
 export const rtc_groups = writable({
