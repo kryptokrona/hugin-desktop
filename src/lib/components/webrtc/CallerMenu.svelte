@@ -10,12 +10,7 @@ import { videoGrid } from '$lib/stores/layout-state.js'
 import { calcTime } from '$lib/utils/utils.js'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
 
-const dispatch = createEventDispatcher()
-
 export let paused = false
-let peer
-let stream
-let calling = true
 let toggle = false
 
 let startTime = Date.now()
