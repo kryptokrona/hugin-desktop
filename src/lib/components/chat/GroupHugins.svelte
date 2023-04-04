@@ -1,14 +1,8 @@
 <script>
-    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import {fade} from 'svelte/transition'
-    import {groupMessages} from '$lib/stores/groupmsgs.js'
     import {groups} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import Group from '$lib/components/chat/Group.svelte'
-    import Plus from '$lib/components/icons/Plus.svelte'
-    import RemoveGroup from '$lib/components/chat/RemoveGroup.svelte'
     import {layoutState} from '$lib/stores/layout-state.js'
-    import {sleep} from '$lib/utils/utils.js'
     import {flip} from 'svelte/animate'
 
     import { page } from '$app/stores'
@@ -17,10 +11,6 @@
     let group = ''
     let groupName
 
-    
-onDestroy(() => {
-    window.api.removeAllListeners('groupMsg')
-})
 
 function sendPM() {
     // Add friend request here?
