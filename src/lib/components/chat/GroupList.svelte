@@ -31,6 +31,7 @@
 onMount( async () => {
     await printGroups()
     checkGroup()
+    filterActiveHugins($groupMessages)
 })
 
 onDestroy(() => {
@@ -80,7 +81,7 @@ const printGroup = async (grp) => {
 //Function to filer array of active users on board.
 function filterActiveHugins(arr) {
     let uniq = {}
-    activeHugins = arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
+    $groups.activeHugins = arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
 }
 
 //Print our conversations from DBs
@@ -191,7 +192,7 @@ $: activeHugins
     />
 {/if}
 
-<div class="wrapper" in:fade class:hide="{$layoutState.hideGroupList}">
+<div class="wrapper" in:fade>
     <div class="top">
         <h2>Groups</h2>
         <br />

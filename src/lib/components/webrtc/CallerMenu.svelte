@@ -58,8 +58,8 @@ const showGrid = () => {
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
 <div
-    in:fly="{{ y: 100, duration: 300, easing: cubicOut }}"
-    out:fly="{{ y: 100, duration: 300, easing: cubicIn }}"
+    in:fly="{{ y: 100, duration: 200, easing: cubicOut }}"
+    out:fly="{{ y: 100, duration: 200, easing: cubicIn }}"
     class="card"
 >
     <audio bind:paused></audio>
@@ -105,7 +105,6 @@ const showGrid = () => {
     padding: 1px;
     bottom: 20px;
     right: 105px;
-    height: 100px;
     width: 350px;
     border-radius: 5px;
     z-index: 500;

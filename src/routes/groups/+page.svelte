@@ -12,6 +12,7 @@ import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
 import { containsOnlyEmojis } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
+import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -369,6 +370,7 @@ function addHash(data) {
             {/each}
             <!-- <InfiniteScroll reverse={true} threshold={20} on:loadMore={() => loadMoreMessages()} /> -->
         </div>
+    
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">
                 {reply_exit_icon} Reply to {$groups.replyTo.nick}
@@ -376,6 +378,7 @@ function addHash(data) {
         {/if}
         <ChatInput on:message="{(e) => sendGroupMsg(e)}" />
     </div>
+    <GroupHugins />
 </main>
 
 <style lang="scss">
@@ -392,7 +395,7 @@ h1 {
 main {
     display: flex;
     margin-left: 85px;
-    margin-right: 85px;
+    margin-right: 0px;
     z-index: 3;
     height: 100vh;
 }
