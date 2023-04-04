@@ -28,17 +28,14 @@
     import OptimizeToast from '$lib/components/custom-toasts/OptimizeToast.svelte'
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
-import { sleep } from '$lib/utils/utils'
 
     let ready = false
-    let myVideo = false
-    let peerVideo = true
     let incoming_call
     let showCallerMenu = false
     let new_messages = false
     let board_message_sound
     let new_message_sound
-    let incomingCalls = []
+    
     const closePopup = () => {
         incoming_call = false
     }
