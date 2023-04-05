@@ -92,6 +92,7 @@ const showGrid = () => {
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
     padding: 0 1rem;
+    height: 70px;
 }
 
 .card {
@@ -103,6 +104,7 @@ const showGrid = () => {
     width: 350px;
     border-radius: 5px;
     z-index: 500;
+
 }
 
 .inner-card {

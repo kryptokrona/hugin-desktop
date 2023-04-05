@@ -435,6 +435,7 @@ async function startPeer1(stream, video, contact) {
 
     peer1.on('connect', async () => {
         // SOUND EFFECT
+        window.api.successMessage('Call established')
         $webRTC.call[0].connected = true
         checkVolume(peer1)
         console.log('Connection established')
@@ -543,6 +544,7 @@ async function startPeer2(stream, video) {
 
     peer2.on('connect', () => {
         // SOUND EFFECT
+        window.api.successMessage('Call established')
         console.log('Connection established;')
         $webRTC.call[0].connected = true
         checkVolume(peer2)
