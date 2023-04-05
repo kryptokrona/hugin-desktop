@@ -42,7 +42,6 @@
 
     const endThisCall = () => {
         showCallerMenu = false
-        myVideo = false
     }
 
     const answerIncomingCall = (call) => {
@@ -50,7 +49,6 @@
         let filter = $webRTC.incoming.filter((a) => a.chat !== call.chat)
         $webRTC.incoming = filter
         showCallerMenu = true
-        myVideo = true
         incoming_call = false
         console.log('incoming clean', $webRTC.incoming)
         console.log('webRTC call ', $webRTC.call)
