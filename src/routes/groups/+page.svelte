@@ -27,8 +27,6 @@ const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUU
 
 onMount(async () => {
     chatWindow = document.getElementById('group_chat_window')
-    console.log('mounting')
-
     let filter = $notify.unread.filter((a) => a.type !== 'group')
     $notify.unread = filter
     scrollDown()
@@ -36,7 +34,6 @@ onMount(async () => {
     //Listens for new messages from backend
     window.api.receive('groupMsg', (data) => {
         if (data.address === $user.huginAddress.substring(0, 99)) return
-        //*TODO*//Keep logs to experiment with toast popups
 
         if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') {
             //Push new message to store
