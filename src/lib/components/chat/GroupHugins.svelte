@@ -191,6 +191,6 @@ p {
 }
 
 .hide {
-    width: 0px;
+    margin-right: -210px;
 }
 </style>
