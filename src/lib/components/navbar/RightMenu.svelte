@@ -163,9 +163,6 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
-const openRemove = () => {
-    $groups.removeGroup = !$groups.removeGroup
-}
 
 function newBeam() {
     window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
@@ -318,9 +315,6 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                 </button>
             </div>
             <div class="draggable hitbox"></div>
-            <div class="button">
-                <Exit on:remove="{openRemove}" />
-            </div>
         </div>
     {/if}
 </div>
