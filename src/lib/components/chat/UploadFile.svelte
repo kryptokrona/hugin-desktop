@@ -9,7 +9,7 @@
     let uploading = false
     let image = ""
     let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
+    let videoTypes = ['.mp4', '.webm', '.avi', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
 
     onMount( async () =>
     {   

@@ -11,7 +11,7 @@
     export let file
 
     let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg']
+    let videoTypes = ['.mp4', '.webm', '.avi', '.mov','.wmv', '.mkv', '.mpeg']
     let downloadDone = false
     let downloading = false
     let thisFile
@@ -20,7 +20,6 @@
     onMount(() => {   
         if (videoTypes.some(a => file.fileName.endsWith(a)))
         {
-            console.log('Found video format')
             video = true
             return
         }
@@ -43,7 +42,10 @@
     async function loadFile(file) {
         await sleep(200)
         let arr = await window.api.loadFile(file.path)
-        if (arr === "File" || arr === "File not found") return arr
+        if (arr === "File" || arr === "File not found") {
+            thisFile = arr
+            return
+        }
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
         thisFile = imageUrl
