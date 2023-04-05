@@ -188,7 +188,7 @@ const addNewGroup = (e) => {
     if (group.length < 32) return
     openAddGroup()
     let add = {
-        m: 'Added group',
+        m: 'Joined group',
         n: group.name,
         hash: Date.now() * 2,
         t: Date.now().toString(),
