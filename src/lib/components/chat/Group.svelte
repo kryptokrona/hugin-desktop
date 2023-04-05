@@ -11,6 +11,11 @@ const printThis = (group) => {
     if (group.key === $groups.thisGroup.key) return
     dispatch('print')
 }
+
+const openRemove = () => {
+    $groups.removeGroup = !$groups.removeGroup
+}
+
 </script>
 
 <div
@@ -24,7 +29,7 @@ const printThis = (group) => {
         <div class:unread="{group.new}"></div>
     {/if}
 
-    <img class="avatar" src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
+    <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
     <div class="content">
         <h4>{group.name}</h4>
         <div class="text">
