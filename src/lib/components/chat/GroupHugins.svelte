@@ -6,6 +6,7 @@
     import {flip} from 'svelte/animate'
 
     import { page } from '$app/stores'
+    import Exit from '$lib/components/icons/Exit.svelte'
 
     let activeHugins = []
     let group = ''
@@ -26,6 +27,9 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
+const openRemove = () => {
+    $groups.removeGroup = !$groups.removeGroup
+}
 
 //Set group key
 $: if ($groups.thisGroup.key) {
@@ -38,6 +42,7 @@ $: groupName = $groups.thisGroup.name
 //Active hugins
 $: activeHugins = $groups.activeHugins
 
+$: activeList = activeHugins.filter(a => a.grp !== a.address)
 
 </script>
 
@@ -49,8 +54,7 @@ $: activeHugins = $groups.activeHugins
         <br />
     </div>
         <div class="list-wrapper">
-            {#each activeHugins as user}
-                {#if user.address !== user.grp}
+            {#each activeList as user}
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
                         <img
                             class="avatar"
@@ -60,7 +64,6 @@ $: activeHugins = $groups.activeHugins
                         <p class="nickname">{user.name}</p>
                         <br />
                     </div>
-                {/if}
             {/each}
         </div>
 
