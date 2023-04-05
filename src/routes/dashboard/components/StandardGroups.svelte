@@ -26,7 +26,7 @@
     const addNewGroup = (group) => {
         if (group.length < 32) return
         let data = {
-            m: 'Added group',
+            m: 'Joined group',
             n: group.name,
             hash: Date.now() * 2,
             t: Date.now().toString(),
