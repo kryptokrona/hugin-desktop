@@ -30,8 +30,8 @@
     
 onMount( async () => {
     await printGroups()
-    checkGroup()
     filterActiveHugins($groupMessages)
+    checkGroup()
 })
 
 onDestroy(() => {
@@ -200,26 +200,6 @@ $: activeHugins
             <Plus on:click="{addGroup}" />
         </div>
     </div>
-    {#if $layoutState.showActiveList}
-        <div class="active_hugins">
-            <h4>Active Hugins</h4>
-        </div>
-        <div class="list-wrapper">
-            {#each activeHugins as user}
-                {#if user.address !== user.grp}
-                    <div class="card" on:click="{() => sendPM(user)}">
-                        <img
-                            class="avatar"
-                            src="data:image/png;base64,{get_avatar(user.address)}"
-                            alt=""
-                        />
-                        <p class="nickname">{user.name}</p>
-                        <br />
-                    </div>
-                {/if}
-            {/each}
-        </div>
-    {:else}
         <div class="list-wrapper">
             {#each groupList as group (group.key)}
                 <div animate:flip="{{duration: 250}}">
@@ -227,7 +207,6 @@ $: activeHugins
                 </div>
             {/each}
         </div>
-    {/if}
 </div>
 
 <style lang="scss">
