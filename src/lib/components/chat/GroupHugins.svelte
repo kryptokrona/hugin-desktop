@@ -27,10 +27,6 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
-const openRemove = () => {
-    $groups.removeGroup = !$groups.removeGroup
-}
-
 //Set group key
 $: if ($groups.thisGroup.key) {
     group = $groups.thisGroup.key
