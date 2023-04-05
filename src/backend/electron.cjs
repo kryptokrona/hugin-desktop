@@ -1628,10 +1628,16 @@ async function load_file(path) {
                 stream.on('data', (data) => { 
                     imgArray.push(data)
                 })
+
+                stream.on('error', (data) => {
+                    return "File not found"
+                })
+
                 stream.on('end', () => {
                     resolve(Buffer.concat(imgArray))
                 })
         })
+
         } catch (err) {
             return "File not found"
         }
