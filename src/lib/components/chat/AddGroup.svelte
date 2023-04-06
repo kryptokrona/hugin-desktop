@@ -101,45 +101,45 @@ const joinGroup = () => {
 
     <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
         {#if !newgroup}
-        <div >
-         <p>Create a new group</p>
-            <FillButton
-            text="{"Create"}"
-            disabled="{false}"
-            enabled="{true}"
-            on:click="{() => createNewGroup()}"
-        />
-        </div>
-        <div>
-        <p>Join your friends group</p>
-        <FillButton
-            text="{"Join"}"
-            disabled="{false}"
-            enabled="{true}"
-            on:click="{() => joinGroup()}"
+            <div >
+            <p>Create a new group?</p>
+                <FillButton
+                text="{"Create"}"
+                disabled="{false}"
+                enabled="{true}"
+                on:click="{() => createNewGroup()}"
             />
-        </div>
+            </div>
+            <div>
+            <p>Join your friends group?</p>
+            <FillButton
+                text="{"Join"}"
+                disabled="{false}"
+                enabled="{true}"
+                on:click="{() => joinGroup()}"
+                />
+            </div>
          {/if}
 
         {#if newgroup}
 
-        <h3 in:fade>Name your group</h3>
-        <input placeholder="Name your group" type="text" bind:value="{name}" />
-        {#if create}
-        <Button disabled="{false}" text="Generate key" on:click="{() => createGroup()}" />
-        {/if}
-        <div class="key-wrapper" in:fade>
-            <input placeholder="Input group key" type="text" bind:value="{key}" />
-            {#if key.length}
-                <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+            <h3 in:fade>Name your group</h3>
+            <input placeholder="Name your group" type="text" bind:value="{name}" />
+            {#if create}
+            <Button disabled="{false}" text="Generate key" on:click="{() => createGroup()}" />
             {/if}
-        </div>
-        <FillButton
-            text="{create_group}"
-            disabled="{!enableAddGroupButton}"
-            enabled="{enableAddGroupButton}"
-            on:click="{() => addGroup()}"
-        />
+            <div class="key-wrapper" in:fade>
+                <input placeholder="Input group key" type="text" bind:value="{key}" />
+                {#if key.length}
+                    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+                {/if}
+            </div>
+            <FillButton
+                text="{create_group}"
+                disabled="{!enableAddGroupButton}"
+                enabled="{enableAddGroupButton}"
+                on:click="{() => addGroup()}"
+            />
         {/if}
     </div>
     
