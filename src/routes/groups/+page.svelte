@@ -17,13 +17,18 @@ import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
 let replyto = ''
 let reply_exit_icon = 'x'
 let noMsgs = false
-let filterBoards = []
+let filterGroups = []
 let filterEmojis = []
 let fixedGroups = []
 let replyTrue = false
 let chatWindow
 let scrollGroups = []
+
 const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
+
+const hashPadding = () => {
+    return Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+}
 
 onMount(async () => {
     chatWindow = document.getElementById('group_chat_window')
@@ -37,7 +42,7 @@ onMount(async () => {
 
         if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') {
             //Push new message to store
-            printBoardMessage(data)
+            printGroupMessage(data)
         } else {
             console.log('Another group', data)
         }
@@ -79,7 +84,7 @@ const sendGroupMsg = async (e) => {
     if (e.detail.reply) {
         replyto = e.detail.reply
     }
-    //Construct a new json object (myBoardMessage) to be able to print our message instant.
+    //Construct a new json object (myGroupMessage) to be able to print our message instant.
     let myGroupMessage = {
         message: msg,
         grp: group,
@@ -100,7 +105,7 @@ const sendGroupMsg = async (e) => {
         hash: time,
     }
     window.api.sendGroupMessage(sendMsg)
-    printBoardMessage(myGroupMessage)
+    printGroupMessage(myGroupMessage)
     replyExit()
     scrollDown()
 }
@@ -109,8 +114,8 @@ const scrollDown = () => {
     chatWindow.scrollTop = chatWindow.scrollHeight
 }
 
-//Prints any single board message. Takes boardmessage and updates to store.
-const printBoardMessage = (groupMsg) => {
+//Prints any single group message. 
+const printGroupMessage = (groupMsg) => {
     if (
         groupMsg.reply.length === 64 &&
         groupMsg.message.length < 9 &&
@@ -163,7 +168,7 @@ async function replyToMessage(hash, nickname, emoji = false) {
     })
 }
 
-//Default value should be false to hide the AddBoard form.
+//Default value should be false to hide the AddGroup form.
 let wantToAdd = false
 
 //Open AddGroup component and update state in store.
@@ -179,7 +184,7 @@ const openAddGroup = () => {
         })
     }
 }
-//Adds new board to groArray and prints that board, its probably empty.
+//Adds new Group to groArray and prints that Group, its probably empty.
 const addNewGroup = (e) => {
     let group = e.detail
     if (group.length < 32) return
@@ -208,28 +213,26 @@ $: if ($groupMessages.length == 0) {
     noMsgs = false
 }
 
-//Checks messages for reactions in chosen board from printBoard() function
+//Checks messages for reactions in chosen Group from printGroup() function
 async function checkReactions() {
-    //All boardmessages all messages except reactions
-    filterBoards = await $groupMessages.filter(
+    //All group messages all messages except reactions
+    filterGroups = await $groupMessages.filter(
         (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
     )
     //Only reactions
     filterEmojis = await $groupMessages.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
     )
-    console.log('filter emoji ', filterEmojis)
     if (filterEmojis.length) {
         //Adding emojis to the correct message.
         addEmoji()
     } else {
-        fixedGroups = filterBoards
+        fixedGroups = filterGroups
     }
 }
 
-//Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisGroup.
+//Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
-    console.log('Printing group', group)
     fixedGroups = []
     scrollGroups = []
     noMsgs = false
@@ -239,11 +242,10 @@ async function printGroup(group) {
             thisGroup: { key: group.key, name: group.name, chat: true},
         }
     })
-    //Load boardMessages from db
+    //Load GroupMessages from db
     await groupMessages.set(await window.api.printGroup(group.key))
     //Check for emojis and filter them
     await checkReactions()
-    console.log($groups.groupArray)
     //Reactions should be set, update thisGroup in store and set reply to false.
     groups.update((data) => {
         return {
@@ -251,6 +253,7 @@ async function printGroup(group) {
             replyTo: { reply: false },
         }
     })
+    replyExit()
     scrollDown()
 }
 
@@ -259,10 +262,10 @@ async function updateReactions(msg) {
     fixedGroups.some(function (r) {
         if (r.hash == msg.reply && !r.react) {
             r.react = []
-            msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+            msg.hash = msg.hash + hashPadding
             r.react.push(msg)
         } else if (r.hash == msg.reply && r.react) {
-            msg.hash = msg.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+            msg.hash = msg.hash + hashPadding
             r.react.push(msg)
         }
     })
@@ -273,16 +276,16 @@ async function updateReactions(msg) {
 
     let emojis = filterEmojis
     //Check for replies and message hash that match and then adds reactions to the messages.
-    filterBoards.forEach(async function (a) {
+    filterGroups.forEach(async function (a) {
         emojis.forEach(function (b) {
             if (!a.react && b.reply == a.hash) {
                 a.react = []
-                b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+                b.hash = b.hash + hashPadding
                 a.react.push(b)
                 emojis.pop(b)
 
             } else if (b.reply == a.hash) {
-                b.hash = b.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+                b.hash = b.hash + hashPadding
                 a.react.push(b)
                 emojis.pop(b)
             }
@@ -292,7 +295,7 @@ async function updateReactions(msg) {
     fixedGroups = fixedGroups
 }
 
-//Reactive depending on user.addBoard boolean, displays AddBoard component.
+//Reactive depending on user.addGroup boolean, displays AddGroup component.
 $: wantToAdd = $groups.addGroup
 
 $: replyTrue = $groups.replyTo.reply
