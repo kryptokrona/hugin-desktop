@@ -13,11 +13,12 @@ let enableAddGroupButton = false
 
 let create = false
 let newgroup = false
-let create_group = create ? 'Create' : 'Join'
 let name = ''
 let key = ''
 let test
 let avatar
+
+$: create_group = create ? 'Create' : 'Join'
 
 const enter = (e) => {
     if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
