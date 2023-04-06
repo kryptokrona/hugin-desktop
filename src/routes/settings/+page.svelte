@@ -156,10 +156,10 @@ $: {
 
         <div class="settings" in:fade>
             <div class="nodestatus">
-                <h2>Selected Node</h2>
-                <h4>Address</h4>
-                <p class="nodeinfo">{$misc.node.node}</p>
-
+                <div class="node">
+                    <h4>Address</h4>
+                    <p class="nodeinfo">{$misc.node.node}</p>
+            </div>
                 <div class="status">
                     <h4>Status</h4>
 
@@ -180,15 +180,16 @@ $: {
                         <p class="nodeinfo">{networkHeight} - {walletHeight}</p>
                     {/if}
                 </div>
-                <div style="width: 160px;">
-                    <FillButton
-                        text="Change Node"
-                        enabled="{false}"
-                        disabled="{false}"
-                        on:click="{() => ($layoutState.showNodeSelector = true)}"
-                    />
-                </div>
             </div>
+            <div style="width: 160px;">
+                <Button
+                    text="Change Node"
+                    enabled="{false}"
+                    disabled="{false}"
+                    on:click="{() => ($layoutState.showNodeSelector = true)}"
+                />
+            </div>
+            <br>
         </div>
     {/if}
 
@@ -302,7 +303,7 @@ p {
 }
 
 .settings {
-    margin-top: 1rem;
+    margin-top: 2rem;
     border-radius: 10px;
     display: grid;
     transition: 0.25s ease-in-out all;
@@ -401,6 +402,12 @@ p {
     &:hover {
         opacity: 1;
     }
+}
+
+.nodestatus {
+    display: inline-flex;
+    justify-content: space-around;
+    width: 90%;
 }
 
 </style>
