@@ -2,7 +2,7 @@
     import { misc } from '$lib/stores/user.js';
     import { goto } from '$app/navigation'
 
-    $: syncstatus = $misc.syncStatus
+    $: syncstatus = $misc.syncedStatus
 
 </script>
 
