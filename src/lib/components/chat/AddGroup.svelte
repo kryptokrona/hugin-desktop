@@ -10,7 +10,10 @@ import { get_avatar } from '$lib/utils/hugin-utils.js'
 const dispatch = createEventDispatcher()
 
 let enableAddGroupButton = false
-let create_group = 'Create'
+
+let create = false
+let newgroup = false
+let create_group = create ? 'Create' : 'Join'
 let name = ''
 let key = ''
 let test
@@ -76,15 +79,54 @@ const createGroup = async () => {
 
 $: key
 $: avatar
+
+const createNewGroup = () => {
+    create = true
+    newgroup = true
+    console.log("Wanna create")
+}
+
+const joinGroup = () => {
+    newgroup = true
+    console.log("Wanna join")
+}
+
 </script>
 
 <svelte:window on:keyup|preventDefault="{enter}" />
 
+
 <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="backdrop" on:click|self>
+
     <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
+        {#if !newgroup}
+        <div >
+         <p>Create a new group</p>
+            <FillButton
+            text="{"Create"}"
+            disabled="{false}"
+            enabled="{true}"
+            on:click="{() => createNewGroup()}"
+        />
+        </div>
+        <div>
+        <p>Join your friends group</p>
+        <FillButton
+            text="{"Join"}"
+            disabled="{false}"
+            enabled="{true}"
+            on:click="{() => joinGroup()}"
+            />
+        </div>
+         {/if}
+
+        {#if newgroup}
+
         <h3 in:fade>Name your group</h3>
         <input placeholder="Name your group" type="text" bind:value="{name}" />
+        {#if create}
         <Button disabled="{false}" text="Generate key" on:click="{() => createGroup()}" />
+        {/if}
         <div class="key-wrapper" in:fade>
             <input placeholder="Input group key" type="text" bind:value="{key}" />
             {#if key.length}
@@ -97,7 +139,10 @@ $: avatar
             enabled="{enableAddGroupButton}"
             on:click="{() => addGroup()}"
         />
+        {/if}
     </div>
+    
+
 </div>
 
 <style lang="scss">
@@ -124,7 +169,7 @@ h3 {
 .card {
     background-color: var(--backgound-color);
     border: 1px solid var(--card-border);
-    padding: 20px;
+    padding: 30px;
     border-radius: 8px;
     width: 250px;
     height: 300px;
