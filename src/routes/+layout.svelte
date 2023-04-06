@@ -83,6 +83,14 @@
 
     })
 
+    window.api.receive("sync", (state) => {
+        if (state === "Synced") $misc.syncedStatus = true
+        if (state === "Syncing") $misc.syncedStatus = false
+        if (state === "Not syncing") $misc.syncedStatus = false 
+    })
+
+
+
         //Handle incoming call
         window.api.receive('call-incoming', async (msg, chat, group = false) => {
             console.log('chat', chat)
