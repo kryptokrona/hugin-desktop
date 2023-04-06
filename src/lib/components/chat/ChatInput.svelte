@@ -22,8 +22,9 @@
   let shiftKey
 
   onMount(async () => {
-    await sleep(300)
     mount = true
+    await sleep(1000)
+    //Not sure why it takes so long to find the emoji picker.
     emojiPicker = document.querySelector('emoji-picker')
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
   })
@@ -116,7 +117,6 @@
   $: {
     if ($beam.active.length) {
       activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
-      console.log("Beam active", activeBeam);
     } else {
       activeBeam = false
     }
