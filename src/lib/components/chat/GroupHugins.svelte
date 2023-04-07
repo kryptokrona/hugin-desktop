@@ -43,7 +43,7 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
 </script>
 
 
-<div class="wrapper" in:fade out:fade class:hide="{$layoutState.hideGroupList || $page.url.pathname !== '/groups'}">
+<div class="wrapper" in:fade out:fade class:hide="{$layoutState.hideGroupList}">
     <div class="top">
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
         <br />
@@ -187,6 +187,7 @@ p {
 }
 
 .hide {
+    transition: 200ms ease-in-out;
     margin-right: -210px;
 }
 </style>

@@ -147,7 +147,7 @@
     }
 
     const setEmbedCode = () => {
-        embed_code = messageLink.split('/').slice(-1)[0].split('=').slice(-1)[0];
+        embed_code = messageLink.split('=')[1];
         youtube = true
     }
 

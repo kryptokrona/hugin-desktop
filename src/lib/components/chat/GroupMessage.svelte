@@ -166,12 +166,12 @@ const checkLink = () => {
             messageLink = messageLink.split('&list')[0]
         }
         setEmbedCode()
-    }
+}
 
-    const setEmbedCode = () => {
-        embed_code = messageLink.split('/').slice(-1)[0].split('=').slice(-1)[0];
+const setEmbedCode = () => {
+        embed_code = messageLink.split('=')[1];
         youtube = true
-    }
+}
 
 const openEmbed = () => {
     openLink = true
