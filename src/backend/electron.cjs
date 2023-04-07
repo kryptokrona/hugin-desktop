@@ -519,8 +519,7 @@ async function loadCheckedTxs() {
         checkedTxs = checkedTxs.slice(arrayLength - 200, arrayLength - 1).map(function (knownTX) {
             return knownTX.hash
         })
-
-        checkedTxs
+        
     } else {
         checkedTxs = []
     }
