@@ -509,6 +509,25 @@ async function checkNodeAndPassword(password, node) {
     return true
 }
 
+async function loadCheckedTxs() {
+    
+    //Load known pool txs from db.
+    let checkedTxs = await loadKnownTxs()
+    let arrayLength = checkedTxs.length
+
+    if (arrayLength > 0) {
+        checkedTxs = checkedTxs.slice(arrayLength - 200, arrayLength - 1).map(function (knownTX) {
+            return knownTX.hash
+        })
+
+        checkedTxs
+    } else {
+        checkedTxs = []
+    }
+
+    return checkedTxs
+}
+
 async function start_js_wallet(walletName, password, node) {
     
     if (!await checkNodeAndPassword(password, node)) return
@@ -529,9 +548,7 @@ async function start_js_wallet(walletName, password, node) {
     //Start wallet sync process
     await js_wallet.start()
 
-    //Load known pool txs from db.
-    let checkedTxs
-    let knownTxsIds = await loadKnownTxs()
+    let checkedTxs = await loadCheckedTxs()
     let my_groups = await getGroups()
     block_list = await loadBlockList()
     my_boards = await getMyBoardList()
@@ -545,14 +562,6 @@ async function start_js_wallet(walletName, password, node) {
     console.log('Hugin Address', myAddress + msgKey)
 
     mainWindow.webContents.send('addr', myAddress + msgKey)
-    
-    if (knownTxsIds.length > 0) {
-        checkedTxs = knownTxsIds.map(function (knownTX) {
-            return knownTX.hash
-        })
-    } else {
-        checkedTxs = []
-    }
 
     sendNodeInfo()
 
@@ -748,7 +757,7 @@ function validateExtra(thisExtra, thisHash) {
 //Set known pool txs on start
 function setKnownPoolTxs(checkedTxs) {
     //Here we can adjust number of known we send to the node
-    known_pool_txs = checkedTxs.slice(checkedTxs.length - 100, checkedTxs.length - 1)
+    known_pool_txs = checkedTxs
     //Can't send undefined to node, it wont respond
     let known = known_pool_txs.filter(a => a !== undefined)
     return known
