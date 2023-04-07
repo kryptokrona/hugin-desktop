@@ -129,6 +129,8 @@ const removeGroup = async () => {
     }
     $groups.removeGroup = false
     dispatch('removeGroup')
+    await sleep(100)
+    filterActiveHugins($groupMessages)
 }
 
 //Read message
