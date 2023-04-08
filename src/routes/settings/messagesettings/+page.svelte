@@ -3,16 +3,16 @@
     import { messageWallet } from '$lib/stores/user.js'
     import Button from "$lib/components/buttons/Button.svelte"
 
-
     const optimizeMessages = () => {
         window.api.send('optimize')
     }
+
     </script>
     
     <h2>Messages</h2>
-    <div>
+    <div class="optimize">
         <Button
-        text="Optimize"
+        text="Optimize inputs"
         disabled="{$messageWallet.optimized}"
         red="{$messageWallet.optimized}"
         on:click="{optimizeMessages}"
@@ -25,7 +25,7 @@
             <br>
         <p>Your wallet will create more when you start to run out.
             <br>
-             Press the button <b>Optimize</b> to create 25 more.</p>
+             Press the button <b>Optimize</b> to create more.</p>
         <br>
     </div>
     
@@ -37,9 +37,8 @@
         display: grid;
         transition: 0.25s ease-in-out all;
         grid-template-columns: repeat(1, 1fr);
+        font-size: 14px;
     }
 
-    .p {
-        font-family: "Montserrat";
-    }
+
     </style>

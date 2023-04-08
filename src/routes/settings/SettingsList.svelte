@@ -6,6 +6,7 @@
     let nodeIcon = ""
 
     const dispatch = createEventDispatcher()
+
     const settings = [
         {
             name: 'Node',
@@ -43,13 +44,6 @@
         },
 
     ]
-
-    
-onMount( async () => {
-})
-
-onDestroy(() => {
-})
 
 
 </script>

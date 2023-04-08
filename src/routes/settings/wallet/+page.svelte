@@ -33,8 +33,6 @@ $: {
 }
 
 
-
-
 </script>
 
 {#if $js_wallet.rescan}
@@ -42,8 +40,8 @@ $: {
  {/if}
  
 <h2>Wallet</h2>
-<div>
-    <Button text="Rescan" enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
+<div class="rescan">
+    <Button text="Rescan wallet" enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
 </div>
 
 <div class="settings" in:fade>

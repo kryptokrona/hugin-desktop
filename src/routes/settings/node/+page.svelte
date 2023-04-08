@@ -9,22 +9,16 @@
     let synced = false
     let networkHeight
     let walletHeight
-
-     $: status = synced ? "Connected" : "Syncing blocks"
-
     
     onMount(() => {
         getHeight();
     })
 
+    $: status = synced ? "Connected" : "Syncing blocks"
+
     $: {
         synced = $misc.syncedStatus
     }
-
-
-    $: console.log(
-         'synced status', $misc.syncedStatus
-    )
 
     $: {
         networkHeight
@@ -67,7 +61,7 @@
 {/if}
 
 <h2>Node</h2>
-<div style="width: 160px;">
+<div class="change_node">
     <Button
         text="Change Node"
         enabled="{false}"
@@ -138,9 +132,6 @@
 .networkheight {
     font-size: 15px;
 
-}
-
-.nodestatus {
 }
 
 .backdrop {

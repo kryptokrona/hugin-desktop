@@ -3,7 +3,6 @@ import Button from "$lib/components/buttons/Button.svelte"
 import { fade } from "svelte/transition"
 import {misc} from '$lib/stores/user.js'
 
-
 </script>
 
 <h2>Update</h2>

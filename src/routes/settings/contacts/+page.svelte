@@ -3,7 +3,6 @@ import { groups } from "$lib/stores/user"
 import { get_avatar } from "$lib/utils/hugin-utils"
 import { fade } from "svelte/transition"
 
-
 </script>
 
 <h2>Contacts</h2>
