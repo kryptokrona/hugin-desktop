@@ -398,6 +398,7 @@ main {
     margin-right: 0px;
     z-index: 3;
     height: 100vh;
+    width: 100%;
 }
 
 #board_box {

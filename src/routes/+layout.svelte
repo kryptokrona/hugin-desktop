@@ -437,7 +437,7 @@
 
 
 </script>
-
+<main>
 <TrafficLights/>
 <Toaster/>
 
@@ -506,7 +506,15 @@
     <slot/>
 {/if}
 
+</main>
 <style>
+
+main {
+      height: 100vh;
+      overflow: hidden;
+      z-index: 3;
+      width: 100%;
+  }
     .close {
         pointer-events: visible;
     }

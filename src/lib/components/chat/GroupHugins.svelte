@@ -84,6 +84,7 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
     max-width: 210px;
     border-left: 1px solid var(--border-color);
     border-right: none;
+    margin-right: 85px;
 }
 
 .list-wrapper {
@@ -188,6 +189,6 @@ p {
 
 .hide {
     transition: 200ms ease-in-out;
-    margin-right: -210px;
+    margin-right: -125px;
 }
 </style>

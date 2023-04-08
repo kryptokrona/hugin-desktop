@@ -117,6 +117,7 @@
       height: 100vh;
       overflow: hidden;
       z-index: 3;
+      width: 100%;
   }
   .wrapper {
     display: flex;

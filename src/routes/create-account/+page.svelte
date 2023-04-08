@@ -72,7 +72,7 @@
 </script>
 
 <svelte:window on:keyup|preventDefault="{enter}"/>
-<main in:fade>
+<div class="main" in:fade>
     {#if step === 1 && $user.restore}
         <div in:fade class="wrapper">
             <h2>Please enter your mnemonic seed</h2>
@@ -149,15 +149,17 @@
     {:else if step === 3}
         <NodeSelector on:back="{() => (step = 2)}" on:connect="{(e) => handleLogin(e)}"/>
     {/if}
-</main>
+        </div>
 
 <style lang="scss">
-  main {
+
+ .main {
     height: 100vh;
     padding: 4rem;
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
   }
 
   .wrapper {

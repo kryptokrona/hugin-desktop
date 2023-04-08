@@ -308,6 +308,7 @@ main {
     height: 100vh;
     overflow: hidden;
     z-index: 3;
+    width: 100%;
 }
 
 .right_side {
@@ -316,7 +317,7 @@ main {
     justify-content: flex-end;
     position: relative;
     width: 100%;
-    margin-right: 85px;
+    margin-right: 170px;
 }
 
 .inner {
