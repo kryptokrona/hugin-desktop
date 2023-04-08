@@ -8,7 +8,7 @@
 
 
 <svg
-    on:click="{() => goto('/settings')}"
+    on:click="{() => goto('/settings/node')}"
     width="45px"
     height="13px"
     viewBox="0 0 176 54"

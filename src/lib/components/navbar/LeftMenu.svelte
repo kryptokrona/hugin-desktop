@@ -69,7 +69,7 @@ const groupRouteAndMenu = () => {
     </div>
     <div class="draggable"></div>
     <div class="nav">
-        <div on:click="{() => goto('/settings')}" class="button">
+        <div on:click="{() => goto('/settings/node')}" class="button">
             <SettingsIcon />
         </div>
         <a class='button' href="/" on:click={handleLogout}>
