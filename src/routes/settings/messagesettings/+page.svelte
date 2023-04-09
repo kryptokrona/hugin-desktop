@@ -25,7 +25,7 @@
             <br>
         <p>Your wallet will create more when you start to run out.
             <br>
-             Press the button <b>Optimize</b> to create more.</p>
+             Press the button <b>Optimize inputs</b> to create more.</p>
         <br>
     </div>
     

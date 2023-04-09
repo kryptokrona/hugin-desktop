@@ -108,7 +108,6 @@ $: {
         width: 250px;
         text-overflow: ellipsis;
         margin-left: -9px;
-        border: 1px solid white;
     }
     
     .mnemonic p {
@@ -120,7 +119,6 @@ $: {
         width: 250px;
         padding-right: 10px;
         margin-left: -9px;
-        border: 1px solid white;
     }
     
     .settings {
