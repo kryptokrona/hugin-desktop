@@ -146,4 +146,9 @@
     background-color: var(--backgound-color);
     z-index: 103;
 }
+
+.change_node {
+    margin-left: -2.5%;
+}
+
 </style>

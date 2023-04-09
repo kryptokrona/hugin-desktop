@@ -135,6 +135,10 @@ $: {
     .button {
         margin-left: -15px;
     }
+
+    .rescan {
+        margin-left: -2.5%;
+    }
     
 
  

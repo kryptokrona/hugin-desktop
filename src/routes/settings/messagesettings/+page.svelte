@@ -40,5 +40,8 @@
         font-size: 14px;
     }
 
+    .optimize {
+        margin-left: -2.5%;
+    }
 
     </style>
