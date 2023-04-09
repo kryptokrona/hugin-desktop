@@ -550,7 +550,6 @@ async function start_js_wallet(walletName, password, node) {
     let checkedTxs = await loadCheckedTxs()
     let my_groups = await getGroups()
     block_list = await loadBlockList()
-    block_list  = []
     my_boards = await getMyBoardList()
 
     //Save backup wallet to file
