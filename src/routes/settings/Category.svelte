@@ -1,8 +1,9 @@
 <script>
+    import { page } from '$app/stores'
     import {fade} from 'svelte/transition'
     
     export let tab
-    
+
     </script>
     
     <div
@@ -10,6 +11,8 @@
         in:fade
         out:fade
         on:click
+        class:active="{tab.route === $page.url.pathname}"
+
     >
     
         <div class="content">
@@ -100,6 +103,11 @@
     .text {
         display: flex;
         gap: 4px;
+    }
+
+    .active {
+        background-color: var(--border-color);
+        border-bottom: 1px solid transparent;
     }
     </style>
     
