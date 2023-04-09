@@ -117,7 +117,7 @@
 }
 
 .syncstatus {
-    color: var(--warn-color);
+    color: var(--alert-color);
 }
 
 .nodeinfo {
