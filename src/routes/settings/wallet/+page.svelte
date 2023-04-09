@@ -137,7 +137,7 @@ $: {
     }
 
     .rescan {
-        margin-left: -2.5%;
+        margin-left: -15px;
     }
     
 

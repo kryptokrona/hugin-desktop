@@ -30,6 +30,6 @@ import {misc} from '$lib/stores/user.js'
 
 .update {
     width: 50%;
-    margin-left: -2.5%;
+    margin-left: -15px;
 }
 </style>
