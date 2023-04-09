@@ -6,7 +6,7 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
 
     const blockContact = () => {
-        window.api.send('block', $user.block.address, $user.block.name)
+        window.api.send('block', $user.block)
         $user.block = false
     }
     </script>

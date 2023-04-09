@@ -550,6 +550,7 @@ async function start_js_wallet(walletName, password, node) {
     let checkedTxs = await loadCheckedTxs()
     let my_groups = await getGroups()
     block_list = await loadBlockList()
+    block_list  = []
     my_boards = await getMyBoardList()
 
     //Save backup wallet to file
@@ -1751,8 +1752,8 @@ ipcMain.on('unblock', async (e, address) => {
     mainWindow.webContents.send('update-blocklist', block_list)
 })
 
-ipcMain.on('block', async (e, contact, name) => {
-    await blockContact(contact, name)
+ipcMain.on('block', async (e, block) => {
+    blockContact(block.address, block.name)
     block_list = await loadBlockList()
     mainWindow.webContents.send('update-blocklist', block_list)
 })
