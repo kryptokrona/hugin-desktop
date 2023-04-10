@@ -140,7 +140,6 @@ async function shareScreen(id) {
 }
 
 $: {
-    console.log('My Audio/Video devices', $webRTC.devices)
     console.log('Active Camera', $webRTC.cameraId)
     console.log('Active Calls', $webRTC.call)
 }
