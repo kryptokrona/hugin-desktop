@@ -1003,6 +1003,11 @@ async function sendGroupsMessage(message, offchain = false) {
         return
     }
 
+    if (!offchain) {
+        let balance = await checkBalance()
+        if (!balance) return
+    }
+ 
     let message_json = {
         m: message.m,
         k: my_address,
@@ -1299,6 +1304,20 @@ async function checkHistory(messageKey) {
 
 }
 
+async function checkBalance() {
+    try {
+        let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
+
+        if (munlockedBalance < 11) {
+            mainWindow.webContents.send('error-notify-message', 'Not enough unlocked funds.')
+            return false
+        }
+    } catch (err) {
+        return false
+    }
+    return true
+}
+
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
     //Assert address length
     if (receiver.length !== 163) {
@@ -1312,14 +1331,9 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     let messageKey = receiver.substring(99, 163)
     let has_history = await checkHistory(messageKey)
 
-    try {
-        let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
-
-        if (munlockedBalance < 11 && mlockedBalance > 0 && !beam_this) {
-            return
-        }
-    } catch (err) {
-        return
+    if (!beam_this) {
+        let balance = await checkBalance()
+        if (!balance) return
     }
 
     let timestamp = Date.now()
