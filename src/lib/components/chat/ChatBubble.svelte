@@ -39,6 +39,7 @@
     let beamFile = false
     let clicked = false
     let beam_key = ""
+    let youtube_shared_link_type = false
 
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
@@ -62,6 +63,7 @@
         }
 
         if (link && message.match(/youtu/) || message.match(/y2u.be/)) {
+            if (message.match(/youtu.be/)) youtube_shared_link_type = true
             youtubeLink = true
             if (ownMsg) checkLink()
             return
@@ -147,7 +149,11 @@
     }
 
     const setEmbedCode = () => {
-        embed_code = messageLink.split('=')[1];
+        if (!youtube_shared_link_type) { 
+            embed_code = messageLink.split('watch?v=')[1];
+        } else {
+            embed_code = messageLink.split('youtu.be/')[1]
+        }
         youtube = true
     }
 

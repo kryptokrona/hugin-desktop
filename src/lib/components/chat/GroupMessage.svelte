@@ -40,6 +40,8 @@ let openLink = false
 let link = false
 let messageText
 let messageLink
+let youtube_shared_link_type = false
+
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
@@ -144,6 +146,7 @@ $: if (msg.match(geturl)) {
 
 //Check for youtube links
 $:  if (msg.match(/youtu/) || msg.match(/y2u.be/)) {
+    if (msg.match(/youtu.be/)) youtube_shared_link_type = true
     youtubeLink = true
     if (myMsg) checkLink()
 }
@@ -169,8 +172,12 @@ const checkLink = () => {
 }
 
 const setEmbedCode = () => {
-        embed_code = messageLink.split('=')[1];
-        youtube = true
+    if (!youtube_shared_link_type) { 
+            embed_code = messageLink.split('watch?v=')[1];
+        } else {
+            embed_code = messageLink.split('youtu.be/')[1]
+        }
+    youtube = true
 }
 
 const openEmbed = () => {
