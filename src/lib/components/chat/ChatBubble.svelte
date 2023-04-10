@@ -62,7 +62,7 @@
             messageLink = messageLink[0]
         }
 
-        if (link && message.match(/youtu/) || message.match(/y2u.be/)) {
+        if (link && message.match(/youtube.com/) || message.match(/youtu.be/)) {
             if (message.match(/youtu.be/)) youtube_shared_link_type = true
             youtubeLink = true
             if (ownMsg) checkLink()

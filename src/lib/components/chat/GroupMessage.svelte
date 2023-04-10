@@ -39,7 +39,7 @@ let youtubeLink = false
 let openLink = false
 let link = false
 let messageText
-let messageLink
+let messageLink = ""
 let youtube_shared_link_type = false
 
 let geturl = new RegExp(
@@ -62,8 +62,20 @@ onMount( async () => {
         if (thisReply) return
         replyError = true
         }
+        checkMessage()
 })
 
+function checkMessage() {
+    
+    if (msg.match(geturl)) {
+    link = true
+    messageLink = msg.match(geturl)
+    messageText = msg.replace(messageLink,'')
+    //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
+    messageLink = messageLink[0]
+    }
+
+}
 async function checkreply(reply) {
     if (offchain) {
         let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
@@ -135,17 +147,8 @@ $: if ($webRTC.groupCall && rtc) {
     offchain = false
 }
 
-//Check for regular links and splits message and link
-$: if (msg.match(geturl)) {
-    link = true
-    messageLink = msg.match(geturl)
-    messageText = msg.replace(messageLink,'')
-    //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
-    messageLink = messageLink[0]
-}
-
 //Check for youtube links
-$:  if (msg.match(/youtu/) || msg.match(/y2u.be/)) {
+$:  if (msg.match(/youtube.com/) || msg.match(/youtu.be/)) {
     if (msg.match(/youtu.be/)) youtube_shared_link_type = true
     youtubeLink = true
     if (myMsg) checkLink()
