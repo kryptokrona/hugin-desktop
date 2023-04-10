@@ -144,7 +144,6 @@
             new_messages = true
             board_message_sound.play()
             $notify.new.push(data)
-            console.log('notif', $notify.new)
             $notify.new = $notify.new
         })
 
@@ -158,9 +157,10 @@
             }
             new_messages = true
             data.key = data.address
-            board_message_sound.play()
-            $notify.new.push(data)
-            console.log('notif', $notify.new)
+            if ($notify.new.length < 5) {
+                board_message_sound.play()
+                $notify.new.push(data)
+            }
             $notify.new = $notify.new
         })
 
@@ -224,8 +224,10 @@
 
 
     function removeNotification(e) {
-        let filterArr = $notify.new.filter((a) => a.hash !== e.detail.hash)
-        $notify.new = filterArr
+       $notify.new.some((a) => {
+            if (a.hash !== e.detail.hash) $notify.new.pop(a)
+        })
+        $notify.new = $notify.new
     }
 
     //APP UPDATER
@@ -374,26 +376,27 @@
     const updateUploadProgress = async (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
-        $upload = $upload.map(a => { 
+        $upload.some(a => { 
             if (a.chat === thisAddr && a.fileName === thisFile && a.time === data.time) 
             {
-            a.progress = data.progress
+                a.progress = data.progress
             }
-            return a
         })
+        $upload = $upload
     }
 
     const updateDownloadProgress = async (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
-        $download = $download.map(a => { 
+        $download.some(a => { 
             if (a.chat === thisAddr && a.fileName === thisFile) 
             {
-            a.path = data.path
-            a.progress = data.progress
+                a.path = data.path
+                a.progress = data.progress
             }
-            return a
         })
+
+        $upload = $upload
 
         if (data.progress === 100) {
             toast.success(`${thisFile} finished downloading`, {
