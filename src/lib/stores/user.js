@@ -47,6 +47,7 @@ export const misc = writable({
     balance: [0, 0],
     node: '',
     version: '',
+    os: '',
     loading: false,
     syncStatus: false,
 })

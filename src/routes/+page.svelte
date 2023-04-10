@@ -20,6 +20,10 @@
         window.api.receive('version', version => {
             $misc.version = version
         })
+      window.api.receive('os', os => {
+        console.log(os)
+        $misc.os = os
+      })
 
         $user.username = window.localStorage.getItem('userName')
         if (!$user.username) $user.username = 'Anon'
