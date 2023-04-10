@@ -4,6 +4,17 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { formatBytes } from '$lib/utils/utils.js'
 import {misc} from "$lib/stores/user.js";
 import {appUpdateState} from "$lib/components/updater/update-store.js";
+
+const download = () => {
+
+    if ($misc.os === "darwin" && $misc.version === "0.2.3") {
+        //Open link
+        return
+    }
+
+    window.api.send('download-update')
+}
+
 </script>
 
 <div class="backdrop" in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}">
@@ -23,7 +34,7 @@ import {appUpdateState} from "$lib/components/updater/update-store.js";
                     and improvements
                 </h4>
                 <div class="buttons">
-                    <FillButton text="Download" on:click="{() => window.api.send('download-update')}"/>
+                    <FillButton text="Download" on:click="{download}"/>
                     <FillButton text="Later" on:click="{() => ($appUpdateState.openPopup = false)}"/>
                 </div>
             </div>
