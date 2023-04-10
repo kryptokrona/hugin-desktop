@@ -20,9 +20,10 @@
         window.api.receive('version', version => {
             $misc.version = version
         })
-      window.api.receive('os', os => {
-        console.log(os)
-        $misc.os = os
+      window.api.receive('os-arch', data => {
+        console.log(`You're running ${data.os} on ${data.arch}`)
+        $misc.os = data.os
+        $misc.arch = data.arch
       })
 
         $user.username = window.localStorage.getItem('userName')
