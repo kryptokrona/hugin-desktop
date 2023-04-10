@@ -8,7 +8,17 @@ import {appUpdateState} from "$lib/components/updater/update-store.js";
 const download = () => {
 
     if ($misc.os === "darwin" && $misc.version === "0.2.3") {
-        //Open link
+        let link
+        if ($misc.arch === "arm64" ) {
+            link = "https://github.com/kryptokrona/hugin-desktop/releases/download/v0.2.4/Hugin-Messenger-0.2.4-arm64.dmg"
+        }
+        if ($misc.arch === "x64") {
+            link = "https://github.com/kryptokrona/hugin-desktop/releases/download/v0.2.4/Hugin-Messenger-0.2.4.dmg"
+        }
+        if (!link) {
+            link = "https://github.com/kryptokrona/hugin-desktop/releases/"
+        }
+        window.api.openLink(link)
         return
     }
 
