@@ -252,7 +252,7 @@ app.whenReady().then(() => {
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
     mainWindow.webContents.send('version', app.getVersion())
-    mainWindow.webContents.send('os', process.platform)
+    mainWindow.webContents.send('os-arch', {os: process.platform, arch: process.arch})
     
     console.log('App version update timestamp',store.get('db.versionDate'));
 
