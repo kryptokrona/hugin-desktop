@@ -224,8 +224,9 @@
 
 
     function removeNotification(e) {
+        
        $notify.new.some((a) => {
-            if (a.hash !== e.detail.hash) $notify.new.pop(a)
+            if (a.hash === e.detail.hash) $notify.new.pop(a)
         })
         $notify.new = $notify.new
     }
