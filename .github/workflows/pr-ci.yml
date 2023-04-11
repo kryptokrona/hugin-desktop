@@ -49,16 +49,16 @@ jobs:
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'windows-latest'
-        run: npm run build:win-$PLATFORM-gh
+        run: npm run build:win-${{ matrix.config.platform }}-gh
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'ubuntu-latest'
-        run: npm run build:linux-$PLATFORM
+        run: npm run build:linux-${{ matrix.config.platform }}
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.name == 'macOS-11'
-        run: npm run build:mac-$PLATFORM-gh
+        run: npm run build:mac-${{ matrix.config.platform }}-gh
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.name == 'macOS Latest'
-        run: npm run build:mac-$PLATFORM-gh
+        run: npm run build:mac-${{ matrix.config.platform }}-gh
