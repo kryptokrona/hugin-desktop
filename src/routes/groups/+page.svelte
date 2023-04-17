@@ -21,8 +21,9 @@ let filterGroups = []
 let filterEmojis = []
 let fixedGroups = []
 let replyTrue = false
-let chatWindow
 let scrollGroups = []
+let windowHeight
+let windowChat
 
 const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 
@@ -31,7 +32,7 @@ const hashPadding = () => {
 }
 
 onMount(async () => {
-    chatWindow = document.getElementById('group_chat_window')
+
     let filter = $notify.unread.filter((a) => a.type !== 'group')
     $notify.unread = filter
     scrollDown()
@@ -104,14 +105,16 @@ const sendGroupMsg = async (e) => {
         n: myName,
         hash: time,
     }
+    
     window.api.sendGroupMessage(sendMsg)
     printGroupMessage(myGroupMessage)
     replyExit()
     scrollDown()
 }
 
+
 const scrollDown = () => {
-    chatWindow.scrollTop = chatWindow.scrollHeight
+    windowChat.scrollTop = windowHeight
 }
 
 //Prints any single group message. 
@@ -347,7 +350,7 @@ function addHash(data) {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="group_chat_window">
+        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight}>
             {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress) && !$groups.thisGroup.chat}
                 <div>
                     <Loader/>

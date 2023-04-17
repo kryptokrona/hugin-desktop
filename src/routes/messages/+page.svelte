@@ -21,15 +21,14 @@ let active_contact
 let savedMsg = []
 let key
 let contact
-let chatWindow
 let dragover = false
 let toggleRename = false
 let wantToAdd = false
+let windowHeight
+let windowChat
 
 //Get messages on mount.
 onMount(async () => {
-
-    chatWindow = document.getElementById('chat_window')
 
     boards.update((data) => {
         return {
@@ -99,8 +98,9 @@ const printMessage = (data) => {
     scrollDown()
 }
 
+
 const scrollDown = () => {
-    chatWindow.scrollTop = chatWindow.scrollHeight
+    windowChat.scrollTop = windowHeight
 }
 
 const saveToStore = (data) => {
@@ -280,7 +280,7 @@ const hideModal = () => {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="chat_window">
+        <div class="outer" id="chat_window" bind:this={windowChat} bind:clientHeight={windowHeight}>
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner">
                 {#each savedMsg as message (message.timestamp)}
