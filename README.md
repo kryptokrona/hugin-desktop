@@ -124,6 +124,7 @@ being awesome contributors to this project. **We'd like to take a moment to reco
 [<img src="https://avatars.githubusercontent.com/u/36674091?v=4?size=72" alt="Swepool" width="72">](https://github.com/Swepool)
 [<img src="https://avatars.githubusercontent.com/u/33717111?v=4?size=72" alt="mjovanc" width="72">](https://github.com/mjovanc)
 [<img src="https://avatars.githubusercontent.com/u/3246908?v=4?size=72" alt="f-r00t" width="72">](https://github.com/f-r00t)
+[<img src="https://github.com/appelskrutt34.png?size=72" alt="appelskrutt34" width="72">](https://github.com/appelskrutt34)
 
 # License
 
