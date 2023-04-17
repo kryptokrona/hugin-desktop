@@ -1057,9 +1057,8 @@ async function sendGroupsMessage(message, offchain = false) {
             saveHash(result.transactionHash)
             optimizeMessages()
         } else {
-            mainWindow.webContents.send('optimized', false)
             let error = {
-                message: 'Failed to send',
+                message: 'Failed to send, please wait a couple of minutes.',
                 name: 'Error',
                 hash: Date.now(),
             }
@@ -1379,13 +1378,11 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
             saveMessage(sentMsg)
             optimizeMessages()
         } else {
-            mainWindow.webContents.send('optimized', false)
             let error = {
-                message: `Failed to send`,
+                message: `Failed to send, please wait a couple of minutes.`,
                 name: 'Error',
                 hash: Date.now(),
             }
-
             optimizeMessages()
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             mainWindow.webContents.send('error_msg', error)
