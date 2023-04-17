@@ -68,12 +68,26 @@ onMount( async () => {
 function checkMessage() {
     
     if (msg.match(geturl)) {
-    link = true
-    messageLink = msg.match(geturl)
-    messageText = msg.replace(messageLink,'')
-    //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
-    messageLink = messageLink[0]
+        link = true
+        messageLink = msg.match(geturl)
+        messageText = msg.replace(messageLink,'')
+        //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
+        messageLink = messageLink[0]
     }
+
+    if (link && msg.match(/youtube.com/) || msg.match(/youtu.be/)) {
+        if (msg.match(/youtu.be/)) youtube_shared_link_type = true
+        youtubeLink = true
+        if (myMsg) checkLink()
+        return
+    }
+
+    if (containsOnlyEmojis(msg)) {
+        emojiMessage = true
+        return
+    }
+
+
 
 }
 async function checkreply(reply) {
@@ -147,24 +161,12 @@ $: if ($webRTC.groupCall && rtc) {
     offchain = false
 }
 
-//Check for youtube links
-$:  if (msg.match(/youtube.com/) || msg.match(/youtu.be/)) {
-    if (msg.match(/youtu.be/)) youtube_shared_link_type = true
-    youtubeLink = true
-    if (myMsg) checkLink()
-}
-
 //Open youtube links and check embed code
 $: if (openLink) {
     if (messageLink.includes('&amp;list')) {
         messageLink = messageLink.split('&amp;list')[0]
     }
     setEmbedCode()
-}
-
-//Code block
-$: if (containsOnlyEmojis(msg)) {
-    emojiMessage = true
 }
 
 const checkLink = () => {
