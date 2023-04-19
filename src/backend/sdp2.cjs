@@ -536,12 +536,36 @@ ${
           '\r\n' +
           'a=ssrc:' +
           ssrc[1] +
-          ' cname:0v7phLz3L82cIhVT' +
+          ' cname:qwjy1Thr/obQUvqd\r\n' +
+          'a=ssrc:' +
+          ssrc[1] +
+          ' msid:' +
+          msid +
+          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
+          'a=ssrc:' +
+          ssrc[1] +
+          ' mslabel:' +
+          msid +
           '\r\n' +
-          `a=ssrc:` +
+          'a=ssrc:' +
+          ssrc[1] +
+          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
+          'a=ssrc:' +
           ssrc[2] +
-          ' cname:0v7phLz3L82cIhVT' +
-          '\r\n'
+          ' cname:qwjy1Thr/obQUvqd\r\n' +
+          'a=ssrc:' +
+          ssrc[2] +
+          ' msid:' +
+          msid +
+          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
+          'a=ssrc:' +
+          ssrc[2] +
+          ' mslabel:' +
+          msid +
+          '\r\n' +
+          'a=ssrc:' +
+          ssrc[2] +
+          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n'
         : ''
 }m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
