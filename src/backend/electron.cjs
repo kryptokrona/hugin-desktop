@@ -1994,7 +1994,7 @@ ipcMain.on('openLink', (e, url) => {
 })
 
 ipcMain.on('expand-sdp', (e, data, address) => {
-    let recovered_data = unpack(data)
+    let recovered_data = unpack(data.substring(1))
     let expanded_data = []
     expanded_data.push(recovered_data)
     expanded_data.push(address)
