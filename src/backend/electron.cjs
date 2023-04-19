@@ -1667,21 +1667,24 @@ async function load_file(path) {
     }    
 }
 
+const { pack, unpack } = require("sdpmin");
+
 function get_sdp(data) 
 {
     if (data.type == 'offer') 
     {
-        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        let recovered_data = expand_sdp_offer(parsed_data)
+
+        console.log('data.data', data.data)
+        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + pack(data.data);
+        mainWindow.webContents.send('rec-off', parsed_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     } 
     else if (data.type == 'answer') 
     {
-        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
+        console.log('data.data', data.data)
+        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + pack(data.data);
         console.log('parsed data really cool sheet:', parsed_data)
-        let recovered_data = expand_sdp_answer(parsed_data)
         //Send expanded recovered data to front end for debugging etc, this can be removed
-        mainWindow.webContents.send('rec-off', recovered_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     }
 }
@@ -1991,7 +1994,7 @@ ipcMain.on('openLink', (e, url) => {
 })
 
 ipcMain.on('expand-sdp', (e, data, address) => {
-    let recovered_data = expand_sdp_offer(data, true)
+    let recovered_data = unpack(data)
     let expanded_data = []
     expanded_data.push(recovered_data)
     expanded_data.push(address)
