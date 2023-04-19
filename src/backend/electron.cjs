@@ -28,7 +28,7 @@ const {createReadStream} = require("fs");
 const { 
     expand_sdp_answer, 
     expand_sdp_offer, 
-    parse_sdp } = require("./sdp.cjs")
+    parse_sdp } = require("./sdp2.cjs")
 const {
     sleep, 
     trimExtra, 
@@ -1079,6 +1079,7 @@ async function sendGroupsMessage(message, offchain = false) {
         })
     }
 }
+
 
 async function decryptRtcMessage(message) {
     let hash = message.substring(0, 64)
