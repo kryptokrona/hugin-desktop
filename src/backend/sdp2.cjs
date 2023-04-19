@@ -122,13 +122,13 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
 o=- 5726742634414877819 3 IN IP4 127.0.0.1
 s=-
 t=0 0
-a=group:BUNDLE audio video data
+a=group:BUNDLE 0 1 2
 a=msid-semantic: WMS ` +
         msid +
         `
 m=audio ` +
         external_ports[0] +
-        ` UDP/TLS/RTP/SAVPF 111 103 104 9 102 0 8 106 105 13 110 112 113 126
+        ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` +
         external_ip +
         `
@@ -141,12 +141,11 @@ a=rtcp:9 IN IP4 0.0.0.0
 a=ice-pwd:` +
         ice_pwd +
         `
-a=ice-options:trickle renomination
 a=fingerprint:sha-256 ` +
         fingerprint +
         `
 a=setup:actpass
-a=mid:audio
+a=mid:0
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
@@ -158,7 +157,6 @@ a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
 a=rtpmap:9 G722/8000
-a=rtpmap:102 ILBC/8000
 a=rtpmap:0 PCMU/8000
 a=rtpmap:8 PCMA/8000
 a=rtpmap:106 CN/32000
@@ -199,12 +197,11 @@ a=rtcp:9 IN IP4 0.0.0.0
 a=ice-pwd:` +
         ice_pwd +
         `
-a=ice-options:trickle renomination
 a=fingerprint:sha-256 ` +
         fingerprint +
         `
 a=setup:actpass
-a=mid:video
+a=mid:1
 a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:13 urn:3gpp:video-orientation
@@ -295,12 +292,11 @@ c=IN IP4 ` +
 a=ice-pwd:` +
         ice_pwd +
         `
-a=ice-options:trickle renomination
 a=fingerprint:sha-256 ` +
         fingerprint +
         `
 a=setup:actpass
-a=mid:data
+a=mid:2
 a=sctp-port:5000
 a=max-message-size:262144
 `
@@ -421,13 +417,13 @@ const expand_sdp_answer = (compressed_string) => {
 o=- 8377786102162672707 3 IN IP4 127.0.0.1
 s=-
 t=0 0
-a=group:BUNDLE audio video data
+a=group:BUNDLE 0 1 2
 a=msid-semantic: WMS ` +
         msid +
         `
 m=audio ` +
         external_port +
-        ` UDP/TLS/RTP/SAVPF 111 103 104 9 102 0 8 106 105 13 110 112 113 126
+        ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 ` +
         external_ip +
         `
@@ -440,12 +436,11 @@ a=rtcp:9 IN IP4 0.0.0.0
 a=ice-pwd:` +
         ice_pwd +
         `
-a=ice-options:trickle renomination
 a=fingerprint:sha-256 ` +
         fingerprint +
         `
 a=setup:active
-a=mid:audio
+a=mid:0
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
@@ -457,7 +452,6 @@ a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
 a=rtpmap:104 ISAC/32000
 a=rtpmap:9 G722/8000
-a=rtpmap:102 ILBC/8000
 a=rtpmap:0 PCMU/8000
 a=rtpmap:8 PCMA/8000
 a=rtpmap:106 CN/32000
@@ -492,12 +486,11 @@ a=ice-ufrag:` +
 a=ice-pwd:` +
         ice_pwd +
         `
-a=ice-options:trickle renomination
 a=fingerprint:sha-256 ` +
         fingerprint +
         `
 a=setup:active
-a=mid:video
+a=mid:1
 a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
 a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
 a=extmap:13 urn:3gpp:video-orientation
@@ -543,36 +536,12 @@ ${
           '\r\n' +
           'a=ssrc:' +
           ssrc[1] +
-          ' cname:qwjy1Thr/obQUvqd\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' msid:' +
-          msid +
-          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' mslabel:' +
-          msid +
+          ' cname:0v7phLz3L82cIhVT' +
           '\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
+          `a=ssrc:` +
           ssrc[2] +
-          ' cname:qwjy1Thr/obQUvqd\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' msid:' +
-          msid +
-          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' mslabel:' +
-          msid +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n'
+          ' cname:0v7phLz3L82cIhVT' +
+          '\r\n'
         : ''
 }m=application 9 UDP/DTLS/SCTP webrtc-datachannel
 c=IN IP4 0.0.0.0
@@ -583,12 +552,11 @@ a=ice-ufrag:` +
 a=ice-pwd:` +
         ice_pwd +
         `
-a=ice-options:trickle renomination
 a=fingerprint:sha-256 ` +
         fingerprint +
         `
 a=setup:active
-a=mid:data
+a=mid:2
 a=sctp-port:5000
 a=max-message-size:262144
 `
