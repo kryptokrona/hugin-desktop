@@ -128,7 +128,7 @@ a=msid-semantic: WMS ` +
         `
 m=audio ` +
         external_ports[0] +
-        ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+        ` UDP/TLS/RTP/SAVPF 111 103
 c=IN IP4 ` +
         external_ip +
         `
@@ -155,17 +155,6 @@ a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
-a=rtpmap:104 ISAC/32000
-a=rtpmap:9 G722/8000
-a=rtpmap:0 PCMU/8000
-a=rtpmap:8 PCMA/8000
-a=rtpmap:106 CN/32000
-a=rtpmap:105 CN/16000
-a=rtpmap:13 CN/8000
-a=rtpmap:110 telephone-event/48000
-a=rtpmap:112 telephone-event/32000
-a=rtpmap:113 telephone-event/16000
-a=rtpmap:126 telephone-event/8000
 a=ssrc:` +
         ssrc[0] +
         ` cname:c2J8K3mNIXGEi9qt
@@ -184,7 +173,7 @@ a=ssrc:` +
         ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
 m=video ` +
         external_ports[external_ports.length / 3] +
-        ` UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 127
+        ` UDP/TLS/RTP/SAVPF 96 97
 c=IN IP4 ` +
         external_ip +
         `
@@ -226,18 +215,6 @@ a=rtcp-fb:96 nack
 a=rtcp-fb:96 nack pli
 a=rtpmap:97 rtx/90000
 a=fmtp:97 apt=96
-a=rtpmap:98 VP9/90000
-a=rtcp-fb:98 goog-remb
-a=rtcp-fb:98 transport-cc
-a=rtcp-fb:98 ccm fir
-a=rtcp-fb:98 nack
-a=rtcp-fb:98 nack pli
-a=rtpmap:99 rtx/90000
-a=fmtp:99 apt=98
-a=rtpmap:100 red/90000
-a=rtpmap:101 rtx/90000
-a=fmtp:101 apt=100
-a=rtpmap:127 ulpfec/90000
 ${
     type == 'Δ'
         ? 'a=ssrc-group:FID ' +
@@ -423,7 +400,7 @@ a=msid-semantic: WMS ` +
         `
 m=audio ` +
         external_port +
-        ` UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+        ` UDP/TLS/RTP/SAVPF 111 103
 c=IN IP4 ` +
         external_ip +
         `
@@ -450,17 +427,6 @@ a=rtpmap:111 opus/48000/2
 a=rtcp-fb:111 transport-cc
 a=fmtp:111 minptime=10;useinbandfec=1
 a=rtpmap:103 ISAC/16000
-a=rtpmap:104 ISAC/32000
-a=rtpmap:9 G722/8000
-a=rtpmap:0 PCMU/8000
-a=rtpmap:8 PCMA/8000
-a=rtpmap:106 CN/32000
-a=rtpmap:105 CN/16000
-a=rtpmap:13 CN/8000
-a=rtpmap:110 telephone-event/48000
-a=rtpmap:112 telephone-event/32000
-a=rtpmap:113 telephone-event/16000
-a=rtpmap:126 telephone-event/8000
 a=ssrc:` +
         ssrc[0] +
         ` cname:c2J8K3mNIXGEi9qt
@@ -477,7 +443,7 @@ a=ssrc:` +
 a=ssrc:` +
         ssrc[0] +
         ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video 9 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 127
+m=video 9 UDP/TLS/RTP/SAVPF 96 97
 c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
 a=ice-ufrag:` +
@@ -515,18 +481,6 @@ a=rtcp-fb:96 nack
 a=rtcp-fb:96 nack pli
 a=rtpmap:97 rtx/90000
 a=fmtp:97 apt=96
-a=rtpmap:98 VP9/90000
-a=rtcp-fb:98 goog-remb
-a=rtcp-fb:98 transport-cc
-a=rtcp-fb:98 ccm fir
-a=rtcp-fb:98 nack
-a=rtcp-fb:98 nack pli
-a=rtpmap:99 rtx/90000
-a=fmtp:99 apt=98
-a=rtpmap:100 red/90000
-a=rtpmap:101 rtx/90000
-a=fmtp:101 apt=100
-a=rtpmap:127 ulpfec/90000
 ${
     type == 'δ'
         ? 'a=ssrc-group:FID ' +
