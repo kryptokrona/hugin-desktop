@@ -28,7 +28,7 @@ const {createReadStream} = require("fs");
 const { 
     expand_sdp_answer, 
     expand_sdp_offer, 
-    parse_sdp } = require("./sdp2.cjs")
+    parse_sdp } = require("./sdp.cjs")
 const {
     sleep, 
     trimExtra, 
