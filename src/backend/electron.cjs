@@ -1080,6 +1080,7 @@ async function sendGroupsMessage(message, offchain = false) {
     }
 }
 
+
 async function decryptRtcMessage(message) {
     let hash = message.substring(0, 64)
     let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
