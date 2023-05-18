@@ -19,6 +19,7 @@
         { name: 'Norway',          key: 'c70fb6179cecf1c3438d5789b2bac13e8231a97717ac0c16f9d0039a314dfb0c' },
         { name: 'Denmark',         key: '1ca321697271265b2ce80f4dd70632682915aef8fc6bbd8be0492673e9ffda72' },
         { name: 'Finland',         key: '6e0861b7e3bcb3c83040d6003f2cd407bb249959f5c6c0959ac1de4f91f6e756' },
+        { name: 'China',           key: '03aed1def7f6010f810c3347cab7970a0c5a6950fb0fccb75b10b891c4181400' },
     ]
 
     $: groupSuggestions = standardGroups.filter(a => !$groups.groupArray.map(b=>b.key).includes(a.key))
