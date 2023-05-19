@@ -1,6 +1,6 @@
 <script>
     import {fade} from 'svelte/transition'
-    import {groups} from '$lib/stores/user.js'
+    import {groups, swarm, user} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {layoutState} from '$lib/stores/layout-state.js'
     import {flip} from 'svelte/animate'
@@ -40,6 +40,8 @@ $: activeHugins = $groups.activeHugins
 
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
+$: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
+
 </script>
 
 
@@ -47,7 +49,14 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
     <div class="top">
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
         <br />
+        <div class="swarm">
+        {#if !activeSwarm}
+        <p on:click={window.api.send("new-swarm", $groups.thisGroup.key, $user.huginAddress.substring(0,99))}>Activate</p>
+        {:else}
+        <p on:click={window.api.send("end-swarm", $groups.thisGroup.key)}>Disconnect</p>
         <br />
+        {/if}
+        </div>
     </div>
         <div class="list-wrapper">
             {#each activeList as user}
@@ -66,6 +75,11 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
 </div>
 
 <style lang="scss">
+
+.swarm {
+    cursor: pointer;
+}
+
 .nickname {
     margin: 0;
     word-break: break-word;
