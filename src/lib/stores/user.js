@@ -101,3 +101,10 @@ export const userAvatar = derived(user, ($user) => {
         return get_avatar($user.huginAddress.substring(0, 99))
     }
 })
+
+export const swarm = writable({
+    active: [],
+    voice_channel: [],
+    call: []
+})
+
