@@ -1,7 +1,7 @@
 <script>
   import {createEventDispatcher, onDestroy, onMount} from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
-  import {boards, webRTC, groups, beam} from '$lib/stores/user.js'
+  import {boards, webRTC, groups, beam, swarm} from '$lib/stores/user.js'
   import {page} from '$app/stores'
   import {user} from '$lib/stores/user.js'
   import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -74,7 +74,8 @@
     dispatch('message', {
       text: msg,
       offChain: off_chain,
-      beam: activeBeam
+      beam: activeBeam,
+      swarm: activeSwarm
     })
     resetInputHeight()
     messageInput = ''
@@ -119,6 +120,17 @@
       activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
     } else {
       activeBeam = false
+    }
+  }
+
+  let activeSwarm = false
+  $: console.log("active swarm", activeSwarm)
+
+  $: {
+    if ($swarm.active.length) {
+      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key);
+    } else {
+      activeSwarm = false
     }
   }
 
