@@ -10,6 +10,7 @@ const WINDOW_API = {
         ipcRenderer.sendSync(channel, data)
     },
     receive: (channel, func) => {
+        console.log("Receive bug?", channel)
         ipcRenderer.on(channel, (event, ...args) => func(...args))
     },
 
@@ -24,9 +25,9 @@ const WINDOW_API = {
         ipcRenderer.send('sendBoardMsg', msg)
     },
 
-    sendGroupMessage: (msg, offchain) => {
-        console.log('Send group msg', msg, offchain)
-        ipcRenderer.send('sendGroupsMessage', msg, offchain)
+    sendGroupMessage: (msg, offchain, swarm) => {
+        console.log('Send group msg', msg, offchain, swarm)
+        ipcRenderer.send('sendGroupsMessage', msg, offchain, swarm)
     },
 
     decryptMessage: (msg) => {
