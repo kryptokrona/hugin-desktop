@@ -7,7 +7,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm} from '$lib/stores/user.js'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
 
@@ -358,6 +358,48 @@
         console.log('lcocalfiles', $localFiles)
     })
 
+    window.api.receive('swarm-connected', async (data)  => { 
+        console.log(
+            'Swarm connected', data
+        )
+        $swarm.active.push(data)
+        $swarm.active = $swarm.active
+    })
+
+    window.api.receive('swarm-disconnected', async (topic)  => { 
+        let remove = $swarm.active.find(a => a.topic === topic)
+        $swarm.active.pop(remove)
+        $swarm.active = $swarm.active
+    })
+
+    window.api.receive('peer-connected', async (data)  => { 
+        let joined = $swarm.active.find(a => a.topic === data.topic)
+        joined.connections.push(data)
+        $swarm.active = $swarm.active
+    })
+
+    window.api.receive('peer-disconnected', async (data)  => { 
+        let joined = $swarm.active.find(a => a.topic === data.topic)
+        let connections = joined.connections.find(a => a.address === data.address)
+        connections.pop(data)
+        $swarm.active = $swarm.active
+    })
+
+    window.api.receive('voice-channel-status', async (data)  => { 
+        let status = $swarm.active.find(a => a.topic === data.topic)
+        if (data.voice === true) {
+            let user = status.connections.find(a => a.address === data.address)
+            data.name = user.name
+            status.voice_channel.push(data)
+        } else {
+           let remove = status.voice_channel.find(a => a.address === data.address)
+           status.voice_channel.pop(remove)
+        }
+        
+
+        $swarm.active = $swarm.active
+    })
+
     window.api.receive('uploading', (data)  => { 
         setUploadStatus(data)
     })
@@ -476,6 +518,16 @@
                 />
             {/if}
         {/each}
+    {/if}
+
+    {#if ($user.loggedIn && $swarm.call.length != 0)}
+
+    {#each $swarm.call as connection}
+        {#if $swarm.call.some((a) => a.peerAudio === true)}
+            <PeerAudio audioCall="{connection}"/>
+        {/if}
+    {/each}
+
     {/if}
 
     {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
