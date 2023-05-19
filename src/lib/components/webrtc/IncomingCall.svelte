@@ -28,11 +28,8 @@ onMount(() => {
     }
     video = $webRTC.devices.some((a) => a.kind == 'videoinput')
     if (video) return
-    console.log('no video device found')
     video = false
 })
-
-$: console.log('video status', video)
 
 //When a user clicks answer
 const handleAnswer = async () => {
@@ -43,19 +40,18 @@ const handleAnswer = async () => {
     let caller = $user.contacts.find((a) => a.chat === thisCall.chat)
     console.log('caller', caller)
     let offchain = false
-
+    let message = thisCall.msg
     if ($webRTC.groupCall) {
         offchain = true
     }
-    //If video call incoming and no video device is plugged in
-    if (thisCall.msg.substring(0, 1) == 'Δ' && !video) {
-        let errMessage = 'You have no video device'
-        window.api.errorMessage(errMessage)
-        return
+     //If video call incoming and no video device is plugged in
+     if (thisCall.msg.substring(0, 1) == 'Δ' && !video) {
+        //Pretend its a voice call and answer only with audio
+        message = thisCall.msg.replace("Δ", "Λ")
     }
-    console.log('offchain?', offchain)
+  
     //We delay the answerCall for routing purposes
-    window.api.answerCall(thisCall.msg, thisCall.chat, caller.key, offchain)
+    window.api.answerCall(message, thisCall.chat, caller.key, offchain)
 
     //We pause the ringtone and destroy the popup
     ringtone.pause()
