@@ -80,7 +80,11 @@ const sendGroupMsg = async (e) => {
     let time = Date.now()
     let myName = $user.username
     let group = thisGroup
-
+    let swarm = false
+    
+    if (e.detail.swarm) {
+        swarm = true
+    }
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
@@ -106,7 +110,7 @@ const sendGroupMsg = async (e) => {
         hash: time,
     }
     
-    window.api.sendGroupMessage(sendMsg)
+    window.api.sendGroupMessage(sendMsg, swarm, swarm)
     printGroupMessage(myGroupMessage)
     replyExit()
     scrollDown()

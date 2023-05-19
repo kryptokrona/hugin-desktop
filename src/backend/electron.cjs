@@ -81,6 +81,7 @@ const {
 } = require('kryptokrona-utils')
 
 const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile } = require("./beam.cjs")
+const { newSwarm, sendSwarmMessage, endSwarm} = require("./swarm.cjs")
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
@@ -988,7 +989,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
     return payload_hex
 }
 
-async function sendGroupsMessage(message, offchain = false) {
+async function sendGroupsMessage(message, offchain = false, swarm = false) {
     const my_address = message.k
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
@@ -1071,6 +1072,10 @@ async function sendGroupsMessage(message, offchain = false) {
         let randomKey = await createGroup()
         let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
         let sendMsg = randomKey + '99' + sentMsg
+        if (swarm) {
+            sendSwarmMessage(sendMsg, group)
+            return
+        }
         let messageArray = [sendMsg]
         mainWindow.webContents.send('rtc_message', messageArray, true)
         mainWindow.webContents.send('sent_rtc_group', {
@@ -1736,8 +1741,8 @@ ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => 
 
 //GROUPS
 
-ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
-    sendGroupsMessage(msg, offchain)
+ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
+    sendGroupsMessage(msg, offchain, swarm)
 })
 
 ipcMain.handle('getGroups', async (e) => {
@@ -2041,6 +2046,22 @@ ipcMain.on('download-update', (e) => {
 ipcMain.on('install-update', async (e, data) => {
     autoUpdater.quitAndInstall()
 })
+
+ipcMain.on('new-swarm', async (e, key, myAddress, name) => {
+
+    let topic = await hashPassword(key)
+    console.log("Topic and key", topic)
+    console.log("", key)
+    newSwarm(topic, key, sender, getXKRKeypair(), myAddress, name)
+})
+ipcMain.on('end-swarm', async (e, key) => {
+
+    let topic = await hashPassword(key)
+    console.log("TEnding opic and key", topic)
+    console.log("", key)
+    endSwarm(topic)
+})
+
 
 
 
