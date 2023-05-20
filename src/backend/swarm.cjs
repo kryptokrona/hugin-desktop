@@ -248,14 +248,14 @@ const incomingMessage = async (data, addr, connection) => {
     const str = new TextDecoder().decode(data);
     if (str === "Ping") return
     //if (checkDataMessage(str, addr, connection)) return
-    let hash = str.substring(0,64)
-    let [message, time, hsh] = decryptSwarmMessage(str, hash, key)
-    if (!message) return
     let check = checkJoinMessage(message, connection)
     if (check === "Error") {
         //Close connection.
     }
     if (check) return
+    let hash = str.substring(0,64)
+    let [message, time, hsh] = decryptSwarmMessage(str, hash, key)
+    if (!message) return
 
     let msg = await saveGroupMsg(message, hsh, time)
         //Send new board message to frontend.
