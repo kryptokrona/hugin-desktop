@@ -51,7 +51,7 @@ $: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
         <br />
         <div class="swarm">
         {#if !activeSwarm}
-        <p on:click={window.api.send("new-swarm", $groups.thisGroup.key, $user.huginAddress.substring(0,99))}>Activate</p>
+        <p on:click={window.api.send("new-swarm", $groups.thisGroup.key, $user.huginAddress.substring(0,99), $user.username)}>Activate</p>
         {:else}
         <p on:click={window.api.send("end-swarm", $groups.thisGroup.key)}>Disconnect</p>
         <br />

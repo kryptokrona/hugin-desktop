@@ -108,7 +108,7 @@ const createSwarm = async (topic, key, name) => {
         swarm = new HyperSwarm(
             {firewall (remotePublicKey, payload) {
             return !remotePublicKey.equals(keypair.publicKey)
-        }})
+        }}, {keyPair: keypair})
 
     } catch (e) {
         console.log('Error starting swarm')
@@ -119,9 +119,9 @@ const createSwarm = async (topic, key, name) => {
     sender('swarm-connected', {topic, key, channels: [], voice_channel: []})
     console.log('active swarms', active_swarms)
 
-
     swarm.on('connection', (connection, information) => {
 
+        console.log("Connection! ************")
         active.connections.push(connection)
         sendJoinedMessage(key, name)
         checkIfOnline(topic)
@@ -170,12 +170,13 @@ const get_active = (topic) => {
 }
 
 const checkJoinMessage = async (data, connection) => {
-    
+
     try {
         data = JSON.parse(data)
     } catch (e) {
         return false
     }
+    console.log("Got join message *********", data)
 
     if (typeof data === "object") {
 
