@@ -100,6 +100,7 @@ const createSwarm = async (topic, key, name) => {
 
     let active = active_swarms.find(a => a.key === key)
     let secret = Buffer.alloc(32).fill(key)
+    //Derive new secret?
     let keypair = DHT.keyPair(secret)
     let discovery
     let swarm
@@ -108,8 +109,7 @@ const createSwarm = async (topic, key, name) => {
         swarm = new HyperSwarm(
             {firewall (remotePublicKey, payload) {
             return !remotePublicKey.equals(keypair.publicKey)
-        }}, {keyPair: keypair})
-
+        }, keyPair: keypair})
     } catch (e) {
         console.log('Error starting swarm')
         return
