@@ -77,7 +77,7 @@ const set_voice_channel_status = (data) => {
 }
 
 const set_leave_voice_channel_status = () => {
-    active_voice_channel = {}
+    active_voice_channel = {joined: false, topic: ""}
 }
 
 const endSwarm = async (topic) => {
