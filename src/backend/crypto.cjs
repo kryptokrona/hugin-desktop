@@ -1,4 +1,4 @@
-const { sleep, hexToUint, nonceFromTimestamp } = require('./utils.cjs');
+const { sleep, hexToUint, nonceFromTimestamp, trimExtra } = require('./utils.cjs');
 const naclUtil = require('tweetnacl-util')
 const nacl = require('tweetnacl')
 const {Address,CryptoNote} = require('kryptokrona-utils')
@@ -33,11 +33,11 @@ const decryptSwarmMessage = async (tx, hash, group_key) => {
     const from = payload_json.k
 
     const verified = await verifySignature(payload_json.m, from, payload_json.s)
-    if (!verified) return false
+    if (!verified) return [false]
 
     payload_json.sent = false
 
-    return [payload_json, tx.t, hash]
+    return [payload_json, json.t, hash]
 
     } catch {
         return [false]
