@@ -51,7 +51,7 @@ const joinVoiceChannel = () => {
         if (!disconnectFromActiveVoice()) return
     }
     console.log("Want to Join new voice")
-    voice_channel.push({address: $user.huginAddress.substring(0,99), name: "nils", key: group.key })
+    voice_channel.push({address: $user.huginAddress.substring(0,99), name: $user.username, key: group.key })
     $swarm.voice_channel = voice_channel
     console.log("voice", voice_channel)
     window.api.send("join-voice", group.key)

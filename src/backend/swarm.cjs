@@ -2,7 +2,7 @@ const HyperSwarm = require("hyperswarm");
 const DHT = require('@hyperswarm/dht')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep } = require('./utils.cjs');
+const { sleep, trimExtra } = require('./utils.cjs');
 const {saveGroupMsg} = require("./database.cjs")
 const {
     ipcMain
@@ -45,7 +45,6 @@ const send_voice_channel_status = async (joined = false, key) => {
     })
 
     console.log("data", data)
-    console.log("Sent joined mesg")
 
     if (joined) { 
 
@@ -61,6 +60,8 @@ const send_voice_channel_status = async (joined = false, key) => {
         set_leave_voice_channel_status()
     }
     sendSwarmMessage(data, key)
+    
+    console.log("Sent joined voice mesg")
 }
 
 const join_voice_channel = (connection, key, topic, address) => {
@@ -71,7 +72,6 @@ const join_voice_channel = (connection, key, topic, address) => {
 const newSwarm = async (topic, key, ipc, xkr_keys, xkr_address, name) => {
     sender = ipc
     chat_keys = xkr_keys
-    console.log("xkr adress", xkr_address)
     my_address = xkr_address
     return await createSwarm(topic, key, name)
 }
@@ -85,7 +85,7 @@ const set_leave_voice_channel_status = () => {
 }
 
 const endSwarm = async (topic) => {
-    let active = active_swarms.find(a => a.chat === topic)
+    let active = active_swarms.find(a => a.topic === topic)
     active.connections.forEach(chat => {
         chat.write(JSON.stringify({type: "disconnected"}))
     })
@@ -100,7 +100,7 @@ const endSwarm = async (topic) => {
 
 const createSwarm = async (hash, key, name) => {
 
-    active_swarms.push({key, chat: hash, connections: [], call: []})
+    active_swarms.push({key, topic: hash, connections: [], call: []})
 
     let active = active_swarms.find(a => a.key === key)
     let secret = Buffer.alloc(32).fill(key)
@@ -121,18 +121,18 @@ const createSwarm = async (hash, key, name) => {
     console.log("My public!", keypair.publicKey)
     console.log("swarm key", swarm.keyPair.publicKey)
     active.swarm = swarm
-    sender('swarm-connected', {hash, key, channels: [], voice_channel: []})
+    sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
     console.log('active swarms', active_swarms)
 
     swarm.on('connection', (connection, information) => {
 
-        console.log("Connection! ************")
+        console.log("*********Got new Connection! ************")
         active.connections.push(connection)
         sendJoinedMessage(key, name, hash)
         checkIfOnline(hash)
         connection.on('data', async data => {
 
-            incomingMessage(data, hash, connection)
+            incomingMessage(data, hash, connection, key)
 
         })
 
@@ -163,15 +163,16 @@ const createSwarm = async (hash, key, name) => {
 }
 
 const connection_closed = (conn, topic) => {
+    console.log("Connection cloesd")
     let active = get_active(topic)
     if (!active) return
     let connection = active.connections.find(a => conn)
     sender("peer-disconnected", {address: connection.address, topic})
-    active.connection.pop(connection)
+    active.connections.pop(connection)
 }
 
 const get_active = (topic) => {
-    let active = active_swarms.find(a => a.chat === topic)
+    let active = active_swarms.find(a => a.topic === topic)
     if (!active) return false
     return active
 }
@@ -208,6 +209,9 @@ const checkJoinMessage = async (data, connection) => {
 
         if ('voice' in data) {
 
+            console.log("Got voice joined", data)
+            console.log("Got data voice joined status", data.voice)
+            console.log("Check connection voice status", con.voice)
             if (data.voice === con.voice) return true
             if (data.address !== con.address) return "Error"
             con.voice = data.voice ? true : false
@@ -215,6 +219,7 @@ const checkJoinMessage = async (data, connection) => {
         }
 
         if ('offer' in data) {
+            console.log("Got voice offer / answer", data)
             if (!active_voice_channel.joined === true && active_voice_channel.topic === data.topic) return
             
             if (data.offer === true) {
@@ -252,21 +257,23 @@ const sendJoinedMessage = async (key, name, topic) => {
     sendSwarmMessage(data, key)
 }
 
-const incomingMessage = async (data, addr, connection) => {
+const incomingMessage = async (data, addr, connection, key) => {
           
     console.log("Got data incoming", data)
     const str = new TextDecoder().decode(data);
     if (str === "Ping") return
     //if (checkDataMessage(str, addr, connection)) return
-    let check = checkJoinMessage(data, connection)
+    let check = await checkJoinMessage(data, connection)
     if (check === "Error") {
         //Close connection.
     }
     if (check) return
     let hash = str.substring(0,64)
-    let [message, time, hsh] = decryptSwarmMessage(str, hash, key)
+    console.log("Message incoming", str)
+    let [message, time, hsh] = await decryptSwarmMessage(str, hash, key)
+    console.log("Decrypted", message)
     if (!message) return
-
+    console.log("Message", message)
     let msg = await saveGroupMsg(message, hsh, time)
         //Send new board message to frontend.
         sender('groupMsg', msg)
@@ -276,6 +283,7 @@ const incomingMessage = async (data, addr, connection) => {
 
 
 const sendSwarmMessage = (message, key) => {
+    console.log("Sending swarm msg", message)
     let active = active_swarms.find(a => a.key === key)
     active.connections.forEach(chat => {
         chat.write(message)
@@ -287,7 +295,7 @@ const sendSwarmMessage = (message, key) => {
 const checkIfOnline = (addr) => {
     let interval = setInterval(ping, 10 * 1000)
     function ping() {
-        let active = active_swarms.find(a => a.chat === addr)
+        let active = active_swarms.find(a => a.topic === addr)
         if (!active) {
             clearInterval(interval)
             return
