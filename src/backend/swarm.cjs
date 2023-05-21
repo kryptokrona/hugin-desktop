@@ -46,25 +46,26 @@ const send_voice_channel_status = async (joined = false, key) => {
 
     console.log("data", data)
 
+    sendSwarmMessage(data, key)
     if (joined) { 
 
         set_voice_channel_status(data)
         if (!active.connections.some(a => a.voice === true)) return
         let active_voice = active.connections.filter(a => a.voice === true)
-        active_voice.forEach(user => {
-           join_voice_channel(user, key, active.topic, user.address)
+        active_voice.forEach(async function(user) {
+            await sleep(300)
+           join_voice_channel(key, active.topic, user.address)
         })
 
 
-    } else if ( !joined) {
+    } else {
         set_leave_voice_channel_status()
     }
-    sendSwarmMessage(data, key)
     
     console.log("Sent joined voice mesg")
 }
 
-const join_voice_channel = (connection, key, topic, address) => {
+const join_voice_channel = (key, topic, address) => {
     sender("join-voice-channel", {key, topic, address})
 }
 
@@ -103,22 +104,24 @@ const createSwarm = async (hash, key, name) => {
     active_swarms.push({key, topic: hash, connections: [], call: []})
 
     let active = active_swarms.find(a => a.key === key)
-    let secret = Buffer.alloc(32).fill(key)
-    //Derive new secret?
-    let keypair = DHT.keyPair(secret)
-    let discovery
-    let swarm
     
+    let discovery
+    let swarm 
+    //Derive new secret?
+    let secret = Buffer.alloc(32).fill(key)
+    let keyPair = DHT.keyPair(secret)
+
     try {
         swarm = new HyperSwarm({firewall (remotePublicKey, payload) {
-            return !remotePublicKey.equals(keypair.publicKey)
-            }, keyPair: keypair})
+            console.log("payload? key?", remotePublicKey)
+            return !remotePublicKey.equals(keyPair.publicKey)
+            }, keyPair})
     } catch (e) {
         console.log('Error starting swarm')
         return
     }      
 
-    console.log("My public!", keypair.publicKey)
+    console.log("My public!", keyPair.publicKey)
     console.log("swarm key", swarm.keyPair.publicKey)
     active.swarm = swarm
     sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
@@ -129,7 +132,7 @@ const createSwarm = async (hash, key, name) => {
         console.log("*********Got new Connection! ************")
         active.connections.push(connection)
         sendJoinedMessage(key, name, hash)
-        checkIfOnline(hash)
+        //checkIfOnline(hash)
         connection.on('data', async data => {
 
             incomingMessage(data, hash, connection, key)
@@ -177,7 +180,7 @@ const get_active = (topic) => {
     return active
 }
 
-const checkJoinMessage = async (data, connection) => {
+const checkJoinMessage = async (data, connection, topic) => {
 
     try {
         data = JSON.parse(data)
@@ -188,11 +191,10 @@ const checkJoinMessage = async (data, connection) => {
 
     if (typeof data === "object") {
 
-        let active = get_active(data.topic)
+        let active = get_active(topic)
         console.log("Got active", active)
         if (!active) return "Error"
         let con = active.connections.find(a => a === connection)
-        console.log("Verify this", con)
         const verified = await verifySignature(data.message, data.address, data.signature)
         if(!verified) return "Error"
 
@@ -229,6 +231,12 @@ const checkJoinMessage = async (data, connection) => {
             }
             return true
         }
+
+        if ('type' in data) {
+            if (data.type === "disconnected") {
+                connection_closed(connection, active.topic)
+            }
+        }
     }
 
     return false
@@ -257,13 +265,13 @@ const sendJoinedMessage = async (key, name, topic) => {
     sendSwarmMessage(data, key)
 }
 
-const incomingMessage = async (data, addr, connection, key) => {
+const incomingMessage = async (data, topic, connection, key) => {
           
     console.log("Got data incoming", data)
     const str = new TextDecoder().decode(data);
     if (str === "Ping") return
     //if (checkDataMessage(str, addr, connection)) return
-    let check = await checkJoinMessage(data, connection)
+    let check = await checkJoinMessage(data, connection, topic)
     if (check === "Error") {
         //Close connection.
     }
