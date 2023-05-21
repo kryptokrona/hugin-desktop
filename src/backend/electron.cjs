@@ -2047,12 +2047,10 @@ ipcMain.on('install-update', async (e, data) => {
     autoUpdater.quitAndInstall()
 })
 
-ipcMain.on('new-swarm', async (e, key, myAddress, name) => {
+ipcMain.on('new-swarm', async (e, data) => {
 
-    let topic = await hashPassword(key)
-    console.log("Topic and key", topic)
-    console.log("", key)
-    newSwarm(topic, key, sender, getXKRKeypair(), myAddress, name)
+    let topic = await hashPassword(data.key)
+    newSwarm(topic, data.key, sender, getXKRKeypair(), data.address, data.name)
 })
 ipcMain.on('end-swarm', async (e, key) => {
 
