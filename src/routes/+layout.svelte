@@ -28,6 +28,7 @@
     import OptimizeToast from '$lib/components/custom-toasts/OptimizeToast.svelte'
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
+import { sleep } from '$lib/utils/utils'
 
     let ready = false
     let incoming_call
@@ -94,6 +95,7 @@
         //Handle incoming call
         window.api.receive('call-incoming', async (msg, chat, group = false) => {
             console.log('chat', chat)
+            await sleep(500)
             let incoming = $user.contacts.find((a) => a.chat === chat)
             console.log('contacts set???', $user.contacts)
             incoming_call = true
@@ -157,9 +159,14 @@
             }
             new_messages = true
             data.key = data.address
-            if ($notify.new.length < 5) {
+            if ($notify.new.length < 2) {
                 board_message_sound.play()
                 $notify.new.push(data)
+            } else {
+                toast.success(`${$notify.new.length} new group messages`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
             }
             $notify.new = $notify.new
         })
@@ -480,20 +487,15 @@
 
     {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
         <div class="notifs">
+            {#if $notify.new.length < 2}
             {#each $notify.new as notif}
                 <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
             {/each}
+            {/if}
+
         </div>
     {/if}
 
-
-    {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
-        <div class="notifs">
-            {#each $notify.new as notif}
-                <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
-            {/each}
-        </div>
-    {/if}
 
     {#if $user.loggedIn}
         <LeftMenu/>
