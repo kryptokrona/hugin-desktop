@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store'
 
 // items
-const uri = 'https://raw.githubusercontent.com/kryptokrona/kryptokrona-nodes-list/master/nodes.json'
+const uri = 'https://raw.githubusercontent.com/kryptokrona/kryptokrona-public-nodes/main/nodes.json'
 
 export const nodelist = writable([])
 
