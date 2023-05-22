@@ -3,7 +3,6 @@
     import { misc } from '$lib/stores/user.js'
     import {layoutState} from '$lib/stores/layout-state.js'
     import { onMount } from 'svelte'
-    import { fade } from 'svelte/transition'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
 
     let synced = false
@@ -69,7 +68,7 @@
         on:click="{() => ($layoutState.showNodeSelector = true)}"
     />
 </div>
-<div class="settings" in:fade>
+<div class="settings">
 <div class="nodestatus">
 
     <div class="node">

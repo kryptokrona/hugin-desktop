@@ -8,7 +8,7 @@ import { onDestroy, onMount } from 'svelte'
 import toast from 'svelte-french-toast'
 import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 import {layoutState} from "$lib/stores/layout-state.js";
-import { sleep } from '$lib/utils/utils'
+import { sleep } from '$lib/utils/utils.js'
 
 let myPassword = ""
 let enableLogin = false

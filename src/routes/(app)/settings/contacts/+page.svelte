@@ -1,12 +1,11 @@
 <script>
-import { groups } from "$lib/stores/user"
-import { get_avatar } from "$lib/utils/hugin-utils"
-import { fade } from "svelte/transition"
+import { groups } from "$lib/stores/user.js"
+import { get_avatar } from "$lib/utils/hugin-utils.js"
 
 </script>
 
 <h2>Contacts</h2>
-<div class="settings" in:fade>
+<div class="settings">
     <div class="inner blocklist">
         <div class="list-wrapper">
             <h4>Block list</h4>

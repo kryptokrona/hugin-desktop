@@ -564,6 +564,7 @@ async function start_js_wallet(walletName, password, node) {
     mainWindow.webContents.send('addr', myAddress + msgKey)
 
     sendNodeInfo()
+    
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {

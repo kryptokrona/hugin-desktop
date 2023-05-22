@@ -11,7 +11,7 @@ import Rename from '$lib/components/chat/Rename.svelte'
 import BackDrop from '$lib/components/popups/BackDrop.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
-import { sleep } from '$lib/utils/utils'
+import { sleep } from '$lib/utils/utils.js'
 import FileViewer from '$lib/components/popups/FileViewer.svelte'
 import { fileSettings, fileViewer } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
@@ -271,14 +271,14 @@ const hideModal = () => {
     <SendTransaction on:click="{hideModal}" on:send="{(e) => sendTransaction(e)}" />
 {/if}
 
-<main in:fade="{{ duration: 350 }}">
+<div class="flex w-full h-full" in:fade="{{ duration: 350 }}">
     <ChatList
         on:openRename="{(a) => openRename(a)}"
         on:conversation="{(e) => printConversation(e.detail)}"
         on:open="{openAdd}"
     />
 
-    <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
+    <div class="right_side" in:fade="{{ duration: 350 }}">
         <div class="fade"></div>
         <div class="outer" id="chat_window" bind:this={windowChat} bind:clientHeight={windowHeight}>
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
@@ -299,12 +299,11 @@ const hideModal = () => {
         </div>
         <ChatInput on:message="{sendMsg}" />
     </div>
-</main>
+</div>
 
 <style lang="scss">
 main {
     display: flex;
-    margin-left: 85px;
     height: 100vh;
     overflow: hidden;
     z-index: 3;
@@ -317,7 +316,6 @@ main {
     justify-content: flex-end;
     position: relative;
     width: 100%;
-    margin-right: 170px;
 }
 
 .inner {

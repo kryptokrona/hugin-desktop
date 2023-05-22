@@ -2,8 +2,7 @@
 <script>
 import Button from "$lib/components/buttons/Button.svelte"
 import RescanHeight from "$lib/components/popups/RescanHeight.svelte"
-import { js_wallet } from "$lib/stores/wallet"
-import { fade } from "svelte/transition"
+import { js_wallet } from "$lib/stores/wallet.js"
 
 let showKeys = false
 let showMnemonic = false
@@ -44,7 +43,7 @@ $: {
     <Button text="Rescan wallet" enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
 </div>
 
-<div class="settings" in:fade>
+<div class="settings">
     <div class="inner keys">
         <h3>Private keys</h3>
         <div class="button">
@@ -57,12 +56,12 @@ $: {
         <br />
         {#if showKeys}
             <h6>Spend Key</h6>
-            <p style="user-select: text;" in:fade type="text">
+            <p style="user-select: text;" type="text">
                 {privateSpendKey}
             </p>
 
             <h6>View key</h6>
-            <p style="user-select: text;" in:fade type="text">
+            <p style="user-select: text;" type="text">
                 {privateViewKey}
             </p>
         {/if}
@@ -76,7 +75,7 @@ $: {
         <br />
         {#if showMnemonic}
             <h6>Mnemonic seed</h6>
-            <p style="user-select: text;" in:fade type="text">
+            <p style="user-select: text;" type="text">
                 {seedPhrase}
             </p>
         {/if}

@@ -146,7 +146,7 @@
 
 <svelte:window on:keyup="{keyup}" on:keydown="{keydown}"/>
 
-<div class="wrapper" class:rtc
+<div class="flex w-full p-2" class:rtc
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
     <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}></textarea>

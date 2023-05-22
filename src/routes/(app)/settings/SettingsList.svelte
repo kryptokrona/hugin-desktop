@@ -1,7 +1,7 @@
 <script>
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import {fade} from 'svelte/transition'
-    import Category from '/src/routes/settings/Category.svelte'
+    import Category from '/src/routes/(app)/settings/Category.svelte'
 
     let nodeIcon = ""
 

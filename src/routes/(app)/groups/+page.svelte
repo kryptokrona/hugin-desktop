@@ -10,7 +10,7 @@ import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
-import { containsOnlyEmojis } from '$lib/utils/utils'
+import { containsOnlyEmojis } from '$lib/utils/utils.js'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
 
@@ -397,8 +397,6 @@ h1 {
 
 main {
     display: flex;
-    margin-left: 85px;
-    margin-right: 0px;
     z-index: 3;
     height: 100vh;
     width: 100%;
@@ -446,7 +444,6 @@ p {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    position: relative;
     width: 100%;
 }
 

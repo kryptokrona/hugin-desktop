@@ -1,6 +1,5 @@
 <script>
 import Button from "$lib/components/buttons/Button.svelte"
-import { fade } from "svelte/transition"
 import {misc} from '$lib/stores/user.js'
 
 </script>
@@ -13,7 +12,7 @@ import {misc} from '$lib/stores/user.js'
     on:click="{() => window.api.send('check-new-release')}"
 />
 </div>
-<div class="settings" in:fade>
+<div class="settings">
     <p>Current version is  {$misc.version}</p>
     <br>
 </div>

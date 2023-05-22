@@ -37,6 +37,7 @@ $: if ($webRTC.devices.length) {
     videoInput = $webRTC.devices.some((a) => a.kind == 'videoinput')
 }
 
+
 $: {
     if ($user.activeChat) {
         active_contact = $user.activeChat
@@ -329,7 +330,6 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: fixed;
     right: 0;
     z-index: 100;
     overflow: hidden;

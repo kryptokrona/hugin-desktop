@@ -114,12 +114,12 @@ const readMessage = (e) => {
 $: chatList
 </script>
 
-<div class="wrapper" class:hide="{$layoutState.hideChatList === true}">
-    <div class="top" in:fade>
-        <h2>Messages</h2>
+<div class="flex flex-col w-full h-full max-w-xs border-r border-neutral-800" class:hide="{$layoutState.hideChatList === true}">
+    <div class="w-full p-4 flex justify-between items-center border-b border-neutral-800" in:fade>
+        <h2 class="text-2xl">Messages</h2>
         <AddCircle on:click="{() => dispatch('open')}" />
     </div>
-    <div class="list-wrapper">
+    <div class="flex flex-col w-full no-scrollbar overflow-scroll">
         {#each chatList as message (message.chat)}
             <div animate:flip="{{duration: 250}}">
             <Contact
@@ -134,44 +134,6 @@ $: chatList
 </div>
 
 <style lang="scss">
-.top {
-    top: 0;
-    width: 100%;
-    padding: 20px;
-    height: 85px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.wrapper {
-    width: 100%;
-    height: 100%;
-    max-width: 280px;
-    border-right: 1px solid var(--border-color);
-    z-index: 3;
-    transition: all 0.3s ease-in-out;
-}
-
-.list-wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: calc(100% - 103px);
-    overflow-x: scroll;
-}
-
-.wrapper::-webkit-scrollbar,
-.list-wrapper::-webkit-scrollbar {
-    display: none;
-}
-
-h2 {
-    margin: 0;
-    color: var(--title-color);
-    font-size: 22px;
-}
 
 .add-icon {
     background-color: transparent;

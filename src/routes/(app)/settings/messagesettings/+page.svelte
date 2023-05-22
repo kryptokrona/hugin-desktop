@@ -1,5 +1,4 @@
 <script>
-    import { fade } from "svelte/transition"
     import { messageWallet } from '$lib/stores/user.js'
     import Button from "$lib/components/buttons/Button.svelte"
 
@@ -18,7 +17,7 @@
         on:click="{optimizeMessages}"
     />
     </div>
-    <div class="settings" in:fade>
+    <div class="settings">
         <p>Here you can manually create more xkr inputs to send messages with. 
             <br>
             This will lock some of your wallet balance during the process.</p>

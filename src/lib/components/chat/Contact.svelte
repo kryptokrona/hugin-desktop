@@ -5,6 +5,7 @@ import {get_avatar} from '$lib/utils/hugin-utils.js'
 import {user, webRTC} from '$lib/stores/user.js'
 
 export let contact
+
 let thisCall = false
 let beamInvite = false
 
@@ -41,11 +42,10 @@ const rename = () => {
 </script>
 
 <div
-    class="card"
+    class="flex py-4 px-4 w-full cursor-pointer hover:bg-neutral-800/50"
     in:fade
-    out:fade
     class:rgb="{thisCall}"
-    class:active="{contact.chat === $user.activeChat.chat}"
+    class:bg-neutral-800="{contact.chat === $user.activeChat.chat}"
     on:click="{() => printThis(contact)}"
 >
     {#if contact.new}
@@ -53,75 +53,24 @@ const rename = () => {
     {/if}
 
     <img
-        class="avatar"
+        class="h-10 w-10"
+        width="20px"
+        height="20px"
         on:click="{() => rename(contact)}"
         src="data:image/png;base64,{get_avatar(contact.chat)}"
-        alt=""
     />
-    <div class="content">
-        <h4>{contact.name}</h4>
-        
+
+    <div class="flex flex-col ml-5 justify-center">
+        <h4 class="text-md">{contact.name}</h4>
         {#if !beamInvite}
-        <p>{contact.msg}</p>
+        <p class="text-sm tracking-tight">{contact.msg}</p>
         {:else if beamInvite}
-        <p>Started a beam ⚡️</p>
+        <p class="text-sm tracking-tight">Started a beam ⚡️</p>
         {/if}
     </div>
 </div>
 
 <style lang="scss">
-.card {
-    display: flex;
-    height: 80px;
-    padding: 1rem;
-    width: 100%;
-    color: var(--title-color);
-    border-bottom: 1px solid var(--border-color);
-  background-color: var(--backgound-color);
-    transition: 200ms ease-in-out;
-    cursor: pointer;
-    opacity: 0.9;
-
-    &:hover {
-        color: white;
-        opacity: 1;
-        background-color: var(--card-border);
-        border-bottom: 1px solid transparent;
-    }
-}
-
-.avatar {
-    margin-bottom: 10px;
-    opacity: 0.92;
-    cursor: pointer;
-}
-
-.content {
-    margin-left: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-h4 {
-    margin: 0;
-    white-space: nowrap;
-    max-width: 180px;
-    overflow: hidden;
-    font-family: 'Montserrat', sans-serif;
-    text-overflow: ellipsis;
-    font-weight: bold;
-}
-
-p {
-    margin: 5px 0 0 0;
-    white-space: nowrap;
-    max-width: 200px;
-    overflow: hidden;
-    font-size: 12px;
-    text-overflow: ellipsis;
-    font-family: 'Montserrat', sans-serif;
-}
 
 .unread {
     animation: border_rgb 30s infinite;
@@ -132,10 +81,5 @@ p {
     left: 340px;
     margin-top: 25px;
     position: absolute;
-}
-
-.active {
-    background-color: var(--border-color);
-    border-bottom: 1px solid transparent;
 }
 </style>
