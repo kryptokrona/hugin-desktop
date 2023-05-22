@@ -119,7 +119,7 @@ const declineCall = () => {
     align-items: center;
     width: 100%;
     border-radius: 3px;
-    background-color: #202020;
+    background-color: #181818;
 }
 
 .caller {

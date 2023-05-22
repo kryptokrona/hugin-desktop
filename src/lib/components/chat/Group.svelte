@@ -98,11 +98,11 @@ p {
     animation: border_rgb 30s infinite;
     background-color: white;
     width: 5px;
-    height: 2px;
+    height: 5px;
     border-radius: 30%;
     left: 340px;
     margin-top: 25px;
-    position: absolute;
+    position: sticky;
 }
 
 .active {
