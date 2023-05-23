@@ -162,12 +162,8 @@ import { sleep } from '$lib/utils/utils'
             if ($notify.new.length < 2) {
                 board_message_sound.play()
                 $notify.new.push(data)
-            } else {
-                toast.success(`${$notify.new.length} new group messages`, {
-                position: 'top-right',
-                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-            })
             }
+            
             $notify.new = $notify.new
         })
 

@@ -1,5 +1,5 @@
 {
-    "appId": "com.electron.hugin",
+    "appId": "org.kryptokrona.hugin",
     "productName": "Hugin Messenger",
     "afterSign": "./afterSignHook.cjs",
     "directories": {
