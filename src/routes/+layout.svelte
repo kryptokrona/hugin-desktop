@@ -28,7 +28,7 @@
     import OptimizeToast from '$lib/components/custom-toasts/OptimizeToast.svelte'
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
-import { sleep } from '$lib/utils/utils'
+    import { sleep } from '$lib/utils/utils'
 
     let ready = false
     let incoming_call
@@ -77,7 +77,6 @@ import { sleep } from '$lib/utils/utils'
         new_message_sound = new Audio('/audio/message.mp3')
 
         window.api.receive('contacts', async (my_contacts) => {
-            console.log('contacts!', my_contacts)
             //Set contacts to store
             $user.contacts = my_contacts
         })
@@ -93,19 +92,29 @@ import { sleep } from '$lib/utils/utils'
 
 
         //Handle incoming call
-        window.api.receive('call-incoming', async (msg, chat, group = false) => {
-            console.log('chat', chat)
+        window.api.receive('call-incoming', async (data) => {
+            let msg = data.msg
+            let chat = data.sender
+            let group = data.group
+            let timestamp = data.timestamp
+            console.log('Incoming call', data)
             await sleep(500)
             let incoming = $user.contacts.find((a) => a.chat === chat)
-            console.log('contacts set???', $user.contacts)
+            //Missed call
+            if (Date.now() - timestamp >= 1000 * 360) {
+                    toast.success(`Missed call from ${incoming.name}`, {
+                    position: 'top-right',
+                    style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+                })
+             return
+            }
             incoming_call = true
-            console.log('INCMING CALL')
-            console.log('new call', msg, chat)
 
             let type = 'incoming'
             if ($webRTC.groupCall) {
                 type = 'groupinvite'
             }
+
             $webRTC.incoming.push({
                 msg,
                 chat,
@@ -227,11 +236,8 @@ import { sleep } from '$lib/utils/utils'
 
 
     function removeNotification(e) {
-        
-       $notify.new.some((a) => {
-            if (a.hash === e.detail.hash) $notify.new.pop(a)
-        })
-        $notify.new = $notify.new
+        let filter = $notify.new.filter(a => a.hash !== e.detail.hash)
+        $notify.new = filter
     }
 
     //APP UPDATER

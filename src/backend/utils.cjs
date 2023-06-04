@@ -61,6 +61,35 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function parseCall(msg, sender, sent, group = false, timestamp) {
+    const {expand_sdp_answer} = require("./sdp.cjs")
+    
+    switch (msg.substring(0, 1)) {
+        case 'Δ':
+        // Fall through
+        case 'Λ':
+            // Call offer
+            return [`${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`, {msg, sender, group, timestamp}, true, sent]
+            break
+        case 'δ':
+        // Fall through
+        case 'λ':
+            // Answer
+            if (sent) return ['Call answered', {}, false, false ]
+                let callback = JSON.stringify(expand_sdp_answer(msg))
+                let callerdata = {
+                    data: callback,
+                    chat: sender,
+                }
+
+                console.log("GOT CALLBACK ANSWER!")
+            return ['Call answered', callerdata, true, sent]
+
+            break
+        default:
+            return [msg, false, false, false]
+    }
+}
 
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, createGroup, hexToUint, toHex }
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, createGroup, hexToUint, toHex, parseCall}
