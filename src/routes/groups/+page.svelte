@@ -285,12 +285,10 @@ async function updateReactions(msg) {
                 a.react = []
                 b.hash = b.hash + hashPadding
                 a.react.push(b)
-                emojis.pop(b)
 
             } else if (b.reply == a.hash) {
                 b.hash = b.hash + hashPadding
                 a.react.push(b)
-                emojis.pop(b)
             }
         })
         fixedGroups.push(a)

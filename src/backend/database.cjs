@@ -969,8 +969,8 @@ const getContacts = async () => {
                 
                 let newRow = row
                 newRow.chat = row.address
+                if (!row.key) return
                 myContactList.push(newRow)
-                if (!row.key) myContactList.pop(newRow)
             },
             () => {
                 resolve(myContactList)

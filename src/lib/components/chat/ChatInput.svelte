@@ -20,6 +20,7 @@
   let activeBeam = false
   let to = ""
   let shiftKey
+  let messageInput = ""
 
   onMount(async () => {
     mount = true
@@ -62,8 +63,6 @@
   }
 
   //Input data to dispatch
-  let messageInput = ""
-
   //To handle button disabled enabled
   let enableSend = false
 
@@ -141,6 +140,9 @@
     }
 
   }
+
+
+
 
 </script>
 
