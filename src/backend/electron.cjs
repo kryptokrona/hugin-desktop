@@ -36,7 +36,7 @@ const {
     nonceFromTimestamp, 
     createGroup, 
     hexToUint, 
-    toHex } = require("./utils.cjs")
+    toHex, parseCall } = require("./utils.cjs")
 const {
     loadDB,
     saveHash,
@@ -911,8 +911,18 @@ async function saveMessage(msg, offchain = false) {
     let key = sanitizeHtml(msg.k)
 
     if (await messageExists(timestamp)) return
+    
     //Checking if private msg is a call
-    let text = await parseCall(msg.msg, addr, sent, offchain)
+    let [text, data, is_call, if_sent] = parseCall(msg.msg, addr, sent, offchain, timestamp)
+
+    if (text === "Audio call started" || text === "Video call started" && is_call && !if_sent) {
+        //Incoming calll
+        mainWindow.webContents.send('call-incoming', data)
+    } else if (text === "Call answered" && is_call && !if_sent) {
+        //Callback
+        mainWindow.webContents.send('got-callback', data)
+    }
+
     let message = sanitizeHtml(text)
 
     //If sent set chat to chat instead of from
@@ -1022,7 +1032,7 @@ async function sendGroupsMessage(message, offchain = false) {
         message_json.r = message.r
     }
 
-    let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
+    let [mainWallet, subWallet, messageSubWallet] = js_wallet.subWallets.getAddresses()
     const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json))
     const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group))
 
@@ -1039,7 +1049,7 @@ async function sendGroupsMessage(message, offchain = false) {
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
-            [subWallet], // subWalletsToTakeFrom
+            [subWallet, messageSubWallet], // subWalletsToTakeFrom
             undefined, // changeAddress
             true, // relayToNetwork
             false, // sneedAll
@@ -1348,6 +1358,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
 
     //Choose subwallet with message inputs
     let messageWallet = js_wallet.subWallets.getAddresses()[1]
+    let messageSubWallet = js_wallet.subWallets.getAddresses()[2]
 
     if (!off_chain) {
         let result = await js_wallet.sendTransactionAdvanced(
@@ -1355,7 +1366,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
-            [messageWallet], // subWalletsToTakeFrom
+            [messageWallet, messageSubWallet], // subWalletsToTakeFrom
             undefined, // changeAddresss
             true, // relayToNetwork
             false, // sneedAll
@@ -1421,23 +1432,34 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     }
 }
 
-async function optimizeMessages(force = false) {
-    if (js_wallet.subWallets.getAddresses().length === 1) {
+async function createMessageSubWallet() {
+
+    if (js_wallet.subWallets.getAddresses().length < 3) {
+        if (js_wallet.subWallets.getAddresses().length === 1) {
         const [address, error] = await js_wallet.addSubWallet()
         if (error) {
            return 
         }
+        }
+        const [spendKey, viewKey] = await js_wallet.getPrimaryAddressPrivateKeys()
+        const subWalletKeys = await crypto.generateDeterministicSubwalletKeys(spendKey, 1)
+        await js_wallet.importSubWallet(subWalletKeys.private_key)
     }
+}
 
-    let [mainWallet, subWallet] = js_wallet.subWallets.getAddresses()
+async function optimizeMessages(force = false) {
+
+    await createMessageSubWallet();
+
+    let [mainWallet, subWallet, messageSubWallet] = js_wallet.subWallets.getAddresses()
+    console.log("Message wallets", [mainWallet, subWallet, messageSubWallet])
     const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus()
 
     let inputs = await js_wallet.subWallets.getSpendableTransactionInputs(
-        [subWallet],
+        [subWallet, messageSubWallet],
         networkHeight
     )
 
-    console.log('inputs', inputs.length)
     if (inputs.length > 25 && !force) {
         mainWindow.webContents.send('optimized', true)
         return
@@ -1457,7 +1479,7 @@ async function optimizeMessages(force = false) {
     let i = 0
     /* User payment */
     while (i <= 49) {
-        payments.push([subWallet, 1000])
+        payments.push([messageSubWallet, 1000])
         i += 1
     }
 
@@ -1562,40 +1584,6 @@ async function resetOptimizeTimer() {
             optimized: false
         }
     });
-}
-
-function parseCall(msg, sender, sent, group = false) {
-    switch (msg.substring(0, 1)) {
-        case 'Δ':
-        // Fall through
-        case 'Λ':
-            // Call offer
-                if (!sent) {
-                    console.log('call  incoming')
-                    mainWindow.webContents.send('call-incoming', msg, sender, group)
-                    // Handle answer/decline here
-                }
-                console.log('call incoming')
-            return `${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
-            break
-        case 'δ':
-        // Fall through
-        case 'λ':
-            // Answer
-            if (sent) return 'Call answered'
-                let callback = JSON.stringify(expand_sdp_answer(msg))
-                let callerdata = {
-                    data: callback,
-                    chat: sender,
-                }
-                mainWindow.webContents.send('got-callback', callerdata)
-
-            return 'Call answered'
-
-            break
-        default:
-            return msg
-    }
 }
 
 async function pickNode(node) {
