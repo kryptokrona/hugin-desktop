@@ -58,7 +58,9 @@ onMount(async () => {
     })
 
     window.api.receive('privateMsg', async (data) => {
-        scrollDown()
+        if (data.chat === $user.activeChat.chat) {
+            scrollDown()
+        }
     })
 
 })
