@@ -239,7 +239,7 @@
         let filter = $notify.new.filter(a => a.hash !== e.detail.hash)
         $notify.new = filter
     }
-
+    
     //APP UPDATER
     window.api.receive('updater', (data) => {
         data = data.toString()
@@ -406,7 +406,7 @@
             }
         })
 
-        $upload = $upload
+        $download = $download
 
         if (data.progress === 100) {
             toast.success(`${thisFile} finished downloading`, {
