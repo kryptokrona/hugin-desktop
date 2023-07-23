@@ -63,7 +63,7 @@ function sleep(ms) {
 
 function parseCall(msg, sender, sent, group = false, timestamp) {
     const {expand_sdp_answer} = require("./sdp.cjs")
-    
+
     switch (msg.substring(0, 1)) {
         case 'Δ':
         // Fall through
@@ -81,8 +81,6 @@ function parseCall(msg, sender, sent, group = false, timestamp) {
                     data: callback,
                     chat: sender,
                 }
-
-                console.log("GOT CALLBACK ANSWER!")
             return ['Call answered', callerdata, true, sent]
 
             break

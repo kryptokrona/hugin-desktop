@@ -207,7 +207,7 @@
                     <p class="nickname">
                         {$user.username}
                         <span class="time">
-                            | <Time relative timestamp="{parseInt(timestamp)}" /></span
+                            | <Time live={30 * 1_000} relative timestamp="{parseInt(timestamp)}" /></span
                         >
                     </p>
                     {#if beamMsg}
@@ -253,7 +253,7 @@
                     <p class="nickname">
                         {$user.activeChat.name}
                         <span class="time">
-                            | <Time relative timestamp="{parseInt(timestamp)}"/></span
+                            | <Time live={30 * 1_000} relative timestamp="{parseInt(timestamp)}"/></span
                         >
                     </p>
                     {#if beamMsg}

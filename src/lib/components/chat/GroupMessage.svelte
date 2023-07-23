@@ -234,7 +234,7 @@ const openLinkMessage = (url) => {
                     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
                     <h5 class="nickname">
                         {nickname}<span class="time" class:min="{rtc}"
-                            >| <Time relative timestamp="{parseInt(message.time)}" /></span
+                            >| <Time live={30 * 1_000} relative timestamp="{parseInt(message.time)}" /></span
                         >
                     </h5>
                 </div>
