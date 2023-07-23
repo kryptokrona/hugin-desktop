@@ -503,10 +503,6 @@ async function checkNodeAndPassword(password, node) {
     }
 
     let nodeOnline = await checkNodeStatus(node)
-    if (!nodeOnline) {
-        mainWindow.webContents.send('error-notify-message', 'The node seems to be slow or offline, try another one.')
-    }
-
     return true
 }
 
@@ -533,7 +529,7 @@ async function start_js_wallet(walletName, password, node) {
     if (!await checkNodeAndPassword(password, node)) return
 
     if (!await login(walletName, password)) return
-
+    
     hashed_pass = await hashPassword(password)
     
     pickNode(node.node + ":" + node.port.toString())
@@ -547,7 +543,7 @@ async function start_js_wallet(walletName, password, node) {
     await js_wallet.enableAutoOptimization(false)
     //Start wallet sync process
     await js_wallet.start()
-
+    await createMessageSubWallet();
     let checkedTxs = await loadCheckedTxs()
     let my_groups = await getGroups()
     block_list = await loadBlockList()
@@ -1449,8 +1445,6 @@ async function createMessageSubWallet() {
 
 async function optimizeMessages(force = false) {
 
-    await createMessageSubWallet();
-
     let [mainWallet, subWallet, messageSubWallet] = js_wallet.subWallets.getAddresses()
     console.log("Message wallets", [mainWallet, subWallet, messageSubWallet])
     const [walletHeight, localHeight, networkHeight] = await js_wallet.getSyncStatus()
@@ -1900,7 +1894,7 @@ ipcMain.on('check-srcs', async (e, src) => {
 
 //Rescan wallet
 ipcMain.on('rescan', async (e, height) => {
-    js_wallet.rescan(parseInt(height))
+    js_wallet.reset(parseInt(height))
 })
 
 //Optimize messages
