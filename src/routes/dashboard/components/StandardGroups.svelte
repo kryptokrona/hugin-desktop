@@ -10,6 +10,7 @@
     let standardGroups = [
         { name: 'Kryptokrona',     key: '33909fb89783fb15b5c2df50ff7107c112c3b232681f77814c024c909c07e932' },
         { name: 'Hugin',           key: '20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8' },
+        { name: 'Support',         key: '345e8da2223971f1dc9ad39f2cd8b9d875256c9041ac9d7af793be2c137670ac' },
         { name: 'Programming',     key: '613d2331b9b4305a78275fbce193c3818948980cae43e86b53e85d55e01ad0d0' },
         { name: 'Gaming',          key: 'aab2b5493d95074e03090501a1cbc34955c29d4f0bfe5eed76445b2f049031b2' },
         { name: 'Cryptocurrency',  key: 'f28311919d9516831d79bc7ca68d108ba53f8432c639445e565cd2b1ecd70510' },
