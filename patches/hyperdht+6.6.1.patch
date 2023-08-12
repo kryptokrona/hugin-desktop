@@ -1,0 +1,201 @@
+diff --git a/node_modules/hyperdht/index.js b/node_modules/hyperdht/index.js
+index 19e5c6b..13dde2d 100644
+--- a/node_modules/hyperdht/index.js
++++ b/node_modules/hyperdht/index.js
+@@ -17,7 +17,7 @@ const maxSize = 65536
+ const maxAge = 20 * 60 * 1000
+ 
+ class HyperDHT extends DHT {
+-  constructor (opts = {}) {
++  constructor (opts, sig, priv = {}) {
+     const port = opts.port || 49737
+     const bootstrap = opts.bootstrap || BOOTSTRAP_NODES
+ 
+@@ -27,10 +27,11 @@ class HyperDHT extends DHT {
+       maxSize: opts.maxSize || maxSize,
+       maxAge: opts.maxAge || maxAge
+     }
+-
++    this.sig = sig
++    console.log("opts sig!", sig)
+     this.defaultKeyPair = opts.keyPair || createKeyPair(opts.seed)
+     this.listening = new Set()
+-
++    this.priv = priv
+     this._router = new Router(this, cacheOpts)
+     this._socketPool = new SocketPool(this, opts.host || '0.0.0.0')
+     this._rawStreams = new RawStreamSet(this)
+@@ -49,7 +50,7 @@ class HyperDHT extends DHT {
+   }
+ 
+   connect (remotePublicKey, opts) {
+-    return connect(this, remotePublicKey, opts)
++    return connect(this, remotePublicKey, opts, this.sig, this.priv)
+   }
+ 
+   createServer (opts, onconnection) {
+diff --git a/node_modules/hyperdht/lib/connect.js b/node_modules/hyperdht/lib/connect.js
+index edd93ee..e492829 100644
+--- a/node_modules/hyperdht/lib/connect.js
++++ b/node_modules/hyperdht/lib/connect.js
+@@ -25,7 +25,8 @@ const {
+   SERVER_INCOMPATIBLE
+ } = require('./errors')
+ 
+-module.exports = function connect (dht, publicKey, opts = {}) {
++
++module.exports = function connect (dht, publicKey, opts, sig, priv = {}) {
+   const keyPair = opts.keyPair || dht.defaultKeyPair
+   const encryptedSocket = (opts.createSecretStream || defaultCreateSecretStream)(true, null, {
+     publicKey: keyPair.publicKey,
+@@ -55,7 +56,9 @@ module.exports = function connect (dht, publicKey, opts = {}) {
+     serverAddress: null,
+     onsocket: null,
+     sleeper: new Sleeper(),
+-    encryptedSocket
++    encryptedSocket,
++    sig,
++    priv
+   }
+ 
+   // If the raw stream receives an error signal pre connect (ie from the firewall hook), make sure
+@@ -272,6 +275,7 @@ async function findAndConnect (c, opts) {
+ }
+ 
+ async function connectThroughNode (c, address, socket) {
++  console.log("Want to connect through node with sig!", c.sig)
+   if (!c.requesting) {
+     // If we have a stable server address, send it over now
+     const addr = c.dht.remoteAddress()
+@@ -294,8 +298,10 @@ async function connectThroughNode (c, address, socket) {
+         id: c.rawStream.id,
+         seq: 0
+       },
+-      secretStream: {}
++      secretStream: {},
++      mid: c.sig
+     })
++
+     if (isDone(c)) return
+   }
+ 
+@@ -303,8 +309,12 @@ async function connectThroughNode (c, address, socket) {
+   if (isDone(c) || c.connect) return
+ 
+   const payload = await c.handshake.recv(noise)
++  console.log("Payload recv", payload)
++  
+   if (isDone(c) || !payload) return
+ 
++  console.log("It is done!")
++
+   if (payload.version !== 1) {
+     destroyEncryptedSocket(c, SERVER_INCOMPATIBLE())
+     return
+@@ -319,6 +329,11 @@ async function connectThroughNode (c, address, socket) {
+   }
+  
+   const hs = c.handshake.final()
++  const checked = check_key(hs.publicKey, c.sig, c.priv)
++  
++  if (!checked) {
++    destroyEncryptedSocket(c, SERVER_INCOMPATIBLE())
++  }
+ 
+   c.handshake = null
+   c.request = null
+@@ -367,6 +382,21 @@ async function connectThroughNode (c, address, socket) {
+   }
+ }
+ 
++function check_key(pub, sig, keys) {
++    const sub = get_sub_key(keys, sig)
++    if (sub.publicKey.toString('hex') === pub.toString('hex')) {
++      return true
++    } else {
++      return false
++    }
++  }
++
++function get_sub_key(keys, tweak) {
++    const random_buf = Buffer.alloc(32).fill(tweak)
++    const sub = keys.sub(random_buf).get()
++    return sub
++}
++
+ async function updateHolepunch (c, peerAddress, relayAddr, payload) {
+   const holepunch = await c.dht._router.peerHolepunch(c.target, {
+     id: c.connect.payload.holepunch.id,
+diff --git a/node_modules/hyperdht/lib/messages.js b/node_modules/hyperdht/lib/messages.js
+index 9760e66..064af9c 100644
+--- a/node_modules/hyperdht/lib/messages.js
++++ b/node_modules/hyperdht/lib/messages.js
+@@ -130,7 +130,7 @@ const secretStreamInfo = {
+ 
+ exports.noisePayload = {
+   preencode (state, m) {
+-    state.end += 4 // version + flags + error + firewall
++    state.end += 17 // version + flags + error + firewall
+     if (m.holepunch) holepunchInfo.preencode(state, m.holepunch)
+     if (m.addresses4 && m.addresses4.length) ipv4Array.preencode(state, m.addresses4)
+     if (m.addresses6 && m.addresses6.length) ipv6Array.preencode(state, m.addresses6)
+@@ -156,6 +156,7 @@ exports.noisePayload = {
+     if (m.addresses6 && m.addresses6.length) ipv6Array.encode(state, m.addresses6)
+     if (m.udx) udxInfo.encode(state, m.udx)
+     if (m.secretStream) secretStreamInfo.encode(state, m.secretStream)
++    if (m.mid) c.uint.encode(state, m.mid)
+   },
+   decode (state) {
+     const version = c.uint.decode(state)
+@@ -171,7 +172,8 @@ exports.noisePayload = {
+         addresses4: [],
+         addresses6: [],
+         udx: null,
+-        secretStream: null
++        secretStream: null,
++        mid: null
+       }
+     }
+ 
+@@ -185,7 +187,8 @@ exports.noisePayload = {
+       addresses4: (flags & 2) !== 0 ? ipv4Array.decode(state) : [],
+       addresses6: (flags & 4) !== 0 ? ipv6Array.decode(state) : [],
+       udx: (flags & 8) !== 0 ? udxInfo.decode(state) : null,
+-      secretStream: (flags & 16) !== 0 ? secretStreamInfo.decode(state) : null
++      secretStream: (flags & 16) !== 0 ? secretStreamInfo.decode(state) : null,
++      mid: c.uint.decode(state)
+     }
+   }
+ }
+diff --git a/node_modules/hyperdht/lib/server.js b/node_modules/hyperdht/lib/server.js
+index 5ada099..b73d2c5 100644
+--- a/node_modules/hyperdht/lib/server.js
++++ b/node_modules/hyperdht/lib/server.js
+@@ -21,7 +21,7 @@ module.exports = class Server extends EventEmitter {
+ 
+     this.dht = dht
+     this.target = null
+-
++    this.sig = dht.sig
+     this.relayAddresses = null // TODO: populate this
+     this.closed = false
+     this.firewall = opts.firewall || (() => false)
+@@ -37,6 +37,8 @@ module.exports = class Server extends EventEmitter {
+     this._holepunches = []
+     this._listening = false
+     this._closing = null
++
++    console.log("This sig server", this.sig)
+   }
+ 
+   get publicKey () {
+@@ -234,7 +236,8 @@ module.exports = class Server extends EventEmitter {
+           id: hs.rawStream ? hs.rawStream.id : 0,
+           seq: 0
+         },
+-        secretStream: {}
++        secretStream: {},
++        mid: this.sig
+       })
+     } catch (err) {
+       safetyCatch(err)
