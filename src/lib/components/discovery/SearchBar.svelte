@@ -1,12 +1,16 @@
 <script>
 import { goto } from '$app/navigation'
+import { search } from '$lib/stores/search.js'
 let searchTerm = ''
+
+$: console.log($search.term)
 
 function handleSearch(event) {
     if (event.key === 'Enter') {
         searchTerm = event.target.value
+        $search.term = searchTerm
         // You can perform your search logic here, such as filtering a list of items.
-        console.log('Search term:', searchTerm)
+        console.log('Search term:', $search.term)
         goto('/discovery-results')
     }
 }
@@ -17,7 +21,7 @@ function handleSearch(event) {
         class="search-input"
         type="text"
         placeholder="Search..."
-        bind:value="{searchTerm}"
+        bind:value="{$search.term}"
         on:keydown="{handleSearch}" />
 </div>
 
