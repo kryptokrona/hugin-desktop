@@ -29,27 +29,27 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 ## Getting Help
 
-Are you having trouble with Kryptokrona Kotlin SDK? We want to help!
+Are you having trouble with Hugin? We want to help!
 
-- Read through all documentation on our website: https://sdk.kryptokrona.org
+- Read through all documentation on our website: https://docs.kryptokrona.org
 
 - If you are upgrading, read the release notes for upgrade instructions and "new and noteworthy" features.
 
-- Ask a question we monitor stackoverflow.com for questions tagged with kryptokrona-kotlin-sdk. You can also chat with the community on Hugin or Discord.
+- Ask a question we monitor stackoverflow.com for questions tagged with hugin-desktop. You can also chat with the community on Hugin or Discord.
 
-- Report bugs with Kryptokrona Kotlin SDK at https://github.com/kryptokrona/kryptokrona-kotlin-sdk/issues.
+- Report bugs with Hugin at https://github.com/kryptokrona/hugin-desktop/issues.
 
-- Join the Discussion and be part of the community at https://github.com/kryptokrona/kryptokrona-kotlin-sdk/discussions
+- Join the Discussion and be part of the community at https://github.com/kryptokrona/hugin-desktop/discussions
 
 ## Reporting Issues
 
-Kryptokrona Kotlin SDK uses GitHub’s integrated issue tracking system to record bugs and feature requests. If you want to raise an issue, please follow the recommendations below:
+Hugin uses GitHub’s integrated issue tracking system to record bugs and feature requests. If you want to raise an issue, please follow the recommendations below:
 
 - Before you log a bug, please search the issue tracker to see if someone has already reported the problem.
 
 - If the issue doesn’t already exist, create a new issue.
 
-- Please provide as much information as possible with the issue report. We like to know the Kryptokrona Kotlin SDK version, operating system, and JVM version you’re using.
+- Please provide as much information as possible with the issue report. We like to know the Hugin version, operating system, and JVM version you’re using.
 
 - If you need to paste code or include a stack trace, use Markdown. ``` escapes before and after your text.
 

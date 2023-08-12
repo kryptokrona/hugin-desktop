@@ -186,7 +186,7 @@ onMount(() => {
 }
 
 .grid {
-    height: calc(100vh - 60px);
+    height: calc(100vh - 60px - 60px); // Adjust padding as needed
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-gap: 20px;
@@ -201,7 +201,7 @@ onMount(() => {
 }
 
 .box {
-    height: 150px;
+    height: 130px;
     width: 100%;
     display: flex;
     background-color: #1f1f1f;

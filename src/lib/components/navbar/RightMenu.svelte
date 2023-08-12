@@ -318,7 +318,7 @@ $: if ($localFiles.some((a) => a.chat === $user.activeChat.chat)) {
         <div class="nav" style="height: 100%">
             <div class="nav">
                 <button class="button">
-                    <DiscoveryHelpIcon on:copy="{() => copyThis($groups.thisGroup.key)}" />
+                    <DiscoveryHelpIcon on:click="{() => console.log('Helllo')}" />
                 </button>
             </div>
             <div class="draggable hitbox"></div>
