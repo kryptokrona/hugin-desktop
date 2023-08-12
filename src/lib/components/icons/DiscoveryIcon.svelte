@@ -1,7 +1,5 @@
 <script>
 import { page } from '$app/stores'
-import { fade } from 'svelte/transition'
-import { notify } from '$lib/stores/user.js'
 
 let thispage
 $: thispage = $page.url.pathname === '/discovery'
