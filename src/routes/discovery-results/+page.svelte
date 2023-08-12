@@ -100,13 +100,18 @@ let db = {
 
 const colors = ['red', 'green', 'blue', 'purple', 'orange']
 
-const filteredGroups = derived(
-    search, // Only include the search store
-    ($search) => {
-        const searchTerm = $search.term.toLowerCase()
-        return db.groups.filter((item) => item.name.toLowerCase().includes(searchTerm))
-    }
-)
+const filteredGroups = derived(search, ($search) => {
+    const searchTerm = $search.term.toLowerCase()
+    return db.groups.filter((item) => {
+        const itemName = item.name.toLowerCase()
+        const categoryNames = item.category.map((cat) => cat.toLowerCase())
+
+        return (
+            itemName.includes(searchTerm) ||
+            categoryNames.some((catName) => catName.includes(searchTerm))
+        )
+    })
+})
 
 const addNewGroup = (group) => {
     if (group.length < 32) return
@@ -154,7 +159,7 @@ onMount(() => {
                 </div>
             </div>
 
-            <div class="box-content">
+            <div class="box-content2">
                 <div class="box-info">
                     <p class="box-text">
                         {#if $groups.groupArray.some((g) => g.key === item.key)}
@@ -207,6 +212,14 @@ onMount(() => {
 .box-content {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
+    padding: 15px;
+    position: relative;
+}
+
+.box-content2 {
+    display: flex;
+    flex-direction: row;
     align-items: flex-start;
     padding: 15px;
     position: relative;
