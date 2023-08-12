@@ -1,100 +1,100 @@
-name: Hugin Desktop Main Pipeline
+name: build
 
 env:
-  GITHUB_REGISTRY: "ghcr.io"
-  GITHUB_OWNER: "kryptokrona"
-  GH_TOKEN: ${{ secrets.HUGIN_DESKTOP_SECRET }}
+    GITHUB_REGISTRY: 'ghcr.io'
+    GITHUB_OWNER: 'kryptokrona'
+    GH_TOKEN: ${{ secrets.HUGIN_DESKTOP_SECRET }}
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - "*.md"
-      - ".run/**"
-      - ".github/ISSUE_TEMPLATE/**"
+    push:
+        branches:
+            - main
+        paths-ignore:
+            - '*.md'
+            - '.run/**'
+            - '.github/ISSUE_TEMPLATE/**'
 
 jobs:
-  build:
-    name: "Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}"
-    runs-on: ${{ matrix.config.os }}
+    build:
+        name: 'Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}'
+        runs-on: ${{ matrix.config.os }}
 
-    strategy:
-      fail-fast: true
-      matrix:
-        config:
-          - { name: "Windows Latest", os: windows-latest, platform: x64 }
-          - { name: "Ubuntu Latest", os: ubuntu-latest, platform: x64 }
-          - { name: "macOS-11", os: macos-11, platform: x64 }
-          - { name: "macOS Latest", os: macos-latest, platform: arm64 }
+        strategy:
+            fail-fast: true
+            matrix:
+                config:
+                    - { name: 'Windows Latest', os: windows-latest, platform: x64 }
+                    - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
+                    - { name: 'macOS-11', os: macos-11, platform: x64 }
+                    - { name: 'macOS Latest', os: macos-latest, platform: arm64 }
 
-    env:
-      PLATFORM: ${{ matrix.config.platform }}
+        env:
+            PLATFORM: ${{ matrix.config.platform }}
 
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v1
+        steps:
+            - name: Check out Git repository
+              uses: actions/checkout@v1
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16.16.0
+            - name: Install Node.js, NPM and Yarn
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 16.16.0
 
-      - name: Install dependencies
-        run: npm install --quiet
+            - name: Install dependencies
+              run: npm install --quiet
 
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.os == 'windows-latest'
-        run: npm run build:win-${{ matrix.config.platform }}-gh
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.os == 'windows-latest'
+              run: npm run build:win-${{ matrix.config.platform }}-gh
 
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.os == 'ubuntu-latest'
-        run: npm run build:linux-${{ matrix.config.platform }}
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.os == 'ubuntu-latest'
+              run: npm run build:linux-${{ matrix.config.platform }}
 
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.name == 'macOS-11'
-        run: npm run build:mac-${{ matrix.config.platform }}-gh
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.name == 'macOS-11'
+              run: npm run build:mac-${{ matrix.config.platform }}-gh
 
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.name == 'macOS Latest'
-        run: npm run build:mac-${{ matrix.config.platform }}-gh
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.name == 'macOS Latest'
+              run: npm run build:mac-${{ matrix.config.platform }}-gh
 
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.os == 'windows-latest'
-        with:
-          name: windows-latest
-          path: |
-            dist/*.exe
+            - name: 'Upload ${{ matrix.config.name }} Artifact'
+              uses: actions/upload-artifact@v3
+              if: matrix.config.os == 'windows-latest'
+              with:
+                  name: windows-latest
+                  path: |
+                      dist/*.exe
 
-      - name: "Upload ${{ matrix.config.name }} Deb Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.os == 'ubuntu-latest'
-        with:
-          name: ubuntu-latest-deb
-          path: |
-            dist/*.deb
+            - name: 'Upload ${{ matrix.config.name }} Deb Artifact'
+              uses: actions/upload-artifact@v3
+              if: matrix.config.os == 'ubuntu-latest'
+              with:
+                  name: ubuntu-latest-deb
+                  path: |
+                      dist/*.deb
 
-      - name: "Upload ${{ matrix.config.name }} Snap Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.os == 'ubuntu-latest'
-        with:
-          name: ubuntu-latest-snap
-          path: |
-            dist/*.snap
+            - name: 'Upload ${{ matrix.config.name }} Snap Artifact'
+              uses: actions/upload-artifact@v3
+              if: matrix.config.os == 'ubuntu-latest'
+              with:
+                  name: ubuntu-latest-snap
+                  path: |
+                      dist/*.snap
 
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.name == 'macOS-11'
-        with:
-          name: macos-11
-          path: |
-            dist/*.dmg
+            - name: 'Upload ${{ matrix.config.name }} Artifact'
+              uses: actions/upload-artifact@v3
+              if: matrix.config.name == 'macOS-11'
+              with:
+                  name: macos-11
+                  path: |
+                      dist/*.dmg
 
-      - name: "Upload ${{ matrix.config.name }} Artifact"
-        uses: actions/upload-artifact@v3
-        if: matrix.config.name == 'macOS Latest'
-        with:
-          name: macos-latest
-          path: |
-            dist/*.dmg
+            - name: 'Upload ${{ matrix.config.name }} Artifact'
+              uses: actions/upload-artifact@v3
+              if: matrix.config.name == 'macOS Latest'
+              with:
+                  name: macos-latest
+                  path: |
+                      dist/*.dmg
