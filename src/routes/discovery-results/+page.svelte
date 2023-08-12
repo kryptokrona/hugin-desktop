@@ -2,7 +2,10 @@
 import { onMount } from 'svelte'
 import { derived, writable } from 'svelte/store'
 import { search } from '$lib/stores/search.js'
+import { groups } from '$lib/stores/user.js'
+import Button from '$lib/components/buttons/Button.svelte'
 import SearchBar from '$lib/components/discovery/SearchBar.svelte'
+import { get_avatar } from '$lib/utils/hugin-utils.js'
 
 let colorIndex = writable(0)
 
@@ -105,6 +108,25 @@ const filteredGroups = derived(
     }
 )
 
+const addNewGroup = (group) => {
+    if (group.length < 32) return
+    let data = {
+        m: 'Joined group',
+        n: group.name,
+        hash: Date.now() * 2,
+        t: Date.now().toString(),
+        s: '',
+        k: group.key,
+        sent: false,
+        r: '',
+        g: group.key,
+        h: parseInt(Date.now()),
+    }
+    window.api.addGroup(data)
+}
+
+const leaveGroup = (group) => {}
+
 onMount(() => {
     const interval = setInterval(() => {
         colorIndex.update((index) => (index + 1) % colors.length)
@@ -124,8 +146,29 @@ onMount(() => {
         <div class="box">
             <div class="box-content">
                 <div class="box-info">
+                    <img
+                        class="box-image"
+                        src="data:image/png;base64,{get_avatar(item.key)}"
+                        alt="" />
                     <p class="box-name">{item.name}</p>
-                    <p class="box-text">Join</p>
+                </div>
+            </div>
+
+            <div class="box-content">
+                <div class="box-info">
+                    <p class="box-text">
+                        {#if $groups.groupArray.some((g) => g.key === item.key)}
+                            <Button
+                                text="Leave"
+                                disabled="{false}"
+                                on:click="{() => leaveGroup(item)}" />
+                        {:else}
+                            <Button
+                                text="Join"
+                                disabled="{false}"
+                                on:click="{() => addNewGroup(item)}" />
+                        {/if}
+                    </p>
                 </div>
             </div>
         </div>
@@ -154,6 +197,7 @@ onMount(() => {
 
 .box {
     height: 150px;
+    width: 100%;
     display: flex;
     background-color: #1f1f1f;
     border-radius: 9px;
@@ -169,12 +213,11 @@ onMount(() => {
 }
 
 .box-image {
-    width: 80px; /* Adjust image size as needed */
-    height: 80px;
+    width: 60px;
+    height: 60px;
 }
 
 .box-info {
-    margin-top: auto; /* Push to the bottom of the box */
     display: flex;
     flex-direction: column;
 }
