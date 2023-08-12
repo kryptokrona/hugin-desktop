@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
 import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/stores/user.js'
-import {remoteFiles, localFiles, fileSettings} from '$lib/stores/files.js'
+import { remoteFiles, localFiles, fileSettings } from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import SimpleAdd from '$lib/components/icons/SimpleAdd.svelte'
@@ -11,6 +11,7 @@ import MicIcon from '$lib/components/icons/MicIcon.svelte'
 import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
 import HomeIcon from '$lib/components/icons/HomeIcon.svelte'
 import Lock from '$lib/components/icons/Lock.svelte'
+import DiscoveryHelpIcon from '$lib/components/icons/DiscoveryHelpIcon.svelte'
 
 import CallIcon from '$lib/components/icons/CallIcon.svelte'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
@@ -52,8 +53,8 @@ $: {
 $: thisChat = $user.activeChat
 
 //Beam reactive button states
-$: activeBeam = $beam.active.some(a => a.chat === thisChat.chat)
-$: connectedBeam = $beam.active.some(a => a.chat === thisChat.chat && a.connected === true)
+$: activeBeam = $beam.active.some((a) => a.chat === thisChat.chat)
+$: connectedBeam = $beam.active.some((a) => a.chat === thisChat.chat && a.connected === true)
 
 //Starts any call
 const startCall = async (contact, calltype) => {
@@ -163,13 +164,12 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
-
 function newBeam() {
-    window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
+    window.api.createBeam('new', $user.activeChat.chat + $user.activeChat.key)
     $beam.active.push({
-      chat: $user.activeChat.chat,
-      connected: false,
-      key: undefined,
+        chat: $user.activeChat.chat,
+        connected: false,
+        key: undefined,
     })
     $beam.active = $beam.active
 }
@@ -177,23 +177,23 @@ function newBeam() {
 let incoming_file = false
 let shared_files = false
 
-$: if ($remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
+$: if ($remoteFiles.some((a) => a.chat === $user.activeChat.chat)) {
     incoming_file = true
 } else {
     incoming_file = false
 }
 
-$: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
+$: if ($localFiles.some((a) => a.chat === $user.activeChat.chat)) {
     shared_files = true
 } else {
     shared_files = false
 }
-
-
-
 </script>
 
-<div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length || $page.url.pathname === '/groups'}">
+<div
+    class="rightMenu"
+    class:hide="{($videoGrid.showVideoGrid && $webRTC.call.length) ||
+        $page.url.pathname === '/groups'}">
     {#if $page.url.pathname === '/boards'}
         <div class="nav" style="display:block !important;">
             <div class="add" on:click="{openAdd}">
@@ -205,16 +205,14 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                         <div style="display: flex; align-items: center; position: relative;">
                             <div
                                 class="board"
-                                style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})"
-                            >
+                                style="background-color: rgb({board_color.red}, {board_color.green},{board_color.blue})">
                                 {#if board === 'Home'}
                                     <button class="board-icon" on:click="{() => printBoard(board)}">
                                         <HomeIcon />
                                     </button>
                                 {:else}
                                     <button class="board-icon" on:click="{() => printBoard(board)}"
-                                        >{board.substring(0, 1).toUpperCase()}</button
-                                    >
+                                        >{board.substring(0, 1).toUpperCase()}</button>
                                 {/if}
                             </div>
                             {#if board === $boards.thisBoard}
@@ -235,31 +233,32 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                 class="avatar"
                 src="data:image/png;base64,{avatar}"
                 alt=""
-                on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}"
-            />
+                on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}" />
 
-            <div class="button" on:click={() => {
-                if (connectedBeam || activeBeam) {
-                    window.api.send('end-beam', $user.activeChat.chat)
-                } else newBeam()}
-                }>
-                <Lightning connected={connectedBeam} connecting={activeBeam} />
+            <div
+                class="button"
+                on:click="{() => {
+                    if (connectedBeam || activeBeam) {
+                        window.api.send('end-beam', $user.activeChat.chat)
+                    } else newBeam()
+                }}">
+                <Lightning connected="{connectedBeam}" connecting="{activeBeam}" />
             </div>
 
-            {#if !connectedBeam }
+            {#if !connectedBeam}
                 <button class="button">
                     {#if thisCall && !video}
-                        <CallSlash on:click="{() => endCall()}"/>
+                        <CallSlash on:click="{() => endCall()}" />
                     {:else}
-                        <CallIcon on:click="{() => startCall(contact, false)}"/>
+                        <CallIcon on:click="{() => startCall(contact, false)}" />
                     {/if}
                 </button>
 
                 <button class="button">
                     {#if thisCall && video}
-                        <VideoSlash on:click="{() => endCall()}"/>
+                        <VideoSlash on:click="{() => endCall()}" />
                     {:else if !thisCall}
-                        <VideoIcon menu="{true}" on:click="{() => startCall(contact, true)}"/>
+                        <VideoIcon menu="{true}" on:click="{() => startCall(contact, true)}" />
                     {/if}
                 </button>
             {/if}
@@ -286,12 +285,11 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
             </div>
             {/if} -->
 
-             <!-- {#if shared_files }
+            <!-- {#if shared_files }
              <div class="button" on:click="{() => $fileSettings.showFiles = !$fileSettings.showFiles}">
                      <Lightning connected={true} />
              </div>
               {/if} -->
-
         </div>
         <div class="draggable"></div>
     {/if}
@@ -302,16 +300,25 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                 <img
                     class="avatar"
                     src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}"
-                    alt=""
-                />
+                    alt="" />
                 <button class="button">
                     <Lock on:copy="{() => copyThis($groups.thisGroup.key)}" />
                 </button>
                 <button class="button">
                     <ListButton
                         on:click="{() =>
-                            ($layoutState.showActiveList = !$layoutState.showActiveList)}"
-                    />
+                            ($layoutState.showActiveList = !$layoutState.showActiveList)}" />
+                </button>
+            </div>
+            <div class="draggable hitbox"></div>
+        </div>
+    {/if}
+
+    {#if $page.url.pathname === '/discovery'}
+        <div class="nav" style="height: 100%">
+            <div class="nav">
+                <button class="button">
+                    <DiscoveryHelpIcon on:copy="{() => copyThis($groups.thisGroup.key)}" />
                 </button>
             </div>
             <div class="draggable hitbox"></div>
@@ -466,6 +473,11 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
 
 .shiny {
     box-shadow: 0 0 10px white;
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0) 1%, rgba(255, 255, 255, 0.2) 9%, rgba(255, 255, 255, 0) 100%);
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 1%,
+        rgba(255, 255, 255, 0.2) 9%,
+        rgba(255, 255, 255, 0) 100%
+    );
 }
 </style>
