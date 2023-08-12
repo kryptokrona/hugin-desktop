@@ -5,6 +5,7 @@ import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte'
 import XkrLogo from '$lib/components/icons/XkrLogo.svelte'
+import DiscoveryIcon from '$lib/components/icons/DiscoveryIcon.svelte'
 import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores'
 import { layoutState } from '$lib/stores/layout-state.js'
@@ -28,7 +29,7 @@ const handleLogout = () => {
             loggedIn: false,
         }
     })
-     goto("/login")
+    goto('/login')
 }
 
 const messagesRouteAndMenu = () => {
@@ -49,6 +50,14 @@ const groupRouteAndMenu = () => {
         goto('/groups')
     }
 }
+
+const discoveryRouteAndMenu = () => {
+    if ($page.url.pathname === '/discovery') {
+        $layoutState.hideGroupList = !$layoutState.hideGroupList
+    } else {
+        goto('/discovery')
+    }
+}
 </script>
 
 <div class="leftMenu">
@@ -62,6 +71,9 @@ const groupRouteAndMenu = () => {
         <div on:click="{groupRouteAndMenu}" class="button">
             <GroupIcon />
         </div>
+        <div on:click="{discoveryRouteAndMenu}" class="button">
+            <DiscoveryIcon />
+        </div>
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
@@ -72,14 +84,13 @@ const groupRouteAndMenu = () => {
         <div on:click="{() => goto('/settings/node')}" class="button">
             <SettingsIcon />
         </div>
-        <a class='button' href="/" on:click={handleLogout}>
-            <Logout/>
+        <a class="button" href="/" on:click="{handleLogout}">
+            <Logout />
         </a>
         <XkrLogo grey="{true}" />
         <div
             on:click="{() =>
-                openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}"
-        >
+                openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}">
             <AlphaIcon />
         </div>
     </div>
