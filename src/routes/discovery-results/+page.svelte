@@ -23,11 +23,22 @@ onMount(() => {
 
 <div class="grid">
     {#each Array.from({ length: 12 }) as _, i}
-        <div class="box"></div>
+        <div class="box">
+            <div class="box-content">
+                <div class="box-info">
+                    <p class="box-name">Rust</p>
+                    <p class="box-text">Join</p>
+                </div>
+            </div>
+        </div>
     {/each}
 </div>
 
 <style lang="scss">
+.header {
+    padding: 20px;
+}
+
 .grid {
     height: calc(100vh - 60px);
     display: grid;
@@ -46,13 +57,39 @@ onMount(() => {
 .box {
     height: 150px;
     display: flex;
-    align-items: center;
-    justify-content: left;
-    font-size: 1.5rem;
-    border-radius: 10px;
-    color: white;
-    text-align: left;
     background-color: #1f1f1f;
-    margin: 0px 0;
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.box-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px;
+    position: relative;
+}
+
+.box-image {
+    width: 80px; /* Adjust image size as needed */
+    height: 80px;
+}
+
+.box-info {
+    margin-top: auto; /* Push to the bottom of the box */
+    display: flex;
+    flex-direction: column;
+}
+
+.box-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: white;
+}
+
+.box-text {
+    font-size: 0.9rem;
+    color: white;
+    text-align: right;
 }
 </style>

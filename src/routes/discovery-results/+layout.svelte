@@ -20,6 +20,6 @@ onMount(async () => {
     height: 100vh;
     margin-left: 85px;
     padding-right: 85px;
-    width: 100%;
+    width: 90%;
 }
 </style>

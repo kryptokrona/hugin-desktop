@@ -314,7 +314,7 @@ $: if ($localFiles.some((a) => a.chat === $user.activeChat.chat)) {
         </div>
     {/if}
 
-    {#if $page.url.pathname === '/discovery'}
+    {#if $page.url.pathname === '/discovery' || $page.url.pathname === '/discovery-results'}
         <div class="nav" style="height: 100%">
             <div class="nav">
                 <button class="button">
