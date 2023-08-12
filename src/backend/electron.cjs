@@ -36,7 +36,7 @@ const {
     nonceFromTimestamp, 
     createGroup, 
     hexToUint, 
-    toHex, parseCall } = require("./utils.cjs")
+    toHex, parseCall, hash } = require("./utils.cjs")
 const {
     loadDB,
     saveHash,
@@ -81,6 +81,7 @@ const {
 } = require('kryptokrona-utils')
 
 const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile } = require("./beam.cjs")
+const { newSwarm, sendSwarmMessage, endSwarm} = require("./swarm.cjs")
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
@@ -93,6 +94,9 @@ const dbPath = userDataDir + '/SQLmessages.db'
 const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
+
+
+const DHT = require('@hyperswarm/dht')
 
 let mainWindow
 let daemon
@@ -530,7 +534,7 @@ async function start_js_wallet(walletName, password, node) {
 
     if (!await login(walletName, password)) return
     
-    hashed_pass = await hashPassword(password)
+    hashed_pass = await hash(password)
     
     pickNode(node.node + ":" + node.port.toString())
     //Load known public keys and contacts
@@ -865,12 +869,8 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     }
 }
 
-async function hashPassword(pass) {
-    return await crypto.cn_fast_hash(toHex(pass))
-}
-
 async function checkPass(pass, oldHash) {
-    let passHash = await hashPassword(pass)
+    let passHash = await hash(pass)
     if (oldHash === passHash) return true
     return false
 }
@@ -994,7 +994,8 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
     return payload_hex
 }
 
-async function sendGroupsMessage(message, offchain = false) {
+async function sendGroupsMessage(message, offchain = false, swarm = false) {
+    console.log("Sending group msg!")
     const my_address = message.k
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
@@ -1041,7 +1042,7 @@ async function sendGroupsMessage(message, offchain = false) {
 
     if (!offchain) {
         let result = await js_wallet.sendTransactionAdvanced(
-            [[subWallet, 1000]], // destinations,
+            [[messageSubWallet, 1000]], // destinations,
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
@@ -1053,6 +1054,7 @@ async function sendGroupsMessage(message, offchain = false) {
         )
 
         if (result.success) {
+            console.log("Succces sending tx")
             message_json.sent = true
             saveGroupMessage(message_json, result.transactionHash, timestamp)
             mainWindow.webContents.send('sent_group', {
@@ -1077,12 +1079,22 @@ async function sendGroupsMessage(message, offchain = false) {
         let randomKey = await createGroup()
         let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
         let sendMsg = randomKey + '99' + sentMsg
+        if (swarm) {
+            sendSwarmMessage(sendMsg, group)
+            saveGroupMessage(message_json, randomKey, timestamp)
+            mainWindow.webContents.send('sent_group', {
+                hash: randomKey,
+                time: message.t,
+            })
+            return
+        }
         let messageArray = [sendMsg]
         mainWindow.webContents.send('rtc_message', messageArray, true)
         mainWindow.webContents.send('sent_rtc_group', {
             hash: randomKey,
             time: message.t,
         })
+        
     }
 }
 
@@ -1454,6 +1466,8 @@ async function optimizeMessages(force = false) {
         networkHeight
     )
 
+    console.log("Inputs", inputs.length)
+
     if (inputs.length > 25 && !force) {
         mainWindow.webContents.send('optimized', true)
         return
@@ -1682,6 +1696,27 @@ ipcMain.on("end-beam", async (e, chat) => {
     endBeam(chat);
 });
 
+//SWARM
+
+ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
+    sendGroupsMessage(msg, offchain, swarm)
+})
+
+ipcMain.on('new-swarm', async (e, data) => {
+
+    let topic = await hash(data.key)
+    console.log("Starting topic and key", topic)
+    console.log("", data.key)
+    newSwarm(topic, data, sender, getXKRKeypair())
+})
+ipcMain.on('end-swarm', async (e, key) => {
+
+    let topic = await hash(key)
+    console.log("Ending topic", topic)
+    console.log("key", key)
+    endSwarm(topic)
+})
+
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
@@ -1717,10 +1752,6 @@ ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => 
 
 
 //GROUPS
-
-ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
-    sendGroupsMessage(msg, offchain)
-})
 
 ipcMain.handle('getGroups', async (e) => {
     let groups = await getGroups()

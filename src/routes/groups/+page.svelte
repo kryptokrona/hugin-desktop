@@ -4,7 +4,7 @@ import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {groupMessages} from '$lib/stores/groupmsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
 import GroupList from '$lib/components/chat/GroupList.svelte'
-import {groups, notify, user} from '$lib/stores/user.js'
+import {groups, notify, user, swarm} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
@@ -80,11 +80,13 @@ const sendGroupMsg = async (e) => {
     let time = Date.now()
     let myName = $user.username
     let group = thisGroup
-
+    let in_swarm = $swarm.active.some(a => a.key === thisGroup)
+    let offchain = in_swarm
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
     }
+    
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
     let myGroupMessage = {
         message: msg,
@@ -104,9 +106,10 @@ const sendGroupMsg = async (e) => {
         t: time,
         n: myName,
         hash: time,
+        swarm: in_swarm
     }
     
-    window.api.sendGroupMessage(sendMsg)
+    window.api.sendGroupMessage(sendMsg, offchain, in_swarm)
     printGroupMessage(myGroupMessage)
     replyExit()
     scrollDown()
@@ -302,13 +305,11 @@ $: wantToAdd = $groups.addGroup
 $: replyTrue = $groups.replyTo.reply
 
 function addHash(data) {
-    fixedGroups.slice(-10).some(function (a) {
+    fixedGroups.some(function (a) {
         if (a.hash === data.time) {
             a.hash = data.hash
         }
     })
-
-    fixedGroups = fixedGroups
 }
 
     // let pageNum = 0;

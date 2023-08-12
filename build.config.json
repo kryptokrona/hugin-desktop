@@ -38,6 +38,8 @@
         "src/backend/preload.cjs",
         "src/backend/sdp.cjs",
         "src/backend/utils.cjs",
+        "src/backend/crypto.cjs",
+        "src/backend/swarm.cjs",
         {
             "from": "build",
             "to": ""

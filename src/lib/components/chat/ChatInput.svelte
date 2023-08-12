@@ -1,7 +1,7 @@
 <script>
   import {createEventDispatcher, onDestroy, onMount} from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
-  import {boards, webRTC, groups, beam} from '$lib/stores/user.js'
+  import {boards, webRTC, groups, beam, swarm} from '$lib/stores/user.js'
   import {page} from '$app/stores'
   import {user} from '$lib/stores/user.js'
   import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -20,7 +20,6 @@
   let activeBeam = false
   let to = ""
   let shiftKey
-  let messageInput = ""
 
   onMount(async () => {
     mount = true
@@ -63,6 +62,8 @@
   }
 
   //Input data to dispatch
+  let messageInput = ""
+
   //To handle button disabled enabled
   let enableSend = false
 
@@ -73,7 +74,8 @@
     dispatch('message', {
       text: msg,
       offChain: off_chain,
-      beam: activeBeam
+      beam: activeBeam,
+      swarm: activeSwarm
     })
     resetInputHeight()
     messageInput = ''
@@ -121,6 +123,17 @@
     }
   }
 
+  let activeSwarm = false
+  $: console.log("active swarm in Chatinput.svelte", activeSwarm)
+
+  $: {
+    if ($swarm.active.length) {
+      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key);
+    } else {
+      activeSwarm = false
+    }
+  }
+
   function autosize() {
     console.log(messageField.scrollHeight)
     if(messageInput !== '') {
@@ -141,9 +154,6 @@
 
   }
 
-
-
-
 </script>
 
 <svelte:window on:keyup="{keyup}" on:keydown="{keydown}"/>
@@ -161,7 +171,7 @@
             <Emoji/>
         </div>
     </div>
-    <div class="button" disabled="{!enableSend}" class:enableSend on:click="{sendMsg}">
+    <div class="button" disabled="{!enableSend}" class:enableSend on:click|once="{sendMsg}">
         <SendIcon/>
     </div>
 </div>

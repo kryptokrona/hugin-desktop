@@ -2,14 +2,15 @@
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import {fade} from 'svelte/transition'
     import {groupMessages} from '$lib/stores/groupmsgs.js'
-    import {groups} from '$lib/stores/user.js'
+    import {groups, swarm} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import Group from '$lib/components/chat/Group.svelte'
     import Plus from '$lib/components/icons/Plus.svelte'
     import RemoveGroup from '$lib/components/chat/RemoveGroup.svelte'
-    import {layoutState} from '$lib/stores/layout-state.js'
+    import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
     import {sleep} from '$lib/utils/utils.js'
     import {flip} from 'svelte/animate'
+    import Rooms from '$lib/components/chat/Rooms.svelte'
 
 
     let activeHugins = []
@@ -174,6 +175,10 @@ const addGroup = () => {
     $groups.addGroup = true
 }
 
+const addRoom = () => {
+    console.log("add room here? on click")
+}
+
 //Set group key
 $: if ($groups.thisGroup.key) {
     group = $groups.thisGroup.key
@@ -182,10 +187,69 @@ $: if ($groups.thisGroup.key) {
 //This group name
 $: groupName = $groups.thisGroup.name
 
+$: active_swarm = $swarm.active.some(a => groupList.map(b=>b.key).includes(a.key))
+
+$: console.log("active swarm? in groupList", active_swarm)
+
 //Active hugins
 $: activeHugins
 
+$: show_groups = $swarmGroups.showGroups
+	
+	function flipper(node, {
+		delay = 0,
+		duration = 200
+	}) {
+		return {
+			delay,
+			duration,
+			css: (t, u) => `
+				transform: rotateY(${1 - (u * 180)}deg);
+				opacity: ${1 - u};
+			`
+		};
+	}
+
+    const back = () => {
+        $swarmGroups.showGroups = true
+    }
+
 </script>
+
+<div class="wrapper" in:fade>
+    <div class="top" transition:flipper>
+        {#if show_groups}
+            <h2>Groups</h2>
+            <br />
+            <div class="buttons">
+                <Plus on:click="{addGroup}" />
+            </div>
+        {:else}
+            <p class="back" on:click={back}>Back</p>
+            <h2>Rooms</h2>
+            <br />
+            <div class="buttons">
+                <Plus on:click="{addRoom}" />
+            </div>
+        {/if}
+       
+    </div>
+		{#if show_groups}
+            <div class="list-wrapper" transition:flipper>
+                {#each groupList as group (group.key)}
+                    <div animate:flip="{{duration: 250}}">
+                        <Group group="{group}" on:print="{() => printGroup(group)}" />
+                    </div>
+                {/each}
+            </div>
+    {:else}
+        <div class="list-wrapper" transition:flipper>
+            <Rooms />
+        </div>
+
+    {/if}
+</div>
+
 
 {#if $groups.removeGroup}
     <RemoveGroup
@@ -194,24 +258,12 @@ $: activeHugins
     />
 {/if}
 
-<div class="wrapper" in:fade>
-    <div class="top">
-        <h2>Groups</h2>
-        <br />
-        <div class="buttons">
-            <Plus on:click="{addGroup}" />
-        </div>
-    </div>
-        <div class="list-wrapper">
-            {#each groupList as group (group.key)}
-                <div animate:flip="{{duration: 250}}">
-                    <Group group="{group}" on:print="{() => printGroup(group)}" />
-                </div>
-            {/each}
-        </div>
-</div>
+
 
 <style lang="scss">
+
+
+
 .nickname {
     margin: 0;
     word-break: break-word;
@@ -332,5 +384,9 @@ p {
 
 .hide {
     width: 0px;
+}
+
+.back {
+    cursor: pointer;
 }
 </style>

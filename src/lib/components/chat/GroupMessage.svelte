@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onMount } from 'svelte'
-import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
@@ -13,6 +13,7 @@ import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
 import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
+import { groupMessages } from '$lib/stores/groupmsgs.js'
 
 export let msg
 export let msgFrom
@@ -54,8 +55,10 @@ let offchain = false
 let thisReply = false
 let replyError = false
 
+let in_swarm
+
 onMount( async () => {
-        if (reply.length === 64) 
+        if (reply.length < 65) 
         {
         thisReply = await checkreply(reply)
         replyMessage = true
@@ -91,10 +94,19 @@ function checkMessage() {
 
 }
 async function checkreply(reply) {
+
+    
+    if ($swarm.active.some(a => a.key === group.key)) {
+        in_swarm = true
+    } else {
+        in_swarm = false
+    }
+    
     if (offchain) {
         let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
         return group_reply
     }
+
     let thisreply = await window.api.getGroupReply(reply)
     if (!thisreply) return false
     //Add extra number to avoid collision for keys in Svelte each loop

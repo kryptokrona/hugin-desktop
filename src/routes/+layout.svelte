@@ -7,7 +7,8 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm} from '$lib/stores/user.js'
+    import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
 
@@ -16,6 +17,7 @@
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
     import IncomingCall from '$lib/components/webrtc/IncomingCall.svelte'
     import Webrtc from '$lib/components/webrtc/Calls.svelte'
+    import Group_Webrtc from '$lib/components/group_webrtc/VoiceChannel.svelte'
     import TrafficLights from '$lib/components/TrafficLights.svelte'
     import CallerMenu from '$lib/components/webrtc/CallerMenu.svelte'
     import PeerAudio from '$lib/components/webrtc/PeerAudio.svelte'
@@ -239,7 +241,7 @@
         let filter = $notify.new.filter(a => a.hash !== e.detail.hash)
         $notify.new = filter
     }
-    
+
     //APP UPDATER
     window.api.receive('updater', (data) => {
         data = data.toString()
@@ -383,6 +385,23 @@
         updateUploadProgress(data)
     })
 
+    window.api.receive('checked', (data)  => { 
+        console.log("Got p2p data", data)
+        if (data) {
+            toast.success(`P2P connection esablished`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+            return
+        }
+
+        toast.error('P2P connection failed', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+         })
+        
+    })
+
     const updateUploadProgress = async (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
@@ -455,9 +474,19 @@
 <Toaster/>
 
 {#if ready}
-
+    <StoreFunctions/>
     {#if startAnimation}
         <div class="shine"></div>
+    {/if}
+
+    {#if ($user.loggedIn && $swarm.call.length)}
+
+    {#each $swarm.call as connection}
+        {#if $swarm.call.some((a) => a.peerAudio === true)}
+            <PeerAudio audioCall="{connection}"/>
+        {/if}
+    {/each}
+
     {/if}
 
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
@@ -505,6 +534,7 @@
             <RightMenu/>
         {/if}
         <Webrtc/>
+        <Group_Webrtc/>
     {/if}
 
     {#if $appUpdateState.openPopup}

@@ -1,8 +1,8 @@
 <script>
     import {fade} from 'svelte/transition'
-    import {groups} from '$lib/stores/user.js'
+    import {groups, swarm, user} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import {layoutState} from '$lib/stores/layout-state.js'
+    import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
     import {flip} from 'svelte/animate'
 
     import { page } from '$app/stores'
@@ -11,7 +11,6 @@
     let activeHugins = []
     let group = ''
     let groupName
-
 
 function sendPM() {
     // Add friend request here?
@@ -27,10 +26,15 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
+const myAddress = $user.huginAddress.substring(0,99)
+
 //Set group key
 $: if ($groups.thisGroup.key) {
     group = $groups.thisGroup.key
 }
+
+//Active users in p2p chat
+let activeUsers = []
 
 //This group name
 $: groupName = $groups.thisGroup.name
@@ -40,6 +44,18 @@ $: activeHugins = $groups.activeHugins
 
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
+$: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
+
+$: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
+
+let inSwarm = false
+
+$: if (thisSwarm) {
+    activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
+} else {
+    activeUsers = []
+}
+
 </script>
 
 
@@ -47,11 +63,16 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
     <div class="top">
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
         <br />
-        <br />
+        <div class="swarm">
+        </div>
     </div>
         <div class="list-wrapper">
-            {#each activeList as user}
+            {#each activeList as user}     
+            
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
+                        {#if (thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
+                            <div class:unread="{(thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}"></div>
+                        {/if}
                         <img
                             class="avatar"
                             src="data:image/png;base64,{get_avatar(user.address)}"
@@ -59,6 +80,7 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
                         />
                         <p class="nickname">{user.name}</p>
                         <br />
+                      
                     </div>
             {/each}
         </div>
@@ -66,6 +88,11 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
 </div>
 
 <style lang="scss">
+
+.swarm {
+    cursor: pointer;
+}
+
 .nickname {
     margin: 0;
     word-break: break-word;
@@ -191,4 +218,18 @@ p {
     transition: 200ms ease-in-out;
     margin-right: -125px;
 }
+
+.in_swarm {
+    transition: 0.2s;
+    border: 1px solid var(--success-color);
+}
+
+.unread {
+    background-color: var(--success-color);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: relative;
+}
+
 </style>

@@ -16,3 +16,7 @@ export const videoGrid = writable({
     hideMyVideo: false,
     multiView: false,
 })
+
+export const swarmGroups = writable({
+    showGroups: true,
+})

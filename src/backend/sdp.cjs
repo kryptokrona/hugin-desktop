@@ -104,13 +104,13 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
     let external_ip_out = ipv6(external_ip) ? 'c=IN IP6 ' + external_ip : 'c=IN IP4 ' + external_ip;
 
     if (external_ip.length == 0) {
-        external_id = ips[0].substring(1)
+        external_ip = ips[0].substring(1)
     }
 
     console.log(external_ports.length / 3)
     console.log((external_ports.length / 3) * 2)
 
-    if (!external_ports[0]) {
+    if (external_ports[0].length === 0) {
         external_ports[0] = '9'
     }
 

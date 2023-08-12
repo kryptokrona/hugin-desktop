@@ -24,9 +24,9 @@ const WINDOW_API = {
         ipcRenderer.send('sendBoardMsg', msg)
     },
 
-    sendGroupMessage: (msg, offchain) => {
-        console.log('Send group msg', msg, offchain)
-        ipcRenderer.send('sendGroupsMessage', msg, offchain)
+    sendGroupMessage: (msg, offchain, swarm) => {
+        console.log('Send group msg', msg, offchain, swarm)
+        ipcRenderer.send('sendGroupsMessage', msg, offchain, swarm)
     },
 
     decryptMessage: (msg) => {
@@ -36,6 +36,7 @@ const WINDOW_API = {
         console.log('key', key)
         ipcRenderer.send('decrypt_rtc_group_message', msg, key)
     },
+    
 
     getMessages: async (data) => {
         const res = await ipcRenderer.invoke('getMessages')

@@ -96,6 +96,12 @@ export const beam = writable({
     active: []
 })
 
+export const swarm = writable({
+    active: [],
+    voice_channel: [],
+    call: []
+})
+
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
         return get_avatar($user.huginAddress.substring(0, 99))
