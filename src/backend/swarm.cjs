@@ -90,10 +90,10 @@ const join_voice_channel = (key, topic, address) => {
 }
 
 
-const newSwarm = async (topic, data, ipc, xkr_keys) => {
+const newSwarm = async (data, ipc, xkr_keys) => {
     sender = ipc
     chat_keys = xkr_keys
-    return await createSwarm(topic, data)
+    return await createSwarm(data)
 }
 
 const update_local_voice_channel_status = (data) => {
@@ -132,16 +132,13 @@ const endSwarm = async (topic) => {
     console.log("***** Ended swarm *****")
 }
 
-const createSwarm = async (hash, data) => {
+const createSwarm = async (data) => {
     const key = data.key
     const name = data.name
 
     my_address = data.address
     my_name = name
 
-    active_swarms.push({key, topic: hash, connections: [], call: []})
-
-    let active = active_swarms.find(a => a.key === key)
     let discovery
     let swarm
 
@@ -159,10 +156,15 @@ const createSwarm = async (hash, data) => {
     } catch (e) {
         console.log('Error starting swarm')
         return
-    }      
-
+    }  
+    
+    //The topic is public so lets use the pubkey from the new base keypair
+    let hash = keys.publicKey
+    active_swarms.push({key, topic: hash, connections: [], call: []})
+    let active = active_swarms.find(a => a.key === key) 
+ 
     active.swarm = swarm
-    sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
+    sender('swarm-connected', {topic: keys.publicKey, key, channels: [], voice_channel: [], connections: []})
 
     swarm.on('connection', (connection, information) => {
         console.log("New connection ", information)
@@ -178,7 +180,7 @@ const createSwarm = async (hash, data) => {
         setTimeout(() => process.exit(), 2000);
     });
     
-    let topic = Buffer.alloc(32).fill(hash)
+    let topic = Buffer.alloc(32).fill(keys.publicKey)
     discovery = swarm.join(topic, {server: true, client: true})
     active.discovery = discovery
     await discovery.flushed()
@@ -223,7 +225,6 @@ const connection_closed = (conn, topic) => {
     if (!active) return
     try {
         connection.end()
-        console.log("CONNECTION SUCCESSFULLY CLOSED***")
         sender("close-voice-channel-with-peer", user.address)
     } catch (e) {
         console.log("failed close connection")
@@ -335,7 +336,6 @@ const check_peer_voice_status = (data, con) => {
 
 const update_voice_channel_status = (data, con) => {
     ////
-    console.log("Got voice joined", data)
     console.log("Got data voice joined status", data.voice)
     console.log("Check connection voice status", con.voice)
 
@@ -344,12 +344,9 @@ const update_voice_channel_status = (data, con) => {
         console.log("Data voice === con Voice return")
         return true
     }
-
     //Just doublechecking the address
     if (data.address !== con.address) {
-        console.log("Data address", data.address)
-        console.log("Connection Address", con.address)
-        console.log("aDDRESS not correct?")
+        return false
     }
     //Set voice status
     con.voice = data.voice
@@ -362,14 +359,10 @@ const update_voice_channel_status = (data, con) => {
 }
 
 const answer_call = (offer) => {
-    console.log("Answer voice channel send:", offer)
     sender('answer-voice-channel', offer)
 }
 
 const got_answer = (answer) => {
-    console.log("Got answer-voice-channel, send:", answer)
-    // let recovered_data = expand_sdp_answer(answer.data)
-    // answer.data = recovered_data
     sender('got-answer-voice-channel', answer)
 }
 
@@ -484,9 +477,8 @@ ipcMain.on('get-sdp-voice-channel', async (e, data) => {
 
 
 ipcMain.on('expand-voice-channel-sdp', async (e, expand) => {
+    //This roundtrip is not needed when we do not expand sdps anymore
     let [data, address] = expand
-    // console.log("Expand sdp offer", data, address)
-    // let recovered_data = expand_sdp_offer(data, true)
     let expanded_data = [data, address]
     sender('got-expanded-voice-channel', expanded_data)
  })

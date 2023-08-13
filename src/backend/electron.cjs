@@ -1703,11 +1703,8 @@ ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
 })
 
 ipcMain.on('new-swarm', async (e, data) => {
-
-    let topic = await hash(data.key)
-    console.log("Starting topic and key", topic)
     console.log("", data.key)
-    newSwarm(topic, data, sender, getXKRKeypair())
+    newSwarm(data, sender, getXKRKeypair())
 })
 ipcMain.on('end-swarm', async (e, key) => {
 
