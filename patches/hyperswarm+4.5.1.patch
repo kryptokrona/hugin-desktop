@@ -1,5 +1,5 @@
 diff --git a/node_modules/hyperswarm/index.js b/node_modules/hyperswarm/index.js
-index ad0de06..4272c6f 100644
+index ad0de06..cebf95f 100644
 --- a/node_modules/hyperswarm/index.js
 +++ b/node_modules/hyperswarm/index.js
 @@ -18,7 +18,7 @@ const ERR_DESTROYED = 'Swarm has been destroyed'
@@ -7,19 +7,29 @@ index ad0de06..4272c6f 100644
  
  module.exports = class Hyperswarm extends EventEmitter {
 -  constructor (opts = {}) {
-+  constructor (opts, sig, priv = {}) {
++  constructor (opts, sig, priv, keychain = {}) {
      super()
      const {
        seed,
-@@ -34,7 +34,7 @@ module.exports = class Hyperswarm extends EventEmitter {
+@@ -30,15 +30,15 @@ module.exports = class Hyperswarm extends EventEmitter {
+       firewall = allowAll
+     } = opts
+     this.keyPair = keyPair
+-
++    this.priv = priv
      this.dht = opts.dht || new DHT({
        bootstrap: opts.bootstrap,
        debug: opts.debug
 -    })
-+    }, sig, priv)
++    }, sig, priv, keychain)
      this.server = this.dht.createServer({
        firewall: this._handleFirewall.bind(this)
      }, this._handleServerConnection.bind(this))
+-
++    this.keychain = keychain
+     this.destroyed = false
+     this.maxPeers = maxPeers
+     this.maxClientConnections = maxClientConnections
 @@ -65,7 +65,7 @@ module.exports = class Hyperswarm extends EventEmitter {
      this._clientConnections = 0
      this._serverConnections = 0
@@ -37,15 +47,38 @@ index ad0de06..4272c6f 100644
        peerInfo.ban(true)
        this._flushMaybe(peerInfo)
        return
-@@ -212,8 +213,10 @@ module.exports = class Hyperswarm extends EventEmitter {
+@@ -212,10 +213,33 @@ module.exports = class Hyperswarm extends EventEmitter {
  
      const peerInfo = this.peers.get(b4a.toString(remotePublicKey, 'hex'))
      if (peerInfo && peerInfo.banned) return true
-+    let server = true
-+    if (payload === null) server = false
- 
--    return this._firewall(remotePublicKey, payload)
-+    return this._firewall(remotePublicKey, payload, server)
+-
++    if (payload !== null) {
++    if (!payload.mpub) return true
++    if (!payload.mid) return true
++      if (!this.checkKey(payload.mpub, payload.mid, this.priv))  {
++          console.log("Check failed")
++          return true
++      }
++    }
+     return this._firewall(remotePublicKey, payload)
    }
  
++  //Add this check here aswell because firewall payload is null on connect. //TODO, Maybe i can fix that?
++  checkKey(pub, sig, keys) {
++      const sub = this.getSubKey(keys, sig)
++      if (sub.publicKey.toString('hex') === pub.toString('hex')) {
++        return true
++      } else {
++        return false
++      }
++    }
++  
++  getSubKey(keys, tweak) {
++      const random_buf = Buffer.alloc(32).fill(tweak)
++      const sub = keys.sub(random_buf).get()
++      return sub
++  }
++
    _handleServerConnectionSwap (existing, conn) {
+     let closed = false
+ 

@@ -1,5 +1,5 @@
 diff --git a/node_modules/hyperdht/index.js b/node_modules/hyperdht/index.js
-index 19e5c6b..13dde2d 100644
+index 19e5c6b..5608305 100644
 --- a/node_modules/hyperdht/index.js
 +++ b/node_modules/hyperdht/index.js
 @@ -17,7 +17,7 @@ const maxSize = 65536
@@ -7,7 +7,7 @@ index 19e5c6b..13dde2d 100644
  
  class HyperDHT extends DHT {
 -  constructor (opts = {}) {
-+  constructor (opts, sig, priv = {}) {
++  constructor (opts, sig, priv, keychain = {}) {
      const port = opts.port || 49737
      const bootstrap = opts.bootstrap || BOOTSTRAP_NODES
  
@@ -17,7 +17,7 @@ index 19e5c6b..13dde2d 100644
      }
 -
 +    this.sig = sig
-+    console.log("opts sig!", sig)
++    this.keychain = keychain
      this.defaultKeyPair = opts.keyPair || createKeyPair(opts.seed)
      this.listening = new Set()
 -
@@ -25,17 +25,45 @@ index 19e5c6b..13dde2d 100644
      this._router = new Router(this, cacheOpts)
      this._socketPool = new SocketPool(this, opts.host || '0.0.0.0')
      this._rawStreams = new RawStreamSet(this)
-@@ -49,7 +50,7 @@ class HyperDHT extends DHT {
+@@ -48,8 +49,18 @@ class HyperDHT extends DHT {
+     })
    }
  
++  hexToDec(hex) {
++    var result = 0, digitValue;
++    hex = hex.toLowerCase();
++    for (var i = 0; i < hex.length; i++) {
++        digitValue = '0123456789abcdef'.indexOf(hex[i]);
++        result = result * 16 + digitValue;
++    }
++    return result;
++}
++
    connect (remotePublicKey, opts) {
 -    return connect(this, remotePublicKey, opts)
-+    return connect(this, remotePublicKey, opts, this.sig, this.priv)
++    return connect(this, remotePublicKey, opts, this.sig, this.priv, this.keychain)
    }
  
    createServer (opts, onconnection) {
+@@ -316,6 +327,16 @@ class HyperDHT extends DHT {
+     return createKeyPair(seed)
+   }
+ 
++  static hexToDec(hex) {
++    var result = 0, digitValue;
++    hex = hex.toLowerCase();
++    for (var i = 0; i < hex.length; i++) {
++        digitValue = '0123456789abcdef'.indexOf(hex[i]);
++        result = result * 16 + digitValue;
++    }
++    return result;
++}
++
+   static hash (data) {
+     return hash(data)
+   }
 diff --git a/node_modules/hyperdht/lib/connect.js b/node_modules/hyperdht/lib/connect.js
-index edd93ee..e492829 100644
+index edd93ee..f5bbc54 100644
 --- a/node_modules/hyperdht/lib/connect.js
 +++ b/node_modules/hyperdht/lib/connect.js
 @@ -25,7 +25,8 @@ const {
@@ -48,38 +76,40 @@ index edd93ee..e492829 100644
    const keyPair = opts.keyPair || dht.defaultKeyPair
    const encryptedSocket = (opts.createSecretStream || defaultCreateSecretStream)(true, null, {
      publicKey: keyPair.publicKey,
-@@ -55,7 +56,9 @@ module.exports = function connect (dht, publicKey, opts = {}) {
+@@ -55,7 +56,10 @@ module.exports = function connect (dht, publicKey, opts = {}) {
      serverAddress: null,
      onsocket: null,
      sleeper: new Sleeper(),
 -    encryptedSocket
 +    encryptedSocket,
 +    sig,
-+    priv
++    priv,
++    keychain: dht.keychain
    }
  
    // If the raw stream receives an error signal pre connect (ie from the firewall hook), make sure
-@@ -272,6 +275,7 @@ async function findAndConnect (c, opts) {
+@@ -272,6 +276,7 @@ async function findAndConnect (c, opts) {
  }
  
  async function connectThroughNode (c, address, socket) {
-+  console.log("Want to connect through node with sig!", c.sig)
++  console.log("Connecting through node...")
    if (!c.requesting) {
      // If we have a stable server address, send it over now
      const addr = c.dht.remoteAddress()
-@@ -294,8 +298,10 @@ async function connectThroughNode (c, address, socket) {
+@@ -294,8 +299,11 @@ async function connectThroughNode (c, address, socket) {
          id: c.rawStream.id,
          seq: 0
        },
 -      secretStream: {}
 +      secretStream: {},
-+      mid: c.sig
++      mid: c.sig,
++      mpub: c.keychain.publicKey 
      })
 +
      if (isDone(c)) return
    }
  
-@@ -303,8 +309,12 @@ async function connectThroughNode (c, address, socket) {
+@@ -303,6 +311,8 @@ async function connectThroughNode (c, address, socket) {
    if (isDone(c) || c.connect) return
  
    const payload = await c.handshake.recv(noise)
@@ -87,29 +117,33 @@ index edd93ee..e492829 100644
 +  
    if (isDone(c) || !payload) return
  
-+  console.log("It is done!")
-+
    if (payload.version !== 1) {
-     destroyEncryptedSocket(c, SERVER_INCOMPATIBLE())
-     return
-@@ -319,6 +329,11 @@ async function connectThroughNode (c, address, socket) {
-   }
+@@ -320,6 +330,17 @@ async function connectThroughNode (c, address, socket) {
   
    const hs = c.handshake.final()
-+  const checked = check_key(hs.publicKey, c.sig, c.priv)
-+  
+ 
++  //firewall function does not send payload so we must check here for now
++ //Checking if it is a valid subkey is the most efficent way i could come up with with assuming we have a preshared key
++ //Added new payload pub, to avoid using the same as DHT. not sure if its needed but rather safe if i dont know some quirks
++ 
++  const checked = checkKey(payload.mpub, payload.mid, c.priv)
++
 +  if (!checked) {
 +    destroyEncryptedSocket(c, SERVER_INCOMPATIBLE())
++    return
 +  }
- 
++
    c.handshake = null
    c.request = null
-@@ -367,6 +382,21 @@ async function connectThroughNode (c, address, socket) {
+   c.requesting = false
+@@ -367,6 +388,23 @@ async function connectThroughNode (c, address, socket) {
    }
  }
  
-+function check_key(pub, sig, keys) {
++function checkKey(pub, sig, keys) {
++  console.log("checking keys!", pub)
 +    const sub = get_sub_key(keys, sig)
++    console.log("Checking sub!", sub.publicKey)
 +    if (sub.publicKey.toString('hex') === pub.toString('hex')) {
 +      return true
 +    } else {
@@ -127,60 +161,68 @@ index edd93ee..e492829 100644
    const holepunch = await c.dht._router.peerHolepunch(c.target, {
      id: c.connect.payload.holepunch.id,
 diff --git a/node_modules/hyperdht/lib/messages.js b/node_modules/hyperdht/lib/messages.js
-index 9760e66..064af9c 100644
+index 9760e66..b56f15e 100644
 --- a/node_modules/hyperdht/lib/messages.js
 +++ b/node_modules/hyperdht/lib/messages.js
-@@ -130,7 +130,7 @@ const secretStreamInfo = {
+@@ -130,7 +130,11 @@ const secretStreamInfo = {
  
  exports.noisePayload = {
    preencode (state, m) {
 -    state.end += 4 // version + flags + error + firewall
-+    state.end += 17 // version + flags + error + firewall
++    state.end += 49 // version + flags + error + firewall + newpub + id
++    //Changed payload
++    //Not sure if we need an extra pub just want to be sure we are not sharing dht priv key,
++    // if they can be used in some weird way i dont know about, its 44 more and still less than a signature, shouldnt be a problem
++
      if (m.holepunch) holepunchInfo.preencode(state, m.holepunch)
      if (m.addresses4 && m.addresses4.length) ipv4Array.preencode(state, m.addresses4)
      if (m.addresses6 && m.addresses6.length) ipv6Array.preencode(state, m.addresses6)
-@@ -156,6 +156,7 @@ exports.noisePayload = {
+@@ -156,6 +160,8 @@ exports.noisePayload = {
      if (m.addresses6 && m.addresses6.length) ipv6Array.encode(state, m.addresses6)
      if (m.udx) udxInfo.encode(state, m.udx)
      if (m.secretStream) secretStreamInfo.encode(state, m.secretStream)
 +    if (m.mid) c.uint.encode(state, m.mid)
++    if (m.mpub) c.fixed32.encode(state, m.mpub)
    },
    decode (state) {
      const version = c.uint.decode(state)
-@@ -171,7 +172,8 @@ exports.noisePayload = {
+@@ -171,7 +177,9 @@ exports.noisePayload = {
          addresses4: [],
          addresses6: [],
          udx: null,
 -        secretStream: null
 +        secretStream: null,
-+        mid: null
++        mid: null,
++        mpub: null,
        }
      }
  
-@@ -185,7 +187,8 @@ exports.noisePayload = {
+@@ -185,7 +193,9 @@ exports.noisePayload = {
        addresses4: (flags & 2) !== 0 ? ipv4Array.decode(state) : [],
        addresses6: (flags & 4) !== 0 ? ipv6Array.decode(state) : [],
        udx: (flags & 8) !== 0 ? udxInfo.decode(state) : null,
 -      secretStream: (flags & 16) !== 0 ? secretStreamInfo.decode(state) : null
 +      secretStream: (flags & 16) !== 0 ? secretStreamInfo.decode(state) : null,
-+      mid: c.uint.decode(state)
++      mid: c.uint.decode(state),
++      mpub: c.fixed32.decode(state)
      }
    }
  }
 diff --git a/node_modules/hyperdht/lib/server.js b/node_modules/hyperdht/lib/server.js
-index 5ada099..b73d2c5 100644
+index 5ada099..dd35891 100644
 --- a/node_modules/hyperdht/lib/server.js
 +++ b/node_modules/hyperdht/lib/server.js
-@@ -21,7 +21,7 @@ module.exports = class Server extends EventEmitter {
+@@ -21,7 +21,8 @@ module.exports = class Server extends EventEmitter {
  
      this.dht = dht
      this.target = null
 -
 +    this.sig = dht.sig
++    this.keychain = dht.keychain
      this.relayAddresses = null // TODO: populate this
      this.closed = false
      this.firewall = opts.firewall || (() => false)
-@@ -37,6 +37,8 @@ module.exports = class Server extends EventEmitter {
+@@ -37,6 +38,8 @@ module.exports = class Server extends EventEmitter {
      this._holepunches = []
      this._listening = false
      this._closing = null
@@ -189,13 +231,14 @@ index 5ada099..b73d2c5 100644
    }
  
    get publicKey () {
-@@ -234,7 +236,8 @@ module.exports = class Server extends EventEmitter {
+@@ -234,7 +237,9 @@ module.exports = class Server extends EventEmitter {
            id: hs.rawStream ? hs.rawStream.id : 0,
            seq: 0
          },
 -        secretStream: {}
 +        secretStream: {},
-+        mid: this.sig
++        mid: this.sig,
++        mpub: this.keychain.publicKey
        })
      } catch (err) {
        safetyCatch(err)
