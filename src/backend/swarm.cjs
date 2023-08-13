@@ -146,15 +146,16 @@ const createSwarm = async (hash, data) => {
     let swarm
 
     let [keyPair, keys, sig] = get_new_peer_keys(key)
-
+    //We add sig, keys and keyPair is for custom firewall settings.
     try {
-        swarm = new HyperSwarm({firewall (remotePublicKey, payload, server = false) {
-            console.log("SERVER!?", server)
-            if (payload !== null && 'mid' in payload && server) {
-                return !check_key(remotePublicKey, payload.mid, keys)
-            } else if (!server) return false
-            return true
-        }, keyPair}, sig, keys)
+        swarm = new HyperSwarm({firewall (remotePublicKey, payload) {
+            //We are already checking payloads in hyperswarm
+            if (payload !== null) {
+                //Moved checkKey to hyperswarm
+            }
+            //Allow connection
+            return false
+        }}, sig, keys, keyPair)
     } catch (e) {
         console.log('Error starting swarm')
         return
@@ -187,15 +188,13 @@ const createSwarm = async (hash, data) => {
 const new_connection = (connection, hash, key, name) => {
     console.log("New connection incoming")
     let active = get_active_topic(hash)
-    // let checked = check_key(connection.remotePublicKey)
-
-    // if (!checked) connection_closed(connection, hash)
     
     if (!active) {
         console.log("no longer active in topic")
         connection_closed(connection, hash)
         return
     }
+
     console.log("*********Got new Connection! ************")
     active.connections.push({connection, topic: hash, voice: false, name: "", address: ""})
     send_joined_message(key, hash, my_address)
