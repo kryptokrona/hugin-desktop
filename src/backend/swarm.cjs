@@ -40,7 +40,7 @@ async function send_voice_channel_sdp(data) {
 
 const send_voice_channel_status = async (joined = false, key) => {
     let active = active_swarms.find(a => a.key === key)
-    let msg = joined ? "Joined voice" : "Left voice"
+    let msg = active.topic
     if (!active) return
     let sig = await signMessage(msg, chat_keys.privateSpendKey)
     let data = JSON.stringify({
@@ -265,25 +265,24 @@ const check_data_message = async (data, connection, topic) => {
         if (data.type === "disconnected") {
             console.log("Got disconnected message!", data)
             connection_closed(connection, active.topic)
-            return
+            return true
         }
     }
 
     //Double check if connection is joined voice?
     if ('offer' in data) {
-        console.log("Got voice offer / answer", data)
+        //Check if this connection has voice status activated.
         if (active.connections.some(a => a.connection === connection && a.voice === true)) {
-            console.log("Very active in voice ******************* ->>>>>>>>>>>>>")
             if (active_voice_channel.voice === false) {
-                console.log("I am not active in voice! ************* Return")
-                return
+                //We are not connected to a voice channel
+                //Return true bc we do not need to check it again
+                return true
             }
-            
+            //Joining == offer
             if (data.offer === true) {
-                console.log("Want to answer!", data)
                 answer_call(data)
             } else {
-                console.log("Got answer!", data)
+                //Already in voice == answer
                 got_answer(data)
             }
             return true
@@ -301,10 +300,11 @@ const check_data_message = async (data, connection, topic) => {
             if (!joined) return "Error"
 
             if (con.joined) {
-                console.log("*** Already joined! returning ***")
+                //Connection is already joined
                 return
             }
-          
+
+            //Basic signature, TODO** should change the signed message to topic
             const verified = await verifySignature(joined.message, joined.address, joined.signature)
             if(!verified) return "Error"
             con.joined = true
@@ -335,9 +335,6 @@ const check_peer_voice_status = (data, con) => {
 
 
 const update_voice_channel_status = (data, con) => {
-    ////
-    console.log("Got data voice joined status", data.voice)
-    console.log("Check connection voice status", con.voice)
 
     ////Already know this status
     if (data.voice === con.voice) {
@@ -369,6 +366,8 @@ const got_answer = (answer) => {
 const get_local_voice_status = (topic) => {
     let voice = false
     let channel
+    //We do this bc stringified data is set locally from the status messages.
+    //This can change 
     try {
         channel = JSON.parse(active_voice_channel[0])
         if (channel.topic !== topic) return [false]
@@ -376,17 +375,15 @@ const get_local_voice_status = (topic) => {
         return [false]
     }
 
-    console.log("channel.topic", channel)
     voice = channel.voice
     console.log("Success parsed voice status", voice)
-    //Doublecheck voice status
-    if (voice === undefined) voice = true
 
     return [voice]
 }
 
 const send_joined_message = async (key, topic, my_address) => {
-    const msg = "Joined"
+    //Use topic as signed message?
+    const msg = topic
     const sig = await signMessage(msg, chat_keys.privateSpendKey)
     const [voice] = get_local_voice_status(topic)
     console.log("Got local voice", voice)
@@ -519,7 +516,6 @@ function create_peer_base_keys(buf) {
 function get_new_peer_keys(key) {
     const secret = Buffer.alloc(32).fill(key)
     const keys = create_peer_base_keys(secret)
-    console.log("First keys", keys)
     const sig = Date.now() //This could change to a more random thing
     const sub = get_sub_key(keys, sig)
     return [sub, keys, sig]
