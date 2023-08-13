@@ -285,8 +285,8 @@ const check_data_message = async (data, connection, topic) => {
                 //Already in voice == answer
                 got_answer(data)
             }
-            return true
         }
+        return true
     }
 
     if (typeof data === "object") {
@@ -304,7 +304,7 @@ const check_data_message = async (data, connection, topic) => {
                 return
             }
 
-            //Basic signature, TODO** should change the signed message to topic
+            //Check signature
             const verified = await verifySignature(joined.message, joined.address, joined.signature)
             if(!verified) return "Error"
             con.joined = true

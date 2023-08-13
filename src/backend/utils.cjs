@@ -101,7 +101,7 @@ const sanitize_join_swarm_data = (data) => {
     const address = sanitizeHtml(data.address)
     if (address.length !== 99) return false
     const message = sanitizeHtml(data.message)
-    if (message.length > 20) return false 
+    if (message.length > 64) return false 
     const signature = sanitizeHtml(data.signature)
     if (signature.length !== 128) return false
     const topic = sanitizeHtml(data.topic)
@@ -131,7 +131,7 @@ const sanitize_voice_status_data = (data) => {
     const address = sanitizeHtml(data.address)
     if (address.length !== 99) return false
     const message = sanitizeHtml(data.message)
-    if (message.length > 20) return false 
+    if (message.length > 64) return false 
     const signature = sanitizeHtml(data.signature)
     if (signature.length !== 128) return false
     const topic = sanitizeHtml(data.topic)
