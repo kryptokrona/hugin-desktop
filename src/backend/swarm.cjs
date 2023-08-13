@@ -102,8 +102,6 @@ const update_local_voice_channel_status = (data) => {
     return true
 }
 
-
-
 const endSwarm = async (key) => {
     let active = active_swarms.find(a => a.key === key)
     let topic = active.topic

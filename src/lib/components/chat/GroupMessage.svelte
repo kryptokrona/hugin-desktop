@@ -58,7 +58,7 @@ let replyError = false
 let in_swarm
 
 onMount( async () => {
-        if (reply.length < 65) 
+        if (reply.length === 64) 
         {
         thisReply = await checkreply(reply)
         replyMessage = true
@@ -93,17 +93,31 @@ function checkMessage() {
 
 
 }
+
+
+//Add extra number to avoid collision for keys in Svelte each loop
+const svelteHashPadding = Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+
 async function checkreply(reply) {
-
+    let group_reply
+    
     if (offchain) {
-        let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
+        //Search in rtc messages
+        group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
+        if (group_reply) return
+    } else {
+        //Check if they are in our message array, no need to look in db!
+        group_reply = $groupMessages.find(a => a.hash === reply)
+        if (group_reply) {
+        group_reply.hash = group_reply.hash + svelteHashPadding
+        console.log("group_reply hash", group_reply.hash)
         return group_reply
+        } 
     }
-
+    //Check in db if we can find it
     let thisreply = await window.api.getGroupReply(reply)
     if (!thisreply) return false
-    //Add extra number to avoid collision for keys in Svelte each loop
-    thisreply.hash = thisreply.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+    thisreply.hash = thisreply.hash + svelteHashPadding
     return thisreply
 }
 
