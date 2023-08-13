@@ -105,9 +105,9 @@ const update_local_voice_channel_status = (data) => {
 
 
 
-const endSwarm = async (topic) => {
-    let active = active_swarms.find(a => a.topic === topic)
-    console.log("Ending active swarm", topic)
+const endSwarm = async (key) => {
+    let active = active_swarms.find(a => a.key === key)
+    console.log("Ending active swarm", active.topic)
     const [voice] = get_local_voice_status(topic)
 
     if (voice) {
@@ -164,7 +164,7 @@ const createSwarm = async (data) => {
     let active = active_swarms.find(a => a.key === key) 
  
     active.swarm = swarm
-    sender('swarm-connected', {topic: keys.publicKey, key, channels: [], voice_channel: [], connections: []})
+    sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
 
     swarm.on('connection', (connection, information) => {
         console.log("New connection ", information)
@@ -180,7 +180,7 @@ const createSwarm = async (data) => {
         setTimeout(() => process.exit(), 2000);
     });
     
-    let topic = Buffer.alloc(32).fill(keys.publicKey)
+    let topic = Buffer.alloc(32).fill(hash)
     discovery = swarm.join(topic, {server: true, client: true})
     active.discovery = discovery
     await discovery.flushed()
@@ -259,7 +259,6 @@ const check_data_message = async (data, connection, topic) => {
     let con = active.connections.find(a => a.connection === connection)
     if (!con) return "Error"
     
-    console.log("Got join message *********", data)
     //If the connections send us disconnect message, return. **todo double check closed connection
     if ('type' in data) {
         if (data.type === "disconnected") {
@@ -278,7 +277,7 @@ const check_data_message = async (data, connection, topic) => {
                 //Return true bc we do not need to check it again
                 return true
             }
-            //Joining == offer
+                //Joining == offer
             if (data.offer === true) {
                 answer_call(data)
             } else {
@@ -295,8 +294,8 @@ const check_data_message = async (data, connection, topic) => {
 
         if ('joined' in data) {
 
+            console.log("Got joined message:", data)
             let joined = sanitize_join_swarm_data(data)
-            console.log("Got joined message!")
             if (!joined) return "Error"
 
             if (con.joined) {
@@ -337,19 +336,12 @@ const check_peer_voice_status = (data, con) => {
 const update_voice_channel_status = (data, con) => {
 
     ////Already know this status
-    if (data.voice === con.voice) {
-        console.log("Data voice === con Voice return")
-        return true
-    }
+    if (data.voice === con.voice) return true
     //Just doublechecking the address
-    if (data.address !== con.address) {
-        return false
-    }
+    if (data.address !== con.address) return false
     //Set voice status
     con.voice = data.voice
-    
     console.log("Updating voice channel status for this connection:", con.voice)
-
     //Send status to front-end
     sender("voice-channel-status", data)
     return true
@@ -519,15 +511,6 @@ function get_new_peer_keys(key) {
     const sig = Date.now() //This could change to a more random thing
     const sub = get_sub_key(keys, sig)
     return [sub, keys, sig]
-}
-
-const check_key = (pub, sig, keys) => {
-  const sub = get_sub_key(keys, sig)
-  if (sub.publicKey.toString('hex') === pub.toString('hex')) {
-    return true
-  } else {
-    return false
-  }
 }
 
 

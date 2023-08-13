@@ -63,7 +63,7 @@ const fileBeam = (beam, chat, key, download = false) => {
     active_beams.push({beam, chat, key})
 
     beam.on('data', (data) => {
-        if (!start) {
+        if (!start && download) {
             const str = new TextDecoder().decode(data);
             if (str === "Start") {
                 start = true

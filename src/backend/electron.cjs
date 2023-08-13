@@ -1703,15 +1703,10 @@ ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
 })
 
 ipcMain.on('new-swarm', async (e, data) => {
-    console.log("", data.key)
     newSwarm(data, sender, getXKRKeypair())
 })
 ipcMain.on('end-swarm', async (e, key) => {
-
-    let topic = await hash(key)
-    console.log("Ending topic", topic)
-    console.log("key", key)
-    endSwarm(topic)
+    endSwarm(key)
 })
 
 //FILES
