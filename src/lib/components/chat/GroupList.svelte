@@ -189,7 +189,6 @@ $: groupName = $groups.thisGroup.name
 
 $: active_swarm = $swarm.active.some(a => groupList.map(b=>b.key).includes(a.key))
 
-$: console.log("active swarm? in groupList", active_swarm)
 
 //Active hugins
 $: activeHugins
