@@ -31,7 +31,6 @@ async function send_voice_channel_sdp(data) {
     let active = active_swarms.find(a => a.topic === data.topic)
     if (!active) return
     let con = active.connections.find(a => a.address === data.address)
-    console.log("Send sdp data", data)
     if (!con) return
     //We switch data address because in this case, it is from, we can change this
     data.address = my_address
@@ -40,8 +39,8 @@ async function send_voice_channel_sdp(data) {
 
 const send_voice_channel_status = async (joined = false, key) => {
     let active = active_swarms.find(a => a.key === key)
-    let msg = active.topic
     if (!active) return
+    let msg = active.topic
     let sig = await signMessage(msg, chat_keys.privateSpendKey)
     let data = JSON.stringify({
         address: my_address,
@@ -160,7 +159,7 @@ const createSwarm = async (data) => {
     }  
     
     //The topic is public so lets use the pubkey from the new base keypair
-    let hash = keys.publicKey
+    let hash = keys.publicKey.toString('hex')
     active_swarms.push({key, topic: hash, connections: [], call: []})
     let active = active_swarms.find(a => a.key === key) 
  
