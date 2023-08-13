@@ -3,8 +3,6 @@ import { goto } from '$app/navigation'
 import { search } from '$lib/stores/search.js'
 let searchTerm = ''
 
-$: console.log($search.term)
-
 function handleSearch(event) {
     if (event.key === 'Enter') {
         searchTerm = event.target.value

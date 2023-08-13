@@ -21,6 +21,7 @@ import { layoutState, videoGrid } from '$lib/stores/layout-state.js'
 import ListButton from '$lib/components/icons/ListButton.svelte'
 import Exit from '$lib/components/icons/Exit.svelte'
 import Lightning from '$lib/components/icons/Lightning.svelte'
+import DiscoveryHelp from '../popups/DiscoveryHelp.svelte'
 
 const dispatch = createEventDispatcher()
 let contact
@@ -33,6 +34,7 @@ let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
 let video = false
 let videoInput
+let showPopup = false
 
 $: if ($webRTC.devices.length) {
     videoInput = $webRTC.devices.some((a) => a.kind == 'videoinput')
@@ -188,6 +190,14 @@ $: if ($localFiles.some((a) => a.chat === $user.activeChat.chat)) {
 } else {
     shared_files = false
 }
+
+function openPopup() {
+    showPopup = true
+}
+
+function closePopup() {
+    showPopup = false
+}
 </script>
 
 <div
@@ -318,11 +328,17 @@ $: if ($localFiles.some((a) => a.chat === $user.activeChat.chat)) {
         <div class="nav" style="height: 100%">
             <div class="nav">
                 <button class="button">
-                    <DiscoveryHelpIcon on:click="{() => console.log('Helllo')}" />
+                    <DiscoveryHelpIcon on:click="{() => openPopup()}" />
                 </button>
             </div>
             <div class="draggable hitbox"></div>
         </div>
+
+        {#if showPopup}
+            <div class="overlay">
+                <DiscoveryHelp onClose="{closePopup}" />
+            </div>
+        {/if}
     {/if}
 </div>
 
