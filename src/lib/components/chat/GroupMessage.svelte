@@ -95,13 +95,6 @@ function checkMessage() {
 }
 async function checkreply(reply) {
 
-    
-    if ($swarm.active.some(a => a.key === group.key)) {
-        in_swarm = true
-    } else {
-        in_swarm = false
-    }
-    
     if (offchain) {
         let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
         return group_reply

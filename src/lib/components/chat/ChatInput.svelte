@@ -124,7 +124,6 @@
   }
 
   let activeSwarm = false
-  $: console.log("active swarm in Chatinput.svelte", activeSwarm)
 
   $: {
     if ($swarm.active.length) {
