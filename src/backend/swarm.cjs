@@ -107,8 +107,9 @@ const update_local_voice_channel_status = (data) => {
 
 const endSwarm = async (key) => {
     let active = active_swarms.find(a => a.key === key)
-    console.log("Ending active swarm", active.topic)
-    const [voice] = get_local_voice_status(active.topic)
+    let topic = active.topic
+    console.log("Ending active swarm", topic)
+    const [voice] = get_local_voice_status(topic)
 
     if (voice) {
         update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
