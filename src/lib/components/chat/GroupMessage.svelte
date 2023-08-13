@@ -90,10 +90,7 @@ function checkMessage() {
         return
     }
 
-
-
 }
-
 
 //Add extra number to avoid collision for keys in Svelte each loop
 const svelteHashPadding = Date.now().toString() + Math.floor(Math.random() * 1000).toString()
@@ -110,7 +107,6 @@ async function checkreply(reply) {
         group_reply = $groupMessages.find(a => a.hash === reply)
         if (group_reply) {
         group_reply.hash = group_reply.hash + svelteHashPadding
-        console.log("group_reply hash", group_reply.hash)
         return group_reply
         } 
     }
