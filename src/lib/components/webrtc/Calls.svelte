@@ -202,7 +202,10 @@ async function checkSources() {
     if (!$webRTC.cameraId ) {
         //Set defauklt camera id in store
         let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
-        if (!camera) $webRTC.cameraId = "none"
+        if (camera.length === 0) {
+            $webRTC.cameraId = "none"
+        return
+        }
         $webRTC.cameraId = camera[0].deviceId
         // select the desired transceiver
     }
