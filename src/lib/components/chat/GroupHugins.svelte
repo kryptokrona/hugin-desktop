@@ -64,6 +64,9 @@ $: if (thisSwarm) {
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
         <br />
         <div class="swarm">
+            {#if thisSwarm && $swarm.activeChannel}
+                <p>#{$swarm.activeChannel.name}</p>
+            {/if}
         </div>
     </div>
         <div class="list-wrapper">
@@ -133,7 +136,7 @@ $: if (thisSwarm) {
     width: 100%;
     max-width: 280px;
     padding: 20px;
-    display: flex;
+    display: inline-table;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);

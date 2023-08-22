@@ -145,6 +145,10 @@
     if (mount) {
     if ($page.url.pathname === '/groups') {
       to = $groups.thisGroup.name
+      if (activeSwarm) {
+        //Show channel name
+        if ($swarm.activeChannel.name.length) to = "#" + $swarm.activeChannel.name
+      }
     }
 
     if ($page.url.pathname === '/messages') {

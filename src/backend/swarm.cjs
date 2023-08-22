@@ -3,7 +3,7 @@ const DHT = require('@hyperswarm/dht')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
 const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash } = require('./utils.cjs');
-const {saveGroupMsg} = require("./database.cjs")
+const {saveGroupMsg, getChannels} = require("./database.cjs")
 const {
     ipcMain
 } = require('electron')
@@ -15,7 +15,8 @@ const {
    
 const LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, topic: ""})]
 
-const Keychain = require('keypear')
+const Keychain = require('keypear');
+const { channel } = require("diagnostics_channel");
 
 let localFiles = []
 let remoteFiles = []
@@ -50,12 +51,8 @@ const send_voice_channel_status = async (joined = false, key) => {
         topic: active.topic,
         name: my_name
     })
-
-    console.log("We want to join! Setting local status...", data)
+    
     update_local_voice_channel_status(data)
-
-    console.log("Sending data! Current status joined:", joined)
-    console.log("Sending data! With message:", msg)
 
     //Send voice channel status to others in the group
     sendSwarmMessage(data, key)
@@ -98,7 +95,6 @@ const newSwarm = async (data, ipc, xkr_keys) => {
 const update_local_voice_channel_status = (data) => {
     const updated = data
     active_voice_channel = [updated]
-    console.log("Updated local voice channel:", active_voice_channel)
     return true
 }
 
@@ -163,7 +159,6 @@ const createSwarm = async (data) => {
  
     active.swarm = swarm
     sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
-
     swarm.on('connection', (connection, information) => {
         console.log("New connection ", information)
         new_connection(connection, hash, key, name)
@@ -288,11 +283,8 @@ const check_data_message = async (data, connection, topic) => {
 
     if (typeof data === "object") {
 
-        console.log("Got active topic", active.topic)
-
         if ('joined' in data) {
 
-            console.log("Got joined message:", data)
             let joined = sanitize_join_swarm_data(data)
             if (!joined) return "Error"
 
@@ -371,13 +363,21 @@ const get_local_voice_status = (topic) => {
     return [voice]
 }
 
+const get_my_channels = async (key) => {
+    const c = await getChannels()
+    let uniq = {}
+    const channels_messages = c.filter(a => a.room === key)
+    const channels = channels_messages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
+    return channels.map(a => { return a.channel })
+}
+
 const send_joined_message = async (key, topic, my_address) => {
     //Use topic as signed message?
     const msg = topic
     const sig = await signMessage(msg, chat_keys.privateSpendKey)
     const [voice] = get_local_voice_status(topic)
+    const channels = await get_my_channels(key)
     console.log("Got local voice", voice)
-
 
     console.log("Voice", voice)
     let data = JSON.stringify({
@@ -388,8 +388,9 @@ const send_joined_message = async (key, topic, my_address) => {
         topic: topic,
         name: my_name,
         voice: voice,
+        channels: channels
     })
-    console.log("Sent joined mesg")
+    console.log("Sent joined mesg", data)
     sendSwarmMessage(data, key)
 }
 
@@ -409,7 +410,7 @@ const incoming_message = async (data, topic, connection, key) => {
     console.log("Decrypted", message)
     if (!message) return
     console.log("Message", message)
-    let msg = await saveGroupMsg(message, hsh, time)
+    let msg = await saveGroupMsg(message, hsh, time, false, true)
         //Send new board message to frontend.
         sender('groupMsg', msg)
         sender('newGroupMessage', msg)
@@ -462,6 +463,10 @@ ipcMain.on('get-sdp-voice-channel', async (e, data) => {
    get_sdp(data)
 })
 
+ipcMain.on('new-channel', async (e, data) => {
+   console.log("New channel!", data)
+   sender('channel-created', data)
+ })
 
 ipcMain.on('expand-voice-channel-sdp', async (e, expand) => {
     //This roundtrip is not needed when we do not expand sdps anymore

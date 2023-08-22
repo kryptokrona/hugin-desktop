@@ -24,6 +24,7 @@ const createTables = () => {
     groupMessageTable()
     groupsTable()
     blockListTable()
+    groupChannelsMessagesTable()
 }
 
 let welcomeAddress =
@@ -170,6 +171,25 @@ const blockListTable = () => {
                      address TEXT,
                      name TEXT,
                      UNIQUE (address)
+                 )`
+    return new Promise(
+        (resolve, reject) => {
+            database.run(blockList, (err) => {})
+        },
+        () => {
+            resolve()
+        }
+    )
+}
+
+const groupChannelsMessagesTable = () => {
+    const blockList = `
+                  CREATE TABLE IF NOT EXISTS channelmessage (
+                     hash TEXT,
+                     time TEXT,
+                     channel TEXT,
+                     room TEXT,
+                     UNIQUE (hash)
                  )`
     return new Promise(
         (resolve, reject) => {
@@ -437,7 +457,7 @@ const saveBoardMessage = (msg, hash) => {
     return message
 }
 
-const saveGroupMsg = async (msg, hash, time, offchain) => {
+const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
 
     let group = sanitizeHtml(msg.g)
     let text = sanitizeHtml(msg.m)
@@ -447,7 +467,13 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
     let timestamp = sanitizeHtml(time)
     let nick = sanitizeHtml(msg.n)
     let txHash = sanitizeHtml(hash)
+    let channel = false
     if (await groupMessageExists(timestamp)) return
+
+    if (channels) {
+        channel = sanitizeHtml(msg.c)
+        saveChannelMessage(txHash, timestamp, channel, group) 
+    }
 
     if (nick === '') {
         nick = 'Anonymous'
@@ -463,13 +489,14 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
         reply: reply,
         hash: txHash,
         sent: msg.sent,
+        channel: channel
     }
 
     if (offchain) {
         return message
     } 
 
-
+try {
     database.run(
         `REPLACE INTO groupmessages  (
     message,
@@ -486,6 +513,10 @@ const saveGroupMsg = async (msg, hash, time, offchain) => {
            (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
         [text, addr, sig, group, timestamp, nick, reply, txHash, msg.sent]
     )
+
+        } catch(a) {
+            console.log("Sql lite", a)
+        }
 
     return message
 }
@@ -540,6 +571,24 @@ const saveHash = async (txHash) => {
                    ( ? )`,
         [txHash]
     )
+}
+
+const saveChannelMessage = (hsh, timestamp, chnl, grp) => {
+
+    try {
+        //Save to DB
+        database.run(
+            `REPLACE INTO channelmessage
+                (hash, time, channel, room)
+            VALUES
+                (?, ?, ?, ?)`,
+            [hsh, timestamp, chnl, grp]
+        )
+
+    } catch (a) {
+        console.log("database err", a)
+    }
+    
 }
 
 const addBoard = (brd) => {
@@ -783,6 +832,8 @@ const getConversation = async (chat = false) => {
 
 //Print a chosen group from the shared key.
 const printGroup = async (group = false) => {
+    const channels = await getChannels()
+
     const thisGroup = []
     return new Promise((resolve, reject) => {
         const getGroup = `SELECT
@@ -807,10 +858,36 @@ const printGroup = async (group = false) => {
                 if (err) {
                     console.log('Error', err)
                 }
-                thisGroup.push(row)
+                const msg = channels.find(a => a.hash === row.hash)
+                if (msg) {
+                    row.channel = msg.channel
+                }
+                    thisGroup.push(row)
             },
             () => {
                 resolve(thisGroup)
+            }
+        )
+    })
+}
+
+
+//DATABAS REQUESTS
+
+const getChannels = async () => {
+    const rows = []
+    return new Promise((resolve, reject) => {
+        const getChannelsMessages = `SELECT * FROM channelmessage`
+        database.each(
+            getChannelsMessages,
+            (err, row) => {
+                if (err) {
+                    console.log('Error', err)
+                }
+                rows.push(row)
+            },
+            () => {
+                resolve(rows)
             }
         )
     })
@@ -1067,4 +1144,4 @@ const saveThisContact = async (addr, key, name) => {
 
 
 
-module.exports = {saveHash, addBoard, firstContact, welcomeMessage, welcomeBoardMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, removeBoard, loadBlockList, getConversation, getConversations, loadKnownTxs, getMyBoardList, getBoardMsgs, getMessages, getReplies, getGroupReply, getReply, printGroup, printBoard, saveMsg, saveBoardMessage, saveThisContact, groupMessageExists, messageExists, getContacts}
+module.exports = {saveHash, addBoard, firstContact, welcomeMessage, welcomeBoardMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, removeBoard, loadBlockList, getConversation, getConversations, loadKnownTxs, getMyBoardList, getBoardMsgs, getMessages, getReplies, getGroupReply, getReply, printGroup, printBoard, saveMsg, saveBoardMessage, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels}

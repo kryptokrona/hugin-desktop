@@ -108,7 +108,10 @@ async function checkreply(reply) {
         if (group_reply) {
         group_reply.hash = group_reply.hash + svelteHashPadding
         return group_reply
-        } 
+        }
+
+        group_reply = $swarm.activeChannelMessages.find(a => a.hash === reply)
+        if (group_reply) return group_reply
     }
     //Check in db if we can find it
     let thisreply = await window.api.getGroupReply(reply)

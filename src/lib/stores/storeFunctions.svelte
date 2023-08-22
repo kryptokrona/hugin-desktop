@@ -21,6 +21,10 @@
         voice_channel_status(data)
     })
 
+    window.api.receive('channel-created', async (data)  => { 
+        new_channel(data)
+    })
+
     function swarm_connected(data) {
         console.log( 'Swarm connected', data)
         $swarm.active.push(data)
@@ -28,7 +32,19 @@
     }
 
     function peer_connected(data) {
+        console.log("Data", data)
         let joined = $swarm.active.find(a => a.topic === data.topic)
+        if (data.channels) {
+            let known_channels = joined.channels
+            for (const channel of data.channels) {
+                console.log("Channel!", channel)
+                if (known_channels.some(a => a.name === channel)) continue
+                let c = {name: channel}
+                known_channels.push(c)
+            }
+
+            joined.channels = known_channels
+        }
         joined.connections.push(data)
         updateActiveSwarm()
     }
@@ -79,6 +95,12 @@
         }
         
        updateActiveSwarm()
+    }
+
+    function new_channel(data) {
+        let active = $swarm.active.find(a => a.key === data.key)
+        active.channels.push(data)
+        updateActiveSwarm()
     }
 
     function updateActiveSwarm() {

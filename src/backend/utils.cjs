@@ -112,6 +112,15 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof voice !== 'boolean') return false
     const joined = data.joined
     if (typeof joined !== 'boolean') return false
+    const channels = []
+    if (data.channels.length) {
+        if (data.channels.length > 100) return false
+        for (const a of data.channels) {
+            let channel = sanitizeHtml(a)
+            if (channel.length > 50) return false
+            channels.push(channel)
+        }
+    }
 
     const clean_object = {
         address: address,
@@ -120,7 +129,8 @@ const sanitize_join_swarm_data = (data) => {
         topic: topic,
         name: name,
         voice: voice,
-        joined: joined
+        joined: joined,
+        channels: channels
     }
 
     return clean_object

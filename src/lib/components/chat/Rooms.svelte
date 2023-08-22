@@ -2,7 +2,7 @@
     import {createEventDispatcher} from 'svelte'
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import {groups, swarm, user} from '$lib/stores/user.js'
+    import {groups, notify, swarm, user} from '$lib/stores/user.js'
     import VoiceUser from './VoiceUser.svelte'
     import Lightning from '../icons/Lightning.svelte'
     import { swarmGroups } from '$lib/stores/layout-state'
@@ -22,13 +22,10 @@
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 
-    //TODO**** //Print different channels in a room/group? //TODO****
     const printThis = (channel) => {
-    console.log("    //TODO**** //Print different channels in a room/group? //TODO****")
-    console.log("Print channel:", channel)
-    return
-        if (channel === thisChannel.name) return
+        if (channel === $swarm.activeChannel.name) return
         dispatch('print-channel', channel)
+        $swarm.activeChannel = {name: channel, key: thisSwarm.key}
     }
     
     const openRemove = () => {
@@ -119,8 +116,12 @@ const exitVoiceChannel = (key) => {
         console.log("test click!")
     }
 
+    const createChannel = () => {
+        $swarm.newChannel = true
+    }
+
 </script>
-  <div
+    <div on:click={dispatch('printGroup', $groups.thisGroup)}
         class="card"
         in:fade
         out:fade
@@ -143,7 +144,6 @@ const exitVoiceChannel = (key) => {
 <div class="swarm_info">
     <div class="channels">
         <div class="voice-channel">
-            <p>Channels</p>
             <p class="voice" on:click={join_voice_channel}>#Radio room</p>
             {#if in_voice}<p class="disconnect" on:click={disconnect_from_active_voice}>disconnect</p>{/if}
                 <div class="list-wrapper">
@@ -152,11 +152,25 @@ const exitVoiceChannel = (key) => {
                     {/each}
                 </div>
             </div>
-            {#each channels as channel}
-                <p on:click={printThis(channel.name)}>{channel.name}</p>{channel.type}
-            {/each}
         </div>
 </div>
+    <div class="text-channels">
+        <p>Channels</p>
+        <p class="create" on:click={createChannel}>+</p>
+        <br>
+        {#each channels as channel}
+        
+            {#if $swarm.activeChannel.name === channel.name}
+                <div class="this-channel"></div>
+            {/if}
+            
+            {#if $notify.unread.some(a => a.channel === channel.name)}
+                <div class="dot" in:fade></div>
+            {/if}
+            
+        <p class="channel" on:click={printThis(channel.name)}>#{channel.name}</p>
+        {/each}
+    </div>
 {/if}
 
 <style lang="scss">
@@ -231,7 +245,6 @@ const exitVoiceChannel = (key) => {
     
     .swarm_info {
         color: white;
-        height: 100px;
         border-bottom: 1px solid var(--border-color);
     }
 
@@ -240,6 +253,13 @@ const exitVoiceChannel = (key) => {
             font-size: 15px;
             font-family: "Roboto Mono";
             padding: 10px;
+    }
+
+    .channel {
+            cursor: pointer;
+            font-size: 15px;
+            font-family: "Roboto Mono";
+            padding: 5px;
     }
 
     .list-wrapper {
@@ -261,6 +281,45 @@ const exitVoiceChannel = (key) => {
             opacity: 0.95;
         }
     }
+
+    .text-channels {
+        display: block;
+        position: relative;
+        padding: 10px;
+        margin: 10px;
+    }
+
+    .this-channel {
+        position: absolute;
+        background-color: white;
+        border-radius: 2px;
+        height: 16px;
+        width: 3px;
+        left: -10px;
+        box-shadow: 0 0 10px white;
+        margin-top: 13px;
+        transition: 0.2s;
+}
+
+.create {
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.85;
+    &:hover {
+        opacity: 1
+    }
+}
+
+.dot {
+    position: absolute;
+    background-color: var(--warn-color);
+    border-radius: 50%;
+    height: 5px;
+    width: 5px;
+    left: 2px;
+    margin-top: 17px;
+    box-shadow: 0 0 10px white;
+}
 
 
 </style>

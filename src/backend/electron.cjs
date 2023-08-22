@@ -886,8 +886,9 @@ async function saveBoardMsg(msg, hash, follow = false) {
     mainWindow.webContents.send('newBoardMessage', message)
 }
 
-async function saveGroupMessage(msg, hash, time, offchain) {
-    let message = await saveGroupMsg(msg, hash, time, offchain)
+async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
+    console.log("Savin grp msg")
+    let message = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!offchain) {
         //Send new board message to frontend.
         mainWindow.webContents.send('groupMsg', message)
@@ -1029,6 +1030,10 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         message_json.r = message.r
     }
 
+    if (message.c) {
+        message_json.c = message.c
+    }
+
     let [mainWallet, subWallet, messageSubWallet] = js_wallet.subWallets.getAddresses()
     const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json))
     const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group))
@@ -1079,9 +1084,10 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         let randomKey = await createGroup()
         let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
         let sendMsg = randomKey + '99' + sentMsg
+        message_json.sent = true
         if (swarm) {
             sendSwarmMessage(sendMsg, group)
-            saveGroupMessage(message_json, randomKey, timestamp)
+            saveGroupMessage(message_json, randomKey, timestamp, false, true)
             mainWindow.webContents.send('sent_group', {
                 hash: randomKey,
                 time: message.t,

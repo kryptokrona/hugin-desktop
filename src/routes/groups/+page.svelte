@@ -13,6 +13,7 @@ import BlockContact from '$lib/components/chat/BlockContact.svelte'
 import { containsOnlyEmojis } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
+import NewChannel from './components/NewChannel.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -33,7 +34,7 @@ const hashPadding = () => {
 
 onMount(async () => {
 
-    let filter = $notify.unread.filter((a) => a.type !== 'group')
+    let filter = $notify.unread.filter((a) => a.type !== 'group' && !a.channel)
     $notify.unread = filter
     scrollDown()
 
@@ -41,23 +42,50 @@ onMount(async () => {
     window.api.receive('groupMsg', (data) => {
         if (data.address === $user.huginAddress.substring(0, 99)) return
 
-        if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') {
+        if (data.channel.length) {
+
+            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel === $swarm.activeChannel.name) {
+                printGroupMessage(data)
+            }
+
+            if (!channelMessages.some(a => a.channel === data.channel) && data.group === $groups.thisGroup.key) {
+                //Must set message before updating channels
+                channelMessages.unshift(data)
+                setChannels()
+                return
+            }
+
+            channelMessages.unshift(data)
+                //This store is not used yet, not sure if we need it, these messages are only relevant in /groups atm
+            $swarm.activeChannelMessages.unshift(data)
+            return
+        } else {
+        if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.activeChannel.name.length < 1) {
             //Push new message to store
             printGroupMessage(data)
         } else {
             console.log('Another group', data)
         }
-})
+        }
+    })
+    
 
 })
 
 onDestroy(() => {
     window.api.removeAllListeners('groupMsg')
     window.api.removeAllListeners('sent_group')
+    window.api.removeAllListeners('swarm-connected')
 })
 
 window.api.receive('sent_group', (data) => {
     addHash(data)
+})
+
+
+window.api.receive('swarm-connected', (data) => { 
+    console.log("Swwarm set channels connected!")
+    setChannels()
 })
 
 //Check for possible errors
@@ -81,6 +109,7 @@ const sendGroupMsg = async (e) => {
     let myName = $user.username
     let group = thisGroup
     let in_swarm = $swarm.active.some(a => a.key === thisGroup)
+    let in_channel = $swarm.activeChannel.name
     let offchain = in_swarm
     //Reaction switch
     if (e.detail.reply) {
@@ -107,6 +136,14 @@ const sendGroupMsg = async (e) => {
         n: myName,
         hash: time,
         swarm: in_swarm
+    }
+
+    if (in_channel) {
+        sendMsg.c = in_channel
+        myGroupMessage.channel = in_channel
+        channelMessages.unshift(myGroupMessage)
+        //Doin this global store for better use in future
+        $swarm.activeChannelMessages.unshift(myGroupMessage)
     }
     
     window.api.sendGroupMessage(sendMsg, offchain, in_swarm)
@@ -220,13 +257,13 @@ $: if ($groupMessages.length == 0) {
 }
 
 //Checks messages for reactions in chosen Group from printGroup() function
-async function checkReactions() {
+async function checkReactions(array) {
     //All group messages all messages except reactions
-    filterGroups = await $groupMessages.filter(
+    filterGroups = await array.filter(
         (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
     )
     //Only reactions
-    filterEmojis = await $groupMessages.filter(
+    filterEmojis = await array.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
     )
     if (filterEmojis.length) {
@@ -236,11 +273,12 @@ async function checkReactions() {
         fixedGroups = filterGroups
     }
 }
-
+let channelMessages = []
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
     fixedGroups = []
     scrollGroups = []
+    $swarm.activeChannel = {name: "", key: ""}
     noMsgs = false
     groups.update((data) => {
         return {
@@ -248,10 +286,16 @@ async function printGroup(group) {
             thisGroup: { key: group.key, name: group.name, chat: true},
         }
     })
+   
+    const messages = await window.api.printGroup(group.key)
+    const chain_messages = messages.filter(a => !a.channel)
+    channelMessages = messages.filter(a => a.channel)
+
+    setChannels()
     //Load GroupMessages from db
-    await groupMessages.set(await window.api.printGroup(group.key))
+    await groupMessages.set(chain_messages)
     //Check for emojis and filter them
-    await checkReactions()
+    await checkReactions(chain_messages)
     //Reactions should be set, update thisGroup in store and set reply to false.
     groups.update((data) => {
         return {
@@ -261,6 +305,24 @@ async function printGroup(group) {
     })
     replyExit()
     scrollDown()
+}
+
+
+
+function setChannels() {
+    let in_swarm = $swarm.active.find(a => a.key === thisGroup)
+    if (in_swarm) {
+        let uniq = {}
+        const channels = channelMessages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
+        if (!channels) return
+        const mapped = channels.map(a => {
+            return {name: a.channel, key: a.key}
+        })
+
+        in_swarm.channels = mapped
+        $swarm.active = $swarm.active
+        console.log("channelMessages", channelMessages)
+    }
 }
 
 async function updateReactions(msg) {
@@ -310,6 +372,8 @@ function addHash(data) {
             a.hash = data.hash
         }
     })
+
+    fixedGroups = fixedGroups
 }
 
     // let pageNum = 0;
@@ -331,7 +395,21 @@ function addHash(data) {
     //     console.log('want to load more')
     // }
 
+    const printChannel = async (e) => {
+       let filter = $notify.unread.filter((a) => a.channel !== e.detail)
+       $notify.unread = filter
+        fixedGroups = []
+        filterEmojis = []
+        let channel = channelMessages.filter(a => a.channel === e.detail)
+        $swarm.activeChannelMessages = channel
+        await checkReactions(channel)
+    }
+
 </script>
+
+{#if $swarm.newChannel === true}
+ <NewChannel/>
+{/if}
 
 {#if wantToAdd}
     <AddGroup on:click="{openAddGroup}" on:addGroup="{(e) => addNewGroup(e)}" />
@@ -345,6 +423,7 @@ function addHash(data) {
     <GroupList
         on:printGroup="{(e) => printGroup(e.detail)}"
         on:removeGroup="{() => printGroup($groups.groupArray[0])}"
+        on:printChannel="{(e) => printChannel(e.detail)}"
     />
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">

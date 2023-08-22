@@ -243,7 +243,7 @@ $: show_groups = $swarmGroups.showGroups
             </div>
     {:else}
         <div class="list-wrapper" transition:flipper>
-            <Rooms />
+            <Rooms on:printGroup={(e) => printGroup(e.detail)} on:print-channel={(e) => dispatch('printChannel', e)} />
         </div>
 
     {/if}
