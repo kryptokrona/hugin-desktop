@@ -34,8 +34,7 @@ const hashPadding = () => {
 }
 
 onMount(async () => {
-
-    let filter = $notify.unread.filter((a) => a.type !== 'group' && !a.channel)
+    let filter = $notify.unread.filter((a) => (a.type !== 'group'))
     $notify.unread = filter
     scrollDown()
 
@@ -397,8 +396,8 @@ function addHash(data) {
     // }
 
     const printChannel = async (e) => {
-       let filter = $notify.unread.filter((a) => a.channel !== e.detail)
-       $notify.unread = filter
+        let filter = $notify.unread.filter((a) => a.channel !== e.detail)
+        $notify.unread = filter
         fixedGroups = []
         filterEmojis = []
         let channel = channelMessages.filter(a => a.channel === e.detail)

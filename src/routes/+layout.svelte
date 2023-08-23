@@ -166,6 +166,7 @@
             if (data.channel === $swarm.activeChannel.name) return
             if ($page.url.pathname !== '/groups' || ($page.url.pathname === '/groups' && data.channel !== $swarm.activeChannel.name)) {
                 data.type = 'group'
+                if (data.channel.length > 0) data.type = 'channel'
                 $notify.unread.push(data)
                 $notify.unread = $notify.unread
             }
