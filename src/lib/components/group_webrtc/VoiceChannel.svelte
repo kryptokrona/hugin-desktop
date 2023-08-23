@@ -353,16 +353,18 @@
     
     async function checkMyVolume(stream) {
         //Check if active stream already exists
+        let checkTracks
         try {
-            let old = $swarm.myStream.getTracks()
+            checkTracks = $swarm.myStream.getTracks()
         } catch(e) {
             $swarm.myStream = stream
             return
         }
-        let checkTracks = $swarm.myStream.getTracks()
         if (checkTracks.some(a => !a.enabled)) {
             stream.getTracks().forEach((track) => (track.enabled = false))
         }
+
+        //TODO ** Here we should add function like checkVolume() but for our input to display in UI.
         
         $swarm.myStream = stream
         
