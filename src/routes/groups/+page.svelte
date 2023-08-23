@@ -10,7 +10,7 @@ import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
-import { containsOnlyEmojis } from '$lib/utils/utils'
+import { containsOnlyEmojis, sleep } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
 import NewChannel from './components/NewChannel.svelte'
@@ -84,8 +84,9 @@ window.api.receive('sent_group', (data) => {
 })
 
 
-window.api.receive('swarm-connected', (data) => { 
-    console.log("Swwarm set channels connected!")
+window.api.receive('swarm-connected', async (data) => { 
+    //Await swarm data to be set
+    await sleep(200)
     setChannels()
 })
 
