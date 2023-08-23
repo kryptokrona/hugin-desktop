@@ -6,12 +6,16 @@
     import VoiceUser from './VoiceUser.svelte'
     import Lightning from '../icons/Lightning.svelte'
     import { swarmGroups } from '$lib/stores/layout-state'
+    import CallSlash from '../icons/CallSlash.svelte'
+    import MicIcon from '../icons/MicIcon.svelte'
+    import MuteIcon from '../icons/MuteIcon.svelte'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
     let voice_channel = []
     let connected = true
-    let topic = ""
+    let topic = ""    
+    let muted = false
     const dispatch = createEventDispatcher()
     const my_address = $user.huginAddress.substring(0,99)
     $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
@@ -120,6 +124,11 @@ const exitVoiceChannel = (key) => {
         $swarm.newChannel = true
     }
 
+    const toggleAudio = () => {
+    muted = !muted
+    $swarm.myStream.getTracks().forEach((track) => (track.enabled = !track.enabled))
+}
+
 </script>
     <div on:click={dispatch('printGroup', $groups.thisGroup)}
         class="card"
@@ -145,7 +154,20 @@ const exitVoiceChannel = (key) => {
     <div class="channels">
         <div class="voice-channel">
             <p class="voice" on:click={join_voice_channel}>#Radio room</p>
-            {#if in_voice}<p class="disconnect" on:click={disconnect_from_active_voice}>disconnect</p>{/if}
+            {#if in_voice}
+            <div class="voice-controls">
+                <div  on:click={disconnect_from_active_voice}>
+                    <CallSlash/>
+                </div>
+                <div on:click="{toggleAudio}">
+                    {#if !muted}
+                        <MicIcon />
+                    {:else}
+                        <MuteIcon />
+                    {/if}
+                </div>
+            </div>
+            {/if}
                 <div class="list-wrapper">
                     {#each voice_channel as user}
                         <VoiceUser voice_user={user} topic={topic} voice_channel={voice_channel}/>
@@ -174,6 +196,7 @@ const exitVoiceChannel = (key) => {
 {/if}
 
 <style lang="scss">
+
     .card {
         display: flex;
         height: 80px;
@@ -319,6 +342,12 @@ const exitVoiceChannel = (key) => {
     left: 2px;
     margin-top: 17px;
     box-shadow: 0 0 10px white;
+}
+
+.voice-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
 }
 
 
