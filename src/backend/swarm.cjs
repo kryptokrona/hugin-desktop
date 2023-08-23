@@ -80,7 +80,6 @@ const send_voice_channel_status = async (joined = false, key) => {
 
 const join_voice_channel = (key, topic, address) => {
     //"Join the voice channel in with webRTC"
-    console.log("Sender: join-voice-channel", key, topic, address)
     sender("join-voice-channel", {key, topic, address})
 }
 
@@ -157,7 +156,10 @@ const createSwarm = async (data) => {
     let active = active_swarms.find(a => a.key === key) 
  
     active.swarm = swarm
+    
     sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
+    sender('set-channels')
+
     swarm.on('connection', (connection, information) => {
         console.log("New connection ", information)
         new_connection(connection, hash, key, name)

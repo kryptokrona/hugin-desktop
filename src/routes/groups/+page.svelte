@@ -76,7 +76,7 @@ onMount(async () => {
 onDestroy(() => {
     window.api.removeAllListeners('groupMsg')
     window.api.removeAllListeners('sent_group')
-    window.api.removeAllListeners('swarm-connected')
+    window.api.removeAllListeners('set-channels')
 })
 
 window.api.receive('sent_group', (data) => {
@@ -84,7 +84,7 @@ window.api.receive('sent_group', (data) => {
 })
 
 
-window.api.receive('swarm-connected', async (data) => { 
+window.api.receive('set-channels', async () => { 
     //Await swarm data to be set
     await sleep(200)
     setChannels()
