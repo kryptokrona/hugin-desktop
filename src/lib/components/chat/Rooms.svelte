@@ -346,7 +346,7 @@ const exitVoiceChannel = (key) => {
 
 .voice-controls {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-around;
     margin-bottom: 10px;
 }
 
