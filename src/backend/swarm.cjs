@@ -16,7 +16,6 @@ const {
 const LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, topic: ""})]
 
 const Keychain = require('keypear');
-const { channel } = require("diagnostics_channel");
 
 let localFiles = []
 let remoteFiles = []

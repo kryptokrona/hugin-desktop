@@ -37,7 +37,6 @@
         if (data.channels) {
             let known_channels = joined.channels
             for (const channel of data.channels) {
-                console.log("Channel!", channel)
                 if (known_channels.some(a => a.name === channel)) continue
                 let c = {name: channel}
                 known_channels.push(c)
@@ -99,7 +98,7 @@
 
     function new_channel(data) {
         let active = $swarm.active.find(a => a.key === data.key)
-        active.channels.push(data)
+        active.channels.unshift(data)
         updateActiveSwarm()
     }
 

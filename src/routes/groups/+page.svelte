@@ -25,6 +25,7 @@ let replyTrue = false
 let scrollGroups = []
 let windowHeight
 let windowChat
+let channelMessages = []
 
 const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 
@@ -273,7 +274,6 @@ async function checkReactions(array) {
         fixedGroups = filterGroups
     }
 }
-let channelMessages = []
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
     fixedGroups = []
@@ -313,15 +313,14 @@ function setChannels() {
     let in_swarm = $swarm.active.find(a => a.key === thisGroup)
     if (in_swarm) {
         let uniq = {}
+        if (!channelMessages.some(a => a.channel)) return
         const channels = channelMessages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
         if (!channels) return
         const mapped = channels.map(a => {
             return {name: a.channel, key: a.key}
         })
-
         in_swarm.channels = mapped
         $swarm.active = $swarm.active
-        console.log("channelMessages", channelMessages)
     }
 }
 
