@@ -109,10 +109,9 @@
         console.log("This voice channel call!", this_call)
         let peer1 = await startPeer1(stream, data.address, data.topic, this_call)
     
-        checkMyVolume(peer1)
+        checkMyVolume(stream)
         //Set swarm store update for call
         this_call.peer = peer1
-        $swarm.myStream = stream
         $swarm.voice_active = true
         
         peer1.on('stream', (peerStream) => {
@@ -198,7 +197,7 @@
             //Set swarm store update for call
             this_call.peer = peer2
             this_call.chat = data.address
-            $swarm.myStream = stream
+            checkMyVolume(stream)
     
             sendAnswer(msg, data.address, peer2, data.topic)
             
@@ -352,7 +351,22 @@
         }
     }
     
-    async function checkMyVolume(peer) {}
+    async function checkMyVolume(stream) {
+        //Check if active stream already exists
+        try {
+            let old = $swarm.myStream.getTracks()
+        } catch(e) {
+            $swarm.myStream = stream
+            return
+        }
+        let checkTracks = $swarm.myStream.getTracks()
+        if (checkTracks.some(a => !a.enabled)) {
+            stream.getTracks().forEach((track) => (track.enabled = false))
+        }
+        
+        $swarm.myStream = stream
+        
+    }
     
     //End call
     function endCall(peer, stream, contact) {

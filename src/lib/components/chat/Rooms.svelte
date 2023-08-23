@@ -50,6 +50,7 @@ const exitVoiceChannel = (key) => {
     const join_voice_channel = () => {
         if (in_voice) return
         startTone.play()
+        muted = false
         console.log("Joining!")
         //Leave any active first
         if ($swarm.voice_channel.length) {
