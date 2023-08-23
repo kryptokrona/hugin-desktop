@@ -278,6 +278,7 @@ async function checkReactions(array) {
 async function printGroup(group) {
     fixedGroups = []
     scrollGroups = []
+    channelMessages = []
     $swarm.activeChannel = {name: "", key: ""}
     noMsgs = false
     groups.update((data) => {
