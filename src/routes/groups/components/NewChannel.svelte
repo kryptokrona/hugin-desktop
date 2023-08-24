@@ -74,7 +74,7 @@
                     text="{"Create"}"
                     disabled="{false}"
                     enabled="{enableAdd}"
-                    on:click="{() => new_channel()}"
+                    on:click|once="{() => new_channel()}"
                 />
                 </div>
         </div>

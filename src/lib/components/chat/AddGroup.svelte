@@ -116,7 +116,7 @@ const joinGroup = () => {
                 text="{"Join"}"
                 disabled="{false}"
                 enabled="{true}"
-                on:click="{() => joinGroup()}"
+                on:click|once="{() => joinGroup()}"
                 />
             </div>
          {/if}
@@ -138,7 +138,7 @@ const joinGroup = () => {
                 text="{create_group}"
                 disabled="{!enableAddGroupButton}"
                 enabled="{enableAddGroupButton}"
-                on:click="{() => addGroup()}"
+                on:click|once="{() => addGroup()}"
             />
         {/if}
     </div>
