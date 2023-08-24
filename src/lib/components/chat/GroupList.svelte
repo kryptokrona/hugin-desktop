@@ -87,7 +87,9 @@ function filterActiveHugins(arr) {
 
 //Print our conversations from DBs
 async function printGroups() {
-    newArray = await window.api.getGroups()
+    let groupmessages = await window.api.getGroups()
+    let uniq = {}
+    newArray = groupmessages.filter((obj) => !uniq[obj.key] && (uniq[obj.key] = true))
 
     if (groupList.length) {
         if (

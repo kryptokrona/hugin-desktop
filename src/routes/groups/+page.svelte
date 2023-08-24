@@ -233,17 +233,18 @@ const addNewGroup = (e) => {
     let group = e.detail
     if (group.length < 32) return
     openAddGroup()
+    let hash = hashPadding()
     let add = {
         m: 'Joined group',
         n: group.name,
-        hash: Date.now() * 2,
+        hash: hash,
         t: Date.now().toString(),
         s: '',
         k: group.key,
         sent: false,
         r: '',
         g: group.key,
-        h: parseInt(Date.now()),
+        h: parseInt(Date.now() * 10),
     }
     window.api.addGroup(add)
 

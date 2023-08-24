@@ -1784,7 +1784,7 @@ ipcMain.on('block', async (e, block) => {
 
 ipcMain.on('addGroup', async (e, grp) => {
     addGroup(grp)
-    saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
+    saveGroupMessage(grp, parseInt(Date.now() * 1000), parseInt(Date.now()))
 })
 
 ipcMain.on('removeGroup', async (e, grp) => {
