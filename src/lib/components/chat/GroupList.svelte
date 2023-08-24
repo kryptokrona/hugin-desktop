@@ -175,8 +175,8 @@ const addGroup = () => {
     $groups.addGroup = true
 }
 
-const addRoom = () => {
-    console.log("add room here? on click")
+const addChannel = () => {
+    $swarm.newChannel = true
 }
 
 //Set group key
@@ -228,7 +228,7 @@ $: show_groups = $swarmGroups.showGroups
             <h2>Rooms</h2>
             <br />
             <div class="buttons">
-                <Plus on:click="{addRoom}" />
+                <Plus on:click="{addChannel}" />
             </div>
         {/if}
        

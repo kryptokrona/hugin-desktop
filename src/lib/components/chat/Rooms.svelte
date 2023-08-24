@@ -117,18 +117,11 @@ const exitVoiceChannel = (key) => {
         connected = false
     }
 
-    const testclick = () => {
-        console.log("test click!")
-    }
-
-    const createChannel = () => {
-        $swarm.newChannel = true
-    }
-
     const toggleAudio = () => {
-    muted = !muted
-    $swarm.myStream.getTracks().forEach((track) => (track.enabled = !track.enabled))
-}
+        $swarm.audio = !$swarm.audio
+        if (!$swarm.myStream) return
+        $swarm.myStream.getTracks().forEach((track) => (track.enabled = !track.enabled))
+    }
 
 </script>
     <div on:click={dispatch('printGroup', $groups.thisGroup)}
@@ -141,7 +134,7 @@ const exitVoiceChannel = (key) => {
     
     <Lightning on:click={disconnect_from_swarm} connected={connected} />
     
-        <img class="avatar" on:click={testclick()} src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="" />
+        <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="" />
         <div class="content">
             <h4>{$groups.thisGroup.name}</h4>
             <div class="text">
@@ -161,7 +154,7 @@ const exitVoiceChannel = (key) => {
                     <CallSlash/>
                 </div>
                 <div on:click="{toggleAudio}">
-                    {#if !muted}
+                    {#if $swarm.audio}
                         <MicIcon />
                     {:else}
                         <MuteIcon />
@@ -179,7 +172,6 @@ const exitVoiceChannel = (key) => {
 </div>
     <div class="text-channels">
         <p>Channels</p>
-        <p class="create" on:click={createChannel}>+</p>
         <br>
         {#each channels as channel}
         
