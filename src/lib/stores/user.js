@@ -102,7 +102,8 @@ export const swarm = writable({
     call: [],
     newChannel: false,
     activeChannel: {name: ""},
-    activeChannelMessages: []
+    activeChannelMessages: [],
+    audio: true
 })
 
 export const userAvatar = derived(user, ($user) => {
