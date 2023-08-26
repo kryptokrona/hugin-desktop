@@ -369,7 +369,7 @@ const get_my_channels = async (key) => {
     let uniq = {}
     const channels_messages = c.filter(a => a.room === key)
     const channels = channels_messages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
-    return channels.map(a => { return a.channel })
+    return channels.map(a => { if (a.channel === "Chat room") return a.channel })
 }
 
 const send_joined_message = async (key, topic, my_address) => {
@@ -377,7 +377,7 @@ const send_joined_message = async (key, topic, my_address) => {
     const msg = topic
     const sig = await signMessage(msg, chat_keys.privateSpendKey)
     const [voice] = get_local_voice_status(topic)
-    const channels = await get_my_channels(key)
+    //const channels = await get_my_channels(key)
     console.log("Got local voice", voice)
 
     console.log("Voice", voice)
@@ -389,7 +389,7 @@ const send_joined_message = async (key, topic, my_address) => {
         topic: topic,
         name: my_name,
         voice: voice,
-        channels: channels
+        channels: []
     })
     console.log("Sent joined mesg", data)
     sendSwarmMessage(data, key)

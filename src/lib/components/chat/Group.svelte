@@ -17,7 +17,7 @@
     
     const dispatch = createEventDispatcher()
     
-    const printThis = (group) => {
+    const print_group = (group) => {
          //If p2p group, enter focus mode
          if (thisSwarm) {
             $swarmGroups.showGroups = false
@@ -120,7 +120,7 @@
         out:fade
         class:active="{$groups.thisGroup.key === group.key}"
         class:swarm="{swarmGroup}"
-        on:click="{(e) => printThis(group)}"
+        on:click="{(e) => print_group(group)}"
     >
         {#if group.new}
             <div class:unread="{group.new}"></div>

@@ -34,16 +34,16 @@
     function peer_connected(data) {
         console.log("Data", data)
         let joined = $swarm.active.find(a => a.topic === data.topic)
-        if (data.channels) {
-            let known_channels = joined.channels
-            for (const channel of data.channels) {
-                if (known_channels.some(a => a.name === channel)) continue
-                let c = {name: channel}
-                known_channels.push(c)
-            }
+        // if (data.channels) {
+        //     let known_channels = joined.channels
+        //     for (const channel of data.channels) {
+        //         if (known_channels.some(a => a.name === channel)) continue
+        //         let c = {name: channel}
+        //         known_channels.push(c)
+        //     }
 
-            joined.channels = known_channels
-        }
+        //     joined.channels = known_channels
+        // }
         joined.connections.push(data)
         updateActiveSwarm()
     }

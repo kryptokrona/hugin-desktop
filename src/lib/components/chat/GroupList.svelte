@@ -229,9 +229,9 @@ $: show_groups = $swarmGroups.showGroups
             <p class="back" on:click={back}>Back</p>
             <h2>Rooms</h2>
             <br />
-            <div class="buttons">
+            <!-- <div class="buttons">
                 <Plus on:click="{addChannel}" />
-            </div>
+            </div> -->
         {/if}
        
     </div>
@@ -245,7 +245,7 @@ $: show_groups = $swarmGroups.showGroups
             </div>
     {:else}
         <div class="list-wrapper" transition:flipper>
-            <Rooms on:printGroup={(e) => printGroup(e.detail)} on:print-channel={(e) => dispatch('printChannel', e)} />
+            <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
         </div>
 
     {/if}

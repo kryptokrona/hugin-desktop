@@ -28,10 +28,6 @@
         }
 
         if (name.length < 1) error = true
-        // if ($groups.groupArray.some((g) => g.key === key)) {
-        //     errorMessage =  'This group key already exists',
-        //     error = true
-        // }
         if (error) {
             window.api.errorMessage(errorMessage)
             return true

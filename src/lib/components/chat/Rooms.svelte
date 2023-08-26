@@ -145,7 +145,7 @@ const exitVoiceChannel = (key) => {
     </div>
 {#if thisSwarm}
 <div class="swarm_info">
-    <div class="channels">
+    <!-- <div class="channels"> -->
         <div class="voice-channel">
             <p class="voice" on:click={join_voice_channel}>#Radio room</p>
             {#if in_voice}
@@ -168,11 +168,9 @@ const exitVoiceChannel = (key) => {
                     {/each}
                 </div>
             </div>
-        </div>
+        <!-- </div> -->
 </div>
     <div class="text-channels">
-        <p>Channels</p>
-        <br>
         {#each channels as channel}
         
             {#if $swarm.activeChannel.name === channel.name}
@@ -261,7 +259,6 @@ const exitVoiceChannel = (key) => {
     
     .swarm_info {
         color: white;
-        border-bottom: 1px solid var(--border-color);
     }
 
     .voice {
@@ -269,6 +266,7 @@ const exitVoiceChannel = (key) => {
             font-size: 15px;
             font-family: "Roboto Mono";
             padding: 10px;
+            margin-left: 10px;
     }
 
     .channel {
@@ -276,6 +274,7 @@ const exitVoiceChannel = (key) => {
             font-size: 15px;
             font-family: "Roboto Mono";
             padding: 5px;
+            margin-left: -5px;
     }
 
     .list-wrapper {

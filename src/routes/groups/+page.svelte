@@ -50,8 +50,8 @@ onMount(async () => {
 
             if (!channelMessages.some(a => a.channel === data.channel) && data.group === $groups.thisGroup.key) {
                 //Must set message before updating channels
-                channelMessages.unshift(data)
-                setChannels()
+                //channelMessages.unshift(data)
+                //setChannels()
                 return
             }
 
@@ -244,7 +244,7 @@ const addNewGroup = (e) => {
         sent: false,
         r: '',
         g: group.key,
-        h: parseInt(Date.now() * 10),
+        h: parseInt(Date.now() * 1000),
     }
     window.api.addGroup(add)
 
@@ -315,12 +315,11 @@ function setChannels() {
     let in_swarm = $swarm.active.find(a => a.key === thisGroup)
     if (in_swarm) {
         let uniq = {}
-        if (!channelMessages.some(a => a.channel)) return
+        // if (!channelMessages.some(a => a.channel && a.grp === thisGroup)) return
+        console.log("channels set")
         const channels = channelMessages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
-        if (!channels) return
-        const mapped = channels.map(a => {
-            return {name: a.channel, key: a.key}
-        })
+        // if (!channels) return
+        const mapped = [{name: "Chat room"}]
         in_swarm.channels = mapped
         $swarm.active = $swarm.active
     }
@@ -397,6 +396,7 @@ function addHash(data) {
     // }
 
     const printChannel = async (e) => {
+        console.log("Print chnanel!")
         let filter = $notify.unread.filter((a) => a.channel !== e.detail)
         $notify.unread = filter
         fixedGroups = []

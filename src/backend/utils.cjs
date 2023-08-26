@@ -114,12 +114,15 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof joined !== 'boolean') return false
     const channels = []
     if (data.channels.length) {
-        if (data.channels.length > 100) return false
-        for (const a of data.channels) {
-            let channel = sanitizeHtml(a)
-            if (channel.length > 50) return false
-            channels.push(channel)
-        }
+        //Disable channels
+        
+        // if (data.channels.length > 100) return false
+        // for (const a of data.channels) {
+        //     let channel = sanitizeHtml(a)
+        //     if (channel.length > 50) return false
+        //     channels.push(channel)
+        // }
+        return false
     }
 
     const clean_object = {
