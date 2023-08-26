@@ -233,7 +233,7 @@ const addNewGroup = (e) => {
     let group = e.detail
     if (group.length < 32) return
     openAddGroup()
-    let hash = hashPadding()
+    let hash = Date.now().toString() + hashPadding()
     let add = {
         m: 'Joined group',
         n: group.name,
