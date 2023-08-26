@@ -233,6 +233,7 @@ const addNewGroup = (e) => {
     let group = e.detail
     if (group.length < 32) return
     openAddGroup()
+    //Avoid svelte collision
     let hash = Date.now().toString() + hashPadding()
     let add = {
         m: 'Joined group',
@@ -272,7 +273,8 @@ async function checkReactions(array) {
         //Adding emojis to the correct message.
         addEmoji()
     } else {
-        fixedGroups = filterGroups
+        let uniq = {}
+        fixedGroups = filterGroups.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
     }
 }
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
@@ -292,7 +294,6 @@ async function printGroup(group) {
     const messages = await window.api.printGroup(group.key)
     const chain_messages = messages.filter(a => !a.channel)
     channelMessages = messages.filter(a => a.channel)
-
     setChannels()
     //Load GroupMessages from db
     await groupMessages.set(chain_messages)
@@ -316,7 +317,6 @@ function setChannels() {
     if (in_swarm) {
         let uniq = {}
         // if (!channelMessages.some(a => a.channel && a.grp === thisGroup)) return
-        console.log("channels set")
         const channels = channelMessages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
         // if (!channels) return
         const mapped = [{name: "Chat room"}]
@@ -396,7 +396,6 @@ function addHash(data) {
     // }
 
     const printChannel = async (e) => {
-        console.log("Print chnanel!")
         let filter = $notify.unread.filter((a) => a.channel !== e.detail)
         $notify.unread = filter
         fixedGroups = []
