@@ -31,23 +31,6 @@
         $groups.removeGroup = !$groups.removeGroup
     }
 
-    const disconnect_from_swarm = () => {
-        let key = $groups.thisGroup.key
-        window.api.send("exit-voice",key)
-        window.api.send("end-swarm", key)
-        $swarmGroups.showGroups = true
-    }
-
-    const connecto_to_swarm = () => {
-        if (swarmGroup) return
-        $swarmGroups.showGroups = false
-        window.api.send("new-swarm", {
-            key: group.key, 
-            address: $user.huginAddress.substring(0,99),
-            name: $user.username
-        })
-    }
-    
     const my_address = $user.huginAddress.substring(0,99)
 
     $: swarmGroup = $swarm.active.some(a => a.key === group.key)
@@ -124,10 +107,6 @@
     >
         {#if group.new}
             <div class:unread="{group.new}"></div>
-        {/if}
-
-         {#if !$standardGroups.some(a => a.key === group.key)}
-        <Lightning on:click={connecto_to_swarm} connected={swarmGroup} />
         {/if}
     
         <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />

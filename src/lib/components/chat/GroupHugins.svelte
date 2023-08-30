@@ -7,6 +7,8 @@
 
     import { page } from '$app/stores'
     import Exit from '$lib/components/icons/Exit.svelte'
+    import Lightning from '../icons/Lightning.svelte'
+    import { standardGroups } from '$lib/stores/standardgroups.js'
 
     let activeHugins = []
     let group = ''
@@ -56,12 +58,36 @@ $: if (thisSwarm) {
     activeUsers = []
 }
 
+const disconnect_from_swarm = () => {
+        let key = $groups.thisGroup.key
+        window.api.send("exit-voice",key)
+        window.api.send("end-swarm", key)
+        $swarmGroups.showGroups = true
+    }
+
+const connecto_to_swarm = () => {
+        if (thisSwarm) {
+            disconnect_from_swarm()
+            return
+        }
+        $swarmGroups.showGroups = false
+        window.api.send("new-swarm", {
+            key: $groups.thisGroup.key, 
+            address: $user.huginAddress.substring(0,99),
+            name: $user.username
+        })
+    }
+
 </script>
 
 
 <div class="wrapper" in:fade out:fade class:hide="{$layoutState.hideGroupList}">
     <div class="top">
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
+        <br />
+        {#if !$standardGroups.some(a => a.key === $groups.thisGroup.key)}
+        <Lightning on:click={connecto_to_swarm} connected={thisSwarm} />
+        {/if}
         <br />
         <div class="swarm">
             {#if thisSwarm && $swarm.activeChannel}

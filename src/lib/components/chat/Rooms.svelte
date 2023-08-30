@@ -1,5 +1,5 @@
 <script>
-    import {createEventDispatcher} from 'svelte'
+    import {createEventDispatcher, onMount} from 'svelte'
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {groups, notify, swarm, user} from '$lib/stores/user.js'
@@ -9,6 +9,8 @@
     import CallSlash from '../icons/CallSlash.svelte'
     import MicIcon from '../icons/MicIcon.svelte'
     import MuteIcon from '../icons/MuteIcon.svelte'
+    import Button from '../buttons/Button.svelte'
+    import { sleep } from '$lib/utils/utils'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -25,6 +27,11 @@
     $: if (thisSwarm) channels = thisSwarm.channels
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
+
+    onMount(async () => {
+        await sleep(300)
+        printThis("Chat room")
+    })
 
     const printThis = (channel) => {
         if (channel === $swarm.activeChannel.name) return
@@ -124,7 +131,7 @@ const exitVoiceChannel = (key) => {
     }
 
 </script>
-    <div on:click={dispatch('printGroup', $groups.thisGroup)}
+    <!-- <div on:click={dispatch('printGroup', $groups.thisGroup)}
         class="card"
         in:fade
         out:fade
@@ -138,16 +145,16 @@ const exitVoiceChannel = (key) => {
         <div class="content">
             <h4>{$groups.thisGroup.name}</h4>
             <div class="text">
-                <!-- <p class="from">{group.nick}:</p>
-                <p>{group.msg}</p> -->
+                <p class="from">{group.nick}:</p>
+                <p>{group.msg}</p>
             </div>
         </div>
-    </div>
+    </div> -->
 {#if thisSwarm}
 <div class="swarm_info">
     <!-- <div class="channels"> -->
         <div class="voice-channel">
-            <p class="voice" on:click={join_voice_channel}>#Radio room</p>
+            <p class="voice" on:click={join_voice_channel}><Button disabled={false} text={"Radio room"}/></p>
             {#if in_voice}
             <div class="voice-controls">
                 <div  on:click={disconnect_from_active_voice}>
@@ -181,7 +188,7 @@ const exitVoiceChannel = (key) => {
                 <div class="dot" in:fade></div>
             {/if}
             
-        <p class="channel" on:click={printThis(channel.name)}>#{channel.name}</p>
+        <p class="channel" on:click={printThis(channel.name)}><Button disabled={false} text={channel.name}/></p>
         {/each}
     </div>
 {/if}
@@ -212,6 +219,10 @@ const exitVoiceChannel = (key) => {
         margin-bottom: 10px;
         opacity: 0.92;
         cursor: pointer;
+    }
+
+    .svg {
+        margin-top: 5px;
     }
     
     .content {
@@ -262,19 +273,17 @@ const exitVoiceChannel = (key) => {
     }
 
     .voice {
-            cursor: pointer;
-            font-size: 15px;
-            font-family: "Roboto Mono";
-            padding: 10px;
-            margin-left: 10px;
+        cursor: pointer;
+        font-size: 15px;
+        font-family: "Roboto Mono";
+        padding: 10px;
+        margin-left: 10px;
     }
 
     .channel {
-            cursor: pointer;
-            font-size: 15px;
-            font-family: "Roboto Mono";
-            padding: 5px;
-            margin-left: -5px;
+        cursor: pointer;
+        font-size: 15px;
+        font-family: "Roboto Mono";
     }
 
     .list-wrapper {
