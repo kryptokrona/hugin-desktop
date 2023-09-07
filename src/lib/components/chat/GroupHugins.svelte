@@ -85,9 +85,17 @@ const connecto_to_swarm = () => {
     <div class="top">
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
         <br />
-        {#if !$standardGroups.some(a => a.key === $groups.thisGroup.key)}
-        <Lightning on:click={connecto_to_swarm} connected={thisSwarm} />
-        {/if}
+            {#if !$standardGroups.some(a => a.key === $groups.thisGroup.key)}
+            
+            <div class="connect" on:click={connecto_to_swarm}>
+                <Lightning connected={thisSwarm} />
+                {#if !thisSwarm}
+                    <p class="connectto">Connect</p>
+                    {:else}
+                    <p class="disconnect">Disconnect</p>
+                    {/if}    
+                </div>
+            {/if}
         <br />
         <div class="swarm">
             {#if thisSwarm && $swarm.activeChannel}
@@ -117,6 +125,25 @@ const connecto_to_swarm = () => {
 </div>
 
 <style lang="scss">
+
+.connectto {
+    color: var(--success-color);
+    margin-left: 5px;
+}
+
+.disconnect {
+    color: var(--warn-color);
+    margin-left: 5px;
+}
+
+.connect {
+    display: flex;
+    cursor: pointer;
+    opacity: 0.8;
+    &:hover {
+        opacity: 1;
+    }
+}
 
 .swarm {
     cursor: pointer;
