@@ -859,17 +859,15 @@ const printGroup = async (group = false) => {
                 if (err) {
                     console.log('Error', err)
                 }
+
+                if (row.address.length === 0) row.address = row.grp
+                    
                 const msg = channels.find(a => a.hash === row.hash)
 
                 if (msg) {
                     row.channel = msg.channel
                 }
                 
-                //Double check to avoid frontend bugs
-                let hash = row.hash
-                if (hash === undefined || hash.length < 15) {
-                    row.hash = randomKey()
-                }
 
                     thisGroup.push(row)
             },

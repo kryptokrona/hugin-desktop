@@ -997,6 +997,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
 
 async function sendGroupsMessage(message, offchain = false, swarm = false) {
     console.log("Sending group msg!")
+    if (message.m.length === 0) return
     const my_address = message.k
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)

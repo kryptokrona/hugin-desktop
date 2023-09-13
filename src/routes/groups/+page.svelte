@@ -229,7 +229,7 @@ const openAddGroup = () => {
     }
 }
 //Adds new Group to groArray and prints that Group, its probably empty.
-const addNewGroup = (e) => {
+const addNewGroup = async (e) => {
     let group = e.detail
     if (group.length < 32) return
     openAddGroup()
@@ -241,14 +241,15 @@ const addNewGroup = (e) => {
         hash: hash,
         t: Date.now().toString(),
         s: '',
-        k: group.key,
         sent: false,
         r: '',
+        k: group.key,
         g: group.key,
         h: parseInt(Date.now() * 1000),
     }
+    
     window.api.addGroup(add)
-
+    await sleep(200)
     printGroup(group)
 }
 
