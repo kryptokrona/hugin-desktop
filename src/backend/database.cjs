@@ -1,7 +1,6 @@
 
 const sqlite3 = require('sqlite3').verbose()
 const sanitizeHtml = require('sanitize-html')
-const { randomKey } = require("./utils.cjs")
 let database
 //CREATE DB
 const loadDB = (userDataDir, dbPath) => {
@@ -868,8 +867,7 @@ const printGroup = async (group = false) => {
                     row.channel = msg.channel
                 }
                 
-
-                    thisGroup.push(row)
+                thisGroup.push(row)
             },
             () => {
                 resolve(thisGroup)
