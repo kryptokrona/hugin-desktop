@@ -1,6 +1,7 @@
 
 const sqlite3 = require('sqlite3').verbose()
 const sanitizeHtml = require('sanitize-html')
+const { randomKey } = require("./utils.cjs")
 let database
 //CREATE DB
 const loadDB = (userDataDir, dbPath) => {
@@ -859,9 +860,17 @@ const printGroup = async (group = false) => {
                     console.log('Error', err)
                 }
                 const msg = channels.find(a => a.hash === row.hash)
+
                 if (msg) {
                     row.channel = msg.channel
                 }
+                
+                //Double check to avoid frontend bugs
+                let hash = row.hash
+                if (hash === undefined || hash.length < 15) {
+                    row.hash = randomKey()
+                }
+
                     thisGroup.push(row)
             },
             () => {

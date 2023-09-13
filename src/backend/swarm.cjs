@@ -98,7 +98,9 @@ const update_local_voice_channel_status = (data) => {
 
 const endSwarm = async (key) => {
     let active = active_swarms.find(a => a.key === key)
+    if (!active) return
     let topic = active.topic
+    sender('swarm-disconnected', topic)
     console.log("Ending active swarm", topic)
     const [voice] = get_local_voice_status(topic)
 
@@ -114,7 +116,6 @@ const endSwarm = async (key) => {
         chat.connection.write(JSON.stringify({type: "disconnected"}))
     })
   
-    sender('swarm-disconnected', topic)
 
     await active.swarm.leave(Buffer.from(topic))
     await active.discovery.destroy()

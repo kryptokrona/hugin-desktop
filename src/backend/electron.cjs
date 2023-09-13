@@ -34,7 +34,7 @@ const {
     trimExtra, 
     fromHex, 
     nonceFromTimestamp, 
-    createGroup, 
+    randomKey, 
     hexToUint, 
     toHex, parseCall, hash } = require("./utils.cjs")
 const {
@@ -1081,15 +1081,15 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         }
     } else if (offchain) {
         //Generate a random hash
-        let randomKey = await createGroup()
+        let random_key = randomKey()
         let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
-        let sendMsg = randomKey + '99' + sentMsg
+        let sendMsg = random_key + '99' + sentMsg
         message_json.sent = true
         if (swarm) {
             sendSwarmMessage(sendMsg, group)
-            saveGroupMessage(message_json, randomKey, timestamp, false, true)
+            saveGroupMessage(message_json, random_key, timestamp, false, true)
             mainWindow.webContents.send('sent_group', {
-                hash: randomKey,
+                hash: random_key,
                 time: message.t,
             })
             return
@@ -1097,7 +1097,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         let messageArray = [sendMsg]
         mainWindow.webContents.send('rtc_message', messageArray, true)
         mainWindow.webContents.send('sent_rtc_group', {
-            hash: randomKey,
+            hash: random_key,
             time: message.t,
         })
         
@@ -1415,7 +1415,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
         }
     } else if (off_chain) {
         //Offchain messages
-        let randomKey = await createGroup()
+        let randomKey = randomKey()
         let sentMsg = Buffer.from(payload_hex, 'hex')
         let sendMsg = randomKey + '99' + sentMsg
         let messageArray = []
@@ -1766,7 +1766,7 @@ ipcMain.handle('getGroupReply', async (e, data) => {
 
 
 ipcMain.handle('createGroup', async () => {
-    return await createGroup()
+    return randomKey()
 })
 
 ipcMain.on('unblock', async (e, address) => {

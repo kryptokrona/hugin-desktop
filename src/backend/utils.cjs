@@ -6,8 +6,8 @@ const crypto = new Crypto()
 const hexToUint = (hexString) =>
     new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
 
-async function createGroup() {
-    return await Buffer.from(nacl.randomBytes(32)).toString('hex')
+function randomKey() {
+    return Buffer.from(nacl.randomBytes(32)).toString('hex')
 }
 
 async function hash(text) {
@@ -167,4 +167,4 @@ const sanitize_voice_status_data = (data) => {
 }
 
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, createGroup, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash}
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash}
