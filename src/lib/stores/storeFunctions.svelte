@@ -46,6 +46,7 @@
         // }
         joined.connections.push(data)
         updateActiveSwarm()
+        voice_channel_status(data)
     }
 
     function peer_disconnected(data) {
@@ -62,6 +63,11 @@
             let removed = joined.voice_channel.filter(a => a.address !== data.address) 
             joined.voice_channel = removed
         }
+
+        // if ($swarm.call.some(a => a.chat === data.address)) {
+        //     let filter = $swarm.call.filter(a => a.chat !== data.address)
+        //     $swarm.call = filter
+        // }
 
         //Update store
         updateActiveSwarm()
@@ -87,7 +93,6 @@
             let user = status.connections.find(a => a.address === data.address)
             user.name = data.name
             status.voice_channel.push(data)
-            
         } else {
            let still_active = status.voice_channel.filter(a => a.address !== data.address)
            status.voice_channel = still_active
