@@ -7,8 +7,9 @@
 
     import { page } from '$app/stores'
     import Exit from '$lib/components/icons/Exit.svelte'
-    import Lightning from '../icons/Lightning.svelte'
+    import Lightning from '$lib/components/icons/Lightning.svelte'
     import { standardGroups } from '$lib/stores/standardgroups.js'
+    import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
 
     let activeHugins = []
     let group = ''
@@ -70,12 +71,17 @@ const connecto_to_swarm = () => {
             disconnect_from_swarm()
             return
         }
-        $swarmGroups.showGroups = false
+        $swarmGroups.showGroups = true
+        $swarm.showVideoGrid = true
         window.api.send("new-swarm", {
             key: $groups.thisGroup.key, 
             address: $user.huginAddress.substring(0,99),
             name: $user.username
         })
+    }
+
+    const show_video_room = () => {
+        $swarm.showVideoGrid = true
     }
 
 </script>
@@ -98,8 +104,10 @@ const connecto_to_swarm = () => {
             {/if}
         <br />
         <div class="swarm">
-            {#if thisSwarm && $swarm.activeChannel}
-                <p>#{$swarm.activeChannel.name}</p>
+            {#if thisSwarm}
+            <div  on:click={show_video_room}>
+                <ShowVideoMenu />
+            </div>
             {/if}
         </div>
     </div>
