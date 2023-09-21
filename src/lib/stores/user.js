@@ -98,12 +98,16 @@ export const beam = writable({
 
 export const swarm = writable({
     active: [],
+    myVideo: false,
     voice_channel: [],
     call: [],
     newChannel: false,
     activeChannel: {name: ""},
     activeChannelMessages: [],
-    audio: true
+    audio: true,
+    showVideoGrid: false,
+    myStream: false,
+    screenshare: false,
 })
 
 export const userAvatar = derived(user, ($user) => {
