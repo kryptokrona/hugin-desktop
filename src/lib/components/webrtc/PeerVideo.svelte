@@ -10,6 +10,7 @@ let peerVideo = document.getElementById('peerVideo')
 let peerStream
 let thisWindow = false
 let windowCheck = false
+let audio = false
 export let call
 
 const dispatch = createEventDispatcher()
@@ -81,7 +82,6 @@ const resize = (size) => {
       //Reset size to multiview if we minimize one fullscreen
     if (thisWindow.size === 2 && size == 'min') {
         $videoGrid.multiView = true
-        return
     }
     
     //Size switch
@@ -108,22 +108,28 @@ const resize = (size) => {
     console.log('Updating resize thiswindow', thisWindow.size)
   }
 
+  let showMenu = false
+
   $: thisWindow
 
 
 </script>
 
 <div class="card" class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+    {#if audio}
+    <audio autoplay bind:this="{peerVideo}"></audio>
+    {:else}
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
     {#await setName() then contact}
     <div class="name">{contact.name}</div>
     {/await}
-    <!-- <div class="fade">
+    <div in:fade class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
           <Plus on:click={()=> resize('medium')}/>
         </div>
-      </div> -->
+      </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -222,22 +228,21 @@ p {
       width: 100%;
       height: 100px;
       z-index: 501;
-      opacity: 1;
+      opacity: 0;
       transition: 200ms ease-in-out;
       border-radius: 0 0 10px 10px;
     
     &:hover {
-        .fade {
-        opacity: 100%;
+        opacity: 0.9;
         background-image: linear-gradient(180deg, #00000000, #000000);
         pointer-events: visible;
-      }
     }
     .toggles {
       display: flex;
       width: 100%;
       justify-content: space-evenly;
       align-items: center;
+      cursor: pointer;
     }
 
 }
