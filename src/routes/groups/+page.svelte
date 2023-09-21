@@ -262,6 +262,7 @@ $: if ($groupMessages.length == 0) {
 
 //Checks messages for reactions in chosen Group from printGroup() function
 async function checkReactions(array) {
+    console.log("Array?", array)
     //All group messages all messages except reactions
     filterGroups = await array.filter(
         (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
@@ -283,7 +284,6 @@ async function printGroup(group) {
     fixedGroups = []
     scrollGroups = []
     channelMessages = []
-    $swarm.activeChannel = {name: "", key: ""}
     noMsgs = false
     groups.update((data) => {
         return {
@@ -295,18 +295,26 @@ async function printGroup(group) {
     const messages = await window.api.printGroup(group.key)
     const chain_messages = messages.filter(a => !a.channel)
     channelMessages = messages.filter(a => a.channel)
+
+    console.log("channelMessages", channelMessages)
+    
     setChannels()
-    //Load GroupMessages from db
-    await groupMessages.set(chain_messages)
-    //Check for emojis and filter them
-    await checkReactions(chain_messages)
-    //Reactions should be set, update thisGroup in store and set reply to false.
-    groups.update((data) => {
-        return {
-            ...data,
-            replyTo: { reply: false },
-        }
-    })
+
+    console.log("Active channel! print!", $swarm.activeChannel)
+    console.log("Group key", group.key)
+    // if ($swarm.activeChannel.key === group.key) {
+    //     console.log("Print channel!")
+        printChannel($swarm.activeChannel.name)
+    // } else {
+        //Prin
+        $swarm.activeChannel = {name: "", key: ""}
+        //Load GroupMessages from db
+        await groupMessages.set(chain_messages)
+        //Check for emojis and filter them
+        await checkReactions(chain_messages)
+        //Reactions should be set, update thisGroup in store and set reply to false.
+    // }
+
     replyExit()
     scrollDown()
 }
@@ -396,14 +404,15 @@ function addHash(data) {
     //     console.log('want to load more')
     // }
 
-    const printChannel = async (e) => {
-        let filter = $notify.unread.filter((a) => a.channel !== e.detail)
+    const printChannel = async (name) => {
+        let filter = $notify.unread.filter((a) => a.channel !== name)
         $notify.unread = filter
         fixedGroups = []
         filterEmojis = []
-        let channel = channelMessages.filter(a => a.channel === e.detail)
+        let channel = channelMessages.filter(a => a.channel === name)
         $swarm.activeChannelMessages = channel
-        await checkReactions(channel)
+        console.log("Active channel messages",  $swarm.activeChannelMessages)
+        //await checkReactions(channel)
     }
 
 </script>
