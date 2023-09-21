@@ -2,7 +2,7 @@
 //To handle true and false, or in this case show and hide.
 import { fade } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { webRTC, user } from '$lib/stores/user.js'
+import { webRTC, user, swarm } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 
 let myVideo = document.getElementById('myVideo')
@@ -13,7 +13,6 @@ let window_max = false
 let window_medium = false
 
 export let call
-
 const dispatch = createEventDispatcher()
 
 // When incoming call and this get mounted we play the ringtone
@@ -40,7 +39,16 @@ const pauseVideo = () => {
 }
 
 const playVideo = () => {
-    myVideo.srcObject = $webRTC.myStream
+    myVideo = document.getElementById('myVideo')
+    console.log("Myvide", myVideo)
+    if (myVideo === null) return
+    console.log("Playvideo")
+    console.log("$swarm.myVideo", $swarm.myVideo)
+    console.log("$webRTC.myVideo", $webRTC.myVideo)
+    if (!$swarm.myVideo && !$webRTC.myVideo) return
+    if ($webRTC.call.length) myVideo.srcObject = $webRTC.myStream
+    if (!$swarm.myStream) return
+    if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
     console.log('play video')
     myVideo.play()
 }
@@ -48,9 +56,9 @@ const playVideo = () => {
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {})
 
-$: if ($webRTC.screen_stream) {
+$: if ($swarm.screen_stream) {
     playVideo()
-} else if ($webRTC.video) {
+} else if ($swarm.myVideo) {
     playVideo()
 }
 
