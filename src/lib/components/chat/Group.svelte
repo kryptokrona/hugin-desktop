@@ -21,8 +21,11 @@
          //If p2p group, enter focus mode
          if (thisSwarm) {
             $swarmGroups.showGroups = false
+            $swarm.activeChannel = {name: "Chat room", key: thisSwarm.key}
+            // $swarm.showVideoGrid = true
         }
-        if (group.key === $groups.thisGroup.key) return
+
+        if (group.key === $groups.thisGroup.key && !thisSwarm) return
      
         dispatch('print')
     }
@@ -43,56 +46,6 @@
     
     const createNewChannel = () => {
         //Add to channels and notify others in the swarm
-    }
-    
-    const exitVoiceChannel = (key) => {
-        let endTone = new Audio('/audio/endcall.mp3')
-        endTone.play()
-        let leave = voice_channel.find(a => a.address === $user.huginAddress.substring(0,99))
-        let stay = voice_channel.filter(a => a !== leave)
-        voice_channel = stay
-        window.api.send("exit-voice", group.key)
-        thisSwarm.voice_connected = false
-        //We also need to leave the $swarm.voice_channel which is the _one_ and only active call at a time.
-    }
-    
-    const join_voice_channel = () => {
-        let startTone = new Audio('/audio/startcall.mp3')
-        startTone.play()
-        console.log("Joining!")
-        //Leave any active first
-        if ($swarm.voice_channel.length) {
-            //We already have an active call.
-            //Replace this with our new call
-            if (!disconnect_from_active_voice()) return
-        }
-        console.log("Want to Join new voice")
-        $swarm.voice_channel.push({address: $user.huginAddress.substring(0,99), name: $user.username, key: group.key })
-        $swarm.voice_channel = voice_channel
-        console.log("voice", voice_channel)
-        window.api.send("join-voice", group.key)
-        //Set to true? here
-        thisSwarm.voice_connected = true
-    }
-
-    
-    const disconnect_from_active_voice = () => {
-        console.log("Disconnect from old!")
-            //Leave any active first, check if my own address is active in some channel
-            let active = $swarm.voice_channel.find(a => a.address === $user.huginAddress.substring(0,99))
-            console.log("Wanna disconnect", active)
-            if (!active) return true
-            if (group.key === active.key) return false
-            console.log("Want to exit old voice")
-            let old = $swarm.active.find(a => a.voice_connected === true)
-            if (!old) {
-                console.log("No active voice found!")
-            }
-            old.voice_connected = false
-            $swarm.voice_channel.filter( a => a !== active)
-            $swarm.voice_channel = $swarm.voice_channel
-            window.api.send("exit-voice", old.key)
-            return true
     }
     
     </script>
