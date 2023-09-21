@@ -13,7 +13,7 @@ const {
     expand_sdp_offer, 
     parse_sdp } = require("./sdp.cjs")
    
-const LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, topic: ""})]
+let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
 const Keychain = require('keypear');
 
@@ -37,8 +37,8 @@ async function send_voice_channel_sdp(data) {
     con.connection.write(JSON.stringify(data))
 }
 
-const send_voice_channel_status = async (joined = false, key) => {
-    let active = active_swarms.find(a => a.key === key)
+const send_voice_channel_status = async (joined, status) => {
+    let active = active_swarms.find(a => a.key === status.key)
     if (!active) return
     let msg = active.topic
     let sig = await signMessage(msg, chat_keys.privateSpendKey)
@@ -48,13 +48,14 @@ const send_voice_channel_status = async (joined = false, key) => {
         message: msg,
         voice: joined,
         topic: active.topic,
-        name: my_name
+        name: my_name,
+        video: status.video
     })
     
     update_local_voice_channel_status(data)
 
     //Send voice channel status to others in the group
-    sendSwarmMessage(data, key)
+    sendSwarmMessage(data, status.key)
 
     //If we joined the voice channel, make a call to those already announced their joined_voice_status
     if (joined) { 
@@ -64,12 +65,12 @@ const send_voice_channel_status = async (joined = false, key) => {
         console.log("Updating active voice connections...")
         //Check whos active and call them individually
         let active_voice = active.connections.filter(a => a.voice === true && a.address)
-        console.log("Active connections in voice channel...", active_voice.address, active.voice)
+        console.log("Active connections in voice channel...", active_voice)
         active_voice.forEach(async function(user) {
             console.log("Joining voice with:", user.address)
             await sleep(100)
             //Call to VoiceChannel.svelte
-            join_voice_channel(key, active.topic, user.address)
+            join_voice_channel(status.key, active.topic, user.address)
         })
 
 
@@ -102,15 +103,8 @@ const endSwarm = async (key) => {
     let topic = active.topic
     sender('swarm-disconnected', topic)
     console.log("Ending active swarm", topic)
-    const [voice] = get_local_voice_status(topic)
-
-    if (voice) {
-        update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
-    }
-
-    if (!active) return
+    update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
     
-    if (voice)
     active.connections.forEach(chat => {
         console.log("Disconnecting from:", chat.address)
         chat.connection.write(JSON.stringify({type: "disconnected"}))
@@ -193,7 +187,7 @@ const new_connection = (connection, hash, key, name) => {
     }
 
     console.log("*********Got new Connection! ************")
-    active.connections.push({connection, topic: hash, voice: false, name: "", address: ""})
+    active.connections.push({connection, topic: hash, voice: false, name: "", address: "", video: false})
     send_joined_message(key, hash, my_address)
     //checkIfOnline(hash)
     connection.on('data', async data => {
@@ -265,17 +259,29 @@ const check_data_message = async (data, connection, topic) => {
 
     //Double check if connection is joined voice?
     if ('offer' in data) {
+        console.log("GOt offer or answer!!")
         //Check if this connection has voice status activated.
         if (active.connections.some(a => a.connection === connection && a.voice === true)) {
-            if (active_voice_channel.voice === false) {
+            const [voice, video] = get_local_voice_status(topic)
+            if ((!voice && !video) || !voice) {
+                console.log("Not active! ***************")
                 //We are not connected to a voice channel
                 //Return true bc we do not need to check it again
                 return true
             }
                 //Joining == offer
             if (data.offer === true) {
+                console.log("Answer call")
+                if ('retry' in data) {    
+                    if (data.retry === true) {
+                        console.log("Retry connection!")
+                        sender('got-expanded-voice-channel', [data.data, data.address])
+                        return
+                    }
+                }
                 answer_call(data)
             } else {
+                console.log("Got answer!")
                 //Already in voice == answer
                 got_answer(data)
             }
@@ -301,6 +307,8 @@ const check_data_message = async (data, connection, topic) => {
             con.joined = true
             con.address = joined.address
             con.name = joined.name
+            con.voice = joined.voice
+            con.video = joined.video
             console.log("Connection updated: Joined:", con.joined)
             sender("peer-connected", joined)
         }
@@ -318,6 +326,7 @@ const check_data_message = async (data, connection, topic) => {
 
 const check_peer_voice_status = (data, con) => {
     let voice_data = sanitize_voice_status_data(data) 
+    console.log("Not voice data", voice_data)
     if (!voice_data) return false
     let updated = update_voice_channel_status(voice_data, con)
     if (!updated) return false
@@ -333,6 +342,7 @@ const update_voice_channel_status = (data, con) => {
     if (data.address !== con.address) return false
     //Set voice status
     con.voice = data.voice
+    con.video = data.video
     console.log("Updating voice channel status for this connection:", con.voice)
     //Send status to front-end
     sender("voice-channel-status", data)
@@ -349,20 +359,23 @@ const got_answer = (answer) => {
 
 const get_local_voice_status = (topic) => {
     let voice = false
+    let video = false
     let channel
     //We do this bc stringified data is set locally from the status messages.
     //This can change 
     try {
         channel = JSON.parse(active_voice_channel[0])
-        if (channel.topic !== topic) return [false]
+        if (channel.topic !== topic) return [false, false]
     } catch (e) {
         return [false]
     }
 
-    voice = channel.voice
-    console.log("Success parsed voice status", voice)
+    console.log("channel video", channel)
 
-    return [voice]
+    voice = channel.voice
+    video = channel.video
+
+    return [voice, video, topic]
 }
 
 const get_my_channels = async (key) => {
@@ -377,9 +390,11 @@ const send_joined_message = async (key, topic, my_address) => {
     //Use topic as signed message?
     const msg = topic
     const sig = await signMessage(msg, chat_keys.privateSpendKey)
-    const [voice] = get_local_voice_status(topic)
+    let [voice, video] = get_local_voice_status(topic)
+    if (video) voice = true
     //const channels = await get_my_channels(key)
     console.log("Got local voice", voice)
+    console.log("Got local video", video)
 
     console.log("Voice", voice)
     let data = JSON.stringify({
@@ -390,7 +405,8 @@ const send_joined_message = async (key, topic, my_address) => {
         topic: topic,
         name: my_name,
         voice: voice,
-        channels: []
+        channels: [],
+        video: video
     })
     console.log("Sent joined mesg", data)
     sendSwarmMessage(data, key)
@@ -449,16 +465,16 @@ const errorMessage = (message) => {
     sender('error-notify-message', message)
 }
 
-ipcMain.on('join-voice', async (e, key) => {
-    console.log("Join voice", key)
-    send_voice_channel_status(true, key)
+ipcMain.on('join-voice', async (e, data) => {
+    console.log("Join voice", data.key)
+    send_voice_channel_status(true, data)
 })
 
 ipcMain.on('exit-voice', async (e, key) => {
     console.log("exit voice", key)
     //We should only be active in one channel. Close all connections
     sender("leave-voice-channel")
-    send_voice_channel_status(false, key)
+    send_voice_channel_status(false, {key: key, video: false})
 })
 
 ipcMain.on('get-sdp-voice-channel', async (e, data) => {
@@ -480,21 +496,33 @@ ipcMain.on('expand-voice-channel-sdp', async (e, expand) => {
 
 function get_sdp(data) {
 
-    let sendMessage
-    let offer = false
+    console.log("Get sdp!", data.retry)
 
-    if (data.type == 'offer') {
-        offer = true
+    let sendMessage
+    let offer = true
+    let reconnect = false
+
+    if ('retry' in data) {
+        if (data.retry === true) reconnect = true
     }
+    
+    if (data.type == 'answer') {
+        offer = false
+    }
+
+    if ('renegotiate' in data.data) {
+        offer = false
+    } 
 
     sendMessage = {
         data: data.data,
         offer: offer,
         address: data.address,
-        topic: data.topic
+        topic: data.topic,
+        retry: reconnect
     }
 
-    console.log("Send voice channel sdp:", sendMessage)
+    console.log("Send voice channel sdp reconnect?:", sendMessage.retry)
     send_voice_channel_sdp(sendMessage)
 }
 
