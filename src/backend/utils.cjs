@@ -112,6 +112,8 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof voice !== 'boolean') return false
     const joined = data.joined
     if (typeof joined !== 'boolean') return false
+    const video = data.video
+    if (typeof video !== 'boolean') return false
     const channels = []
     if (data.channels.length) {
         //Disable channels
@@ -133,7 +135,8 @@ const sanitize_join_swarm_data = (data) => {
         name: name,
         voice: voice,
         joined: joined,
-        channels: channels
+        channels: channels,
+        video: video
     }
 
     return clean_object
@@ -153,6 +156,8 @@ const sanitize_voice_status_data = (data) => {
     if (name.length > 50) return false
     const voice = data.voice
     if (typeof voice !== 'boolean') return false
+    const video = data.video
+    if (typeof video !== 'boolean') return false
 
     const clean_object = {
         address: address,
@@ -161,6 +166,7 @@ const sanitize_voice_status_data = (data) => {
         topic: topic,
         name: name,
         voice: voice,
+        video: video
     }
 
     return clean_object

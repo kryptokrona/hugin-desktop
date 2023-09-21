@@ -143,17 +143,17 @@ const WINDOW_API = {
         ipcRenderer.send('switchNode', node)
     },
 
-    shareScreen: async () => {
-        ipcRenderer.invoke('shareScreen')
+    shareScreen: async (start, conference) => {
+        ipcRenderer.invoke('shareScreen', false, conference)
     },
 
     setCamera: async () => {
         ipcRenderer.send('setCamera')
     },
 
-    changeSource: async (src) => {
+    changeSource: async (src, conference, add) => {
         console.log('preload', src)
-        ipcRenderer.send('change-src', src)
+        ipcRenderer.send('change-src', src, conference, add)
     },
 
     changeAudioSource: async (src) => {
