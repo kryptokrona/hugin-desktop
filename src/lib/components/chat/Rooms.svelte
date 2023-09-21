@@ -11,11 +11,12 @@
     import MuteIcon from '../icons/MuteIcon.svelte'
     import Button from '../buttons/Button.svelte'
     import { sleep } from '$lib/utils/utils'
+import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
     let voice_channel = []
-    let connected = true
+    let connected = false
     let topic = ""    
     let muted = false
     const dispatch = createEventDispatcher()
@@ -29,36 +30,39 @@
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 
     onMount(async () => {
-        await sleep(300)
+        await sleep(200)
         printThis("Chat room")
     })
 
     const printThis = (channel) => {
-        if (channel === $swarm.activeChannel.name) return
-        dispatch('print-channel', channel)
+        //if (channel === $swarm.activeChannel.name) return
+        
         $swarm.activeChannel = {name: channel, key: thisSwarm.key}
+        dispatch('print-channel', channel)
     }
     
     const openRemove = () => {
         $groups.removeGroup = !$groups.removeGroup
     }
 
-
-const exitVoiceChannel = (key) => {
-      
-        let leave = voice_channel.find(a => a.address === my_address)
-        let stay = voice_channel.filter(a => a !== leave)
-        voice_channel = stay
-        window.api.send("exit-voice", leave.key)
-        thisSwarm.voice_connected = false
-        //We also need to leave the $swarm.voice_channel which is the _one_ and only active call at a time.
+      //Share screenpmn
+      const switchStream = async () => {
+        if (!$swarm.screenshare) {
+            await window.api.shareScreen(false, true)
+            $swarm.screenshare = true
+        }
     }
-    
-    const join_voice_channel = () => {
+
+    const join_voice_channel = async (video = false, reconnect = false, screen) => {
         if (in_voice) return
-        startTone.play()
-        muted = false
+        if (!reconnect) startTone.play()
+        $swarm.showVideoGrid = false
         console.log("Joining!")
+        if (reconnect) {
+            //activate_video()
+            //await sleep(200)
+            $swarm.myVideo = true
+        }
         //Leave any active first
         if ($swarm.voice_channel.length) {
             //We already have an active call.  
@@ -67,23 +71,23 @@ const exitVoiceChannel = (key) => {
             if (!disconnect_from_active_voice()) return
         }
         console.log("Want to Join new voice")
-        voice_channel.push({address: $user.huginAddress.substring(0,99), name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = voice_channel
+        thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
+        $swarm.voice_channel = thisSwarm.voice_channel
         console.log("voice", voice_channel)
-        window.api.send("join-voice", thisSwarm.key)
+        window.api.send("join-voice", {key: thisSwarm.key, video: $swarm.myVideo})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm 
         console.log("Should be joined and connected here in this swarm", thisSwarm)
     }
-    
-    
-    const disconnect_from_active_voice = () => {
+
+    function disconnect_from_active_voice(reconnect = false) {
         console.log("Disconnect from active voice!")
+
+        if (!reconnect) $swarm.showVideoGrid = false
             //Leave any active first, check if my own address is active in some channel
              //Also remove from voice channel
             let swarms = $swarm.active
-
             //Remove my own address from swarm active voice channel list in UI
             swarms.forEach(joined => {
                 if (joined.voice_channel.some(a => a.address === my_address)) {
@@ -93,42 +97,90 @@ const exitVoiceChannel = (key) => {
             })
             
             //Check my current active swarm voice channel and remove aswell
-            let active = $swarm.voice_channel.find(a => a.address === $user.huginAddress.substring(0,99))
+            let active = $swarm.voice_channel.find(a => a.address === my_address)
             if (!active) return true
 
             //Change voice connected status in other channels
             let old = $swarm.active.find(a => a.voice_connected === true)
             if (old) old.voice_connected = false
 
-
+            
             //Remove from the active voice channel we have
             console.log("Want to exit old voice")
             let remove = $swarm.voice_channel.filter( a => a !== active)
             $swarm.voice_channel = remove
+            
+            //Stop any active tracks
+            if (active && $swarm.myStream) {
+                $swarm.myStream.getTracks().forEach((track) => track.stop())
+            }
 
+            connected = false
+            //Stop any active stream
             if (!old) return true
 
-            let endTone = new Audio('/audio/endcall.mp3')
-            endTone.play()
-
+            if (!reconnect) {
+                let endTone = new Audio('/audio/endcall.mp3')
+                endTone.play()
+            }
             //Send status to backend
             window.api.send("exit-voice", old.key)
+            $swarm.myVideo = false
             return true
     }
-
-    const disconnect_from_swarm = () => {
-        let key = $groups.thisGroup.key
-        window.api.send("exit-voice",key)
-        window.api.send("end-swarm", key)
-        $swarmGroups.showGroups = true
-        connected = false
-    }
-
+    
+    
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
         if (!$swarm.myStream) return
-        $swarm.myStream.getTracks().forEach((track) => (track.enabled = !track.enabled))
+        $swarm.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
     }
+
+    const add_video = async (screen = false) => {
+        if ($swarm.cameraId === "none") return
+        window.api.changeSource($swarm.cameraId, true, true)
+        $swarm.screenshare = false
+    }
+
+    const activate_video = () =>{
+        window.api.send('active-video')
+    }
+    
+    const toggleVideo = () => {
+    
+        if (!connected) {
+            if ($swarm.call.length > 0 && !$swarm.screenshare && !$swarm.myVideo) {
+                console.log("Reconnect with video!")
+                add_video()
+            } else if ($swarm.call.length === 0 && !$swarm.screenshare && !$swarm.myVideo) {
+                console.log("Activate video!")
+                activate_video()
+            }
+            connected = true
+            return
+        }
+
+        if ($swarm.screenshare) {
+            let camera = $swarm.cameraId
+            window.api.changeSource(camera, true)
+            $swarm.screenshare = false
+            return
+        }
+
+        console.log("Changed toggle! stream",$swarm.myStream)
+        $swarm.myVideo = !$swarm.myVideo
+        if (!$swarm.myStream) return
+        $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+    }
+    
+    // const showMessages = () => {
+    //     $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+    // }
+    
+    const show_grid = () => {
+        $swarm.showVideoGrid = true
+    }
+
 
 </script>
     <!-- <div on:click={dispatch('printGroup', $groups.thisGroup)}
@@ -159,6 +211,9 @@ const exitVoiceChannel = (key) => {
             <div class="voice-controls">
                 <div  on:click={disconnect_from_active_voice}>
                     <CallSlash/>
+                </div>
+                <div  on:click={show_grid}>
+                    <ShowVideoMenu />
                 </div>
                 <div on:click="{toggleAudio}">
                     {#if $swarm.audio}
