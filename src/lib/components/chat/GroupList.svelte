@@ -18,7 +18,6 @@
     let groupList = []
     let group = ''
     let groupName
-
     const dispatch = createEventDispatcher()
     const nogroup = {
             nick: 'No contacts',
@@ -195,7 +194,7 @@ $: active_swarm = $swarm.active.some(a => groupList.map(b=>b.key).includes(a.key
 //Active hugins
 $: activeHugins
 
-$: show_groups = $swarmGroups.showGroups
+$: show_groups = true
 	
 	function flipper(node, {
 		delay = 0,
