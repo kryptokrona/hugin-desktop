@@ -2,6 +2,12 @@
     import wrtc from '@koush/wrtc'
     import Peer from 'simple-peer'
     import { audioLevel, user, swarm } from '$lib/stores/user.js'
+    import { onMount } from 'svelte'
+    import { sleep } from '$lib/utils/utils'
+
+    onMount(() => {
+        checkSources()
+    })
     
     window.api.receive('answer-voice-channel', (data) => {
         console.log("Answer voice channel", data)
@@ -26,7 +32,15 @@
             endCall('peer', 'stream', active.chat)
         })
     })
-    
+
+    window.api.receive('activate-video', () => {
+        set_camera()
+    })
+
+    window.api.receive('group-screen-share', (id) => {
+        shareScreen(id)
+    })
+
     //TODO ADD MEDIA TRAKCS; VIDEO; SCREENSHARE
     // NEW CALL? 
     
@@ -45,11 +59,30 @@
     // window.api.receive('check-src', () => {
     //     checkSources()
     // })
+
+    async function checkSources() {
+        console.log("checking soruces conference")
+    let devices = await navigator.mediaDevices.enumerateDevices()
+    $swarm.devices = devices
+    if (!$swarm.cameraId) {
+        //Set defauklt camera id in store
+        let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
+        if (camera.length === 0) {
+            $swarm.cameraId = "none"
+            return
+        }
+        $swarm.cameraId = camera[0].deviceId
+        
+        console.log(" $swarm.cameraId",   $swarm.cameraId)
+        // select the desired transceiver
+    }
+}
+
     
-    // window.api.receive('change-source', (src) => {
-    //     console.log('want to change in calls', src)
-    //     changeCamera(true, src)
-    // })
+    window.api.receive('group-change-source', (src, add) => {
+        console.log('want to change in calls', src)
+        changeCamera(true, src, add)
+    })
     
     // window.api.receive('rtc_message', (msg, to_group = false) => {
     //     sendRtcMessage(msg, to_group)
@@ -59,41 +92,132 @@
     // navigator.mediaDevices.ondevicechange = () => {
     //     checkSources()
     // }
+
+    async function changeCamera(video, id, add) {
+    if (video) {
+        // get video/voice stream
+        navigator.mediaDevices
+            .getUserMedia({
+                video: {
+                    deviceId: id,
+                },
+            })
+            .then(function (device) {
+                changeVideoSource(device, id, add)
+            })
+            .catch((e) => {
+                console.log('error', e)
+            })
+    }
+    }
     
     window.api.receive('got-expanded-voice-channel', async (callData) => {
-        console.log("calldata", callData)
+        console.log("Got offer signal", callData)
         let [sdp, address] = callData
-        console.log("Find call", $swarm.call)
         let contact = $swarm.call.find((a) => a.chat == address)
-        console.log(address)
         contact.peer.signal(sdp)
     })
     
     //Awaits msg answer with sdp from contact
     window.api.receive('got-answer-voice-channel', (signal) => {
-        console.log("Got caller data:", signal)
+        console.log("Got ansswer data:", signal)
         let contact = $swarm.call.find((a) => a.chat === signal.address)
-        console.log('contact filter', contact)
         contact.peer.signal(signal.data)
         console.log('Connecting to ...', signal.address)
     })
+
+    async function shareScreen(id) {
+    const screen_stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+            mandatory: {
+                chromeMediaSource: 'desktop',
+                chromeMediaSourceId: id,
+                minWidth: 1280,
+                maxWidth: 1280,
+                minHeight: 720,
+                maxHeight: 720,
+            },
+        },
+    })
+
+    let add = false
+    if (!$swarm.myStream) add = true
+    if ($swarm.myStream) {
+        if ($swarm.myStream.getVideoTracks().length === 0) add = true
+    }
+    changeVideoSource(screen_stream, 'screen', add)
+    }
     
+
+    async function changeVideoSource(device, id, add = false) {
+        let current = $swarm.myStream
+    
+        //We have no active local stream set and we are alone in the conference room
+        if (!current) {
+            $swarm.myStream = device
+            $swarm.myVideo = true
+        }
+
+        //Check if we have an active peer
+        let peer = $swarm.call.some(a => a.peer)
+        //Add new track to current stream
+        if (add && peer) {
+            $swarm.call.forEach( async (a) => {
+                a.peer.addTrack(device.getVideoTracks()[0], current)
+            })
+        } 
+        
+        //Replace track for all peers
+        if (peer && !add) {
+            $swarm.call.forEach((a) => {
+                a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current)
+            })
+        }
+        
+        if (current) current.addTrack(device.getVideoTracks()[0])
+       
+        if (!add && current) {
+            //Stop old track
+            let old = current.getVideoTracks()[0]
+            old.stop()
+            //Remove old track
+            current.removeTrack(current.getVideoTracks()[0])
+            //Update stream
+        }
+
+        if (current) $swarm.myStream = current
+        $swarm.myVideo = true
+        //Set video boolean to play video
+        $swarm.video = true
+        if ($swarm.screenshare) return
+        $swarm.cameraId = id
+    }
     
     
     const join_voice_channel = async (data) => {
-        console.log('Joining voice channel... in VoiceChannel.svelte', data)
+        console.log('Joining voice channel... in VoiceChannel.svelte')
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
-        //Get video/voice stream
+        let video = $swarm.myVideo
+        if ($swarm.cameraId === "none") video = false
+        
+        //If we already have an active stream, do not create a new one.
+        if ($swarm.myStream) {
+                gotMedia($swarm.myStream, data, video)
+            return
+        }
+        
+        //Get a new video/voice stream
         navigator.mediaDevices
             .getUserMedia({
-                video: false,
+                video: video,
                 audio: {
                     googNoiseSupression: true,
                 },
             })
             .then(function (stream) {
-                gotMedia(stream, data)
+                gotMedia(stream, data, video)
             })
             .catch((err) => {
                 console.log('error', err)
@@ -101,12 +225,9 @@
     }
     
     
-    async function gotMedia(stream, data) {
-        console.log("** GOT MEDIA VOICE DATA! join_voice_channel **", data)
-        console.log("** GOT MEDIA VOICE CHANNEL STREAM! join_voice_channel **", stream)
+    async function gotMedia(stream, data, video) {
         let active = $swarm.active.find(a => a.key === data.key)
         let this_call = $swarm.call.find(a => a.chat === data.address)
-        console.log("This voice channel call!", this_call)
         let peer1 = await startPeer1(stream, data.address, data.topic, this_call)
     
         checkMyVolume(stream)
@@ -118,7 +239,7 @@
             console.log("Got peer1 stream", peerStream)
             //Set peerStream to store
             this_call.peerStream = peerStream
-            this_call.peerAudio = true
+            this_call.peerVideo = true
             $swarm.call = $swarm.call
         })
     }
@@ -142,7 +263,7 @@
     
         peer1.on('close', (e) => {
             console.log(e)
-            console.log('Connection lost..')
+            console.log('Connection closed..')
             endCall(peer1, stream)
             // ENDCALL AUDIO
         })
@@ -158,10 +279,18 @@
         peer1.on('connect', async () => {
             // SOUND EFFECT
             window.api.successMessage('Connection established')
-            let startTone = new Audio('/audio/startcall.mp3')
-            startTone.play()
+            if ($swarm.call.length < 2) {
+                //Only play sound on first connect. Peer 2 will play all incoming connections when joined.
+                let startTone = new Audio('/audio/startcall.mp3')
+                startTone.play()
+            }
             this_call.connected = true
             checkVolume(peer1)
+            $swarm.call = $swarm.call
+        })
+
+        peer1.on('track', (track, stream) => {
+            this_call.peerStream = stream
             $swarm.call = $swarm.call
         })
     
@@ -173,40 +302,58 @@
     const answer_voice_channel = (data) => {
         
         console.log("Answer voice channel", data)
-        let video = false
         let contact = data.address
         let msg = data.data
-    
+        let video = $swarm.myVideo
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
-        let this_call = $swarm.call.find(a => a.chat === data.address)
         // get video/voice stream
+        
+        if ($swarm.myStream) {
+            got_answer_media($swarm.myStream, msg, data)
+            return
+        }
+
         navigator.mediaDevices
             .getUserMedia({
-                video: video,
+                video: $swarm.myVideo,
                 audio: true,
             })
-            .then(gotMedia)
+            .then(function (stream) {
+                got_answer_media(stream, msg, data)
+            })
             .catch(() => {})
-        console.log('Got media')
-    
-        async function gotMedia(stream) {
-    
+    }
+
+    const got_answer_media = async (stream, msg, data) => {
+            console.log("Got stream!", stream)
+            let this_call = $swarm.call.find(a => a.chat === data.address)
+            let video = $swarm.myVideo
             let peer2 = await startPeer2(stream, video, this_call)
     
             //Set swarm store update for call
             this_call.peer = peer2
             this_call.chat = data.address
             checkMyVolume(stream)
+
+            peer2.on('stream', (peerStream) => {
+
+                console.log('peer2 stream', peerStream)
+                this_call.peerStream = peerStream
+                this_call.peerVideo = true
+
+                $swarm.call = $swarm.call
+                console.log('Setting up link..')
+        })
     
             sendAnswer(msg, data.address, peer2, data.topic)
-            
-            console.log('answrcall done got peer 2', peer2)
         }
-    }
     
     async function startPeer2(stream, video, this_call) {
-        let peer2 = new Peer({ stream: stream, trickle: false, wrtc: wrtc })
+        let peer2 = new Peer({ stream: stream, trickle: false, wrtc: wrtc, answerOptions: {
+                offerToReceiveVideo: true,
+                offerToReceiveAudio: true,
+            }, })
     
         peer2.on('close', (e) => {
             console.log('Connection closed..', e)
@@ -227,7 +374,7 @@
         console.log('sending offer!!!')
     
         peer2.on('track', (track, stream) => {
-            console.log('Setting up link..', track, stream)
+            console.log('Peer 2 got tracks Ä******************', track, stream)
         })
     
         peer2.on('connect', () => {
@@ -245,35 +392,27 @@
             })
         })
     
-        peer2.on('stream', (peerStream) => {
-            // got remote video stream, now let's show it in a video tag
-    
-            console.log('peer2 stream', peerStream)
-            this_call.peerStream = peerStream
-            if (video) {
-                this_call.peerVideo = true
-            } else {
-                this_call.peerAudio = true
-            }
-
-            $swarm.call = $swarm.call
-            console.log('Setting up link..')
-        })
-    
         return peer2
     }
     
     function sendOffer(peer, contact, topic) {
     
         peer.on('signal', (data) => {
+            console.log("Signal peer 1", data)
             let dataToSend = {
                 data: data,
                 type: 'offer',
                 address: contact,
                 topic: topic,
-                video: false
+                video: false,
+                retry: false
             }
-    
+
+            if ($swarm.call.some(a => a.chat === contact && a.connected)) {
+                console.log("Retry!", dataToSend)
+                dataToSend.retry = true
+            }
+
             console.log('Want to send sdp offer in voice chnnael', dataToSend)
     
             window.api.send('get-sdp-voice-channel', dataToSend)
@@ -286,18 +425,50 @@
         window.api.send("expand-voice-channel-sdp", [sdpOffer, address])
     
         peer.on('signal', (data) => {
-            console.log('initial offer data:', data)
+            console.log('answer data:', data)
             let dataToSend = {
                 data: data,
                 type: 'answer',
                 address: address,
                 topic: topic,
-                video: false
+                video: false,
+                retry: false
             }
-            console.log('sending sdp swarm', dataToSend)
     
             window.api.send('get-sdp-voice-channel', dataToSend)
         })
+    }
+
+    async function set_camera() {
+    //Get video/voice stream
+    navigator.mediaDevices
+            .getUserMedia({
+                video: true,
+                audio: {
+                    googNoiseSupression: true,
+                },
+            })
+            .then(function (stream) {
+                set_video(stream)
+            })
+            .catch((e) => {
+                console.log('error', e)
+            })
+}
+
+    function set_video(stream) {
+        $swarm.oldStream = $swarm.myStream
+        $swarm.myStream = stream
+        // if ($swarm.call.length && on) changeVideoSource(stream)
+        $swarm.myVideo = true
+        $swarm.video = true
+
+        let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
+        $swarm.cameraId = camera[0].deviceId
+        
+        // if (!on) $swarm.myStream.getVideoTracks().forEach(function (track) {
+        //             track.stop()
+        // })
     }
     
     async function checkVolume(peer) {
@@ -314,7 +485,7 @@
     
         function getAudioLevel() {
             if ($swarm.call.some((a) => a.chat == contact.chat)) {
-                const rec = peer._pc.getReceivers().find((r) => {
+                const rec = contact.peer._pc.getReceivers().find((r) => {
                     return r.track.kind === 'audio'
                 })
                 if (rec && rec.getSynchronizationSources()) {
@@ -354,7 +525,7 @@
     async function checkMyVolume(stream) {
         //Check if active stream already exists
         if (!$swarm.audio) {
-            stream.getTracks().forEach((track) => (track.enabled = false))
+            stream.getAudioTracks().forEach((track) => (track.enabled = false))
         }
         $swarm.myStream = stream
         return
@@ -364,13 +535,16 @@
         $swarm.myStream = stream
         
     }
+
+    $: console.log("$swarm calls", $swarm.call)
     
     //End call
     function endCall(peer, stream, contact) {
+
+        console.log("Call ending with", peer, contact)
         let caller = $swarm.call.find((a) => a.chat === contact)
     
-        if (contact === undefined) {
-            console.log('contact', contact)
+        if (contact === undefined && peer !== undefined) {
             caller = $swarm.call.find((e) => e.peer.channelName == peer.channelName)
         }
     
@@ -388,50 +562,41 @@
     
         }
 
-        let endTone = new Audio('/audio/endcall.mp3')
+        const endTone = new Audio('/audio/endcall.mp3')
             endTone.play()
     
         let filter
+
         if (contact === undefined) {
             filter = $swarm.call.filter((e) => e.peer !== peer)
         } else {
             filter = $swarm.call.filter((a) => a.chat !== contact)
         }
     
-        if (filter.length < 1) {
-            $swarm.groupCall = false
-        }
-    
         console.log('cleared this call from', filter)
         $swarm.call = filter
     
-        if ($swarm.call.some((a) => a.peerVideo)) {
-            $swarm.myVideo = true
-            $swarm.video = true
-            console.log('Already got a video call open, return')
+        const in_voice = $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))
+        
+        if (in_voice) {
+            //Still in channel, dont stop video/voice tracks.
             return
         }
-    
-        if ($swarm.call.some((a) => a.peerAudio)) {
-            console.log('Already got a audio call open, return')
-            $swarm.myVideo = false
-            return
-        }
-    
-        if ($swarm.call.length === 0) {
+        
+        if ($swarm.call.length === 0 && !in_voice) {
+            //Not active anymore, stop all tracks here.
                 $swarm.myStream.getTracks().forEach(function (track) {
                     console.log('track stopped')
                     track.stop()
                 })
         }
-    
         //
         $swarm.initiator = false
         $swarm.screenshare = false
         $swarm.video = false
         $swarm.screen_stream = false
         $swarm.myVideo = false
-    
+        $swarm.myStream = false
         console.log('Call ended')
     }
     </script>
