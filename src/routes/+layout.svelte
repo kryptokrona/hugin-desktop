@@ -31,6 +31,7 @@
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
+import Conference from './groups/components/Conference.svelte'
 
     let ready = false
     let incoming_call
@@ -479,6 +480,12 @@
     <StoreFunctions/>
     {#if startAnimation}
         <div class="shine"></div>
+    {/if}
+
+    {#if $swarm.active.length}
+        {#each $swarm.active as connection}
+            <Conference connections={connection}/>
+        {/each}
     {/if}
 
     {#if ($user.loggedIn && $swarm.call.length)}
