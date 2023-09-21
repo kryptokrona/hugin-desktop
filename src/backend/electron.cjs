@@ -1209,7 +1209,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
             key = possibleKey
         } catch (err) {
-            console.log(err)
         }
     }
 
@@ -1614,15 +1613,18 @@ async function pickNode(node) {
     await db.write()
 }
 
-async function shareScreen(start) {
+async function shareScreen(start, conference) {
 
 const { desktopCapturer } = require('electron')
     desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
         for (const source of sources) {
             if (source.name === 'Entire Screen') {
             }
-            if (!start) {
+            if (!start && !conference) {
                 mainWindow.webContents.send('screen-share', source.id)
+            } else if (conference) {
+                console.log("CONFERENCE!")
+                mainWindow.webContents.send('group-screen-share', source.id)
             }
             return source.id
         }
@@ -1697,6 +1699,9 @@ ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
     sendMessage(beamMessage.msg, beamMessage.chat, offchain)
 });
 
+ipcMain.on("active-video", async (e, chat) => {
+    mainWindow.webContents.send('activate-video')
+});
 
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
@@ -1898,16 +1903,20 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
     mainWindow.webContents.send('start-call', contact, calltype)
 })
 
-ipcMain.handle('shareScreen', async (e, start) => {
-    shareScreen(start)
+ipcMain.handle('shareScreen', async (e, start, conference) => {
+    shareScreen(start, conference)
 })
 
 ipcMain.on('setCamera', async (e, contact, calltype) => {
     mainWindow.webContents.send('set-camera')
 })
 
-ipcMain.on('change-src', async (e, src) => {
-    console.log('ipc main on')
+ipcMain.on('change-src', async (e, src, conference, add) => {
+    if (conference) {
+        console.log("Add===", add)
+        mainWindow.webContents.send('group-change-source', src, add)
+        return
+    }
     mainWindow.webContents.send('change-source', src)
 })
 
