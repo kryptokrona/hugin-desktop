@@ -11,8 +11,8 @@
     import MuteIcon from '../icons/MuteIcon.svelte'
     import Button from '../buttons/Button.svelte'
     import { sleep } from '$lib/utils/utils'
-import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
-import FillButton from '../buttons/FillButton.svelte'
+    import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
+    import FillButton from '../buttons/FillButton.svelte'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -112,18 +112,17 @@ import FillButton from '../buttons/FillButton.svelte'
             $swarm.voice_channel = remove
             
             //Stop any active tracks
-            if (active && $swarm.myStream) {
-                $swarm.myStream.getTracks().forEach((track) => track.stop())
+            if (active && $swarm.myStream && $swarm.myVideo) {
+                $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
             }
 
             connected = false
             //Stop any active stream
             if (!old) return true
 
-            if (!reconnect) {
-                let endTone = new Audio('/audio/endcall.mp3')
-                endTone.play()
-            }
+            let endTone = new Audio('/audio/endcall.mp3')
+            endTone.play()
+
             //Send status to backend
             window.api.send("exit-voice", old.key)
             $swarm.myVideo = false

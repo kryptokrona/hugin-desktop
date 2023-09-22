@@ -288,11 +288,6 @@
             checkVolume(peer1)
             $swarm.call = $swarm.call
         })
-
-        peer1.on('track', (track, stream) => {
-            this_call.peerStream = stream
-            $swarm.call = $swarm.call
-        })
     
         sendOffer(peer1, contact, topic)
     
@@ -371,11 +366,7 @@
             console.log('msg from peer2', incMsg)
         })
     
-        console.log('sending offer!!!')
-    
-        peer2.on('track', (track, stream) => {
-            console.log('Peer 2 got tracks Ä******************', track, stream)
-        })
+        console.log('Sending offer!')
     
         peer2.on('connect', () => {
             // SOUND EFFECT

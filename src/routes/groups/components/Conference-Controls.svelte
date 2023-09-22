@@ -111,8 +111,8 @@
             $swarm.voice_channel = remove
             
             //Stop any active tracks
-            if (active && $swarm.myStream) {
-                $swarm.myStream.getTracks().forEach((track) => track.stop())
+            if (active && $swarm.myStream && $swarm.myVideo) {
+                $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
             }
             //Stop any active stream
             if (!old) return true
