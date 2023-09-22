@@ -246,6 +246,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
             from {
                 opacity: 0;
                 visibility: hidden;
+                pointer-events: none;
             }
             to {
                 opacity: 100%;
