@@ -194,7 +194,7 @@ $: active_swarm = $swarm.active.some(a => groupList.map(b=>b.key).includes(a.key
 //Active hugins
 $: activeHugins
 
-$: show_groups = true
+$: show_groups = $swarmGroups.showGroups
 	
 	function flipper(node, {
 		delay = 0,

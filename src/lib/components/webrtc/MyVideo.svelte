@@ -87,7 +87,7 @@ $: window_medium
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:hide={$videoGrid.hideMyVideo}>
+<div in:fade out:fade class="card" class:hide={$videoGrid.hideMyVideo}>
     <video
         on:click="{playVideo}"
         muted

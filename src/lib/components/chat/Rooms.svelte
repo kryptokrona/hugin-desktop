@@ -12,6 +12,7 @@
     import Button from '../buttons/Button.svelte'
     import { sleep } from '$lib/utils/utils'
 import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
+import FillButton from '../buttons/FillButton.svelte'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -30,8 +31,8 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 
     onMount(async () => {
-        await sleep(200)
-        printThis("Chat room")
+        // await sleep(200)
+        // printThis("Chat room")
     })
 
     const printThis = (channel) => {
@@ -206,7 +207,7 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
 <div class="swarm_info">
     <!-- <div class="channels"> -->
         <div class="voice-channel">
-            <p class="voice" on:click={join_voice_channel}><Button disabled={false} text={"Radio room"}/></p>
+            <p class="voice" on:click={join_voice_channel}><FillButton disabled={false} enabled={in_voice} text={"Voice channel"}/></p>
             {#if in_voice}
             <div class="voice-controls">
                 <div  on:click={disconnect_from_active_voice}>
@@ -232,7 +233,7 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
             </div>
         <!-- </div> -->
 </div>
-    <div class="text-channels">
+    <!-- <div class="text-channels">
         {#each channels as channel}
         
             {#if $swarm.activeChannel.name === channel.name}
@@ -245,7 +246,7 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
             
         <p class="channel" on:click={printThis(channel.name)}><Button disabled={false} text={channel.name}/></p>
         {/each}
-    </div>
+    </div> -->
 {/if}
 
 <style lang="scss">
@@ -329,6 +330,7 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
 
     .voice {
         cursor: pointer;
+        display: contents;
         font-size: 15px;
         font-family: "Roboto Mono";
         padding: 10px;
@@ -404,6 +406,7 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
     display: flex;
     justify-content: space-around;
     margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 
