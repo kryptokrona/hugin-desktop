@@ -146,6 +146,7 @@ const resize = (size) => {
     pointer-events: all;
     transition: 0.35s;
     aspect-ratio: 16/9;
+    pointer-events: none;
 
     video {
         position: absolute;

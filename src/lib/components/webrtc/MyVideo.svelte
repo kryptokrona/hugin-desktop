@@ -58,7 +58,7 @@ onDestroy(() => {})
 
 $: if ($swarm.screen_stream) {
     playVideo()
-} else if ($swarm.myVideo) {
+} else if ($swarm.video) {
     playVideo()
 }
 
@@ -113,6 +113,7 @@ $: window_medium
     pointer-events: all;
     transition: 0.35s;
     aspect-ratio: 16/9;
+    pointer-events: none;
 
     video {
         position: absolute;
