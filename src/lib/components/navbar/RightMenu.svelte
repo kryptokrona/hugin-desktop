@@ -70,7 +70,9 @@ const startCall = async (contact, calltype) => {
 
     if (calltype) {
         video = true
+        $videoGrid.showVideoGrid = true
     }
+    
     startTone.play()
     let call = {
         msg: 'outgoing',
