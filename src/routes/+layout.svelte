@@ -482,10 +482,8 @@ import Conference from './groups/components/Conference.svelte'
         <div class="shine"></div>
     {/if}
 
-    {#if $swarm.active.length}
-        {#each $swarm.active as connection}
-            <Conference connections={connection}/>
-        {/each}
+    {#if $swarm.showVideoGrid}
+            <Conference />
     {/if}
 
     {#if ($user.loggedIn && $swarm.call.length)}
