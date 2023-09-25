@@ -19,6 +19,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
     let connected = false
     let topic = ""    
     let muted = false
+    let thisSwarm = {}
     const dispatch = createEventDispatcher()
     const my_address = $user.huginAddress.substring(0,99)
     
@@ -28,6 +29,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
     $: if (thisSwarm) channels = thisSwarm.channels
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
+    let active = thisSwarm
 
     onMount(async () => {
         // await sleep(300)
@@ -164,9 +166,9 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         <div class="video-wrapper">
             <div class="video-grid">
             {#if in_voice}
-                <MyVideo />
+                <MyVideo active={active}/>
                 {:else}
-                <FillButton on:click={join_voice_channel} text={"Join call"} disabled={false} enabled={true} />
+                <!-- <FillButton on:click={join_voice_channel} text={"Join call"} disabled={false} enabled={true} /> -->
             {/if}
         
             {#if videoCalls.length}
@@ -251,10 +253,10 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
             to {
                 opacity: 100%;
                 visibility: visible;
-                pointer-events: all;
             }
         }
-    
+        
+        pointer-events: all !important;
         animation: fadeLayout ease-out 300ms;
         animation-fill-mode: forwards;
     }
