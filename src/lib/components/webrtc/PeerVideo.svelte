@@ -2,7 +2,7 @@
 //To handle true and false, or in this case show and hide.
 import { fade } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { audioLevel, user } from '$lib/stores/user.js'
+import { audioLevel, user, swarm } from '$lib/stores/user.js'
 import Minus from '../icons/Minus.svelte'
 import Plus from '../icons/Plus.svelte'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
@@ -108,14 +108,22 @@ const resize = (size) => {
     console.log('Updating resize thiswindow', thisWindow.size)
   }
 
-  let showMenu = false
+  let showWindow = false
 
   $: thisWindow
+    
+  $: {
+    if ($swarm.showVideoGrid) {
+        showWindow = true
+    } else if ($videoGrid.showVideoGrid) showWindow = true
+    else showWindow = false
+  }
 
+  $: console.log("Showwindow!", showWindow)
 
 </script>
 
-<div class="card" class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+<div class="card" class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
     {#if audio}
     <audio autoplay bind:this="{peerVideo}"></audio>
     {:else}
@@ -143,7 +151,6 @@ const resize = (size) => {
     z-index: 500;
     width: 47.652%;
     height: 47.652%;
-    pointer-events: all;
     transition: 0.35s;
     aspect-ratio: 16/9;
     pointer-events: none;
@@ -260,6 +267,10 @@ p {
 .min {
     width: 47.652% !important;
     height: 47.652% !important;
+}
+
+.show {
+    pointer-events: all !important;
 }
 
 </style>
