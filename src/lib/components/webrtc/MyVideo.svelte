@@ -49,6 +49,7 @@ const playVideo = () => {
     if ($webRTC.call.length) myVideo.srcObject = $webRTC.myStream
     if (!$swarm.myStream) return
     if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
+    if (!$swarm.showVideGrid) return
     console.log('play video')
     myVideo.play()
 }
