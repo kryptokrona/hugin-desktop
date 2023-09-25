@@ -10,6 +10,8 @@
     import Lightning from '$lib/components/icons/Lightning.svelte'
     import { standardGroups } from '$lib/stores/standardgroups.js'
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
+    import Button from '$lib/components/buttons/Button.svelte'
+import FillButton from '../buttons/FillButton.svelte'
 
     let activeHugins = []
     let group = ''
@@ -94,20 +96,20 @@ const connecto_to_swarm = () => {
             {#if !$standardGroups.some(a => a.key === $groups.thisGroup.key)}
             
             <div class="connect" on:click={connecto_to_swarm}>
-                <Lightning connected={thisSwarm} />
+                <!-- <Lightning connected={thisSwarm} /> -->
                 {#if !thisSwarm}
-                    <p class="connectto">Connect</p>
+                    <FillButton disabled={false} enabled={true} text={"Join room"} />
                     {:else}
-                    <p class="disconnect">Disconnect</p>
+                    <FillButton disabled={false} enabled={false} text={"Leave room"} />
                     {/if}    
                 </div>
             {/if}
         <br />
         <div class="swarm">
             {#if thisSwarm}
-            <div  on:click={show_video_room}>
+            <!-- <div  on:click={show_video_room}>
                 <ShowVideoMenu />
-            </div>
+            </div> -->
             {/if}
         </div>
     </div>
@@ -148,6 +150,7 @@ const connecto_to_swarm = () => {
     display: flex;
     cursor: pointer;
     opacity: 0.8;
+    width: 170px;
     &:hover {
         opacity: 1;
     }
