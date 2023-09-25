@@ -1415,9 +1415,9 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
         }
     } else if (off_chain) {
         //Offchain messages
-        let randomKey = randomKey()
+        let random_key = randomKey()
         let sentMsg = Buffer.from(payload_hex, 'hex')
-        let sendMsg = randomKey + '99' + sentMsg
+        let sendMsg = random_key + '99' + sentMsg
         let messageArray = []
         messageArray.push(sendMsg)
         messageArray.push(address)
