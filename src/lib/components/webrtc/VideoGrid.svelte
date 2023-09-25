@@ -38,7 +38,7 @@ $: videoCalls = $webRTC.call.filter((a) => a.peerVideo === true)
 $: console.log('video calls', videoCalls)
 </script>
 
-<div in:fade out:fade class:hide="{!$videoGrid.showVideoGrid}" class="layout">
+<div in:fade out:fade class:show="{$videoGrid.showVideoGrid}" class="layout">
     <!--
     <p on:click={close}>Close</p>
     <p on:click={()=> join = !join}>Join chat</p>
@@ -79,6 +79,8 @@ $: console.log('video calls', videoCalls)
     transition: all 500ms ease-in-out;
     border-radius: 15px;
     overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
 }
 
 .video-wrapper {
@@ -120,18 +122,19 @@ $: console.log('video calls', videoCalls)
     }
 }
 
-.hide {
+.show {
     @keyframes fadeLayout {
         from {
-            opacity: 100%;
-            visibility: visible;
-        }
-        to {
             opacity: 0;
             visibility: hidden;
         }
+        to {
+            opacity: 100%;
+            visibility: visible;
+        }
     }
-
+    
+    pointer-events: all !important;
     animation: fadeLayout ease-out 300ms;
     animation-fill-mode: forwards;
 }
