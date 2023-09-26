@@ -482,7 +482,7 @@ import Conference from './groups/components/Conference.svelte'
         <div class="shine"></div>
     {/if}
 
-    {#if $swarm.showVideoGrid}
+    {#if $swarm.voice_channel.length}
             <Conference />
     {/if}
 
