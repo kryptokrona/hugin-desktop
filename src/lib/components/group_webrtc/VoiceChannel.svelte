@@ -450,16 +450,10 @@
     function set_video(stream) {
         $swarm.oldStream = $swarm.myStream
         $swarm.myStream = stream
-        // if ($swarm.call.length && on) changeVideoSource(stream)
         $swarm.myVideo = true
         $swarm.video = true
-
         let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
         $swarm.cameraId = camera[0].deviceId
-        
-        // if (!on) $swarm.myStream.getVideoTracks().forEach(function (track) {
-        //             track.stop()
-        // })
     }
     
     async function checkVolume(peer) {
@@ -566,9 +560,9 @@
     
         console.log('cleared this call from', filter)
         $swarm.call = filter
-    
+
         const in_voice = $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))
-        
+
         if (in_voice) {
             //Still in channel, dont stop video/voice tracks.
             return
