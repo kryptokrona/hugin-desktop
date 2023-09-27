@@ -223,6 +223,10 @@ const WINDOW_API = {
         await ipcRenderer.invoke('check-pass', pass, hash)
     },
 
+    exitVoiceChannel: async () => {
+        ipcRenderer.send('exit-voice-channel')
+    },
+
      errorMessage: async (errorMessage) => {
         ipcRenderer.send('error-notify-message-main', errorMessage)
     },

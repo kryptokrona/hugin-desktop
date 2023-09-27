@@ -1,7 +1,7 @@
 <script>
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
-import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/stores/user.js'
+import { boards, groups, notify, transactions, user, webRTC, beam, swarm } from '$lib/stores/user.js'
 import {remoteFiles, localFiles, fileSettings} from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
@@ -66,13 +66,15 @@ const startCall = async (contact, calltype) => {
         $webRTC.initiator = true
     }
 
+    if ($swarm.call.length) window.api.exitVoiceChannel()
+
     $webRTC.invited = false
 
     if (calltype) {
         video = true
         $videoGrid.showVideoGrid = true
     }
-    
+
     startTone.play()
     let call = {
         msg: 'outgoing',

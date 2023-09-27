@@ -395,7 +395,6 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
         $webRTC.call[0].peerStream = peerStream
         if (video) {
             $webRTC.call[0].peerVideo = true
-            
             $videoGrid.showVideoGrid = true
         } else {
             $webRTC.call[0].peerAudio = true

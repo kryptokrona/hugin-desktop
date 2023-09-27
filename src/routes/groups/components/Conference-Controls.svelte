@@ -32,6 +32,8 @@
     $: if (thisSwarm) channels = thisSwarm.channels
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
+
+    
     
     onMount(() => {
         timer = setInterval(() => {
@@ -45,6 +47,10 @@
         clearInterval(timer)
     })
     
+    window.api.receive('leave-active-voice-channel', async () => {
+        disconnect_from_active_voice()
+    })
+
     //Share screenpmn
     const switchStream = async () => {
         if (!$swarm.screenshare) {

@@ -31,7 +31,7 @@
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
-import Conference from './groups/components/Conference.svelte'
+    import Conference from './groups/components/Conference.svelte'
 
     let ready = false
     let incoming_call

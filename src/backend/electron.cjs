@@ -1721,6 +1721,10 @@ ipcMain.on('end-swarm', async (e, key) => {
     endSwarm(key)
 })
 
+ipcMain.on('exit-voice-channel', async (e, key) => {
+    mainWindow.webContents.send('leave-active-voice-channel')
+})
+
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
