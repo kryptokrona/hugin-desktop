@@ -75,7 +75,7 @@ $: if (open) window.api.checkSources()
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    width: 120px;
+    width: 300px;
     padding: 5px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);

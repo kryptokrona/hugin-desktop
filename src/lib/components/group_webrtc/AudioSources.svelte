@@ -1,12 +1,13 @@
 <script>
     import { fade } from 'svelte/transition'
     import { swarm } from '$lib/stores/user.js'
-    
+
     let open
     let changed
     let audioInput = $swarm.devices.filter((a) => a.kind == 'audioinput')
     let audioOutput = $swarm.devices.filter((a) => a.kind == 'audiooutput')
-    function pickSource(src) {
+
+    function pickSource(src, input) {
         console.log('pick', src)
         window.api.changeAudioSource(src.deviceId, true, input)
         buttonGlow()
@@ -24,39 +25,38 @@
     
     </script>
     
-    <div style="display: flex; flex-direction: column">
+<div style="display: flex; flex-direction: column">
 
-        {#if input}
-            {#if open}
+
+    {#if open}
         <div in:fade class="list layered-shadow">
+
             <div>
-                <h5 on:click={() => input = !input}>{input ? "Microphone" : "Speaker"}</h5>
+                <h4>Microphone</h4>
             </div>
-            {#each audioInput as src}
-                <div on:click="{() => pickSource(src)}">
-                    <h5>{src.label}</h5>
-                </div>
-            {/each}
-        </div>
-        {/if}
-        {:else}
-            {#if open}
-                <div in:fade class="list layered-shadow">
-                    <div>
-                        <h5 on:click={() => input = !input}>{input ? "Microphone" : "Speaker"}</h5>
+
+                {#each audioInput as src}
+                    <div on:click="{() => pickSource(src, true)}">
+                        <h5>{src.label}</h5>
                     </div>
-                    {#each audioOutput as src}
-                        <div on:click="{() => pickSource(src)}">
-                            <h5>{src.label}</h5>
-                        </div>
-                    {/each}
-                </div>
-            {/if}
+                {/each}
+
+            <div>
+                <h4>Speakers</h4>
+            </div>
             
-        {/if}
+                {#each audioOutput as src}
+                    <div on:click="{() => pickSource(src, false)}">
+                        <h5>{src.label}</h5>
+                    </div>
+                {/each}
+        </div>
+    {/if}
+                
             <div class="share" class:border_rgb="{changed}" class:open on:click="{() => (open = !open)}">
                 <h5>Audio</h5>
             </div>
+
     </div>
 
     <style lang="scss">
@@ -87,7 +87,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        width: 120px;
+        width: 300px;
         padding: 5px;
         background-color: var(--card-background);
         border: 1px solid var(--card-border);
