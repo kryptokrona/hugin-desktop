@@ -17,25 +17,16 @@ const dispatch = createEventDispatcher()
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
-    console.log('peerVideo call', call)
-    console.log('before', call.peerStream)
     peerVideo.srcObject = call.peerStream
     $videoGrid.peerVideos.push({chat: call.chat, size: 1})
     $videoGrid.peerVideos = $videoGrid.peerVideos
     thisWindow = $videoGrid.peerVideos.find(a => a.chat === call.chat)
-    console.log('This window', thisWindow)
     playVideo()
     windowCheck = true
 })
 
 async function setName() {
     return $user.contacts.find(a => a.chat === call.chat)
-}
-
-//When a user clicks answer
-const pauseVideo = () => {
-    console.log('pausevideo')
-    peerVideo.pause()
 }
 
 const playVideo = () => {
@@ -75,7 +66,7 @@ $:  if (thisWindow && windowCheck) {
             $videoGrid.hideMyVideo = true
             
         }
-        //Multiview reset test
+        //Multiview reset test 
         if ($videoGrid.multiView && thisWindow.size !== 1) {
             thisWindow.size = 1
             $videoGrid.showChat = false
@@ -130,8 +121,6 @@ const resize = (size) => {
     } else if ($videoGrid.showVideoGrid) showWindow = true
     else showWindow = false
   }
-
-  $: console.log("Showwindow!", showWindow)
 
 </script>
 
