@@ -95,7 +95,6 @@ async function checkAudioSources() {
     
     
     window.api.receive('set-audio-input-group', (src, input) => {
-        console.log('want to change in calls', src)
         if (!input) return
         changeAudio(src)
     })
@@ -119,7 +118,6 @@ async function checkAudioSources() {
     
 
     function changeAudioSource (device) {
-        console.log("Device!", device)
         let current = $swarm.myStream
     
         //Check if we have an active peer
@@ -194,10 +192,10 @@ async function checkAudioSources() {
             mandatory: {
                 chromeMediaSource: 'desktop',
                 chromeMediaSourceId: id,
-                minWidth: 1280,
-                maxWidth: 1280,
-                minHeight: 720,
-                maxHeight: 720,
+                minWidth: 1920,
+                maxWidth: 1920,
+                minHeight: 1280,
+                maxHeight: 1280,
             },
         },
     })
