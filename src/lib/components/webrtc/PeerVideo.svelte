@@ -45,6 +45,7 @@ const playVideo = () => {
 
 window.api.receive('set-audio-input-group', (src, input) => {
         console.log('want to change in peervideo', src)
+        if (input) return
         changeAudioSource(src, input)
 })
     
