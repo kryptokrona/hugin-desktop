@@ -1,6 +1,6 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
-    import {fade} from 'svelte/transition'
+    import {fade, fly} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {groups, notify, swarm, user} from '$lib/stores/user.js'
     import VoiceUser from './VoiceUser.svelte'
@@ -84,6 +84,7 @@
 
     function disconnect_from_active_voice(reconnect = false) {
         window.api.exitVoiceChannel()
+        return true
     }
     
     
@@ -159,7 +160,6 @@
             </div>
         </div>
     </div> -->
-{#if thisSwarm}
 <div class="swarm_info">
     <!-- <div class="channels"> -->
         <div class="voice-channel">
@@ -203,7 +203,6 @@
         <p class="channel" on:click={printThis(channel.name)}><Button disabled={false} text={channel.name}/></p>
         {/each}
     </div> -->
-{/if}
 
 <style lang="scss">
 

@@ -7,6 +7,7 @@
 
     onMount(() => {
         checkSources()
+        checkAudioSources()
     })
     
     window.api.receive('answer-voice-channel', (data) => {
@@ -78,11 +79,32 @@
     }
 }
 
+async function checkAudioSources() {
+        console.log("checking audio conference sources")
+    let devices = await navigator.mediaDevices.enumerateDevices()
+    $swarm.devices = devices
+    console.log(" audio $swarm.devices",  $swarm.devices)
+        
+}
+
     
     window.api.receive('group-change-source', (src, add) => {
         console.log('want to change in calls', src)
         changeCamera(true, src, add)
     })
+
+    
+    
+    window.api.receive('set-audio-input-group', (src, input) => {
+        console.log('want to change in calls', src)
+        changeAudioSource(src, input)
+    })
+    
+
+    function changeAudioSource (src, input) {
+        console.log("Input?", input)
+        console.log("Change this!", src)
+    }
     
     // window.api.receive('rtc_message', (msg, to_group = false) => {
     //     sendRtcMessage(msg, to_group)

@@ -3,7 +3,6 @@
     import {fade, fly} from 'svelte/transition'
     import {groupMessages} from '$lib/stores/groupmsgs.js'
     import {groups, swarm} from '$lib/stores/user.js'
-    import {get_avatar} from '$lib/utils/hugin-utils.js'
     import Group from '$lib/components/chat/Group.svelte'
     import Plus from '$lib/components/icons/Plus.svelte'
     import RemoveGroup from '$lib/components/chat/RemoveGroup.svelte'
@@ -243,7 +242,7 @@ $: show_groups = $swarmGroups.showGroups
                 {/each}
             </div>
     {:else}
-        <div class="list-wrapper" in:fly="{{ x: 50 }}" out:fly="{{ x: -150 }}">
+        <div class="list-wrapper" in:fly="{{ y: 50 }}">
             <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
         </div>
 

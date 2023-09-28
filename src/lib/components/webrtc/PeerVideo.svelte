@@ -43,6 +43,17 @@ const playVideo = () => {
     peerVideo.play()
 }
 
+window.api.receive('set-audio-input-group', (src, input) => {
+        console.log('want to change in peervideo', src)
+        changeAudioSource(src, input)
+})
+    
+
+const changeAudioSource = async (src, input) => {
+    console.log("ID?", src, input)
+    peerVideo.setSinkId(src)
+}
+
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {
     peerVideo.pause()

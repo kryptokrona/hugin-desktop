@@ -14,6 +14,8 @@
     import { calcTime, sleep } from '$lib/utils/utils.js'
     import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
     import {createEventDispatcher} from 'svelte'
+    import AudioSources from '$lib/components/group_webrtc/AudioSources.svelte'
+    
     let startTime = Date.now()
     let time = '0:00:00'
     let timer
@@ -226,7 +228,10 @@
                 <CallSlash />
             </div>
             <div class="icon">
-                <VideoSources />
+                <AudioSources />
+            </div>
+            <div class="icon">
+                <VideoSources conference={true} />
             </div>
             <!-- <div class="icon">
                 <Contacts />

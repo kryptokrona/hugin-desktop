@@ -1,17 +1,21 @@
 <script>
 import { fade } from 'svelte/transition'
-import { webRTC } from '$lib/stores/user.js'
-
+import { webRTC, swarm } from '$lib/stores/user.js'
+export let conference = false
 let open
 let changed
+let add = false
 let videoDevices = $webRTC.devices.filter((a) => a.kind == 'videoinput')
+$: if (conference) videoDevices = $swarm.devices.filter((a) => a.kind == 'videoinput')
+
 
 function pickSource(src) {
     console.log('pick', src)
-    console.log('change this', src.id)
-    window.api.changeSource(src.deviceId)
-    if ($webRTC.screenshare) {
+    if ($swarm.call.length === 0 && conference) add = true
+    window.api.changeSource(src.deviceId, conference, add)
+    if ($webRTC.screenshare || $swarm.screenshare) {
         $webRTC.screenshare = false
+        $swarm.screenshare = false
     }
     buttonGlow()
 }
@@ -25,6 +29,7 @@ const buttonGlow = () => {
 }
 
 $: if (open) window.api.checkSources()
+
 </script>
 
 <div style="display: flex; flex-direction: column">

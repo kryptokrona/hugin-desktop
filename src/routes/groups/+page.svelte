@@ -298,7 +298,7 @@ async function printGroup(group) {
 
     console.log("channelMessages", channelMessages)
     
-    setChannels()
+    //setChannels()
 
     console.log("Active channel! print!", $swarm.activeChannel)
     console.log("Group key", group.key)
