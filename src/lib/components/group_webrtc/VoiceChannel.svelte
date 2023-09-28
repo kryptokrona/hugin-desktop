@@ -80,10 +80,9 @@
 }
 
 async function checkAudioSources() {
-        console.log("checking audio conference sources")
+    console.log("checking audio conference sources")
     let devices = await navigator.mediaDevices.enumerateDevices()
     $swarm.devices = devices
-    console.log(" audio $swarm.devices",  $swarm.devices)
         
 }
 
@@ -97,13 +96,52 @@ async function checkAudioSources() {
     
     window.api.receive('set-audio-input-group', (src, input) => {
         console.log('want to change in calls', src)
-        changeAudioSource(src, input)
+        if (!input) return
+        changeAudioSource(src)
     })
+
+
+    function changeAudio(id, add) {
+         // get video/voice stream
+         navigator.mediaDevices
+            .getUserMedia({
+                audio: {
+                    deviceId: id,
+                },
+            })
+            .then(function (device) {
+                changeAudioSource(device)
+            })
+            .catch((e) => {
+                console.log('error', e)
+            })
+    }
     
 
-    function changeAudioSource (src, input) {
-        console.log("Input?", input)
-        console.log("Change this!", src)
+    function changeAudioSource (device) {
+        let current = $swarm.myStream
+    
+        //Check if we have an active peer
+        let peer = $swarm.call.some(a => a.peer)
+        
+        //Replace track for all peers
+        if (peer) {
+            $swarm.call.forEach((a) => {
+                a.peer.replaceTrack(current.getAudioTracks()[0], device.getAudioTracks()[0], current)
+            })
+        }
+        
+        //Add track to local stream
+        current.addTrack(device.getAudioTracks()[0])
+        //Stop old track
+        let old = current.getAudioTracks()[0]
+        old.stop()
+        //Remove old track
+        current.removeTrack(current.getAudioTracks()[0])
+        //Update stream
+        
+        $swarm.myStream = current
+
     }
     
     // window.api.receive('rtc_message', (msg, to_group = false) => {
