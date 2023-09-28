@@ -6,14 +6,8 @@ import { webRTC, user, swarm } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 
 let myVideo = document.getElementById('myVideo')
-let video = false
 let hover = false
-let chatWindow = true
-let window_max = false
 let window_medium = false
-
-export let call
-const dispatch = createEventDispatcher()
 
 // When incoming call and this get mounted we play the ringtone
 onMount(async () => {
@@ -22,66 +16,26 @@ onMount(async () => {
 
 onDestroy(() => {})
 
-//Hover functions
-function enter() {
-    console.log('enter')
-    hover = true
-}
-
-function leave() {
-    hover = false
-}
-
-//When a user clicks answer
-const pauseVideo = () => {
-    console.log('pausevideo')
-    myVideo.pause()
-}
-
 const playVideo = () => {
     myVideo = document.getElementById('myVideo')
-    console.log("Myvide", myVideo)
     if (myVideo === null) return
-    console.log("Playvideo")
-    console.log("$swarm.myVideo", $swarm.myVideo)
-    console.log("$webRTC.myVideo", $webRTC.myVideo)
     if (!$swarm.myVideo && !$webRTC.myVideo) return
     if ($webRTC.call.length) myVideo.srcObject = $webRTC.myStream
     if (!$swarm.myStream) return
     if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
     if (!$swarm.showVideGrid) return
-    console.log('play video')
     myVideo.play()
 }
 
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {})
 
-$: if ($swarm.screen_stream) {
+$: if ($swarm.screen_stream || $webRTC.screen_stream) {
     playVideo()
-} else if ($swarm.video) {
+} else if ($swarm.video || $webRTC.myVideo) {
     playVideo()
 }
 
-let source = true
-
-const switchStream = async () => {
-    if (!$webRTC.screen_stream) {
-        await window.api.shareScreen(false)
-    } else {
-        window.api.setCamera()
-    }
-}
-
-const resize = (size) => {
-    switch (size) {
-        case 'min':
-            window_medium = false
-            break
-        case 'medium':
-            window_medium = true
-    }
-}
 
 $: window_medium
 </script>
