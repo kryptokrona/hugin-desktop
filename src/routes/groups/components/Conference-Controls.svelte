@@ -35,8 +35,6 @@
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 
-    
-    
     onMount(() => {
         timer = setInterval(() => {
             let currentTime = Date.now()
@@ -49,10 +47,6 @@
         clearInterval(timer)
     })
     
-    window.api.receive('leave-active-voice-channel', async () => {
-        disconnect_from_active_voice()
-    })
-
     //Share screenpmn
     const switchStream = async () => {
         if (!$swarm.screenshare) {
@@ -60,7 +54,11 @@
             $swarm.video = true
             await window.api.shareScreen(false, true)
             $swarm.screenshare = true
+            return
         }
+        $swarm.myVideo = false
+        $swarm.screenshare = false
+        $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
     }
 
     const join_voice_channel = async (video = false, reconnect = false, screen) => {
@@ -92,61 +90,7 @@
     }
 
     function disconnect_from_active_voice(reconnect = false) {
-        console.log("Disconnect from active voice!")
-
-        if (!reconnect) $swarm.showVideoGrid = false
-            //Leave any active first, check if my own address is active in some channel
-             //Also remove from voice channel
-            let swarms = $swarm.active
-            //Remove my own address from swarm active voice channel list in UI
-            swarms.forEach(joined => {
-                if (joined.voice_channel.some(a => a.address === my_address)) {
-                let removed = joined.voice_channel.filter(a => a.address !== my_address) 
-                joined.voice_channel = removed
-                }
-            })
-            
-            //Check my current active swarm voice channel and remove aswell
-            let active = $swarm.voice_channel.find(a => a.address === my_address)
-            if (!active) return true
-
-            //Change voice connected status in other channels
-            let old = $swarm.active.find(a => a.voice_connected === true)
-            if (old) old.voice_connected = false
-
-            
-            //Remove from the active voice channel we have
-            console.log("Want to exit old voice")
-            let remove = $swarm.voice_channel.filter( a => a !== active)
-            $swarm.voice_channel = remove
-            
-            //Stop any active tracks
-            if (active && $swarm.myStream && $swarm.myVideo) {
-                $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
-            }
-            
-            //Stop any active stream
-            if (!old) return true
-
-            if (!reconnect) {
-                let endTone = new Audio('/audio/endcall.mp3')
-                endTone.play()
-            }
-            
-            //Reset state if we are / were alone in the channel
-            if ($swarm.call.length === 0) {
-                $swarm.screenshare = false
-                $swarm.video = false
-                $swarm.screen_stream = false
-                $swarm.myVideo = false
-                $swarm.myStream = false
-            }
-
-            connected = false
-            //Send status to backend
-            window.api.send("exit-voice", old.key)
-            $swarm.myVideo = false
-            return true
+       window.api.exitVoiceChannel()
     }
     
     
@@ -156,9 +100,9 @@
         $swarm.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
     }
 
-    const add_video = async (screen = false) => {
+    const add_video = async (add) => {
         if ($swarm.cameraId === "none") return
-        window.api.changeSource($swarm.cameraId, true, true)
+        window.api.changeSource($swarm.cameraId, true, add)
         $swarm.screenshare = false
     }
 
@@ -170,11 +114,14 @@
     
         if (!connected) {
             if ($swarm.call.length > 0 && !$swarm.screenshare && !$swarm.myVideo) {
-                add_video()
+                add_video(true)
             } else if ($swarm.call.length === 0 && !$swarm.screenshare && !$swarm.myVideo) {
                 activate_video()
             }
             connected = true
+            return
+        } else if ($swarm.call.length > 0 && !$swarm.screenshare && connected && !$swarm.myVideo) {
+            add_video(false)
             return
         }
 
@@ -191,9 +138,9 @@
         $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
     }
     
-    // const showMessages = () => {
-    //     $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
-    // }
+    const showMessages = () => {
+       console.log("show msgs!! *todo")
+    }
     
     const hideGrid = () => {
         $swarm.showVideoGrid = false
