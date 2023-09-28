@@ -97,7 +97,7 @@ async function checkAudioSources() {
     window.api.receive('set-audio-input-group', (src, input) => {
         console.log('want to change in calls', src)
         if (!input) return
-        changeAudioSource(src)
+        changeAudio(src)
     })
 
 
@@ -119,6 +119,7 @@ async function checkAudioSources() {
     
 
     function changeAudioSource (device) {
+        console.log("Device!", device)
         let current = $swarm.myStream
     
         //Check if we have an active peer
@@ -139,7 +140,7 @@ async function checkAudioSources() {
         //Remove old track
         current.removeTrack(current.getAudioTracks()[0])
         //Update stream
-        
+
         $swarm.myStream = current
 
     }
