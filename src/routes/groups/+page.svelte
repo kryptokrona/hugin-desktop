@@ -1,5 +1,5 @@
 <script>
-import {fade} from 'svelte/transition'
+import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {groupMessages} from '$lib/stores/groupmsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
@@ -438,7 +438,7 @@ function addHash(data) {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight}>
+        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
             {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress) && !$groups.thisGroup.chat}
                 <div>
                     <Loader/>

@@ -1,5 +1,5 @@
 <script>
-import {fade} from 'svelte/transition'
+import {fade, fly} from 'svelte/transition'
 import {onDestroy, onMount} from 'svelte'
 import {messages} from '$lib/stores/messages.js'
 import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
@@ -282,7 +282,7 @@ const hideModal = () => {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="chat_window">
+        <div class="outer" id="chat_window" in:fly="{{ y: 50 }}">
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
                 {#each savedMsg as message (message.timestamp)}

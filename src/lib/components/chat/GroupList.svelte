@@ -1,6 +1,6 @@
 <script>
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
-    import {fade} from 'svelte/transition'
+    import {fade, fly} from 'svelte/transition'
     import {groupMessages} from '$lib/stores/groupmsgs.js'
     import {groups, swarm} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
@@ -217,7 +217,7 @@ $: show_groups = $swarmGroups.showGroups
 </script>
 
 <div class="wrapper" in:fade>
-    <div class="top" transition:flipper>
+    <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
         {#if show_groups}
             <h2>Groups</h2>
             <br />
@@ -235,7 +235,7 @@ $: show_groups = $swarmGroups.showGroups
        
     </div>
 		{#if show_groups}
-            <div class="list-wrapper" transition:flipper>
+            <div class="list-wrapper"  in:fly="{{ y: 50 }}">
                 {#each groupList as group (group.key)}
                     <div animate:flip="{{duration: 250}}">
                         <Group group="{group}" on:print="{() => printGroup(group)}" />
@@ -243,7 +243,7 @@ $: show_groups = $swarmGroups.showGroups
                 {/each}
             </div>
     {:else}
-        <div class="list-wrapper" transition:flipper>
+        <div class="list-wrapper" in:fly="{{ x: 50 }}" out:fly="{{ x: -150 }}">
             <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
         </div>
 

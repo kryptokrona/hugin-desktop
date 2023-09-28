@@ -108,6 +108,7 @@ export const swarm = writable({
     showVideoGrid: false,
     myStream: false,
     screenshare: false,
+    showInfo: true,
 })
 
 export const userAvatar = derived(user, ($user) => {

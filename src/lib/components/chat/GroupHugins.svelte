@@ -1,5 +1,5 @@
 <script>
-    import {fade} from 'svelte/transition'
+    import {fade, fly} from 'svelte/transition'
     import {groups, swarm, user} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
@@ -12,6 +12,8 @@
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import Button from '$lib/components/buttons/Button.svelte'
 import FillButton from '../buttons/FillButton.svelte'
+import AddGroup from './AddGroup.svelte'
+import SwarmInfo from '../popups/SwarmInfo.svelte'
 
     let activeHugins = []
     let group = ''
@@ -67,8 +69,16 @@ const disconnect_from_swarm = () => {
         window.api.send("end-swarm", key)
         $swarmGroups.showGroups = true
     }
+let firstConnect = false
 
 const connecto_to_swarm = () => {
+
+        if (!window.localStorage.getItem('swarm-info')) {
+            $swarm.showInfo = true
+            firstConnect = true
+            return
+        }
+
         if (thisSwarm) {
             disconnect_from_swarm()
             return
@@ -88,8 +98,11 @@ const connecto_to_swarm = () => {
 
 </script>
 
+{#if $swarm.showInfo && firstConnect}
+    <SwarmInfo on:join-room={connecto_to_swarm}/>
+{/if}
 
-<div class="wrapper" in:fade out:fade class:hide="{$layoutState.hideGroupList}">
+<div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
     <div class="top">
         <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
         <br />
@@ -100,7 +113,7 @@ const connecto_to_swarm = () => {
                 {#if !thisSwarm}
                     <FillButton disabled={false} enabled={true} text={"Join room"} />
                     {:else}
-                    <FillButton disabled={false} enabled={false} text={"Leave room"} />
+                    <FillButton disabled={false} text={"Leave room"} />
                     {/if}    
                 </div>
             {/if}

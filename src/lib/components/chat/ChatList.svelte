@@ -4,7 +4,7 @@
     import AddCircle from '$lib/components/icons/AddCircle.svelte'
     import Contact from '$lib/components/chat/Contact.svelte'
     import {layoutState} from '$lib/stores/layout-state.js'
-    import {fade} from 'svelte/transition'
+    import {fade, fly} from 'svelte/transition'
     import {flip} from 'svelte/animate'
 
     const dispatch = createEventDispatcher()
@@ -114,12 +114,12 @@ const readMessage = (e) => {
 $: chatList
 </script>
 
-<div class="wrapper" class:hide="{$layoutState.hideChatList === true}">
-    <div class="top" in:fade>
+<div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly="{{ y: 50 }}">
+    <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
         <h2>Messages</h2>
         <AddCircle on:click="{() => dispatch('open')}" />
     </div>
-    <div class="list-wrapper">
+    <div class="list-wrapper" in:fly="{{ y: 50 }}">
         {#each chatList as message (message.chat)}
             <div animate:flip="{{duration: 250}}">
             <Contact
