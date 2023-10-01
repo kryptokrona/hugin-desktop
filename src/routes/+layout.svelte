@@ -483,10 +483,11 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
         <div class="shine"></div>
     {/if}
 
-    {#if $swarm.voice_channel.length}
+    {#if $swarm.active.length}
             <Conference />
-          
-            <ConferenceFloater />
+            {#if $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))}
+                <ConferenceFloater />
+            {/if}
     {/if}
 
   

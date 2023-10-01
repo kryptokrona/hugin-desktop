@@ -439,7 +439,7 @@ const incoming_message = async (data, topic, connection, key) => {
     console.log("Message", message)
     let msg = await saveGroupMsg(message, hsh, time, false, true)
         //Send new board message to frontend.
-        sender('groupMsg', msg)
+        sender('groupRtcMsg', msg)
         sender('newGroupMessage', msg)
 
 }

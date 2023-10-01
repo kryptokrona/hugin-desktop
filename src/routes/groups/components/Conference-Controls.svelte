@@ -7,7 +7,7 @@
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
     import { swarmGroups, videoGrid } from '$lib/stores/layout-state.js'
-    import { swarm, user, groups } from '$lib/stores/user.js'
+    import { swarm, user, groups, rtc_groups } from '$lib/stores/user.js'
     import VideoSources from '$lib/components/chat/VideoSources.svelte'
     import Contacts from '$lib/components/chat/Contacts.svelte'
     import { onDestroy, onMount } from 'svelte'
@@ -143,8 +143,12 @@
     }
     
     const showMessages = () => {
-       console.log("show msgs!! *todo")
-    }
+        $rtc_groups.unread = []
+        $rtc_groups.unread =  $rtc_groups.unread
+        $videoGrid.showChat = !$videoGrid.showChat
+        $videoGrid.multiView = true
+}
+
     
     const hideGrid = () => {
         $swarm.showVideoGrid = false
@@ -154,10 +158,11 @@
     <div class="wrapper layered-shadow">
         <div>
         <div on:click>
-            <p>{time}</p>
+            <p>{in_voice ? "Disconnect" : "Join"}</p>
         </div>
         </div>
         <div class="controls">
+            {#if in_voice}
             <div class="icon" on:click="{toggleVideo}">
                 {#if !$swarm.myVideo}
                     <VideoSlash />
@@ -190,6 +195,8 @@
             <!-- <div class="icon">
                 <AudioSources />
             </div> -->
+        
+        {/if}
         </div>
         <div class="icon" on:click="{() => hideGrid()}">
             <HideVideoGrid />

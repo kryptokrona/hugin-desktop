@@ -11,9 +11,9 @@
     import { standardGroups } from '$lib/stores/standardgroups.js'
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import Button from '$lib/components/buttons/Button.svelte'
-import FillButton from '../buttons/FillButton.svelte'
-import AddGroup from './AddGroup.svelte'
-import SwarmInfo from '../popups/SwarmInfo.svelte'
+    import FillButton from '../buttons/FillButton.svelte'
+    import AddGroup from './AddGroup.svelte'
+    import SwarmInfo from '../popups/SwarmInfo.svelte'
 
     let activeHugins = []
     let group = ''
@@ -68,6 +68,7 @@ const disconnect_from_swarm = () => {
         window.api.send("exit-voice",key)
         window.api.send("end-swarm", key)
         $swarmGroups.showGroups = true
+        $swarm.showVideoGrid = false
     }
 let firstConnect = false
 

@@ -32,8 +32,9 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
     let active = thisSwarm
 
     onMount(async () => {
-        // await sleep(300)
-        // printThis("Chat room")
+        $videoGrid.showChat = true
+        await sleep(200)
+        $swarm.activeSwarm = thisSwarm
     })
 
     const printThis = (channel) => {
@@ -167,24 +168,33 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
             <div class="video-grid">
             {#if in_voice}
                 <MyVideo active={active}/>
-                {:else}
-                <!-- <FillButton on:click={join_voice_channel} text={"Join call"} disabled={false} enabled={true} /> -->
-            {/if}
-        
+              
+
             {#if videoCalls.length}
                 {#each videoCalls as peer (peer.chat)}
                     <PeerVideo call="{peer}" />
                 {/each}
                 
             {/if}
+
+            {:else}
+         
+                <FillButton text={"Join call"} enabled={true} on:click={join_voice_channel}/>
+
+                {#if thisSwarm?.voice_channel.length}
+                {#each thisSwarm?.voice_channel as peer (peer.address)}
+                    <PeerVideo call="{peer}" active={false} channel={thisSwarm.voice_channel}/>
+                {/each}
+            
+                {/if}
+
+            {/if}
             </div>
-            {#if in_voice}
             <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}">
                 <ConferenceControls />
             </div>
-            {/if}
         </div>
-
+        <RtcGroupMessages />
     </div>
     
     <style lang="scss">

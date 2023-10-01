@@ -30,10 +30,10 @@
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 
+
     onMount(async () => {
         // await sleep(200)
         // printThis("Chat room")
-        join_voice_channel()
     })
 
     const printThis = (channel) => {
@@ -91,7 +91,7 @@
     function disconnect_from_active_voice(reconnect = false) {
         console.log("Disconnect from active voice!")
 
-        if (!reconnect) $swarm.showVideoGrid = false
+        if (!reconnect) $swarm.showVideoGrid = true
             //Leave any active first, check if my own address is active in some channel
             //Also remove from voice channel
             let swarms = $swarm.active

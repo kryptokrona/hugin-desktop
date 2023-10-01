@@ -2,7 +2,7 @@
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
 import { onDestroy, onMount } from 'svelte'
-import { rtc_groups, user, webRTC } from '$lib/stores/user.js'
+import { rtc_groups, user, webRTC, swarm } from '$lib/stores/user.js'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 //Use for filesharing later
 import { videoGrid } from '$lib/stores/layout-state.js'
@@ -24,6 +24,11 @@ onMount(async () => {
 
 onDestroy(() => {
     window.api.removeAllListeners('groupRtcMsg')
+    window.api.removeAllListeners('leave-active-voice-channel')
+})
+
+window.api.receive('leave-active-voice-channel', (data) => { 
+    fixedRtcGroups = []
 })
 
 //Listens for new messages from backend
@@ -46,8 +51,14 @@ function sendGroupRtCMsg(e) {
     let myaddr = $user.huginAddress.substring(0, 99)
     let time = Date.now()
     let myName = $user.username
-    let group = $webRTC.groupCall
+    let group
     let offchain = true
+    const is_swarm = $swarm.showVideoGrid
+    if ($webRTC.groupCall) {
+         group = $webRTC.groupCall
+    } else if(is_swarm) {
+        group = $swarm.activeSwarm.key
+    }
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
@@ -76,7 +87,7 @@ function sendGroupRtCMsg(e) {
     console.log('wanna send this', sendMsg)
     printGroupRtcMessage(myGroupRtCMessage)
     if (!offchain) return
-    window.api.sendGroupMessage(sendMsg, true)
+    window.api.sendGroupMessage(sendMsg, true, is_swarm)
     replyExit()
     scrollDown()
 }

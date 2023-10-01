@@ -11,12 +11,16 @@ let peerStream
 let thisWindow = false
 let windowCheck = false
 let audio = false
+export let active = true
 export let call
+export let channel = []
 
 const dispatch = createEventDispatcher()
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
+    console.log("$swarm.active", $swarm.active)
+    if (!active) return
     peerVideo.srcObject = call.peerStream
     $videoGrid.peerVideos.push({chat: call.chat, size: 1})
     $videoGrid.peerVideos = $videoGrid.peerVideos
@@ -26,6 +30,10 @@ onMount(() => {
 })
 
 async function setName() {
+    if (!active) {
+        return channel.find(a => call.address === a.address)
+    }
+    else
     return $user.contacts.find(a => a.chat === call.chat)
 }
 

@@ -20,9 +20,10 @@
     const print_group = (group) => {
          //If p2p group, enter focus mode
          if (thisSwarm) {
+
             $swarmGroups.showGroups = false
             $swarm.activeChannel = {name: "Chat room", key: thisSwarm.key}
-            // $swarm.showVideoGrid = true
+            $swarm.showVideoGrid = true
         }
 
         if (group.key === $groups.thisGroup.key && !thisSwarm) return
