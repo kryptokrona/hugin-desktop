@@ -33,6 +33,7 @@
     onMount(async () => {
         // await sleep(200)
         // printThis("Chat room")
+        join_voice_channel()
     })
 
     const printThis = (channel) => {
