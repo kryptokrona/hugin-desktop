@@ -147,7 +147,7 @@ const createSwarm = async (data) => {
     
     //The topic is public so lets use the pubkey from the new base keypair
     let hash = keys.publicKey.toString('hex')
-    active_swarms.push({key, topic: hash, connections: [], call: []})
+    active_swarms.push({key, topic: hash, connections: [], call: [], time: Date.now().toString()})
     let active = active_swarms.find(a => a.key === key) 
  
     active.swarm = swarm
@@ -308,6 +308,14 @@ const check_data_message = async (data, connection, topic) => {
             con.address = joined.address
             con.name = joined.name
             con.voice = joined.voice
+
+            let time = parseInt(joined.time)
+            //If our new connection is also in voice, check who was connected first to decide who creates the offer
+            let [in_voice, video] = get_local_voice_status(topic)
+            if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
+                join_voice_channel(active.key, topic, joined.address)
+            }
+
             con.video = joined.video
             console.log("Connection updated: Joined:", con.joined)
             sender("peer-connected", joined)
@@ -406,7 +414,8 @@ const send_joined_message = async (key, topic, my_address) => {
         name: my_name,
         voice: voice,
         channels: [],
-        video: video
+        video: video,
+        time: Date.now().toString()
     })
     console.log("Sent joined mesg", data)
     sendSwarmMessage(data, key)
@@ -519,7 +528,7 @@ function get_sdp(data) {
         offer: offer,
         address: data.address,
         topic: data.topic,
-        retry: reconnect
+        retry: reconnect,
     }
 
     console.log("Send voice channel sdp reconnect?:", sendMessage.retry)

@@ -193,7 +193,7 @@ $: active_swarm = $swarm.active.some(a => groupList.map(b=>b.key).includes(a.key
 //Active hugins
 $: activeHugins
 
-$: show_groups = $swarmGroups.showGroups
+$: show_groups = true
 	
 	function flipper(node, {
 		delay = 0,
@@ -233,7 +233,6 @@ $: show_groups = $swarmGroups.showGroups
         {/if}
        
     </div>
-		{#if show_groups}
             <div class="list-wrapper"  in:fly="{{ y: 50 }}">
                 {#each groupList as group (group.key)}
                     <div animate:flip="{{duration: 250}}">
@@ -241,12 +240,9 @@ $: show_groups = $swarmGroups.showGroups
                     </div>
                 {/each}
             </div>
-    {:else}
-        <div class="list-wrapper" in:fly="{{ y: 50 }}">
-            <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
-        </div>
-
-    {/if}
+            {#if $swarm.active.length}
+                <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
+            {/if}
 </div>
 
 

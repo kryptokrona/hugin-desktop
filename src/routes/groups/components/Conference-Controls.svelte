@@ -97,7 +97,9 @@
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
         if (!$swarm.myStream) return
-        $swarm.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        $swarm.call.forEach((a) => {
+        a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        })
     }
 
     const add_video = async (add) => {
@@ -135,7 +137,9 @@
         console.log("Changed toggle! stream",$swarm.myStream)
         $swarm.myVideo = !$swarm.myVideo
         if (!$swarm.myStream) return
-        $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+        $swarm.call.forEach((a) => {
+            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        })
     }
     
     const showMessages = () => {

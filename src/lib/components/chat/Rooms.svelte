@@ -55,6 +55,7 @@
     }
 
     window.api.receive('leave-active-voice-channel', async () => {
+        console.log("leave vojs!")
         disconnect_from_active_voice()
     })
 
@@ -123,11 +124,11 @@
             //Stop any active stream
             if (!old) return true
 
-            if (!reconnect) {
-                let endTone = new Audio('/audio/endcall.mp3')
-                endTone.play()
-            }
+            console.log("play sound!")
+            let endTone = new Audio('/audio/endcall.mp3')
+            endTone.play()
             
+            console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
                 $swarm.screenshare = false
@@ -136,7 +137,8 @@
                 $swarm.myVideo = false
                 $swarm.myStream = false
             }
-
+            
+            console.log("Exit vojs!")
             connected = false
             //Send status to backend
             window.api.send("exit-voice", old.key)
@@ -147,8 +149,11 @@
     
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
+        console.log("mystream?", $swarm.myStream)
         if (!$swarm.myStream) return
-        $swarm.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        $swarm.call.forEach((a) => {
+            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        })
     }
 
     const add_video = async (screen = false) => {
@@ -185,7 +190,9 @@
         console.log("Changed toggle! stream",$swarm.myStream)
         $swarm.myVideo = !$swarm.myVideo
         if (!$swarm.myStream) return
-        $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+        $swarm.call.forEach((a) => {
+            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        })
     }
     
     // const showMessages = () => {
@@ -217,10 +224,10 @@
             </div>
         </div>
     </div> -->
-<div class="swarm_info">
+<div class="swarm_info" in:fly="{{ y: 50 }}">
     <!-- <div class="channels"> -->
         <div class="voice-channel">
-            <p class="voice" on:click={join_voice_channel}><FillButton disabled={false} enabled={in_voice} text={"Voice channel"}/></p>
+            <p class="voice" on:click={join_voice_channel}><FillButton disabled={false} enabled={in_voice} text={in_voice ? "Voice channel" : "Join call"}/></p>
             {#if in_voice}
             <div class="voice-controls">
                 <div  on:click={disconnect_from_active_voice}>

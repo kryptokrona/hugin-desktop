@@ -292,6 +292,7 @@ async function checkAudioSources() {
         checkMyVolume(stream)
         //Set swarm store update for call
         this_call.peer = peer1
+        this_call.myStream = stream
         $swarm.voice_active = true
         
         peer1.on('stream', (peerStream) => {
@@ -388,6 +389,7 @@ async function checkAudioSources() {
             //Set swarm store update for call
             this_call.peer = peer2
             this_call.chat = data.address
+            this_call.myStream = stream
             checkMyVolume(stream)
 
             peer2.on('stream', (peerStream) => {

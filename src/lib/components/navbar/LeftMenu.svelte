@@ -1,5 +1,5 @@
 <script>
-import { misc, user, userAvatar } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -49,11 +49,14 @@ const groupRouteAndMenu = () => {
         goto('/groups')
     }
 }
+
+$: in_voice = $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))
+
 </script>
 
 <div class="leftMenu">
     <div class="nav">
-        <div class="button myavatar" on:click="{() => goto('/dashboard')}">
+        <div class:border_rgb={in_voice} class="button myavatar" on:click="{() => goto('/dashboard')}">
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
         </div>
         <div on:click="{messagesRouteAndMenu}" class="button">

@@ -32,6 +32,7 @@
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
     import Conference from './groups/components/Conference.svelte'
+import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.svelte'
 
     let ready = false
     let incoming_call
@@ -484,7 +485,11 @@
 
     {#if $swarm.voice_channel.length}
             <Conference />
+          
+            <ConferenceFloater />
     {/if}
+
+  
 
     {#if ($user.loggedIn && $swarm.call.length)}
 

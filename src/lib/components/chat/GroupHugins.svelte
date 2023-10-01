@@ -83,8 +83,8 @@ const connecto_to_swarm = () => {
             disconnect_from_swarm()
             return
         }
-        $swarmGroups.showGroups = false
-        $swarm.showVideoGrid = false
+        $swarmGroups.showGroups = true
+        $swarm.showVideoGrid = true
         window.api.send("new-swarm", {
             key: $groups.thisGroup.key, 
             address: $user.huginAddress.substring(0,99),
