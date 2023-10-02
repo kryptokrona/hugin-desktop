@@ -1,23 +1,23 @@
 <script>
     import { get_avatar } from "$lib/utils/hugin-utils"
     import { fade } from "svelte/transition"
-    import { audioLevel } from '$lib/stores/user.js'
     import {swarm, user} from '$lib/stores/user.js'
     import {Moon} from "svelte-loading-spinners";
-
+    //Inactive
+    import { audioLevel } from '$lib/stores/user.js'
+    //
     export let voice_user
     export let voice_channel
 
     let isTalking = false
     let isConnecting = false
     const myAddress = $user.huginAddress.substring(0,99)
-    console.log("In voice", in_voice)
 
-    $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
-        isTalking = true
-    } else {
-        isTalking = false
-    }
+    // $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
+    //     isTalking = true
+    // } else {
+    //     isTalking = false
+    // }
 
     
     //Check if we are also online in this channel
