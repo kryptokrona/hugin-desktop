@@ -63,7 +63,7 @@
     const join_voice_channel = async (video = false, reconnect = false, screen) => {
         if (in_voice) return
         if (!reconnect) startTone.play()
-        $swarm.showVideoGrid = false
+        $swarm.showVideoGrid = true
         console.log("Joining!")
         if (reconnect) {
             //activate_video()
@@ -227,7 +227,7 @@
     </div> -->
 <div class="swarm_info" in:fly="{{ y: 50 }}">
     <!-- <div class="channels"> -->
-        <div class="voice-channel">
+        <!-- <div class="voice-channel">
             <p class="voice" on:click={join_voice_channel}><FillButton disabled={false} enabled={in_voice} text={in_voice ? "Voice channel" : "Join call"}/></p>
             {#if in_voice}
             <div class="voice-controls">
@@ -251,7 +251,7 @@
                         <VoiceUser voice_user={user} topic={topic} voice_channel={voice_channel}/>
                     {/each}
                 </div>
-            </div>
+            </div> -->
         <!-- </div> -->
 </div>
     <!-- <div class="text-channels">
