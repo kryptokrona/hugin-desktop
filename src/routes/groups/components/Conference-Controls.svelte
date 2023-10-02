@@ -15,6 +15,7 @@
     import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
     import {createEventDispatcher} from 'svelte'
     import AudioSources from '$lib/components/group_webrtc/AudioSources.svelte'
+import FillButton from '$lib/components/buttons/FillButton.svelte'
     
     let startTime = Date.now()
     let time = '0:00:00'
@@ -58,13 +59,18 @@
         }
         $swarm.myVideo = false
         $swarm.screenshare = false
-        $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
+        $swarm.call.forEach((a) => {
+            a.myStream.getVideoTracks().forEach((track) => track.stop())
+        })
     }
 
     const join_voice_channel = async (video = false, reconnect = false, screen) => {
         if (in_voice) return
+        if (thisSwarm.voice_channel.length > 10) {
+            window.api.errorMessage('There are too many in the call')
+        }
         if (!reconnect) startTone.play()
-        $swarm.showVideoGrid = false
+        $swarm.showVideoGrid = true
         console.log("Joining!")
         if (reconnect) {
             //activate_video()
@@ -73,6 +79,7 @@
         }
         //Leave any active first
         if ($swarm.voice_channel.length) {
+            console.log("Still in voice")
             //We already have an active call.  
             if (thisSwarm.voice_connected === true) return
              //Replace this with our new call
@@ -90,7 +97,62 @@
     }
 
     function disconnect_from_active_voice(reconnect = false) {
-       window.api.exitVoiceChannel()
+        console.log("Disconnect from active voice!")
+
+        if (!reconnect) $swarm.showVideoGrid = true
+            //Leave any active first, check if my own address is active in some channel
+            //Also remove from voice channel
+            let swarms = $swarm.active
+            //Remove my own address from swarm active voice channel list in UI
+            swarms.forEach(joined => {
+                if (joined.voice_channel.some(a => a.address === my_address)) {
+                let removed = joined.voice_channel.filter(a => a.address !== my_address) 
+                joined.voice_channel = removed
+                }
+            })
+            
+            //Check my current active swarm voice channel and remove aswell
+            let active = $swarm.voice_channel.find(a => a.address === my_address)
+            if (!active) return true
+
+            //Change voice connected status in other channels
+            let old = $swarm.active.find(a => a.voice_connected === true)
+            if (old) old.voice_connected = false
+
+            
+            //Remove from the active voice channel we have
+            console.log("Want to exit old voice")
+            let remove = $swarm.voice_channel.filter( a => a !== active)
+            $swarm.voice_channel = remove
+            
+            //Stop any active tracks
+            if (active && $swarm.myStream && $swarm.myVideo) {
+                $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
+            }
+            
+            //Stop any active stream
+            if (!old) return true
+
+            console.log("play sound!")
+            let endTone = new Audio('/audio/endcall.mp3')
+            endTone.play()
+            
+            console.log("Aha? still")
+            //Reset state if we are / were alone in the channel
+            if ($swarm.call.length === 0) {
+                $swarm.screenshare = false
+                $swarm.video = false
+                $swarm.screen_stream = false
+                $swarm.myVideo = false
+                $swarm.myStream = false
+            }
+            
+            console.log("Exit vojs!")
+            connected = false
+            //Send status to backend
+            window.api.send("exit-voice", old.key)
+            $swarm.myVideo = false
+            return true
     }
     
     
@@ -138,7 +200,7 @@
         $swarm.myVideo = !$swarm.myVideo
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
-            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+            a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         })
     }
     
@@ -157,8 +219,12 @@
     
     <div class="wrapper layered-shadow">
         <div>
-        <div on:click>
-            <p>{in_voice ? "Disconnect" : "Join"}</p>
+        <div class="connectButton">
+            {#if !in_voice}
+            <FillButton text={"Join call"} enabled={true} on:click={join_voice_channel}/>
+            {:else}
+            <p>{time}</p>
+            {/if}
         </div>
         </div>
         <div class="controls">
@@ -229,6 +295,9 @@
         .icon {
             cursor: pointer;
         }
+    }
+    .connectButton {
+            padding: 5px;
     }
     </style>
     
