@@ -10,24 +10,25 @@
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MuteIcon from '../icons/MuteIcon.svelte'
     import MicIcon from '../icons/MicIcon.svelte'
+import InCallAvatar from '../chat/InCallAvatar.svelte'
     
     export let paused = false
     let toggle = false
     
-    // let startTime = Date.now()
-    // let time = '0:00:00'
-    // let timer
+    let startTime = Date.now()
+    let time = '0:00:00'
+    let timer
     
-    // onMount(() => {
-    //     // timer = setInterval(() => {
-    //     //     let currentTime = Date.now()
-    //     //     let ms = currentTime - startTime
-    //     //     time = calcTime(ms)
-    //     // }, 1000)
-    // })
+    onMount(() => {
+        timer = setInterval(() => {
+            let currentTime = Date.now()
+            let ms = currentTime - startTime
+            time = calcTime(ms)
+        }, 1000)
+    })
     
     onDestroy(() => {
-        // clearInterval(timer)
+        clearInterval(timer)
     })
     
     //End call with all peers
@@ -67,7 +68,7 @@
         <div class="wrapper">
             <div class="caller">
                 {#each $swarm.voice_channel as call}
-                    <img class="avatar" src="data:image/png;base64,{get_avatar(call.address)}" alt="" />
+                    <InCallAvatar call={call} />
                 {/each}
                 <!-- <p>{this_call.name}</p> -->
             </div>
@@ -111,8 +112,8 @@
     .card {
         position: absolute;
         padding: 1px;
-        bottom: 20px;
-        right: 105px;
+        bottom: 70px;
+        right: 20px;
         width: 350px;
         border-radius: 5px;
         z-index: 500;
