@@ -179,16 +179,17 @@ import { Moon } from 'svelte-loading-spinners'
         
             <div class="video-grid">
             {#if in_voice}
-            {#if isConnecting}
-                <Moon color="#f5f5f5" size="60" unit="px"/>
-            {/if}
                     <MyVideo active={active}/>
                 {#if videoCalls.length}
                     {#each videoCalls as peer (peer.chat)}
                         <PeerVideo call="{peer}" channel="{thisSwarm?.voice_channel}" />
                     {/each}
                 {/if}
-
+                {#if isConnecting}
+                <div class="loader">
+                    <Moon color="#f5f5f5" size="60" unit="px"/>
+                </div>
+                {/if}
             {:else}
                 {#if thisSwarm?.voice_channel.length}
             
@@ -209,7 +210,7 @@ import { Moon } from 'svelte-loading-spinners'
         <div class="fly" in:fly="{{ x: -150 }}">
 
             <div class="list-wrapper">
-                {#each thisSwarm?.voice_channel as user}
+                {#each thisSwarm?.connections as user}
                     <VoiceUser voice_user={user} voice_channel={thisSwarm?.voice_channel}/>
                 {/each}
             </div>
@@ -316,6 +317,10 @@ import { Moon } from 'svelte-loading-spinners'
     .join_group {
         position: absolute;
         display: flex;
+    }
+
+    .loader {
+        margin-left: 50px;
     }
     </style>
     
