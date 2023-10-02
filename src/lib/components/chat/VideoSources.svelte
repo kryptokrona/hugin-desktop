@@ -28,6 +28,8 @@ const buttonGlow = () => {
     }, 1000)
 }
 
+$: activeDevice = $swarm.cameraId
+
 $: if (open) window.api.checkSources()
 
 </script>
@@ -37,7 +39,7 @@ $: if (open) window.api.checkSources()
         <div in:fade class="list layered-shadow">
             {#each videoDevices as src}
                 <div on:click="{() => pickSource(src)}">
-                    <h5>{src.label}</h5>
+                    <h5 class:picked={activeDevice === src.deviceId}>{src.label}</h5>
                 </div>
             {/each}
         </div>
