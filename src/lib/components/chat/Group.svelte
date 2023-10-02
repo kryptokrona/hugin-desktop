@@ -23,7 +23,7 @@
 
             $swarmGroups.showGroups = false
             $swarm.activeChannel = {name: "Chat room", key: thisSwarm.key}
-            $swarm.showVideoGrid = true
+            // $swarm.showVideoGrid = true
         }
 
         if (group.key === $groups.thisGroup.key && !thisSwarm) return

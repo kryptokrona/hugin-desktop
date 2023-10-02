@@ -129,7 +129,9 @@ const createSwarm = async (data) => {
     let discovery
     let swarm
 
-    let [keyPair, keys, sig] = get_new_peer_keys(key)
+    const [keyPair, keys, sig] = get_new_peer_keys(key)
+    const hash = keys.publicKey.toString('hex')
+
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
         swarm = new HyperSwarm({firewall (remotePublicKey, payload) {
@@ -143,16 +145,18 @@ const createSwarm = async (data) => {
     } catch (e) {
         console.log('Error starting swarm')
         return
-    }  
+    }
+    
+    const startTime = Date.now().toString()
+    
+    sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: [], time: startTime})
     
     //The topic is public so lets use the pubkey from the new base keypair
-    let hash = keys.publicKey.toString('hex')
-    active_swarms.push({key, topic: hash, connections: [], call: [], time: Date.now().toString()})
+
+    active_swarms.push({key, topic: hash, connections: [], call: [], time: startTime})
     let active = active_swarms.find(a => a.key === key) 
- 
     active.swarm = swarm
     
-    sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: []})
     sender('set-channels')
 
     swarm.on('connection', (connection, information) => {
@@ -269,7 +273,7 @@ const check_data_message = async (data, connection, topic) => {
                 //Return true bc we do not need to check it again
                 return true
             }
-            
+
             //There are too many in the voice call
             let users = active.connections.filter(a => a.voice === true)
             if (users.length > 10) return true

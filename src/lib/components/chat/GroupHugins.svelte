@@ -70,6 +70,7 @@ const disconnect_from_swarm = () => {
         $swarmGroups.showGroups = true
         $swarm.showVideoGrid = false
     }
+
 let firstConnect = false
 
 const connecto_to_swarm = () => {
@@ -79,11 +80,15 @@ const connecto_to_swarm = () => {
             firstConnect = true
             return
         }
-
         if (thisSwarm) {
             disconnect_from_swarm()
             return
+        } else if (!thisSwarm && $swarm.active.length) {
+            //Temporary fix until we handle more 
+            window.api.errorMessage('You are already in a room')
+            return
         }
+
         $swarmGroups.showGroups = true
         $swarm.showVideoGrid = true
         window.api.send("new-swarm", {
@@ -117,6 +122,12 @@ const connecto_to_swarm = () => {
                     <FillButton disabled={false} text={"Leave room"} />
                     {/if}    
                 </div>
+                <br>
+                {#if thisSwarm}
+                <div style="width: 170px;">
+                    <FillButton disabled={false} enabled={true} text={"Open room"} on:click={show_video_room} />
+                </div>
+                {/if} 
             {/if}
         <br />
         <div class="swarm">

@@ -24,10 +24,10 @@ onMount(async () => {
 
 onDestroy(() => {
     window.api.removeAllListeners('groupRtcMsg')
-    window.api.removeAllListeners('leave-active-voice-channel')
 })
 
-window.api.receive('leave-active-voice-channel', (data) => { 
+window.api.receive('swarm-connected', () => { 
+    $rtcgroupMessages = []
     fixedRtcGroups = []
 })
 
@@ -252,7 +252,7 @@ window.api.receive('sent_rtc_group', (data) => {
         <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
               on:drop={dropFile}> -->
         <div class="inner">
-            {#each fixedRtcGroups as message}
+            {#each fixedRtcGroups as message (message.hash)}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupRtCMsg(e)}"
                     on:replyTo="{(e) => replyToMessage(message.hash, message.name)}"

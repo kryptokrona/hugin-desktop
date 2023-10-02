@@ -34,6 +34,7 @@
     function peer_connected(data) {
         console.log("Data", data)
         let joined = $swarm.active.find(a => a.topic === data.topic)
+        if (!joined) return
         // if (data.channels) {
         //     let known_channels = joined.channels
         //     for (const channel of data.channels) {
@@ -83,6 +84,7 @@
         still_active.voice_channel = still_active
         //Update active swarm store
         $swarm.active = removed
+        updateActiveSwarm()
     }
 
     function voice_channel_status(data) {
