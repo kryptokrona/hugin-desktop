@@ -70,12 +70,21 @@
         let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
         if (camera.length === 0) {
             $swarm.cameraId = "none"
-            return
-        }
-        $swarm.cameraId = camera[0].deviceId
+        } else $swarm.cameraId = camera[0].deviceId
+        
         
         console.log(" $swarm.cameraId",   $swarm.cameraId)
         // select the desired transceiver
+    }
+
+    if (!$swarm.audioInputId) { 
+        let audio = $swarm.devices.filter((a) => a.kind === 'audioinput')
+        $swarm.audioInput = audio[0].deviceId
+    }
+
+    if (!$swarm.audioOutput) { 
+        let audio = $swarm.devices.filter((a) => a.kind === 'audiooutput')
+        $swarm.audioOutput = audio[0].deviceId
     }
 }
 
