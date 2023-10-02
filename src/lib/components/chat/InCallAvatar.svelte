@@ -12,17 +12,17 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.add
 
 </script>
 
-<div class:talking={isTalking}>
+<div class="img" class:talking={isTalking}>
 <img class="avatar" src="data:image/png;base64,{get_avatar(call.address)}" alt="" />
 </div>
 
 <style lang="scss">
       .talking {
-        border-radius: 15px;
-        border: 1px solid var(--success-color);
+        border-radius: 5px;
+        border: 1px solid var(--success-color) !important;
     }
 
-    img {
+    .img {
         border: 1px solid transparent;
     }
 </style>
