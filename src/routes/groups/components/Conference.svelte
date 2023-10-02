@@ -12,6 +12,8 @@
     import { sleep } from '$lib/utils/utils'
 import Button from '$lib/components/buttons/Button.svelte'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
+import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
+import { Moon } from 'svelte-loading-spinners'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -146,6 +148,15 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         groupKey = ''
         join = false
     }
+    let isConnecting = false
+    //If so the user is connecting to our call if he is not yet connected in $swarm.call
+    $: if ($swarm.call.some(a => thisSwarm?.voice_channel.some(b => b.address === a.chat) && !a.connected && in_voice && a.chat !== my_address)) {
+        isConnecting = true
+    } else {
+        isConnecting = false
+    }
+
+    $: console.log("isconeccting", isConnecting)
     
     $: groupKey
     
@@ -165,27 +176,27 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         </div>
         -->
         <div class="video-wrapper">
+        
             <div class="video-grid">
             {#if in_voice}
-                <MyVideo active={active}/>
-              
-
-            {#if videoCalls.length}
-                {#each videoCalls as peer (peer.chat)}
-                    <PeerVideo call="{peer}" />
-                {/each}
-                
+            {#if isConnecting}
+                <Moon color="#f5f5f5" size="60" unit="px"/>
             {/if}
+                    <MyVideo active={active}/>
+                {#if videoCalls.length}
+                    {#each videoCalls as peer (peer.chat)}
+                        <PeerVideo call="{peer}" channel="{thisSwarm?.voice_channel}" />
+                    {/each}
+                {/if}
 
             {:else}
-         
-                <FillButton text={"Join call"} enabled={true} on:click={join_voice_channel}/>
-
                 {#if thisSwarm?.voice_channel.length}
-                {#each thisSwarm?.voice_channel as peer (peer.address)}
-                    <PeerVideo call="{peer}" active={false} channel={thisSwarm.voice_channel}/>
-                {/each}
             
+                    {#each thisSwarm?.voice_channel as peer (peer.address)}
+            
+                        <PeerVideo call="{peer}" active="{false}" channel="{thisSwarm.voice_channel}"/>
+                        
+                    {/each}
                 {/if}
 
             {/if}
@@ -194,10 +205,25 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
                 <ConferenceControls />
             </div>
         </div>
+        {#if !$videoGrid.showChat && $swarm.showVideoGrid}
+        <div class="fly" in:fly="{{ x: -150 }}">
+
+            <div class="list-wrapper">
+                {#each thisSwarm?.voice_channel as user}
+                    <VoiceUser voice_user={user} voice_channel={thisSwarm?.voice_channel}/>
+                {/each}
+            </div>
+        </div> 
+        {/if}
         <RtcGroupMessages />
     </div>
     
     <style lang="scss">
+
+        .fly {
+            width: 17%;
+            height: 17%;
+        }
     .layout {
         display: flex;
         position: absolute;
