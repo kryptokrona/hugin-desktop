@@ -22,7 +22,8 @@
     
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
                 <div >
-                <p>This feature is still experimental! Only connect to rooms with friends.
+                <p>This feature is still experimental! 
+                    Join rooms only with friends.
                     
                 </p>
                     <FillButton
@@ -72,7 +73,7 @@
     }
     
     p {
-        font-size: 12px;
+        font-size: 15px;
         color: white;
         font-family: 'Montserrat';
     }

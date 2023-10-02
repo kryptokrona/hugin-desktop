@@ -211,6 +211,7 @@ img {
     position: relative;
     opacity: 0.9;
     border-radius: 50%;
+    z-index: 5;
 }
 .options {
     display: flex;
@@ -265,6 +266,7 @@ p {
     position: relative;
     opacity: 0.8;
     color: white;
+    z-index: 5;
 }
 
 .fade {

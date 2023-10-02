@@ -106,6 +106,7 @@ $: window_medium
     position: relative;
     opacity: 0.9;
     border-radius: 50%;
+    z-index: 5;
 }
 
 img {
@@ -192,6 +193,7 @@ p {
     position: relative;
     opacity: 0.8;
     color: white;
+    z-index: 5;
 }
 
 .hide {
