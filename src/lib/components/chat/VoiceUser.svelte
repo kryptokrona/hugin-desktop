@@ -23,7 +23,7 @@
     //Check if we are also online in this channel
     $: in_voice = voice_channel.some(a => a.address === myAddress)
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
-    $: if (!$swarm.call.some(a => a.chat === voice_user.address && a.connected) && in_voice && (voice_user.address !== myAddress)) {
+    $: if ($swarm.call.some(a => a.chat === voice_user.address && !a.connected) && in_voice) {
         isConnecting = true
     } else {
         isConnecting = false
