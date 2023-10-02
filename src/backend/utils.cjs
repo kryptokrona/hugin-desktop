@@ -141,7 +141,8 @@ const sanitize_join_swarm_data = (data) => {
         voice: voice,
         joined: joined,
         channels: channels,
-        video: video
+        video: video,
+        time: time
     }
 
     return clean_object
