@@ -269,6 +269,11 @@ const check_data_message = async (data, connection, topic) => {
                 //Return true bc we do not need to check it again
                 return true
             }
+            
+            //There are too many in the voice call
+            let users = active.connections.filter(a => a.voice === true)
+            if (users.length > 10) return true
+
                 //Joining == offer
             if (data.offer === true) {
                 console.log("Answer call")
@@ -397,6 +402,8 @@ const get_my_channels = async (key) => {
 const send_joined_message = async (key, topic, my_address) => {
     //Use topic as signed message?
     const msg = topic
+    const active = get_active_topic(topic)
+    if (!active) return
     const sig = await signMessage(msg, chat_keys.privateSpendKey)
     let [voice, video] = get_local_voice_status(topic)
     if (video) voice = true
@@ -415,7 +422,7 @@ const send_joined_message = async (key, topic, my_address) => {
         voice: voice,
         channels: [],
         video: video,
-        time: Date.now().toString()
+        time: active.time
     })
     console.log("Sent joined mesg", data)
     sendSwarmMessage(data, key)
