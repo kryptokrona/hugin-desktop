@@ -21,5 +21,9 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.add
         border-radius: 15px;
         border: 1px solid var(--success-color);
     }
+
+    img {
+        border: 1px solid transparent;
+    }
 </style>
 
