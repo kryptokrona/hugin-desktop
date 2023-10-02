@@ -1,9 +1,10 @@
 <script>
 //To handle true and false, or in this case show and hide.
-import { fade } from 'svelte/transition'
+import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { webRTC, user, swarm } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
+import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 
 let myVideo = document.getElementById('myVideo')
 let hover = false
@@ -42,7 +43,7 @@ $: window_medium
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div in:fade out:fade class="card" class:hide={$videoGrid.hideMyVideo}>
+<div class="card" in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
     <video
         on:click="{playVideo}"
         muted
@@ -51,7 +52,9 @@ $: window_medium
         playsinline
         autoplay
         bind:this="{myVideo}"></video>
+        <div class:in_call="{true}"></div>
         <div class="name">{$user.username}</div>
+        <VoiceUserIcon/>
 </div>
 
 <style lang="scss">
@@ -84,6 +87,23 @@ $: window_medium
     justify-content: center;
     align-items: center;
     padding: 10px;
+}
+
+
+.in_call {
+    left: 9px;
+    top: 92%;
+    border-radius: 5px;
+    height: 10px;
+    width: 10px;
+    padding: 5px;
+    line-height: 15px;
+    font-family: "Montserrat";
+    width: fit-content;
+    background: var(--success-color);
+    position: relative;
+    opacity: 0.9;
+    border-radius: 50%;
 }
 
 .options {
@@ -158,10 +178,9 @@ p {
     line-height: 15px;
     font-family: "Montserrat";
     width: fit-content;
-    background: white;
     position: relative;
-    opacity: 0.6;
-    color: black;
+    opacity: 0.8;
+    color: white;
 }
 
 .hide {

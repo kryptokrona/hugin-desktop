@@ -1,11 +1,13 @@
 <script>
 //To handle true and false, or in this case show and hide.
-import { fade } from 'svelte/transition'
+import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { audioLevel, user, swarm } from '$lib/stores/user.js'
 import Minus from '../icons/Minus.svelte'
 import Plus from '../icons/Plus.svelte'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
+import { get_avatar } from '$lib/utils/hugin-utils'
+import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 let peerVideo = document.getElementById('peerVideo')
 let peerStream
 let thisWindow = false
@@ -19,7 +21,6 @@ const dispatch = createEventDispatcher()
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
-    console.log("$swarm.active", $swarm.active)
     if (!active) return
     peerVideo.srcObject = call.peerStream
     $videoGrid.peerVideos.push({chat: call.chat, size: 1})
@@ -33,8 +34,8 @@ async function setName() {
     if (!active) {
         return channel.find(a => call.address === a.address)
     }
-    else
-    return $user.contacts.find(a => a.chat === call.chat)
+    else if ($swarm.call.length) return channel.find(a => call.chat === a.address)
+    else  return $user.contacts.find(a => a.chat === call.chat)
 }
 
 const playVideo = () => {
@@ -83,6 +84,7 @@ $:  if (thisWindow && windowCheck) {
     }
 
 const resize = (size) => {
+    if (!active) return
     $videoGrid.multiView = false
      //Right now we only have two modes, medium and min
      //Medium is fullscreen
@@ -132,14 +134,16 @@ const resize = (size) => {
 
 </script>
 
-<div class="card" class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+<div class="card" in:fly={{ x: -150}} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
     {#if audio}
     <audio autoplay bind:this="{peerVideo}"></audio>
     {:else}
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
     {#await setName() then contact}
+    <div class:in_call="{true}"></div>
     <div class="name">{contact.name}</div>
     {/await}
+    <VoiceUserIcon/>
     <div in:fade class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
@@ -173,6 +177,12 @@ const resize = (size) => {
     }
 }
 
+img {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    left: 25%;
+}
 .caller {
     display: flex;
     justify-content: center;
@@ -180,6 +190,21 @@ const resize = (size) => {
     padding: 10px;
 }
 
+.in_call {
+    left: 9px;
+    top: 92%;
+    border-radius: 5px;
+    height: 10px;
+    width: 10px;
+    padding: 5px;
+    line-height: 15px;
+    font-family: "Montserrat";
+    width: fit-content;
+    background: var(--success-color);
+    position: relative;
+    opacity: 0.9;
+    border-radius: 50%;
+}
 .options {
     display: flex;
 }
@@ -230,10 +255,9 @@ p {
     line-height: 15px;
     font-family: "Montserrat";
     width: fit-content;
-    background: white;
     position: relative;
-    opacity: 0.6;
-    color: black;
+    opacity: 0.8;
+    color: white;
 }
 
 .fade {
