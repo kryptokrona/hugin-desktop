@@ -26,6 +26,7 @@ export let hash
 export let message
 export let reply_to_this = false
 export let rtc = false
+export let joined = false
 
 let thisreply = ''
 let has_reaction = false
@@ -273,7 +274,7 @@ const openLinkMessage = (url) => {
             {:else if emojiMessage}
                 <p class="emoji">{msg}</p>
             {:else}
-                <p class:rtc style="user-select: text;">{msg}</p>
+                <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}
         </div>
 
@@ -442,5 +443,9 @@ p {
 .emoji {
     font-size: 21px !important;
     user-select: text;
+}
+
+.joined {
+    font-style: italic;
 }
 </style>
