@@ -143,7 +143,11 @@ const resize = (size) => {
     <div class:in_call="{true}"></div>
     <div class="name">{contact.name}</div>
     {/await}
-    <VoiceUserIcon/>
+    {#if !active}
+    <img src="data:image/png;base64,{get_avatar(call.address, 'png', true)}" alt="" />
+    {:else}
+    <img src="data:image/png;base64,{get_avatar(call.chat, 'png', true)}" alt="" />
+    {/if}
     <div in:fade class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
@@ -174,6 +178,7 @@ const resize = (size) => {
         height: 100%;
         object-fit: cover;
         border-radius: inherit;
+        z-index: 5;
     }
 }
 
@@ -181,7 +186,9 @@ img {
     width: 200px;
     height: 200px;
     position: absolute;
-    left: 25%;
+    left: calc(50% - 100px);
+    top: calc(50% - 100px);
+    z-index: 4;
 }
 .caller {
     display: flex;
@@ -192,7 +199,7 @@ img {
 
 .in_call {
     left: 9px;
-    top: 92%;
+    top: 92.4%;
     border-radius: 5px;
     height: 10px;
     width: 10px;

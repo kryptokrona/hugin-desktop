@@ -5,6 +5,7 @@ import { createEventDispatcher, onDestroy, onMount } from 'svelte'
 import { webRTC, user, swarm } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
+import { get_avatar } from '$lib/utils/hugin-utils'
 
 let myVideo = document.getElementById('myVideo')
 let hover = false
@@ -54,7 +55,7 @@ $: window_medium
         bind:this="{myVideo}"></video>
         <div class:in_call="{true}"></div>
         <div class="name">{$user.username}</div>
-        <VoiceUserIcon/>
+        <img src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />
 </div>
 
 <style lang="scss">
@@ -79,6 +80,7 @@ $: window_medium
         height: 100%;
         object-fit: cover;
         border-radius: inherit;
+        z-index: 5;
     }
 }
 
@@ -92,7 +94,7 @@ $: window_medium
 
 .in_call {
     left: 9px;
-    top: 92%;
+    top: 92.4%;
     border-radius: 5px;
     height: 10px;
     width: 10px;
@@ -104,6 +106,15 @@ $: window_medium
     position: relative;
     opacity: 0.9;
     border-radius: 50%;
+}
+
+img {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    left: calc(50% - 100px);
+    top: calc(50% - 100px);
+    z-index: 4;
 }
 
 .options {
