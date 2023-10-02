@@ -285,6 +285,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         border: 1px solid var(--card-border);
         border-radius: 0.4rem;
         padding: 0 1rem;
+        max-height: 70px;
     }
     
     .controls {
@@ -297,7 +298,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         }
     }
     .connectButton {
-            padding: 5px;
+            padding: 15px;
     }
     </style>
     
