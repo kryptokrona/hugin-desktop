@@ -66,6 +66,9 @@ import InCallAvatar from '../chat/InCallAvatar.svelte'
     >
         <audio bind:paused></audio>
         <div class="wrapper">
+            <div on:click>
+                <p>{time}</p>
+            </div>
             <div class="caller">
                 {#each $swarm.voice_channel as call}
                     <InCallAvatar call={call} />
@@ -75,9 +78,6 @@ import InCallAvatar from '../chat/InCallAvatar.svelte'
     
             <audio bind:paused></audio>
             <div class="controls">
-                <div on:click>
-                    <!-- <p>{time}</p> -->
-                </div>
                 <div on:click="{endCall}">
                     <CallSlash />
                 </div>
@@ -111,10 +111,10 @@ import InCallAvatar from '../chat/InCallAvatar.svelte'
     
     .card {
         position: absolute;
-        padding: 1px;
+        padding: 2px;
         bottom: 70px;
-        right: 20px;
-        width: 350px;
+        right: 70px;
+        max-width: 500px;
         border-radius: 5px;
         z-index: 500;
         display: none;
