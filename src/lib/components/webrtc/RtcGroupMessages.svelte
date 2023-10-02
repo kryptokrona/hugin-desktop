@@ -31,6 +31,24 @@ window.api.receive('leave-active-voice-channel', (data) => {
     fixedRtcGroups = []
 })
 
+window.api.receive('peer-connected', (data) => { 
+    if ($swarm.active.length) {
+            let joinedMessage = {
+            message: "Joined the lobby",
+            grp: $swarm.activeSwarm.key,
+            reply: false,
+            address: data.address,
+            time: parseInt(data.time),
+            name: data.name,
+            hash: data.time,
+            joined: true
+        }
+        
+    fixedRtcGroups.push(joinedMessage)
+    fixedRtcGroups = fixedRtcGroups
+    }
+})
+
 //Listens for new messages from backend
 window.api.receive('groupRtcMsg', (data) => {
     if (!$videoGrid.showChat) {
@@ -249,6 +267,7 @@ window.api.receive('sent_rtc_group', (data) => {
                     timestamp="{message.time}"
                     hash="{message.hash}"
                     rtc="{true}"
+                    joined={message.joined ? true : false}
                 />
             {/each}
         </div>
@@ -318,4 +337,5 @@ p {
 .show {
     margin-right: 0;
 }
+
 </style>
