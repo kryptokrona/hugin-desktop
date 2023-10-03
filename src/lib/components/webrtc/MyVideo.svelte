@@ -22,10 +22,10 @@ const playVideo = () => {
     myVideo = document.getElementById('myVideo')
     if (myVideo === null) return
     if (!$swarm.myVideo && !$webRTC.myVideo) return
-    if ($webRTC.call.length) myVideo.srcObject = $webRTC.myStream
     if (!$swarm.myStream) return
+    if ($webRTC.call.length) myVideo.srcObject = $webRTC.myStream
     if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
-    if (!$swarm.showVideGrid) return
+    if (!$swarm.showVideGrid && $swarm.myStream) return
     myVideo.play()
 }
 
