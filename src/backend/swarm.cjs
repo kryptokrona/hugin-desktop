@@ -148,7 +148,7 @@ const createSwarm = async (data) => {
     }
     
     const startTime = Date.now().toString()
-    
+
     sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: [], time: startTime})
     
     //The topic is public so lets use the pubkey from the new base keypair
@@ -493,6 +493,7 @@ ipcMain.on('join-voice', async (e, data) => {
 ipcMain.on('exit-voice', async (e, key) => {
     console.log("exit voice", key)
     //We should only be active in one channel. Close all connections
+    sender('leave-active-voice-channel')
     sender("leave-voice-channel")
     send_voice_channel_status(false, {key: key, video: false})
 })
