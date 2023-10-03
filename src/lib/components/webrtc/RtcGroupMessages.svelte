@@ -27,9 +27,22 @@ onDestroy(() => {
 })
 
 window.api.receive('swarm-connected', () => { 
+    clearMessages()
+})
+
+window.api.receive('start-call', () => { 
+    if ($webRTC.groupCall) return
+    clearMessages()
+})
+window.api.receive('answer-call', () => { 
+    if ($webRTC.groupCall) return
+    clearMessages()
+})
+
+const clearMessages = () => {
     $rtcgroupMessages = []
     fixedRtcGroups = []
-})
+}
 
 window.api.receive('peer-connected', (data) => { 
     if ($swarm.active.length) {
