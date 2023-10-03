@@ -52,6 +52,7 @@ const endCall = () => {
 
 const toggleAudio = () => {
     muted = !muted
+    $webRTC.audio = !$webRTC.audio
     $webRTC.call.forEach((a) => {
         a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
     })
@@ -95,7 +96,7 @@ const hideGrid = () => {
             {/if}
         </div>
         <div class="icon" on:click="{toggleAudio}">
-            {#if !muted}
+            {#if !$webRTC.audio}
                 <MicIcon />
             {:else}
                 <MuteIcon />
