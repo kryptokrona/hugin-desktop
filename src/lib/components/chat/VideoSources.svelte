@@ -10,8 +10,8 @@ $: if (conference) videoDevices = $swarm.devices.filter((a) => a.kind == 'videoi
 
 
 function pickSource(src) {
-    console.log('pick', src)
-    if ($swarm.call.length === 0 && conference) add = true
+    let add = false
+    if (!$swarm.myVideo && conference) add = true
     window.api.changeSource(src.deviceId, conference, add)
     if ($webRTC.screenshare || $swarm.screenshare) {
         $webRTC.screenshare = false
@@ -94,5 +94,9 @@ $: if (open) window.api.checkSources()
             background-color: var(--card-border);
         }
     }
+}
+
+.picked {
+    color: var(--success-color);
 }
 </style>

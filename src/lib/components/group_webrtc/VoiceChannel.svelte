@@ -123,6 +123,8 @@ async function checkAudioSources() {
             .catch((e) => {
                 console.log('error', e)
             })
+
+            $swarm.audioInput = id
     }
     
 
@@ -147,7 +149,10 @@ async function checkAudioSources() {
         //Remove old track
         current.removeTrack(current.getAudioTracks()[0])
         //Update stream
-
+        if (!$swarm.audio) {
+            current.getAudioTracks().forEach((track) => (track.enabled = false))
+        }
+        
         $swarm.myStream = current
 
     }

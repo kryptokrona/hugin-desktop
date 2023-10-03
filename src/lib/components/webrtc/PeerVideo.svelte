@@ -51,7 +51,8 @@ window.api.receive('set-audio-input-group', (src, input) => {
     
 
 const changeAudioSource = async (src, input) => {
-    console.log("ID?", src, input)
+    $swarm.audioOutput = src
+    if (peerVideo === null) return
     peerVideo.setSinkId(src)
 }
 
