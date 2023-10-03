@@ -97,9 +97,8 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
         sendInviteNotification(contact, contact_address)
     }
 
-     if ($webRTC.call.some(a => a.peerVideo)) {
-        let activeStream = $webRTC.myStream
-        gotMedia(activeStream, contact, isVideo, false)
+     if ($webRTC.myStream) {
+        gotMedia($webRTC.myStream, contact, isVideo, false)
         return
     }
 
@@ -364,7 +363,7 @@ async function inviteToGroupCall(peer) {
 
 async function gotMedia(stream, contact, video, screen_stream = false) {
     $webRTC.myStream = stream
-
+    let this_call = $webRTC.call.find(a => a.chat === contact.substring(0, 99))
     if (video) {
         $webRTC.myVideo = true
 
@@ -380,12 +379,12 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
 
     checkMyVolume(peer1)
     //Set webRTC store update for call
-    $webRTC.call[0].peer = peer1
-    $webRTC.call[0].screen_stream = screen_stream
-    $webRTC.call[0].video = video
-    $webRTC.call[0].myStream = stream
+    this_call.peer = peer1
+    this_call.screen_stream = screen_stream
+    this_call.video = video
+    this_call.myStream = stream
 
-    console.log('This call', $webRTC.call[0])
+    console.log('This call', this_call)
     checkSources()
     $webRTC.active = true
 
@@ -393,13 +392,12 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
         console.log(' Got peerstream object in store')
 
         //Set peerStream to store
-        $webRTC.call[0].peerStream = peerStream
+        this_call.peerStream = peerStream
         if (video) {
-            $webRTC.call[0].peerVideo = true
             $videoGrid.showVideoGrid = true
         } else {
-            $webRTC.call[0].peerAudio = true
         }
+        this_call.peerVideo = true
     })
 }
 
@@ -492,16 +490,18 @@ const answerCall = (msg, contact, key, offchain = false) => {
     console.log('Got media')
 
     async function gotMedia(stream) {
-
-        let peer2 = await startPeer2(stream, video)
+        let this_call = $webRTC.call.find(a => a.chat === contact)
+        let peer2 = await startPeer2(stream, video, this_call)
         
         checkMyVolume(stream)
         checkSources()
         //Set webRTC store update for call
-        $webRTC.call[0].peer = peer2
+        this_call.peer = peer2
+        this_call.myStream = stream
+        this_call.video = video
+        
         $webRTC.myStream = stream
         $webRTC.active = true
-        $webRTC.call[0].video = video
 
         if (video) {
             $webRTC.myVideo = true
@@ -520,7 +520,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
     }
 }
 
-async function startPeer2(stream, video) {
+async function startPeer2(stream, video, this_call) {
     let peer2 = new Peer({ stream: stream, trickle: false, wrtc: wrtc })
 
     peer2.on('close', (e) => {
@@ -549,7 +549,7 @@ async function startPeer2(stream, video) {
         // SOUND EFFECT
         window.api.successMessage('Call established')
         console.log('Connection established;')
-        $webRTC.call[0].connected = true
+        this_call.connected = true
         checkVolume(peer2)
         if ($webRTC.call.length > 1) {
             $webRTC.group = true
@@ -565,14 +565,12 @@ async function startPeer2(stream, video) {
         // got remote video stream, now let's show it in a video tag
 
         console.log('peer2 stream', peerStream)
-        $webRTC.call[0].peerStream = peerStream
+        this_call.peerStream = peerStream
 
         if (video) {
-            $webRTC.call[0].peerVideo = true
-        } else {
-            $webRTC.call[0].peerAudio = true
+            $videoGrid.showVideoGrid = true
         }
-
+        this_call.peerVideo = true
         console.log('Setting up link..')
     })
 
@@ -778,7 +776,7 @@ function endCall(peer, stream, contact) {
         return
     }
 
-    if ($webRTC.call.length === 0) {
+    if ($webRTC.call.length === 0 && $webRTC.myStream) {
             $webRTC.myStream.getTracks().forEach(function (track) {
                 console.log('track stopped')
                 track.stop()
@@ -791,6 +789,7 @@ function endCall(peer, stream, contact) {
     $webRTC.video = false
     $webRTC.screen_stream = false
     $webRTC.myVideo = false
+    $webRTC.myStream = false
 
     console.log('Call ended')
 }
