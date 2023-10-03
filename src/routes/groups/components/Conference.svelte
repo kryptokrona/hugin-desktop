@@ -10,10 +10,10 @@
     import {createEventDispatcher, onMount} from 'svelte'
     import {groups, user} from '$lib/stores/user.js'
     import { sleep } from '$lib/utils/utils'
-import Button from '$lib/components/buttons/Button.svelte'
-import FillButton from '$lib/components/buttons/FillButton.svelte'
-import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
-import { Moon } from 'svelte-loading-spinners'
+    import Button from '$lib/components/buttons/Button.svelte'
+    import FillButton from '$lib/components/buttons/FillButton.svelte'
+    import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
+    import { Moon } from 'svelte-loading-spinners'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
