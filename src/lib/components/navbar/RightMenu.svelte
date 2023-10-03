@@ -145,9 +145,10 @@ const sendMoney = () => {
 let muted = false
 
 const toggleAudio = () => {
-    muted = !muted
-    $webRTC.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
-    $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+    $webRTC.audio = !$webRTC.audio
+    $webRTC.call.forEach((a) => {
+        a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+    })
 }
 
 function copyThis(copy) {
