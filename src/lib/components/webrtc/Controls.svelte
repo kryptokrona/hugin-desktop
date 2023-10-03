@@ -95,7 +95,7 @@ const hideGrid = () => {
             {/if}
         </div>
         <div class="icon" on:click="{toggleAudio}">
-            {#if !$webRTC.audio}
+            {#if $webRTC.audio}
                 <MicIcon />
             {:else}
                 <MuteIcon />
