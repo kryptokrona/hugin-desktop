@@ -383,6 +383,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
     $webRTC.call[0].peer = peer1
     $webRTC.call[0].screen_stream = screen_stream
     $webRTC.call[0].video = video
+    $webRTC.call[0].myStream = stream
 
     console.log('This call', $webRTC.call[0])
     checkSources()
@@ -493,7 +494,8 @@ const answerCall = (msg, contact, key, offchain = false) => {
     async function gotMedia(stream) {
 
         let peer2 = await startPeer2(stream, video)
-
+        
+        checkMyVolume(stream)
         checkSources()
         //Set webRTC store update for call
         $webRTC.call[0].peer = peer2
@@ -716,7 +718,17 @@ async function checkVolume(peer) {
     }
 }
 
-async function checkMyVolume(peer) {}
+async function checkMyVolume(stream) {
+        //Check if active stream already exists
+        if (!$webRTC.audio) {
+            stream.getAudioTracks().forEach((track) => (track.enabled = false))
+        }
+        $webRTC.myStream = stream
+        return
+
+        //TODO ** Here we should add function like checkVolume() but for our input to display in UI.
+        
+    }
 
 //End call
 function endCall(peer, stream, contact) {
@@ -757,15 +769,12 @@ function endCall(peer, stream, contact) {
     $webRTC.call = filter
 
     if ($webRTC.call.some((a) => a.peerVideo)) {
-        $webRTC.myVideo = true
-        $webRTC.video = true
         console.log('Already got a video call open, return')
         return
     }
 
     if ($webRTC.call.some((a) => a.peerAudio)) {
         console.log('Already got a audio call open, return')
-        $webRTC.myVideo = false
         return
     }
 
