@@ -1,5 +1,5 @@
 diff --git a/node_modules/hyperdht/index.js b/node_modules/hyperdht/index.js
-index 19e5c6b..b622f1d 100644
+index 19e5c6b..b9420d2 100644
 --- a/node_modules/hyperdht/index.js
 +++ b/node_modules/hyperdht/index.js
 @@ -17,7 +17,7 @@ const maxSize = 65536
@@ -11,7 +11,7 @@ index 19e5c6b..b622f1d 100644
      const port = opts.port || 49737
      const bootstrap = opts.bootstrap || BOOTSTRAP_NODES
  
-@@ -27,10 +27,11 @@ class HyperDHT extends DHT {
+@@ -27,15 +27,16 @@ class HyperDHT extends DHT {
        maxSize: opts.maxSize || maxSize,
        maxAge: opts.maxAge || maxAge
      }
@@ -25,6 +25,12 @@ index 19e5c6b..b622f1d 100644
      this._router = new Router(this, cacheOpts)
      this._socketPool = new SocketPool(this, opts.host || '0.0.0.0')
      this._rawStreams = new RawStreamSet(this)
+     this._persistent = null
+-
++    this.checkedSigs = []
+     this._debugStream = (opts.debug && opts.debug.stream) || null
+     this._debugHandshakeLatency = toRange((opts.debug && opts.debug.handshake && opts.debug.handshake.latency) || 0)
+ 
 @@ -49,7 +50,7 @@ class HyperDHT extends DHT {
    }
  
@@ -35,7 +41,7 @@ index 19e5c6b..b622f1d 100644
  
    createServer (opts, onconnection) {
 diff --git a/node_modules/hyperdht/lib/connect.js b/node_modules/hyperdht/lib/connect.js
-index edd93ee..f5bbc54 100644
+index edd93ee..a605747 100644
 --- a/node_modules/hyperdht/lib/connect.js
 +++ b/node_modules/hyperdht/lib/connect.js
 @@ -25,7 +25,8 @@ const {
@@ -90,17 +96,24 @@ index edd93ee..f5bbc54 100644
    if (isDone(c) || !payload) return
  
    if (payload.version !== 1) {
-@@ -320,6 +330,17 @@ async function connectThroughNode (c, address, socket) {
+@@ -320,6 +330,24 @@ async function connectThroughNode (c, address, socket) {
   
    const hs = c.handshake.final()
  
 +  //firewall function does not send payload so we must check here for now
 + //Checking if it is a valid subkey is the most efficent way i could come up with with assuming we have a preshared key
 + //Added new payload pub, to avoid using the same as DHT. not sure if its needed but rather safe if i dont know some quirks
-+ 
-+  const checked = checkKey(payload.mpub, payload.mid, c.priv)
++ let error = false
++ if (!payload.mid) error = true
++ if (!payload.mpub) error = true
++ let checked = checkKey(payload.mpub, payload.mid, c.priv)
 +
-+  if (!checked) {
++ //Check if this id is already used by another active connection
++ if (c.dht.checkedSigs.some(a => payload.mid === a)) error = true
++ if (!checkTime(payload.mid)) error = true
++  c.dht.checkedSigs.push(payload.mid)
++
++  if (!checked || error) {
 +    destroyEncryptedSocket(c, SERVER_INCOMPATIBLE())
 +    return
 +  }
@@ -108,10 +121,16 @@ index edd93ee..f5bbc54 100644
    c.handshake = null
    c.request = null
    c.requesting = false
-@@ -367,6 +388,23 @@ async function connectThroughNode (c, address, socket) {
+@@ -367,6 +395,29 @@ async function connectThroughNode (c, address, socket) {
    }
  }
  
++function checkTime(date) {
++  const day = 1000 * 60 * 60 * 24;
++  const dayAgo = Date.now() - day;
++  return date > dayAgo;
++}
++
 +function checkKey(pub, sig, keys) {
 +  console.log("checking keys!", pub)
 +    const sub = get_sub_key(keys, sig)
