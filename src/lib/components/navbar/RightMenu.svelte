@@ -66,7 +66,7 @@ const startCall = async (contact, calltype) => {
         $webRTC.initiator = true
     }
 
-    if ($swarm.call.length) window.api.exitVoiceChannel()
+    if ($swarm.voice_channel.length) window.api.exitVoiceChannel()
 
     $webRTC.invited = false
 

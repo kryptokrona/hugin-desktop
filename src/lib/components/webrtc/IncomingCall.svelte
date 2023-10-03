@@ -49,7 +49,7 @@ const handleAnswer = async () => {
         offchain = true
     }
 
-    if ($swarm.call.length) window.api.exitVoiceChannel()
+    if ($swarm.voice_channel.length) window.api.exitVoiceChannel()
 
     if (video) $videoGrid.showVideoGrid = true
     //If video call incoming and no video device is plugged in
