@@ -68,7 +68,8 @@ export const webRTC = writable({
     invited: false,
     initiator: false,
     devices: [],
-    cameraId: false
+    cameraId: false,
+    audio: true
 })
 
 export const audioLevel = writable({
