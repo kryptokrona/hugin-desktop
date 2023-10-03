@@ -6,6 +6,7 @@ import { videoGrid } from '$lib/stores/layout-state.js'
 import { fade } from 'svelte/transition'
 import RtcGroupMessages from '$lib/components/webrtc/RtcGroupMessages.svelte'
 import Controls from '$lib/components/webrtc/Controls.svelte'
+import { Moon } from 'svelte-loading-spinners'
 
 let drag = false
 let videoCalls = []
@@ -30,6 +31,16 @@ const joinGroupChat = () => {
     groupKey = ''
     join = false
 }
+
+let isConnecting = false
+
+//If the user is connecting to our call
+$: if ($webRTC.call.some(a => !a.connected)) {
+    isConnecting = true
+} else {
+    isConnecting = false
+}
+
 
 $: groupKey
 
@@ -58,6 +69,11 @@ $: console.log('video calls', videoCalls)
                 {#each videoCalls as peer (peer.chat)}
                     <PeerVideo call="{peer}" />
                 {/each}
+            {/if}
+            {#if isConnecting}
+            <div class="loader">
+                <Moon color="#f5f5f5" size="60" unit="px"/>
+            </div>
             {/if}
         </div>
         <Controls />
