@@ -9,6 +9,8 @@ import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { calcTime } from '$lib/utils/utils.js'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
+import MicIcon from '../icons/MicIcon.svelte'
+import MuteIcon from '../icons/MuteIcon.svelte'
 
 export let paused = false
 let toggle = false
@@ -42,7 +44,8 @@ onDestroy(() => {})
 
 const toggleAudio = () => {
     toggle = !toggle
-    $webRTC.myStream.getTracks().forEach((track) => (track.enabled = !track.enabled))
+    $webRTC.audio = !$webRTC.audio
+    $webRTC.myStream.getTAudioracks().forEach((track) => (track.enabled = !track.enabled))
 }
 
 const showGrid = () => {
@@ -74,6 +77,13 @@ const showGrid = () => {
             <div on:click="{endCall}">
                 <CallSlash />
             </div>
+            <div on:click="{toggleAudio}">
+                {#if $webRTC.audio}
+                    <MicIcon />
+                {:else}
+                    <MuteIcon />
+                {/if}
+            </div>
             <div on:click="{() => showGrid()}">
                 <ShowVideoMenu />
             </div>
@@ -98,10 +108,10 @@ const showGrid = () => {
 .card {
     display: flex;
     position: absolute;
-    padding: 1px;
-    bottom: 20px;
-    right: 105px;
-    width: 350px;
+    padding: 2px;
+    bottom: 70px;
+    right: 70px;
+    max-width: 500px;
     border-radius: 5px;
     z-index: 500;
 
