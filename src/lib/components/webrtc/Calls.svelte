@@ -779,7 +779,6 @@ function endCall(peer, stream, contact) {
     }
 
     if ($webRTC.call.length === 0 && $webRTC.myStream) {
-        console.log("$webRTC.myStream", $webRTC.myStream)
         $webRTC.myStream.getTracks().forEach(function (track) {
                 console.log('track stopped')
                 track.stop()
