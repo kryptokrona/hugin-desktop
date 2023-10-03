@@ -21,11 +21,21 @@ onDestroy(() => {})
 const playVideo = () => {
     myVideo = document.getElementById('myVideo')
     if (myVideo === null) return
-    if (!$swarm.myVideo && !$webRTC.myVideo) return
-    if (!$swarm.myStream) return
-    if ($webRTC.call.length) myVideo.srcObject = $webRTC.myStream
-    if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
-    if (!$swarm.showVideGrid && $swarm.myStream) return
+    if ($swarm.myVideo) {
+        //Avoid UI bugs
+        if (!$swarm.myVideo) return
+        if (!$swarm.myStream) return
+        //Set video
+        if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
+
+    } else if ($webRTC.call.length) {
+        //Avoid UI bugs
+        if (!$webRTC.myStream) return
+        if ($webRTC.myStream) myVideo.srcObject = $webRTC.myStream
+    }
+
+    console.log("video played?")
+   
     myVideo.play()
 }
 

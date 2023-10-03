@@ -13,7 +13,6 @@ import MicIcon from '../icons/MicIcon.svelte'
 import MuteIcon from '../icons/MuteIcon.svelte'
 
 export let paused = false
-let toggle = false
 
 let startTime = Date.now()
 let time = '0:00:00'
@@ -43,9 +42,10 @@ const endCall = () => {
 onDestroy(() => {})
 
 const toggleAudio = () => {
-    toggle = !toggle
     $webRTC.audio = !$webRTC.audio
-    $webRTC.myStream.getTAudioracks().forEach((track) => (track.enabled = !track.enabled))
+    $webRTC.call.forEach((a) => {
+       a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+    })
 }
 
 const showGrid = () => {

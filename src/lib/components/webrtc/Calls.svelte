@@ -97,7 +97,7 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
         sendInviteNotification(contact, contact_address)
     }
 
-     if ($webRTC.myStream) {
+     if ($webRTC.call.length > 1) {
         gotMedia($webRTC.myStream, contact, isVideo, false)
         return
     }
@@ -377,7 +377,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
 
     let peer1 = await startPeer1(stream, video, contact)
 
-    checkMyVolume(peer1)
+    checkMyVolume(stream)
     //Set webRTC store update for call
     this_call.peer = peer1
     this_call.screen_stream = screen_stream
@@ -478,6 +478,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
     if (msg.substring(0, 1) === 'Δ') {
         video = true
     }
+    $webRTC.myVideo = video
 
     // get video/voice stream
     navigator.mediaDevices
@@ -764,6 +765,7 @@ function endCall(peer, stream, contact) {
     }
 
     console.log('cleared this call from', filter)
+    
     $webRTC.call = filter
 
     if ($webRTC.call.some((a) => a.peerVideo)) {
@@ -777,7 +779,8 @@ function endCall(peer, stream, contact) {
     }
 
     if ($webRTC.call.length === 0 && $webRTC.myStream) {
-            $webRTC.myStream.getTracks().forEach(function (track) {
+        console.log("$webRTC.myStream", $webRTC.myStream)
+        $webRTC.myStream.getTracks().forEach(function (track) {
                 console.log('track stopped')
                 track.stop()
             })
