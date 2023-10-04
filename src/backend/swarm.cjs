@@ -459,9 +459,13 @@ const incoming_message = async (data, topic, connection, key) => {
 const sendSwarmMessage = (message, key) => {
     console.log("Sending swarm msg", message)
     let active = active_swarms.find(a => a.key === key)
+    if (!active) return
     active.connections.forEach(chat => {
-        console.log("Sending in forEach user in active topic")
-        chat.connection.write(message)
+        try {
+            chat.connection.write(message)
+        } catch(e) {
+            errorMessage('Connection offline')
+        }
     })
 
     console.log("Swarm msg sent!")

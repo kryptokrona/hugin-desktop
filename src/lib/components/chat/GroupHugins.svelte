@@ -124,7 +124,7 @@ const connecto_to_swarm = () => {
                 </div>
                 <br>
                 {#if thisSwarm}
-                <div style="width: 170px;">
+                <div in:fly={{x : -150}} style="width: 170px;">
                     <FillButton disabled={false} enabled={true} text={"Open room"} on:click={show_video_room} />
                 </div>
                 {/if} 
