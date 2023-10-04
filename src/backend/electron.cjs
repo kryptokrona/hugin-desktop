@@ -1089,7 +1089,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         if (swarm) {
             sendSwarmMessage(sendMsg, group)
             saveGroupMessage(message_json, random_key, timestamp, false, true)
-            mainWindow.webContents.send('sent_group', {
+            mainWindow.webContents.send('sent_rtc_group', {
                 hash: random_key,
                 time: message.t,
             })

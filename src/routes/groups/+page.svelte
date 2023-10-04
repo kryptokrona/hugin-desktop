@@ -294,7 +294,7 @@ async function printGroup(group) {
    
     const messages = await window.api.printGroup(group.key)
     const chain_messages = messages.filter(a => !a.channel)
-    channelMessages = messages.filter(a => a.channel)
+    $swarm.activeChannelMessages = messages.filter(a => a.channel)
 
     console.log("channelMessages", channelMessages)
     

@@ -54,7 +54,8 @@ window.api.receive('peer-connected', (data) => {
             time: parseInt(data.time),
             name: data.name,
             hash: data.time,
-            joined: true
+            joined: true,
+            channel: "Chat room"
         }
         
     fixedRtcGroups.push(joinedMessage)
@@ -85,10 +86,12 @@ function sendGroupRtCMsg(e) {
     let group
     let offchain = true
     const is_swarm = $swarm.showVideoGrid
+    let channel = ""
     if ($webRTC.groupCall) {
          group = $webRTC.groupCall
     } else if(is_swarm) {
         group = $swarm.activeSwarm.key
+        channel = "Chat room"
     }
     //Reaction switch
     if (e.detail.reply) {
@@ -104,6 +107,7 @@ function sendGroupRtCMsg(e) {
         time: time,
         name: myName,
         hash: time,
+        channel: channel
     }
     let sendMsg = {
         m: msg,
@@ -113,6 +117,7 @@ function sendGroupRtCMsg(e) {
         t: time,
         n: myName,
         hash: time,
+        c: channel
     }
 
     console.log('wanna send this', sendMsg)
