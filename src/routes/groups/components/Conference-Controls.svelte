@@ -263,11 +263,11 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         
         {/if}
         </div>
-        <div class="icon" on:click="{() => hideGrid()}">
+        <div class="icon" style="padding: 5px;" on:click="{() => hideGrid()}">
             <HideVideoGrid />
         </div>
         <div>
-            <div class="icon" on:click="{() => showMessages()}">
+            <div class="icon" style="padding: 5px;" on:click="{() => showMessages()}">
                 <MessageIcon />
             </div>
         </div>

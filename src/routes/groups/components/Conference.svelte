@@ -206,7 +206,7 @@
                 <ConferenceControls />
             </div>
         </div>
-        {#if !$videoGrid.showChat && $swarm.showVideoGrid}
+        <!-- {#if !$videoGrid.showChat && $swarm.showVideoGrid}
         <div class="fly" in:fly="{{ x: -150 }}">
 
             <div class="list-wrapper">
@@ -215,16 +215,17 @@
                 {/each}
             </div>
         </div> 
-        {/if}
+        {/if} -->
         <RtcGroupMessages />
     </div>
     
     <style lang="scss">
 
-        .fly {
-            width: 17%;
-            height: 17%;
-        }
+    // .fly {
+    //     width: 17%;
+    //     height: 17%;
+    // }
+    
     .layout {
         display: flex;
         position: absolute;
