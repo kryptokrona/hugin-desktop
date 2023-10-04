@@ -54,7 +54,7 @@ $: window_medium
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
+<div class="card" class:many={$swarm.call.length > 4} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
     <video
         on:click="{playVideo}"
         muted
@@ -92,6 +92,11 @@ $: window_medium
         border-radius: inherit;
         z-index: 5;
     }
+}
+
+.many {
+    height: 30.52% !important;
+    width: 30.52% !important;
 }
 
 .caller {

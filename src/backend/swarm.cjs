@@ -276,7 +276,7 @@ const check_data_message = async (data, connection, topic) => {
 
             //There are too many in the voice call
             let users = active.connections.filter(a => a.voice === true)
-            if (users.length > 10) return true
+            if (users.length > 9) return true
 
                 //Joining == offer
             if (data.offer === true) {

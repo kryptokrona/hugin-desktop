@@ -133,9 +133,15 @@ const resize = (size) => {
     else showWindow = false
   }
 
+  let many = false
+
+  $: if ($swarm.call.length > 4) {
+    many = true
+  } else many = false
+
 </script>
 
-<div class="card" in:fly={{ x: -150}} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+<div class="card" in:fly={{ x: -150}} class:many={many} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1 && !many} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
     {#if audio}
     <audio autoplay bind:this="{peerVideo}"></audio>
     {:else}
@@ -196,6 +202,11 @@ img {
     justify-content: center;
     align-items: center;
     padding: 10px;
+}
+
+.many {
+    height: 30.52% !important;
+    width: 30.52% !important;
 }
 
 .in_call {

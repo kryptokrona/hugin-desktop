@@ -66,7 +66,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
 
     const join_voice_channel = async (video = false, reconnect = false, screen) => {
         if (in_voice) return
-        if (thisSwarm.voice_channel.length > 10) {
+        if (thisSwarm.voice_channel.length > 9) {
             window.api.errorMessage('There are too many in the call')
         }
         if (!reconnect) startTone.play()
@@ -209,8 +209,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         $rtc_groups.unread =  $rtc_groups.unread
         $videoGrid.showChat = !$videoGrid.showChat
         $videoGrid.multiView = true
-}
-
+    }
     
     const hideGrid = () => {
         $swarm.showVideoGrid = false
