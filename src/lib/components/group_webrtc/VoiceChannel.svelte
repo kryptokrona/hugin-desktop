@@ -63,29 +63,37 @@
 
     async function checkSources() {
         console.log("checking soruces conference")
-    let devices = await navigator.mediaDevices.enumerateDevices()
-    $swarm.devices = devices
-    if (!$swarm.cameraId) {
-        //Set defauklt camera id in store
-        let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
-        if (camera.length === 0) {
-            $swarm.cameraId = "none"
-        } else $swarm.cameraId = camera[0].deviceId
-        
-        
-        console.log(" $swarm.cameraId",   $swarm.cameraId)
-        // select the desired transceiver
-    }
+        let devices = await navigator.mediaDevices.enumerateDevices()
+        $swarm.devices = devices
+        if (!$swarm.cameraId) {
+            //Set defauklt camera id in store
+            let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
+            if (camera.length === 0) {
+                $swarm.cameraId = "none"
+            } else $swarm.cameraId = camera[0].deviceId
+            
+            
+            console.log(" $swarm.cameraId",   $swarm.cameraId)
+            // select the desired transceiver
+        }
 
-    if (!$swarm.audioInputId) { 
-        let audio = $swarm.devices.filter((a) => a.kind === 'audioinput')
-        $swarm.audioInput = audio[0].deviceId
-    }
+        if (!$swarm.audioInputId) { 
+            let audio = $swarm.devices.filter((a) => a.kind === 'audioinput')
+            $swarm.audioInput = audio[0].deviceId
+        }
 
-    if (!$swarm.audioOutput) { 
-        let audio = $swarm.devices.filter((a) => a.kind === 'audiooutput')
-        $swarm.audioOutput = audio[0].deviceId
-    }
+        if (!$swarm.audioOutput) { 
+            let audio = $swarm.devices.filter((a) => a.kind === 'audiooutput')
+            $swarm.audioOutput = audio[0].deviceId
+        }
+        
+        //Checking active stream active devices
+        if ($swarm.myStream) {
+            $swarm.myStream.getAudioTracks().forEach(track => {
+                if (track.kind === 'audioinput') $swarm.audioInput = track.getSettings().deviceId
+                if (track.kind === 'audiooutput') $swarm.audioOutput = track.getSettings().deviceId
+            })
+        }
 }
 
 async function checkAudioSources() {
@@ -161,10 +169,10 @@ async function checkAudioSources() {
     //     sendRtcMessage(msg, to_group)
     // })
     
-    // //Update device list on change
-    // navigator.mediaDevices.ondevicechange = () => {
-    //     checkSources()
-    // }
+    //Update device list on change
+    navigator.mediaDevices.ondevicechange = () => {
+        checkSources()
+    }
 
     async function changeCamera(video, id, add) {
     if (video) {
