@@ -270,7 +270,6 @@ async function checkAudioSources() {
         if (current) $swarm.myStream = current
         $swarm.myVideo = true
         //Set video boolean to play video
-        $swarm.video = true
         if ($swarm.screenshare) return
         $swarm.cameraId = id
     }

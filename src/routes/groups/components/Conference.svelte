@@ -198,6 +198,11 @@
                         <PeerVideo call="{peer}" active="{false}" channel="{thisSwarm.voice_channel}"/>
                         
                     {/each}
+
+                {:else}
+                 <div in:fly={{ x: 150}}>
+                        <h4>Empty room</h4>
+                 </div>
                 {/if}
 
             {/if}
