@@ -165,13 +165,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
         window.api.receive('newGroupMessage', (data) => {
             if (data.address == $user.huginAddress.substring(0, 99)) return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
-            if (data.channel === $swarm.activeChannel.name) return
-            if ($page.url.pathname !== '/groups' || ($page.url.pathname === '/groups' && data.channel !== $swarm.activeChannel.name)) {
-                data.type = 'group'
-                if (data.channel.length > 0) data.type = 'channel'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-            }
+            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room") return
             new_messages = true
             data.key = data.address
             if ($notify.new.length < 2) {
