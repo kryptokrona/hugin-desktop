@@ -32,7 +32,7 @@
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
     import Conference from './groups/components/Conference.svelte'
-import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.svelte'
+    import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.svelte'
 
     let ready = false
     let incoming_call
@@ -176,7 +176,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
             $notify.new = $notify.new
         })
 
-        window.api.receive('privateMsg', async (data) => {
+        window.api.receive('privateMsg', (data) => {
             console.log('newmsg in layout', data)
             if (data.chat === $user.huginAddress.substring(0, 99)) return
             if (data.chat !== $user.activeChat.chat) {
@@ -191,7 +191,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
             saveToStore(data)
         })
 
-        window.api.receive('addr', async (huginAddr) => {
+        window.api.receive('addr', (huginAddr) => {
             console.log('Addr incoming')
             user.update((data) => {
                 return {
@@ -214,7 +214,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
         })
 
 
-        window.api.receive('group_invited_contact', async (data) => {
+        window.api.receive('group_invited_contact', (data) => {
             console.log('***** GROUP INVITED ****', data)
             let name
             let key
@@ -359,7 +359,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
         $remoteFiles = data.remoteFiles
     })
 
-    window.api.receive('local-files', async (data)  => { 
+    window.api.receive('local-files', (data)  => { 
         console.log(
             'Local files n data', data
         )
@@ -400,7 +400,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
         
     })
 
-    const updateUploadProgress = async (data) => {
+    const updateUploadProgress = (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
         $upload.some(a => { 
@@ -412,7 +412,7 @@ import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.sv
         $upload = $upload
     }
 
-    const updateDownloadProgress = async (data) => {
+    const updateDownloadProgress = (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
         $download.some(a => { 

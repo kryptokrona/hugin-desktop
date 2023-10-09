@@ -213,19 +213,20 @@ const new_connection = (connection, hash, key, name) => {
 }
 
 const connection_closed = (conn, topic) => {
-    console.log("Connection closed")
+    console.log("Closing connection...")
     let active = get_active_topic(topic)
     if (!active) return
     try {
-        connection.end()
-        sender("close-voice-channel-with-peer", user.address)
+        conn.end()
     } catch (e) {
         console.log("failed close connection")
     }
     let user = active.connections.find(a => a.connection === conn)
     if (!user) return
+    sender("close-voice-channel-with-peer", user.address)
     sender("peer-disconnected", {address: user.address, topic})
     let still_active = active.connections.filter(a => a.connection !== conn)
+    console.log("Connection closed")
     console.log("Still active:", still_active)
     active.connections = still_active
 }
