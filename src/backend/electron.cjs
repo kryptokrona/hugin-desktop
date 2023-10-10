@@ -1008,7 +1008,8 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
     let reply = ''
 
     group = message.g
-
+    
+    if (group === undefined) return
     if (group.length !== 64) {
         return
     }
