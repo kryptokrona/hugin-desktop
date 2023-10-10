@@ -8,7 +8,6 @@ import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { get_avatar } from '$lib/utils/hugin-utils'
 
 let myVideo = document.getElementById('myVideo')
-let hover = false
 let window_medium = false
 
 // When incoming call and this get mounted we play the ringtone
@@ -49,12 +48,20 @@ $: if ($swarm.screen_stream || $webRTC.screen_stream) {
 }
 
 
+let many = false
+
+$: if ($swarm.call.length > 4) {
+  many = true
+} else many = false
+
+
+
 $: window_medium
 </script>
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:many={$swarm.call.length > 4} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
+<div class="card" class:many={many} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
     <video
         on:click="{playVideo}"
         muted
@@ -91,8 +98,10 @@ $: window_medium
         object-fit: cover;
         border-radius: inherit;
         z-index: 5;
+        transform: scaleX(-1);
     }
 }
+
 
 .many {
     height: 30.52% !important;
