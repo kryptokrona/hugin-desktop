@@ -56,6 +56,12 @@ const toggleAudio = () => {
         a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
     })
 }
+const add_video = async (add) => {
+        if ($webRTC.cameraId === "none") return
+        window.api.changeSource($webRTC.cameraId, false, add)
+        $webRTC.screenshare = false
+    }
+
 
 const toggleVideo = () => {
     if ($webRTC.screenshare) {
@@ -64,6 +70,12 @@ const toggleVideo = () => {
         $webRTC.screenshare = false
         return
     }
+
+    if (!$webRTC.myVideo) {
+        add_video(true)
+        return
+    }
+    
     video = !video
     $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
 }

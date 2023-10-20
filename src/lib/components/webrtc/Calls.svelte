@@ -43,9 +43,9 @@ window.api.receive('check-src', () => {
     checkSources()
 })
 
-window.api.receive('change-source', (src) => {
+window.api.receive('change-source', (src, add) => {
     console.log('want to change in calls', src)
-    changeCamera(true, src)
+    changeCamera(true, src, add)
 })
 //Got expanded offer sdp. Signal in data channel
 window.api.receive('got-expanded', async (callData) => {

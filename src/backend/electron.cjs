@@ -1917,7 +1917,7 @@ ipcMain.on('change-src', async (e, src, conference, add) => {
         mainWindow.webContents.send('group-change-source', src, add)
         return
     }
-    mainWindow.webContents.send('change-source', src)
+    mainWindow.webContents.send('change-source', src, add)
 })
 
 ipcMain.on('change-audio-src', async (e, id, conference, input) => {
