@@ -1079,7 +1079,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
             }
             mainWindow.webContents.send('error_msg', error)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
-            optimizeMessages()
+            optimizeMessages(true)
         }
     } else if (offchain) {
         //Generate a random hash
@@ -1410,7 +1410,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
                 name: 'Error',
                 hash: Date.now(),
             }
-            optimizeMessages()
+            optimizeMessages(true)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             mainWindow.webContents.send('error_msg', error)
         }
@@ -1678,16 +1678,11 @@ function get_sdp(data)
     if (data.type == 'offer') 
     {
         let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        let recovered_data = expand_sdp_offer(parsed_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     } 
     else if (data.type == 'answer') 
     {
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        console.log('parsed data really cool sheet:', parsed_data)
-        let recovered_data = expand_sdp_answer(parsed_data)
-        //Send expanded recovered data to front end for debugging etc, this can be removed
-        mainWindow.webContents.send('rec-off', recovered_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     }
 }
