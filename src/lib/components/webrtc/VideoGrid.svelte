@@ -44,7 +44,7 @@ $: if ($webRTC.call.some(a => !a.connected)) {
 
 $: groupKey
 
-$: videoCalls = $webRTC.call.filter((a) => a.peerVideo === true)
+$: videoCalls = $webRTC.call.filter((a) => a.connected === true)
 
 $: console.log('video calls', videoCalls)
 </script>
@@ -61,7 +61,7 @@ $: console.log('video calls', videoCalls)
     -->
     <div class="video-wrapper">
         <div class="video-grid">
-            {#if $webRTC.myVideo}
+            {#if $webRTC.call.length}
                 <MyVideo />
             {/if}
 
