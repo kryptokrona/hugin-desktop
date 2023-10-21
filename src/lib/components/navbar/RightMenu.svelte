@@ -20,6 +20,7 @@ import { layoutState, videoGrid } from '$lib/stores/layout-state.js'
 import ListButton from '$lib/components/icons/ListButton.svelte'
 import Exit from '$lib/components/icons/Exit.svelte'
 import Lightning from '$lib/components/icons/Lightning.svelte'
+import { mediaSettings } from '$lib/stores/mediasettings'
 
 const dispatch = createEventDispatcher()
 let contact
@@ -32,8 +33,8 @@ let thisCall = false
 let video = false
 let videoInput
 
-$: if ($webRTC.devices.length) {
-    videoInput = $webRTC.devices.some((a) => a.kind == 'videoinput')
+$: if ($mediaSettings.devices.length) {
+    videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
 }
 
 $: {

@@ -62,7 +62,7 @@
     // })
 
     async function checkSources() {
-        $swarm.devices = await navigator.mediaDevices.enumerateDevices()
+        $mediaSettings.devices = await navigator.mediaDevices.enumerateDevices()
         if (!$videoSettings.cameraId) {
             //Set defauklt camera id in store
             let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
@@ -73,12 +73,12 @@
         }
 
         if (!$audioSettings.audioInput) { 
-            let audio = $swarm.devices.filter((a) => a.kind === 'audioinput')
+            let audio = $mediaSettings.devices.filter((a) => a.kind === 'audioinput')
             $audioSettings.audioInput = audio[0].deviceId
         }
 
         if (!$audioSettings.audioOutput) { 
-            let audio = $swarm.devices.filter((a) => a.kind === 'audiooutput')
+            let audio = $mediaSettings.devices.filter((a) => a.kind === 'audiooutput')
             $audioSettings.audioOutput = audio[0].deviceId
         }
         
@@ -522,7 +522,7 @@
         $swarm.myStream = stream
         $videoSettings.myVideo = true
         $videoSettings.video = true
-        let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
+        let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
         $videoSettings.cameraId = camera[0].deviceId
     }
     

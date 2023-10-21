@@ -10,6 +10,7 @@ import CallIcon from '$lib/components/icons/CallIcon.svelte'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
 import { sleep } from '$lib/utils/utils'
 import { videoGrid } from '$lib/stores/layout-state'
+import { mediaSettings } from '$lib/stores/mediasettings'
 
 export let paused = false
 export let thisCall
@@ -29,7 +30,7 @@ onMount( async () => {
     if (thisCall.type === 'groupinvite') {
         invite = true
     }
-    video = $webRTC.devices.some((a) => a.kind == 'videoinput')
+    video = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
     if (video) return
     console.log('no video device found')
     video = false
