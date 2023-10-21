@@ -1,15 +1,15 @@
 <script>
     import { fade } from 'svelte/transition'
-    import { swarm } from '$lib/stores/user.js'
-
+    import { audioSettings, mediaSettings } from '$lib/stores/mediasettings.js'
+    export let conference = false
     let open
     let changed
-    let audioInput = $swarm.devices.filter((a) => a.kind == 'audioinput')
-    let audioOutput = $swarm.devices.filter((a) => a.kind == 'audiooutput')
+    let audioInput = $mediaSettings.devices.filter((a) => a.kind == 'audioinput')
+    let audioOutput = $mediaSettings.devices.filter((a) => a.kind == 'audiooutput')
 
     function pickSource(src, input) {
         console.log('pick', src)
-        window.api.changeAudioSource(src.deviceId, true, input)
+        window.api.changeAudioSource(src.deviceId, conference, input)
         buttonGlow()
     }
     
@@ -23,9 +23,10 @@
 
     let pickedInput
     let pickedOutput
+
     $: {
-        pickedInput = $swarm.audioInput
-        pickedOutput = $swarm.audioOutput
+        pickedInput = $audioSettings.audioInput
+        pickedOutput = $audioSettings.audioOutput
     }
 
     let input = true

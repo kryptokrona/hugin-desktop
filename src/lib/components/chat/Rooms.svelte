@@ -13,6 +13,7 @@
     import { sleep } from '$lib/utils/utils'
     import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
     import FillButton from '../buttons/FillButton.svelte'
+import { videoSettings } from '$lib/stores/mediasettings'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -49,9 +50,9 @@
 
       //Share screenpmn
       const switchStream = async () => {
-        if (!$swarm.screenshare) {
+        if (!$videoSettings.screenshare) {
             await window.api.shareScreen(false, true)
-            $swarm.screenshare = true
+            $videoSettings.screenshare = true
         }
     }
 
@@ -68,7 +69,7 @@
         if (reconnect) {
             //activate_video()
             //await sleep(200)
-            $swarm.myVideo = true
+            $videoSettings.myVideo = true
         }
         //Leave any active first
         if ($swarm.voice_channel.length) {
@@ -81,7 +82,7 @@
         thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
         console.log("voice", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $swarm.myVideo})
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm 
@@ -132,10 +133,9 @@
             console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
-                $swarm.screenshare = false
-                $swarm.video = false
-                $swarm.screen_stream = false
-                $swarm.myVideo = false
+                $videoSettings.video = false
+                $videoSettings.myVideo = false
+                $videoSettings.screenshare = false
                 $swarm.myStream = false
             }
             
@@ -143,7 +143,7 @@
             connected = false
             //Send status to backend
             window.api.send("exit-voice", old.key)
-            $swarm.myVideo = false
+            $videoSettings.myVideo = false
             return true
     }
     
@@ -160,7 +160,7 @@
     const add_video = async (screen = false) => {
         if ($swarm.cameraId === "none") return
         window.api.changeSource($swarm.cameraId, true, true)
-        $swarm.screenshare = false
+        $videoSettings.screenshare = false
     }
 
     const activate_video = () =>{
@@ -170,10 +170,10 @@
     const toggleVideo = () => {
     
         if (!connected) {
-            if ($swarm.call.length > 0 && !$swarm.screenshare && !$swarm.myVideo) {
+            if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
                 console.log("Reconnect with video!")
                 add_video()
-            } else if ($swarm.call.length === 0 && !$swarm.screenshare && !$swarm.myVideo) {
+            } else if ($swarm.call.length === 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
                 console.log("Activate video!")
                 activate_video()
             }
@@ -181,15 +181,15 @@
             return
         }
 
-        if ($swarm.screenshare) {
+        if ($videoSettings.screenshare) {
             let camera = $swarm.cameraId
             window.api.changeSource(camera, true)
-            $swarm.screenshare = false
+            $videoSettings.screenshare = false
             return
         }
 
         console.log("Changed toggle! stream",$swarm.myStream)
-        $swarm.myVideo = !$swarm.myVideo
+        $videoSettings.myVideo = !$videoSettings.myVideo
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
             a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))

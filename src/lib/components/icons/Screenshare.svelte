@@ -1,11 +1,10 @@
 <script>
-import { webRTC, swarm } from '$lib/stores/user.js'
-
+import { videoSettings } from '$lib/stores/mediasettings'
 let color = '#f5f5f5'
 
-$: if ($webRTC.myVideo && $webRTC.screenshare || $swarm.myVideo && $swarm.screenshare) {
+$: if ($videoSettings.myVideo && $videoSettings.screenshare) {
     color = '#4dbb45'
-} else if (!$webRTC.screenshare) {
+} else if (!$videoSettings.screenshare) {
     color = '#f5f5f5'
 }
 </script>

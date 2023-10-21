@@ -6,6 +6,7 @@ import { webRTC, user, swarm } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { get_avatar } from '$lib/utils/hugin-utils'
+import { videoSettings } from '$lib/stores/mediasettings'
 
 let myVideo = document.getElementById('myVideo')
 let window_medium = false
@@ -20,12 +21,11 @@ onDestroy(() => {})
 const playVideo = () => {
     myVideo = document.getElementById('myVideo')
     if (myVideo === null) return
-    if ($swarm.myVideo) {
+    if ($webRTC.call.length === 0) {
         //Avoid UI bugs
-        if (!$swarm.myVideo) return
         if (!$swarm.myStream) return
         //Set video
-        if ($swarm.myVideo) myVideo.srcObject = $swarm.myStream
+        if ($videoSettings.myVideo) myVideo.srcObject = $swarm.myStream
 
     } else if ($webRTC.call.length) {
         //Avoid UI bugs
@@ -33,7 +33,7 @@ const playVideo = () => {
         if ($webRTC.myStream) myVideo.srcObject = $webRTC.myStream
     }
 
-    console.log("video played?")
+    console.log("Video played!")
    
     myVideo.play()
 }
@@ -41,9 +41,9 @@ const playVideo = () => {
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {})
 
-$: if ($swarm.screen_stream || $webRTC.screen_stream) {
+$: if ($videoSettings.screenshare) {
     playVideo()
-} else if ($swarm.video || $webRTC.myVideo) {
+} else if ($videoSettings.video) {
     playVideo()
 }
 

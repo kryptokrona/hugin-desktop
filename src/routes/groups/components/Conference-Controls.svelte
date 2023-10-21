@@ -8,14 +8,15 @@
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
     import { swarmGroups, videoGrid } from '$lib/stores/layout-state.js'
     import { swarm, user, groups, rtc_groups } from '$lib/stores/user.js'
-    import VideoSources from '$lib/components/chat/VideoSources.svelte'
+    import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
     import Contacts from '$lib/components/chat/Contacts.svelte'
     import { onDestroy, onMount } from 'svelte'
     import { calcTime, sleep } from '$lib/utils/utils.js'
     import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
     import {createEventDispatcher} from 'svelte'
-    import AudioSources from '$lib/components/group_webrtc/AudioSources.svelte'
-import FillButton from '$lib/components/buttons/FillButton.svelte'
+    import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
+    import FillButton from '$lib/components/buttons/FillButton.svelte'
+    import { videoSettings } from '$lib/stores/mediasettings'
     
     let startTime = Date.now()
     let time = '0:00:00'
@@ -50,15 +51,15 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
     
     //Share screenpmn
     const switchStream = async () => {
-        if (!$swarm.screenshare) {
-            $swarm.myVideo = true
-            $swarm.video = true
+        if (!$videoSettings.screenshare) {
+            $videoSettings.myVideo = true
+            $videoSettings.video = true
             await window.api.shareScreen(false, true)
-            $swarm.screenshare = true
+            $videoSettings.screenshare = true
             return
         }
-        $swarm.myVideo = false
-        $swarm.screenshare = false
+        $videoSettings.myVideo = false
+        $videoSettings.screenshare = false
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => track.stop())
         })
@@ -75,7 +76,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         if (reconnect) {
             //activate_video()
             //await sleep(200)
-            $swarm.myVideo = true
+            $videoSettings.myVideo = true
         }
         //Leave any active first
         if ($swarm.voice_channel.length) {
@@ -89,7 +90,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
         console.log("voice", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $swarm.myVideo})
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm 
@@ -126,7 +127,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
             $swarm.voice_channel = remove
             
             //Stop any active tracks
-            if (active && $swarm.myStream && $swarm.myVideo) {
+            if (active && $swarm.myStream && $videoSettings.myVideo) {
                 $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
             }
             
@@ -140,10 +141,9 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
             console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
-                $swarm.screenshare = false
-                $swarm.video = false
-                $swarm.screen_stream = false
-                $swarm.myVideo = false
+                $videoSettings.video = false
+                $videoSettings.myVideo = false
+                $videoSettings.screenshare = false
                 $swarm.myStream = false
             }
             
@@ -151,7 +151,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
             connected = false
             //Send status to backend
             window.api.send("exit-voice", old.key)
-            $swarm.myVideo = false
+            $videoSettings.myVideo = false
             return true
     }
     
@@ -167,7 +167,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
     const add_video = async (add) => {
         if ($swarm.cameraId === "none") return
         window.api.changeSource($swarm.cameraId, true, add)
-        $swarm.screenshare = false
+        $videoSettings.screenshare = false
     }
 
     const activate_video = () =>{
@@ -177,27 +177,27 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
     const toggleVideo = () => {
     
         if (!connected) {
-            if ($swarm.call.length > 0 && !$swarm.screenshare && !$swarm.myVideo) {
+            if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
                 add_video(true)
-            } else if ($swarm.call.length === 0 && !$swarm.screenshare && !$swarm.myVideo) {
+            } else if ($swarm.call.length === 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
                 activate_video()
             }
             connected = true
             return
-        } else if ($swarm.call.length > 0 && !$swarm.screenshare && connected && !$swarm.myVideo) {
+        } else if ($swarm.call.length > 0 && !$videoSettings.screenshare && connected && !$videoSettings.myVideo) {
             add_video(false)
             return
         }
 
-        if ($swarm.screenshare) {
-            let camera = $swarm.cameraId
+        if ($videoSettings.screenshare) {
+            let camera = $videoSettings.cameraId
             window.api.changeSource(camera, true)
-            $swarm.screenshare = false
+            $videoSettings.screenshare = false
             return
         }
 
         console.log("Changed toggle! stream",$swarm.myStream)
-        $swarm.myVideo = !$swarm.myVideo
+        $videoSettings.myVideo = !$videoSettings.myVideo
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
@@ -229,7 +229,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
         <div class="controls">
             {#if in_voice}
             <div class="icon" on:click="{toggleVideo}">
-                {#if !$swarm.myVideo}
+                {#if !$videoSettings.myVideo}
                     <VideoSlash />
                 {:else}
                     <VideoIcon grid="{true}" />
@@ -249,7 +249,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
                 <CallSlash />
             </div>
             <div class="icon">
-                <AudioSources />
+                <AudioSources conference={true}/>
             </div>
             <div class="icon">
                 <VideoSources conference={true} />

@@ -26,7 +26,6 @@ let contact
 let active_contact
 let avatar
 let calltype
-let call_active = false
 let startTone = new Audio('/audio/startcall.mp3')
 let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
@@ -106,11 +105,6 @@ const openAdd = () => {
     })
 }
 
-$: if ($webRTC.myVideo || $webRTC.peer) {
-    call_active = true
-} else {
-    call_active = false
-}
 
 const endCall = () => {
     //We delay the answerCall for routing purposes

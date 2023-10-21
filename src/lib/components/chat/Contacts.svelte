@@ -3,17 +3,17 @@ import { fade } from 'svelte/transition'
 import { notify, user, webRTC } from '$lib/stores/user.js'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import AddToCall from '$lib/components/icons/AddToCall.svelte'
-
+import { videoSettings, mediaSettings } from '$lib/stores/mediasettings.js'
 let open
 let changed
-let audioDevices = $webRTC.devices.filter((a) => a.kind == 'audioinput')
+let audioDevices = $mediaSettings.devices.filter((a) => a.kind == 'audioinput')
 
 function invite(contact) {
     buttonGlow()
     console.log('invite!', contact)
     let video = false
     //If video
-    if ($webRTC.myVideo) {
+    if ($videoSettings.myVideo) {
         video = true
     }
     //Set group iniator state
@@ -48,8 +48,6 @@ const buttonGlow = () => {
         open = false
     }, 1000)
 }
-
-$: if (open) window.api.checkSources()
 
 </script>
 

@@ -8,11 +8,13 @@ import CallSlash from '$lib/components/icons/CallSlash.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { webRTC, rtc_groups } from '$lib/stores/user.js'
-import VideoSources from '$lib/components/chat/VideoSources.svelte'
+import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
 import Contacts from '$lib/components/chat/Contacts.svelte'
 import { onDestroy, onMount } from 'svelte'
 import { calcTime } from '$lib/utils/utils.js'
 import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
+import { videoSettings } from '$lib/stores/mediasettings'
+import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
 
 let muted = false
 let video = true
@@ -34,9 +36,9 @@ onDestroy(() => {
 
 //Share screenpmn
 const switchStream = async () => {
-    if (!$webRTC.screenshare) {
+    if (!$videoSettings.screenshare) {
         await window.api.shareScreen(false)
-        $webRTC.screenshare = true
+        $videoSettings.screenshare = true
     }
 }
 
@@ -57,21 +59,21 @@ const toggleAudio = () => {
     })
 }
 const add_video = async (add) => {
-        if ($webRTC.cameraId === "none") return
+        if ($videoSettings.cameraId === "none") return
         window.api.changeSource($webRTC.cameraId, false, add)
-        $webRTC.screenshare = false
+        $videoSettings.screenshare = false
     }
 
 
 const toggleVideo = () => {
-    if ($webRTC.screenshare) {
-        let camera = $webRTC.cameraId
+    if ($videoSettings.screenshare) {
+        let camera = $videoSettings.cameraId
         window.api.changeSource(camera)
-        $webRTC.screenshare = false
+        $videoSettings.screenshare = false
         return
     }
 
-    if (!$webRTC.myVideo) {
+    if (!$videoSettings.myVideo) {
         add_video(true)
         return
     }
@@ -127,9 +129,9 @@ const hideGrid = () => {
         <div class="icon">
             <Contacts />
         </div>
-        <!-- <div class="icon">
+        <div class="icon">
             <AudioSources />
-        </div> -->
+        </div>
     </div>
     <div class="icon" on:click="{() => hideGrid()}">
         <HideVideoGrid />

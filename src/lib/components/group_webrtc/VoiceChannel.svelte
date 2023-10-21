@@ -4,10 +4,10 @@
     import { audioLevel, user, swarm } from '$lib/stores/user.js'
     import { onMount } from 'svelte'
     import { sleep } from '$lib/utils/utils'
+    import { mediaSettings, videoSettings, audioSettings } from '$lib/stores/mediasettings'
 
     onMount(() => {
         checkSources()
-        checkAudioSources()
     })
     
     window.api.receive('answer-voice-channel', (data) => {
@@ -62,47 +62,34 @@
     // })
 
     async function checkSources() {
-        console.log("checking soruces conference")
-        let devices = await navigator.mediaDevices.enumerateDevices()
-        $swarm.devices = devices
-        if (!$swarm.cameraId) {
+        $swarm.devices = await navigator.mediaDevices.enumerateDevices()
+        if (!$videoSettings.cameraId) {
             //Set defauklt camera id in store
-            let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
+            let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
             if (camera.length === 0) {
-                $swarm.cameraId = "none"
-            } else $swarm.cameraId = camera[0].deviceId
+                $videoSettings.cameraId = "none"
+            } else $videoSettings.cameraId = camera[0].deviceId
             
-            
-            console.log(" $swarm.cameraId",   $swarm.cameraId)
-            // select the desired transceiver
         }
 
-        if (!$swarm.audioInputId) { 
+        if (!$audioSettings.audioInput) { 
             let audio = $swarm.devices.filter((a) => a.kind === 'audioinput')
-            $swarm.audioInput = audio[0].deviceId
+            $audioSettings.audioInput = audio[0].deviceId
         }
 
-        if (!$swarm.audioOutput) { 
+        if (!$audioSettings.audioOutput) { 
             let audio = $swarm.devices.filter((a) => a.kind === 'audiooutput')
-            $swarm.audioOutput = audio[0].deviceId
+            $audioSettings.audioOutput = audio[0].deviceId
         }
         
         //Checking active stream active devices
         if ($swarm.myStream) {
             $swarm.myStream.getAudioTracks().forEach(track => {
-                if (track.kind === 'audioinput') $swarm.audioInput = track.getSettings().deviceId
-                if (track.kind === 'audiooutput') $swarm.audioOutput = track.getSettings().deviceId
+                if (track.kind === 'audioinput') $audioSettings.audioInput = track.getSettings().deviceId
+                if (track.kind === 'audiooutput') $audioSettings.audioOutput = track.getSettings().deviceId
             })
         }
 }
-
-async function checkAudioSources() {
-    console.log("checking audio conference sources")
-    let devices = await navigator.mediaDevices.enumerateDevices()
-    $swarm.devices = devices
-        
-}
-
     
     window.api.receive('group-change-source', (src, add) => {
         console.log('want to change in calls', src)
@@ -237,7 +224,7 @@ async function checkAudioSources() {
         //We have no active local stream set and we are alone in the conference room
         if (!current) {
             $swarm.myStream = device
-            $swarm.myVideo = true
+            $videoSettings.myVideo = true
         }
 
         //Check if we have an active peer
@@ -268,11 +255,11 @@ async function checkAudioSources() {
         }
 
         if (current) $swarm.myStream = current
-        $swarm.myVideo = true
-        $swarm.video = true
+        $videoSettings.myVideo = true
+        $videoSettings.video = true
         //Set video boolean to play video
-        if ($swarm.screenshare) return
-        $swarm.cameraId = id
+        if ($videoSettings.screenshare) return
+        $videoSettings.cameraId = id
     }
     
     
@@ -280,7 +267,7 @@ async function checkAudioSources() {
         console.log('Joining voice channel... in VoiceChannel.svelte')
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
-        let video = $swarm.myVideo
+        let video = $videoSettings.myVideo
         if ($swarm.cameraId === "none") video = false
         
         //If we already have an active stream, do not create a new one.
@@ -381,7 +368,7 @@ async function checkAudioSources() {
         console.log("Answer voice channel", data)
         let contact = data.address
         let msg = data.data
-        let video = $swarm.myVideo
+        let video = $videoSettings.myVideo
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
         // get video/voice stream
@@ -393,7 +380,7 @@ async function checkAudioSources() {
 
         navigator.mediaDevices
             .getUserMedia({
-                video: $swarm.myVideo,
+                video: $videoSettings.myVideo,
                 audio: true,
             })
             .then(function (stream) {
@@ -405,7 +392,7 @@ async function checkAudioSources() {
     const got_answer_media = async (stream, msg, data) => {
             console.log("Got stream!", stream)
             let this_call = $swarm.call.find(a => a.chat === data.address)
-            let video = $swarm.myVideo
+            let video = $videoSettings.myVideo
             let peer2 = await startPeer2(stream, video, this_call)
     
             //Set swarm store update for call
@@ -533,10 +520,10 @@ async function checkAudioSources() {
     function set_video(stream) {
         $swarm.oldStream = $swarm.myStream
         $swarm.myStream = stream
-        $swarm.myVideo = true
-        $swarm.video = true
+        $videoSettings.myVideo = true
+        $videoSettings.video = true
         let camera = $swarm.devices.filter((a) => a.kind === 'videoinput')
-        $swarm.cameraId = camera[0].deviceId
+        $videoSettings.cameraId = camera[0].deviceId
     }
     
     async function checkVolume(peer) {
@@ -660,10 +647,9 @@ async function checkAudioSources() {
         }
         //
         $swarm.initiator = false
-        $swarm.screenshare = false
-        $swarm.video = false
-        $swarm.screen_stream = false
-        $swarm.myVideo = false
+        $videoSettings.video = false
+        $videoSettings.screenshare = false
+        $videoSettings.myVideo = false
         $swarm.myStream = false
         console.log('Call ended')
     }

@@ -6,6 +6,7 @@ import { onMount } from 'svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { sleep } from '$lib/utils/utils'
+import { mediaSettings, videoSettings, audioSettings } from '$lib/stores/mediasettings'
 
 onMount(() => {
     checkSources()
@@ -32,7 +33,7 @@ window.api.receive('screen-share', (id) => {
 })
 
 window.api.receive('set-camera', () => {
-    changeCamera(true, $webRTC.cameraId)
+    changeCamera(true, $videoSettings.cameraId)
 })
 
 window.api.receive('set-audio-input', (id) => {
@@ -186,7 +187,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
     $webRTC.myStream = stream
     let this_call = getActive(contact.substring(0, 99))
     if (video) {
-        $webRTC.myVideo = true
+        $videoSettings.myVideo = true
         startLocalVideo()
         if (screen_stream) {
             let id = await window.api.shareScreen(true)
@@ -314,7 +315,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
     if (msg.substring(0, 1) === 'Δ') {
         video = true
     }
-    $webRTC.myVideo = video
+    $videoSettings.myVideo = video
 
     // get video/voice stream
     navigator.mediaDevices
@@ -345,7 +346,7 @@ const answerCall = (msg, contact, key, offchain = false) => {
 
         if (video) {
             startLocalVideo()
-            $webRTC.myVideo = true
+            $videoSettings.myVideo = true
             $videoGrid.showVideoGrid = true
         }
     }
@@ -515,7 +516,7 @@ async function shareScreen(id) {
 }
 
 $: {
-    console.log('Active Camera', $webRTC.cameraId)
+    console.log('Active Camera', $videoSettings.cameraId)
     console.log('Active Calls', $webRTC.call)
 }
 
@@ -572,16 +573,32 @@ function sendInviteNotification(contact, contact_address) {
 }
 
 async function checkSources() {
-    let devices = await navigator.mediaDevices.enumerateDevices()
-    $webRTC.devices = devices
-    if (!$webRTC.cameraId ) {
+    $mediaSettings.devices = await navigator.mediaDevices.enumerateDevices()
+    if (!$videoSettings.cameraId) {
         //Set defauklt camera id in store
-        let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
+        let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
         if (camera.length === 0) {
-            $webRTC.cameraId = "none"
+            $videoSettings.cameraId = "none"
             return
+        } else $videoSettings.cameraId = camera[0].deviceId
+
+        if (!$audioSettings.audioInput) { 
+            let audio = $mediaSettings.devices.filter((a) => a.kind === 'audioinput')
+            $audioSettings.audioInput = audio[0].deviceId
         }
-        $webRTC.cameraId = camera[0].deviceId
+
+        if (!$audioSettings.audioOutput) { 
+            let audio = $mediaSettings.devices.filter((a) => a.kind === 'audiooutput')
+            $audioSettings.audioOutput = audio[0].deviceId
+        }
+        
+        //Checking active stream active devices
+        if ($webRTC.myStream) {
+            $webRTC.myStream.getAudioTracks().forEach(track => {
+                if (track.kind === 'audioinput') $audioSettings.audioInput = track.getSettings().deviceId
+                if (track.kind === 'audiooutput') $audioSettings.audioOutput = track.getSettings().deviceId
+            })
+        }
         // select the desired transceiver
     }
 }
@@ -592,7 +609,7 @@ async function changeVideoSource(device, id, add = false) {
         //We have no active local stream set and we are alone in the conference room
         if (!current) {
             $webRTC.myStream = device
-            $webRTC.myVideo = true
+            $videoSettings.myVideo = true
         }
 
         //Check if we have an active peer
@@ -619,11 +636,11 @@ async function changeVideoSource(device, id, add = false) {
         }
 
         if (current) $webRTC.myStream = current
-        $webRTC.myVideo = true
-        $webRTC.video = true
+        $videoSettings.myVideo = true
+        $videoSettings.video = true
         //Set video boolean to play video
-        if ($webRTC.screenshare) return
-        $webRTC.cameraId = id
+        if ($videoSettings.screenshare) return
+        $videoSettings.cameraId = id
     }
     
 
@@ -784,7 +801,7 @@ async function inviteToGroupCall(peer) {
     //Sort out all active calls except this
     let callList = $webRTC.call.filter((a) => a.chat !== thisCall.chat)
     let activeCall = []
-    let type = $webRTC.myVideo
+    let type = $videoSettings.myVideo
     //If we have more active calls, invite them aswell.
     if (callList.length) {
         //Go through that list and add our contacts to a new array
@@ -884,7 +901,7 @@ async function createRoom(video) {
 async function awaitInvite(stream) {
     console.log('Want to create room!')
     $webRTC.myStream = stream
-    $webRTC.myVideo = true
+    $videoSettings.myVideo = true
     let call = {
         chat: $user.huginAddress.substring(0, 99),
         type: 'room',
@@ -966,10 +983,9 @@ function endCall(peer, stream, contact) {
 
     //
     $webRTC.initiator = false
-    $webRTC.screenshare = false
-    $webRTC.video = false
-    $webRTC.screen_stream = false
-    $webRTC.myVideo = false
+    $videoSettings.video = false
+    $videoSettings.screenshare = false
+    $videoSettings.myVideo = false
     $webRTC.myStream = false
 
     console.log('Call ended')

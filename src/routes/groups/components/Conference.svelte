@@ -14,6 +14,7 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
     import { Moon } from 'svelte-loading-spinners'
+    import { videoSettings } from '$lib/stores/mediasettings'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -58,7 +59,7 @@
         if (reconnect) {
             //activate_video()
             //await sleep(200)
-            $swarm.myVideo = true
+            $videoSettings.myVideo = true
         }
         //Leave any active first
         if ($swarm.voice_channel.length) {
@@ -71,7 +72,7 @@
         thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
         console.log("voice", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $swarm.myVideo})
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm 
@@ -121,7 +122,7 @@
             connected = false
             //Send status to backend
             window.api.send("exit-voice", old.key)
-            $swarm.myVideo = false
+            $videoSettings.myVideo = false
             return true
     }
     
