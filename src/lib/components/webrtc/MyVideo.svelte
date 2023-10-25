@@ -43,7 +43,7 @@ onDestroy(() => {})
 
 $: if ($videoSettings.screenshare) {
     playVideo()
-} else if ($videoSettings.video) {
+} else if ($videoSettings.myVideo) {
     playVideo()
 }
 
