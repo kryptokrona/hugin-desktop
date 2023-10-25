@@ -102,16 +102,7 @@ async function checkreply(reply) {
     if (offchain) {
         //Search in rtc messages
         group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
-        if (group_reply) return
-    } else {
-        //Check if they are in our message array, no need to look in db!
-        group_reply = $groupMessages.find(a => a.hash === reply)
-        if (group_reply) {
-        group_reply.hash = group_reply.hash + svelteHashPadding
-        return group_reply
-        }
-
-        group_reply = $swarm.activeChannelMessages.find(a => a.hash === reply)
+        group_reply.hash + svelteHashPadding
         if (group_reply) return group_reply
     }
     //Check in db if we can find it
