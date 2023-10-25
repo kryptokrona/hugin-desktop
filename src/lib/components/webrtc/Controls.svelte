@@ -130,7 +130,7 @@ const hideGrid = () => {
             <Contacts />
         </div>
         <div class="icon">
-            <AudioSources />
+            <AudioSources conference={false}/>
         </div>
     </div>
     <div class="icon" on:click="{() => hideGrid()}">

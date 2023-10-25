@@ -44,6 +44,11 @@ window.api.receive('check-src', () => {
     checkSources()
 })
 
+window.api.receive('set-audio-input', (src, input) => {
+        if (!input) return
+        changeAudio(src)
+    })
+
 window.api.receive('change-source', (src, add) => {
     console.log('want to change in calls', src)
     changeCamera(true, src, add)
@@ -604,76 +609,43 @@ async function checkSources() {
 }
 
 async function changeVideoSource(device, id, add = false) {
-        let current = $webRTC.myStream
-    
-        //We have no active local stream set and we are alone in the conference room
-        if (!current) {
-            $webRTC.myStream = device
-            $videoSettings.myVideo = true
-        }
+    let current = $webRTC.myStream
 
-        //Check if we have an active peer
-        let peer = $webRTC.call.some(a => a.peer)
-        //Add new track to current stream
-        if (add && peer) {
-            addVideoTrack(device, current)
-        } 
-        
-        //Replace track for all peers
-        if (peer && !add) {
-            replaceVideoTrack(device, current)
-        }
-        
-        if (current) current.addTrack(device.getVideoTracks()[0])
-       
-        if (!add && current) {
-            //Stop old track
-            let old = current.getVideoTracks()[0]
-            old.stop()
-            //Remove old track
-            current.removeTrack(current.getVideoTracks()[0])
-            //Update stream
-        }
-
-        if (current) $webRTC.myStream = current
+    //We have no active local stream set and we are alone in the conference room
+    if (!current) {
+        $webRTC.myStream = device
         $videoSettings.myVideo = true
-        $videoSettings.video = true
-        //Set video boolean to play video
-        if ($videoSettings.screenshare) return
-        $videoSettings.cameraId = id
+    }
+
+    //Check if we have an active peer
+    let peer = $webRTC.call.some(a => a.peer)
+    //Add new track to current stream
+    if (add && peer) {
+        addVideoTrack(device, current)
+    } 
+    
+    //Replace track for all peers
+    if (peer && !add) {
+        replaceVideoTrack(device, current)
     }
     
+    if (current) current.addTrack(device.getVideoTracks()[0])
+    
+    if (!add && current) {
+        //Stop old track
+        let old = current.getVideoTracks()[0]
+        old.stop()
+        //Remove old track
+        current.removeTrack(current.getVideoTracks()[0])
+        //Update stream
+    }
 
-async function changeAudioSource(device, oldSrc, chat) {
-    let current = $webRTC.myStream
-    console.log('want to change audio', device)
-    //Add new track to current stream
-    current.addTrack(device.getAudioTracks()[0])
-    //Replace track
-    $webRTC.call.forEach((a) => {
-        console.log('replacing track', a.peer)
-        a.peer.replaceTrack(current.getAudioTracks()[0], device.getAudioTracks()[0], current)
-    })
-    //Remove old track
-    current.removeTrack(current.getAudioTracks()[0])
-    //Update stream
-    $webRTC.myStream = current
-}
-
-async function changeAudio(id, chat) {
-    // get video/voice stream
-    navigator.mediaDevices
-        .getUserMedia({
-            audio: {
-                deviceId: id,
-            },
-        })
-        .then(function (device) {
-            changeAudioSource(device)
-        })
-        .catch((e) => {
-            console.log('error', e)
-        })
+    if (current) $webRTC.myStream = current
+    $videoSettings.myVideo = true
+    $videoSettings.video = true
+    //Set video boolean to play video
+    if ($videoSettings.screenshare) return
+    $videoSettings.cameraId = id
 }
 
 function getActive(contact) {
@@ -880,6 +852,54 @@ async function checkVolume(peer) {
         }
     }
 }
+
+function changeAudio(id, add) {
+         // get video/voice stream
+         navigator.mediaDevices
+            .getUserMedia({
+                audio: {
+                    deviceId: id,
+                },
+            })
+            .then(function (device) {
+                changeAudioSource(device)
+            })
+            .catch((e) => {
+                console.log('error', e)
+            })
+
+            $audioSettings.audioInput = id
+    }
+    
+
+    function changeAudioSource (device) {
+        let current = $webRTC.myStream
+    
+        //Check if we have an active peer
+        let peer = $webRTC.call.some(a => a.peer)
+        
+        //Replace track for all peers
+        if (peer) {
+            $webRTC.call.forEach((a) => {
+                a.peer.replaceTrack(current.getAudioTracks()[0], device.getAudioTracks()[0], current)
+            })
+        }
+        
+        //Add track to local stream
+        current.addTrack(device.getAudioTracks()[0])
+        //Stop old track
+        let old = current.getAudioTracks()[0]
+        old.stop()
+        //Remove old track
+        current.removeTrack(current.getAudioTracks()[0])
+        //Update stream
+        if (!$webRTC.audio) {
+            current.getAudioTracks().forEach((track) => (track.enabled = false))
+        }
+        
+        $webRTC.myStream = current
+
+    }
 
 async function createRoom(video) {
     //Get video/voice stream

@@ -9,6 +9,7 @@
 
     function pickSource(src, input) {
         console.log('pick', src)
+        console.log("Confere", conference)
         window.api.changeAudioSource(src.deviceId, conference, input)
         buttonGlow()
     }

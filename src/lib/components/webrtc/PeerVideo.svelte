@@ -8,6 +8,7 @@ import Plus from '../icons/Plus.svelte'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import { get_avatar } from '$lib/utils/hugin-utils'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
+import { audioSettings } from '$lib/stores/mediasettings'
 let peerVideo = document.getElementById('peerVideo')
 let peerStream
 let thisWindow = false
@@ -48,10 +49,16 @@ window.api.receive('set-audio-input-group', (src, input) => {
         if (input) return
         changeAudioSource(src, input)
 })
+
+window.api.receive('set-audio-input', (src, input) => {
+        console.log('want to change in peervideo', src)
+        if (input) return
+        changeAudioSource(src, input)
+})
     
 
 const changeAudioSource = async (src, input) => {
-    $swarm.audioOutput = src
+    $audioSettings.audioOutput = src
     if (peerVideo === null) return
     peerVideo.setSinkId(src)
 }
