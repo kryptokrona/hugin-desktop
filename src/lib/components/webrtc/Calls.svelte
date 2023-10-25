@@ -235,6 +235,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
                 this_call.peerStream = peerStream
                 if (video) {
                     $videoGrid.showVideoGrid = true
+
                 } else {
                 }
                 //Set video true for UI
@@ -395,6 +396,7 @@ async function startPeer2(stream, video, this_call) {
         window.api.successMessage('Call established')
         console.log('Connection established;')
         this_call.connected = true
+        updateStore()
         checkVolume(peer2)
         if ($webRTC.call.length > 1) {
             $webRTC.group = true
@@ -418,13 +420,17 @@ async function startPeer2(stream, video, this_call) {
         if (video) {
             $videoGrid.showVideoGrid = true
         }
-
         //Set video true for UI
         this_call.peerVideo = true
+        $videoSettings.myVideo = true
         console.log('Setting up link..')
     })
 
     return peer2
+}
+
+function updateStore() {
+    $webRTC.call = $webRTC.call
 }
 
 function sendOffer(peer, contact, video, group = false, offchain = false) {
@@ -928,7 +934,7 @@ async function awaitInvite(stream) {
         myStream: stream,
     }
     $webRTC.call.unshift(call)
-    $webRTC.call = $webRTC.call
+    updateStore()
     $videoGrid.showVideoGrid = true
 }
 
