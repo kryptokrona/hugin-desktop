@@ -193,7 +193,6 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
     let this_call = getActive(contact.substring(0, 99))
     if (video) {
         $videoSettings.myVideo = true
-        startLocalVideo()
         if (screen_stream) {
             let id = await window.api.shareScreen(true)
             shareScreen(id)
@@ -351,7 +350,6 @@ const answerCall = (msg, contact, key, offchain = false) => {
         $webRTC.active = true
 
         if (video) {
-            startLocalVideo()
             $videoSettings.myVideo = true
             $videoGrid.showVideoGrid = true
         }
