@@ -119,7 +119,7 @@
                 console.log('error', e)
             })
 
-            $swarm.audioInput = id
+            $audioSettings.audioInput = id
     }
     
 
