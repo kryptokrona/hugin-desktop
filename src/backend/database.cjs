@@ -460,15 +460,23 @@ const saveBoardMessage = (msg, hash) => {
 const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
 
     let group = sanitizeHtml(msg.g)
+    if (group.length > 64) return false
     let text = sanitizeHtml(msg.m)
+    if (text.length > 777) return false
     let addr = sanitizeHtml(msg.k)
+    if (addr.length > 99) return false
     let reply = sanitizeHtml(msg.r)
+    if (reply.length > 64) return false
     let sig = sanitizeHtml(msg.s)
+    if (sig.length > 200) return false
     let timestamp = sanitizeHtml(time)
+    if (timestamp.length > 20) return false
     let nick = sanitizeHtml(msg.n)
+    if (nick.length > 50) return false
     let txHash = sanitizeHtml(hash)
+    if (txHash.length > 64) return false
     let channel = false
-    if (await groupMessageExists(timestamp)) return
+    if (await groupMessageExists(timestamp)) return false
 
     if (channels) {
         channel = sanitizeHtml(msg.c)
@@ -523,7 +531,6 @@ try {
 
 const saveMsg = async (message, addr, sent, timestamp, offchain) => {
 
-    
     //Call offer message
     switch (message.substring(0, 1)) {
         case 'Δ':

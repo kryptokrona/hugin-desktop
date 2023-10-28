@@ -35,8 +35,9 @@ const {
     fromHex, 
     nonceFromTimestamp, 
     randomKey, 
-    hexToUint, 
-    toHex, parseCall, hash } = require("./utils.cjs")
+    hexToUint,
+    toHex, parseCall, hash,
+    sanitize_pm_message } = require("./utils.cjs")
 const {
     loadDB,
     saveHash,
@@ -887,8 +888,9 @@ async function saveBoardMsg(msg, hash, follow = false) {
 }
 
 async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
-    console.log("Savin grp msg")
+    console.log("Savin group message")
     let message = await saveGroupMsg(msg, hash, time, offchain, channel)
+    if (!message) return false
     if (!offchain) {
         //Send new board message to frontend.
         mainWindow.webContents.send('groupMsg', message)
@@ -902,10 +904,10 @@ async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
 
 //Saves private message
 async function saveMessage(msg, offchain = false) {
-    let sent = msg.sent
-    let addr = sanitizeHtml(msg.from)
-    let timestamp = sanitizeHtml(msg.t)
-    let key = sanitizeHtml(msg.k)
+
+    let [message, addr, key, timestamp, sent] = sanitize_pm_message(msg)
+    
+    if (!message) return
 
     if (await messageExists(timestamp)) return
     
@@ -920,8 +922,6 @@ async function saveMessage(msg, offchain = false) {
         mainWindow.webContents.send('got-callback', data)
     }
 
-    let message = sanitizeHtml(text)
-
     //If sent set chat to chat instead of from
     if (msg.chat && sent) {
         addr = msg.chat
@@ -934,7 +934,6 @@ async function saveMessage(msg, offchain = false) {
     }
 
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
-
     if (sent) {
         //If sent, update conversation list
         mainWindow.webContents.send('sent', newMsg)
@@ -1233,7 +1232,9 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
     payload_json.sent = false
 
-    saveGroupMessage(payload_json, hash, tx.t, offchain)
+    let saved = saveGroupMessage(payload_json, hash, tx.t, offchain)
+    
+    if (!saved) return false
 
     return [payload_json, tx.t, hash]
 

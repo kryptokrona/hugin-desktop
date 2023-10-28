@@ -178,5 +178,20 @@ const sanitize_voice_status_data = (data) => {
     return clean_object
 }
 
+const sanitize_pm_message = (msg) => {
+    let sent = msg.sent
+    let addr = sanitizeHtml(msg.from)
+    let timestamp = sanitizeHtml(msg.t)
+    let key = sanitizeHtml(msg.k)
+    let message = sanitizeHtml(msg.msg)
+    if (message.length > 777) return [false]
+    if (addr.length > 99) return [false]
+    if (typeof sent !== 'boolean') return [false]
+    if (timestamp.length > 25) return f[false]
+    if (key.length > 64) return [false]
+    if (message.length > 777) return [false]
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash}
+    return [message, addr, key, timestamp, sent]
+}
+
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message}

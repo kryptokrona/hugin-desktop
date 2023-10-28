@@ -444,12 +444,10 @@ const incoming_message = async (data, topic, connection, key) => {
     }
     if (check) return
     let hash = str.substring(0,64)
-    console.log("Message incoming", str)
     let [message, time, hsh] = await decryptSwarmMessage(str, hash, key)
-    console.log("Decrypted", message)
     if (!message) return
-    console.log("Message", message)
     let msg = await saveGroupMsg(message, hsh, time, false, true)
+    if (!msg) return
         //Send new board message to frontend.
         sender('groupRtcMsg', msg)
         sender('newGroupMessage', msg)
