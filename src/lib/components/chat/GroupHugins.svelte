@@ -18,7 +18,7 @@
     let activeHugins = []
     let group = ''
     let groupName
-
+    const standardGroup = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 function sendPM() {
     // Add friend request here?
 }
@@ -110,9 +110,9 @@ const connecto_to_swarm = () => {
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
     <div class="top">
-        <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
+        <h2 style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>
         <br />
-            {#if !$standardGroups.some(a => a.key === $groups.thisGroup.key)}
+            {#if !$standardGroups.some(a => a.key === group || (group === standardGroup))}
             
             <div class="connect" on:click={connecto_to_swarm}>
                 <!-- <Lightning connected={thisSwarm} /> -->
