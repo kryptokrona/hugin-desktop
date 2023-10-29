@@ -57,6 +57,9 @@
         incoming_call = false
         console.log('incoming clean', $webRTC.incoming)
         console.log('webRTC call ', $webRTC.call)
+        window.api.send("exit-voice",$groups.thisGroup.key)
+        window.api.send("end-swarm", $groups.thisGroup.key)
+        $swarm.showVideoGrid = false
     }
 
     let startAnimation
