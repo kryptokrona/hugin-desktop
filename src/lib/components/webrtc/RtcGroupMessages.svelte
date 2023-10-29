@@ -23,7 +23,7 @@ onMount(async () => {
 })
 
 onDestroy(() => {
-    window.api.removeAllListeners('groupRtcMsg')
+    // window.api.removeAllListeners('groupRtcMsg')
 })
 
 window.api.receive('swarm-connected', () => { 
@@ -69,7 +69,7 @@ window.api.receive('groupRtcMsg', (data) => {
         $rtc_groups.unread.push(data)
         $rtc_groups.unread = $rtc_groups.unread
     }
-    if (data.k === $user.huginAddress.substring(0, 99)) return
+    if (data.address === $user.huginAddress.substring(0, 99)) return
     console.log('Group rtc message', data.group)
     console.log('This group rtc key', $webRTC.groupCall)
     //Push new message to store

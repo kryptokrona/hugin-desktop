@@ -82,6 +82,11 @@ const startCall = async (contact, calltype) => {
         chat: contact.substring(0, 99),
         video: calltype,
     }
+    
+    //Leave any active room
+    window.api.send("exit-voice", $groups.thisGroup.key)
+    window.api.send("end-swarm", $groups.thisGroup.key)
+    $swarm.showVideoGrid = false
 
     $webRTC.call.unshift(call)
     window.api.startCall(contact, calltype)

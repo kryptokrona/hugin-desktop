@@ -96,7 +96,6 @@ const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 
-
 const DHT = require('@hyperswarm/dht')
 
 let mainWindow
@@ -926,6 +925,8 @@ async function saveMessage(msg, offchain = false) {
     if (msg.chat && sent) {
         addr = msg.chat
     }
+
+    message = sanitizeHtml(text)
 
     //New message from unknown contact
     if (msg.type === 'sealedbox' && !sent) {

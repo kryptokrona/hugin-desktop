@@ -1,6 +1,6 @@
 <script>
     import {fade, fly} from 'svelte/transition'
-    import {groups, swarm, user} from '$lib/stores/user.js'
+    import {groups, swarm, user, webRTC} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
     import {flip} from 'svelte/animate'
@@ -88,7 +88,12 @@ const connecto_to_swarm = () => {
             window.api.errorMessage('You are already in a room')
             return
         }
-
+        
+        if ($webRTC.call.length) {
+            window.api.errorMessage('You are already in a call')
+            return
+        }
+        
         $swarmGroups.showGroups = true
         $swarm.showVideoGrid = true
         window.api.send("new-swarm", {
