@@ -52,6 +52,7 @@
     //Share screenpmn
     const switchStream = async () => {
         if (!$videoSettings.screenshare) {
+            $videoSettings.loading = true
             $videoSettings.myVideo = true
             $videoSettings.video = true
             await window.api.shareScreen(false, true)
@@ -175,7 +176,7 @@
     }
     
     const toggleVideo = () => {
-    
+        $videoSettings.loading = true
         if (!connected) {
             if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
                 add_video(true)
@@ -202,6 +203,7 @@
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         })
+        $videoSettings.loading = false
     }
     
     const showMessages = () => {

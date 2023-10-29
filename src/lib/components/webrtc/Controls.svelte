@@ -37,6 +37,7 @@ onDestroy(() => {
 //Share screenpmn
 const switchStream = async () => {
     if (!$videoSettings.screenshare) {
+        $videoSettings.loading = true
         await window.api.shareScreen(false)
         $videoSettings.screenshare = true
     }
@@ -66,6 +67,7 @@ const add_video = async (add) => {
 
 
 const toggleVideo = () => {
+    $videoSettings.loading = true
     if ($videoSettings.screenshare) {
         let camera = $videoSettings.cameraId
         window.api.changeSource(camera)
@@ -80,6 +82,7 @@ const toggleVideo = () => {
     
     video = !video
     $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+    $videoSettings.loading = false
 }
 
 const showMessages = () => {

@@ -503,6 +503,7 @@ async function startLocalVideo() {
 }
 
 async function shareScreen(id) {
+    $videoSettings.loading = true
     const screen_stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -648,6 +649,7 @@ async function changeVideoSource(device, id, add = false) {
     $videoSettings.myVideo = true
     $videoSettings.video = true
     //Set video boolean to play video
+    $videoSettings.loading = false
     if ($videoSettings.screenshare) return
     $videoSettings.cameraId = id
 }

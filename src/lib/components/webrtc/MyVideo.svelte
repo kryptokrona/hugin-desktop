@@ -7,6 +7,7 @@ import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { get_avatar } from '$lib/utils/hugin-utils'
 import { videoSettings } from '$lib/stores/mediasettings'
+import { Moon } from 'svelte-loading-spinners'
 
 let myVideo = document.getElementById('myVideo')
 let window_medium = false
@@ -72,6 +73,12 @@ $: window_medium
         bind:this="{myVideo}"></video>
         <div class:in_call="{true}"></div>
         <div class="name">{$user.username}</div>
+        {#if $videoSettings.loading}
+        <div class="loader">
+            <Moon color="green" size="60" unit="px"/>
+            <h4>Loading video</h4>
+        </div>
+        {/if}
         <img src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />
 </div>
 
@@ -222,5 +229,15 @@ p {
 
 .hide {
     display: none;
+}
+
+.loader {
+    z-index: 6;
+    width: 100%;
+    height: 99%;
+    position: absolute;
+    align-items: center;
+    display: flex;
+    justify-content: center
 }
 </style>

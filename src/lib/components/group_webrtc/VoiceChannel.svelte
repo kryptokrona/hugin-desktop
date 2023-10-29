@@ -258,6 +258,7 @@
         $videoSettings.myVideo = true
         $videoSettings.video = true
         //Set video boolean to play video
+        $videoSettings.loading = false
         if ($videoSettings.screenshare) return
         $videoSettings.cameraId = id
     }

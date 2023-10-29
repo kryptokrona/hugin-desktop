@@ -9,6 +9,7 @@ export const videoSettings = writable({
     cameraId: false,
     screenshare: false,
     myVideo: false,
+    loading: false,
 })
 
 export const mediaSettings = writable({
