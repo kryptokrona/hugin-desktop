@@ -15,3 +15,7 @@ export const mediaSettings = writable({
     cameraId: false,
     loading: false,
 })
+
+export const video = writable({
+    play: false,
+})

@@ -6,7 +6,7 @@ import { onMount } from 'svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { sleep } from '$lib/utils/utils'
-import { mediaSettings, videoSettings, audioSettings } from '$lib/stores/mediasettings'
+import { mediaSettings, videoSettings, audioSettings, video } from '$lib/stores/mediasettings'
 
 onMount(() => {
     checkSources()
@@ -635,7 +635,10 @@ async function changeVideoSource(device, id, add = false) {
     }
     
     if (current) current.addTrack(device.getVideoTracks()[0])
-    
+    //Play video
+    $video.play = true
+    if (current) $webRTC.myStream = current
+
     if (!add && current) {
         //Stop old track
         let old = current.getVideoTracks()[0]
@@ -644,11 +647,8 @@ async function changeVideoSource(device, id, add = false) {
         current.removeTrack(current.getVideoTracks()[0])
         //Update stream
     }
-
-    if (current) $webRTC.myStream = current
     $videoSettings.myVideo = true
-    $videoSettings.video = true
-    //Set video boolean to play video
+    await sleep(200)
     $videoSettings.loading = false
     if ($videoSettings.screenshare) return
     $mediaSettings.cameraId = id

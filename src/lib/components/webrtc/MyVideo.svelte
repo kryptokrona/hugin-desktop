@@ -6,7 +6,7 @@ import { webRTC, user, swarm } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { get_avatar } from '$lib/utils/hugin-utils'
-import { videoSettings } from '$lib/stores/mediasettings'
+import { videoSettings, video } from '$lib/stores/mediasettings'
 import { Moon } from 'svelte-loading-spinners'
 
 let myVideo = document.getElementById('myVideo')
@@ -42,7 +42,7 @@ const playVideo = () => {
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {})
 
-$: if ($videoSettings.myVideo) {
+$: if ($video.play) {
     playVideo()
 }
 
@@ -72,8 +72,8 @@ $: window_medium
         <div class:in_call="{true}"></div>
         <div class="name">{$user.username}</div>
         {#if $videoSettings.loading}
-        <div class="loader">
-            <Moon color="green" size="60" unit="px"/>
+        <div in:fly={{ x: -50}} out:fly={{ x: 50}} class="loader">
+            <Moon color="#f5f5f5" size="77" unit="px"/>
         </div>
         {/if}
         <img src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />
@@ -235,6 +235,6 @@ p {
     position: absolute;
     align-items: center;
     display: flex;
-    justify-content: center
+    justify-content: center;
 }
 </style>

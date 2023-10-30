@@ -4,7 +4,7 @@
     import { audioLevel, user, swarm } from '$lib/stores/user.js'
     import { onMount } from 'svelte'
     import { sleep } from '$lib/utils/utils'
-    import { mediaSettings, videoSettings, audioSettings } from '$lib/stores/mediasettings'
+    import { mediaSettings, videoSettings, audioSettings, video } from '$lib/stores/mediasettings'
 
     onMount(() => {
         checkSources()
@@ -244,7 +244,9 @@
         }
         
         if (current) current.addTrack(device.getVideoTracks()[0])
-       
+        $video.play = true
+        if (current) $swarm.myStream = current
+
         if (!add && current) {
             //Stop old track
             let old = current.getVideoTracks()[0]
@@ -254,10 +256,9 @@
             //Update stream
         }
 
-        if (current) $swarm.myStream = current
         $videoSettings.myVideo = true
         $videoSettings.video = true
-        //Set video boolean to play video
+        await sleep(200)
         $videoSettings.loading = false
         if ($videoSettings.screenshare) return
         $mediaSettings.cameraId = id
