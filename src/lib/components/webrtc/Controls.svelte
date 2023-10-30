@@ -13,7 +13,7 @@ import Contacts from '$lib/components/chat/Contacts.svelte'
 import { onDestroy, onMount } from 'svelte'
 import { calcTime } from '$lib/utils/utils.js'
 import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
-import { videoSettings } from '$lib/stores/mediasettings'
+import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
 import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
 
 let muted = false
@@ -60,7 +60,7 @@ const toggleAudio = () => {
     })
 }
 const add_video = async (add) => {
-        if ($videoSettings.cameraId === "none") return
+        if ($mediaSettings.cameraId === "none") return
         window.api.changeSource($webRTC.cameraId, false, add)
         $videoSettings.screenshare = false
     }
@@ -69,7 +69,7 @@ const add_video = async (add) => {
 const toggleVideo = () => {
     $videoSettings.loading = true
     if ($videoSettings.screenshare) {
-        let camera = $videoSettings.cameraId
+        let camera = $mediaSettings.cameraId
         window.api.changeSource(camera)
         $videoSettings.screenshare = false
         return

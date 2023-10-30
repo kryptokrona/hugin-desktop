@@ -16,7 +16,7 @@
     import {createEventDispatcher} from 'svelte'
     import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import { videoSettings } from '$lib/stores/mediasettings'
+    import { videoSettings, mediaSettings } from '$lib/stores/mediasettings'
     
     let startTime = Date.now()
     let time = '0:00:00'
@@ -53,8 +53,6 @@
     const switchStream = async () => {
         if (!$videoSettings.screenshare) {
             $videoSettings.loading = true
-            $videoSettings.myVideo = true
-            $videoSettings.video = true
             await window.api.shareScreen(false, true)
             $videoSettings.screenshare = true
             return
@@ -166,8 +164,8 @@
     }
 
     const add_video = async (add) => {
-        if ($swarm.cameraId === "none") return
-        window.api.changeSource($swarm.cameraId, true, add)
+        if ($mediaSettings.cameraId === "none") return
+        window.api.changeSource($mediaSettings.cameraId, true, add)
         $videoSettings.screenshare = false
     }
 
@@ -191,7 +189,7 @@
         }
 
         if ($videoSettings.screenshare) {
-            let camera = $videoSettings.cameraId
+            let camera = $mediaSettings.cameraId
             window.api.changeSource(camera, true)
             $videoSettings.screenshare = false
             return

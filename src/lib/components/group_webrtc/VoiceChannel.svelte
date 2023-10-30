@@ -50,7 +50,7 @@
     // })
     
     // window.api.receive('set-camera', () => {
-    //     changeCamera(true, $swarm.cameraId)
+    //     changeCamera(true, $mediaSettings.cameraId)
     // })
     
     // window.api.receive('set-audio-input', (id) => {
@@ -63,12 +63,12 @@
 
     async function checkSources() {
         $mediaSettings.devices = await navigator.mediaDevices.enumerateDevices()
-        if (!$videoSettings.cameraId) {
+        if (!$mediaSettings.cameraId) {
             //Set defauklt camera id in store
             let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
             if (camera.length === 0) {
-                $videoSettings.cameraId = "none"
-            } else $videoSettings.cameraId = camera[0].deviceId
+                $mediaSettings.cameraId = "none"
+            } else $mediaSettings.cameraId = camera[0].deviceId
             
         }
 
@@ -260,7 +260,7 @@
         //Set video boolean to play video
         $videoSettings.loading = false
         if ($videoSettings.screenshare) return
-        $videoSettings.cameraId = id
+        $mediaSettings.cameraId = id
     }
     
     
@@ -269,7 +269,7 @@
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
         let video = $videoSettings.myVideo
-        if ($swarm.cameraId === "none") video = false
+        if ($mediaSettings.cameraId === "none") video = false
         
         //If we already have an active stream, do not create a new one.
         if ($swarm.myStream) {
@@ -524,7 +524,7 @@
         $videoSettings.myVideo = true
         $videoSettings.video = true
         let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
-        $videoSettings.cameraId = camera[0].deviceId
+        $mediaSettings.cameraId = camera[0].deviceId
     }
     
     async function checkVolume(peer) {

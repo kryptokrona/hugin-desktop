@@ -1,19 +1,8 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
     import {fade, fly} from 'svelte/transition'
-    import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {groups, notify, swarm, user} from '$lib/stores/user.js'
-    import VoiceUser from './VoiceUser.svelte'
-    import Lightning from '../icons/Lightning.svelte'
-    import { swarmGroups } from '$lib/stores/layout-state'
-    import CallSlash from '../icons/CallSlash.svelte'
-    import MicIcon from '../icons/MicIcon.svelte'
-    import MuteIcon from '../icons/MuteIcon.svelte'
-    import Button from '../buttons/Button.svelte'
-    import { sleep } from '$lib/utils/utils'
-    import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
-    import FillButton from '../buttons/FillButton.svelte'
-import { videoSettings } from '$lib/stores/mediasettings'
+    import { videoSettings } from '$lib/stores/mediasettings'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -43,51 +32,11 @@ import { videoSettings } from '$lib/stores/mediasettings'
         $swarm.activeChannel = {name: channel, key: thisSwarm.key}
         dispatch('print-channel', channel)
     }
-    
-    const openRemove = () => {
-        $groups.removeGroup = !$groups.removeGroup
-    }
-
-      //Share screenpmn
-      const switchStream = async () => {
-        if (!$videoSettings.screenshare) {
-            await window.api.shareScreen(false, true)
-            $videoSettings.screenshare = true
-        }
-    }
 
     window.api.receive('leave-active-voice-channel', async () => {
         console.log("leave vojs!")
         disconnect_from_active_voice()
     })
-
-    const join_voice_channel = async (video = false, reconnect = false, screen) => {
-        if (in_voice) return
-        if (!reconnect) startTone.play()
-        $swarm.showVideoGrid = true
-        console.log("Joining!")
-        if (reconnect) {
-            //activate_video()
-            //await sleep(200)
-            $videoSettings.myVideo = true
-        }
-        //Leave any active first
-        if ($swarm.voice_channel.length) {
-            //We already have an active call.  
-            if (thisSwarm.voice_connected === true) return
-             //Replace this with our new call
-            if (!disconnect_from_active_voice()) return
-        }
-        console.log("Want to Join new voice")
-        thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = thisSwarm.voice_channel
-        console.log("voice", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
-        //Set to true? here
-        thisSwarm.voice_connected = true
-        $swarm = $swarm 
-        console.log("Should be joined and connected here in this swarm", thisSwarm)
-    }
 
     function disconnect_from_active_voice(reconnect = false) {
         console.log("Disconnect from active voice!")
@@ -148,62 +97,9 @@ import { videoSettings } from '$lib/stores/mediasettings'
     }
     
     
-    const toggleAudio = () => {
-        $swarm.audio = !$swarm.audio
-        console.log("mystream?", $swarm.myStream)
-        if (!$swarm.myStream) return
-        $swarm.call.forEach((a) => {
-            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
-        })
-    }
-
-    const add_video = async (screen = false) => {
-        if ($swarm.cameraId === "none") return
-        window.api.changeSource($swarm.cameraId, true, true)
-        $videoSettings.screenshare = false
-    }
-
-    const activate_video = () =>{
-        window.api.send('active-video')
-    }
-    
-    const toggleVideo = () => {
-    
-        if (!connected) {
-            if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
-                console.log("Reconnect with video!")
-                add_video()
-            } else if ($swarm.call.length === 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
-                console.log("Activate video!")
-                activate_video()
-            }
-            connected = true
-            return
-        }
-
-        if ($videoSettings.screenshare) {
-            let camera = $swarm.cameraId
-            window.api.changeSource(camera, true)
-            $videoSettings.screenshare = false
-            return
-        }
-
-        console.log("Changed toggle! stream",$swarm.myStream)
-        $videoSettings.myVideo = !$videoSettings.myVideo
-        if (!$swarm.myStream) return
-        $swarm.call.forEach((a) => {
-            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
-        })
-    }
-    
     // const showMessages = () => {
     //     $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
     // }
-    
-    const show_grid = () => {
-        $swarm.showVideoGrid = true
-    }
-
 
 </script>
     <!-- <div on:click={dispatch('printGroup', $groups.thisGroup)}

@@ -42,9 +42,7 @@ const playVideo = () => {
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {})
 
-$: if ($videoSettings.screenshare) {
-    playVideo()
-} else if ($videoSettings.myVideo) {
+$: if ($videoSettings.myVideo) {
     playVideo()
 }
 
@@ -76,7 +74,6 @@ $: window_medium
         {#if $videoSettings.loading}
         <div class="loader">
             <Moon color="green" size="60" unit="px"/>
-            <h4>Loading video</h4>
         </div>
         {/if}
         <img src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />

@@ -28,7 +28,7 @@ const buttonGlow = () => {
     }, 1000)
 }
 
-$: activeDevice = $videoSettings.cameraId
+$: activeDevice = $mediaSettings.cameraId
 
 </script>
 

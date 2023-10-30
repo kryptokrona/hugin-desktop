@@ -6,12 +6,12 @@ export const audioSettings = writable({
 })
 
 export const videoSettings = writable({
-    cameraId: false,
     screenshare: false,
     myVideo: false,
-    loading: false,
 })
 
 export const mediaSettings = writable({
     devices: [],
+    cameraId: false,
+    loading: false,
 })

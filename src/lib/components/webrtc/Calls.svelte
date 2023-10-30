@@ -33,7 +33,7 @@ window.api.receive('screen-share', (id) => {
 })
 
 window.api.receive('set-camera', () => {
-    changeCamera(true, $videoSettings.cameraId)
+    changeCamera(true, $mediaSettings.cameraId)
 })
 
 window.api.receive('set-audio-input', (id) => {
@@ -526,7 +526,7 @@ async function shareScreen(id) {
 }
 
 $: {
-    console.log('Active Camera', $videoSettings.cameraId)
+    console.log('Active Camera', $mediaSettings.cameraId)
     console.log('Active Calls', $webRTC.call)
 }
 
@@ -584,13 +584,13 @@ function sendInviteNotification(contact, contact_address) {
 
 async function checkSources() {
     $mediaSettings.devices = await navigator.mediaDevices.enumerateDevices()
-    if (!$videoSettings.cameraId) {
+    if (!$mediaSettings.cameraId) {
         //Set defauklt camera id in store
         let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
         if (camera.length === 0) {
-            $videoSettings.cameraId = "none"
+            $mediaSettings.cameraId = "none"
             return
-        } else $videoSettings.cameraId = camera[0].deviceId
+        } else $mediaSettings.cameraId = camera[0].deviceId
 
         if (!$audioSettings.audioInput) { 
             let audio = $mediaSettings.devices.filter((a) => a.kind === 'audioinput')
@@ -651,7 +651,7 @@ async function changeVideoSource(device, id, add = false) {
     //Set video boolean to play video
     $videoSettings.loading = false
     if ($videoSettings.screenshare) return
-    $videoSettings.cameraId = id
+    $mediaSettings.cameraId = id
 }
 
 function getActive(contact) {
