@@ -240,9 +240,7 @@ $: show_groups = true
                     </div>
                 {/each}
             </div>
-            {#if $swarm.active.length}
                 <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
-            {/if}
 </div>
 
 
