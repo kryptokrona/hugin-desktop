@@ -10,6 +10,7 @@
     import StandardGroups from '$routes/dashboard/components/StandardGroups.svelte'
     import Transactions from "$routes/dashboard/components/Transactions.svelte";
     import {messages} from '$lib/stores/messages.js'
+import { fly } from 'svelte/transition'
     
     let date = new Date()
     let hrs = date.getHours()
@@ -23,7 +24,7 @@
     })
 </script>
 
-<div class="header">
+<div class="header" in:fly="{{ y: 100 }}">
     <div style="display: flex; align-items: center; gap: 0.5rem">
         <h1>{greet}, {$user.username}!</h1>
         <EditName/>
@@ -47,7 +48,7 @@
 </div>
 
 <Funds/>
-<div class="grid">
+<div class="grid"  in:fly="{{ y: 100 }}">
     <StandardGroups/>
     <Transactions/>
     <!-- <CreateRoom/> -->

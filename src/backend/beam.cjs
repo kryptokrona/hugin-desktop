@@ -5,7 +5,7 @@ const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep } = require('./utils.cjs');
+const { sleep, sanitize_pm_message } = require('./utils.cjs');
 
 let active_beams = []
 let chat_keys
@@ -63,7 +63,7 @@ const fileBeam = (beam, chat, key, download = false) => {
     active_beams.push({beam, chat, key})
 
     beam.on('data', (data) => {
-        if (!start) {
+        if (!start && download) {
             const str = new TextDecoder().decode(data);
             if (str === "Start") {
                 start = true
@@ -139,11 +139,13 @@ const beamEvent = (beam, chat, key) => {
 }
 
 const decryptMessage = async (str, msgKey) => {
+
     let decrypted_message = await extraDataToMessage(str, [msgKey], chat_keys)
-    let address = sanitizeHtml(decrypted_message.from)
-    let timestamp = sanitizeHtml(decrypted_message.t)
-    let message = sanitizeHtml(decrypted_message.msg)
-    let sent = false
+    decrypted_message.k = msgKey
+    decrypted_message.sent = false
+    let [message, address, key, timestamp] = sanitize_pm_message(decrypted_message)
+
+    if (!message) return
 
     let newMsg = {
         msg: message,

@@ -1,10 +1,17 @@
 const nacl = require('tweetnacl')
+const sanitizeHtml = require('sanitize-html')
+const { Crypto } = require('kryptokrona-utils')
 
+const crypto = new Crypto()
 const hexToUint = (hexString) =>
     new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
 
-async function createGroup() {
-    return await Buffer.from(nacl.randomBytes(32)).toString('hex')
+function randomKey() {
+    return Buffer.from(nacl.randomBytes(32)).toString('hex')
+}
+
+async function hash(text) {
+    return await crypto.cn_fast_hash(toHex(text))
 }
 
 function toHex(str, hex) {
@@ -89,5 +96,102 @@ function parseCall(msg, sender, sent, group = false, timestamp) {
     }
 }
 
+const sanitize_join_swarm_data = (data) => {
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, createGroup, hexToUint, toHex, parseCall}
+    const address = sanitizeHtml(data.address)
+    if (address.length !== 99) return false
+    const message = sanitizeHtml(data.message)
+    if (message.length > 64) return false 
+    const signature = sanitizeHtml(data.signature)
+    if (signature.length !== 128) return false
+    const topic = sanitizeHtml(data.topic)
+    if (topic.length !== 64) return false
+    const name = sanitizeHtml(data.name) 
+    if (name.length > 50) return false
+    let voice = data.voice
+    if (typeof voice !== 'boolean') return false
+    const joined = data.joined
+    if (typeof joined !== 'boolean') return false
+    const video = data.video
+    if (typeof video !== 'boolean') return false
+    const time = sanitizeHtml(data.time) 
+    if (typeof time !== 'string') return false
+    if (time.length > 50) return false
+
+    const channels = []
+    
+    if (data.channels.length) {
+        //Disable channels
+        
+        // if (data.channels.length > 100) return false
+        // for (const a of data.channels) {
+        //     let channel = sanitizeHtml(a)
+        //     if (channel.length > 50) return false
+        //     channels.push(channel)
+        // }
+        return false
+    }
+
+    const clean_object = {
+        address: address,
+        message: message,
+        signature: signature,
+        topic: topic,
+        name: name,
+        voice: voice,
+        joined: joined,
+        channels: channels,
+        video: video,
+        time: time
+    }
+
+    return clean_object
+}
+
+const sanitize_voice_status_data = (data) => {
+
+    const address = sanitizeHtml(data.address)
+    if (address.length !== 99) return false
+    const message = sanitizeHtml(data.message)
+    if (message.length > 64) return false 
+    const signature = sanitizeHtml(data.signature)
+    if (signature.length !== 128) return false
+    const topic = sanitizeHtml(data.topic)
+    if (topic.length !== 64) return false
+    const name = sanitizeHtml(data.name) 
+    if (name.length > 50) return false
+    const voice = data.voice
+    if (typeof voice !== 'boolean') return false
+    const video = data.video
+    if (typeof video !== 'boolean') return false
+
+    const clean_object = {
+        address: address,
+        message: message,
+        signature: signature,
+        topic: topic,
+        name: name,
+        voice: voice,
+        video: video
+    }
+
+    return clean_object
+}
+
+const sanitize_pm_message = (msg) => {
+    let sent = msg.sent
+    let addr = sanitizeHtml(msg.from)
+    let timestamp = sanitizeHtml(msg.t)
+    let key = sanitizeHtml(msg.k)
+    let message = sanitizeHtml(msg.msg)
+    if (message.length > 777) return [false]
+    if (addr.length > 99) return [false]
+    if (typeof sent !== 'boolean') return [false]
+    if (timestamp.length > 25) return f[false]
+    if (key.length > 64) return [false]
+    if (message.length > 777) return [false]
+
+    return [message, addr, key, timestamp, sent]
+}
+
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message}

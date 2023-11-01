@@ -7,7 +7,8 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm} from '$lib/stores/user.js'
+    import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
 
@@ -16,6 +17,7 @@
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
     import IncomingCall from '$lib/components/webrtc/IncomingCall.svelte'
     import Webrtc from '$lib/components/webrtc/Calls.svelte'
+    import Group_Webrtc from '$lib/components/group_webrtc/VoiceChannel.svelte'
     import TrafficLights from '$lib/components/TrafficLights.svelte'
     import CallerMenu from '$lib/components/webrtc/CallerMenu.svelte'
     import PeerAudio from '$lib/components/webrtc/PeerAudio.svelte'
@@ -29,6 +31,8 @@
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
+    import Conference from './groups/components/Conference.svelte'
+    import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.svelte'
 
     let ready = false
     let incoming_call
@@ -53,6 +57,9 @@
         incoming_call = false
         console.log('incoming clean', $webRTC.incoming)
         console.log('webRTC call ', $webRTC.call)
+        window.api.send("exit-voice",$groups.thisGroup.key)
+        window.api.send("end-swarm", $groups.thisGroup.key)
+        $swarm.showVideoGrid = false
     }
 
     let startAnimation
@@ -160,12 +167,8 @@
 
         window.api.receive('newGroupMessage', (data) => {
             if (data.address == $user.huginAddress.substring(0, 99)) return
-            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') return
-            if ($page.url.pathname !== '/groups') {
-                data.type = 'group'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-            }
+            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
+            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room") return
             new_messages = true
             data.key = data.address
             if ($notify.new.length < 2) {
@@ -176,7 +179,7 @@
             $notify.new = $notify.new
         })
 
-        window.api.receive('privateMsg', async (data) => {
+        window.api.receive('privateMsg', (data) => {
             console.log('newmsg in layout', data)
             if (data.chat === $user.huginAddress.substring(0, 99)) return
             if (data.chat !== $user.activeChat.chat) {
@@ -191,7 +194,7 @@
             saveToStore(data)
         })
 
-        window.api.receive('addr', async (huginAddr) => {
+        window.api.receive('addr', (huginAddr) => {
             console.log('Addr incoming')
             user.update((data) => {
                 return {
@@ -214,7 +217,7 @@
         })
 
 
-        window.api.receive('group_invited_contact', async (data) => {
+        window.api.receive('group_invited_contact', (data) => {
             console.log('***** GROUP INVITED ****', data)
             let name
             let key
@@ -239,7 +242,7 @@
         let filter = $notify.new.filter(a => a.hash !== e.detail.hash)
         $notify.new = filter
     }
-    
+
     //APP UPDATER
     window.api.receive('updater', (data) => {
         data = data.toString()
@@ -359,7 +362,7 @@
         $remoteFiles = data.remoteFiles
     })
 
-    window.api.receive('local-files', async (data)  => { 
+    window.api.receive('local-files', (data)  => { 
         console.log(
             'Local files n data', data
         )
@@ -383,7 +386,24 @@
         updateUploadProgress(data)
     })
 
-    const updateUploadProgress = async (data) => {
+    window.api.receive('checked', (data)  => { 
+        console.log("Got p2p data", data)
+        if (data) {
+            toast.success(`P2P connection esablished`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+            return
+        }
+
+        toast.error('P2P connection failed', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+         })
+        
+    })
+
+    const updateUploadProgress = (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
         $upload.some(a => { 
@@ -395,7 +415,7 @@
         $upload = $upload
     }
 
-    const updateDownloadProgress = async (data) => {
+    const updateDownloadProgress = (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
         $download.some(a => { 
@@ -455,9 +475,28 @@
 <Toaster/>
 
 {#if ready}
-
+    <StoreFunctions/>
     {#if startAnimation}
         <div class="shine"></div>
+    {/if}
+
+    {#if $swarm.active.length}
+            <Conference />
+            {#if $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))}
+                <ConferenceFloater />
+            {/if}
+    {/if}
+
+  
+
+    {#if ($user.loggedIn && $swarm.call.length)}
+
+    {#each $swarm.call as connection}
+        {#if $swarm.call.some((a) => a.peerAudio === true)}
+            <PeerAudio audioCall="{connection}"/>
+        {/if}
+    {/each}
+
     {/if}
 
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
@@ -505,6 +544,7 @@
             <RightMenu/>
         {/if}
         <Webrtc/>
+        <Group_Webrtc/>
     {/if}
 
     {#if $appUpdateState.openPopup}

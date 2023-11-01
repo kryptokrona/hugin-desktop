@@ -2,7 +2,7 @@
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
 import { onDestroy, onMount } from 'svelte'
-import { rtc_groups, user, webRTC } from '$lib/stores/user.js'
+import { rtc_groups, user, webRTC, swarm } from '$lib/stores/user.js'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 //Use for filesharing later
 import { videoGrid } from '$lib/stores/layout-state.js'
@@ -23,7 +23,44 @@ onMount(async () => {
 })
 
 onDestroy(() => {
-    window.api.removeAllListeners('groupRtcMsg')
+    // window.api.removeAllListeners('groupRtcMsg')
+})
+
+window.api.receive('swarm-connected', () => { 
+    clearMessages()
+})
+
+window.api.receive('start-call', () => { 
+    if ($webRTC.groupCall) return
+    clearMessages()
+})
+window.api.receive('answer-call', () => { 
+    if ($webRTC.groupCall) return
+    clearMessages()
+})
+
+const clearMessages = () => {
+    $rtcgroupMessages = []
+    fixedRtcGroups = []
+}
+
+window.api.receive('peer-connected', (data) => { 
+    if ($swarm.active.length) {
+            let joinedMessage = {
+            message: "Joined the lobby",
+            grp: $swarm.activeSwarm.key,
+            reply: false,
+            address: data.address,
+            time: parseInt(data.time),
+            name: data.name,
+            hash: data.time,
+            joined: true,
+            channel: "Chat room"
+        }
+        
+    fixedRtcGroups.push(joinedMessage)
+    fixedRtcGroups = fixedRtcGroups
+    }
 })
 
 //Listens for new messages from backend
@@ -32,7 +69,7 @@ window.api.receive('groupRtcMsg', (data) => {
         $rtc_groups.unread.push(data)
         $rtc_groups.unread = $rtc_groups.unread
     }
-    if (data.k === $user.huginAddress.substring(0, 99)) return
+    if (data.address === $user.huginAddress.substring(0, 99)) return
     console.log('Group rtc message', data.group)
     console.log('This group rtc key', $webRTC.groupCall)
     //Push new message to store
@@ -46,8 +83,16 @@ function sendGroupRtCMsg(e) {
     let myaddr = $user.huginAddress.substring(0, 99)
     let time = Date.now()
     let myName = $user.username
-    let group = $webRTC.groupCall
+    let group
     let offchain = true
+    const is_swarm = $swarm.showVideoGrid
+    let channel = ""
+    if ($webRTC.groupCall) {
+         group = $webRTC.groupCall
+    } else if(is_swarm) {
+        group = $swarm.activeSwarm.key
+        channel = "Chat room"
+    }
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
@@ -62,6 +107,7 @@ function sendGroupRtCMsg(e) {
         time: time,
         name: myName,
         hash: time,
+        channel: channel
     }
     let sendMsg = {
         m: msg,
@@ -71,12 +117,13 @@ function sendGroupRtCMsg(e) {
         t: time,
         n: myName,
         hash: time,
+        c: channel
     }
 
     console.log('wanna send this', sendMsg)
     printGroupRtcMessage(myGroupRtCMessage)
     if (!offchain) return
-    window.api.sendGroupMessage(sendMsg, true)
+    window.api.sendGroupMessage(sendMsg, true, is_swarm)
     replyExit()
     scrollDown()
 }
@@ -223,7 +270,7 @@ window.api.receive('sent_rtc_group', (data) => {
         <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
               on:drop={dropFile}> -->
         <div class="inner">
-            {#each fixedRtcGroups as message}
+            {#each fixedRtcGroups as message (message.hash)}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupRtCMsg(e)}"
                     on:replyTo="{(e) => replyToMessage(message.hash, message.name)}"
@@ -238,6 +285,7 @@ window.api.receive('sent_rtc_group', (data) => {
                     timestamp="{message.time}"
                     hash="{message.hash}"
                     rtc="{true}"
+                    joined={message.joined ? true : false}
                 />
             {/each}
         </div>
@@ -307,4 +355,5 @@ p {
 .show {
     margin-right: 0;
 }
+
 </style>

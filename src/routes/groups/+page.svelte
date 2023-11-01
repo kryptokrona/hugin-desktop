@@ -1,18 +1,19 @@
 <script>
-import {fade} from 'svelte/transition'
+import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {groupMessages} from '$lib/stores/groupmsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
 import GroupList from '$lib/components/chat/GroupList.svelte'
-import {groups, notify, user} from '$lib/stores/user.js'
+import {groups, notify, user, swarm} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import InfiniteScroll from "svelte-infinite-scroll";
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
-import { containsOnlyEmojis } from '$lib/utils/utils'
+import { containsOnlyEmojis, sleep } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
+import NewChannel from './components/NewChannel.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -24,6 +25,7 @@ let replyTrue = false
 let scrollGroups = []
 let windowHeight
 let windowChat
+let channelMessages = []
 
 const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 
@@ -32,8 +34,7 @@ const hashPadding = () => {
 }
 
 onMount(async () => {
-
-    let filter = $notify.unread.filter((a) => a.type !== 'group')
+    let filter = $notify.unread.filter((a) => (a.type !== 'group'))
     $notify.unread = filter
     scrollDown()
 
@@ -41,23 +42,51 @@ onMount(async () => {
     window.api.receive('groupMsg', (data) => {
         if (data.address === $user.huginAddress.substring(0, 99)) return
 
-        if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') {
+        if (data.channel.length) {
+
+            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel === $swarm.activeChannel.name) {
+                printGroupMessage(data)
+            }
+
+            if (!channelMessages.some(a => a.channel === data.channel) && data.group === $groups.thisGroup.key) {
+                //Must set message before updating channels
+                //channelMessages.unshift(data)
+                //setChannels()
+                return
+            }
+
+            channelMessages.unshift(data)
+                //This store is not used yet, not sure if we need it, these messages are only relevant in /groups atm
+            $swarm.activeChannelMessages.unshift(data)
+            return
+        } else {
+        if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.activeChannel.name.length < 1) {
             //Push new message to store
             printGroupMessage(data)
         } else {
             console.log('Another group', data)
         }
-})
+        }
+    })
+    
 
 })
 
 onDestroy(() => {
     window.api.removeAllListeners('groupMsg')
     window.api.removeAllListeners('sent_group')
+    window.api.removeAllListeners('set-channels')
 })
 
 window.api.receive('sent_group', (data) => {
     addHash(data)
+})
+
+
+window.api.receive('set-channels', async () => { 
+    //Await swarm data to be set
+    await sleep(200)
+    setChannels()
 })
 
 //Check for possible errors
@@ -80,11 +109,14 @@ const sendGroupMsg = async (e) => {
     let time = Date.now()
     let myName = $user.username
     let group = thisGroup
-
+    let in_swarm = $swarm.active.some(a => a.key === thisGroup && $swarm.showVideoGrid)
+    let in_channel = $swarm.activeChannel.name
+    let offchain = in_swarm
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
     }
+    
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
     let myGroupMessage = {
         message: msg,
@@ -104,9 +136,18 @@ const sendGroupMsg = async (e) => {
         t: time,
         n: myName,
         hash: time,
+        swarm: in_swarm
+    }
+
+    if (in_channel && in_swarm) {
+        sendMsg.c = in_channel
+        myGroupMessage.channel = in_channel
+        channelMessages.unshift(myGroupMessage)
+        //Doin this global store for better use in future
+        $swarm.activeChannelMessages.unshift(myGroupMessage)
     }
     
-    window.api.sendGroupMessage(sendMsg)
+    window.api.sendGroupMessage(sendMsg, offchain, in_swarm)
     printGroupMessage(myGroupMessage)
     replyExit()
     scrollDown()
@@ -188,24 +229,27 @@ const openAddGroup = () => {
     }
 }
 //Adds new Group to groArray and prints that Group, its probably empty.
-const addNewGroup = (e) => {
+const addNewGroup = async (e) => {
     let group = e.detail
     if (group.length < 32) return
     openAddGroup()
+    //Avoid svelte collision
+    let hash = Date.now().toString() + hashPadding()
     let add = {
         m: 'Joined group',
         n: group.name,
-        hash: Date.now() * 2,
+        hash: hash,
         t: Date.now().toString(),
         s: '',
-        k: group.key,
         sent: false,
         r: '',
+        k: group.key,
         g: group.key,
-        h: parseInt(Date.now()),
+        h: parseInt(Date.now() * 1000),
     }
+    
     window.api.addGroup(add)
-
+    await sleep(200)
     printGroup(group)
 }
 
@@ -217,27 +261,29 @@ $: if ($groupMessages.length == 0) {
 }
 
 //Checks messages for reactions in chosen Group from printGroup() function
-async function checkReactions() {
+async function checkReactions(array) {
+    console.log("Array?", array)
     //All group messages all messages except reactions
-    filterGroups = await $groupMessages.filter(
+    filterGroups = await array.filter(
         (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
     )
     //Only reactions
-    filterEmojis = await $groupMessages.filter(
+    filterEmojis = await array.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
     )
     if (filterEmojis.length) {
         //Adding emojis to the correct message.
         addEmoji()
     } else {
-        fixedGroups = filterGroups
+        let uniq = {}
+        fixedGroups = filterGroups.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
     }
 }
-
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
     fixedGroups = []
     scrollGroups = []
+    channelMessages = []
     noMsgs = false
     groups.update((data) => {
         return {
@@ -245,19 +291,47 @@ async function printGroup(group) {
             thisGroup: { key: group.key, name: group.name, chat: true},
         }
     })
-    //Load GroupMessages from db
-    await groupMessages.set(await window.api.printGroup(group.key))
-    //Check for emojis and filter them
-    await checkReactions()
-    //Reactions should be set, update thisGroup in store and set reply to false.
-    groups.update((data) => {
-        return {
-            ...data,
-            replyTo: { reply: false },
-        }
-    })
+   
+    const messages = await window.api.printGroup(group.key)
+    const chain_messages = messages.filter(a => !a.channel)
+    $swarm.activeChannelMessages = messages.filter(a => a.channel)
+
+    console.log("channelMessages", channelMessages)
+    
+    //setChannels()
+
+    console.log("Active channel! print!", $swarm.activeChannel)
+    console.log("Group key", group.key)
+    // if ($swarm.activeChannel.key === group.key) {
+    //     console.log("Print channel!")
+        printChannel($swarm.activeChannel.name)
+    // } else {
+        //Prin
+        $swarm.activeChannel = {name: "", key: ""}
+        //Load GroupMessages from db
+        await groupMessages.set(chain_messages)
+        //Check for emojis and filter them
+        await checkReactions(chain_messages)
+        //Reactions should be set, update thisGroup in store and set reply to false.
+    // }
+
     replyExit()
     scrollDown()
+}
+
+
+
+function setChannels() {
+    let in_swarm = $swarm.active.find(a => a.key === thisGroup)
+    if (in_swarm) {
+        let uniq = {}
+        // if (!channelMessages.some(a => a.channel && a.grp === thisGroup)) return
+        const channels = channelMessages.filter((obj) => !uniq[obj.channel] && (uniq[obj.channel] = true))
+        // if (!channels) return
+        const mapped = [{name: "Chat room"}]
+        in_swarm.channels = mapped
+        $swarm.active = $swarm.active
+    }
 }
 
 async function updateReactions(msg) {
@@ -302,7 +376,7 @@ $: wantToAdd = $groups.addGroup
 $: replyTrue = $groups.replyTo.reply
 
 function addHash(data) {
-    fixedGroups.slice(-10).some(function (a) {
+    fixedGroups.some(function (a) {
         if (a.hash === data.time) {
             a.hash = data.hash
         }
@@ -330,7 +404,22 @@ function addHash(data) {
     //     console.log('want to load more')
     // }
 
+    const printChannel = async (name) => {
+        let filter = $notify.unread.filter((a) => a.channel !== name)
+        $notify.unread = filter
+        fixedGroups = []
+        filterEmojis = []
+        let channel = channelMessages.filter(a => a.channel === name)
+        $swarm.activeChannelMessages = channel
+        console.log("Active channel messages",  $swarm.activeChannelMessages)
+        //await checkReactions(channel)
+    }
+
 </script>
+
+{#if $swarm.newChannel === true}
+ <NewChannel/>
+{/if}
 
 {#if wantToAdd}
     <AddGroup on:click="{openAddGroup}" on:addGroup="{(e) => addNewGroup(e)}" />
@@ -344,11 +433,12 @@ function addHash(data) {
     <GroupList
         on:printGroup="{(e) => printGroup(e.detail)}"
         on:removeGroup="{() => printGroup($groups.groupArray[0])}"
+        on:printChannel="{(e) => printChannel(e.detail)}"
     />
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight}>
+        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
             {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress) && !$groups.thisGroup.chat}
                 <div>
                     <Loader/>

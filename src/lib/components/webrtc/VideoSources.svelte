@@ -1,17 +1,21 @@
 <script>
 import { fade } from 'svelte/transition'
-import { webRTC } from '$lib/stores/user.js'
-
+import { webRTC, swarm } from '$lib/stores/user.js'
+import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
+export let conference = false
 let open
 let changed
-let videoDevices = $webRTC.devices.filter((a) => a.kind == 'videoinput')
+let add = false
+let videoDevices = $mediaSettings.devices.filter((a) => a.kind == 'videoinput')
+
 
 function pickSource(src) {
-    console.log('pick', src)
-    console.log('change this', src.id)
-    window.api.changeSource(src.deviceId)
-    if ($webRTC.screenshare) {
-        $webRTC.screenshare = false
+    let add = false
+    if (!$videoSettings.myVideo && conference) add = true
+    
+    window.api.changeSource(src.deviceId, conference, add)
+    if ($videoSettings.screenshare) {
+        $videoSettings.screenshare = false
     }
     buttonGlow()
 }
@@ -24,7 +28,8 @@ const buttonGlow = () => {
     }, 1000)
 }
 
-$: if (open) window.api.checkSources()
+$: activeDevice = $mediaSettings.cameraId
+
 </script>
 
 <div style="display: flex; flex-direction: column">
@@ -32,13 +37,13 @@ $: if (open) window.api.checkSources()
         <div in:fade class="list layered-shadow">
             {#each videoDevices as src}
                 <div on:click="{() => pickSource(src)}">
-                    <h5>{src.label}</h5>
+                    <h5 class:picked={activeDevice === src.deviceId}>{src.label}</h5>
                 </div>
             {/each}
         </div>
     {/if}
     <div class="share" class:border_rgb="{changed}" class:open on:click="{() => (open = !open)}">
-        <h5>{$webRTC.screenshare ? 'Screen' : 'Camera'}</h5>
+        <h5>{$videoSettings.screenshare ? 'Screen' : 'Camera'}</h5>
     </div>
 </div>
 
@@ -70,7 +75,7 @@ $: if (open) window.api.checkSources()
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    width: 120px;
+    width: 300px;
     padding: 5px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
@@ -87,5 +92,9 @@ $: if (open) window.api.checkSources()
             background-color: var(--card-border);
         }
     }
+}
+
+.picked {
+    color: var(--success-color);
 }
 </style>

@@ -24,9 +24,9 @@ const WINDOW_API = {
         ipcRenderer.send('sendBoardMsg', msg)
     },
 
-    sendGroupMessage: (msg, offchain) => {
-        console.log('Send group msg', msg, offchain)
-        ipcRenderer.send('sendGroupsMessage', msg, offchain)
+    sendGroupMessage: (msg, offchain, swarm) => {
+        console.log('Send group msg', msg, offchain, swarm)
+        ipcRenderer.send('sendGroupsMessage', msg, offchain, swarm)
     },
 
     decryptMessage: (msg) => {
@@ -36,6 +36,7 @@ const WINDOW_API = {
         console.log('key', key)
         ipcRenderer.send('decrypt_rtc_group_message', msg, key)
     },
+    
 
     getMessages: async (data) => {
         const res = await ipcRenderer.invoke('getMessages')
@@ -142,22 +143,22 @@ const WINDOW_API = {
         ipcRenderer.send('switchNode', node)
     },
 
-    shareScreen: async () => {
-        ipcRenderer.invoke('shareScreen')
+    shareScreen: async (start, conference) => {
+        ipcRenderer.invoke('shareScreen', false, conference)
     },
 
     setCamera: async () => {
         ipcRenderer.send('setCamera')
     },
 
-    changeSource: async (src) => {
+    changeSource: async (src, conference, add) => {
         console.log('preload', src)
-        ipcRenderer.send('change-src', src)
+        ipcRenderer.send('change-src', src, conference, add)
     },
 
-    changeAudioSource: async (src) => {
+    changeAudioSource: async (src, conference, input) => {
         console.log('preload audio', src)
-        ipcRenderer.send('change-audio-src', src)
+        ipcRenderer.send('change-audio-src', src, conference, input)
     },
 
     checkSources: async () => {
@@ -220,6 +221,10 @@ const WINDOW_API = {
      //HANDLE ADDRESS
      checkPass: async (pass, hash) => {
         await ipcRenderer.invoke('check-pass', pass, hash)
+    },
+
+    exitVoiceChannel: async () => {
+        ipcRenderer.send('exit-voice-channel')
     },
 
      errorMessage: async (errorMessage) => {

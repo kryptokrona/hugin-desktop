@@ -18,12 +18,6 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
 
     let prts = split[4]
 
-    let ssrc = split[5].split('&').map(function (h) {
-        return en.decode(h)
-    })
-
-    let msid = split[6]
-
     let external_ip = ''
 
     let external_ports = []
@@ -97,15 +91,11 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
             j += 1
             external_port_found = false
         }
-
+        
         i += 1
-    })
+     })
 
     let external_ip_out = ipv6(external_ip) ? 'c=IN IP6 ' + external_ip : 'c=IN IP4 ' + external_ip;
-
-    if (external_ip.length == 0) {
-        external_id = ips[0].substring(1)
-    }
 
     console.log(external_ports.length / 3)
     console.log((external_ports.length / 3) * 2)
@@ -119,16 +109,14 @@ const expand_sdp_offer = (compressed_string, incoming = false) => {
 o=- 5726742634414877819 3 IN IP4 127.0.0.1
 s=-
 t=0 0
-a=group:BUNDLE 0 1 2
-a=msid-semantic: WMS ` +
-        msid +
-        `
-m=audio ` +
+a=group:BUNDLE 0
+a=msid-semantic: WMS
+m=application ` +
         external_ports[0] +
-        ` UDP/TLS/RTP/SAVPF 111 103
-` + external_ip_out +
-`
-a=rtcp:9 IN IP4 0.0.0.0
+        ` UDP/DTLS/SCTP webrtc-datachannel
+` +
+        external_ip_out +
+        `
 ` +
         candidates[1] +
         `a=ice-ufrag:` +
@@ -142,133 +130,6 @@ a=fingerprint:sha-256 ` +
         `
 a=setup:actpass
 a=mid:0
-a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
-a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
-a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=sendrecv
-a=rtcp-mux
-a=rtpmap:111 opus/48000/2
-a=rtcp-fb:111 transport-cc
-a=fmtp:111 minptime=10;useinbandfec=1
-a=rtpmap:103 ISAC/16000
-a=ssrc:` +
-        ssrc[0] +
-        ` cname:c2J8K3mNIXGEi9qt
-a=ssrc:` +
-        ssrc[0] +
-        ` msid:` +
-        msid +
-        ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
-a=ssrc:` +
-        ssrc[0] +
-        ` mslabel:` +
-        msid +
-        `
-a=ssrc:` +
-        ssrc[0] +
-        ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video ` +
-        external_ports[external_ports.length / 3] +
-        ` UDP/TLS/RTP/SAVPF 96 97
-` + external_ip_out +
-`
-a=rtcp:9 IN IP4 0.0.0.0
-` +
-        candidates[2] +
-        `a=ice-ufrag:` +
-        ice_ufrag +
-        `
-a=ice-pwd:` +
-        ice_pwd +
-        `
-a=fingerprint:sha-256 ` +
-        fingerprint +
-        `
-a=setup:actpass
-a=mid:1
-a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
-a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
-a=extmap:13 urn:3gpp:video-orientation
-a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=extmap:5 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
-a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
-a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
-a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
-a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
-${
-    type == 'Δ'
-        ? 'a=sendrecv'
-        : 'a=inactive'
-}
-a=rtcp-mux
-a=rtcp-rsize
-a=rtpmap:96 VP8/90000
-a=rtcp-fb:96 goog-remb
-a=rtcp-fb:96 transport-cc
-a=rtcp-fb:96 ccm fir
-a=rtcp-fb:96 nack
-a=rtcp-fb:96 nack pli
-a=rtpmap:97 rtx/90000
-a=fmtp:97 apt=96
-${
-    type == 'Δ'
-        ? 'a=ssrc-group:FID ' +
-          ssrc[1] +
-          ' ' +
-          ssrc[2] +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' cname:qwjy1Thr/obQUvqd\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' msid:' +
-          msid +
-          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' mslabel:' +
-          msid +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' cname:qwjy1Thr/obQUvqd\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' msid:' +
-          msid +
-          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' mslabel:' +
-          msid +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n'
-        : ''
-}m=application ` +
-        external_ports[(external_ports.length / 3) * 2] +
-        ` UDP/DTLS/SCTP webrtc-datachannel
-` +
-        external_ip_out +
-        `
-` +
-        candidates[3] +
-        `a=ice-ufrag:` +
-        ice_ufrag +
-        `
-a=ice-pwd:` +
-        ice_pwd +
-        `
-a=fingerprint:sha-256 ` +
-        fingerprint +
-        `
-a=setup:actpass
-a=mid:2
 a=sctp-port:5000
 a=max-message-size:262144
 `
@@ -289,7 +150,7 @@ const expand_sdp_answer = (compressed_string) => {
     console.log('split:', split)
 
     let type = compressed_string.substring(0, 1)
-
+    
     let ice_ufrag = split[0].substring(1)
 
     let ice_pwd = split[1]
@@ -299,16 +160,6 @@ const expand_sdp_answer = (compressed_string) => {
     let ips = split[3]
 
     let prts = split[4]
-
-    let ssrc = split[5].split('&').map(function (h) {
-        return en.decode(h)
-    })
-
-    if (ssrc[1] == undefined) {
-        ssrc[1] = ssrc[0]
-    }
-
-    let msid = split[6]
 
     let candidates = ''
 
@@ -391,154 +242,35 @@ const expand_sdp_answer = (compressed_string) => {
         external_port = '9'
     }
 
-    let sdp =
-        `v=0
-o=- 8377786102162672707 3 IN IP4 127.0.0.1
+let sdp =
+`v=0
+o=- 5726742634414877819 3 IN IP4 127.0.0.1
 s=-
 t=0 0
-a=group:BUNDLE 0 1 2
-a=msid-semantic: WMS ` +
-        msid +
-        `
-m=audio ` +
-        external_port +
-        ` UDP/TLS/RTP/SAVPF 111 103
-` + ip_out + `
-a=rtcp:9 IN IP4 0.0.0.0
+a=group:BUNDLE 0
+a=msid-semantic: WMS
+m=application ` +
+    external_port +
+    ` UDP/DTLS/SCTP webrtc-datachannel
 ` +
-        candidates +
-        `a=ice-ufrag:` +
-        ice_ufrag +
-        `
+    ip_out +
+    `
+` +
+    candidates +
+    `a=ice-ufrag:` +
+    ice_ufrag +
+    `
 a=ice-pwd:` +
-        ice_pwd +
-        `
+    ice_pwd +
+    `
 a=fingerprint:sha-256 ` +
-        fingerprint +
-        `
+    fingerprint +
+    `
 a=setup:active
 a=mid:0
-a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
-a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
-a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=sendrecv
-a=rtcp-mux
-a=rtpmap:111 opus/48000/2
-a=rtcp-fb:111 transport-cc
-a=fmtp:111 minptime=10;useinbandfec=1
-a=rtpmap:103 ISAC/16000
-a=ssrc:` +
-        ssrc[0] +
-        ` cname:c2J8K3mNIXGEi9qt
-a=ssrc:` +
-        ssrc[0] +
-        ` msid:` +
-        msid +
-        ` 333cfa17-df46-4ffc-bd9a-bc1c47c90485
-a=ssrc:` +
-        ssrc[0] +
-        ` mslabel:` +
-        msid +
-        `
-a=ssrc:` +
-        ssrc[0] +
-        ` label:333cfa17-df46-4ffc-bd9a-bc1c47c90485
-m=video 9 UDP/TLS/RTP/SAVPF 96 97
-c=IN IP4 0.0.0.0
-a=rtcp:9 IN IP4 0.0.0.0
-a=ice-ufrag:` +
-        ice_ufrag +
-        `
-a=ice-pwd:` +
-        ice_pwd +
-        `
-a=fingerprint:sha-256 ` +
-        fingerprint +
-        `
-a=setup:active
-a=mid:1
-a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
-a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
-a=extmap:13 urn:3gpp:video-orientation
-a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-a=extmap:5 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
-a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
-a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
-a=extmap:8 http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07
-a=extmap:9 http://www.webrtc.org/experiments/rtp-hdrext/color-space
-${
-    type == 'δ'
-        ? 'a=sendrecv'
-        : 'a=recvonly'
-}
-a=rtcp-mux
-a=rtcp-rsize
-a=rtpmap:96 VP8/90000
-a=rtcp-fb:96 goog-remb
-a=rtcp-fb:96 transport-cc
-a=rtcp-fb:96 ccm fir
-a=rtcp-fb:96 nack
-a=rtcp-fb:96 nack pli
-a=rtpmap:97 rtx/90000
-a=fmtp:97 apt=96
-${
-    type == 'δ'
-        ? 'a=ssrc-group:FID ' +
-          ssrc[1] +
-          ' ' +
-          ssrc[2] +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' cname:qwjy1Thr/obQUvqd\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' msid:' +
-          msid +
-          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' mslabel:' +
-          msid +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[1] +
-          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' cname:qwjy1Thr/obQUvqd\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' msid:' +
-          msid +
-          ' 6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' mslabel:' +
-          msid +
-          '\r\n' +
-          'a=ssrc:' +
-          ssrc[2] +
-          ' label:6a080e8b-c845-4716-8c42-8ca0ab567ebe\r\n'
-        : ''
-}m=application 9 UDP/DTLS/SCTP webrtc-datachannel
-c=IN IP4 0.0.0.0
-b=AS:30
-a=ice-ufrag:` +
-        ice_ufrag +
-        `
-a=ice-pwd:` +
-        ice_pwd +
-        `
-a=fingerprint:sha-256 ` +
-        fingerprint +
-        `
-a=setup:active
-a=mid:2
 a=sctp-port:5000
 a=max-message-size:262144
 `
-
 
     return { type: 'answer', sdp: sdp }
 }
@@ -602,11 +334,8 @@ const parse_sdp = (sdp, answr = false) => {
             }
         } else if (line.includes('a=msid-semantic:')) {
             msid = line.substr(16).split(' ')[2]
-            console.log('msid', msid)
         }
     })
-
-    //Reset incoming ipv6 settings
 
     return (
         ice_ufrag +
@@ -617,11 +346,7 @@ const parse_sdp = (sdp, answr = false) => {
         ',' +
         ips.join('&') +
         ',' +
-        prts.join('&') +
-        ',' +
-        ssrcs.join('&') +
-        ',' +
-        msid
+        prts.join('&')
     )
 }
 

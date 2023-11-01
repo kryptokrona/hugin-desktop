@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onMount } from 'svelte'
-import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
@@ -13,6 +13,7 @@ import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
 import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
+import { groupMessages } from '$lib/stores/groupmsgs.js'
 
 export let msg
 export let msgFrom
@@ -25,6 +26,7 @@ export let hash
 export let message
 export let reply_to_this = false
 export let rtc = false
+export let joined = false
 
 let thisreply = ''
 let has_reaction = false
@@ -53,6 +55,8 @@ let page
 let offchain = false
 let thisReply = false
 let replyError = false
+
+let in_swarm
 
 onMount( async () => {
         if (reply.length === 64) 
@@ -87,18 +91,24 @@ function checkMessage() {
         return
     }
 
-
-
 }
+
+//Add extra number to avoid collision for keys in Svelte each loop
+const svelteHashPadding = Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+
 async function checkreply(reply) {
+    let group_reply
+    
     if (offchain) {
-        let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
-        return group_reply
+        //Search in rtc messages
+        group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
+        group_reply.hash + svelteHashPadding
+        if (group_reply) return group_reply
     }
+    //Check in db if we can find it
     let thisreply = await window.api.getGroupReply(reply)
     if (!thisreply) return false
-    //Add extra number to avoid collision for keys in Svelte each loop
-    thisreply.hash = thisreply.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+    thisreply.hash = thisreply.hash + svelteHashPadding
     return thisreply
 }
 
@@ -255,7 +265,7 @@ const openLinkMessage = (url) => {
             {:else if emojiMessage}
                 <p class="emoji">{msg}</p>
             {:else}
-                <p class:rtc style="user-select: text;">{msg}</p>
+                <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}
         </div>
 
@@ -423,5 +433,10 @@ p {
 
 .emoji {
     font-size: 21px !important;
+    user-select: text;
+}
+
+.joined {
+    font-style: italic;
 }
 </style>

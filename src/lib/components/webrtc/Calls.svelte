@@ -5,6 +5,8 @@ import { audioLevel, user, webRTC } from '$lib/stores/user.js'
 import { onMount } from 'svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import { videoGrid } from '$lib/stores/layout-state.js'
+import { sleep } from '$lib/utils/utils'
+import { mediaSettings, videoSettings, audioSettings, video } from '$lib/stores/mediasettings'
 
 onMount(() => {
     checkSources()
@@ -31,7 +33,7 @@ window.api.receive('screen-share', (id) => {
 })
 
 window.api.receive('set-camera', () => {
-    changeCamera(true, $webRTC.cameraId)
+    changeCamera(true, $mediaSettings.cameraId)
 })
 
 window.api.receive('set-audio-input', (id) => {
@@ -42,32 +44,32 @@ window.api.receive('check-src', () => {
     checkSources()
 })
 
-window.api.receive('change-source', (src) => {
-    console.log('want to change in calls', src)
-    changeCamera(true, src)
-})
+window.api.receive('set-audio-input', (src, input) => {
+        if (!input) return
+        changeAudio(src)
+    })
 
+window.api.receive('change-source', (src, add) => {
+    console.log('want to change in calls', src)
+    changeCamera(true, src, add)
+})
+//Got expanded offer sdp. Signal in data channel
 window.api.receive('got-expanded', async (callData) => {
     console.log('caller expanded', callData)
-    let contact = $webRTC.call.find((a) => a.chat == callData[1])
-    console.log(contact)
-
-    contact.peer.signal(callData[0])
+    let [data, address] = callData
+    signalPeerChannel(address, data)
 })
+
+//Awaits answer sdp, Signal to data channel
+window.api.receive('got-callback', (callerdata) => {
+    let callback = callerdata.data
+    let address = callerdata.chat
+    signalPeerChannel(address, callback)
+})
+
 
 window.api.receive('rtc_message', (msg, to_group = false) => {
     sendRtcMessage(msg, to_group)
-})
-
-//Awaits msg answer with sdp from contact
-window.api.receive('got-callback', (callerdata) => {
-    let callback = JSON.parse(callerdata.data)
-    console.log('callback parsed', callback)
-    console.log('callerdata', callerdata)
-    let contact = $webRTC.call.find((a) => a.chat === callerdata.chat)
-    console.log('contact filter', contact)
-    contact.peer.signal(callback)
-    console.log('Connecting to ...', callerdata.chat)
 })
 
 //Update device list on change
@@ -97,9 +99,8 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
         sendInviteNotification(contact, contact_address)
     }
 
-     if ($webRTC.call.some(a => a.peerVideo)) {
-        let activeStream = $webRTC.myStream
-        gotMedia(activeStream, contact, isVideo, false)
+     if ($webRTC.call.length > 1) {
+        gotMedia($webRTC.myStream, contact, isVideo, false)
         return
     }
 
@@ -121,6 +122,386 @@ const startCall = async (contact, isVideo, invite = false, screenshare = false) 
         })
 }
 
+function startDataChannel(video, this_call, contact) {
+    let channel = new Peer({
+        initiator: true,
+        trickle: false,
+        wrtc: wrtc,
+        config: { iceServers: [{ urls: 'stun:stun.bahnhof.net:3478' }, { urls: 'stun:global.stun.twilio.com:3478' }] },
+    })
+    const address = this_call.chat
+    this_call.channel = channel
+        //Check status for offer
+
+    let group = false
+    let offchain = false
+
+    if ($webRTC.groupCall && $webRTC.call.length > 1 && $webRTC.call[0].type == 'invite') {
+        offchain = true
+        group = true
+    }
+    
+    sendOffer(channel, contact, video, group, offchain)
+    return channel
+}
+
+async function answerDataChannel(msg, address, key, video, offchain, peer2, this_call) {
+
+    let channel = new Peer({trickle: false, wrtc: wrtc })
+    this_call.channel = channel
+    //Data channel
+    console.log("channel?", channel)
+ 
+    channel.on('connect', async () => {
+        this_call.channel_connected = true
+        console.log("Data channel connected!")
+        channel._channel.addEventListener('message', (event) => {
+        checkMessage(event, address)
+        })
+    })
+    
+    peer2.on('signal', (data) => {
+        console.log('initial answer data:', data)
+        let dataToSend = {
+            data: data,
+            type: 'answer',
+            contact: address + key,
+            video: video,
+            offchain: offchain,
+            group: group,
+        }
+
+        console.log("Sending new full answer sdp!", dataToSend)
+        sendPeerMessage(dataToSend, address)
+        return
+    })
+    
+    let group = false
+
+    if (offchain) {
+        group = true
+    }
+    
+
+    sendAnswer(msg, address, channel, key, video, offchain, group, true)
+    return channel
+}
+
+async function gotMedia(stream, contact, video, screen_stream = false) {
+
+    $webRTC.myStream = stream
+    let this_call = getActive(contact.substring(0, 99))
+    if (video) {
+        $videoSettings.myVideo = true
+        if (screen_stream) {
+            let id = await window.api.shareScreen(true)
+            shareScreen(id)
+        }
+    } else {
+        console.log('Audio call')
+    }
+
+
+    const channel = startDataChannel(video, this_call, contact)
+    let peer1
+
+    //Data channel connect event
+    channel.on('connect', async () => {
+
+        console.log("Data channel connected!")
+        //Set datachannel connected 
+        this_call.channel_connected = true
+        //Start voice/video peer
+        peer1 = await startPeer1(stream, video, contact)
+        this_call.peer = peer1
+        //Got offer signal
+            peer1.on('signal', (data) => {
+
+                let dataToSend = {
+                    data: data,
+                    type: 'offer',
+                }
+                
+                //Send offer via first data channel
+                console.log("Sending new full sdp!", dataToSend)
+                sendPeerMessage(dataToSend, contact.substring(0,99))
+            })
+
+            peer1.on('stream', (peerStream) => {
+                console.log(' Got peerstream object in store')
+
+                //Set peerStream to store
+                this_call.peerStream = peerStream
+                if (video) {
+                    $videoGrid.showVideoGrid = true
+
+                } else {
+                }
+                //Set video true for UI
+                this_call.peerVideo = true
+        })
+    })
+
+    //Data channel
+    channel._channel.addEventListener('message', (event) => {
+        checkMessage(event, contact.substring(0,99))
+    })
+
+    checkMyVolume(stream)
+    //Set webRTC store update for call
+
+    this_call.screen_stream = screen_stream
+    this_call.video = video
+    this_call.myStream = stream
+
+    console.log('This call', this_call)
+    checkSources()
+    $webRTC.active = true
+}
+
+async function startPeer1(stream, video, contact) {
+    let peer1 = new Peer({
+        stream: stream,
+        offerOptions: { offerToReceiveAudio: true, offerToReceiveVideo: true },
+        initiator: true,
+        trickle: false,
+        wrtc: wrtc,
+        config: { iceServers: [{ urls: 'stun:stun.bahnhof.net:3478' }, { urls: 'stun:stun.ipfire.org:3478' }] },
+    })
+
+    peer1.on('close', (e) => {
+        console.log(e)
+        console.log('Connection lost..')
+        endCall(peer1, stream)
+        // ENDCALL AUDIO
+    })
+
+    peer1.on('error', (e) => {
+        console.log(e)
+        console.log('Connection lost..')
+
+        endCall(peer1, stream)
+        // ENDCALL AUDIO
+    })
+
+    peer1.on('connect', async () => {
+        // SOUND EFFECT
+        window.api.successMessage('Call established')
+        $webRTC.call[0].connected = true    
+        checkVolume(peer1)
+        console.log('Connection established')
+        if (!$webRTC.invited) {
+            inviteToGroupCall(peer1)
+        }
+        if ($webRTC.call.length > 1) {
+            $webRTC.group = true
+        }
+    })
+
+    peer1.on('data', (msg) => {
+        let incMsg = JSON.parse(msg)
+        console.log('msg from peer2', incMsg)
+    })
+
+    //Data channel
+    peer1._channel.addEventListener('message', (event) => {
+        checkMessage(event, contact.substring(0,99))
+    })
+
+
+    //sendOffer(peer1, contact, video, group, offchain)
+
+    return peer1
+}
+
+const answerCall = (msg, contact, key, offchain = false) => {
+
+    let video = false
+    if (msg.substring(0, 1) === 'Δ') {
+        video = true
+    }
+    $videoSettings.myVideo = video
+
+    // get video/voice stream
+    navigator.mediaDevices
+        .getUserMedia({
+            video: video,
+            audio: {
+                googNoiseSupression: true,
+            },
+        })
+        .then(gotMedia)
+        .catch(() => {})
+    console.log('Got media')
+
+    async function gotMedia(stream) {
+        console.log("Got answer media", stream)
+        let this_call = getActive(contact)
+        let peer2 = await startPeer2(stream, video, this_call)
+        answerDataChannel(msg, contact, key, video, offchain, peer2, this_call)
+        checkMyVolume(stream)
+        checkSources()
+        //Set webRTC store update for call
+        this_call.peer = peer2
+        this_call.myStream = stream
+        this_call.video = video
+        
+        $webRTC.myStream = stream
+        $webRTC.active = true
+
+        if (video) {
+            $videoSettings.myVideo = true
+            $videoGrid.showVideoGrid = true
+        }
+    }
+}
+
+
+function addVideoTrack(device, stream) {
+    $webRTC.call.forEach(a => {
+        a.peer.addTrack(device.getVideoTracks()[0], stream)
+    })
+}
+
+async function startPeer2(stream, video, this_call) {
+    console.log('Starting peer 2')
+    let peer2 = new Peer({
+            stream: stream,
+            answerOptions: { offerToReceiveAudio: true, offerToReceiveVideo: true },
+            trickle: false,
+            wrtc: wrtc
+         })
+
+    peer2.on('close', (e) => {
+        console.log('Connection closed..', e)
+        endCall(peer2, stream)
+    })
+
+    peer2.on('error', (e) => {
+        console.log('Connection lost..', e)
+        endCall(peer2, stream)
+    })
+
+    peer2.on('data', (data) => {
+        console.log('data from peer', data)
+        let incMsg = JSON.parse(data)
+        console.log('msg from peer2', incMsg)
+    })
+
+    //Voice/Video connection event
+    peer2.on('connect', async () => {
+    
+        window.api.successMessage('Call established')
+        console.log('Connection established;')
+        this_call.connected = true
+        updateStore()
+        checkVolume(peer2)
+        if ($webRTC.call.length > 1) {
+            $webRTC.group = true
+        }
+
+        //Data channel
+        peer2._channel.addEventListener('message', (event) => {
+            checkMessage(event, this_call.chat)
+        })       
+
+    })
+
+    peer2.on('stream', async (peerStream) => {
+        // got remote video stream, now let's show it in a video tag
+
+        console.log('peer2 stream', peerStream)
+        this_call.peerStream = peerStream
+        
+
+        
+        if (video) {
+            $videoGrid.showVideoGrid = true
+        }
+        //Set video true for UI
+        this_call.peerVideo = true
+        $videoSettings.myVideo = true
+        console.log('Setting up link..')
+    })
+
+    return peer2
+}
+
+function updateStore() {
+    $webRTC.call = $webRTC.call
+}
+
+function sendOffer(peer, contact, video, group = false, offchain = false) {
+
+    peer.on('signal', (data) => {
+        let dataToSend = {
+            data: data,
+            type: 'offer',
+            contact: contact,
+            video: video,
+            group: group,
+            offchain: offchain,
+        }
+
+        if ($webRTC.call.some(a => a.chat === contact.substring(0,99) && a.channel_connected)) {
+            console.log("Sending new full sdp!", dataToSend)
+            sendPeerMessage(dataToSend, address)
+            return
+        }
+        console.log("Got signal first offer data connection", data)
+
+        window.api.send('get-sdp', dataToSend)
+    })
+}
+
+function sendAnswer(sdpOffer, address, peer, key, video, offchain = false, group = false, channel = false) {
+    
+    if (channel) window.api.expandSdp(sdpOffer, address)
+
+    if ($webRTC.groupCall && !$webRTC.invited) {
+        group = $webRTC.groupCall
+    }
+
+    peer.on('signal', (data) => {
+        console.log('initial answer data:', data)
+        let dataToSend = {
+            data: data,
+            type: 'answer',
+            contact: address + key,
+            video: video,
+            offchain: offchain,
+            group: group,
+        }
+
+        if ($webRTC.call.some(a => a.chat === address && a.channel.connected)) {
+            console.log("Sending new full answer sdp!", dataToSend)
+            sendPeerMessage(dataToSend, address)
+            return
+        }
+
+        console.log('sending sdp', dataToSend)
+
+        window.api.send('get-sdp', dataToSend)
+    })
+}
+
+async function startLocalVideo() {
+       //Get video/voice stream
+       navigator.mediaDevices
+        .getUserMedia({
+            video: true,
+            audio: {
+                googNoiseSupression: true,
+            },
+        })
+        .then(function (stream) {
+            $webRTC.myStream = stream
+        })
+        .catch((e) => {
+            console.log('error', e)
+        })
+}
+
 async function shareScreen(id) {
     const screen_stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -135,12 +516,16 @@ async function shareScreen(id) {
             },
         },
     })
-
-    changeVideoSource(screen_stream)
+    let add = false
+    if (!$webRTC.myStream) add = true
+    if ($webRTC.myStream) {
+        if ($webRTC.myStream.getVideoTracks().length === 0) add = true
+    }
+    changeVideoSource(screen_stream, 'screen', add)
 }
 
 $: {
-    console.log('Active Camera', $webRTC.cameraId)
+    console.log('Active Camera', $mediaSettings.cameraId)
     console.log('Active Calls', $webRTC.call)
 }
 
@@ -197,77 +582,88 @@ function sendInviteNotification(contact, contact_address) {
 }
 
 async function checkSources() {
-    let devices = await navigator.mediaDevices.enumerateDevices()
-    $webRTC.devices = devices
-    if (!$webRTC.cameraId ) {
+    $mediaSettings.devices = await navigator.mediaDevices.enumerateDevices()
+    if (!$mediaSettings.cameraId) {
         //Set defauklt camera id in store
-        let camera = $webRTC.devices.filter((a) => a.kind === 'videoinput')
-        if (!camera) $webRTC.cameraId = "none"
-        $webRTC.cameraId = camera[0].deviceId
+        let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
+        if (camera.length === 0) {
+            $mediaSettings.cameraId = "none"
+            return
+        } else $mediaSettings.cameraId = camera[0].deviceId
+
+        if (!$audioSettings.audioInput) { 
+            let audio = $mediaSettings.devices.filter((a) => a.kind === 'audioinput')
+            $audioSettings.audioInput = audio[0].deviceId
+        }
+
+        if (!$audioSettings.audioOutput) { 
+            let audio = $mediaSettings.devices.filter((a) => a.kind === 'audiooutput')
+            $audioSettings.audioOutput = audio[0].deviceId
+        }
+        
+        //Checking active stream active devices
+        if ($webRTC.myStream) {
+            $webRTC.myStream.getAudioTracks().forEach(track => {
+                if (track.kind === 'audioinput') $audioSettings.audioInput = track.getSettings().deviceId
+                if (track.kind === 'audiooutput') $audioSettings.audioOutput = track.getSettings().deviceId
+            })
+        }
         // select the desired transceiver
     }
 }
 
-async function changeVideoSource(device, id) {
+async function changeVideoSource(device, id, add = false) {
     let current = $webRTC.myStream
-    //Set video boolean to stop video
-    $webRTC.video = false
+
+    //We have no active local stream set and we are alone in the conference room
+    if (!current) {
+        $webRTC.myStream = device
+        $videoSettings.myVideo = true
+    }
+
     //Check if we have an active peer
     let peer = $webRTC.call.some(a => a.peer)
     //Add new track to current stream
-    current.addTrack(device.getVideoTracks()[0])
+    if (add && peer) {
+        addVideoTrack(device, current)
+    } 
+    
     //Replace track for all peers
-    if (peer) {
-        $webRTC.call.forEach((a) => {
-            a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current)
-        })
+    if (peer && !add) {
+        replaceVideoTrack(device, current)
     }
-    //Stop old track
-    let old = current.getVideoTracks()[0]
-    old.stop()
-    //Remove old track
-    current.removeTrack(current.getVideoTracks()[0])
-    //Update stream
-    $webRTC.myStream = current
-    //Set video boolean to play video
-    $webRTC.video = true
-    if ($webRTC.screenshare) return
-    $webRTC.cameraId = id
+    
+    if (current) current.addTrack(device.getVideoTracks()[0])
+    //Play video
+    $video.play = true
+    if (current) $webRTC.myStream = current
+
+    if (!add && current) {
+        //Stop old track
+        let old = current.getVideoTracks()[0]
+        old.stop()
+        //Remove old track
+        current.removeTrack(current.getVideoTracks()[0])
+        //Update stream
+    }
+    $videoSettings.myVideo = true
+    await sleep(200)
+    $videoSettings.loading = false
+    if ($videoSettings.screenshare) return
+    $mediaSettings.cameraId = id
 }
 
-async function changeAudioSource(device, oldSrc, chat) {
-    let current = $webRTC.myStream
-    console.log('want to change audio', device)
-    //Add new track to current stream
-    current.addTrack(device.getAudioTracks()[0])
-    //Replace track
+function getActive(contact) {
+    return $webRTC.call.find(a => a.chat === contact)
+}
+
+function replaceVideoTrack(device, current) {
     $webRTC.call.forEach((a) => {
-        console.log('replacing track', a.peer)
-        a.peer.replaceTrack(current.getAudioTracks()[0], device.getAudioTracks()[0], current)
+        a.peer.replaceTrack(current.getVideoTracks()[0], device.getVideoTracks()[0], current)
     })
-    //Remove old track
-    current.removeTrack(current.getAudioTracks()[0])
-    //Update stream
-    $webRTC.myStream = current
 }
 
-async function changeAudio(id, chat) {
-    // get video/voice stream
-    navigator.mediaDevices
-        .getUserMedia({
-            audio: {
-                deviceId: id,
-            },
-        })
-        .then(function (device) {
-            changeAudioSource(device)
-        })
-        .catch((e) => {
-            console.log('error', e)
-        })
-}
-
-async function changeCamera(video, id, chat) {
+async function changeCamera(video, id, add = false) {
     if (video) {
         // get video/voice stream
         navigator.mediaDevices
@@ -277,7 +673,7 @@ async function changeCamera(video, id, chat) {
                 },
             })
             .then(function (device) {
-                changeVideoSource(device, id)
+                changeVideoSource(device, id, add)
             })
             .catch((e) => {
                 console.log('error', e)
@@ -285,344 +681,48 @@ async function changeCamera(video, id, chat) {
     }
 }
 
-async function createRoom(video) {
-    //Get video/voice stream
-    navigator.mediaDevices
-        .getUserMedia({
-            video: video,
-            audio: {
-                googNoiseSupression: true,
-            },
-        })
-        .then(function (stream) {
-            awaitInvite(stream)
-        })
-        .catch((e) => {
-            console.log('error', e)
-        })
+
+function sendPeerMessage(data, address) {
+    let to = getActive(address)
+    to.channel.send(JSON.stringify(data))
 }
 
-async function awaitInvite(stream) {
-    console.log('Want to create room!')
-    $webRTC.myStream = stream
-    $webRTC.myVideo = true
-    let call = {
-        chat: $user.huginAddress.substring(0, 99),
-        type: 'room',
-        myStream: stream,
-    }
-    $webRTC.call.unshift(call)
-    $webRTC.call = $webRTC.call
-    $videoGrid.showVideoGrid = true
+function signalPeer(address, data) {
+    let contact = $webRTC.call.find((a) => a.chat == address)
+    console.log("Signaling voice/video peer....", data)
+    contact.peer.signal(data)
 }
 
-async function inviteToGroupCall(peer) {
-    console.log('Group call connecting...')
-    if ($webRTC.groupCall === false) {
-        //If no groupcall is started, get a new key
-        $webRTC.groupCall = await window.api.createGroup()
-        console.log('New group key', $webRTC.groupCall)
-    }
-
-    //When you invite a new person to the call
-    let thisCall = $webRTC.call.find((a) => a.peer === peer)
-    let contact = $user.contacts.find((a) => a.chat === thisCall.chat)
-    console.log('this call', thisCall)
-    //Sort out all active calls except this
-    let callList = $webRTC.call.filter((a) => a.chat !== thisCall.chat)
-    let activeCall = []
-    let type = $webRTC.myVideo
-    //If we have more active calls, invite them aswell.
-    if (callList.length) {
-        //Go through that list and add our contacts to a new array
-        callList.forEach((a) => {
-            let tunnelTo = $user.contacts.find((c) => c.chat === a.chat)
-            let listItem = a.chat + tunnelTo.key
-            activeCall.push(listItem)
-            console.log('inviting', listItem)
-        })
-    } else {
-        //First
-        type = 'invite'
-    }
-    //Make an invite message through the datachannel to our new participant
-    let msg = { invite: activeCall, key: $webRTC.groupCall, type: type }
-    let myMessage = {
-        chat: thisCall.chat,
-        msg: msg,
-        sent: true,
-        timestamp: Date.now(),
-    }
-    console.log('Inviting contact', myMessage)
-    let to = thisCall.chat + contact.key
-    //Send offchain invite message
-    window.api.sendMsg(myMessage, to, true, true)
+function signalPeerChannel(address, data) {
+    let contact = $webRTC.call.find((a) => a.chat == address)
+    console.log("Signaling data channel....", data)
+    contact.channel.signal(data)
 }
 
-async function gotMedia(stream, contact, video, screen_stream = false) {
-    $webRTC.myStream = stream
-
-    if (video) {
-        $webRTC.myVideo = true
-
-        if (screen_stream) {
-            let id = await window.api.shareScreen(true)
-            shareScreen(id)
-        }
-    } else {
-        console.log('Audio call')
+function checkMessage(event, address) {
+    let message
+    try {
+        message = JSON.parse(event.data)
+    } catch (e) {
+        return
     }
 
-    let peer1 = await startPeer1(stream, video, contact)
-
-    checkMyVolume(peer1)
-    //Set webRTC store update for call
-    $webRTC.call[0].peer = peer1
-    $webRTC.call[0].screen_stream = screen_stream
-    $webRTC.call[0].video = video
-
-    console.log('This call', $webRTC.call[0])
-    checkSources()
-    $webRTC.active = true
-
-    peer1.on('stream', (peerStream) => {
-        console.log(' Got peerstream object in store')
-
-        //Set peerStream to store
-        $webRTC.call[0].peerStream = peerStream
-        if (video) {
-            $webRTC.call[0].peerVideo = true
-            
-            $videoGrid.showVideoGrid = true
-        } else {
-            $webRTC.call[0].peerAudio = true
+    console.log("Checking incoming message", message)
+    
+    if (typeof message === 'object') {
+        if (message.type === 'offer' || 'answer' || 'renegotiate') {
+            console.log("Got new incoming signal!", message)
+            signalPeer(address, message.data)
+            return
         }
-    })
-}
-
-async function startPeer1(stream, video, contact) {
-    let peer1 = new Peer({
-        initiator: true,
-        stream: stream,
-        trickle: false,
-        wrtc: wrtc,
-        config: { iceServers: [{ urls: 'stun:stun.bahnhof.net:3478' }, { urls: 'stun:stun.ipfire.org:3478' }] },
-        offerOptions: {
-            offerToReceiveVideo: true,
-            offerToReceiveAudio: true,
-        },
-        sdpTransform: (sdp) => {
-            console.log('sdp')
-            return sdp
-        },
-    })
-
-    peer1.on('close', (e) => {
-        console.log(e)
-        console.log('Connection lost..')
-        endCall(peer1, stream)
-        // ENDCALL AUDIO
-    })
-
-    peer1.on('error', (e) => {
-        console.log(e)
-        console.log('Connection lost..')
-
-        endCall(peer1, stream)
-        // ENDCALL AUDIO
-    })
-
-    peer1.on('connect', async () => {
-        // SOUND EFFECT
-        window.api.successMessage('Call established')
-        $webRTC.call[0].connected = true
-        checkVolume(peer1)
-        console.log('Connection established')
-        if (!$webRTC.invited) {
-            inviteToGroupCall(peer1)
-        }
-        if ($webRTC.call.length > 1) {
-            $webRTC.group = true
-        }
-    })
-
-    peer1.on('data', (msg) => {
-        let incMsg = JSON.parse(msg)
-        console.log('msg from peer2', incMsg)
-    })
-
-    //Data channel
-    peer1._channel.addEventListener('message', (event) => {
-        checkMessage(event)
-    })
-
-    //Check status for offer
-
-    let group = false
-    let offchain = false
-
-    if ($webRTC.groupCall && $webRTC.call.length > 1 && $webRTC.call[0].type == 'invite') {
-        offchain = true
-        group = true
     }
+    console.log("Checking message!", message)
 
-    sendOffer(peer1, contact, video, group, offchain)
-
-    return peer1
-}
-
-const answerCall = (msg, contact, key, offchain = false) => {
-
-    let video = false
-    if (msg.substring(0, 1) === 'Δ') {
-        video = true
-    }
-
-    // get video/voice stream
-    navigator.mediaDevices
-        .getUserMedia({
-            video: video,
-            audio: true,
-        })
-        .then(gotMedia)
-        .catch(() => {})
-    console.log('Got media')
-
-    async function gotMedia(stream) {
-
-        let peer2 = await startPeer2(stream, video)
-
-        checkSources()
-        //Set webRTC store update for call
-        $webRTC.call[0].peer = peer2
-        $webRTC.myStream = stream
-        $webRTC.active = true
-        $webRTC.call[0].video = video
-
-        if (video) {
-            $webRTC.myVideo = true
-            $videoGrid.showVideoGrid = true
-        }
-
-        let group = false
-
-        if (offchain) {
-            group = true
-        }
-
-        sendAnswer(msg, contact, peer2, key, video, offchain, group)
-
-        console.log('answrcall done')
-    }
-}
-
-async function startPeer2(stream, video) {
-    let peer2 = new Peer({ stream: stream, trickle: false, wrtc: wrtc })
-
-    peer2.on('close', (e) => {
-        console.log('Connection closed..', e)
-        endCall(peer2, stream)
-    })
-
-    peer2.on('error', (e) => {
-        console.log('Connection lost..', e)
-        endCall(peer2, stream)
-    })
-
-    peer2.on('data', (data) => {
-        console.log('data from peer', data)
-        let incMsg = JSON.parse(data)
-        console.log('msg from peer2', incMsg)
-    })
-
-    console.log('sending offer!!!')
-
-    peer2.on('track', (track, stream) => {
-        console.log('Setting up link..', track, stream)
-    })
-
-    peer2.on('connect', () => {
-        // SOUND EFFECT
-        window.api.successMessage('Call established')
-        console.log('Connection established;')
-        $webRTC.call[0].connected = true
-        checkVolume(peer2)
-        if ($webRTC.call.length > 1) {
-            $webRTC.group = true
-        }
-
-        //Data channel
-        peer2._channel.addEventListener('message', (event) => {
-            checkMessage(event)
-        })
-    })
-
-    peer2.on('stream', (peerStream) => {
-        // got remote video stream, now let's show it in a video tag
-
-        console.log('peer2 stream', peerStream)
-        $webRTC.call[0].peerStream = peerStream
-
-        if (video) {
-            $webRTC.call[0].peerVideo = true
-        } else {
-            $webRTC.call[0].peerAudio = true
-        }
-
-        console.log('Setting up link..')
-    })
-
-    return peer2
-}
-
-function sendOffer(peer, contact, video, group = false, offchain = false) {
-    peer.on('signal', (data) => {
-        let dataToSend = {
-            data: data,
-            type: 'offer',
-            contact: contact,
-            video: video,
-            group: group,
-            offchain: offchain,
-        }
-
-        console.log('SDP', data)
-
-        window.api.send('get-sdp', dataToSend)
-    })
-}
-
-function sendAnswer(sdpOffer, address, peer, key, video, offchain = false, group = false) {
-    console.log('offer?', sdpOffer)
-
-    window.api.expandSdp(sdpOffer, address)
-
-    if ($webRTC.groupCall && !$webRTC.invited) {
-        group = $webRTC.groupCall
-    }
-
-    peer.on('signal', (data) => {
-        console.log('initial offer data:', data)
-        let dataToSend = {
-            data: data,
-            type: 'answer',
-            contact: address + key,
-            video: video,
-            offchain: offchain,
-            group: group,
-        }
-        console.log('sending sdp', dataToSend)
-
-        window.api.send('get-sdp', dataToSend)
-    })
-}
-
-function checkMessage(event) {
-    let message = JSON.parse(event.data)
     let parsedMsg = message.substring(0, message.length - 99)
     let addr = message.substring(message.length - 99)
 
     console.log('Address?', addr)
+    
 
     if (addr == $user.huginAddress.substring(0, 99)) {
         console.log('found tunneled message to me', message)
@@ -663,6 +763,49 @@ function checkMessage(event) {
     window.api.decryptMessage(message)
 }
 
+async function inviteToGroupCall(peer) {
+    console.log('Group call connecting...')
+    if ($webRTC.groupCall === false) {
+        //If no groupcall is started, get a new key
+        $webRTC.groupCall = await window.api.createGroup()
+        console.log('New group key', $webRTC.groupCall)
+    }
+
+    //When you invite a new person to the call
+    let thisCall = $webRTC.call.find((a) => a.peer === peer)
+    let contact = $user.contacts.find((a) => a.chat === thisCall.chat)
+    console.log('this call', thisCall)
+    //Sort out all active calls except this
+    let callList = $webRTC.call.filter((a) => a.chat !== thisCall.chat)
+    let activeCall = []
+    let type = $videoSettings.myVideo
+    //If we have more active calls, invite them aswell.
+    if (callList.length) {
+        //Go through that list and add our contacts to a new array
+        callList.forEach((a) => {
+            let tunnelTo = $user.contacts.find((c) => c.chat === a.chat)
+            let listItem = a.chat + tunnelTo.key
+            activeCall.push(listItem)
+            console.log('inviting', listItem)
+        })
+    } else {
+        //First
+        type = 'invite'
+    }
+    //Make an invite message through the datachannel to our new participant
+    let msg = { invite: activeCall, key: $webRTC.groupCall, type: type }
+    let myMessage = {
+        chat: thisCall.chat,
+        msg: msg,
+        sent: true,
+        timestamp: Date.now(),
+    }
+    console.log('Inviting contact', myMessage)
+    let to = thisCall.chat + contact.key
+    //Send offchain invite message
+    window.api.sendMsg(myMessage, to, true, true)
+}
+
 async function checkVolume(peer) {
     let interval
     let array = new Array(10)
@@ -686,6 +829,7 @@ async function checkVolume(peer) {
                     array.push(source.audioLevel)
                 } else {
                     console.log('No audio')
+                    return
                 }
                 let list = $audioLevel.call
                 for (const speaker of list) {
@@ -714,14 +858,103 @@ async function checkVolume(peer) {
     }
 }
 
-async function checkMyVolume(peer) {}
+function changeAudio(id, add) {
+         // get video/voice stream
+         navigator.mediaDevices
+            .getUserMedia({
+                audio: {
+                    deviceId: id,
+                },
+            })
+            .then(function (device) {
+                changeAudioSource(device)
+            })
+            .catch((e) => {
+                console.log('error', e)
+            })
+
+            $audioSettings.audioInput = id
+    }
+    
+
+    function changeAudioSource (device) {
+        let current = $webRTC.myStream
+    
+        //Check if we have an active peer
+        let peer = $webRTC.call.some(a => a.peer)
+        
+        //Replace track for all peers
+        if (peer) {
+            $webRTC.call.forEach((a) => {
+                a.peer.replaceTrack(current.getAudioTracks()[0], device.getAudioTracks()[0], current)
+            })
+        }
+        
+        //Add track to local stream
+        current.addTrack(device.getAudioTracks()[0])
+        //Stop old track
+        let old = current.getAudioTracks()[0]
+        old.stop()
+        //Remove old track
+        current.removeTrack(current.getAudioTracks()[0])
+        //Update stream
+        if (!$webRTC.audio) {
+            current.getAudioTracks().forEach((track) => (track.enabled = false))
+        }
+        
+        $webRTC.myStream = current
+
+    }
+
+async function createRoom(video) {
+    //Get video/voice stream
+    navigator.mediaDevices
+        .getUserMedia({
+            video: video,
+            audio: {
+                googNoiseSupression: true,
+            },
+        })
+        .then(function (stream) {
+            awaitInvite(stream)
+        })
+        .catch((e) => {
+            console.log('error', e)
+        })
+}
+
+async function awaitInvite(stream) {
+    console.log('Want to create room!')
+    $webRTC.myStream = stream
+    $videoSettings.myVideo = true
+    let call = {
+        chat: $user.huginAddress.substring(0, 99),
+        type: 'room',
+        myStream: stream,
+    }
+    $webRTC.call.unshift(call)
+    updateStore()
+    $videoGrid.showVideoGrid = true
+}
+
+
+async function checkMyVolume(stream) {
+        //Check if active stream already exists
+        if (!$webRTC.audio) {
+            stream.getAudioTracks().forEach((track) => (track.enabled = false))
+        }
+        $webRTC.myStream = stream
+        return
+
+        //TODO ** Here we should add function like checkVolume() but for our input to display in UI.
+        
+    }
 
 //End call
 function endCall(peer, stream, contact) {
-    let caller = $webRTC.call.find((a) => a.chat === contact)
-
+    let caller = getActive(contact)
+    
     if (contact === undefined) {
-        console.log('contact', contact)
         caller = $webRTC.call.find((e) => e.peer.channelName == peer.channelName)
     }
 
@@ -732,6 +965,7 @@ function endCall(peer, stream, contact) {
     if (caller.peer !== undefined) {
 
         try {
+            caller.channel.destroy()
             caller.peer.destroy()
         } catch (e) {
             console.log('error', e)
@@ -752,23 +986,21 @@ function endCall(peer, stream, contact) {
     }
 
     console.log('cleared this call from', filter)
+    
     $webRTC.call = filter
 
     if ($webRTC.call.some((a) => a.peerVideo)) {
-        $webRTC.myVideo = true
-        $webRTC.video = true
         console.log('Already got a video call open, return')
         return
     }
 
     if ($webRTC.call.some((a) => a.peerAudio)) {
         console.log('Already got a audio call open, return')
-        $webRTC.myVideo = false
         return
     }
 
-    if ($webRTC.call.length === 0) {
-            $webRTC.myStream.getTracks().forEach(function (track) {
+    if ($webRTC.call.length === 0 && $webRTC.myStream) {
+        $webRTC.myStream.getTracks().forEach(function (track) {
                 console.log('track stopped')
                 track.stop()
             })
@@ -776,11 +1008,12 @@ function endCall(peer, stream, contact) {
 
     //
     $webRTC.initiator = false
-    $webRTC.screenshare = false
-    $webRTC.video = false
-    $webRTC.screen_stream = false
-    $webRTC.myVideo = false
-
+    $videoSettings.myVideo = false
+    $videoSettings.screenshare = false
+    $videoSettings.myVideo = false
+    $webRTC.myStream = false
+    $videoSettings.loading = false
+    $video.play = false
     console.log('Call ended')
 }
 </script>

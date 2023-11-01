@@ -1,7 +1,7 @@
 <script>
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
-import { boards, groups, notify, transactions, user, webRTC, beam } from '$lib/stores/user.js'
+import { boards, groups, notify, transactions, user, webRTC, beam, swarm } from '$lib/stores/user.js'
 import {remoteFiles, localFiles, fileSettings} from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
@@ -20,21 +20,21 @@ import { layoutState, videoGrid } from '$lib/stores/layout-state.js'
 import ListButton from '$lib/components/icons/ListButton.svelte'
 import Exit from '$lib/components/icons/Exit.svelte'
 import Lightning from '$lib/components/icons/Lightning.svelte'
+import { mediaSettings } from '$lib/stores/mediasettings'
 
 const dispatch = createEventDispatcher()
 let contact
 let active_contact
 let avatar
 let calltype
-let call_active = false
 let startTone = new Audio('/audio/startcall.mp3')
 let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
 let video = false
 let videoInput
 
-$: if ($webRTC.devices.length) {
-    videoInput = $webRTC.devices.some((a) => a.kind == 'videoinput')
+$: if ($mediaSettings.devices.length) {
+    videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
 }
 
 $: {
@@ -66,11 +66,15 @@ const startCall = async (contact, calltype) => {
         $webRTC.initiator = true
     }
 
+    if ($swarm.voice_channel.length) window.api.exitVoiceChannel()
+
     $webRTC.invited = false
 
     if (calltype) {
         video = true
+        $videoGrid.showVideoGrid = true
     }
+
     startTone.play()
     let call = {
         msg: 'outgoing',
@@ -78,6 +82,11 @@ const startCall = async (contact, calltype) => {
         chat: contact.substring(0, 99),
         video: calltype,
     }
+    
+    //Leave any active room
+    window.api.send("exit-voice", $groups.thisGroup.key)
+    window.api.send("end-swarm", $groups.thisGroup.key)
+    $swarm.showVideoGrid = false
 
     $webRTC.call.unshift(call)
     window.api.startCall(contact, calltype)
@@ -102,11 +111,6 @@ const openAdd = () => {
     })
 }
 
-$: if ($webRTC.myVideo || $webRTC.peer) {
-    call_active = true
-} else {
-    call_active = false
-}
 
 const endCall = () => {
     //We delay the answerCall for routing purposes
@@ -141,9 +145,10 @@ const sendMoney = () => {
 let muted = false
 
 const toggleAudio = () => {
-    muted = !muted
-    $webRTC.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
-    $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+    $webRTC.audio = !$webRTC.audio
+    $webRTC.call.forEach((a) => {
+        a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+    })
 }
 
 function copyThis(copy) {

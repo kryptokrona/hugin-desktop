@@ -68,7 +68,8 @@ export const webRTC = writable({
     invited: false,
     initiator: false,
     devices: [],
-    cameraId: false
+    cameraId: false,
+    audio: true
 })
 
 export const audioLevel = writable({
@@ -94,6 +95,21 @@ export const messageWallet = writable({
 
 export const beam = writable({
     active: []
+})
+
+export const swarm = writable({
+    active: [],
+    myVideo: false,
+    voice_channel: [],
+    call: [],
+    newChannel: false,
+    activeChannel: {name: ""},
+    activeChannelMessages: [],
+    audio: true,
+    showVideoGrid: false,
+    myStream: false,
+    screenshare: false,
+    showInfo: true,
 })
 
 export const userAvatar = derived(user, ($user) => {

@@ -1,18 +1,24 @@
 <script>
-    import {fade} from 'svelte/transition'
-    import {groups} from '$lib/stores/user.js'
+    import {fade, fly} from 'svelte/transition'
+    import {groups, swarm, user, webRTC} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import {layoutState} from '$lib/stores/layout-state.js'
+    import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
     import {flip} from 'svelte/animate'
 
     import { page } from '$app/stores'
     import Exit from '$lib/components/icons/Exit.svelte'
+    import Lightning from '$lib/components/icons/Lightning.svelte'
+    import { standardGroups } from '$lib/stores/standardgroups.js'
+    import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
+    import Button from '$lib/components/buttons/Button.svelte'
+    import FillButton from '../buttons/FillButton.svelte'
+    import AddGroup from './AddGroup.svelte'
+    import SwarmInfo from '../popups/SwarmInfo.svelte'
 
     let activeHugins = []
     let group = ''
     let groupName
-
-
+    const standardGroup = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 function sendPM() {
     // Add friend request here?
 }
@@ -27,10 +33,15 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
+const myAddress = $user.huginAddress.substring(0,99)
+
 //Set group key
 $: if ($groups.thisGroup.key) {
     group = $groups.thisGroup.key
 }
+
+//Active users in p2p chat
+let activeUsers = []
 
 //This group name
 $: groupName = $groups.thisGroup.name
@@ -40,18 +51,105 @@ $: activeHugins = $groups.activeHugins
 
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
+$: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
+
+$: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
+
+let inSwarm = false
+
+$: if (thisSwarm) {
+    activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
+} else {
+    activeUsers = []
+}
+
+const disconnect_from_swarm = () => {
+        let key = $groups.thisGroup.key
+        window.api.send("exit-voice",key)
+        window.api.send("end-swarm", key)
+        $swarmGroups.showGroups = true
+        $swarm.showVideoGrid = false
+    }
+
+let firstConnect = false
+
+const connecto_to_swarm = () => {
+
+        if (!window.localStorage.getItem('swarm-info')) {
+            $swarm.showInfo = true
+            firstConnect = true
+            return
+        }
+        if (thisSwarm) {
+            disconnect_from_swarm()
+            return
+        } else if (!thisSwarm && $swarm.active.length) {
+            //Temporary fix until we handle more 
+            window.api.errorMessage('You are already in a room')
+            return
+        }
+        
+        if ($webRTC.call.length) {
+            window.api.errorMessage('You are already in a call')
+            return
+        }
+        
+        $swarmGroups.showGroups = true
+        $swarm.showVideoGrid = true
+        window.api.send("new-swarm", {
+            key: $groups.thisGroup.key, 
+            address: $user.huginAddress.substring(0,99),
+            name: $user.username
+        })
+    }
+
+    const show_video_room = () => {
+        $swarm.showVideoGrid = true
+    }
+
 </script>
 
+{#if $swarm.showInfo && firstConnect}
+    <SwarmInfo on:join-room={connecto_to_swarm}/>
+{/if}
 
-<div class="wrapper" in:fade out:fade class:hide="{$layoutState.hideGroupList}">
+<div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
     <div class="top">
-        <h2 style="cursor: pointer;" on:click={() => copyThis($groups.thisGroup.key)}>{groupName}</h2>
+        <h2 style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>
         <br />
+            {#if !$standardGroups.some(a => a.key === group || (group === standardGroup))}
+            
+            <div class="connect" on:click={connecto_to_swarm}>
+                <!-- <Lightning connected={thisSwarm} /> -->
+                {#if !thisSwarm}
+                    <FillButton disabled={false} enabled={true} text={"Join room"} />
+                    {:else}
+                    <FillButton disabled={false} text={"Leave room"} />
+                    {/if}    
+                </div>
+                <br>
+                {#if thisSwarm}
+                <div in:fly={{x : -150}} style="width: 170px;">
+                    <FillButton disabled={false} enabled={true} text={"Open room"} on:click={show_video_room} />
+                </div>
+                {/if} 
+            {/if}
         <br />
+        <div class="swarm">
+            {#if thisSwarm}
+            <!-- <div  on:click={show_video_room}>
+                <ShowVideoMenu />
+            </div> -->
+            {/if}
+        </div>
     </div>
         <div class="list-wrapper">
-            {#each activeList as user}
+            {#each activeList as user}     
+            
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
+                        {#if (thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
+                            <div class:unread="{(thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}"></div>
+                        {/if}
                         <img
                             class="avatar"
                             src="data:image/png;base64,{get_avatar(user.address)}"
@@ -59,6 +157,7 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
                         />
                         <p class="nickname">{user.name}</p>
                         <br />
+                      
                     </div>
             {/each}
         </div>
@@ -66,6 +165,31 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
 </div>
 
 <style lang="scss">
+
+.connectto {
+    color: var(--success-color);
+    margin-left: 5px;
+}
+
+.disconnect {
+    color: var(--warn-color);
+    margin-left: 5px;
+}
+
+.connect {
+    display: flex;
+    cursor: pointer;
+    opacity: 0.8;
+    width: 170px;
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.swarm {
+    cursor: pointer;
+}
+
 .nickname {
     margin: 0;
     word-break: break-word;
@@ -106,7 +230,7 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
     width: 100%;
     max-width: 280px;
     padding: 20px;
-    display: flex;
+    display: inline-table;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
@@ -191,4 +315,18 @@ p {
     transition: 200ms ease-in-out;
     margin-right: -125px;
 }
+
+.in_swarm {
+    transition: 0.2s;
+    border: 1px solid var(--success-color);
+}
+
+.unread {
+    background-color: var(--success-color);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: relative;
+}
+
 </style>

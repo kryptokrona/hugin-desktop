@@ -1,0 +1,235 @@
+diff --git a/node_modules/hyperdht/index.js b/node_modules/hyperdht/index.js
+index 19e5c6b..b9420d2 100644
+--- a/node_modules/hyperdht/index.js
++++ b/node_modules/hyperdht/index.js
+@@ -17,7 +17,7 @@ const maxSize = 65536
+ const maxAge = 20 * 60 * 1000
+ 
+ class HyperDHT extends DHT {
+-  constructor (opts = {}) {
++  constructor (opts, sig, priv, keychain = {}) {
+     const port = opts.port || 49737
+     const bootstrap = opts.bootstrap || BOOTSTRAP_NODES
+ 
+@@ -27,15 +27,16 @@ class HyperDHT extends DHT {
+       maxSize: opts.maxSize || maxSize,
+       maxAge: opts.maxAge || maxAge
+     }
+-
++    this.sig = sig
++    this.keychain = keychain
+     this.defaultKeyPair = opts.keyPair || createKeyPair(opts.seed)
+     this.listening = new Set()
+-
++    this.priv = priv
+     this._router = new Router(this, cacheOpts)
+     this._socketPool = new SocketPool(this, opts.host || '0.0.0.0')
+     this._rawStreams = new RawStreamSet(this)
+     this._persistent = null
+-
++    this.checkedSigs = []
+     this._debugStream = (opts.debug && opts.debug.stream) || null
+     this._debugHandshakeLatency = toRange((opts.debug && opts.debug.handshake && opts.debug.handshake.latency) || 0)
+ 
+@@ -49,7 +50,7 @@ class HyperDHT extends DHT {
+   }
+ 
+   connect (remotePublicKey, opts) {
+-    return connect(this, remotePublicKey, opts)
++    return connect(this, remotePublicKey, opts, this.sig, this.priv, this.keychain)
+   }
+ 
+   createServer (opts, onconnection) {
+diff --git a/node_modules/hyperdht/lib/connect.js b/node_modules/hyperdht/lib/connect.js
+index edd93ee..a605747 100644
+--- a/node_modules/hyperdht/lib/connect.js
++++ b/node_modules/hyperdht/lib/connect.js
+@@ -25,7 +25,8 @@ const {
+   SERVER_INCOMPATIBLE
+ } = require('./errors')
+ 
+-module.exports = function connect (dht, publicKey, opts = {}) {
++
++module.exports = function connect (dht, publicKey, opts, sig, priv = {}) {
+   const keyPair = opts.keyPair || dht.defaultKeyPair
+   const encryptedSocket = (opts.createSecretStream || defaultCreateSecretStream)(true, null, {
+     publicKey: keyPair.publicKey,
+@@ -55,7 +56,10 @@ module.exports = function connect (dht, publicKey, opts = {}) {
+     serverAddress: null,
+     onsocket: null,
+     sleeper: new Sleeper(),
+-    encryptedSocket
++    encryptedSocket,
++    sig,
++    priv,
++    keychain: dht.keychain
+   }
+ 
+   // If the raw stream receives an error signal pre connect (ie from the firewall hook), make sure
+@@ -272,6 +276,7 @@ async function findAndConnect (c, opts) {
+ }
+ 
+ async function connectThroughNode (c, address, socket) {
++  console.log("Connecting through node...")
+   if (!c.requesting) {
+     // If we have a stable server address, send it over now
+     const addr = c.dht.remoteAddress()
+@@ -294,8 +299,11 @@ async function connectThroughNode (c, address, socket) {
+         id: c.rawStream.id,
+         seq: 0
+       },
+-      secretStream: {}
++      secretStream: {},
++      mid: c.sig,
++      mpub: c.keychain.publicKey 
+     })
++
+     if (isDone(c)) return
+   }
+ 
+@@ -303,6 +311,8 @@ async function connectThroughNode (c, address, socket) {
+   if (isDone(c) || c.connect) return
+ 
+   const payload = await c.handshake.recv(noise)
++  console.log("Payload recv", payload)
++  
+   if (isDone(c) || !payload) return
+ 
+   if (payload.version !== 1) {
+@@ -320,6 +330,24 @@ async function connectThroughNode (c, address, socket) {
+  
+   const hs = c.handshake.final()
+ 
++  //firewall function does not send payload so we must check here for now
++ //Checking if it is a valid subkey is the most efficent way i could come up with with assuming we have a preshared key
++ //Added new payload pub, to avoid using the same as DHT. not sure if its needed but rather safe if i dont know some quirks
++ let error = false
++ if (!payload.mid) error = true
++ if (!payload.mpub) error = true
++ let checked = checkKey(payload.mpub, payload.mid, c.priv)
++
++ //Check if this id is already used by another active connection
++ if (c.dht.checkedSigs.some(a => payload.mid === a)) error = true
++ if (!checkTime(payload.mid)) error = true
++  c.dht.checkedSigs.push(payload.mid)
++
++  if (!checked || error) {
++    destroyEncryptedSocket(c, SERVER_INCOMPATIBLE())
++    return
++  }
++
+   c.handshake = null
+   c.request = null
+   c.requesting = false
+@@ -367,6 +395,29 @@ async function connectThroughNode (c, address, socket) {
+   }
+ }
+ 
++function checkTime(date) {
++  const day = 1000 * 60 * 60 * 24;
++  const dayAgo = Date.now() - day;
++  return date > dayAgo;
++}
++
++function checkKey(pub, sig, keys) {
++  console.log("checking keys!", pub)
++    const sub = get_sub_key(keys, sig)
++    console.log("Checking sub!", sub.publicKey)
++    if (sub.publicKey.toString('hex') === pub.toString('hex')) {
++      return true
++    } else {
++      return false
++    }
++  }
++
++function get_sub_key(keys, tweak) {
++    const random_buf = Buffer.alloc(32).fill(tweak)
++    const sub = keys.sub(random_buf).get()
++    return sub
++}
++
+ async function updateHolepunch (c, peerAddress, relayAddr, payload) {
+   const holepunch = await c.dht._router.peerHolepunch(c.target, {
+     id: c.connect.payload.holepunch.id,
+diff --git a/node_modules/hyperdht/lib/messages.js b/node_modules/hyperdht/lib/messages.js
+index 9760e66..b56f15e 100644
+--- a/node_modules/hyperdht/lib/messages.js
++++ b/node_modules/hyperdht/lib/messages.js
+@@ -130,7 +130,11 @@ const secretStreamInfo = {
+ 
+ exports.noisePayload = {
+   preencode (state, m) {
+-    state.end += 4 // version + flags + error + firewall
++    state.end += 49 // version + flags + error + firewall + newpub + id
++    //Changed payload
++    //Not sure if we need an extra pub just want to be sure we are not sharing dht priv key,
++    // if they can be used in some weird way i dont know about, its 44 more and still less than a signature, shouldnt be a problem
++
+     if (m.holepunch) holepunchInfo.preencode(state, m.holepunch)
+     if (m.addresses4 && m.addresses4.length) ipv4Array.preencode(state, m.addresses4)
+     if (m.addresses6 && m.addresses6.length) ipv6Array.preencode(state, m.addresses6)
+@@ -156,6 +160,8 @@ exports.noisePayload = {
+     if (m.addresses6 && m.addresses6.length) ipv6Array.encode(state, m.addresses6)
+     if (m.udx) udxInfo.encode(state, m.udx)
+     if (m.secretStream) secretStreamInfo.encode(state, m.secretStream)
++    if (m.mid) c.uint.encode(state, m.mid)
++    if (m.mpub) c.fixed32.encode(state, m.mpub)
+   },
+   decode (state) {
+     const version = c.uint.decode(state)
+@@ -171,7 +177,9 @@ exports.noisePayload = {
+         addresses4: [],
+         addresses6: [],
+         udx: null,
+-        secretStream: null
++        secretStream: null,
++        mid: null,
++        mpub: null,
+       }
+     }
+ 
+@@ -185,7 +193,9 @@ exports.noisePayload = {
+       addresses4: (flags & 2) !== 0 ? ipv4Array.decode(state) : [],
+       addresses6: (flags & 4) !== 0 ? ipv6Array.decode(state) : [],
+       udx: (flags & 8) !== 0 ? udxInfo.decode(state) : null,
+-      secretStream: (flags & 16) !== 0 ? secretStreamInfo.decode(state) : null
++      secretStream: (flags & 16) !== 0 ? secretStreamInfo.decode(state) : null,
++      mid: c.uint.decode(state),
++      mpub: c.fixed32.decode(state)
+     }
+   }
+ }
+diff --git a/node_modules/hyperdht/lib/server.js b/node_modules/hyperdht/lib/server.js
+index 5ada099..dd35891 100644
+--- a/node_modules/hyperdht/lib/server.js
++++ b/node_modules/hyperdht/lib/server.js
+@@ -21,7 +21,8 @@ module.exports = class Server extends EventEmitter {
+ 
+     this.dht = dht
+     this.target = null
+-
++    this.sig = dht.sig
++    this.keychain = dht.keychain
+     this.relayAddresses = null // TODO: populate this
+     this.closed = false
+     this.firewall = opts.firewall || (() => false)
+@@ -37,6 +38,8 @@ module.exports = class Server extends EventEmitter {
+     this._holepunches = []
+     this._listening = false
+     this._closing = null
++
++    console.log("This sig server", this.sig)
+   }
+ 
+   get publicKey () {
+@@ -234,7 +237,9 @@ module.exports = class Server extends EventEmitter {
+           id: hs.rawStream ? hs.rawStream.id : 0,
+           seq: 0
+         },
+-        secretStream: {}
++        secretStream: {},
++        mid: this.sig,
++        mpub: this.keychain.publicKey
+       })
+     } catch (err) {
+       safetyCatch(err)

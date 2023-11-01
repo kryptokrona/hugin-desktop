@@ -4,11 +4,13 @@ import { fly } from 'svelte/transition'
 import { cubicIn, cubicOut } from 'svelte/easing'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { notify, user, webRTC } from '$lib/stores/user.js'
+import { notify, user, webRTC, swarm } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import CallIcon from '$lib/components/icons/CallIcon.svelte'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
 import { sleep } from '$lib/utils/utils'
+import { videoGrid } from '$lib/stores/layout-state'
+import { mediaSettings } from '$lib/stores/mediasettings'
 
 export let paused = false
 export let thisCall
@@ -28,7 +30,7 @@ onMount( async () => {
     if (thisCall.type === 'groupinvite') {
         invite = true
     }
-    video = $webRTC.devices.some((a) => a.kind == 'videoinput')
+    video = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
     if (video) return
     console.log('no video device found')
     video = false
@@ -47,6 +49,10 @@ const handleAnswer = async () => {
     if ($webRTC.groupCall) {
         offchain = true
     }
+
+    if ($swarm.voice_channel.length) window.api.exitVoiceChannel()
+
+    if (video) $videoGrid.showVideoGrid = true
     //If video call incoming and no video device is plugged in
     if (thisCall.msg.substring(0, 1) == 'Δ' && !video) {
         let errMessage = 'You have no video device'

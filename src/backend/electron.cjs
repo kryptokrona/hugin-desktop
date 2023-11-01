@@ -34,9 +34,10 @@ const {
     trimExtra, 
     fromHex, 
     nonceFromTimestamp, 
-    createGroup, 
-    hexToUint, 
-    toHex, parseCall } = require("./utils.cjs")
+    randomKey, 
+    hexToUint,
+    toHex, parseCall, hash,
+    sanitize_pm_message } = require("./utils.cjs")
 const {
     loadDB,
     saveHash,
@@ -81,6 +82,7 @@ const {
 } = require('kryptokrona-utils')
 
 const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile } = require("./beam.cjs")
+const { newSwarm, sendSwarmMessage, endSwarm} = require("./swarm.cjs")
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
@@ -93,6 +95,8 @@ const dbPath = userDataDir + '/SQLmessages.db'
 const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
+
+const DHT = require('@hyperswarm/dht')
 
 let mainWindow
 let daemon
@@ -530,7 +534,7 @@ async function start_js_wallet(walletName, password, node) {
 
     if (!await login(walletName, password)) return
     
-    hashed_pass = await hashPassword(password)
+    hashed_pass = await hash(password)
     
     pickNode(node.node + ":" + node.port.toString())
     //Load known public keys and contacts
@@ -865,12 +869,8 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     }
 }
 
-async function hashPassword(pass) {
-    return await crypto.cn_fast_hash(toHex(pass))
-}
-
 async function checkPass(pass, oldHash) {
-    let passHash = await hashPassword(pass)
+    let passHash = await hash(pass)
     if (oldHash === passHash) return true
     return false
 }
@@ -886,8 +886,10 @@ async function saveBoardMsg(msg, hash, follow = false) {
     mainWindow.webContents.send('newBoardMessage', message)
 }
 
-async function saveGroupMessage(msg, hash, time, offchain) {
-    let message = await saveGroupMsg(msg, hash, time, offchain)
+async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
+    console.log("Savin group message")
+    let message = await saveGroupMsg(msg, hash, time, offchain, channel)
+    if (!message) return false
     if (!offchain) {
         //Send new board message to frontend.
         mainWindow.webContents.send('groupMsg', message)
@@ -901,10 +903,10 @@ async function saveGroupMessage(msg, hash, time, offchain) {
 
 //Saves private message
 async function saveMessage(msg, offchain = false) {
-    let sent = msg.sent
-    let addr = sanitizeHtml(msg.from)
-    let timestamp = sanitizeHtml(msg.t)
-    let key = sanitizeHtml(msg.k)
+
+    let [message, addr, key, timestamp, sent] = sanitize_pm_message(msg)
+    
+    if (!message) return
 
     if (await messageExists(timestamp)) return
     
@@ -919,8 +921,6 @@ async function saveMessage(msg, offchain = false) {
         mainWindow.webContents.send('got-callback', data)
     }
 
-    let message = sanitizeHtml(text)
-
     //If sent set chat to chat instead of from
     if (msg.chat && sent) {
         addr = msg.chat
@@ -932,8 +932,8 @@ async function saveMessage(msg, offchain = false) {
         await saveContact(hugin)
     }
 
+    message = sanitizeHtml(text)
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
-
     if (sent) {
         //If sent, update conversation list
         mainWindow.webContents.send('sent', newMsg)
@@ -994,7 +994,9 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
     return payload_hex
 }
 
-async function sendGroupsMessage(message, offchain = false) {
+async function sendGroupsMessage(message, offchain = false, swarm = false) {
+    console.log("Sending group msg!")
+    if (message.m.length === 0) return
     const my_address = message.k
     const [privateSpendKey, privateViewKey] = js_wallet.getPrimaryAddressPrivateKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
@@ -1005,7 +1007,8 @@ async function sendGroupsMessage(message, offchain = false) {
     let reply = ''
 
     group = message.g
-
+    
+    if (group === undefined) return
     if (group.length !== 64) {
         return
     }
@@ -1028,6 +1031,10 @@ async function sendGroupsMessage(message, offchain = false) {
         message_json.r = message.r
     }
 
+    if (message.c) {
+        message_json.c = message.c
+    }
+
     let [mainWallet, subWallet, messageSubWallet] = js_wallet.subWallets.getAddresses()
     const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json))
     const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group))
@@ -1041,7 +1048,7 @@ async function sendGroupsMessage(message, offchain = false) {
 
     if (!offchain) {
         let result = await js_wallet.sendTransactionAdvanced(
-            [[subWallet, 1000]], // destinations,
+            [[messageSubWallet, 1000]], // destinations,
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
             undefined, //paymentID
@@ -1053,6 +1060,7 @@ async function sendGroupsMessage(message, offchain = false) {
         )
 
         if (result.success) {
+            console.log("Succces sending tx")
             message_json.sent = true
             saveGroupMessage(message_json, result.transactionHash, timestamp)
             mainWindow.webContents.send('sent_group', {
@@ -1070,19 +1078,30 @@ async function sendGroupsMessage(message, offchain = false) {
             }
             mainWindow.webContents.send('error_msg', error)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
-            optimizeMessages()
+            optimizeMessages(true)
         }
     } else if (offchain) {
         //Generate a random hash
-        let randomKey = await createGroup()
+        let random_key = randomKey()
         let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
-        let sendMsg = randomKey + '99' + sentMsg
+        let sendMsg = random_key + '99' + sentMsg
+        message_json.sent = true
+        if (swarm) {
+            sendSwarmMessage(sendMsg, group)
+            saveGroupMessage(message_json, random_key, timestamp, false, true)
+            mainWindow.webContents.send('sent_rtc_group', {
+                hash: random_key,
+                time: message.t,
+            })
+            return
+        }
         let messageArray = [sendMsg]
         mainWindow.webContents.send('rtc_message', messageArray, true)
         mainWindow.webContents.send('sent_rtc_group', {
-            hash: randomKey,
+            hash: random_key,
             time: message.t,
         })
+        
     }
 }
 
@@ -1190,7 +1209,6 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
             key = possibleKey
         } catch (err) {
-            console.log(err)
         }
     }
 
@@ -1214,7 +1232,9 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
     payload_json.sent = false
 
-    saveGroupMessage(payload_json, hash, tx.t, offchain)
+    let saved = saveGroupMessage(payload_json, hash, tx.t, offchain)
+    
+    if (!saved) return false
 
     return [payload_json, tx.t, hash]
 
@@ -1391,15 +1411,15 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
                 name: 'Error',
                 hash: Date.now(),
             }
-            optimizeMessages()
+            optimizeMessages(true)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             mainWindow.webContents.send('error_msg', error)
         }
     } else if (off_chain) {
         //Offchain messages
-        let randomKey = await createGroup()
+        let random_key = randomKey()
         let sentMsg = Buffer.from(payload_hex, 'hex')
-        let sendMsg = randomKey + '99' + sentMsg
+        let sendMsg = random_key + '99' + sentMsg
         let messageArray = []
         messageArray.push(sendMsg)
         messageArray.push(address)
@@ -1453,6 +1473,8 @@ async function optimizeMessages(force = false) {
         [subWallet, messageSubWallet],
         networkHeight
     )
+
+    console.log("Inputs", inputs.length)
 
     if (inputs.length > 25 && !force) {
         mainWindow.webContents.send('optimized', true)
@@ -1593,15 +1615,18 @@ async function pickNode(node) {
     await db.write()
 }
 
-async function shareScreen(start) {
+async function shareScreen(start, conference) {
 
 const { desktopCapturer } = require('electron')
     desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
         for (const source of sources) {
             if (source.name === 'Entire Screen') {
             }
-            if (!start) {
+            if (!start && !conference) {
                 mainWindow.webContents.send('screen-share', source.id)
+            } else if (conference) {
+                console.log("CONFERENCE!")
+                mainWindow.webContents.send('group-screen-share', source.id)
             }
             return source.id
         }
@@ -1654,16 +1679,11 @@ function get_sdp(data)
     if (data.type == 'offer') 
     {
         let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        let recovered_data = expand_sdp_offer(parsed_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     } 
     else if (data.type == 'answer') 
     {
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        console.log('parsed data really cool sheet:', parsed_data)
-        let recovered_data = expand_sdp_answer(parsed_data)
-        //Send expanded recovered data to front end for debugging etc, this can be removed
-        mainWindow.webContents.send('rec-off', recovered_data)
         sendMessage(parsed_data, data.contact, data.offchain, data.group)
     }
 }
@@ -1676,11 +1696,31 @@ ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
     sendMessage(beamMessage.msg, beamMessage.chat, offchain)
 });
 
+ipcMain.on("active-video", async (e, chat) => {
+    mainWindow.webContents.send('activate-video')
+});
 
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
     endBeam(chat);
 });
+
+//SWARM
+
+ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
+    sendGroupsMessage(msg, offchain, swarm)
+})
+
+ipcMain.on('new-swarm', async (e, data) => {
+    newSwarm(data, sender, getXKRKeypair())
+})
+ipcMain.on('end-swarm', async (e, key) => {
+    endSwarm(key)
+})
+
+ipcMain.on('exit-voice-channel', async (e, key) => {
+    mainWindow.webContents.send('leave-active-voice-channel')
+})
 
 //FILES
 
@@ -1718,10 +1758,6 @@ ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => 
 
 //GROUPS
 
-ipcMain.on('sendGroupsMessage', (e, msg, offchain) => {
-    sendGroupsMessage(msg, offchain)
-})
-
 ipcMain.handle('getGroups', async (e) => {
     let groups = await getGroups()
     return groups.reverse()
@@ -1737,7 +1773,7 @@ ipcMain.handle('getGroupReply', async (e, data) => {
 
 
 ipcMain.handle('createGroup', async () => {
-    return await createGroup()
+    return randomKey()
 })
 
 ipcMain.on('unblock', async (e, address) => {
@@ -1755,7 +1791,7 @@ ipcMain.on('block', async (e, block) => {
 
 ipcMain.on('addGroup', async (e, grp) => {
     addGroup(grp)
-    saveGroupMessage(grp, parseInt(Date.now() / 1000), parseInt(Date.now()))
+    saveGroupMessage(grp, grp.hash, parseInt(Date.now()))
 })
 
 ipcMain.on('removeGroup', async (e, grp) => {
@@ -1868,21 +1904,29 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
     mainWindow.webContents.send('start-call', contact, calltype)
 })
 
-ipcMain.handle('shareScreen', async (e, start) => {
-    shareScreen(start)
+ipcMain.handle('shareScreen', async (e, start, conference) => {
+    shareScreen(start, conference)
 })
 
 ipcMain.on('setCamera', async (e, contact, calltype) => {
     mainWindow.webContents.send('set-camera')
 })
 
-ipcMain.on('change-src', async (e, src) => {
-    console.log('ipc main on')
-    mainWindow.webContents.send('change-source', src)
+ipcMain.on('change-src', async (e, src, conference, add) => {
+    if (conference) {
+        console.log("Add===", add)
+        mainWindow.webContents.send('group-change-source', src, add)
+        return
+    }
+    mainWindow.webContents.send('change-source', src, add)
 })
 
-ipcMain.on('change-audio-src', async (e, id) => {
-    mainWindow.webContents.send('set-audio-input', id)
+ipcMain.on('change-audio-src', async (e, id, conference, input) => {
+    if (conference) {
+        mainWindow.webContents.send('set-audio-input-group', id, input)
+        return
+    }
+    mainWindow.webContents.send('set-audio-input', id, input)
 })
 
 ipcMain.on('check-srcs', async (e, src) => {
