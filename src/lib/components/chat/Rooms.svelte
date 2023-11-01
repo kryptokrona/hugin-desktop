@@ -1,5 +1,5 @@
 <script>
-    import {createEventDispatcher, onMount} from 'svelte'
+    import {createEventDispatcher, onMount, onDestroy} from 'svelte'
     import {fade, fly} from 'svelte/transition'
     import {groups, notify, swarm, user} from '$lib/stores/user.js'
     import { videoSettings } from '$lib/stores/mediasettings'
@@ -23,9 +23,8 @@
 
     onMount(async () => {
         // await sleep(200)
-        // printThis("Chat room")
     })
-
+    
     const printThis = (channel) => {
         //if (channel === $swarm.activeChannel.name) return
         
@@ -102,68 +101,7 @@
     // }
 
 </script>
-    <!-- <div on:click={dispatch('printGroup', $groups.thisGroup)}
-        class="card"
-        in:fade
-        out:fade
-        class:active="{in_voice}"
-        class:swarm="{thisSwarm}"
-    >
-    
-    <Lightning on:click={disconnect_from_swarm} connected={connected} />
-    
-        <img class="avatar" src="data:image/png;base64,{get_avatar($groups.thisGroup.key)}" alt="" />
-        <div class="content">
-            <h4>{$groups.thisGroup.name}</h4>
-            <div class="text">
-                <p class="from">{group.nick}:</p>
-                <p>{group.msg}</p>
-            </div>
-        </div>
-    </div> -->
-<div class="swarm_info" in:fly="{{ y: 50 }}">
-    <!-- <div class="channels"> -->
-        <!-- <div class="voice-channel">
-            <p class="voice" on:click={join_voice_channel}><FillButton disabled={false} enabled={in_voice} text={in_voice ? "Voice channel" : "Join call"}/></p>
-            {#if in_voice}
-            <div class="voice-controls">
-                <div  on:click={disconnect_from_active_voice}>
-                    <CallSlash/>
-                </div>
-                <div  on:click={show_grid}>
-                    <ShowVideoMenu />
-                </div>
-                <div on:click="{toggleAudio}">
-                    {#if $swarm.audio}
-                        <MicIcon />
-                    {:else}
-                        <MuteIcon />
-                    {/if}
-                </div>
-            </div>
-            {/if}
-                <div class="list-wrapper">
-                    {#each voice_channel as user}
-                        <VoiceUser voice_user={user} topic={topic} voice_channel={voice_channel}/>
-                    {/each}
-                </div>
-            </div> -->
-        <!-- </div> -->
-</div>
-    <!-- <div class="text-channels">
-        {#each channels as channel}
-        
-            {#if $swarm.activeChannel.name === channel.name}
-                <div class="this-channel"></div>
-            {/if}
-            
-            {#if $notify.unread.some(a => a.channel === channel.name)}
-                <div class="dot" in:fade></div>
-            {/if}
-            
-        <p class="channel" on:click={printThis(channel.name)}><Button disabled={false} text={channel.name}/></p>
-        {/each}
-    </div> -->
+
 
 <style lang="scss">
 
