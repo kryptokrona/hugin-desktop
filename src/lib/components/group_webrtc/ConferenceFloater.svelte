@@ -10,7 +10,7 @@
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MuteIcon from '../icons/MuteIcon.svelte'
     import MicIcon from '../icons/MicIcon.svelte'
-import InCallAvatar from '../chat/InCallAvatar.svelte'
+    import InCallAvatar from '../chat/InCallAvatar.svelte'
     
     export let paused = false
     let toggle = false

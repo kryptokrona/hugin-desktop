@@ -16,7 +16,7 @@
     import {createEventDispatcher} from 'svelte'
     import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import { videoSettings, mediaSettings } from '$lib/stores/mediasettings'
+    import { videoSettings, mediaSettings, video } from '$lib/stores/mediasettings'
     
     let startTime = Date.now()
     let time = '0:00:00'
@@ -140,7 +140,7 @@
             console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
-                $videoSettings.play = false
+                $video.play = false
                 $videoSettings.myVideo = false
                 $videoSettings.screenshare = false
                 $swarm.myStream = false

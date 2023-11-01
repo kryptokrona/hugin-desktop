@@ -1,8 +1,7 @@
 <script>
-    import {createEventDispatcher, onMount, onDestroy} from 'svelte'
-    import {fade, fly} from 'svelte/transition'
-    import {groups, notify, swarm, user} from '$lib/stores/user.js'
-    import { videoSettings } from '$lib/stores/mediasettings'
+    import {createEventDispatcher, onMount} from 'svelte'
+    import {groups, swarm, user} from '$lib/stores/user.js'
+    import { videoSettings, video } from '$lib/stores/mediasettings'
     
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
@@ -81,7 +80,7 @@
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
                 $videoSettings.myVideo = false
-                $videoSettings.play = false
+                $video.play = false
                 $videoSettings.screenshare = false
                 $swarm.myStream = false
             }
