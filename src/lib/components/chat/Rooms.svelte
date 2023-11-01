@@ -24,7 +24,7 @@
     onMount(async () => {
         // await sleep(200)
     })
-    
+
     const printThis = (channel) => {
         //if (channel === $swarm.activeChannel.name) return
         
@@ -78,11 +78,10 @@
             let endTone = new Audio('/audio/endcall.mp3')
             endTone.play()
             
-            console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
-                $videoSettings.video = false
                 $videoSettings.myVideo = false
+                $videoSettings.play = false
                 $videoSettings.screenshare = false
                 $swarm.myStream = false
             }

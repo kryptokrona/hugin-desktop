@@ -140,7 +140,7 @@
             console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
-                $videoSettings.video = false
+                $videoSettings.play = false
                 $videoSettings.myVideo = false
                 $videoSettings.screenshare = false
                 $swarm.myStream = false
