@@ -926,14 +926,13 @@ async function saveMessage(msg, offchain = false) {
         addr = msg.chat
     }
 
-    message = sanitizeHtml(text)
-
     //New message from unknown contact
     if (msg.type === 'sealedbox' && !sent) {
         let hugin = addr + key
         await saveContact(hugin)
     }
 
+    message = sanitizeHtml(text)
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
     if (sent) {
         //If sent, update conversation list
