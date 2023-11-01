@@ -256,10 +256,8 @@
             //Update stream
         }
 
-        $videoSettings.myVideo = true
-        $videoSettings.video = true
+        play_video()
         await sleep(200)
-        $videoSettings.loading = false
         if ($videoSettings.screenshare) return
         $mediaSettings.cameraId = id
     }
@@ -517,13 +515,19 @@
             .catch((e) => {
                 console.log('error', e)
             })
+            
+}
+
+function play_video() {
+    $videoSettings.myVideo = true
+    $video.play = true
+    $videoSettings.loading = false
 }
 
     function set_video(stream) {
         $swarm.oldStream = $swarm.myStream
         $swarm.myStream = stream
-        $videoSettings.myVideo = true
-        $videoSettings.video = true
+        play_video()
         let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')
         $mediaSettings.cameraId = camera[0].deviceId
     }
@@ -649,10 +653,12 @@
         }
         //
         $swarm.initiator = false
-        $videoSettings.video = false
+        $videoSettings.myVideo = false
         $videoSettings.screenshare = false
         $videoSettings.myVideo = false
         $swarm.myStream = false
+        $videoSettings.loading = false
+        $video.play = false
         console.log('Call ended')
     }
     </script>
