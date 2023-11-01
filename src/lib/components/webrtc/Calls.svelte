@@ -503,7 +503,6 @@ async function startLocalVideo() {
 }
 
 async function shareScreen(id) {
-    $videoSettings.loading = true
     const screen_stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -1009,11 +1008,12 @@ function endCall(peer, stream, contact) {
 
     //
     $webRTC.initiator = false
-    $videoSettings.video = false
+    $videoSettings.myVideo = false
     $videoSettings.screenshare = false
     $videoSettings.myVideo = false
     $webRTC.myStream = false
-
+    $videoSettings.loading = false
+    $video.play = false
     console.log('Call ended')
 }
 </script>
