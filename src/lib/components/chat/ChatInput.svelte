@@ -127,7 +127,7 @@
 
   $: {
     if ($swarm.active.length) {
-      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key);
+      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key && $swarm.showVideoGrid);
     } else {
       activeSwarm = false
     }

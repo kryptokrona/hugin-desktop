@@ -109,7 +109,7 @@ const sendGroupMsg = async (e) => {
     let time = Date.now()
     let myName = $user.username
     let group = thisGroup
-    let in_swarm = $swarm.active.some(a => a.key === thisGroup)
+    let in_swarm = $swarm.active.some(a => a.key === thisGroup && $swarm.showVideoGrid)
     let in_channel = $swarm.activeChannel.name
     let offchain = in_swarm
     //Reaction switch
@@ -139,7 +139,7 @@ const sendGroupMsg = async (e) => {
         swarm: in_swarm
     }
 
-    if (in_channel) {
+    if (in_channel && in_swarm) {
         sendMsg.c = in_channel
         myGroupMessage.channel = in_channel
         channelMessages.unshift(myGroupMessage)
