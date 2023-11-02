@@ -11,18 +11,12 @@
     })
     
     window.api.receive('answer-voice-channel', (data) => {
-        console.log("Answer voice channel", data)
         answer_voice_channel(data)
     })
     
     window.api.receive('join-voice-channel', (data) => {
-        console.log("Joining voice channel group_webrtc", data)
         join_voice_channel(data)
     })
-    
-    // window.api.receive('start-room', (video) => {
-    //     createRoom(video)
-    // })
 
     window.api.receive('close-voice-channel-with-peer', (address) => { 
         endCall('peer', 'stream', address)
@@ -42,24 +36,21 @@
         shareScreen(id)
     })
 
-    //TODO ADD MEDIA TRAKCS; VIDEO; SCREENSHARE
-    // NEW CALL? 
+    window.api.receive('got-expanded-voice-channel', async (callData) => {
+        let [sdp, address] = callData
+        let contact = $swarm.call.find((a) => a.chat == address)
+        if (!contact) return
+        contact.peer.signal(sdp)
+    })
     
-    // window.api.receive('screen-share', (id) => {
-    //     shareScreen(id)
-    // })
-    
-    // window.api.receive('set-camera', () => {
-    //     changeCamera(true, $mediaSettings.cameraId)
-    // })
-    
-    // window.api.receive('set-audio-input', (id) => {
-    //     changeAudio(id)
-    // })
-    
-    // window.api.receive('check-src', () => {
-    //     checkSources()
-    // })
+    //Awaits msg answer with sdp from contact
+    window.api.receive('got-answer-voice-channel', (signal) => {
+        let contact = $swarm.call.find((a) => a.chat === signal.address)
+        if (!contact) return
+        contact.peer.signal(signal.data)
+        console.log('Connecting to ...', signal.address)
+    })
+
 
     async function checkSources() {
         $mediaSettings.devices = await navigator.mediaDevices.enumerateDevices()
@@ -92,7 +83,6 @@
 }
     
     window.api.receive('group-change-source', (src, add) => {
-        console.log('want to change in calls', src)
         changeCamera(true, src, add)
     })
 
@@ -179,21 +169,6 @@
     }
     }
     
-    window.api.receive('got-expanded-voice-channel', async (callData) => {
-        console.log("Got offer signal", callData)
-        let [sdp, address] = callData
-        let contact = $swarm.call.find((a) => a.chat == address)
-        contact.peer.signal(sdp)
-    })
-    
-    //Awaits msg answer with sdp from contact
-    window.api.receive('got-answer-voice-channel', (signal) => {
-        console.log("Got ansswer data:", signal)
-        let contact = $swarm.call.find((a) => a.chat === signal.address)
-        contact.peer.signal(signal.data)
-        console.log('Connecting to ...', signal.address)
-    })
-
     async function shareScreen(id) {
     const screen_stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -305,7 +280,6 @@
         $swarm.voice_active = true
         
         peer1.on('stream', (peerStream) => {
-            console.log("Got peer1 stream", peerStream)
             //Set peerStream to store
             this_call.peerStream = peerStream
             this_call.peerVideo = true
@@ -365,7 +339,6 @@
     
     const answer_voice_channel = (data) => {
         
-        console.log("Answer voice channel", data)
         let contact = data.address
         let msg = data.data
         let video = $videoSettings.myVideo
@@ -390,7 +363,6 @@
     }
 
     const got_answer_media = async (stream, msg, data) => {
-            console.log("Got stream!", stream)
             let this_call = $swarm.call.find(a => a.chat === data.address)
             let video = $videoSettings.myVideo
             let peer2 = await startPeer2(stream, video, this_call)
@@ -436,7 +408,7 @@
             console.log('msg from peer2', incMsg)
         })
     
-        console.log('Sending offer!')
+        console.log('Sending answer!')
     
         peer2.on('connect', () => {
             // SOUND EFFECT
@@ -459,7 +431,6 @@
     function sendOffer(peer, contact, topic) {
     
         peer.on('signal', (data) => {
-            console.log("Signal peer 1", data)
             let dataToSend = {
                 data: data,
                 type: 'offer',
@@ -473,20 +444,16 @@
                 console.log("Retry!", dataToSend)
                 dataToSend.retry = true
             }
-
-            console.log('Want to send sdp offer in voice chnnael', dataToSend)
     
             window.api.send('get-sdp-voice-channel', dataToSend)
         })
     }
     
     function sendAnswer(sdpOffer, address, peer, topic) {
-        console.log('offer?', sdpOffer, address)
     
         window.api.send("expand-voice-channel-sdp", [sdpOffer, address])
     
         peer.on('signal', (data) => {
-            console.log('answer data:', data)
             let dataToSend = {
                 data: data,
                 type: 'answer',
@@ -596,13 +563,11 @@ function play_video() {
         $swarm.myStream = stream
         
     }
-
-    $: console.log("$swarm calls", $swarm.call)
     
     //End call
     function endCall(peer, stream, contact) {
 
-        console.log("Call ending with", peer, contact)
+        console.log("Call ending with peer")
         let caller = $swarm.call.find((a) => a.chat === contact)
     
         if (contact === undefined && peer !== undefined) {
@@ -634,7 +599,6 @@ function play_video() {
             filter = $swarm.call.filter((a) => a.chat !== contact)
         }
     
-        console.log('cleared this call from', filter)
         $swarm.call = filter
 
         const in_voice = $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))

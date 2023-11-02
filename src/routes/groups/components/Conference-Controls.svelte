@@ -49,34 +49,17 @@
         clearInterval(timer)
     })
     
-    //Share screenpmn
-    const switchStream = async () => {
-        if (!$videoSettings.screenshare) {
-            $videoSettings.loading = true
-            await window.api.shareScreen(false, true)
-            $videoSettings.screenshare = true
-            return
-        }
-        $videoSettings.myVideo = false
-        $videoSettings.screenshare = false
-        $swarm.call.forEach((a) => {
-            a.myStream.getVideoTracks().forEach((track) => track.stop())
-        })
-    }
 
-    const join_voice_channel = async (video = false, reconnect = false, screen) => {
+    const join_voice_channel = async (video = false, screen) => {
         if (in_voice) return
         if (thisSwarm.voice_channel.length > 9) {
             window.api.errorMessage('There are too many in the call')
+            return
         }
-        if (!reconnect) startTone.play()
+        startTone.play()
         $swarm.showVideoGrid = true
         console.log("Joining!")
-        if (reconnect) {
-            //activate_video()
-            //await sleep(200)
-            $videoSettings.myVideo = true
-        }
+
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
@@ -88,7 +71,7 @@
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
-        console.log("voice", voice_channel)
+        console.log("Voice channel", voice_channel)
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
         //Set to true? here
         thisSwarm.voice_connected = true
@@ -96,10 +79,10 @@
         console.log("Should be joined and connected here in this swarm", thisSwarm)
     }
 
-    function disconnect_from_active_voice(reconnect = false) {
+    function disconnect_from_active_voice() {
         console.log("Disconnect from active voice!")
 
-        if (!reconnect) $swarm.showVideoGrid = true
+        $swarm.showVideoGrid = true
             //Leave any active first, check if my own address is active in some channel
             //Also remove from voice channel
             let swarms = $swarm.active
@@ -133,11 +116,9 @@
             //Stop any active stream
             if (!old) return true
 
-            console.log("play sound!")
             let endTone = new Audio('/audio/endcall.mp3')
             endTone.play()
             
-            console.log("Aha? still")
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
                 $video.play = false
@@ -153,7 +134,16 @@
             $videoSettings.myVideo = false
             return true
     }
-    
+
+    //Share screen
+    const switchStream = async () => {
+        if (!$videoSettings.screenshare) {
+            $videoSettings.loading = true
+            await window.api.shareScreen(false, true)
+            $videoSettings.screenshare = true
+            return
+        }
+    }
     
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
@@ -175,17 +165,11 @@
     
     const toggleVideo = () => {
         $videoSettings.loading = true
-        if (!connected) {
-            if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
-                add_video(true)
-            } else if ($swarm.call.length === 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
-                activate_video()
-            }
-            connected = true
-            return
-        } else if ($swarm.call.length > 0 && !$videoSettings.screenshare && connected && !$videoSettings.myVideo) {
-            add_video(false)
-            return
+    
+        if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
+            add_video(true)
+        } else if ($swarm.call.length === 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
+            activate_video()
         }
 
         if ($videoSettings.screenshare) {
@@ -195,7 +179,6 @@
             return
         }
 
-        console.log("Changed toggle! stream",$swarm.myStream)
         $videoSettings.myVideo = !$videoSettings.myVideo
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {

@@ -10,18 +10,11 @@
     import {createEventDispatcher, onMount} from 'svelte'
     import {groups, user} from '$lib/stores/user.js'
     import { sleep } from '$lib/utils/utils'
-    import Button from '$lib/components/buttons/Button.svelte'
-    import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
     import { Moon } from 'svelte-loading-spinners'
-    import { videoSettings } from '$lib/stores/mediasettings'
     
-    let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
     let voice_channel = []
-    let connected = false
     let topic = ""    
-    let muted = false
     let thisSwarm = {}
     const dispatch = createEventDispatcher()
     const my_address = $user.huginAddress.substring(0,99)
@@ -49,81 +42,6 @@
     
     const openRemove = () => {
         $groups.removeGroup = !$groups.removeGroup
-    }
-
-    const join_voice_channel = async (video = false, reconnect = false, screen) => {
-        if (in_voice) return
-        if (!reconnect) startTone.play()
-        $swarm.showVideoGrid = true
-        console.log("Joining!")
-        if (reconnect) {
-            //activate_video()
-            //await sleep(200)
-            $videoSettings.myVideo = true
-        }
-        //Leave any active first
-        if ($swarm.voice_channel.length) {
-            //We already have an active call.  
-            if (thisSwarm.voice_connected === true) return
-             //Replace this with our new call
-            if (!disconnect_from_active_voice()) return
-        }
-        console.log("Want to Join new voice")
-        thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = thisSwarm.voice_channel
-        console.log("voice", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
-        //Set to true? here
-        thisSwarm.voice_connected = true
-        $swarm = $swarm 
-        console.log("Should be joined and connected here in this swarm", thisSwarm)
-    }
-
-    function disconnect_from_active_voice(reconnect = false) {
-        console.log("Disconnect from active voice!")
-
-        if (!reconnect) $swarm.showVideoGrid = false
-            //Leave any active first, check if my own address is active in some channel
-             //Also remove from voice channel
-            let swarms = $swarm.active
-            //Remove my own address from swarm active voice channel list in UI
-            swarms.forEach(joined => {
-                if (joined.voice_channel.some(a => a.address === my_address)) {
-                let removed = joined.voice_channel.filter(a => a.address !== my_address) 
-                joined.voice_channel = removed
-                }
-            })
-            
-            //Check my current active swarm voice channel and remove aswell
-            let active = $swarm.voice_channel.find(a => a.address === my_address)
-            if (!active) return true
-
-            //Change voice connected status in other channels
-            let old = $swarm.active.find(a => a.voice_connected === true)
-            if (old) old.voice_connected = false
-
-            
-            //Remove from the active voice channel we have
-            console.log("Want to exit old voice")
-            let remove = $swarm.voice_channel.filter( a => a !== active)
-            $swarm.voice_channel = remove
-            
-            //Stop any active tracks
-            if (active && $swarm.myStream) {
-                $swarm.myStream.getTracks().forEach((track) => track.stop())
-            }
-            //Stop any active stream
-            if (!old) return true
-
-            if (!reconnect) {
-                let endTone = new Audio('/audio/endcall.mp3')
-                endTone.play()
-            }
-            connected = false
-            //Send status to backend
-            window.api.send("exit-voice", old.key)
-            $videoSettings.myVideo = false
-            return true
     }
     
     let drag = false
@@ -156,26 +74,15 @@
     } else {
         isConnecting = false
     }
-
-    $: console.log("isconeccting", isConnecting)
     
     $: groupKey
     
     $: videoCalls = $swarm.call.filter(a => a.connected === true)
     
-    $: console.log('video calls', videoCalls)
     </script>
     
     <div in:fade out:fade class:show="{$swarm.showVideoGrid}" class="layout">
-        <!--
-        <p on:click={close}>Close</p>
-        <p on:click={()=> join = !join}>Join chat</p>
-        <div class="exit">
-          <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
-            <FillButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
-          </div>
-        </div>
-        -->
+
         <div class="video-wrapper">
         
             <div class="video-grid">
@@ -212,25 +119,12 @@
                 <ConferenceControls />
             </div>
         </div>
-        <!-- {#if !$videoGrid.showChat && $swarm.showVideoGrid}
-        <div class="fly" in:fly="{{ x: -150 }}">
 
-            <div class="list-wrapper">
-                {#each thisSwarm?.connections as user}
-                    <VoiceUser voice_user={user} voice_channel={thisSwarm?.voice_channel}/>
-                {/each}
-            </div>
-        </div> 
-        {/if} -->
         <RtcGroupMessages />
     </div>
     
     <style lang="scss">
-
-    // .fly {
-    //     width: 17%;
-    //     height: 17%;
-    // }
+    
     
     .layout {
         display: flex;
@@ -247,7 +141,6 @@
         overflow: hidden;
         pointer-events: none;
     }
-    
     .video-wrapper {
         display: flex;
         justify-content: space-between;
