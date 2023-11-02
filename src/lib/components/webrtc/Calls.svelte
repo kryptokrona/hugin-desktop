@@ -150,7 +150,6 @@ async function answerDataChannel(msg, address, key, video, offchain, peer2, this
     let channel = new Peer({trickle: false, wrtc: wrtc })
     this_call.channel = channel
     //Data channel
-    console.log("channel?", channel)
  
     channel.on('connect', async () => {
         this_call.channel_connected = true
@@ -161,7 +160,6 @@ async function answerDataChannel(msg, address, key, video, offchain, peer2, this
     })
     
     peer2.on('signal', (data) => {
-        console.log('initial answer data:', data)
         let dataToSend = {
             data: data,
             type: 'answer',
@@ -171,7 +169,6 @@ async function answerDataChannel(msg, address, key, video, offchain, peer2, this
             group: group,
         }
 
-        console.log("Sending new full answer sdp!", dataToSend)
         sendPeerMessage(dataToSend, address)
         return
     })
@@ -223,7 +220,6 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
                 }
                 
                 //Send offer via first data channel
-                console.log("Sending new full sdp!", dataToSend)
                 sendPeerMessage(dataToSend, contact.substring(0,99))
             })
 
@@ -298,11 +294,6 @@ async function startPeer1(stream, video, contact) {
         }
     })
 
-    peer1.on('data', (msg) => {
-        let incMsg = JSON.parse(msg)
-        console.log('msg from peer2', incMsg)
-    })
-
     //Data channel
     peer1._channel.addEventListener('message', (event) => {
         checkMessage(event, contact.substring(0,99))
@@ -335,7 +326,6 @@ const answerCall = (msg, contact, key, offchain = false) => {
     console.log('Got media')
 
     async function gotMedia(stream) {
-        console.log("Got answer media", stream)
         let this_call = getActive(contact)
         let peer2 = await startPeer2(stream, video, this_call)
         answerDataChannel(msg, contact, key, video, offchain, peer2, this_call)
@@ -382,12 +372,7 @@ async function startPeer2(stream, video, this_call) {
         endCall(peer2, stream)
     })
 
-    peer2.on('data', (data) => {
-        console.log('data from peer', data)
-        let incMsg = JSON.parse(data)
-        console.log('msg from peer2', incMsg)
-    })
-
+    
     //Voice/Video connection event
     peer2.on('connect', async () => {
     
@@ -410,10 +395,7 @@ async function startPeer2(stream, video, this_call) {
     peer2.on('stream', async (peerStream) => {
         // got remote video stream, now let's show it in a video tag
 
-        console.log('peer2 stream', peerStream)
         this_call.peerStream = peerStream
-        
-
         
         if (video) {
             $videoGrid.showVideoGrid = true
@@ -444,11 +426,9 @@ function sendOffer(peer, contact, video, group = false, offchain = false) {
         }
 
         if ($webRTC.call.some(a => a.chat === contact.substring(0,99) && a.channel_connected)) {
-            console.log("Sending new full sdp!", dataToSend)
             sendPeerMessage(dataToSend, address)
             return
         }
-        console.log("Got signal first offer data connection", data)
 
         window.api.send('get-sdp', dataToSend)
     })
@@ -463,7 +443,6 @@ function sendAnswer(sdpOffer, address, peer, key, video, offchain = false, group
     }
 
     peer.on('signal', (data) => {
-        console.log('initial answer data:', data)
         let dataToSend = {
             data: data,
             type: 'answer',
@@ -474,12 +453,9 @@ function sendAnswer(sdpOffer, address, peer, key, video, offchain = false, group
         }
 
         if ($webRTC.call.some(a => a.chat === address && a.channel.connected)) {
-            console.log("Sending new full answer sdp!", dataToSend)
             sendPeerMessage(dataToSend, address)
             return
         }
-
-        console.log('sending sdp', dataToSend)
 
         window.api.send('get-sdp', dataToSend)
     })
@@ -524,20 +500,13 @@ async function shareScreen(id) {
     changeVideoSource(screen_stream, 'screen', add)
 }
 
-$: {
-    console.log('Active Camera', $mediaSettings.cameraId)
-    console.log('Active Calls', $webRTC.call)
-}
-
 function sendRtcMessage(msg, to_group) {
 
     if (to_group) {
-        console.log('sending rtc group message')
+        console.log('Sending webrtc data channel message')
         let connected = $webRTC.call.filter((a) => a.connected == true)
         connected.forEach((a) => {
-            console.log('sending to peer', a.peer)
             let sendMsg = JSON.stringify(msg[0])
-            console.log('sending rtc', sendMsg)
             a.peer.send(sendMsg)
         })
 
@@ -547,20 +516,15 @@ function sendRtcMessage(msg, to_group) {
     let [message, address] = msg
     //Find who we are going to send to
     let to = $webRTC.call.find((a) => a.chat == address)
-    console.log('sending rtc', message)
-    console.log('Message to route?', msg)
     let sendMsg
     if (msg.length === 3 && !to.connected) {
         //Want to tunnel message through group inviter to the right address
         sendMsg = JSON.stringify(message + address)
-        console.log('sendMsg tunnel', message, address)
         //Here we should try send it to the first connected peer, maybe more
         let tunnel = $webRTC.call[$webRTC.call.length - 1]
         tunnel.peer.send(sendMsg)
         return
     } else {
-        console.log('sending', message)
-        console.log('to', to)
         sendMsg = JSON.stringify(message)
         to.peer.send(sendMsg)
     }
@@ -684,18 +648,19 @@ async function changeCamera(video, id, add = false) {
 
 function sendPeerMessage(data, address) {
     let to = getActive(address)
+    if (!to) return
     to.channel.send(JSON.stringify(data))
 }
 
 function signalPeer(address, data) {
     let contact = $webRTC.call.find((a) => a.chat == address)
-    console.log("Signaling voice/video peer....", data)
+    if (!contact) return
     contact.peer.signal(data)
 }
 
 function signalPeerChannel(address, data) {
     let contact = $webRTC.call.find((a) => a.chat == address)
-    console.log("Signaling data channel....", data)
+    if (!contact) return
     contact.channel.signal(data)
 }
 
@@ -711,21 +676,15 @@ function checkMessage(event, address) {
     
     if (typeof message === 'object') {
         if (message.type === 'offer' || 'answer' || 'renegotiate') {
-            console.log("Got new incoming signal!", message)
             signalPeer(address, message.data)
             return
         }
     }
-    console.log("Checking message!", message)
 
     let parsedMsg = message.substring(0, message.length - 99)
     let addr = message.substring(message.length - 99)
-
-    console.log('Address?', addr)
     
-
     if (addr == $user.huginAddress.substring(0, 99)) {
-        console.log('found tunneled message to me', message)
         window.api.decryptMessage(parsedMsg)
         return
     }
@@ -733,17 +692,14 @@ function checkMessage(event, address) {
     if (message.substring(68, 70) == 'sb') {
         //Decrypt group message, groupCall is either key or false.
         let key = $webRTC.groupCall
-        console.log('Decrypting group with', key)
         window.api.decryptGroupMessage(message, key)
         return
     }
 
     if ($webRTC.groupCall && addr.substring(0, 4) == 'SEKR') {
-        console.log('Group tunnel message', event)
         let groupMessage = JSON.parse(event.data)
         let address = groupMessage.substring(groupMessage.length - 99)
         //If the address is one of our active calls, tunnel the message
-        console.log('Found address', address)
         if ($webRTC.call.some((a) => a.chat == address)) {
             let tunnel = true
             let sendTunnel = $webRTC.call.find((a) => a.chat === address)
@@ -754,12 +710,10 @@ function checkMessage(event, address) {
     }
 
     if (addr.substring(0, 4) == 'SEKR') {
-        onsole.log('Address?', addr.substring(0, 4))
         console.log('This message should be routed elsewere')
         return
     }
     //Decrypt message
-    console.log('Private rtc message?', message)
     window.api.decryptMessage(message)
 }
 
@@ -768,13 +722,11 @@ async function inviteToGroupCall(peer) {
     if ($webRTC.groupCall === false) {
         //If no groupcall is started, get a new key
         $webRTC.groupCall = await window.api.createGroup()
-        console.log('New group key', $webRTC.groupCall)
     }
 
     //When you invite a new person to the call
     let thisCall = $webRTC.call.find((a) => a.peer === peer)
     let contact = $user.contacts.find((a) => a.chat === thisCall.chat)
-    console.log('this call', thisCall)
     //Sort out all active calls except this
     let callList = $webRTC.call.filter((a) => a.chat !== thisCall.chat)
     let activeCall = []
@@ -786,7 +738,7 @@ async function inviteToGroupCall(peer) {
             let tunnelTo = $user.contacts.find((c) => c.chat === a.chat)
             let listItem = a.chat + tunnelTo.key
             activeCall.push(listItem)
-            console.log('inviting', listItem)
+            console.log('Inviting')
         })
     } else {
         //First
@@ -800,7 +752,7 @@ async function inviteToGroupCall(peer) {
         sent: true,
         timestamp: Date.now(),
     }
-    console.log('Inviting contact', myMessage)
+
     let to = thisCall.chat + contact.key
     //Send offchain invite message
     window.api.sendMsg(myMessage, to, true, true)
@@ -853,7 +805,6 @@ async function checkVolume(peer) {
             clearInterval(interval)
             let clearAudio = $audioLevel.call.filter((a) => a.chat !== contact.chat)
             $audioLevel.call = clearAudio
-            console.log('Audio field cleared', $audioLevel.call)
         }
     }
 }
