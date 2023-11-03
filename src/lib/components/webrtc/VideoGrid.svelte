@@ -46,19 +46,10 @@ $: groupKey
 
 $: videoCalls = $webRTC.call.filter((a) => a.connected === true)
 
-$: console.log('video calls', videoCalls)
 </script>
 
 <div in:fade out:fade class:show="{$videoGrid.showVideoGrid}" class="layout">
-    <!--
-    <p on:click={close}>Close</p>
-    <p on:click={()=> join = !join}>Join chat</p>
-    <div class="exit">
-      <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
-        <FillButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
-      </div>
-    </div>
-    -->
+
     <div class="video-wrapper">
         <div class="video-grid">
             {#if $webRTC.call.length}
