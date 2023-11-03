@@ -184,12 +184,13 @@ async function answerDataChannel(msg, address, key, video, offchain, peer2, this
     return channel
 }
 
-async function gotMedia(stream, contact, video, screen_stream = false) {
+async function gotMedia(stream, contact, isVideo, screen_stream = false) {
 
     $webRTC.myStream = stream
     let this_call = getActive(contact.substring(0, 99))
-    if (video) {
+    if (isVideo) {
         $videoSettings.myVideo = true
+        $video.play = true
         if (screen_stream) {
             let id = await window.api.shareScreen(true)
             shareScreen(id)
@@ -199,7 +200,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
     }
 
 
-    const channel = startDataChannel(video, this_call, contact)
+    const channel = startDataChannel(isVideo, this_call, contact)
     let peer1
 
     //Data channel connect event
@@ -209,7 +210,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
         //Set datachannel connected 
         this_call.channel_connected = true
         //Start voice/video peer
-        peer1 = await startPeer1(stream, video, contact)
+        peer1 = await startPeer1(stream, isVideo, contact)
         this_call.peer = peer1
         //Got offer signal
             peer1.on('signal', (data) => {
@@ -228,7 +229,7 @@ async function gotMedia(stream, contact, video, screen_stream = false) {
 
                 //Set peerStream to store
                 this_call.peerStream = peerStream
-                if (video) {
+                if (isVideo) {
                     $videoGrid.showVideoGrid = true
 
                 } else {
@@ -307,16 +308,16 @@ async function startPeer1(stream, video, contact) {
 
 const answerCall = (msg, contact, key, offchain = false) => {
 
-    let video = false
+    let isVideo = false
     if (msg.substring(0, 1) === 'Δ') {
-        video = true
+        isVideo = true
     }
-    $videoSettings.myVideo = video
+    $videoSettings.myVideo = isVideo
 
     // get video/voice stream
     navigator.mediaDevices
         .getUserMedia({
-            video: video,
+            video: isVideo,
             audio: {
                 googNoiseSupression: true,
             },
@@ -327,19 +328,20 @@ const answerCall = (msg, contact, key, offchain = false) => {
 
     async function gotMedia(stream) {
         let this_call = getActive(contact)
-        let peer2 = await startPeer2(stream, video, this_call)
-        answerDataChannel(msg, contact, key, video, offchain, peer2, this_call)
+        let peer2 = await startPeer2(stream, isVideo, this_call)
+        answerDataChannel(msg, contact, key, isVideo, offchain, peer2, this_call)
         checkMyVolume(stream)
         checkSources()
         //Set webRTC store update for call
         this_call.peer = peer2
         this_call.myStream = stream
-        this_call.video = video
+        this_call.video = isVideo
         
         $webRTC.myStream = stream
         $webRTC.active = true
 
-        if (video) {
+        if (isVideo) {
+            $video.play = true
             $videoSettings.myVideo = true
             $videoGrid.showVideoGrid = true
         }
