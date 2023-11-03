@@ -404,6 +404,7 @@ async function startPeer2(stream, video, this_call) {
         }
         //Set video true for UI
         this_call.peerVideo = true
+        updateStore()
         $videoSettings.myVideo = true
         console.log('Setting up link..')
     })

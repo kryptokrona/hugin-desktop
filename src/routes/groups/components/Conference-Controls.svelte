@@ -181,6 +181,11 @@
 
         $videoSettings.myVideo = !$videoSettings.myVideo
         if (!$swarm.myStream) return
+
+        if ($swarm.call.length === 0) {
+            $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+        }
+        
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         })
