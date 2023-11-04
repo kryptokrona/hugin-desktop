@@ -62,6 +62,7 @@ $: window_medium
 
 <div class="card" class:many={many} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
     <video
+        class:reverse={$videoSettings.screenshare}
         on:click="{playVideo}"
         muted
         in:fade
@@ -103,9 +104,13 @@ $: window_medium
         border-radius: inherit;
         z-index: 5;
         transform: scaleX(-1);
+        
     }
 }
 
+.reverse {
+    transform: scaleX(1) !important;
+}
 
 .many {
     height: 30.52% !important;
