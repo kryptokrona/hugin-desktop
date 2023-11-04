@@ -11,7 +11,7 @@ let videoDevices = $mediaSettings.devices.filter((a) => a.kind == 'videoinput')
 
 function pickSource(src) {
     let add = false
-    if ($mediaSettings.cameraId === src.deviceId) return
+    if ($mediaSettings.cameraId === src.deviceId && !$videoSettings.screenshare) return
     if (!$videoSettings.myVideo && conference) add = true
     
     window.api.changeSource(src.deviceId, conference, add)

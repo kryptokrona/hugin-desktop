@@ -165,11 +165,12 @@
     
     const toggleVideo = () => {
         $videoSettings.loading = true
-    
-        if ($swarm.call.length > 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
-            add_video(true)
-        } else if ($swarm.call.length === 0 && !$videoSettings.screenshare && !$videoSettings.myVideo) {
-            activate_video()
+        //Add video to call or activate local video
+        if (!$videoSettings.screenshare && !$videoSettings.myVideo && !$swarm.myStream) {
+            if ($swarm.call.length > 0 ) add_video(true)
+            if ($swarm.call.length === 0)  activate_video()
+            $videoSettings.myVideo = !$videoSettings.myVideo
+            return
         }
 
         if ($videoSettings.screenshare) {
@@ -185,7 +186,7 @@
         if ($swarm.call.length === 0) {
             $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         }
-        
+
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         })

@@ -222,6 +222,7 @@
         $video.play = true
         if (current) $swarm.myStream = current
 
+        play_video()
         if (!add && current) {
             //Stop old track
             let old = current.getVideoTracks()[0]
@@ -231,8 +232,6 @@
             //Update stream
         }
 
-        play_video()
-        await sleep(200)
         if ($videoSettings.screenshare) return
         $mediaSettings.cameraId = id
     }
@@ -485,9 +484,10 @@
             
 }
 
-function play_video() {
+async function play_video() {
     $videoSettings.myVideo = true
     $video.play = true
+    await sleep(200)
     $videoSettings.loading = false
 }
 

@@ -62,7 +62,7 @@ $: window_medium
 
 <div class="card" class:many={many} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
     <video
-        class:reverse={$videoSettings.screenshare}
+        class:reverse={$videoSettings.screenshare && !$videoSettings.loading}
         on:click="{playVideo}"
         muted
         in:fade
@@ -73,11 +73,13 @@ $: window_medium
         <div class:in_call="{true}"></div>
         <div class="name">{$user.username}</div>
         {#if $videoSettings.loading}
-        <div in:fly={{ x: -50}} out:fly={{ x: 50}} class="loader">
+        <div class="loader">
             <Moon color="#f5f5f5" size="77" unit="px"/>
         </div>
         {/if}
-        <img src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />
+        {#if !$videoSettings.screenshare && !$videoSettings.myVideo}
+            <img in:fly src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />
+        {/if}
 </div>
 
 <style lang="scss">
@@ -104,12 +106,14 @@ $: window_medium
         border-radius: inherit;
         z-index: 5;
         transform: scaleX(-1);
+        transition: 100ms ease-in-out;
         
     }
 }
 
 .reverse {
     transform: scaleX(1) !important;
+    transition: 100ms ease-in-out;
 }
 
 .many {
@@ -236,10 +240,14 @@ p {
 .loader {
     z-index: 6;
     width: 100%;
-    height: 99%;
+    height: 100%;
     position: absolute;
     align-items: center;
     display: flex;
     justify-content: center;
+    background-color: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    transition: 50ms ease-in-out;
 }
 </style>
