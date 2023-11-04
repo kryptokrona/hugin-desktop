@@ -14,6 +14,7 @@ function pickSource(src) {
     if ($mediaSettings.cameraId === src.deviceId && !$videoSettings.screenshare) return
     if (!$videoSettings.myVideo && conference) add = true
     
+    $videoSettings.loading = true
     window.api.changeSource(src.deviceId, conference, add)
     if ($videoSettings.screenshare) {
         $videoSettings.screenshare = false
