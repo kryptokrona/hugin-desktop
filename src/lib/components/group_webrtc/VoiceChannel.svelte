@@ -492,7 +492,6 @@ async function play_video() {
 }
 
     function set_video(stream) {
-        $swarm.oldStream = $swarm.myStream
         $swarm.myStream = stream
         play_video()
         let camera = $mediaSettings.devices.filter((a) => a.kind === 'videoinput')

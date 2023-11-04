@@ -137,8 +137,8 @@
 
     //Share screen
     const switchStream = async () => {
+        $videoSettings.loading = true
         if (!$videoSettings.screenshare) {
-            $videoSettings.loading = true
             await window.api.shareScreen(false, true)
             $videoSettings.screenshare = true
             return
