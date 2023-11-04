@@ -245,7 +245,7 @@ p {
     align-items: center;
     display: flex;
     justify-content: center;
-    background-color: rgba(0,0,0,0.85);
+    background-color: rgba(0,0,0,0.9);
     backdrop-filter: blur(8px);
     border-radius: 10px;
     transition: 50ms ease-in-out;
