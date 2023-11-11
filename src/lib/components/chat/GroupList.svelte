@@ -240,7 +240,6 @@ $: show_groups = true
                     </div>
                 {/each}
             </div>
-                <Rooms on:printGroup="{(e) => printGroup(e.detail)}" on:print-channel="{(e) => dispatch('printChannel', e)}" />
 </div>
 
 

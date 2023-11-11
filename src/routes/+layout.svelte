@@ -33,6 +33,7 @@
     import { sleep } from '$lib/utils/utils'
     import Conference from './groups/components/Conference.svelte'
     import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.svelte'
+import Rooms from '$lib/components/chat/Rooms.svelte'
 
     let ready = false
     let incoming_call
@@ -486,7 +487,8 @@
                 <ConferenceFloater />
             {/if}
     {/if}
-
+    
+    <Rooms />
   
 
     {#if ($user.loggedIn && $swarm.call.length)}
