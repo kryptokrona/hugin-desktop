@@ -1,24 +1,9 @@
 <script>
     import {createEventDispatcher, onMount} from 'svelte'
-    import {groups, swarm, user} from '$lib/stores/user.js'
+    import {swarm, user} from '$lib/stores/user.js'
     import { videoSettings, video } from '$lib/stores/mediasettings'
     
-    let startTone = new Audio('/audio/startcall.mp3')
-    let channels = []
-    let voice_channel = []
-    let connected = false
-    let topic = ""    
-    let muted = false
     const dispatch = createEventDispatcher()
-    const my_address = $user.huginAddress.substring(0,99)
-    $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
-
-    $: in_voice = voice_channel.some(a => a.address === my_address)
-
-    $: if (thisSwarm) channels = thisSwarm.channels
-    $: if (thisSwarm) topic = thisSwarm.topic
-    $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
-
 
     onMount(async () => {
         // await sleep(200)
@@ -27,18 +12,17 @@
     const printThis = (channel) => {
         //if (channel === $swarm.activeChannel.name) return
         
-        $swarm.activeChannel = {name: channel, key: thisSwarm.key}
+        //$swarm.activeChannel = {name: channel, key: thisSwarm.key}
         dispatch('print-channel', channel)
     }
 
     window.api.receive('leave-active-voice-channel', async () => {
-        console.log("leave vojs!")
         disconnect_from_active_voice()
     })
 
     function disconnect_from_active_voice(reconnect = false) {
         console.log("Disconnect from active voice!")
-
+        const my_address = $user.huginAddress.substring(0,99)
         if (!reconnect) $swarm.showVideoGrid = false
             //Leave any active first, check if my own address is active in some channel
             //Also remove from voice channel
@@ -73,7 +57,6 @@
             //Stop any active stream
             if (!old) return true
 
-            console.log("play sound!")
             let endTone = new Audio('/audio/endcall.mp3')
             endTone.play()
             
@@ -85,7 +68,7 @@
                 $swarm.myStream = false
             }
             
-            console.log("Exit vojs!")
+            console.log("Left voice channel!")
             connected = false
             //Send status to backend
             window.api.send("exit-voice", old.key)
