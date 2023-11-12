@@ -3,18 +3,10 @@
     import {groups, swarm, user, webRTC} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
-    import {flip} from 'svelte/animate'
-
-    import { page } from '$app/stores'
-    import Exit from '$lib/components/icons/Exit.svelte'
-    import Lightning from '$lib/components/icons/Lightning.svelte'
     import { standardGroups } from '$lib/stores/standardgroups.js'
-    import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
-    import Button from '$lib/components/buttons/Button.svelte'
     import FillButton from '../buttons/FillButton.svelte'
-    import AddGroup from './AddGroup.svelte'
     import SwarmInfo from '../popups/SwarmInfo.svelte'
-import { sleep } from '$lib/utils/utils'
+    import { sleep } from '$lib/utils/utils'
 
     let activeHugins = []
     let group = ''
