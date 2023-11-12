@@ -14,6 +14,7 @@
     import FillButton from '../buttons/FillButton.svelte'
     import AddGroup from './AddGroup.svelte'
     import SwarmInfo from '../popups/SwarmInfo.svelte'
+import { sleep } from '$lib/utils/utils'
 
     let activeHugins = []
     let group = ''
@@ -55,7 +56,7 @@ $: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
 
 $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
 
-let inSwarm = false
+let timeout = false
 
 $: if (thisSwarm) {
     activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
@@ -63,18 +64,19 @@ $: if (thisSwarm) {
     activeUsers = []
 }
 
-const disconnect_from_swarm = () => {
+const disconnect_from_swarm = async () => {
         let key = $groups.thisGroup.key
         window.api.send("exit-voice",key)
         window.api.send("end-swarm", key)
         $swarmGroups.showGroups = true
         $swarm.showVideoGrid = false
+        await sleep(2000)
+        timeout = false
     }
 
 let firstConnect = false
 
 const connecto_to_swarm = () => {
-
         if (!window.localStorage.getItem('swarm-info')) {
             $swarm.showInfo = true
             firstConnect = true
@@ -94,6 +96,11 @@ const connecto_to_swarm = () => {
             return
         }
         
+        if (timeout) {
+            window.api.errorMessage('Please wait a couple of seconds')
+            return
+        }
+
         $swarmGroups.showGroups = true
         $swarm.showVideoGrid = true
         window.api.send("new-swarm", {
@@ -101,6 +108,7 @@ const connecto_to_swarm = () => {
             address: $user.huginAddress.substring(0,99),
             name: $user.username
         })
+        timeout = true
     }
 
     const show_video_room = () => {

@@ -69,7 +69,6 @@
             }
             
             console.log("Left voice channel!")
-            connected = false
             //Send status to backend
             window.api.send("exit-voice", old.key)
             $videoSettings.myVideo = false
