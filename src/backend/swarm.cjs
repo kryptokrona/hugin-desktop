@@ -495,10 +495,11 @@ ipcMain.on('join-voice', async (e, data) => {
 
 ipcMain.on('exit-voice', async (e, key) => {
     console.log("exit voice", key)
-
-    //Double check if we are active in voice
-    const topic = hash(key)
-    const [in_voice] = get_local_voice_status(topic)
+    
+    //Double check if we are active in voice or if the swarm is still active
+    let active = active_swarms.find(a => a.key === key)
+    if (!active) return
+    const [in_voice] = get_local_voice_status(active.topic)
     if (!in_voice) return
     
     //We should only be active in one channel. Close all connections
