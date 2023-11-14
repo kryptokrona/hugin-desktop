@@ -133,7 +133,7 @@ function createWindow() {
     const windowStateManager = require('electron-window-state')
     const path = require('path')
     let windowState = windowStateManager({
-        defaultWidth: 1000,
+        defaultWidth: 1100,
         defaultHeight: 700,
     })
 
@@ -141,7 +141,7 @@ function createWindow() {
         frame: false,
         autoHideMenuBar: true,
         minHeight: 700,
-        minWidth: 1000,
+        minWidth: 1100,
         transparent: true,
         webPreferences: {
             enableRemoteModule: true,
