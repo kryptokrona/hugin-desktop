@@ -25,12 +25,10 @@
     mount = true
     await sleep(1000)
     //Not sure why it takes so long to find the emoji picker.
-    emojiPicker = document.querySelector('emoji-picker')
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
   })
 
   onDestroy(() => {
-    emojiPicker = ''
     window.api.removeAllListeners("emoji-click");
   })
 
@@ -168,7 +166,7 @@
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="position: relative; display: flex:">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
-            <emoji-picker></emoji-picker>
+            <emoji-picker bind:this={emojiPicker}></emoji-picker>
         </div>
         <div class="emoji-button" on:click={() => openEmoji = !openEmoji}>
             <Emoji/>
