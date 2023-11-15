@@ -10,6 +10,7 @@ import { get_avatar } from '$lib/utils/hugin-utils'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { audioSettings } from '$lib/stores/mediasettings'
 let peerVideo = document.getElementById('peerVideo')
+let peerAudio
 let peerStream
 let thisWindow = false
 let windowCheck = false
@@ -24,6 +25,7 @@ const dispatch = createEventDispatcher()
 onMount(() => {
     if (!active) return
     peerVideo.srcObject = call.peerStream
+    peerAudio.srcObject = call.peerStream
     $videoGrid.peerVideos.push({chat: call.chat, size: 1})
     $videoGrid.peerVideos = $videoGrid.peerVideos
     thisWindow = $videoGrid.peerVideos.find(a => a.chat === call.chat)
@@ -36,11 +38,10 @@ async function setName() {
         return channel.find(a => call.address === a.address)
     }
     else if ($swarm.call.length) return channel.find(a => call.chat === a.address)
-    else  return $user.contacts.find(a => a.chat === call.chat)
+    else return $user.contacts.find(a => a.chat === call.chat)
 }
 
 const playVideo = () => {
-    console.log('play video')
     peerVideo.play()
 }
 
@@ -65,7 +66,7 @@ const changeAudioSource = async (src, input) => {
 
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {
-    peerVideo.pause()
+   // peerVideo.pause()
 })
 let isTalking = false
 
@@ -149,10 +150,9 @@ const resize = (size) => {
 </script>
 
 <div class="card" in:fly={{ x: -150}} class:many={many} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1 && !many} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
-    {#if audio}
-    <audio autoplay bind:this="{peerVideo}"></audio>
-    {:else}
+
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
+    <audio autoplay  bind:this="{peerAudio}"></audio>
     {#await setName() then contact}
     <div class:in_call="{true}"></div>
     <div class="name">{contact.name}</div>
@@ -168,7 +168,6 @@ const resize = (size) => {
           <Plus on:click={()=> resize('medium')}/>
         </div>
       </div>
-    {/if}
 </div>
 
 <style lang="scss">
