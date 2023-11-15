@@ -166,7 +166,7 @@
     const toggleVideo = () => {
         $videoSettings.loading = true
         //Add video to call or activate local video
-        if (!$videoSettings.screenshare && !$videoSettings.myVideo && !$swarm.myStream) {
+        if (!$videoSettings.screenshare && !$videoSettings.myVideo) {
             if ($swarm.call.length > 0 ) add_video(true)
             if ($swarm.call.length === 0)  activate_video()
             $videoSettings.myVideo = !$videoSettings.myVideo
