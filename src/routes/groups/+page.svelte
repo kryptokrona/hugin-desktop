@@ -262,7 +262,6 @@ $: if ($groupMessages.length == 0) {
 
 //Checks messages for reactions in chosen Group from printGroup() function
 async function checkReactions(array) {
-    console.log("Array?", array)
     //All group messages all messages except reactions
     filterGroups = await array.filter(
         (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
@@ -295,13 +294,9 @@ async function printGroup(group) {
     const messages = await window.api.printGroup(group.key)
     const chain_messages = messages.filter(a => !a.channel)
     $swarm.activeChannelMessages = messages.filter(a => a.channel)
-
-    console.log("channelMessages", channelMessages)
     
     //setChannels()
 
-    console.log("Active channel! print!", $swarm.activeChannel)
-    console.log("Group key", group.key)
     // if ($swarm.activeChannel.key === group.key) {
     //     console.log("Print channel!")
         printChannel($swarm.activeChannel.name)
