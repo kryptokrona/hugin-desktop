@@ -35,7 +35,7 @@
         $groups.removeGroup = !$groups.removeGroup
     }
 
-    const my_address = $user.huginAddress.substring(0,99)
+    const my_address = $user.myAddress
 
     $: swarmGroup = $swarm.active.some(a => a.key === group.key)
     

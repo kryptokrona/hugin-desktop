@@ -541,7 +541,7 @@ function sendInviteNotification(contact, contact_address) {
         m: 'ᛊNVITᛊ',
         r: contact,
         g: $webRTC.groupCall,
-        k: $user.huginAddress.substring(0, 99),
+        k: $user.myAddress,
     }
     callList.forEach((a) => {
         window.api.sendGroupMessage(msg, true)
@@ -687,7 +687,7 @@ function checkMessage(event, address) {
     let parsedMsg = message.substring(0, message.length - 99)
     let addr = message.substring(message.length - 99)
     
-    if (addr == $user.huginAddress.substring(0, 99)) {
+    if (addr == $user.myAddress) {
         window.api.decryptMessage(parsedMsg)
         return
     }
@@ -882,7 +882,7 @@ async function awaitInvite(stream) {
     $webRTC.myStream = stream
     $videoSettings.myVideo = true
     let call = {
-        chat: $user.huginAddress.substring(0, 99),
+        chat: $user.myAddress,
         type: 'room',
         myStream: stream,
     }

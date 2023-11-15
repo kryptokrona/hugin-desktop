@@ -26,7 +26,7 @@ function copyThis(copy) {
     navigator.clipboard.writeText(copy)
 }
 
-const myAddress = $user.huginAddress.substring(0,99)
+const myAddress = $user.myAddress
 
 //Set group key
 $: if ($groups.thisGroup.key) {
@@ -97,7 +97,7 @@ const connecto_to_swarm = () => {
         $swarm.showVideoGrid = true
         window.api.send("new-swarm", {
             key: $groups.thisGroup.key, 
-            address: $user.huginAddress.substring(0,99),
+            address: $user.myAddress,
             name: $user.username
         })
         timeout = true

@@ -69,7 +69,7 @@ window.api.receive('groupRtcMsg', (data) => {
         $rtc_groups.unread.push(data)
         $rtc_groups.unread = $rtc_groups.unread
     }
-    if (data.address === $user.huginAddress.substring(0, 99)) return
+    if (data.address === $user.myAddress) return
     console.log('Group rtc message', data.group)
     console.log('This group rtc key', $webRTC.groupCall)
     //Push new message to store
@@ -80,7 +80,7 @@ window.api.receive('groupRtcMsg', (data) => {
 function sendGroupRtCMsg(e) {
     console.log('wanna send this', e)
     let msg = e.detail.text
-    let myaddr = $user.huginAddress.substring(0, 99)
+    let myaddr = $user.myAddress
     let time = Date.now()
     let myName = $user.username
     let group

@@ -11,7 +11,7 @@
 
     let isTalking = false
     let isConnecting = false
-    const myAddress = $user.huginAddress.substring(0,99)
+    const myAddress = $user.myAddress
 
     // $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
     //     isTalking = true

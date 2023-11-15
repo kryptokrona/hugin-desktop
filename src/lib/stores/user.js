@@ -7,6 +7,7 @@ export const user = writable({
     username: 'Anon',
     activeChat: false,
     huginAddress: '',
+    myAddress: '',
     callerMenu: false,
     contacts: null,
     addChat: false,
@@ -114,6 +115,6 @@ export const swarm = writable({
 
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
-        return get_avatar($user.huginAddress.substring(0, 99))
+        return get_avatar($user.myAddress)
     }
 })

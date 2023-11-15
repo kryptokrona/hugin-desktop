@@ -40,7 +40,7 @@ onMount(async () => {
 
     //Listens for new messages from backend
     window.api.receive('groupMsg', (data) => {
-        if (data.address === $user.huginAddress.substring(0, 99)) return
+        if (data.address === $user.myAddress) return
 
         if (data.channel.length) {
 
@@ -105,7 +105,7 @@ const sendGroupMsg = async (e) => {
     let error = checkErr(e)
     if (error) return
     let msg = e.detail.text
-    let myaddr = $user.huginAddress.substring(0, 99)
+    let myaddr = $user.myAddress
     let time = Date.now()
     let myName = $user.username
     let group = thisGroup

@@ -25,7 +25,7 @@ const buttonGlow = () => {
     </div>
     {#if open}
         <div in:fade class="list layered-shadow">
-            <div on:click="{() => copyThis($user.huginAddress.substring(0, 99))}">
+            <div on:click="{() => copyThis($user.myAddress)}">
                 <h5>Address</h5>
             </div>
             <div on:click="{() => copyThis($user.huginAddress.substring(99, 163))}">

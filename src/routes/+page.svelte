@@ -64,6 +64,7 @@
     window.api.receive('addr', async (huginAddr) => {
         console.log('Addr incoming')
         $user.huginAddress = huginAddr
+        $user.myAddress = huginAddr.substring(0,99)
     })
 
     const loginSuccess = async () => {

@@ -1,5 +1,5 @@
 <script>
-import { misc, user, userAvatar, swarm } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm, webRTC } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -13,6 +13,7 @@ import Logout from '$lib/components/icons/Logout.svelte'
 
 let sync
 let avatar
+let in_voice = false
 
 $: sync = $misc.syncState
 
@@ -50,7 +51,9 @@ const groupRouteAndMenu = () => {
     }
 }
 
-$: in_voice = $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))
+$: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {
+    in_voice = true
+} else in_voice = false
 
 </script>
 

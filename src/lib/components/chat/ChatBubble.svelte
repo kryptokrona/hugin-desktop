@@ -23,7 +23,7 @@
     let torrent = false
     let oldInvite = false
     let beamInvite = false
-    let address = $user.huginAddress.substring(0, 99)
+    let address = $user.myAddress
     let beamConnected = false
     let codeBlock = false
     let emojiMessage = false

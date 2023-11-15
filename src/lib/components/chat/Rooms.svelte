@@ -22,7 +22,7 @@
 
     function disconnect_from_active_voice(reconnect = false) {
         console.log("Disconnect from active voice!")
-        const my_address = $user.huginAddress.substring(0,99)
+        const my_address = $user.myAddress
         if (!reconnect) $swarm.showVideoGrid = false
             //Leave any active first, check if my own address is active in some channel
             //Also remove from voice channel

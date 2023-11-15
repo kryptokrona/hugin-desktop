@@ -167,7 +167,7 @@ import Rooms from '$lib/components/chat/Rooms.svelte'
         })
 
         window.api.receive('newGroupMessage', (data) => {
-            if (data.address == $user.huginAddress.substring(0, 99)) return
+            if (data.address == $user.myAddress) return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room") return
             new_messages = true
@@ -182,7 +182,7 @@ import Rooms from '$lib/components/chat/Rooms.svelte'
 
         window.api.receive('privateMsg', (data) => {
             console.log('newmsg in layout', data)
-            if (data.chat === $user.huginAddress.substring(0, 99)) return
+            if (data.chat === $user.myAddress) return
             if (data.chat !== $user.activeChat.chat) {
                 new_message_sound.play()
             }
@@ -483,7 +483,7 @@ import Rooms from '$lib/components/chat/Rooms.svelte'
 
     {#if $swarm.active.length}
             <Conference />
-            {#if $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))}
+            {#if $swarm.voice_channel.some(a => a.address === $user.myAddress)}
                 <ConferenceFloater />
             {/if}
     {/if}

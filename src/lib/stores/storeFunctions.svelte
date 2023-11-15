@@ -79,7 +79,7 @@
         let removed = $swarm.active.filter(a => a.topic !== topic)
         //Remove from voice channel also
         let disconnected = $swarm.active.find(a => a.topic === topic)
-        let still_active = disconnected.voice_channel.filter(a => a.address !== $user.huginAddress.substring(0,99))
+        let still_active = disconnected.voice_channel.filter(a => a.address !== $user.myAddress)
         //Then update that voicechannel list
         still_active.voice_channel = still_active
         //Update active swarm store

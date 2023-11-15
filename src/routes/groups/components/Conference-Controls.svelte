@@ -28,7 +28,7 @@
     let connected = false
     let topic = ""
     const dispatch = createEventDispatcher()
-    const my_address = $user.huginAddress.substring(0,99)
+    const my_address = $user.myAddress
 
     $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
     $: in_voice = voice_channel.some(a => a.address === my_address)

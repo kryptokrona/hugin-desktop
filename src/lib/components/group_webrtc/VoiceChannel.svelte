@@ -600,7 +600,7 @@ async function play_video() {
     
         $swarm.call = filter
 
-        const in_voice = $swarm.voice_channel.some(a => a.address === $user.huginAddress.substring(0,99))
+        const in_voice = $swarm.voice_channel.some(a => a.address === $user.myAddress)
 
         if (in_voice) {
             //Still in channel, dont stop video/voice tracks.

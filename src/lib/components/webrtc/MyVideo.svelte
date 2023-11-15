@@ -78,7 +78,7 @@ $: window_medium
         </div>
         {/if}
         {#if !$videoSettings.screenshare && !$videoSettings.myVideo}
-            <img in:fly src="data:image/png;base64,{get_avatar($user.huginAddress.substring(0,99), 'png', true)}" alt="" />
+            <img in:fly src="data:image/png;base64,{get_avatar($user.myAddress, 'png', true)}" alt="" />
         {/if}
 </div>
 
