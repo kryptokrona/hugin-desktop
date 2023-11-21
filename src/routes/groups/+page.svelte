@@ -246,7 +246,7 @@ const addNewGroup = async (e) => {
         g: group.key,
         h: parseInt(Date.now() * 1000),
     }
-    
+    $groupMessages = []
     window.api.addGroup(add)
     await sleep(200)
     printGroup(group)
