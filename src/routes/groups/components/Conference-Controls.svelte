@@ -81,60 +81,7 @@ import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
     }
 
     function disconnect_from_active_voice() {
-        console.log("Disconnect from active voice!")
-
-        $swarm.showVideoGrid = true
-            //Leave any active first, check if my own address is active in some channel
-            //Also remove from voice channel
-            let swarms = $swarm.active
-            //Remove my own address from swarm active voice channel list in UI
-            swarms.forEach(joined => {
-                if (joined.voice_channel.some(a => a.address === my_address)) {
-                let removed = joined.voice_channel.filter(a => a.address !== my_address) 
-                joined.voice_channel = removed
-                }
-            })
-            
-            //Check my current active swarm voice channel and remove aswell
-            let active = $swarm.voice_channel.find(a => a.address === my_address)
-            if (!active) return true
-
-            //Change voice connected status in other channels
-            let old = $swarm.active.find(a => a.voice_connected === true)
-            if (old) old.voice_connected = false
-
-            
-            //Remove from the active voice channel we have
-            console.log("Want to exit old voice")
-            let remove = $swarm.voice_channel.filter( a => a !== active)
-            $swarm.voice_channel = remove
-            
-            //Stop any active tracks
-            if (active && $swarm.myStream && $videoSettings.myVideo) {
-                $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
-            }
-            
-            //Stop any active stream
-            if (!old) return true
-
-            let endTone = new Audio('/audio/endcall.mp3')
-            endTone.play()
-            
-            //Reset state if we are / were alone in the channel
-            if ($swarm.call.length === 0) {
-                $video.play = false
-                $videoSettings.myVideo = false
-                $videoSettings.screenshare = false
-                $swarm.myStream = false
-                $videoSettings.active = false
-            }
-            
-            console.log("Exit vojs!")
-            connected = false
-            //Send status to backend
-            window.api.send("exit-voice", old.key)
-            $videoSettings.myVideo = false
-            return true
+        window.api.exitVoiceChannel()
     }
 
     //Share screen
@@ -152,14 +99,12 @@ import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
 
     const add_video = async (add) => {
         if ($mediaSettings.cameraId === "none") return
-        $videoSettings.active = true
         window.api.changeSource($mediaSettings.cameraId, true, add)
         $videoSettings.screenshare = false
     }
 
     const activate_video = () =>{
         if ($mediaSettings.cameraId === "none") return
-        $videoSettings.active = true
         $videoSettings.screenshare = false
         window.api.send('active-video')
     }
