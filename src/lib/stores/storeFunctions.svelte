@@ -101,7 +101,7 @@
         }
         
         //We only have one active voice channel at every given time, so update the $swarm.voice_channel
-        if (status.topic === data.topic) $swarm.voice_channel = status.voice_channel
+        if (status.topic === data.topic && $swarm.voice_channel.length) $swarm.voice_channel = status.voice_channel
         
        updateActiveSwarm()
     }

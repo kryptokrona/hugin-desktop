@@ -3,13 +3,11 @@
     import VideoSlash from '$lib/components/icons/VideoSlash.svelte'
     import MicIcon from '$lib/components/icons/MicIcon.svelte'
     import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
-    import Screenshare from '$lib/components/icons/Screenshare.svelte'
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
-    import { swarmGroups, videoGrid } from '$lib/stores/layout-state.js'
+    import { videoGrid } from '$lib/stores/layout-state.js'
     import { swarm, user, groups, rtc_groups } from '$lib/stores/user.js'
     import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
-    import Contacts from '$lib/components/chat/Contacts.svelte'
     import { onDestroy, onMount } from 'svelte'
     import { calcTime, sleep } from '$lib/utils/utils.js'
     import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
@@ -17,7 +15,7 @@
     import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import { videoSettings, mediaSettings, video } from '$lib/stores/mediasettings'
-import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
+    import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
     
     let startTime = Date.now()
     let time = '0:00:00'
