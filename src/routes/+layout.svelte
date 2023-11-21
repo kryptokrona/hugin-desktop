@@ -506,12 +506,13 @@
 
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
         <VideoGrid/>
-
+    {#if $webRTC.call.length}
         <CallerMenu
                 on:click="{endThisCall}"
                 on:endCall="{endThisCall}"
                 paused="{!showCallerMenu}"
         />
+    {/if}
 
         {#each $webRTC.call as thiscall}
             {#if $webRTC.call.some((a) => a.peerAudio === true)}
