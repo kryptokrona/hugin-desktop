@@ -17,7 +17,7 @@
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
     import IncomingCall from '$lib/components/webrtc/IncomingCall.svelte'
     import Webrtc from '$lib/components/webrtc/Calls.svelte'
-    import Group_Webrtc from '/src/routes/groups/components/group_webrtc/VoiceChannel.svelte'
+    import Group_Webrtc from '/src/routes/groups/components/VoiceChannel.svelte'
     import TrafficLights from '$lib/components/TrafficLights.svelte'
     import CallerMenu from '$lib/components/webrtc/CallerMenu.svelte'
     import PeerAudio from '$lib/components/webrtc/PeerAudio.svelte'
@@ -32,7 +32,7 @@
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
     import Conference from '/src/routes/groups/components/Conference.svelte'
-    import ConferenceFloater from '/src/routes/groups/components/group_webrtc/ConferenceFloater.svelte'
+    import ConferenceFloater from '/src/routes/groups/components/ConferenceFloater.svelte'
     import Rooms from '/src/routes/groups/components/Rooms.svelte'
 
     let ready = false

@@ -2,15 +2,14 @@
     //To handle true and false, or in this case show and hide.
     import { fly } from 'svelte/transition'
     import { cubicIn, cubicOut } from 'svelte/easing'
-    import { get_avatar } from '$lib/utils/hugin-utils.js'
-    import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+    import { onDestroy, onMount } from 'svelte'
     import { swarm } from '$lib/stores/user.js'
-    import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
+    import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import { calcTime } from '$lib/utils/utils.js'
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
-    import MuteIcon from '../icons/MuteIcon.svelte'
-    import MicIcon from '../icons/MicIcon.svelte'
-    import InCallAvatar from '../chat/InCallAvatar.svelte'
+    import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
+    import MicIcon from '$lib/components/icons/MicIcon.svelte'
+    import InCallAvatar from '$lib/components/chat/InCallAvatar.svelte'
     
     export let paused = false
     let toggle = false

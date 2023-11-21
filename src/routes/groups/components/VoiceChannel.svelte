@@ -190,7 +190,7 @@
 
     async function changeVideoSource(device, id, add = false) {
         let current = $swarm.myStream
-    
+        $videoSettings.active = true
         //We have no active local stream set and we are alone in the conference room
         if (!current) {
             $swarm.myStream = device
