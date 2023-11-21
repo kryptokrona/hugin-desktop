@@ -66,6 +66,7 @@
                 $video.play = false
                 $videoSettings.screenshare = false
                 $swarm.myStream = false
+                $videoSettings.active = false
             }
             
             console.log("Left voice channel!")

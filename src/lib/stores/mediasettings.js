@@ -9,11 +9,14 @@ export const videoSettings = writable({
     screenshare: false,
     myVideo: false,
     loading: false,
+    active: false,
 })
 
 export const mediaSettings = writable({
     devices: [],
     cameraId: false,
+    screenSources: [],
+    screenId: false
 })
 
 export const video = writable({
