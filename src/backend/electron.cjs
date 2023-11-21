@@ -1615,22 +1615,19 @@ async function pickNode(node) {
     await db.write()
 }
 
-async function shareScreen(start, conference) {
 
+async function shareScreen(start, conference) {
+const windows = []
 const { desktopCapturer } = require('electron')
     desktopCapturer.getSources({ types: ['window', 'screen'] }).then(async (sources) => {
         for (const source of sources) {
-            if (source.name === 'Entire Screen') {
-            }
-            if (!start && !conference) {
-                mainWindow.webContents.send('screen-share', source.id)
-            } else if (conference) {
-                console.log("CONFERENCE!")
-                mainWindow.webContents.send('group-screen-share', source.id)
-            }
-            return source.id
+            windows.push({
+                id: source.id,
+                img: source.thumbnail.toDataURL(),
+                name: source.name,
+            })
         }
-        console.log('sources', sources)
+        mainWindow.webContents.send('screen-share-sources', windows)
     })
 }
 
@@ -1904,8 +1901,13 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
     mainWindow.webContents.send('start-call', contact, calltype)
 })
 
-ipcMain.handle('shareScreen', async (e, start, conference) => {
+ipcMain.on('shareScreen', async (e, start, conference) => {
     shareScreen(start, conference)
+})
+
+ipcMain.on('pick-screen-source', (e, src) => {
+        mainWindow.webContents.send('screen-share', src)
+        mainWindow.webContents.send('group-screen-share', src)
 })
 
 ipcMain.on('setCamera', async (e, contact, calltype) => {
