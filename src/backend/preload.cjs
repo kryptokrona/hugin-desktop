@@ -144,7 +144,7 @@ const WINDOW_API = {
     },
 
     shareScreen: async (start, conference) => {
-        ipcRenderer.invoke('shareScreen', false, conference)
+        ipcRenderer.send('shareScreen', false, conference)
     },
 
     setCamera: async () => {
