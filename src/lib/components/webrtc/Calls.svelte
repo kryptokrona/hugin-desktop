@@ -29,6 +29,7 @@ window.api.receive('endCall', (s, p, this_call) => {
 })
 
 window.api.receive('screen-share', (id) => {
+    if ($webRTC.call.length === 0) return
     shareScreen(id)
 })
 

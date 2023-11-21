@@ -17,6 +17,7 @@
     import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import { videoSettings, mediaSettings, video } from '$lib/stores/mediasettings'
+import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
     
     let startTime = Date.now()
     let time = '0:00:00'
@@ -125,6 +126,7 @@
                 $videoSettings.myVideo = false
                 $videoSettings.screenshare = false
                 $swarm.myStream = false
+                $videoSettings.active = false
             }
             
             console.log("Exit vojs!")
@@ -137,12 +139,7 @@
 
     //Share screen
     const switchStream = async () => {
-        $videoSettings.loading = true
-        if (!$videoSettings.screenshare) {
-            await window.api.shareScreen(false, true)
-            $videoSettings.screenshare = true
-            return
-        }
+        await window.api.shareScreen(false, true)
     }
     
     const toggleAudio = () => {
@@ -155,20 +152,24 @@
 
     const add_video = async (add) => {
         if ($mediaSettings.cameraId === "none") return
+        $videoSettings.active = true
         window.api.changeSource($mediaSettings.cameraId, true, add)
         $videoSettings.screenshare = false
     }
 
     const activate_video = () =>{
+        if ($mediaSettings.cameraId === "none") return
+        $videoSettings.active = true
+        $videoSettings.screenshare = false
         window.api.send('active-video')
     }
     
     const toggleVideo = () => {
         $videoSettings.loading = true
         //Add video to call or activate local video
-        if (!$videoSettings.screenshare && !$videoSettings.myVideo) {
-            if ($swarm.call.length > 0 ) add_video(true)
-            if ($swarm.call.length === 0)  activate_video()
+        if (!$videoSettings.screenshare && !$videoSettings.myVideo && !$videoSettings.active) {
+            if ($swarm.call.length > 0) add_video(true)
+            if ($swarm.call.length === 0) activate_video()
             $videoSettings.myVideo = !$videoSettings.myVideo
             return
         }
@@ -179,7 +180,12 @@
             $videoSettings.screenshare = false
             return
         }
+        
+        muteVideo()
+    }
 
+    const muteVideo = () => {
+        
         $videoSettings.myVideo = !$videoSettings.myVideo
         if (!$swarm.myStream) return
 
@@ -232,7 +238,7 @@
                 {/if}
             </div>
             <div class="icon" on:click="{switchStream}">
-                <Screenshare />
+                <ScreenSources group={true}/>
             </div>
             <div class="icon" on:click="{() => disconnect_from_active_voice(false)}">
                 <CallSlash />

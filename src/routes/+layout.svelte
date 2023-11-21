@@ -11,7 +11,7 @@
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
-
+    import { mediaSettings } from '$lib/stores/mediasettings'
     import {onMount} from 'svelte'
     import LeftMenu from '$lib/components/navbar/LeftMenu.svelte'
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
@@ -33,7 +33,7 @@
     import { sleep } from '$lib/utils/utils'
     import Conference from './groups/components/Conference.svelte'
     import ConferenceFloater from '$lib/components/group_webrtc/ConferenceFloater.svelte'
-import Rooms from '$lib/components/chat/Rooms.svelte'
+    import Rooms from '$lib/components/chat/Rooms.svelte'
 
     let ready = false
     let incoming_call
@@ -217,6 +217,9 @@ import Rooms from '$lib/components/chat/Rooms.svelte'
             endThisCall()
         })
 
+        window.api.receive('screen-share-sources', async (data) => {
+            $mediaSettings.screenSources = data
+        })
 
         window.api.receive('group_invited_contact', (data) => {
             console.log('***** GROUP INVITED ****', data)

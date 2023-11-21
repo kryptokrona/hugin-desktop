@@ -45,7 +45,7 @@ $: activeDevice = $mediaSettings.cameraId
         </div>
     {/if}
     <div class="share" class:border_rgb="{changed}" class:open on:click="{() => (open = !open)}">
-        <h5>{$videoSettings.screenshare ? 'Screen' : 'Camera'}</h5>
+        <h5>Camera</h5>
     </div>
 </div>
 

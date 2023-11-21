@@ -3,7 +3,6 @@ import VideoIcon from '$lib/components/icons/VideoIcon.svelte'
 import VideoSlash from '$lib/components/icons/VideoSlash.svelte'
 import MicIcon from '$lib/components/icons/MicIcon.svelte'
 import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
-import Screenshare from '$lib/components/icons/Screenshare.svelte'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
@@ -15,6 +14,7 @@ import { calcTime } from '$lib/utils/utils.js'
 import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
 import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
 import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
+import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
 
 let muted = false
 let video = true
@@ -36,11 +36,7 @@ onDestroy(() => {
 
 //Share screenpmn
 const switchStream = async () => {
-    if (!$videoSettings.screenshare) {
-        $videoSettings.loading = true
-        await window.api.shareScreen(false)
-        $videoSettings.screenshare = true
-    }
+    await window.api.shareScreen(false)
 }
 
 //End call with all peers
@@ -119,7 +115,7 @@ const hideGrid = () => {
             {/if}
         </div>
         <div class="icon" on:click="{switchStream}">
-            <Screenshare />
+            <ScreenSources />
         </div>
         <div class="icon" on:click="{endCall}">
             <CallSlash />

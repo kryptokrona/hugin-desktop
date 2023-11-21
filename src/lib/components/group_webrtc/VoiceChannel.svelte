@@ -33,6 +33,7 @@
     })
 
     window.api.receive('group-screen-share', (id) => {
+        if ($swarm.voice_channel.length === 0) return
         shareScreen(id)
     })
 
@@ -80,13 +81,12 @@
                 if (track.kind === 'audiooutput') $audioSettings.audioOutput = track.getSettings().deviceId
             })
         }
-}
+    }
     
     window.api.receive('group-change-source', (src, add) => {
         changeCamera(true, src, add)
     })
 
-    
     
     window.api.receive('set-audio-input-group', (src, input) => {
         if (!input) return
@@ -176,14 +176,9 @@
             mandatory: {
                 chromeMediaSource: 'desktop',
                 chromeMediaSourceId: id,
-                minWidth: 1920,
-                maxWidth: 1920,
-                minHeight: 1280,
-                maxHeight: 1280,
             },
         },
     })
-
     let add = false
     if (!$swarm.myStream) add = true
     if ($swarm.myStream) {
@@ -622,6 +617,7 @@ async function play_video() {
         $swarm.myStream = false
         $videoSettings.loading = false
         $video.play = false
+        $videoSettings.active = false
         console.log('Call ended')
     }
     </script>
