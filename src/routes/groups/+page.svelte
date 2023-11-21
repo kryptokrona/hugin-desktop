@@ -13,7 +13,6 @@ import BlockContact from '$lib/components/chat/BlockContact.svelte'
 import { containsOnlyEmojis, sleep } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
-import NewChannel from './components/NewChannel.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -413,7 +412,7 @@ function addHash(data) {
 </script>
 
 {#if $swarm.newChannel === true}
- <NewChannel/>
+ <!-- <NewChannel/> -->
 {/if}
 
 {#if wantToAdd}

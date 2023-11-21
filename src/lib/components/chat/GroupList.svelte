@@ -9,8 +9,6 @@
     import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
     import {sleep} from '$lib/utils/utils.js'
     import {flip} from 'svelte/animate'
-    import Rooms from '$lib/components/chat/Rooms.svelte'
-
 
     let activeHugins = []
     let newArray = []

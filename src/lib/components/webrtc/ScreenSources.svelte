@@ -1,6 +1,5 @@
 <script>
     import { fade } from 'svelte/transition'
-    import { webRTC, swarm } from '$lib/stores/user.js'
     import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
     import Screenshare from '$lib/components/icons/Screenshare.svelte'
 
