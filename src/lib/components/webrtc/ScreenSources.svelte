@@ -86,7 +86,7 @@
             border-radius: 5px;
             padding: 10px;
             cursor: pointer;
-    
+            overflow: hidden;
             &:hover {
                 background-color: var(--card-border);
             }

@@ -18,8 +18,6 @@ let noMsgs
 
 onMount(async () => {
     chatWindow = document.getElementById('chat_window')
-    console.log('mounting video grid chat')
-    checkReactions()
 })
 
 onDestroy(() => {
