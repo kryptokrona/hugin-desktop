@@ -37,10 +37,7 @@ import { fly } from 'svelte/transition'
                     disabled="{false}"
                     on:click="{() =>
                     openURL(
-                        `https:faucet.kryptokrona.org/?address=${$user.huginAddress.substring(
-                            0,
-                            99
-                        )}`
+                        `https://xkr.network/faucet`
                     )}"/>
         {/if}
         <Share/>
