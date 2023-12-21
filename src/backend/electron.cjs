@@ -479,7 +479,7 @@ async function openWalletFromFile(walletName, password) {
     return js_wallet
 }
 
-async function verifyPassword(password) {
+async function verifyPassword(password, hashed_pass) {
     if (await checkPass(password, hashed_pass)) {
         await sleep(1000)
         mainWindow.webContents.send('login-success')
@@ -502,7 +502,7 @@ async function login(walletName, password) {
 async function checkNodeAndPassword(password, node) {
      //If we are already logged in
      if (hashed_pass.length) {
-        verifyPassword(password)
+        verifyPassword(password, hashed_pass)
         return false
     }
 
