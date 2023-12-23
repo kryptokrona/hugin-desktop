@@ -97,6 +97,7 @@ const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 
 const DHT = require('@hyperswarm/dht')
+const { time } = require('console')
 
 let mainWindow
 let daemon
@@ -1653,7 +1654,7 @@ async function load_file(path) {
                 stream.on('data', (data) => { 
                     imgArray.push(data)
                 })
-
+synccac
                 stream.on('error', (data) => {
                     return "File not found"
                 })
@@ -1670,6 +1671,31 @@ async function load_file(path) {
         return "File"
     }    
 }
+
+async function syncGroupHistory(timeframe, page=1) {
+    fetch(`https://techy.ddns.net/api/v1/posts-encrypted-group?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
+    .then((response) => response.json())
+    .then(async (json) => {
+        const items = json.encrypted_group_posts;
+
+        for (message in items) {   
+            try {
+                    let tx = {}
+                    tx.sb = items[message].tx_sb
+                    tx.t = items[message].tx_timestamp
+                    await decryptGroupMessage(tx, items[message].tx_hash)
+                        
+                }
+                 catch {
+                }
+        }
+        if(json.current_page != json.total_pages) {
+            syncGroupHistory(timeframe, page+1)
+        }
+    })
+}
+
+
 
 function get_sdp(data) 
 {
@@ -1793,6 +1819,11 @@ ipcMain.on('addGroup', async (e, grp) => {
 
 ipcMain.on('removeGroup', async (e, grp) => {
     removeGroup(grp)
+})
+
+ipcMain.on('fetchHistory', async (e, timeframe) => {
+    timeframe = Date.now() / 1000 - timeframe * 86400
+    await syncGroupHistory(timeframe)
 })
 
 
