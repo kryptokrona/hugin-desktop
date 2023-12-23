@@ -1654,7 +1654,6 @@ async function load_file(path) {
                 stream.on('data', (data) => { 
                     imgArray.push(data)
                 })
-synccac
                 stream.on('error', (data) => {
                     return "File not found"
                 })
