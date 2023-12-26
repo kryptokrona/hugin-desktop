@@ -13,6 +13,7 @@ import BlockContact from '$lib/components/chat/BlockContact.svelte'
 import { containsOnlyEmojis, sleep } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
+import { nodelist } from '$lib/stores/nodes.js'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -248,6 +249,12 @@ const addNewGroup = async (e) => {
     }
     $groupMessages = []
     window.api.addGroup(add)
+    await sleep(100)
+    let settings = {}
+    settings.timeframe = 14
+    settings.groupKey = group.key
+    settings.recommended_api = await getBestApi()
+    window.api.send('fetchHistory', settings)
     await sleep(200)
     printGroup(group)
 }
@@ -408,6 +415,31 @@ function addHash(data) {
         console.log("Active channel messages",  $swarm.activeChannelMessages)
         //await checkReactions(channel)
     }
+    async function getBestApi() {
+    let apis = $nodelist.apis
+    let recommended_api = undefined
+
+
+    apis = apis.sort((a, b) => 0.5 - Math.random())
+
+    for(const item in apis) {
+        let this_api = apis[item]
+        let apiURL = `${this_api.url}/api/v1/posts-encrypted-group`
+        try {
+            const resp = await fetch(apiURL, {
+               method: 'GET'
+            }, 1000);
+           if (resp.ok) {
+             console.log("selecting " + this_api )
+             recommended_api = this_api;
+             return(this_api);
+           }
+        } catch (e) {
+          console.log(e);
+        }
+    }
+  
+  }
 
 </script>
 

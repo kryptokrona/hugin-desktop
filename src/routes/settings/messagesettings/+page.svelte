@@ -1,6 +1,7 @@
 <script>
     import { fade } from "svelte/transition"
     import { messageWallet, groups } from '$lib/stores/user.js'
+    import { nodelist } from '$lib/stores/nodes.js'
     import Button from "$lib/components/buttons/Button.svelte"
 
     const optimizeMessages = () => {
@@ -9,9 +10,40 @@
 
     let timeframeDays;
 
-    const fetchHistory = () => {
-        window.api.send('fetchHistory', timeframeDays)
+   async function getBestApi() {
+    let apis = $nodelist.apis
+    let recommended_api = undefined
+
+
+    apis = apis.sort((a, b) => 0.5 - Math.random())
+
+    for(const item in apis) {
+        let this_api = apis[item]
+        let apiURL = `${this_api.url}/api/v1/posts-encrypted-group`
+        try {
+            const resp = await fetch(apiURL, {
+               method: 'GET'
+            }, 1000);
+           if (resp.ok) {
+             console.log("selecting " + this_api )
+             recommended_api = this_api;
+             return(this_api);
+           }
+        } catch (e) {
+          console.log(e);
+        }
     }
+  
+  }
+
+    const fetchHistory = async () => {
+        let settings = {}
+        settings.timeframe = timeframeDays
+        settings.recommended_api = await getBestApi()
+        window.api.send('fetchHistory', settings)
+    }
+
+ 
 
     </script>
     
@@ -87,4 +119,4 @@
       outline: none;
     } */
     }
-    </style>
+</style>

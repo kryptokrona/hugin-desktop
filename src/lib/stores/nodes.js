@@ -119,7 +119,7 @@ const fetchNodes = async () => {
     if (result.nodes.length === 0) {
         nodelist.set(standard.nodes)
     }
-    nodelist.set(result.nodes)
+    nodelist.set(result)
     } catch(e) {
         nodelist.set(standard.nodes)
     }
