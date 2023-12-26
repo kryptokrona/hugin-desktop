@@ -252,7 +252,6 @@ const addNewGroup = async (e) => {
     await sleep(100)
     let settings = {}
     settings.timeframe = 14
-    settings.groupKey = group.key
     settings.recommended_api = await getBestApi()
     window.api.send('fetchHistory', settings)
     await sleep(200)
