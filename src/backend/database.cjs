@@ -566,9 +566,9 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
 const saveHash = async (txHash) => {
 
-    if (await knownTxExists(txHash)) return true
-    if (txHash == undefined) return
-    if (txHash.length !== 64) return
+    if (await knownTxExists(txHash)) return false
+    if (txHash == undefined) return false
+    if (txHash.length !== 64) return false
 
     database.run(
         `REPLACE INTO knownTxs (
@@ -579,7 +579,7 @@ const saveHash = async (txHash) => {
         [txHash]
     )
 
-    return false
+    return true
 }
 
 const saveChannelMessage = (hsh, timestamp, chnl, grp) => {

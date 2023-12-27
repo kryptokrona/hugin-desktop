@@ -14,7 +14,10 @@
         let settings = {}
         settings.timeframe = timeframeDays
         settings.recommended_api = await getBestApi()
-        if (settings.recommended_api === false) return
+        if (settings.recommended_api === false) {
+            window.api.errorMessage("Could not connect to Hugin API")
+            return
+        }
         settings.key = undefined
         window.api.fetchGroupHistory(settings)
     }

@@ -743,7 +743,7 @@ function validateExtra(thisExtra, thisHash) {
     //Extra too long
     if (thisExtra.length > 7000) {
         known_pool_txs.push(thisHash)
-        saveHash(thisHash)
+        if (!saveHash(thisHash)) return false
         return false;
     }
     //Check if known tx
@@ -814,14 +814,13 @@ async function fetchHuginMessages() {
 
 async function decryptHuginMessages(transactions) {
 
-    for (let transaction in transactions) {
+    for (const transaction of transactions) {
         try {
-            let thisExtra = transactions[transaction].transactionPrefixInfo.extra
-            let thisHash = transactions[transaction].transactionPrefixInfotxHash
+            let thisExtra = transaction.transactionPrefixInfo.extra
+            let thisHash = transaction.transactionPrefixInfotxHash
             if (!validateExtra(thisExtra, thisHash)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
-                const checked = saveHash(thisHash)
-                if (checked) continue
+                if (!saveHash(thisHash)) continue
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
@@ -1823,9 +1822,11 @@ ipcMain.on('removeGroup', async (e, grp) => {
     removeGroup(grp)
 })
 
-ipcMain.on('fetchGroupHistory', async (e, settings) => { 
+ipcMain.on('fetchGroupHistory', async (e, settings) => {
     let timeframe = Date.now() / 1000 - settings.timeframe * 86400
+    //If key is not undefined we know which group to search messages from
     if (settings.key === undefined) settings.key = false
+    //Clear known pool txs to look through messages we already marked as known
     known_pool_txs = []
     await syncGroupHistory(timeframe, settings.recommended_api, settings.key)
 })
