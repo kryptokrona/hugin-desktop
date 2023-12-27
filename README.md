@@ -125,6 +125,7 @@ being awesome contributors to this project. **We'd like to take a moment to reco
 [<img src="https://avatars.githubusercontent.com/u/33717111?v=4?size=72" alt="mjovanc" width="72">](https://github.com/mjovanc)
 [<img src="https://avatars.githubusercontent.com/u/3246908?v=4?size=72" alt="f-r00t" width="72">](https://github.com/f-r00t)
 [<img src="https://avatars.githubusercontent.com/u/24655747?v=4size=72" alt="appelskrutt34" width="72">](https://github.com/appelskrutt34)
+[<img src="https://github.com/TechyGuy17.png?size=72" alt="TechyGuy17" width="72">](https://github.com/TechyGuy17)
 
 # License
 

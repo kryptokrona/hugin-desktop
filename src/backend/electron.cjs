@@ -81,6 +81,7 @@ const {
     CryptoNote,
 } = require('kryptokrona-utils')
 
+
 const { newBeam, endBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile } = require("./beam.cjs")
 const { newSwarm, sendSwarmMessage, endSwarm} = require("./swarm.cjs")
 const Store = require('electron-store');
@@ -97,6 +98,7 @@ const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 
 const DHT = require('@hyperswarm/dht')
+
 
 let mainWindow
 let daemon
@@ -1653,7 +1655,6 @@ async function load_file(path) {
                 stream.on('data', (data) => { 
                     imgArray.push(data)
                 })
-
                 stream.on('error', (data) => {
                     return "File not found"
                 })
@@ -1670,6 +1671,31 @@ async function load_file(path) {
         return "File"
     }    
 }
+
+async function syncGroupHistory(timeframe, recommended_api = undefined, key=false, page=1) {
+    fetch(`${recommended_api.url}/api/v1/posts-encrypted-group?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
+    .then((response) => response.json())
+    .then(async (json) => {
+        console.log(timeframe + " " + key)
+        const items = json.encrypted_group_posts;
+
+        for (message in items) {   
+            try {
+                    let tx = {}
+                    tx.sb = items[message].tx_sb
+                    tx.t = items[message].tx_timestamp
+                    await decryptGroupMessage(tx, items[message].tx_hash, key)
+                        
+                }
+                 catch {
+                }
+        }
+        if(json.current_page != json.total_pages) {
+            syncGroupHistory(timeframe, recommended_api, key, page+1)
+        }
+    })
+}
+
 
 function get_sdp(data) 
 {
@@ -1793,6 +1819,11 @@ ipcMain.on('addGroup', async (e, grp) => {
 
 ipcMain.on('removeGroup', async (e, grp) => {
     removeGroup(grp)
+})
+
+ipcMain.on('fetchHistory', async (e, settings) => { 
+    let timeframe = Date.now() / 1000 - settings.timeframe * 86400
+    await syncGroupHistory(timeframe, settings.recommended_api)
 })
 
 

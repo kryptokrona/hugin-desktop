@@ -21,9 +21,9 @@
   let node_requests = [];
   let ssl_nodes =[];
   if (ssl) {
-      ssl_nodes = $nodelist.filter(node => {return node.ssl});
+      ssl_nodes = $nodelist.nodes.filter(node => {return node.ssl});
   } else {
-      ssl_nodes =  $nodelist.filter(node => {return !node.ssl});
+      ssl_nodes =  $nodelist.nodes.filter(node => {return !node.ssl});
   }
 
   ssl_nodes = ssl_nodes.sort((a, b) => 0.5 - Math.random());
@@ -88,7 +88,7 @@ if (recommended_node == undefined) {
     <h1>Pick a node</h1>
     <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}"/>
     <div class="node-list">
-        {#each $nodelist as node, i}
+        {#each $nodelist.nodes as node, i}
             <div
                     class="node-card"
                     class:selected="{selectedNode === i}"
