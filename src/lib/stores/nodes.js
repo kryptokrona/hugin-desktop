@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { writable, get } from 'svelte/store'
 
 // items
 const uri = 'https://raw.githubusercontent.com/kryptokrona/kryptokrona-public-nodes/main/nodes.json'
@@ -117,12 +117,37 @@ const fetchNodes = async () => {
     const response = await fetch(uri)
     const result = await response.json()
     if (result.nodes.length === 0) {
-        nodelist.set(standard.nodes)
+        nodelist.set(standard)
+        return
     }
     nodelist.set(result)
     } catch(e) {
-        nodelist.set(standard.nodes)
+        nodelist.set(standard)
     }
 }
+
+export async function getBestApi() {
+    let apis = get(nodelist).apis
+    apis = apis.sort((a, b) => 0.5 - Math.random())
+
+    for(const item in apis) {
+        let this_api = apis[item]
+        let apiURL = `${this_api.url}/api/v1/posts-encrypted-group`
+        console.log("api url")
+        try {
+            const resp = await fetch(apiURL, {
+               method: 'GET'
+            }, 1000);
+           if (resp.ok) {
+             console.log("selecting " + this_api )
+             return(this_api);
+           }
+        } catch (e) {
+          console.log(e);
+        }
+    }
+    
+    return false
+  }
 
 fetchNodes()
