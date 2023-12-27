@@ -820,7 +820,8 @@ async function decryptHuginMessages(transactions) {
             let thisHash = transactions[transaction].transactionPrefixInfotxHash
             if (!validateExtra(thisExtra, thisHash)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
-                saveHash(thisHash)
+                const checked = saveHash(thisHash)
+                if (checked) continue
                 //Check for viewtag
                 let checkTag = await checkForViewTag(thisExtra)
                 if (checkTag) {
@@ -1672,7 +1673,8 @@ async function load_file(path) {
     }    
 }
 
-async function syncGroupHistory(timeframe, recommended_api = undefined, key=false, page=1) {
+async function syncGroupHistory(timeframe, recommended_api, key=false, page=1) {
+    if (recommended_api === undefined) return
     fetch(`${recommended_api.url}/api/v1/posts-encrypted-group?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
     .then((response) => response.json())
     .then(async (json) => {
@@ -1821,9 +1823,11 @@ ipcMain.on('removeGroup', async (e, grp) => {
     removeGroup(grp)
 })
 
-ipcMain.on('fetchHistory', async (e, settings) => { 
+ipcMain.on('fetchGroupHistory', async (e, settings) => { 
     let timeframe = Date.now() / 1000 - settings.timeframe * 86400
-    await syncGroupHistory(timeframe, settings.recommended_api)
+    if (settings.key === undefined) settings.key = false
+    known_pool_txs = []
+    await syncGroupHistory(timeframe, settings.recommended_api, settings.key)
 })
 
 

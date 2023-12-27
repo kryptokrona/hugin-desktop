@@ -210,6 +210,10 @@ const WINDOW_API = {
     createGroup: async () => {
         return await ipcRenderer.invoke('createGroup')
     },
+    
+    fetchGroupHistory: async (settings) => {
+        ipcRenderer.send('fetchGroupHistory', settings)
+    },
 
     removeContact: async (contact) => {
         ipcRenderer.send('removeContact', contact)
