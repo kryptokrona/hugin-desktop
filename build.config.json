@@ -40,6 +40,8 @@
         "src/backend/utils.cjs",
         "src/backend/crypto.cjs",
         "src/backend/swarm.cjs",
+        "src/backend/messages.cjs",
+        "src/backend/wallet.cjs",
         {
             "from": "build",
             "to": ""

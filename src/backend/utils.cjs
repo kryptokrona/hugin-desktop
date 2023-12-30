@@ -1,8 +1,55 @@
 const nacl = require('tweetnacl')
 const sanitizeHtml = require('sanitize-html')
 const { Crypto } = require('kryptokrona-utils')
-
+const {ipcMain} = require('electron')
 const crypto = new Crypto()
+const {createReadStream} = require("fs");
+
+ipcMain.handle('load-file', async (e, path) => {
+    return await load_file(path)
+})
+
+
+//Check if it is an image or video with allowed type
+async function checkImageOrVideoType(path) {
+    if (path === undefined) return false
+    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
+    for (a in types) {
+        if (path.endsWith(types[a])) {
+            return true
+        }
+    }
+    return false
+}
+
+async function load_file(path, size) {
+    let imgArray = []
+    //TODO ADD SIZE CHECK
+    if (checkImageOrVideoType(path)) {
+        //Read the file as an image
+        try {
+        return new Promise((resolve, reject) => {
+            const stream = createReadStream(path)
+                stream.on('data', (data) => { 
+                    imgArray.push(data)
+                })
+                stream.on('error', (data) => {
+                    return "File not found"
+                })
+
+                stream.on('end', () => {
+                    resolve(Buffer.concat(imgArray))
+                })
+        })
+
+        } catch (err) {
+            return "File not found"
+        }
+    } else {
+        return "File"
+    }    
+}
+
 const hexToUint = (hexString) =>
     new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
 
