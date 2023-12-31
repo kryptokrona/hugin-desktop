@@ -27,7 +27,7 @@ const createTables = () => {
     groupChannelsMessagesTable()
 }
 
-let welcomeAddress =
+const welcomeAddress =
     'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
 
 const contactsTable = () => {
@@ -490,7 +490,7 @@ const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
     let message = {
         message: text,
         address: addr,
-        signature: sig,
+        signature: "",
         group: group,
         time: timestamp,
         name: nick,
