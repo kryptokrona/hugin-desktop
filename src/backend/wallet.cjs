@@ -21,10 +21,61 @@ ipcMain.on('switchNode', (e, node) => {
     pickNode(node) 
 })
 
+ipcMain.on('sendTx', (e, tx) => {
+    sendTx(tx)
+})
+
+//Rescan wallet
+ipcMain.on('rescan', async (e, height) => {
+    js_wallet.reset(parseInt(height))
+})
+
+ipcMain.handle('getPrivateKeys', async () => {
+    return getPrivKeys()
+})
+
+ipcMain.handle('getMnemonic', async () => {
+    return await js_wallet.getMnemonicSeed()
+})
+
+ipcMain.handle('getBalance', async () => {
+    return await js_wallet.getBalance()
+})
+
+ipcMain.handle('getAddress', async () => {
+    return js_wallet.getAddresses()
+})
+
+ipcMain.handle('getHeight', async () => {
+    let [walletHeight, daemonCount, networkHeight] = await getSyncStatus()
+    return { walletHeight, networkHeight }
+})
+
+//Gets n transactions per page to view in frontend
+ipcMain.handle('getTransactions', async (e, startIndex) => {
+    let startFrom = startIndex
+    const showPerPage = 10
+    const allTx = await js_wallet.getTransactions()
+    const pages = Math.ceil(allTx.length / showPerPage)
+    const pageTx = []
+    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
+        let amount = WB.prettyPrintAmount(tx.totalAmount())
+        tx.transfers.forEach(function (value) {
+            if (value === -1000) {
+                amount = -0.01000
+            }
+        })
+        pageTx.push({
+            hash: tx.hash,
+            amount: amount.toString(),
+            time: tx.timestamp,
+        })
+    }
+
+    return { pageTx, pages }
+})
 
 ///FUNCTIONS
-
-
 
 const loadWallet = (ipc) => {
     sender = ipc
@@ -244,7 +295,6 @@ const getAddresses = () => {
     return js_wallet.subWallets.getAddresses()
 }
 
-
 const checkBalance = async () => {
     try {
         let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
@@ -269,6 +319,46 @@ const getSubWallets = () => {
 
 const sendTransactionAdvanced = (destinations, mixin, fee, paymentID, walletsToTaeFrom, changeAddress, relay, sendAll, extra) => {
     return js_wallet.sendTransactionAdvanced(destinations, mixin, fee, paymentID, walletsToTaeFrom, changeAddress, relay, sendAll, extra)
+}
+
+
+async function sendTx(tx) {
+    console.log('transactions', tx)
+    console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
+    let result = await sendTransactionAdvanced(
+        [[tx.to, tx.amount]], // destinations,
+        3, // mixin
+        { fixedFee: 1000, isFixedFee: true }, // fee
+        undefined, //paymentID
+        undefined, // subWalletsToTakeFrom
+        undefined, // changeAddress
+        true, // relayToNetwork
+        false, // sneedAll
+        undefined
+    )
+    if (result.success) {
+        let amount = tx.amount / 100000
+        let sent = {
+            message: `You sent ${amount} XKR`,
+            name: 'Transaction sent',
+            hash: parseInt(Date.now()),
+            key: tx.to,
+        }
+        sender('sent_tx', sent)
+        console.log(
+            `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
+                result.fee
+            )}`
+        )
+    } else {
+        console.log(`Failed to send transaction: ${result.error.toString()}`)
+        let error = {
+            message: 'Failed to send',
+            name: 'Transaction error',
+            hash: Date.now(),
+        }
+      sender('error_msg', error)
+    }
 }
    
 

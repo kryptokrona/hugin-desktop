@@ -63,9 +63,6 @@ const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const store = new Store()
 
-const welcomeAddress =
-    'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1'
-
 let js_wallet
 let block_list = []
 
@@ -458,45 +455,6 @@ function sendNodeInfo() {
 
 }
 
-async function sendTx(tx) {
-    console.log('transactions', tx)
-    console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
-    let result = await js_wallet.sendTransactionAdvanced(
-        [[tx.to, tx.amount]], // destinations,
-        3, // mixin
-        { fixedFee: 1000, isFixedFee: true }, // fee
-        undefined, //paymentID
-        undefined, // subWalletsToTakeFrom
-        undefined, // changeAddress
-        true, // relayToNetwork
-        false, // sneedAll
-        undefined
-    )
-    if (result.success) {
-        let amount = tx.amount / 100000
-        let sent = {
-            message: `You sent ${amount} XKR`,
-            name: 'Transaction sent',
-            hash: parseInt(Date.now()),
-            key: tx.to,
-        }
-        mainWindow.webContents.send('sent_tx', sent)
-        console.log(
-            `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
-                result.fee
-            )}`
-        )
-    } else {
-        console.log(`Failed to send transaction: ${result.error.toString()}`)
-        let error = {
-            message: 'Failed to send',
-            name: 'Transaction error',
-            hash: Date.now(),
-        }
-        mainWindow.webContents.send('error_msg', error)
-    }
-}
-
 async function shareScreen(start, conference) {
 const windows = []
 const { desktopCapturer } = require('electron')
@@ -512,19 +470,6 @@ const { desktopCapturer } = require('electron')
     })
 }
 
-function get_sdp(data) 
-{
-    if (data.type == 'offer') 
-    {
-        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        sendMessage(parsed_data, data.contact, data.offchain, data.group)
-    } 
-    else if (data.type == 'answer') 
-    {
-        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        sendMessage(parsed_data, data.contact, data.offchain, data.group)
-    }
-}
 //BEAM
 
 ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
@@ -557,19 +502,6 @@ ipcMain.on('exit-voice-channel', async (e, key) => {
     mainWindow.webContents.send('leave-active-voice-channel')
 })
 
-//FILES
-
-ipcMain.on('download', async (e, file, from) => {
-    requestDownload(downloadDir, file, from)
-})
-
-ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
-    addLocalFile(filename, path, address, fileSize, time)
-})
-
-ipcMain.on('remove-local-file', async (e, filename, address, time) => {
-    removeLocalFile(filename, address, time)
-})
 
 //TOAST NOTIFY
 ipcMain.on('error-notify-message-main', async (e, error) => {
@@ -606,12 +538,6 @@ ipcMain.handle('createGroup', async () => {
     return randomKey()
 })
 
-//NODE
-
-ipcMain.handle('getHeight', async () => {
-    let [walletHeight, daemonCount, networkHeight] = await js_wallet.getSyncStatus()
-    return { walletHeight, networkHeight }
-})
 
 //CALLS
 
@@ -678,59 +604,6 @@ ipcMain.on('check-srcs', async (e, src) => {
 })
 
 
-//WALLET
-
-//Rescan wallet
-ipcMain.on('rescan', async (e, height) => {
-    js_wallet.reset(parseInt(height))
-})
-
-ipcMain.on('sendTx', (e, tx) => {
-    sendTx(tx)
-})
-
-ipcMain.handle('getPrivateKeys', async () => {
-    return getPrivKeys()
-})
-
-ipcMain.handle('getMnemonic', async () => {
-    return await js_wallet.getMnemonicSeed()
-})
-
-//Gets n transactions per page to view in frontend
-ipcMain.handle('getTransactions', async (e, startIndex) => {
-    let startFrom = startIndex
-    const showPerPage = 10
-    const allTx = await js_wallet.getTransactions()
-    const pages = Math.ceil(allTx.length / showPerPage)
-    const pageTx = []
-    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
-        let amount = WB.prettyPrintAmount(tx.totalAmount())
-        tx.transfers.forEach(function (value) {
-            if (value === -1000) {
-                amount = -0.01000
-            }
-        })
-        pageTx.push({
-            hash: tx.hash,
-            amount: amount.toString(),
-            time: tx.timestamp,
-        })
-    }
-
-    return { pageTx, pages }
-})
-
-
-ipcMain.handle('getBalance', async () => {
-    return await js_wallet.getBalance()
-})
-
-ipcMain.handle('getAddress', async () => {
-    return js_wallet.getAddresses()
-})
-
-
 //MISC
 
 ipcMain.on('create-account', async (e, accountData) => {
@@ -745,14 +618,8 @@ ipcMain.on('openLink', (e, url) => {
 
 ipcMain.on('expand-sdp', (e, data, address) => {
     let recovered_data = expand_sdp_offer(data, true)
-    let expanded_data = []
-    expanded_data.push(recovered_data)
-    expanded_data.push(address)
+    let expanded_data = [recovered_data, address]
     mainWindow.webContents.send('got-expanded', expanded_data)
-})
-
-ipcMain.on('get-sdp', (e, data) => {
-    get_sdp(data)
 })
 
 

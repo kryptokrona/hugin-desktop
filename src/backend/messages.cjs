@@ -8,7 +8,8 @@ const {
     sendTransactionAdvanced,
     resetWallet, 
     getXKRKeypair,
-    getSubWallets} = require('./wallet.cjs')
+    getSubWallets,
+    checkBalance} = require('./wallet.cjs')
 const {
     loadKnownTxs, 
     saveHash, 
@@ -103,7 +104,6 @@ ipcMain.handle('getMessages', async (data) => {
 
 ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
     sendMessage(msg, receiver, off_chain, grp, beam)
-    console.log(msg, receiver, off_chain, grp, beam)
 })
 
 //Listens for event from frontend and saves contact and nickname.

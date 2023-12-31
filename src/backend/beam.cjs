@@ -6,13 +6,27 @@ const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
 const { sleep, sanitize_pm_message } = require('./utils.cjs');
-
+const { ipcMain } = require('electron')
 let active_beams = []
 let chat_keys
 let localFiles = []
 let remoteFiles = []
 let downloadDirectory
 let sender
+
+//FILES
+
+ipcMain.on('download', async (e, file, from) => {
+    requestDownload(downloadDir, file, from)
+})
+
+ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
+    addLocalFile(filename, path, address, fileSize, time)
+})
+
+ipcMain.on('remove-local-file', async (e, filename, address, time) => {
+    removeLocalFile(filename, address, time)
+})
 
 const newBeam = async (key, chat, xkr_keys, ipc, send = false) => {
     //If we want to switch key set for decryption or add session key. 
