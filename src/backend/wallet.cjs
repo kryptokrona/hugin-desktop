@@ -1,7 +1,6 @@
 const WB = require('kryptokrona-wallet-backend-js')
 const fs = require('fs')
 const files = require('fs/promises')
-const {hash} = require('./utils.cjs')
 const { join } = require('path')
 const { app, ipcMain } = require('electron')
 const userDataDir = app.getPath('userData')
@@ -10,6 +9,14 @@ const { JSONFile, Low } = require('@commonify/lowdb')
 const { default: fetch } = require('electron-fetch')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
+const Store = require('electron-store');
+const store = new Store()
+
+const {hash, sleep} = require('./utils.cjs')
+const { welcomeMessage, firstContact} = require("./database.cjs")
+const { Hugin } = require('./account.cjs')
+const { startMessageSyncer } = require('./messages.cjs')
+const { keychain } = require('./crypto.cjs')
 
 let js_wallet
 let daemon
@@ -25,13 +32,14 @@ ipcMain.on('sendTx', (e, tx) => {
     sendTx(tx)
 })
 
+
 //Rescan wallet
 ipcMain.on('rescan', async (e, height) => {
     js_wallet.reset(parseInt(height))
 })
 
 ipcMain.handle('getPrivateKeys', async () => {
-    return getPrivKeys()
+    return keychain.getPrivKeys()
 })
 
 ipcMain.handle('getMnemonic', async () => {
@@ -53,26 +61,7 @@ ipcMain.handle('getHeight', async () => {
 
 //Gets n transactions per page to view in frontend
 ipcMain.handle('getTransactions', async (e, startIndex) => {
-    let startFrom = startIndex
-    const showPerPage = 10
-    const allTx = await js_wallet.getTransactions()
-    const pages = Math.ceil(allTx.length / showPerPage)
-    const pageTx = []
-    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
-        let amount = WB.prettyPrintAmount(tx.totalAmount())
-        tx.transfers.forEach(function (value) {
-            if (value === -1000) {
-                amount = -0.01000
-            }
-        })
-        pageTx.push({
-            hash: tx.hash,
-            amount: amount.toString(),
-            time: tx.timestamp,
-        })
-    }
-
-    return { pageTx, pages }
+    return await getTransactions()
 })
 
 ///FUNCTIONS
@@ -81,9 +70,126 @@ const loadWallet = (ipc) => {
     sender = ipc
 }
 
-const getXKRKeypair = () => {
-    const [privateSpendKey, privateViewKey] = getPrivKeys()
-    return { privateSpendKey, privateViewKey }
+async function startJsWallet(walletName, password, node) {
+    
+    if (await checkPassword(password, node)) return false
+
+    if (!await login(walletName, password)) return false
+
+    //Sleep 300ms
+    await sleep(300)
+
+    await Hugin.init(js_wallet, walletName, node, sender)
+    
+    await fuseHuginAddress()
+
+    sendNodeInfo()
+
+    pickNode(node.node + ":" + node.port.toString())
+
+    await startWallet(walletName, password)
+    
+    await sleep(500)
+
+    //Incoming transaction event
+    js_wallet.on('incomingtx', (transaction) => {
+        incomingTx(transaction)
+    })
+
+    js_wallet.on('createdtx', async (tx) => {
+        console.log('***** outgoing *****', tx)
+        await saveWallet(js_wallet, walletName, password)
+    })
+
+    //Wallet heightchange event with funtion that saves wallet only if we are synced
+    js_wallet.on(
+        'heightchange',
+        async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
+            let synced = networkBlockCount - walletBlockCount <= 2
+            if (synced) {
+                //Send synced event to frontend
+                sender('sync', 'Synced')
+
+                // Save js wallet to file
+                console.log('///////******** SAVING WALLET *****\\\\\\\\')
+                await saveWallet(js_wallet, walletName, password)
+            } else if (!synced) {
+
+            }
+        }
+    )
+
+    return true
+    
+   
+}
+
+//Create account
+async function createAccount(accountData) {
+    const walletName = accountData.walletName
+    const myPassword = accountData.password
+    const node = { node: accountData.node, port: accountData.port }
+ 
+    loadDaemon(node.node, node.port)
+
+    if (!accountData.blockheight) {
+        accountData.blockheight = 1
+    }
+    const [js_wallet, error] =
+        accountData.mnemonic.length > 0
+            ? await importFromSeed(
+                accountData.blockheight,
+                accountData.mnemonic)
+            : await createWallet()
+    //Create welcome PM message
+    welcomeMessage()
+    //Create Hugin welcome contact
+    firstContact()
+
+    // Save js wallet to file as backup
+    await saveWallet(js_wallet, walletName, myPassword)
+
+    //Create misc DB template on first start
+    db.data = {
+        walletNames: [],
+        node: { node: '', port: '' },
+    }
+    //Saving node
+    db.data.node = node
+    //Saving wallet name
+    db.data.walletNames.push(walletName)
+    await db.write()
+    console.log('creating dbs...')
+
+    return await startJsWallet(walletName, myPassword, node)
+
+}
+
+const startWallet = async (walletName, password) => {
+    //Disable wallet optimization
+    await js_wallet.enableAutoOptimization(false)
+    //Start wallet sync process
+    await js_wallet.start()
+    //Create extra message subwallets for small inputs
+    await createMessageSubWallet();
+    //Save backup wallet to file
+    saveWalletToFile(js_wallet, walletName, password)
+}
+
+
+const fuseHuginAddress = async () => {
+    //Get primary address and fuse it with our message key to create our hugin address
+    const address = await js_wallet.getPrimaryAddress()
+    const key = keychain.getMsgKey()
+    const huginAddress = address + key
+    sender('addr', huginAddress)
+}
+
+const login = async (walletName, password) => {
+    const [loggedIn, wallet]  = await loginWallet(walletName, password)
+    if (!loggedIn) return false
+    js_wallet = wallet
+    return true
 }
 
 const createWallet = async () => {
@@ -91,13 +197,10 @@ const createWallet = async () => {
 }
 
 const loadDaemon = (nodeUrl, nodePort) => {
-    console.log("Log daemon", nodeUrl, nodePort)
   daemon = new WB.Daemon(nodeUrl, nodePort)
 }
 
-const getPrivKeys = () => {
-    return js_wallet.getPrimaryAddressPrivateKeys()
-}
+
 
 const checkPassword = async (password, node) => {
     //If we are already logged in
@@ -136,14 +239,14 @@ const importFromSeed = async (daemon, blockHeight, mnemonic) => {
 }
 
 const loginWallet = async (walletName, password) => {
-    js_wallet = await logIntoWallet(walletName, password)
-    if (js_wallet === 'Wrong password') {
+    const wallet = await logIntoWallet(walletName, password)
+    if (wallet === 'Wrong password') {
         sender('login-failed')
         return [false, undefined]
     }
     
     hashed_pass = await hash(password)
-    return [true, js_wallet]
+    return [true, wallet]
 }
 
 const saveWallet = async (wallet, walletName, password) => {
@@ -220,11 +323,27 @@ const getSyncStatus = () => {
     return js_wallet.getSyncStatus()
 }
 
-const getSpendableTransactionInputs = async ([subWallet, messageSubWallet], networkHeight) => {
-   return await js_wallet.subWallets.getSpendableTransactionInputs(
-        [subWallet, messageSubWallet],
-        networkHeight
-    )
+const getTransactions = async (startIndex) => {
+    let startFrom = startIndex
+    const showPerPage = 10
+    const allTx = await js_wallet.getTransactions()
+    const pages = Math.ceil(allTx.length / showPerPage)
+    const pageTx = []
+    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
+        let amount = WB.prettyPrintAmount(tx.totalAmount())
+        tx.transfers.forEach(function (value) {
+            if (value === -1000) {
+                amount = -0.01000
+            }
+        })
+        pageTx.push({
+            hash: tx.hash,
+            amount: amount.toString(),
+            time: tx.timestamp,
+        })
+    }
+
+    return { pageTx, pages }
 }
 
 async function createMessageSubWallet() {
@@ -236,29 +355,65 @@ async function createMessageSubWallet() {
            return 
         }
         }
-        const [spendKey, viewKey] = getPrivKeys()
+        const [spendKey, viewKey] = keychain.getPrivKeys()
         const subWalletKeys = await crypto.generateDeterministicSubwalletKeys(spendKey, 1)
         await js_wallet.importSubWallet(subWalletKeys.private_key)
     }
 }
 
+function incomingTx(transaction) {
+    const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
+        let synced = network_height - wallet_count <= 2
+        if (!synced) return
+        optimizeMessages()
+        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
+        console.log('transaction', transaction)
+        sender('new-message', transaction.toJSON())
+
+}
+
+function sendNodeInfo() {
+    const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
+    sender('sync', 'Loading')
+    sender('node-sync-data', {
+        walletBlockCount,
+        localDaemonBlockCount,
+        networkBlockCount,
+    })
+
+}
+
 const pickNode = async (node) => {
     let nodeUrl = node.split(':')[0]
     let nodePort = parseInt(node.split(':')[1])
-    const newNode = { node: nodeUrl, port: nodePort }
-    if (!await checkNodeStatus(newNode)) return
+    const picked = { node: nodeUrl, port: nodePort }
+    if (!await checkNodeStatus(picked)) return
     loadDaemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
-    sender('switch-node', newNode)
+    sender('switch-node', picked)
     saveNode(node)
+    Hugin.node = picked
 }
 
 const saveNode = async (node) => {
     db.data.node = node
     await db.write()
-} 
+   }
 
-const loadMiscData = async () => {
+async function loadHugin(send) {
+    const [node, walletName] = await loadMiscData()
+    send.webContents.send('wallet-exist', true, walletName, node)
+    loadDaemon(node.node, node.port)
+}
+
+async function loadAccount(data) {
+    let node = {node: data.node, port: data.port}
+    return await startJsWallet(data.thisWallet, data.myPassword, node)
+}
+
+
+    
+const loadMiscData = async () => {  
     await db.read()
     let node = db.data.node.node
     let port = db.data.node.port
@@ -267,9 +422,9 @@ const loadMiscData = async () => {
         node = 'privacymine.net'
         port = 11898
     }
-    
     return [{ node, port}, db.data.walletNames]
-}
+  }
+
 
 
 async function checkNodeStatus (node) {
@@ -287,45 +442,11 @@ async function checkNodeStatus (node) {
     return false
 }
 
-const getAddress = async () => {
-   return await js_wallet.getPrimaryAddress()
-}
-
-const getAddresses = () => {
-    return js_wallet.subWallets.getAddresses()
-}
-
-const checkBalance = async () => {
-    try {
-        let [munlockedBalance, mlockedBalance] = await js_wallet.getBalance()
-
-        if (munlockedBalance < 11) {
-            mainWindow.webContents.send('error-notify-message', 'Not enough unlocked funds.')
-            return false
-        }
-    } catch (err) {
-        return false
-    }
-    return true
-}
-
-const resetWallet = (block) => {
-    js_wallet.reset(block)
-}
-
-const getSubWallets = () => {
-   return js_wallet.subWallets.subWallets
-}
-
-const sendTransactionAdvanced = (destinations, mixin, fee, paymentID, walletsToTaeFrom, changeAddress, relay, sendAll, extra) => {
-    return js_wallet.sendTransactionAdvanced(destinations, mixin, fee, paymentID, walletsToTaeFrom, changeAddress, relay, sendAll, extra)
-}
-
 
 async function sendTx(tx) {
     console.log('transactions', tx)
     console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
-    let result = await sendTransactionAdvanced(
+    let result = await js_wallet.sendTransactionAdvanced(
         [[tx.to, tx.amount]], // destinations,
         3, // mixin
         { fixedFee: 1000, isFixedFee: true }, // fee
@@ -345,11 +466,6 @@ async function sendTx(tx) {
             key: tx.to,
         }
         sender('sent_tx', sent)
-        console.log(
-            `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
-                result.fee
-            )}`
-        )
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`)
         let error = {
@@ -362,5 +478,5 @@ async function sendTx(tx) {
 }
    
 
-module.exports = {loadDaemon, createWallet, importFromSeed, loginWallet, loadWallet, saveWallet, saveWalletToFile, pickNode, saveNode, loadMiscData, checkPassword, createMessageSubWallet, getXKRKeypair, getPrivKeys, getSyncStatus, getAddress, getAddresses, getSubWallets, checkBalance, getSpendableTransactionInputs, sendTransactionAdvanced, resetWallet}
+module.exports = {loadDaemon, loadWallet, createAccount, createWallet, saveWallet, saveWalletToFile, pickNode,loadAccount, loadHugin, createMessageSubWallet, loadMiscData }
 

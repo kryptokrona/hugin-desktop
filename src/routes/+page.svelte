@@ -50,9 +50,8 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async (node, my_groups, block_list) => {
-
-        console.log('Got wallet started')
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts]) => {
+        $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
         $groups.blockList = block_list
@@ -62,7 +61,6 @@
 
     //Sets our own address in svelte store
     window.api.receive('addr', async (huginAddr) => {
-        console.log('Addr incoming')
         $user.huginAddress = huginAddr
         $user.myAddress = huginAddr.substring(0,99)
     })

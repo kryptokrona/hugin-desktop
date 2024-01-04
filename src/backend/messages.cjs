@@ -1,15 +1,4 @@
-const {
-    loadMiscData, 
-    getSyncStatus, 
-    getPrivKeys,
-    getAddress, 
-    getAddresses, 
-    getSpendableTransactionInputs,
-    sendTransactionAdvanced,
-    resetWallet, 
-    getXKRKeypair,
-    getSubWallets,
-    checkBalance} = require('./wallet.cjs')
+const { keychain } = require('./crypto.cjs')
 const {
     loadKnownTxs, 
     saveHash, 
@@ -26,7 +15,11 @@ const {
     removeGroup,
     unBlockContact,
     loadBlockList,
-    blockContact} = require("./database.cjs")
+    blockContact,
+    getGroupReply,
+    printGroup,
+    getGroups,
+    loadGroups} = require("./database.cjs")
 const {
     trimExtra, 
     sanitize_pm_message, 
@@ -34,7 +27,8 @@ const {
     sleep, 
     hexToUint,
     randomKey,
-    nonceFromTimestamp
+    nonceFromTimestamp,
+    toHex
 } = require('./utils.cjs')
 
 const { sendBeamMessage} = require("./beam.cjs")
@@ -44,30 +38,53 @@ const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
 const { extraDataToMessage } = require('hugin-crypto')
 const { default: fetch } = require('electron-fetch')
 const naclUtil = require('tweetnacl-util')
+const nacl = require('tweetnacl')
 const sanitizeHtml = require('sanitize-html')
 const crypto = new Crypto()
 const xkrUtils = new CryptoNote()
 const { ipcMain } = require('electron')
 const Store = require('electron-store');
+const { Hugin } = require('./account.cjs')
 const store = new Store()
 
 let known_pool_txs = []
-let sender
 let known_keys = []
 let block_list = []
 
 //IPC MAIN LISTENERS
 
-ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
-    sendGroupsMessage(msg, offchain, swarm)
+//MISC
+
+ipcMain.on('create-account', async (e, accountData) => {
+    createAccount(accountData)
 })
 
-//Optimize messages
 ipcMain.on('optimize', async (e) => {
     optimizeMessages(force = true)
 })
 
-//GROUPS
+//GROUPS MESSAGES
+
+ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
+    sendGroupsMessage(msg, offchain, swarm)
+})
+
+ipcMain.handle('getGroups', async (e) => {
+    let groups = await getGroups()
+    return groups.reverse()
+})
+
+ipcMain.handle('printGroup', async (e, grp) => {
+    return await printGroup(grp)
+})
+
+ipcMain.handle('getGroupReply', async (e, data) => {
+    return await getGroupReply(data)
+})
+
+ipcMain.handle('createGroup', async () => {
+    return randomKey()
+})
 
 ipcMain.on('addGroup', async (e, grp) => {
     addGroup(grp)
@@ -81,13 +98,13 @@ ipcMain.on('removeGroup', async (e, grp) => {
 ipcMain.on('unblock', async (e, address) => {
     unBlockContact(address)
     block_list = await loadBlockList()
-    sender('update-blocklist', block_list)
+    Hugin.send('update-blocklist', block_list)
 })
 
 ipcMain.on('block', async (e, block) => {
     blockContact(block.address, block.name)
     block_list = await loadBlockList()
-    sendTransactionAdvanced('update-blocklist', block_list)
+    Hugin.send('update-blocklist', block_list)
 })
 
 
@@ -115,7 +132,7 @@ ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
 ipcMain.on('removeContact', (e, contact) => {
     removeContact(contact)
     removeMessages(contact)
-    sender('sent')
+    Hugin.send('sent')
 })
 
 //WEBRTC MESSAGES
@@ -129,11 +146,10 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
 })
 
 
-const startMessageSyncer = async (ipc, keys, bl) => {
+const startMessageSyncer = async () => {
      //Load knownTxsIds to backgroundSyncMessages on startup
-    sender = ipc
-    known_keys = keys
-    block_list = bl
+    known_keys = Hugin.known_keys
+    block_list = Hugin.block_list
      backgroundSyncMessages(await loadCheckedTxs())
      while (true) {
          try {
@@ -142,9 +158,9 @@ const startMessageSyncer = async (ipc, keys, bl) => {
  
              backgroundSyncMessages()
  
-             const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = getSyncStatus()
+             const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
 
-             sender('node-sync-data', {
+             Hugin.send('node-sync-data', {
                  walletBlockCount,
                  localDaemonBlockCount,
                  networkBlockCount,
@@ -155,16 +171,16 @@ const startMessageSyncer = async (ipc, keys, bl) => {
                  console.log('**********SYNCED**********')
                  console.log('My Wallet ', walletBlockCount)
                  console.log('The Network', networkBlockCount)
-                 sender('sync', 'Synced')
+                 Hugin.send('sync', 'Synced')
              } else {
                  //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
                  if (walletBlockCount === 0) {
-                     await resetWallet(networkBlockCount - 100)
+                     await Hugin.wallet.reset(networkBlockCount - 100)
                  }
                  console.log('*.[~~~].SYNCING BLOCKS.[~~~].*')
                  console.log('My Wallet ', walletBlockCount)
                  console.log('The Network', networkBlockCount)
-                 sender('sync', 'Syncing')
+                 Hugin.send('sync', 'Syncing')
              }
          } catch (err) {
              console.log(err)
@@ -214,7 +230,7 @@ async function decryptHuginMessages(transactions) {
 
 //Try decrypt extra data
 async function checkForPrivateMessage(thisExtra) {
-    let message = await extraDataToMessage(thisExtra, known_keys, getXKRKeypair())
+    let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair())
     if (!message) return false
     if (message.type === 'sealedbox' || 'box') {
         message.sent = false
@@ -229,7 +245,7 @@ async function checkForViewTag(extra) {
     const rawExtra = trimExtra(extra)
     const parsed_box = JSON.parse(rawExtra)
         if (parsed_box.vt) {
-            const [privateSpendKey, privateViewKey] = getPrivKeys()
+            const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
             const derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
             const hashDerivation = await crypto.cn_fast_hash(derivation)
             const possibleTag = hashDerivation.substring(0,2)
@@ -308,10 +324,10 @@ function setKnownPoolTxs(checkedTxs) {
 
 
 async function fetchHuginMessages() {
-    const [node] = await loadMiscData()
+    const node = Hugin.node
     try {
         const resp = await fetch(
-            'http://' + node.node + ':' + node.port.toString() + '/get_pool_changes_lite',
+            'http://' + node.node + ':' + node.port + '/get_pool_changes_lite',
             {
                 method: 'POST',
                 body: JSON.stringify({ knownTxsIds: known_pool_txs }),
@@ -337,7 +353,7 @@ async function fetchHuginMessages() {
         return transactions
 
     } catch (e) {
-        sender('sync', 'Error')
+        Hugin.send('sync', 'Error')
         return false
     }
 }
@@ -371,11 +387,11 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     }
 
     //Choose subwallet with message inputs
-    let messageWallet = getAddresses()[1]
-    let messageSubWallet = getAddresses()[2]
+    let messageWallet = Hugin.wallet.getAddresses()[1]
+    let messageSubWallet = Hugin.wallet.getAddresses()[2]
 
     if (!off_chain) {
-        let result = await sendTransactionAdvanced(
+        let result = await Hugin.wallet.sendTransactionAdvanced(
             [[messageWallet, 1000]], // destinations,
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
@@ -396,11 +412,6 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
         if (result.success) {
             known_pool_txs.push(result.transactionHash)
             saveHash(result.transactionHash)
-            console.log(
-                `Sent transaction, hash ${result.transactionHash}, fee ${WB.prettyPrintAmount(
-                    result.fee
-                )}`
-            )
             saveMessage(sentMsg)
             optimizeMessages()
         } else {
@@ -411,7 +422,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
             }
             optimizeMessages(true)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
-            sender('error_msg', error)
+            Hugin.send('error_msg', error)
         }
     } else if (off_chain) {
         //Offchain messages
@@ -427,7 +438,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
         if (beam_this) {
             sendBeamMessage(sendMsg, address)
         } else {
-            sender('rtc_message', messageArray)
+            Hugin.send('rtc_message', messageArray)
         }
         //Do not save invite message.
         if (message.msg && 'invite' in message.msg) {
@@ -446,20 +457,18 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     }
 }
 
-
-
 async function optimizeMessages(force = false) {
 
-    let [mainWallet, subWallet, messageSubWallet] = getAddresses()
-    const [walletHeight, localHeight, networkHeight] = getSyncStatus()
+    let [mainWallet, subWallet, messageSubWallet] = Hugin.wallet.getAddresses()
+    const [walletHeight, localHeight, networkHeight] = await Hugin.wallet.getSyncStatus()
 
-    let inputs = await getSpendableTransactionInputs(
+    let inputs = await Hugin.wallet.subWallets.getSpendableTransactionInputs(
         [subWallet, messageSubWallet],
         networkHeight
     )
 
     if (inputs.length > 25 && !force) {
-        sender('optimized', true)
+        Hugin.send('optimized', true)
         return
     }
 
@@ -467,7 +476,7 @@ async function optimizeMessages(force = false) {
         return
     }
 
-    let subWallets = getSubWallets()
+    let subWallets = Hugin.wallet.getSubWallets()
     let txs
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
@@ -481,7 +490,7 @@ async function optimizeMessages(force = false) {
         i += 1
     }
 
-    let result = await sendTransactionAdvanced(
+    let result = await Hugin.wallet.sendTransactionAdvanced(
         payments, // destinations,
         3, // mixin
         { fixedFee: 1000, isFixedFee: true }, // fee
@@ -494,7 +503,7 @@ async function optimizeMessages(force = false) {
     )
 
     if (result.success) {
-        sender('optimized', true)
+        Hugin.send('optimized', true)
 
         store.set({
             wallet: {
@@ -512,7 +521,7 @@ async function optimizeMessages(force = false) {
             optimized: true
         }
 
-        sender('sent_tx', sent)
+        Hugin.send('sent_tx', sent)
         console.log('optimize completed')
         return true
     } else {
@@ -523,14 +532,14 @@ async function optimizeMessages(force = false) {
             }
         });
 
-        sender('optimized', false)
+        Hugin.send('optimized', false)
         let error = {
             message: 'Optimize failed',
             name: 'Optimizing wallet failed',
             hash: parseInt(Date.now()),
             key: mainWallet,
         }
-        sender('error_msg', error)
+        Hugin.send('error_msg', error)
         return false
     }
 
@@ -548,9 +557,9 @@ async function resetOptimizeTimer() {
 
 async function encryptMessage(message, messageKey, sealed = false, toAddr) {
     let timestamp = Date.now()
-    let my_address = getAddress()
+    let my_address = Hugin.wallet.getPrimaryAddress()
     const addr = await Address.fromAddress(toAddr)
-    const [privateSpendKey, privateViewKey] = getPrivKeys()
+    const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
     let xkr_private_key = privateSpendKey
     let box
 
@@ -566,7 +575,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
         let signature = await xkrUtils.signMessage(message, xkr_private_key)
         let payload_json = {
             from: my_address,
-            k: Buffer.from(getKeyPair().publicKey).toString('hex'),
+            k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
             msg: message,
             s: signature,
         }
@@ -585,7 +594,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
             payload_json_decoded,
             nonceFromTimestamp(timestamp),
             hexToUint(messageKey),
-            getKeyPair().secretKey
+            keychain.getKeyPair().secretKey
         )
     }
     //Box object
@@ -601,7 +610,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
     console.log("Sending group msg!")
     if (message.m.length === 0) return
     const my_address = message.k
-    const [privateSpendKey, privateViewKey] = getPrivKeys()
+    const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
     const timestamp = parseInt(Date.now())
     const nonce = nonceFromTimestamp(timestamp)
@@ -638,7 +647,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         message_json.c = message.c
     }
 
-    let [mainWallet, subWallet, messageSubWallet] = getAddresses()
+    let [mainWallet, subWallet, messageSubWallet] = Hugin.wallet.getAddresses()
     const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json))
     const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group))
 
@@ -650,7 +659,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
     const payload_encrypted_hex = toHex(JSON.stringify(payload_encrypted))
 
     if (!offchain) {
-        let result = await sendTransactionAdvanced(
+        let result = await Hugin.wallet.sendTransactionAdvanced(
             [[messageSubWallet, 1000]], // destinations,
             3, // mixin
             { fixedFee: 1000, isFixedFee: true }, // fee
@@ -666,7 +675,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
             console.log("Succces sending tx")
             message_json.sent = true
             saveGroupMessage(message_json, result.transactionHash, timestamp)
-            sender('sent_group', {
+            Hugin.send('sent_group', {
                 hash: result.transactionHash,
                 time: message.t,
             })
@@ -679,7 +688,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
                 name: 'Error',
                 hash: Date.now(),
             }
-            sender('error_msg', error)
+            Hugin.send('error_msg', error)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             optimizeMessages(true)
         }
@@ -692,15 +701,15 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         if (swarm) {
             sendSwarmMessage(sendMsg, group)
             saveGroupMessage(message_json, random_key, timestamp, false, true)
-            sender('sent_rtc_group', {
+            Hugin.send('sent_rtc_group', {
                 hash: random_key,
                 time: message.t,
             })
             return
         }
         let messageArray = [sendMsg]
-        sender('rtc_message', messageArray, true)
-        sender('sent_rtc_group', {
+        Hugin.send('rtc_message', messageArray, true)
+        Hugin.send('sent_rtc_group', {
             hash: random_key,
             time: message.t,
         })
@@ -711,7 +720,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
 
 async function decryptRtcMessage(message) {
     let hash = message.substring(0, 64)
-    let newMsg = await extraDataToMessage(message, known_keys, getXKRKeypair())
+    let newMsg = await extraDataToMessage(message, known_keys, keychain.getXKRKeypair())
 
     if (newMsg) {
         newMsg.sent = false
@@ -724,7 +733,7 @@ async function decryptRtcMessage(message) {
             let invite_key = sanitizeHtml(group.key)
             if (invite_key.length !== 64) return
 
-            sender('group-call', {invite_key, group})
+            Hugin.send('group-call', {invite_key, group})
 
             if (group.type == 'invite') {
                 console.log('Group invite, thanks.')
@@ -742,10 +751,10 @@ async function decryptRtcMessage(message) {
             group.invite.forEach((call) => {
                 let contact = sanitizeHtml(call)
                 if (contact.length !== 163) {
-                    sender('error-notify-message', 'Error reading invite address')
+                    Hugin.send('error-notify-message', 'Error reading invite address')
                 }
                 console.log('Invited to call, joining...')
-                sender('start-call', contact, video, invite)
+                Hugin.send('start-call', contact, video, invite)
                 sleep(1500)
             })
 
@@ -863,7 +872,7 @@ async function decryptGroupRtcMessage(message, key) {
         if (groupMessage.m === 'ᛊNVITᛊ') {
             if (groupMessage.r.length === 163) {
                 let invited = sanitizeHtml(groupMessage.r)
-                sender('group_invited_contact', invited)
+                Hugin.send('group_invited_contact', invited)
                 console.log('Invited')
             }
         }
@@ -872,17 +881,31 @@ async function decryptGroupRtcMessage(message, key) {
     }
 }
 
+const checkBalance = async () => {
+    try {
+        let [munlockedBalance, mlockedBalance] = await Hugin.wallet.getBalance()
+
+        if (munlockedBalance < 11) {
+            Hugin.send('error-notify-message', 'Not enough unlocked funds.')
+            return false
+        }
+    } catch (err) {
+        return false
+    }
+    return true
+}
+
 async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
     console.log("Savin group message")
     let message = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!message) return false
     if (!offchain) {
         //Send new board message to frontend.
-        sender('groupMsg', message)
-        sender('newGroupMessage', message)
+        Hugin.send('groupMsg', message)
+        Hugin.send('newGroupMessage', message)
     } else if (offchain) {
         if (message.message === 'ᛊNVITᛊ') return
-        sender('groupRtcMsg', message)
+        Hugin.send('groupRtcMsg', message)
     }
 }
 
@@ -901,10 +924,10 @@ async function saveMessage(msg, offchain = false) {
 
     if (text === "Audio call started" || text === "Video call started" && is_call && !if_sent) {
         //Incoming calll
-        sender('call-incoming', data)
+        Hugin.send('call-incoming', data)
     } else if (text === "Call answered" && is_call && !if_sent) {
         //Callback
-        sender('got-callback', data)
+        Hugin.send('got-callback', data)
     }
 
     //If sent set addr to chat instead of from
@@ -922,12 +945,12 @@ async function saveMessage(msg, offchain = false) {
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
     if (sent) {
         //If sent, update conversation list
-        sender('sent', newMsg)
+        Hugin.send('sent', newMsg)
         return
     }
     //Send message to front end
-    sender('newMsg', newMsg)
-    sender('privateMsg', newMsg)
+    Hugin.send('newMsg', newMsg)
+    Hugin.send('privateMsg', newMsg)
 }
 
 //Saves contact and nickname to db.
@@ -946,7 +969,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
         known_keys.push(key)
     }
 
-    sender('saved-addr', hugin_address)
+    Hugin.send('saved-addr', hugin_address)
 
     saveThisContact(addr, key, name)
 

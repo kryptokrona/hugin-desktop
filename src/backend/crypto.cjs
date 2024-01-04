@@ -1,7 +1,8 @@
 const { sleep, hexToUint, nonceFromTimestamp, trimExtra } = require('./utils.cjs');
 const naclUtil = require('tweetnacl-util')
 const nacl = require('tweetnacl')
-const {Address,CryptoNote} = require('kryptokrona-utils')
+const {Address,CryptoNote} = require('kryptokrona-utils');
+const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
 
 const decryptSwarmMessage = async (tx, hash, group_key) => {
@@ -63,5 +64,34 @@ const signMessage = async (message, privateSpendKey) => {
     return await xkrUtils.signMessage(message, privateSpendKey)
 }
 
+const keychain =  {
 
-module.exports = {decryptSwarmMessage, verifySignature, signMessage}
+    getNaclKeys(privateSpendKey) {
+        const secretKey = hexToUint(privateSpendKey)
+        const keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
+        return keyPair
+    },
+
+    getXKRKeypair() {
+        const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
+        return { privateSpendKey, privateViewKey }
+    },
+    
+    getPrivKeys() {
+        return Hugin.wallet.getPrimaryAddressPrivateKeys()
+    },
+    
+    getKeyPair() {
+        const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
+        return keychain.getNaclKeys(privateSpendKey)
+    },
+    
+    getMsgKey() {
+        const naclPubKey = keychain.getKeyPair().publicKey
+        return Buffer.from(naclPubKey).toString('hex')
+    },
+    
+}
+
+
+module.exports = {decryptSwarmMessage, verifySignature, signMessage, keychain}

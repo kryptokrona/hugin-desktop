@@ -15,33 +15,6 @@ const fs = require('fs')
 const WB = require('kryptokrona-wallet-backend-js')
 const nacl = require('tweetnacl')
 const { autoUpdater } = require('electron-updater')
-const { 
-    expand_sdp_answer, 
-    expand_sdp_offer, 
-    parse_sdp } = require("./sdp.cjs")
-const {
-    sleep, 
-    randomKey, 
-    hexToUint } = require("./utils.cjs")
-const {
-    loadDB,
-    loadKeys,
-    getGroups,
-    loadBlockList,
-    getMyBoardList,
-    getGroupReply,
-    printGroup,
-    firstContact,
-    welcomeMessage,
-    welcomeBoardMessage,
-    addBoard
-} = require("./database.cjs")
-
-const { loadDaemon, createWallet, importFromSeed, loginWallet, loadWallet, saveWallet, saveWalletToFile, pickNode, saveNode, loadMiscData, checkPassword, createMessageSubWallet, getPrivKeys, getXKRKeypair} = require('./wallet.cjs')
-const { newBeam, endBeam, addLocalFile, requestDownload, removeLocalFile } = require("./beam.cjs")
-const { newSwarm, endSwarm} = require("./swarm.cjs")
-const { startMessageSyncer, sendMessage, optimizeMessages} = require('./messages.cjs')
-
 const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
@@ -52,19 +25,25 @@ const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 
-const DHT = require('@hyperswarm/dht')
-
+const { expand_sdp_offer } = require("./sdp.cjs")
+const { loadDB } = require("./database.cjs")
+const { loadHugin, loadAccount, loadWallet } = require('./wallet.cjs')
+const { newBeam, endBeam } = require("./beam.cjs")
+const { newSwarm, endSwarm} = require("./swarm.cjs")
+const { sendMessage, startMessageSyncer } = require('./messages.cjs')
+const { keychain } = require('./crypto.cjs')
 
 let mainWindow
+
+const sender = (channel, data) => {
+    mainWindow.webContents.send(channel, data)
+}
 
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const store = new Store()
-
-let js_wallet
-let block_list = []
 
 try {
     require('electron-reloader')(module)
@@ -110,6 +89,8 @@ function createWindow() {
     mainWindow.on('close', () => {
         windowState.saveState(mainWindow)
     })
+    
+    startDatabase()
 
     return mainWindow
 }
@@ -213,9 +194,7 @@ ipcMain.on('app', (data) => {
         });
     }
     
-    startCheck()
-    startDatabase()
-    wallet()
+    startCheck(sender)
 
     if (dev) {
         console.log('Running in development')
@@ -248,211 +227,31 @@ ipcMain.on('app', (data) => {
     }
 })
 
-const sender = (channel, data) => {
-    mainWindow.webContents.send(channel, data)
-}
-
 function startDatabase() {
     loadDB(userDataDir, dbPath)
 }
 
-function wallet() {
-    loadWallet(sender)
-}
-
-function getKeyPair() {
-    // return new Promise((resolve) => setTimeout(resolve, ms));
-    const [privateSpendKey, privateViewKey] = getPrivKeys()
-    let secretKey = hexToUint(privateSpendKey)
-    let keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
-    return keyPair
-}
-
-function getMsgKey() {
-    const naclPubKey = getKeyPair().publicKey
-    return Buffer.from(naclPubKey).toString('hex')
-}
-
-async function startCheck() {
+const startCheck = async () => {
    
     store.set({
         wallet: {
             optimized: false
         }
     });
+    
+    loadWallet(sender)
 
     if (fs.existsSync(userDataDir + '/misc.db')) {
-            loadHugin()
-        ipcMain.on('login', async (event, data) => {
-            loadAccount(data)
-        })
-
+        //A misc database exits, probably we have an account
+            loadHugin(mainWindow)
+            ipcMain.on('login', async (event, data) => {
+               if (await loadAccount(data)) startMessageSyncer()
+            })
     } else {
         //No wallet found, probably first start
         console.log('wallet not found')
-        mainWindow.webContents.send('wallet-exist', false)
+        sender('wallet-exist', false)
     }
-}
-
-async function loadHugin() {
-    const [node, walletName] = await loadMiscData()
-    console.log("Loaded misc",[node, walletName] )
-    mainWindow.webContents.send('wallet-exist', true, walletName, node)
-    loadDaemon(node.node, node.port)
-}
-
-const startWallet = async (data, node) => {
-    start_js_wallet(data.thisWallet, data.myPassword, node)
-}
-
-async function loadAccount(data) {
-    let node = {node: data.node, port: data.port}
-    console.log("load acc node", node)
-    saveNode(node)
-    startWallet(data, node)
-}
-
- //Create account
-async function createAccount(accountData) {
-    const walletName = accountData.walletName
-    const myPassword = accountData.password
-    const node = { node: accountData.node, port: accountData.port }
- 
-    loadDaemon(node.node, node.port)
-
-    if (!accountData.blockheight) {
-        accountData.blockheight = 1
-    }
-    const [js_wallet, error] =
-        accountData.mnemonic.length > 0
-            ? await importFromSeed(
-                accountData.blockheight,
-                accountData.mnemonic)
-            : await createWallet()
-    //Create welcome PM message
-    welcomeMessage()
-    //Create Hugin welcome contact
-    firstContact()
-    //Create Boards welcome message
-    welcomeBoardMessage()
-
-    // Save js wallet to file as backup
-    await saveWallet(js_wallet, walletName, myPassword)
-    addBoard('Home')
-
-    //Create misc DB template on first start
-    db.data = {
-        walletNames: [],
-        node: { node: '', port: '' },
-    }
-    //Saving node
-    db.data.node = node
-    //Saving wallet name
-    db.data.walletNames.push(walletName)
-    await db.write()
-    console.log('creating dbs...')
-
-    start_js_wallet(walletName, myPassword, node)
-
-}
-
-async function login(walletName, password) {
-    const [loggedIn, wallet]  = await loginWallet(walletName, password)
-    if (!loggedIn) return false
-    js_wallet = wallet
-    return true
-}
-
-async function start_js_wallet(walletName, password, node) {
-    
-    if (await checkPassword(password, node)) return
-
-    if (!await login(walletName, password)) return
-    
-    pickNode(node.node + ":" + node.port.toString())
-    //Load known public keys and contacts
-    let [myContacts, keys] = await loadKeys((start = true))
-    mainWindow.webContents.send('contacts', myContacts)
-    //Sleep 300ms
-    await sleep(300)
-    //Disable wallet optimization
-    await js_wallet.enableAutoOptimization(false)
-    //Start wallet sync process
-    await js_wallet.start()
-    await createMessageSubWallet();
-    let my_groups = await getGroups()
-    block_list = await loadBlockList()
-    my_boards = await getMyBoardList()
-
-    //Save backup wallet to file
-    saveWalletToFile(js_wallet, walletName, password)
-
-    //Get primary address and fuse it with our message key to create our hugin address
-    let myAddress = await js_wallet.getPrimaryAddress()
-    let msgKey = getMsgKey()
-    console.log('Hugin Address', myAddress + msgKey)
-
-    mainWindow.webContents.send('addr', myAddress + msgKey)
-
-    sendNodeInfo()
-
-    //Incoming transaction event
-    js_wallet.on('incomingtx', (transaction) => {
-        incomingTx(transaction)
-    })
-
-    js_wallet.on('createdtx', async (tx) => {
-        console.log('***** outgoing *****', tx)
-        await saveWallet(js_wallet, walletName, password)
-    })
-
-    //Wallet heightchange event with funtion that saves wallet only if we are synced
-    js_wallet.on(
-        'heightchange',
-        async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
-            let synced = networkBlockCount - walletBlockCount <= 2
-            if (synced) {
-                //Send synced event to frontend
-                mainWindow.webContents.send('sync', 'Synced')
-
-                // Save js wallet to file
-                console.log('///////******** SAVING WALLET *****\\\\\\\\')
-                await saveWallet(js_wallet, walletName, password)
-            } else if (!synced) {
-
-            }
-        }
-    )
-
-    mainWindow.webContents.send('wallet-started', node, my_groups, block_list)
-    console.log('Started wallet')
-    await sleep(500)
-    console.log('Loading Sync')
-    
-    startMessageSyncer(sender, keys, block_list)
-   
-}
-
-function incomingTx(transaction) {
-    const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
-        let synced = network_height - wallet_count <= 2
-        if (!synced) return
-        optimizeMessages()
-        console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
-        console.log('transaction', transaction)
-        mainWindow.webContents.send('new-message', transaction.toJSON())
-
-}
-
-function sendNodeInfo() {
-    const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = js_wallet.getSyncStatus()
-    mainWindow.webContents.send('sync', 'Not syncing')
-    mainWindow.webContents.send('node-sync-data', {
-        walletBlockCount,
-        localDaemonBlockCount,
-        networkBlockCount,
-    })
-
 }
 
 async function shareScreen(start, conference) {
@@ -470,10 +269,14 @@ const { desktopCapturer } = require('electron')
     })
 }
 
+ipcMain.on('create-account', async (e, accountData) => {
+    if(await createAccount(accountData)) startMessageSyncer()
+})
+
 //BEAM
 
 ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
-    let beamMessage = await newBeam(link, chat, getXKRKeypair(), sender, send);
+    let beamMessage = await newBeam(link, chat, keychain.getXKRKeypair(), sender, send);
     if (beamMessage === "Error") return
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, offchain)
@@ -492,7 +295,7 @@ ipcMain.on("end-beam", async (e, chat) => {
 
 
 ipcMain.on('new-swarm', async (e, data) => {
-    newSwarm(data, sender, getXKRKeypair())
+    newSwarm(data, sender, keychain.getXKRKeypair())
 })
 ipcMain.on('end-swarm', async (e, key) => {
     endSwarm(key)
@@ -518,27 +321,6 @@ ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => 
 })
 
 
-//GROUPS
-
-ipcMain.handle('getGroups', async (e) => {
-    let groups = await getGroups()
-    return groups.reverse()
-})
-
-ipcMain.handle('printGroup', async (e, grp) => {
-    return await printGroup(grp)
-})
-
-ipcMain.handle('getGroupReply', async (e, data) => {
-    return await getGroupReply(data)
-})
-
-
-ipcMain.handle('createGroup', async () => {
-    return randomKey()
-})
-
-
 //CALLS
 
 ipcMain.on('answerCall', (e, msg, contact, key, offchain = false) => {
@@ -554,6 +336,10 @@ ipcMain.on('start_group_call', async (e, contacts) => { })
 
 ipcMain.on('create-room', async (e, type) => {
     mainWindow.webContents.send('start-room', type)
+})
+
+ipcMain.on('get-sdp', (e, data) => {
+    get_sdp(data)
 })
 
 //CALL USER MEDIA
@@ -603,12 +389,6 @@ ipcMain.on('check-srcs', async (e, src) => {
     mainWindow.webContents.send('check-src', src)
 })
 
-
-//MISC
-
-ipcMain.on('create-account', async (e, accountData) => {
-    createAccount(accountData)
-})
 
 ipcMain.on('openLink', (e, url) => {
     const {shell} = require('electron')
@@ -662,5 +442,19 @@ ipcMain.on('install-update', async (e, data) => {
     autoUpdater.quitAndInstall()
 })
 
+
+function get_sdp(data) 
+{
+    if (data.type == 'offer') 
+    {
+        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
+        sendMessage(parsed_data, data.contact, data.offchain, data.group)
+    } 
+    else if (data.type == 'answer') 
+    {
+        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
+        sendMessage(parsed_data, data.contact, data.offchain, data.group)
+    }
+}
 
 

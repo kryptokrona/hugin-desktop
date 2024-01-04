@@ -42,7 +42,7 @@ export const rtc_groups = writable({
 })
 
 export const misc = writable({
-    syncState: '',
+    syncState: 'Syncing',
     walletBlockCount: null,
     localDaemonBlockCount: null,
     networkBlockCount: null,
