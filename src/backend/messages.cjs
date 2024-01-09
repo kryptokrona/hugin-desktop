@@ -327,7 +327,7 @@ async function fetchHuginMessages() {
     const node = Hugin.node
     try {
         const resp = await fetch(
-            'http://' + node.node + ':' + node.port + '/get_pool_changes_lite',
+            'http://' + node.node + ':' + node.port.toString() + '/get_pool_changes_lite',
             {
                 method: 'POST',
                 body: JSON.stringify({ knownTxsIds: known_pool_txs }),
