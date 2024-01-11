@@ -476,7 +476,7 @@ async function optimizeMessages(force = false) {
         return
     }
 
-    let subWallets = Hugin.wallet.getSubWallets()
+    let subWallets = Hugin.wallet.subWallets.subWallets
     let txs
     subWallets.forEach((value, name) => {
         txs = value.unconfirmedIncomingAmounts.length
