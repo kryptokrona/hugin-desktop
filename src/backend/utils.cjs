@@ -5,14 +5,15 @@ const {ipcMain} = require('electron')
 const crypto = new Crypto()
 const {createReadStream} = require("fs");
 
-ipcMain.handle('load-file', async (e, path) => {
-    return await load_file(path)
+ipcMain.handle('load-file', async (e, path, size) => {
+    return await load_file(path, size)
 })
 
 
 //Check if it is an image or video with allowed type
-async function checkImageOrVideoType(path) {
+function checkImageOrVideoType(path, size) {
     if (path === undefined) return false
+    if (size >= 50000000) return false
     const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
     for (a in types) {
         if (path.endsWith(types[a])) {
@@ -24,8 +25,7 @@ async function checkImageOrVideoType(path) {
 
 async function load_file(path, size) {
     let imgArray = []
-    //TODO ADD SIZE CHECK
-    if (checkImageOrVideoType(path)) {
+    if (checkImageOrVideoType(path, size)) {
         //Read the file as an image
         try {
         return new Promise((resolve, reject) => {

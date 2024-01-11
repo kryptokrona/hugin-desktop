@@ -13,7 +13,7 @@
 
     onMount( async () =>
     {   
-        if (videoTypes.some(a => file.path.endsWith(a)))
+        if (videoTypes.some(a => file.path.endsWith(a) && file.size < 50000000))
         {
             console.log('Found video format')
             video = true
@@ -34,7 +34,7 @@
     }
 
     async function loadFile(file) {
-        let arr = await window.api.loadFile(file.path)
+        let arr = await window.api.loadFile(file.path, file.size)
         if (arr === "File" || arr === "File not found") {
             image = arr
             return

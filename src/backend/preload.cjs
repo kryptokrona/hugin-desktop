@@ -131,8 +131,8 @@ const WINDOW_API = {
         ipcRenderer.send('beam', key, chat, send, offchain)
     },
 
-    loadFile: async (path) => {
-        return await ipcRenderer.invoke('load-file', path)
+    loadFile: async (path, size) => {
+        return await ipcRenderer.invoke('load-file', path, size)
     },
 
     //HANDLE NODES

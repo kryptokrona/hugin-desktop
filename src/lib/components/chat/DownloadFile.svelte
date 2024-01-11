@@ -18,7 +18,7 @@
     let clicked = false
 
     onMount(() => {   
-        if (videoTypes.some(a => file.fileName.endsWith(a)))
+        if (videoTypes.some(a => file.fileName.endsWith(a) && file.size < 50000000))
         {
             video = true
             return
@@ -41,7 +41,7 @@
 
     async function loadFile(file) {
         await sleep(200)
-        let arr = await window.api.loadFile(file.path)
+        let arr = await window.api.loadFile(file.path, file.size)
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );

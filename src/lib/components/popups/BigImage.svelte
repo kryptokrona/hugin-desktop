@@ -17,7 +17,7 @@ const close = () => {
 }
 
 async function getImage(path) {
-    let arr = await window.api.loadFile(path)
+    let arr = await window.api.loadFile(file.path, file.size)
     let blob = new Blob( [ arr ] );
     image = URL.createObjectURL( blob );
 }
