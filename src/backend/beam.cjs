@@ -7,6 +7,8 @@ const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
 const { sleep, sanitize_pm_message } = require('./utils.cjs');
 const { ipcMain } = require('electron')
+const {Hugin} = require('./account.cjs')
+
 let active_beams = []
 let chat_keys
 let localFiles = []
@@ -17,7 +19,7 @@ let sender
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
-    requestDownload(downloadDir, file, from)
+    requestDownload(Hugin.downloadDir, file, from)
 })
 
 ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
