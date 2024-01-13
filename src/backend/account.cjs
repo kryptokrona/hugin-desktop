@@ -1,5 +1,6 @@
 const { app, ipcMain } = require('electron')
 const userDataDir = app.getPath('userData')
+const downloadDir = app.getPath('downloads')
 const { JSONFile, Low } = require('@commonify/lowdb')
 const { join } = require('path')
 const file = join(userDataDir, 'misc.db')
@@ -18,7 +19,7 @@ class Account {
     this.node = {}
     this.wallet = {}
     this.sender = null
-
+    this.downloadDir = ""
     }
 
     async init(wallet, name, node, s) {
@@ -27,7 +28,7 @@ class Account {
       this.walletName = name
       this.sender = s
       this.node = node
-
+      this.downloadDir = downloadDir
       await this.load()
 
      }
