@@ -1,10 +1,10 @@
 const { sleep, hexToUint, nonceFromTimestamp, trimExtra } = require('./utils.cjs');
 const naclUtil = require('tweetnacl-util')
 const nacl = require('tweetnacl')
-const {Address,CryptoNote} = require('kryptokrona-utils');
+const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
 const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
-
+const crypto = new Crypto()
 const decryptSwarmMessage = async (tx, hash, group_key) => {
 
     try {
@@ -90,6 +90,10 @@ const keychain =  {
         const naclPubKey = keychain.getKeyPair().publicKey
         return Buffer.from(naclPubKey).toString('hex')
     },
+
+   async generateDeterministicSubwalletKeys(spendKey) {
+        return await crypto.generateDeterministicSubwalletKeys(spendKey, 1)
+    }
     
 }
 
