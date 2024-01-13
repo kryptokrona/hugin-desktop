@@ -4,7 +4,7 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
-
+    import { getBestNode } from '$lib/stores/nodes'
     let mnemonic = ''
     let blockHeight
     let password = ''
@@ -14,6 +14,9 @@
     let walletName = ''
     let nodeInput = ''
     let step = 1
+    let showNodes = false
+
+    $: walletName = username
 
     const enter = (e) => {
         if (e.key === 'Enter' && password.length && step === 3) {
@@ -43,6 +46,18 @@
 
         window.api.send('create-account', accountData)
         console.log('Creating user account', accountData)
+    }
+
+    const autoNode = async () => {
+        const node = await getBestNode()
+        if (!node) {
+            window.api.errorMessage('Auto node did not load')
+            return
+        }
+        const event = {detail: {node: node}}
+        
+        console.log("Event node!", event)
+        return handleLogin(event)
     }
 
     $: {
@@ -126,7 +141,6 @@
     {:else if step === 2}
         <div in:fade class="wrapper">
             <h1>Create wallet</h1>
-            <input type="text" placeholder="Wallet name" bind:value="{walletName}"/>
             <input type="password" placeholder="Password" bind:value="{password}"/>
             <input type="password" placeholder="Confirm Password" bind:value="{confirmPassword}"/>
 
@@ -147,7 +161,18 @@
             </div>
         </div>
     {:else if step === 3}
-        <NodeSelector on:back="{() => (step = 2)}" on:connect="{(e) => handleLogin(e)}"/>
+    <div in:fade class="wrapper">
+        <h1>Node</h1>
+        <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
+        <div class="nodes" class:show={showNodes}>
+            <NodeSelector on:back="{() => (showNodes = false)}" on:connect="{(e) => handleLogin(e)}"/>
+        </div>
+            <FillButton disabled="{false}" text="Custom" on:click="{() => (showNodes = true)}"/>
+                
+            <FillButton disabled="{false}" text="Auto" on:click="{async () => await autoNode()}"/>
+         
+        </div>
+    </div>
     {/if}
         </div>
 
@@ -194,5 +219,14 @@
     gap: 1rem;
     width: 100%;
     justify-content: center;
+  }
+
+  .nodes {
+    display: none;
+
+  }
+
+  .show {
+    display: flex;
   }
 </style>

@@ -84,10 +84,6 @@
         board_message_sound = new Audio('/audio/boardmessage.mp3')
         new_message_sound = new Audio('/audio/message.mp3')
 
-        window.api.receive('contacts', async (my_contacts) => {
-            //Set contacts to store
-            $user.contacts = my_contacts
-        })
 
     })
 
