@@ -150,4 +150,49 @@ export async function getBestApi() {
     return false
   }
 
+  export const getBestNode = async (ssl=true) => {
+
+    let recommended_node = undefined;
+  
+    let node_requests = [];
+    let ssl_nodes =[];
+    if (ssl) {
+        ssl_nodes = get(nodelist).nodes.filter(node => {return node.ssl});
+    } else {
+        ssl_nodes =  get(nodelist).nodes.filter(node => {return !node.ssl});
+    }
+  
+    ssl_nodes = ssl_nodes.sort((a, b) => 0.5 - Math.random());
+  
+    console.log(ssl_nodes);
+  
+    let i = 0;
+  
+    while (i < ssl_nodes.length) {
+  
+  
+      let this_node = ssl_nodes[i];
+  
+      let nodeURL = `${this_node.ssl ? 'https://' : 'http://'}${this_node.url}:${this_node.port}/info`;
+      try {
+        const resp = await fetch(nodeURL, {
+          method: 'GET',
+        }, 2000);
+  
+      if (resp.ok) {
+  
+        recommended_node = `${this_node.url}:${this_node.port}`;
+        console.log("resp ok!", recommended_node)
+        return(recommended_node);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    i++;
+    }
+    
+    return false
+  
+    }
+
 fetchNodes()
