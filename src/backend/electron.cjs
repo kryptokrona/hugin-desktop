@@ -19,15 +19,14 @@ const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
 const userDataDir = app.getPath('userData')
-const downloadDir = app.getPath('downloads')
 const dbPath = userDataDir + '/SQLmessages.db'
 const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 
-const { expand_sdp_offer } = require("./sdp.cjs")
+const { expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
 const { loadDB } = require("./database.cjs")
-const { loadHugin, loadAccount, loadWallet } = require('./wallet.cjs')
+const { loadHugin, loadAccount, loadWallet, createAccount } = require('./wallet.cjs')
 const { newBeam, endBeam } = require("./beam.cjs")
 const { newSwarm, endSwarm} = require("./swarm.cjs")
 const { sendMessage, startMessageSyncer } = require('./messages.cjs')

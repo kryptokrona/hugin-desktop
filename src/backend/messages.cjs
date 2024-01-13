@@ -55,14 +55,9 @@ let block_list = []
 
 //MISC
 
-ipcMain.on('create-account', async (e, accountData) => {
-    createAccount(accountData)
-})
-
 ipcMain.on('optimize', async (e) => {
     optimizeMessages(force = true)
 })
-
 //GROUPS MESSAGES
 
 ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {

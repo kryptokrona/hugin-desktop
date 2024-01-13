@@ -356,7 +356,7 @@ async function createMessageSubWallet() {
         }
         }
         const [spendKey, viewKey] = keychain.getPrivKeys()
-        const subWalletKeys = await crypto.generateDeterministicSubwalletKeys(spendKey, 1)
+        const subWalletKeys = await keychain.generateDeterministicSubwalletKeys(spendKey)
         await js_wallet.importSubWallet(subWalletKeys.private_key)
     }
 }
