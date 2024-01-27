@@ -178,9 +178,9 @@ window.api.receive('login-failed', async () => {
       border-radius: 5px;
       cursor: pointer;
       transition: 100ms ease-in-out;
-
+      border: 1px solid transaparent;
       &:hover {
-        background: #303030;
+        background: var(--success-color);
       }
     }
   }

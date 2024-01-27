@@ -16,7 +16,7 @@ import Welcome from './components/Welcome.svelte'
     let date = new Date()
     let hrs = date.getHours()
     let greet
-    let welcome = false
+    let welcome = true
     onMount(async () => {
         if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
         if (!localStorage.getItem('guide')) {

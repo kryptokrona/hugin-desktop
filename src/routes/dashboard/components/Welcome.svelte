@@ -7,7 +7,7 @@ import Boxcard from "$lib/components/layouts/Boxcard.svelte"
 import Cards from "$lib/components/layouts/Cards.svelte"
 import { createEventDispatcher } from "svelte"
 import { fly } from "svelte/transition"
-
+import { user } from '$lib/stores/user.js'
 
 const dispatch = createEventDispatcher()
 
@@ -21,7 +21,7 @@ const close = () => {
     <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="field">
     
     <Cards> 
-            <h2>Welcome anon. </h2>
+            <h2>Welcome {$user.username} </h2>
         <p>Would you like to know more about how to use Hugin?</p>
             <FillButton enabled={true} disabled={false} text={'Continue'} on:click={close}/>
             <FillButton text={'Explpre'} info={true} on:click={close}/>
