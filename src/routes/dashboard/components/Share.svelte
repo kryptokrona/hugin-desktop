@@ -21,15 +21,12 @@ const buttonGlow = () => {
 
 <div style="display: flex; flex-direction: column">
     <div class="share" class:border_rgb="{copied}" class:open on:click="{() => (open = !open)}">
-        <h5>{copied ? 'Copied' : 'Copy'}</h5>
+        <h5>{copied ? 'Copied' : 'Address'}</h5>
     </div>
     {#if open}
         <div in:fade class="list layered-shadow">
             <div on:click="{() => copyThis($user.myAddress)}">
-                <h5>Address</h5>
-            </div>
-            <div on:click="{() => copyThis($user.huginAddress.substring(99, 163))}">
-                <h5>Key</h5>
+                <h5>Payment</h5>
             </div>
             <div on:click="{() => copyThis($user.huginAddress)}">
                 <h5>Hugin</h5>

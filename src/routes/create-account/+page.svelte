@@ -15,7 +15,7 @@
     let nodeInput = ''
     let step = 1
     let showNodes = false
-
+    let loading = false
     $: walletName = username
 
     const enter = (e) => {
@@ -38,7 +38,7 @@
             mnemonic: mnemonic,
             blockheight: parseInt(blockHeight),
         }
-
+        
         //Save username to localStorage
         window.localStorage.setItem('userName', username)
 
@@ -46,9 +46,11 @@
 
         window.api.send('create-account', accountData)
         console.log('Creating user account', accountData)
+        loading = false
     }
 
     const autoNode = async () => {
+        loading = true
         const node = await getBestNode()
         if (!node) {
             window.api.errorMessage('Auto node did not load')
@@ -168,8 +170,11 @@
             <NodeSelector on:back="{() => (showNodes = false)}" on:connect="{(e) => handleLogin(e)}"/>
         </div>
             <FillButton disabled="{false}" text="Custom" on:click="{() => (showNodes = true)}"/>
-                
-            <FillButton disabled="{false}" text="Auto" on:click="{async () => await autoNode()}"/>
+            
+            <FillButton disabled="{false}" info={true} text="Auto" on:click="{async () => await autoNode()}"/>
+                {#if loading}
+                    <Moon color="#000000" size="20" unit="px"/>
+                {/if}
          
         </div>
     </div>
