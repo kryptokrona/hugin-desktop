@@ -11,7 +11,7 @@
     import Transactions from "$routes/dashboard/components/Transactions.svelte";
     import {messages} from '$lib/stores/messages.js'
     import { fly } from 'svelte/transition'
-import Welcome from './components/Welcome.svelte'
+    import Welcome from './components/Welcome.svelte'
     
     let date = new Date()
     let hrs = date.getHours()
@@ -22,7 +22,7 @@ import Welcome from './components/Welcome.svelte'
         if (!localStorage.getItem('guide')) {
             //Set welcome = true to enable guide popup
             //welcome = true
-            welcome = true
+            welcome = false
         }
         if (hrs < 12) greet = 'Good Morning'
         else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'
