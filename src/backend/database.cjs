@@ -169,7 +169,7 @@ const welcomeMessage = () => {
     return new Promise(
         (resolve, reject) => {
             database.prepare(huginMessage).run(
-                ['Welcome to hugin', welcomeAddress, 1, '1650919475320'],
+                ['Welcome to hugin', welcomeAddress, 1, '1650919475320']
             )
             console.log('created welcome msg')
         },
