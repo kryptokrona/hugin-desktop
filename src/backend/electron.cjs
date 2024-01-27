@@ -19,13 +19,12 @@ const Store = require('electron-store');
 const appRoot = require('app-root-dir').get().replace('app.asar', '')
 const appBin = appRoot + '/bin/'
 const userDataDir = app.getPath('userData')
-const dbPath = userDataDir + '/SQLmessages.db'
+// const dbPath = userDataDir + '/SQLmessages.db'
 const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 
 const { expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
-const { loadDB } = require("./database.cjs")
 const { loadHugin, loadAccount, loadWallet, createAccount } = require('./wallet.cjs')
 const { newBeam, endBeam } = require("./beam.cjs")
 const { newSwarm, endSwarm} = require("./swarm.cjs")
@@ -89,8 +88,6 @@ function createWindow() {
         windowState.saveState(mainWindow)
     })
     
-    startDatabase()
-
     return mainWindow
 }
 
@@ -225,10 +222,6 @@ ipcMain.on('app', (data) => {
             })
     }
 })
-
-function startDatabase() {
-    loadDB(userDataDir, dbPath)
-}
 
 const startCheck = async () => {
    
