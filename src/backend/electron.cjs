@@ -68,7 +68,7 @@ function createWindow() {
             contextIsolation: true,
             nodeIntegration: true,
             spellcheck: false,
-            devTools: true,
+            devTools: dev,
             preload: path.join(__dirname, 'preload.cjs'),
         },
         x: windowState.x,
@@ -197,7 +197,6 @@ ipcMain.on('app', (data) => {
         mainWindow.openDevTools()
     } else {
         console.log('Running in production')
-        mainWindow.openDevTools()
         autoUpdater.autoInstallOnAppQuit = false
         autoUpdater.autoDownload = false
         //This can be a setting if people wants beta releases in the future.

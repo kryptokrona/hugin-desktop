@@ -626,10 +626,8 @@ const getConversation = async (chat) => {
         DESC`
         const stmt = database.prepare(getChat)
         for(const row of stmt.iterate(chat)) {
-            console.log(row)
             thisConversation.push(row)
         }
-        console.log(thisConversation)
         resolve(thisConversation)
     })
 }
