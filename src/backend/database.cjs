@@ -6,13 +6,29 @@ const Store = require('electron-store')
 const store = new Store()
 
 const {sleep} = require('./utils.cjs')
+const closeDB = async () => {
+    
+    store.set({
+        sql: {
+            encrypted: true
+        }
+    });
+    database.close();
+    
+}
 
 let database
 //CREATE DB
 const loadDB = async (userDataDir, dbPath, privKey) => {
     database = new sqlite3(dbPath)
-    database.key(Buffer.from(privKey[0]))
-    database.rekey(Buffer.from(privKey[0]))
+
+    //If db is encrypted. Read with key
+    if (store.get('sql.encrypted')) {
+        database.key(Buffer.from(privKey[0]))
+        database.rekey(Buffer.from(keys[0]))
+    }
+
+    
    
     createTables()
     try {
@@ -609,7 +625,6 @@ const getConversation = async (chat) => {
             timestamp
         DESC`
         const stmt = database.prepare(getChat)
-        console.log("Chat: " + chat)
         for(const row of stmt.iterate(chat)) {
             console.log(row)
             thisConversation.push(row)
@@ -785,9 +800,9 @@ const saveThisContact = async (addr, key, name) => {
     ).run([addr, key, name])
 }
 
-process.on('exit', () => database.close());
-process.on('SIGHUP', () => process.exit(128 + 1));
-process.on('SIGINT', () => process.exit(128 + 2));
-process.on('SIGTERM', () => process.exit(128 + 15));
+process.on('exit', async () => await closeDB());
+process.on('SIGHUP', async () => process.exit(128 + 1));
+process.on('SIGINT', async () => process.exit(128 + 2));
+process.on('SIGTERM', async () => process.exit(128 + 15));
 
 module.exports = {saveHash, firstContact, welcomeMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels}

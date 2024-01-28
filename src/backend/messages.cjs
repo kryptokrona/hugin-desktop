@@ -199,7 +199,6 @@ async function backgroundSyncMessages(checkedTxs = false) {
 
 
 async function decryptHuginMessages(transactions) {
-    console.log("INCOOOOMIIIIING")
     for (const transaction of transactions) {
         try {
             let thisExtra = transaction.transactionPrefixInfo.extra
@@ -226,14 +225,9 @@ async function decryptHuginMessages(transactions) {
 
 //Try decrypt extra data
 async function checkForPrivateMessage(thisExtra) {
-    console.log("OwO wat dis?")
-    console.log("Kända nycklar: " + known_keys)
-    console.log("Keypair: " + JSON.stringify(keychain.getXKRKeypair()))
     let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair())
-    console.log("meddelande: " + message)
     if (!message) return false
     if (message.type === 'sealedbox' || 'box') {
-        console.log("OMG its a message!")
         message.sent = false
         saveMessage(message)
         return true
@@ -361,7 +355,6 @@ async function fetchHuginMessages() {
 
 
 async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
-    console.log("Sending message: " + message)
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -373,7 +366,6 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
     let has_history = await checkHistory(messageKey, address)
-    console.log("Eller här?")
     if (!beam_this) {
         let balance = await checkBalance()
         if (!balance) return
@@ -381,13 +373,11 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
 
     let timestamp = Date.now()
     let payload_hex
-    console.log("Är vi här?")
     if (!has_history) {
         payload_hex = await encryptMessage(message, messageKey, true, address)
     } else {
         payload_hex = await encryptMessage(message, messageKey, false, address)
     }
-    console.log("1")
     //Choose subwallet with message inputs
     let messageWallet = Hugin.wallet.getAddresses()[1]
     let messageSubWallet = Hugin.wallet.getAddresses()[2]
@@ -914,9 +904,7 @@ async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
 
 //Saves private message
 async function saveMessage(msg, offchain = false) {
-    console.log("Hello")
     let [message, addr, key, timestamp, sent] = sanitize_pm_message(msg)
-    console.log("Message is: " + message)
     if (!message) return
 
     if (await messageExists(timestamp)) return

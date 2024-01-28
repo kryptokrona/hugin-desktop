@@ -1,0 +1,162 @@
+diff --git a/node_modules/hugin-crypto/index.js b/node_modules/hugin-crypto/index.js
+index 234afdb..0b8b12e 100644
+--- a/node_modules/hugin-crypto/index.js
++++ b/node_modules/hugin-crypto/index.js
+@@ -6,8 +6,6 @@ nacl.util = require('tweetnacl-util');
+ 
+ const naclSealed = require('tweetnacl-sealed-box');
+ 
+-
+-
+ const {
+     Address,
+     AddressPrefix,
+@@ -51,7 +49,6 @@ const nonceFromTimestamp  = (tmstmp) => {
+     nonce = Uint8Array.from(tmp_nonce);
+ 
+   }
+-
+   return nonce;
+ }
+ 
+@@ -87,13 +84,21 @@ function fromHex(hex,str){
+ 
+ function convertXKRKeypairToNaCl(xkr_keypair) {
+     
+-    let secretKey = nacl.util.decodeUTF8(xkr_keypair.privateSpendKey.substring(1, 33));
++    let secretKey = hexToUint(xkr_keypair.privateSpendKey);
+     let keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
+ 
+     return keyPair;
+ 
+ }
+ 
++function convertXKRKeypairToNaCl_old(xkr_keypair) {
++    
++  let old_secretKey = nacl.util.decodeUTF8(xkr_keypair.privateSpendKey.substring(1,33))
++  let old_keyPair = nacl.box.keyPair.fromSecretKey(old_secretKey);
++
++  return old_keyPair;
++
++}
+ async function encryptSealedBox(message, xkr_keypair, timestamp) {
+   // Encryption for first messages containing, in addition to the message,
+   // the senders public key for encryption, address and a signature proving
+@@ -126,10 +131,18 @@ async function encryptBox(message, xkr_keypair, recipient_pubkey, timestamp) {
+ 
+ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+   // Takes raw extra data from the blockchain and converts it to a message
++  let tx
++  try {
+   extra = trimExtra(extra);
+-  let tx = JSON.parse(extra);
++  tx = JSON.parse(extra);
++  } catch (err) {
++    return false
++  }
++
+   let keyPair = convertXKRKeypairToNaCl(xkr_keypair);
++  let oldKeyPair = convertXKRKeypairToNaCl_old(xkr_keypair)
+   let message_type = undefined;
++
+   if (tx.box) {
+ 
+    // Encrypted box was found
+@@ -150,7 +163,20 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+     message_type = 'sealedbox';
+ 
+     } catch (err) {
+-      console.log(err);
++      //Try old keypair
++        try {
++          //Try with our old keypair aswell
++          decryptBox = naclSealed.sealedbox.open(
++            hexToUint(box),
++            nonceFromTimestamp(timestamp),
++            oldKeyPair.secretKey
++          );
++          
++        message_type = 'sealedbox';
++
++        } catch {
++          //Not a sealed box
++        }
+     }
+ 
+    while (i < known_keys.length && !decryptBox) {
+@@ -169,7 +195,6 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+         message_type = 'box';
+       }
+     } catch (err) {
+-      console.log(err);
+       continue;
+     }
+ 
+@@ -177,7 +202,6 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+   }
+ 
+    if (!decryptBox) {
+-
+      return false;
+    }
+ 
+@@ -196,56 +220,12 @@ exports.extraDataToMessage = async function (extra, known_keys, xkr_keypair)  {
+      }
+ 
+    }
++   
+    payload_json.type = message_type;
+    return payload_json;
+ 
+- } else if (tx.b) {
+-   // Private board message
+-   let message_json = false;
+-   let j = 0;
+-
+-   while (j < known_keys.length && !message_json) {
+-
+-       let key = known_keys[j];
+-       j += 1;
+-       try {
+-
+-       let secretKey = nacl.util.decodeUTF8(key.substring(1, 33));
+-       let this_keyPair = nacl.box.keyPair.fromSecretKey(secretKey);
+-
+-       message_json = JSON.parse(
+-         nacl.util.encodeUTF8(
+-           nacl.box.open(
+-             fromHexString(tx.b), // box
+-             nonceFromTimestamp(tx.t), // nonce
+-             this_keyPair.publicKey,
+-             this_keyPair.secretKey
+-           )
+-         )
+-       );
+-       return message_json;
+-     } catch (err) {
+-     }
+-
+-   }
+-   if (!message_json) {
+-     return false;
+-   }
+-
+- } else if (tx.brd) {
+-
+-   // Public board message
+-   let message_json = tx;
+-
+-  let this_addr = await Address.fromAddress(message_json.k);
+-  let verified = await xkrUtils.verifyMessageSignature(message_json.m, this_addr.spend.publicKey, message_json.s);
+-  if (!verified) {
+-    return false;
+-  } else {
+-    return message_json;
+-  }
+-
++ }
+ 
+-  }
++ return false
+ 
+ }
