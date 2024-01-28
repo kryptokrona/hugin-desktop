@@ -10,9 +10,9 @@ const dbPath = userDataDir + '/SQLmessages.db'
 const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
 let sender
 
-function startDatabase(privKey) {
+async function startDatabase(privKey) {
   
-  loadDB(userDataDir, dbPath, privKey)
+  await loadDB(userDataDir, dbPath, privKey)
 }
 
 class Account {
@@ -39,7 +39,7 @@ class Account {
      }
     
     async load() {
-      startDatabase(this.wallet.getPrimaryAddressPrivateKeys())
+      await startDatabase(this.wallet.getPrimaryAddressPrivateKeys())
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()

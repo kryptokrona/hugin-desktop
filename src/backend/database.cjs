@@ -5,15 +5,31 @@ const sanitizeHtml = require('sanitize-html')
 const Store = require('electron-store')
 const store = new Store()
 
+const {sleep} = require('./utils.cjs')
 
 let database
 //CREATE DB
-const loadDB = (userDataDir, dbPath, privKey) => {
+const loadDB = async (userDataDir, dbPath, privKey) => {
     database = new sqlite3(dbPath)
     database.key(Buffer.from(privKey[0]))
     database.rekey(Buffer.from(privKey[0]))
    
     createTables()
+    try {
+    const welcome = database.prepare('SELECT msg FROM messages WHERE timestamp = 1650919475320').get()
+    // If the message doesnt already exist, create it
+    if(!welcome) {
+        
+        //Create welcome PM message
+        welcomeMessage()
+        //Create Hugin welcome contact
+        firstContact()
+        await sleep(100)
+
+    }
+    } catch(e) {
+        console.log(e)
+    }
 }
 
 
@@ -169,7 +185,7 @@ const welcomeMessage = () => {
     return new Promise(
         (resolve, reject) => {
             database.prepare(huginMessage).run(
-                ['Welcome to hugin', welcomeAddress, 1, '1650919475320']
+                ['Welcome to hugin', welcomeAddress, 0, '1650919475320']
             )
             console.log('created welcome msg')
         },
@@ -354,7 +370,7 @@ const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
     if (offchain) {
         return message
     } 
-    msg.sent = 0
+    msg.sent = changeBool(msg.sent)
 try {
     database.prepare(
         `REPLACE INTO groupmessages  (
@@ -381,7 +397,7 @@ try {
 }
 
 const changeBool = (b) => {
-    return b ? 0 : 1
+    return b ? 1 : 0
 }
 
 const saveMsg = async (message, addr, sent, timestamp, offchain) => {
@@ -538,7 +554,7 @@ const getConversations = async () => {
     //Remove Hugin welcome message and contact if new contact was added.
     if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
         removeContact(welcomeAddress)
-        removeMessages(welcomeAddress)
+       // removeMessages(welcomeAddress)
     }
 
     let name
@@ -578,7 +594,7 @@ const getConversations = async () => {
 }
 
 //Get a chosen conversation from the reciepients xkr address.
-const getConversation = async (chat = false) => {
+const getConversation = async (chat) => {
     const thisConversation = []
     return new Promise((resolve, reject) => {
         const getChat = `SELECT
@@ -593,16 +609,18 @@ const getConversation = async (chat = false) => {
             timestamp
         DESC`
         const stmt = database.prepare(getChat)
-
+        console.log("Chat: " + chat)
         for(const row of stmt.iterate(chat)) {
+            console.log(row)
             thisConversation.push(row)
         }
+        console.log(thisConversation)
         resolve(thisConversation)
     })
 }
 
 //Print a chosen group from the shared key.
-const printGroup = async (group = false) => {
+const printGroup = async (group) => {
     const channels = await getChannels()
 
     const thisGroup = []
@@ -767,7 +785,7 @@ const saveThisContact = async (addr, key, name) => {
     ).run([addr, key, name])
 }
 
-process.on('exit', () => db.close());
+process.on('exit', () => database.close());
 process.on('SIGHUP', () => process.exit(128 + 1));
 process.on('SIGINT', () => process.exit(128 + 2));
 process.on('SIGTERM', () => process.exit(128 + 15));
