@@ -25,7 +25,7 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
     //If db is encrypted. Read with key
     if (store.get('sql.encrypted')) {
         database.key(Buffer.from(privKey[0]))
-        database.rekey(Buffer.from(keys[0]))
+        database.rekey(Buffer.from(privKey[0]))
     }
 
     
