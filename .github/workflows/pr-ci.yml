@@ -47,7 +47,7 @@ jobs:
       - name: "Install libudev"
         if: matrix.config.os == 'ubuntu-latest'
         run: |
-          sudo apt-get intall libudev-dev
+          sudo apt-get install libudev-dev
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
