@@ -57,7 +57,7 @@ jobs:
           node-version: 16.16.0
 
       - name: Install dependencies
-        run: npm install --quiet
+        run: npm i node-gyp -g && npm install --quiet
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'windows-latest'
