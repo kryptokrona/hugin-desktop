@@ -43,6 +43,13 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: 3.11
+      
+      - name: install deps for ${{ matrix.config.name }}
+        if: matrix.config.os == 'ubuntu-latest'
+        apt:
+         name: "libudev-dev"
+         update_cache: true
+         state: present
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
@@ -50,7 +57,7 @@ jobs:
           node-version: 16.16.0
 
       - name: Install dependencies
-        run: npm install --quiet
+        run: npm i node-gyp -g && npm install --quiet
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'windows-latest'
