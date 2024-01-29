@@ -1,26 +1,60 @@
 
-const sqlite3 = require('sqlite3').verbose()
+const sqlite3 = require('better-sqlite3-multiple-ciphers')
 const sanitizeHtml = require('sanitize-html')
+
+const Store = require('electron-store')
+const store = new Store()
+
+const {sleep} = require('./utils.cjs')
+const closeDB = async () => {
+    
+    store.set({
+        sql: {
+            encrypted: true
+        }
+    });
+    database.close();
+    
+}
+
 let database
 //CREATE DB
-const loadDB = (userDataDir, dbPath) => {
-    database = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.log('Err', err)
+const loadDB = async (userDataDir, dbPath, privKey) => {
+    database = new sqlite3(dbPath)
+
+    //If db is encrypted. Read with key
+    if (store.get('sql.encrypted')) {
+        database.key(Buffer.from(privKey[0]))
+        database.rekey(Buffer.from(privKey[0]))
     }
-})
+
+    
+   
     createTables()
+    try {
+    const welcome = database.prepare('SELECT msg FROM messages WHERE timestamp = 1650919475320').get()
+    // If the message doesnt already exist, create it
+    if(!welcome) {
+        
+        //Create welcome PM message
+        welcomeMessage()
+        //Create Hugin welcome contact
+        firstContact()
+        await sleep(100)
+
+    }
+    } catch(e) {
+        console.log(e)
+    }
 }
 
 
 //CREATE TABLES
 
 const createTables = () => {
-    boardMessageTable()
     messagesTable()
     knownTxsTable()
     contactsTable()
-    boardsSubscriptionsTable()
     groupMessageTable()
     groupsTable()
     blockListTable()
@@ -40,7 +74,8 @@ const contactsTable = () => {
                    )`
     return new Promise(
         (resolve, reject) => {
-            database.run(contactsTable, (err) => {})
+           database.prepare(contactsTable).run()
+
         },
         () => {
             resolve()
@@ -56,32 +91,7 @@ const knownTxsTable = () => {
                  )`
     return new Promise(
         (resolve, reject) => {
-            database.run(knownTxTable, (err) => {})
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-const boardMessageTable = () => {
-    const boardTable = `
-                CREATE TABLE IF NOT EXISTS boards (
-                     message TEXT,
-                     key TEXT,
-                     signature TEXT,
-                     board TEXT,
-                     time TEXT,
-                     name TEXT,
-                     reply TEXT,
-                     poll TEXT,
-                     thread TEXT,
-                     hash TEXT UNIQUE,
-                     sent BOOLEAN
-                    )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(boardTable, (err) => {})
+          database.prepare(knownTxTable).run()
         },
         () => {
             resolve()
@@ -100,23 +110,7 @@ function messagesTable() {
                )`
     return new Promise(
         (resolve, reject) => {
-            database.run(messageTable, (err) => {})
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-const boardsSubscriptionsTable = () => {
-    const subscriptionTable = `
-            CREATE TABLE IF NOT EXISTS subscription (
-              board TEXT,
-              UNIQUE (board)
-          )`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(subscriptionTable, (err) => {})
+           database.prepare(messageTable).run()
         },
         () => {
             resolve()
@@ -133,7 +127,7 @@ const groupsTable = () => {
           )`
     return new Promise(
         (resolve, reject) => {
-            database.run(groupsTable, (err) => {})
+           database.prepare(groupsTable).run()
         },
         () => {
             resolve()
@@ -157,7 +151,7 @@ const groupMessageTable = () => {
             )`
     return new Promise(
         (resolve, reject) => {
-            database.run(groupTable, (err) => {})
+            database.prepare(groupTable).run()
         },
         () => {
             resolve()
@@ -174,7 +168,7 @@ const blockListTable = () => {
                  )`
     return new Promise(
         (resolve, reject) => {
-            database.run(blockList, (err) => {})
+            database.prepare(blockList).run()
         },
         () => {
             resolve()
@@ -193,49 +187,7 @@ const groupChannelsMessagesTable = () => {
                  )`
     return new Promise(
         (resolve, reject) => {
-            database.run(blockList, (err) => {})
-        },
-        () => {
-            resolve()
-        }
-    )
-}
-
-const welcomeBoardMessage = () => {
-    let sent = false
-    const boardMessage = `INSERT INTO boards  (
-            message,
-            key,
-            signature,
-            board,
-            time,
-            name,
-            reply,
-            hash,
-            sent
-           )
-        VALUES
-            (? ,?, ?, ?, ?, ?, ?, ?, ?)`
-    return new Promise(
-        (resolve, reject) => {
-            database.run(
-                boardMessage,
-                [
-                    'Welcome to Hugin',
-                    'SEKReSxkQgANbzXf4Hc8USCJ8tY9eN9eadYNdbqb5jUG5HEDkb2pZPijE2KGzVLvVKTniMEBe5GSuJbGPma7FDRWUhXXDVSKHWc',
-                    'lol',
-                    'Home',
-                    '1650919475',
-                    'Hugin Messenger',
-                    '',
-                    'b80a4dc4fa60bf26dd31161702a165e43295adc1895f7333ad9eeeb819e20936',
-                    sent,
-                ],
-                (err) => {
-                    console.log('Error creating msg', err)
-                }
-            )
-            console.log('created board msg')
+            database.prepare(blockList).run()
         },
         () => {
             resolve()
@@ -248,12 +200,8 @@ const welcomeMessage = () => {
                           VALUES (?, ?, ?, ?)`
     return new Promise(
         (resolve, reject) => {
-            database.run(
-                huginMessage,
-                ['Welcome to hugin', welcomeAddress, false, '1650919475320'],
-                (err) => {
-                    console.log('Error creating msg', err)
-                }
+            database.prepare(huginMessage).run(
+                ['Welcome to hugin', welcomeAddress, 0, '1650919475320']
             )
             console.log('created welcome msg')
         },
@@ -268,16 +216,12 @@ const firstContact = () => {
                           VALUES (?, ?, ?)`
     return new Promise(
         (resolve, reject) => {
-            database.run(
-                first_Contact,
+            database.prepare(first_Contact).run(
                 [
                     welcomeAddress,
                     '133376bcb04a2b6c62fc9ebdd719fbbc0c680aa411a8e5fd76536915371bba7f',
                     'Hugin',
-                ],
-                (err) => {
-                    console.log('Error creating contact msg', err)
-                }
+                ]
             )
             console.log('created first contact msg')
         },
@@ -289,24 +233,30 @@ const firstContact = () => {
 
 
 
-//DATABAS REQUESTS
+//DATABASE REQUESTS
 
 const loadGroups = async () => {
     const rows = []
     return new Promise((resolve, reject) => {
         const getAllGroups = `SELECT * FROM pgroups`
-        database.each(
-            getAllGroups,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                rows.push(row)
-            },
-            () => {
-                resolve(rows)
-            }
-        )
+        const groups = database.prepare(getAllGroups).all()
+
+        for(const group of groups) {
+            rows.push(group)
+        }
+        resolve(rows)
+        // database.each(
+        //     getAllGroups,
+        //     (err, row) => {
+        //         if (err) {
+        //             console.log('Error', err)
+        //         }
+        //         rows.push(row)
+        //     },
+        //     () => {
+        //         resolve(rows)
+        //     }
+        // )
     })
 }
 
@@ -330,18 +280,11 @@ const loadKnownTxs = async () => {
     const knownTransactions = []
     return new Promise((resolve, reject) => {
         const getAllknownTxs = `SELECT * FROM knownTxs`
-        database.each(
-            getAllknownTxs,
-            (err, txs) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                knownTransactions.push(txs)
-            },
-            () => {
-                resolve(knownTransactions)
-            }
-        )
+        const txs = database.prepare(getAllknownTxs).all()
+        for(const tx of txs) {
+            knownTransactions.push(tx)
+        }
+        resolve(knownTransactions)
     })
 }
 
@@ -349,17 +292,11 @@ const loadBlockList = async () => {
     const blockList = []
     return new Promise((resolve, reject) => {
         const getBlockList = `SELECT * FROM blocklist`
-        database.each(
-            getBlockList,
-            (err, blocked) => {
-                if (err) {
-                }
-                blockList.push(blocked)
-            },
-            () => {
-                resolve(blockList)
-            }
-        )
+        const blockLists = database.prepare(getBlockList).all()
+        for(const block in blockLists) {
+            blockList.push(block)
+        }
+        resolve(blockList)
     })
 }
 
@@ -379,83 +316,29 @@ const getGroups = async () => {
               time
           ASC
           `
-        database.each(
-            getMyGroups,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
+        const stmt = database.prepare(getMyGroups)
+        for (const group of stmt.iterate()) {
                 my_groups.some(function (chat) {
-                    if (chat.key === row.grp) {
+                    if (chat.key === group.grp) {
                         name = chat.name
                         key = chat.key
                         newRow = {
                             name: name,
-                            msg: row.message,
-                            chat: row.grp,
-                            timestamp: row.time,
-                            sent: row.sent,
+                            msg: group.message,
+                            chat: group.grp,
+                            timestamp: group.time,
+                            sent: group.sent,
                             key: key,
-                            hash: row.hash,
-                            nick: row.name,
+                            hash: group.hash,
+                            nick: group.name,
                         }
                         myGroups.push(newRow)
                     }
                 })
-            },
-            () => {
-                resolve(myGroups)
             }
-        )
-    })
-}
-
-const saveBoardMessage = (msg, hash) => {
-
-    return
-
-    let to_board = sanitizeHtml(msg.brd)
-    let text = sanitizeHtml(msg.m)
-    let addr = sanitizeHtml(msg.k)
-    let reply = sanitizeHtml(msg.r)
-    let sig = sanitizeHtml(msg.s)
-    let timestamp = sanitizeHtml(msg.t)
-    let nick = sanitizeHtml(msg.n)
-    let txHash = sanitizeHtml(hash)
-    if (nick === '') {
-        nick = 'Anonymous'
-    }
-
-    let message = {
-        message: text,
-        key: addr,
-        signature: sig,
-        board: to_board,
-        time: timestamp,
-        name: nick,
-        reply: reply,
-        hash: txHash,
-        sent: msg.sent,
-    }
-
-    database.run(
-        `REPLACE INTO boards  (
-               message,
-               key,
-               signature,
-               board,
-               time,
-               name,
-               reply,
-               hash,
-               sent
-              )
-           VALUES
-               (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
-        [text, addr, sig, to_board, timestamp, nick, reply, txHash, msg.sent]
-    )
-    return message
-}
+            resolve(myGroups)
+        })
+    }   
 
 const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
 
@@ -503,9 +386,9 @@ const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
     if (offchain) {
         return message
     } 
-
+    msg.sent = changeBool(msg.sent)
 try {
-    database.run(
+    database.prepare(
         `REPLACE INTO groupmessages  (
     message,
     address,
@@ -518,15 +401,19 @@ try {
     sent
           )
        VALUES
-           (? ,?, ?, ?, ?, ?, ?, ?, ?)`,
-        [text, addr, sig, group, timestamp, nick, reply, txHash, msg.sent]
-    )
+           (? ,?, ?, ?, ?, ?, ?, ?, ?)`
+        
+    ).run(text, addr, sig, group, timestamp, nick, reply, txHash, msg.sent)
 
         } catch(a) {
             console.log("Sql lite", a)
         }
 
     return message
+}
+
+const changeBool = (b) => {
+    return b ? 1 : 0
 }
 
 const saveMsg = async (message, addr, sent, timestamp, offchain) => {
@@ -541,15 +428,16 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
         default:
             message = message
     }
+
+    sent = changeBool(sent)
     
     //Save to DB
-        database.run(
+        database.prepare(
             `REPLACE INTO messages
                 (msg, chat, sent, timestamp)
             VALUES
-                (?, ?, ?, ?)`,
-            [message, addr, sent, timestamp]
-        )
+                (?, ?, ?, ?)`
+        ).run([message, addr, sent, timestamp])
     
         
     let newMsg = {
@@ -570,14 +458,13 @@ const saveHash = async (txHash) => {
     if (txHash == undefined) return false
     if (txHash.length !== 64) return false
 
-    database.run(
+    database.prepare(
         `REPLACE INTO knownTxs (
                  hash
                )
                VALUES
-                   ( ? )`,
-        [txHash]
-    )
+                   ( ? )`
+    ).run([txHash])
 
     return true
 }
@@ -586,13 +473,12 @@ const saveChannelMessage = (hsh, timestamp, chnl, grp) => {
 
     try {
         //Save to DB
-        database.run(
+        database.prepare(
             `REPLACE INTO channelmessage
                 (hash, time, channel, room)
             VALUES
-                (?, ?, ?, ?)`,
-            [hsh, timestamp, chnl, grp]
-        )
+                (?, ?, ?, ?)`
+        ).run([hsh, timestamp, chnl, grp])
 
     } catch (a) {
         console.log("database err", a)
@@ -600,96 +486,66 @@ const saveChannelMessage = (hsh, timestamp, chnl, grp) => {
     
 }
 
-const addBoard = (brd) => {
-    database.run(
-        `REPLACE INTO subscription
-      (board)
-        VALUES
-          (?)`,
-        [brd]
-    )
-
-    console.log('saved board', brd)
-}
-
-const removeBoard = (brd) => {
-    database.run(
-        `DELETE FROM
-        subscription
-      WHERE
-        board = ?`,
-        [brd]
-    )
-
-    console.log('removed brd', brd)
-}
-
 const addGroup = (group) => {
     console.log('adding', group)
-    database.run(
+    database.prepare(
         `REPLACE INTO pgroups
       (key, name)
         VALUES
-          (?, ?)`,
-        [group.k, group.n]
-    )
+          (?, ?)`
+    ).run([group.k, group.n])
 
     console.log('saved group', group)
 }
 
 const removeGroup = (group) => {
-    database.run(
+    database.prepare(
         `DELETE FROM
         pgroups
       WHERE
-        key = ?`,
-        [group]
-    )
+        key = ?`
+    ).run([group])
 
-    console.log('removed brd', group)
+    console.log('removed grp', group)
 }
 
 const removeContact = (contact) => {
-    database.run(
+    database.prepare(
         `DELETE FROM
         contacts
       WHERE
-        address = ?`,
-        [contact]
-    )
+        address = ?`
+    ).run([contact])
 
     console.log('removed contact', contact)
 }
 
 const removeMessages = (contact) => {
-    database.run(
+    database.prepare(
         `DELETE FROM
         messages
       WHERE
-        chat = ?`,
-        [contact]
-    )
+        chat = ?`
+    ).run([contact])
 }
 
 const blockContact = (address, name) => {
-    database.run(
+    database.prepare(
         `REPLACE INTO blocklist
       (address, name)
         VALUES
-          (?, ?)`,
-        [address, name]
-    )
+          (?, ?)`
+    ).run([address, name])
     console.log('Blocked contact', address)
 }
 
 const unBlockContact = (address) => {
-    database.run(
+    database.prepare(
         `DELETE FROM
         blocklist
       WHERE
-        address = ?`,
-        [address]
-    )
+        address = ?`
+    ).run([address])
 
     console.log('Removed from block list', address)
 }
@@ -699,64 +555,14 @@ const getMessages = () => {
     const rows = []
     return new Promise((resolve, reject) => {
         const getAllMessages = `SELECT * FROM messages`
-        database.each(
-            getAllMessages,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                rows.push(row)
-            },
-            () => {
-                resolve(rows)
-            }
-        )
+        const messages = database.prepare(getAllMessages).all()
+
+        for(const message of messages) {
+            rows.push(message)
+        }
+        resolve(rows)
     })
 }
-
-//Get all boardmessages from db.
-const getBoardMsgs = () => {
-    const allBoards = []
-    return new Promise((resolve, reject) => {
-        const getAllBrds = `SELECT * FROM boards`
-        database.each(
-            getAllBrds,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                allBoards.unshift(row)
-            },
-            () => {
-                resolve(allBoards)
-            }
-        )
-    })
-}
-
-//Get one message from every unique board sorted by latest timestmap.
-const getMyBoardList = () => {
-    const myBoards = []
-    return new Promise((resolve, reject) => {
-        const getMyBoards = `
-          SELECT *
-          FROM subscription
-          `
-        database.each(
-            getMyBoards,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                myBoards.push(row.board)
-            },
-            () => {
-                resolve(myBoards)
-            }
-        )
-    })
-}
-
 
 //Get one message from every unique user sorted by latest timestmap.
 const getConversations = async () => {
@@ -764,7 +570,7 @@ const getConversations = async () => {
     //Remove Hugin welcome message and contact if new contact was added.
     if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
         removeContact(welcomeAddress)
-        removeMessages(welcomeAddress)
+       // removeMessages(welcomeAddress)
     }
 
     let name
@@ -780,37 +586,31 @@ const getConversations = async () => {
               timestamp
           ASC
           `
-        database.each(
-            getMyConversations,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                contacts.some(function (chat) {
-                    if (chat.address == row.chat) {
-                        name = chat.name
-                        key = chat.key
-                        newRow = {
-                            name: name,
-                            msg: row.msg,
-                            chat: row.chat,
-                            timestamp: row.timestamp,
-                            sent: row.sent,
-                            key: key,
-                        }
-                        myConversations.push(newRow)
+        const stmt = database.prepare(getMyConversations)
+
+        for(const conversation of stmt.iterate()) {
+            contacts.some(function (chat) {
+                if (chat.address == conversation.chat) {
+                    name = chat.name
+                    key = chat.key
+                    newRow = {
+                        name: name,
+                        msg: conversation.msg,
+                        chat: conversation.chat,
+                        timestamp: conversation.timestamp,
+                        sent: conversation.sent,
+                        key: key,
                     }
-                })
-            },
-            () => {
-                resolve(myConversations)
-            }
-        )
+                    myConversations.push(newRow)
+                }
+            })
+        }
+        resolve(myConversations)
     })
 }
 
 //Get a chosen conversation from the reciepients xkr address.
-const getConversation = async (chat = false) => {
+const getConversation = async (chat) => {
     const thisConversation = []
     return new Promise((resolve, reject) => {
         const getChat = `SELECT
@@ -820,27 +620,20 @@ const getConversation = async (chat = false) => {
             timestamp
         FROM
             messages
-        ${chat ? 'WHERE chat = "' + chat + '"' : ''}
+        WHERE chat = ?
         ORDER BY
             timestamp
         DESC`
-        database.each(
-            getChat,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                thisConversation.push(row)
-            },
-            () => {
-                resolve(thisConversation)
-            }
-        )
+        const stmt = database.prepare(getChat)
+        for(const row of stmt.iterate(chat)) {
+            thisConversation.push(row)
+        }
+        resolve(thisConversation)
     })
 }
 
 //Print a chosen group from the shared key.
-const printGroup = async (group = false) => {
+const printGroup = async (group) => {
     const channels = await getChannels()
 
     const thisGroup = []
@@ -857,18 +650,14 @@ const printGroup = async (group = false) => {
           sent
         FROM
             groupmessages
-        ${group ? 'WHERE grp = "' + group + '"' : ''}
+        WHERE grp = ?
         ORDER BY
             time
         DESC`
-        database.each(
-            getGroup,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
+        const stmt = database.prepare(getGroup)
 
-                if (row.address.length === 0) row.address = row.grp
+        for(const row of stmt.iterate(group)) {
+            if (row.address.length === 0) row.address = row.grp
                     
                 const msg = channels.find(a => a.hash === row.hash)
 
@@ -877,102 +666,24 @@ const printGroup = async (group = false) => {
                 }
                 
                 thisGroup.push(row)
-            },
-            () => {
-                resolve(thisGroup)
-            }
-        )
+        }
+        resolve(thisGroup)
     })
 }
 
 
-//DATABAS REQUESTS
+//DATABASE REQUESTS
 
 const getChannels = async () => {
     const rows = []
     return new Promise((resolve, reject) => {
         const getChannelsMessages = `SELECT * FROM channelmessage`
-        database.each(
-            getChannelsMessages,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                rows.push(row)
-            },
-            () => {
-                resolve(rows)
-            }
-        )
-    })
-}
-
-//Get all messages from a specific board from db
-const printBoard = async (board = false) => {
-    const boardArray = []
-    return new Promise((resolve, reject) => {
-        const getBoard = `SELECT
-               message,
-               key,
-               signature,
-               board,
-               time,
-               name,
-               reply,
-               hash,
-               sent
-        FROM boards
-        ${board ? 'WHERE board = "' + board + '"' : ''}
-        ORDER BY
-            time
-        ASC`
-        database.each(
-            getBoard,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                boardArray.push(row)
-            },
-            () => {
-                boardArray.reverse()
-                resolve(boardArray)
-            }
-        )
-    })
-}
-
-//Get original messsage from a chosen reply hash
-const getReply = async (reply = false) => {
-    let thisReply
-    return new Promise((resolve, reject) => {
-        let sql = `SELECT
-             message,
-             key,
-             signature,
-             board,
-             time,
-             name,
-             reply,
-             hash,
-             sent
-      FROM boards
-      ${reply ? 'WHERE hash = "' + reply + '"' : ''}
-      ORDER BY
-          time
-      ASC`
-        database.each(
-            sql,
-            (err, row) => {
-                thisReply = row
-                if (err) {
-                    console.log('Error', err)
-                }
-            },
-            () => {
-                resolve(thisReply)
-            }
-        )
+        const channels = database.prepare(getChannelsMessages).all()
+        
+        for(const row of channels) {
+            rows.push(row)
+        }
+        resolve(rows)
     })
 }
 
@@ -991,57 +702,13 @@ const getGroupReply = async (reply) => {
              hash,
              sent
       FROM groupmessages
-      ${reply ? 'WHERE hash = "' + reply + '"' : ''}
+      WHERE hash = ?
       ORDER BY
           time
       ASC`
-        database.each(
-            sql,
-            (err, row) => {
-                thisReply = row
-                if (err) {
-                    console.log('Error', err)
-                }
-            },
-            () => {
-                resolve(thisReply)
-            }
-        )
-    })
-}
+        thisReply = database.prepare(sql).get(reply)
 
-//Get all replies to a specific post
-const getReplies = async (hash = false) => {
-    const replies = []
-    return new Promise((resolve, reject) => {
-        let sql = `SELECT
-               message,
-               key,
-               signature,
-               board,
-               time,
-               name,
-               reply,
-               hash,
-               sent
-        FROM boards
-        ${hash ? 'WHERE r = "' + hash + '"' : ''}
-        ORDER BY
-            time
-        ASC`
-        database.each(
-            sql,
-            (err, row) => {
-                console.log(row)
-                if (err) {
-                    console.log('Error', err)
-                }
-                replies.push(row)
-            },
-            () => {
-                resolve(replies)
-            }
-        )
+        resolve(thisReply)
     })
 }
 
@@ -1051,22 +718,16 @@ const getContacts = async () => {
     const myContactList = []
     return new Promise((resolve, reject) => {
         const getMyContacts = `SELECT * FROM contacts`
-        database.each(
-            getMyContacts,
-            (err, row) => {
-                if (err) {
-                    console.log('Error', err)
-                }
-                
-                let newRow = row
-                newRow.chat = row.address
-                if (!row.key) return
+        const stmt = database.prepare(getMyContacts)
+        const contacts = stmt.all()
+
+        for(const contact of contacts) {
+            let newRow = contact
+                newRow.chat = contact.address
+                if (!contact.key) return
                 myContactList.push(newRow)
-            },
-            () => {
-                resolve(myContactList)
-            }
-        )
+        }
+        resolve(myContactList)
     })
 }
 
@@ -1077,19 +738,13 @@ const knownTxExists = async (hash) => {
         const hashExists = 
         `SELECT *
         FROM knownTxs
-        WHERE hash = ${hash}
+        WHERE hash = '${hash}'
         `
-        database.each(
-            hashExists,
-            (err, row) => {
-                if (row) {
-                    exists = true
-                }
-            },
-            () => {
-                resolve(exists)
-            }
-        )
+        const row = database.prepare(hashExists).get()
+        if(row) {
+            exists = true
+        }
+        resolve(exists)
     })
 }
 
@@ -1099,19 +754,13 @@ const messageExists = async (time) => {
         const messageExists = 
         `SELECT *
         FROM messages
-        WHERE timestamp = ${time}
+        WHERE timestamp = '${time}'
         `
-        database.each(
-            messageExists,
-            (err, row) => {
-                if (row) {
-                    exists = true
-                }
-            },
-            () => {
-                resolve(exists)
-            }
-        )
+        const row = database.prepare(messageExists).get()
+        if(row) {
+            exists = true
+        }
+        resolve(exists)
     })
 }
 
@@ -1121,19 +770,13 @@ const groupMessageExists = async (time) => {
         const groupMessageExists = 
         `SELECT *
         FROM groupmessages
-        WHERE time = ${time}
+        WHERE time = '${time}'
         `
-        database.each(
-            groupMessageExists,
-            (err, row) => {
-                if (row) {
-                    exists = true
-                }
-            },
-            () => {
-                resolve(exists)
-            }
-        )
+        const row = database.prepare(groupMessageExists).get()
+        if(row) {
+            exists = true
+        }
+        resolve(exists)
     })
 
 }
@@ -1147,15 +790,17 @@ const saveThisContact = async (addr, key, name) => {
         removeContact(addr)
     }
 
-    database.run(
+    database.prepare(
         `REPLACE INTO contacts
          (address, key, name)
       VALUES
-          (?, ?, ?)`,
-        [addr, key, name]
-    )
+          (?, ?, ?)`
+    ).run([addr, key, name])
 }
 
+process.on('exit', async () => await closeDB());
+process.on('SIGHUP', async () => process.exit(128 + 1));
+process.on('SIGINT', async () => process.exit(128 + 2));
+process.on('SIGTERM', async () => process.exit(128 + 15));
 
-
-module.exports = {saveHash, addBoard, firstContact, welcomeMessage, welcomeBoardMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, removeBoard, loadBlockList, getConversation, getConversations, loadKnownTxs, getMyBoardList, getBoardMsgs, getMessages, getReplies, getGroupReply, getReply, printGroup, printBoard, saveMsg, saveBoardMessage, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels}
+module.exports = {saveHash, firstContact, welcomeMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels}

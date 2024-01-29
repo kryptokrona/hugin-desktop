@@ -5,6 +5,7 @@
     import {goto} from '$app/navigation'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
     import { getBestNode } from '$lib/stores/nodes'
+    import {Moon} from "svelte-loading-spinners";
     let mnemonic = ''
     let blockHeight
     let password = ''

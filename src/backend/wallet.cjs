@@ -141,10 +141,6 @@ async function createAccount(accountData) {
                 accountData.blockheight,
                 accountData.mnemonic)
             : await createWallet()
-    //Create welcome PM message
-    welcomeMessage()
-    //Create Hugin welcome contact
-    firstContact()
 
     // Save js wallet to file as backup
     await saveWallet(js_wallet, walletName, myPassword)
@@ -159,7 +155,11 @@ async function createAccount(accountData) {
     //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
-    console.log('creating dbs...')
+    // console.log('creating dbs...')
+    // //Create welcome PM message
+    // welcomeMessage()
+    // //Create Hugin welcome contact
+    // firstContact()
 
     return await startJsWallet(walletName, myPassword, node)
 

@@ -6,9 +6,14 @@ const { join } = require('path')
 const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
-const { getGroups, loadBlockList, loadKeys } = require('./database.cjs')
-
+const dbPath = userDataDir + '/SQLmessages.db'
+const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
 let sender
+
+async function startDatabase(privKey) {
+  
+  await loadDB(userDataDir, dbPath, privKey)
+}
 
 class Account {
     constructor () {
@@ -34,11 +39,11 @@ class Account {
      }
     
     async load() {
-      
+      await startDatabase(this.wallet.getPrimaryAddressPrivateKeys())
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
-
+      
       this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts])
 
       this.known_keys = keys
