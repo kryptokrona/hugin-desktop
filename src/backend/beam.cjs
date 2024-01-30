@@ -174,7 +174,7 @@ const decryptMessage = async (str, msgKey) => {
 
     sender('newMsg', newMsg)
     sender('privateMsg', newMsg)
-    saveMsg(message, address, sent, timestamp)
+    saveMsg(message, address, false, timestamp)
 }
 
 const sendBeamMessage = (message, to) => {
