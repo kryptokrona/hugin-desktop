@@ -120,7 +120,7 @@ ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
 })
 
 //Listens for event from frontend and saves contact and nickname.
-ipcMain.on('addChat', async (e, hugin_address, nickname, first = false) => {
+ipcMain.on('addChat', async (e, hugin_address, nickname, first) => {
     saveContact(hugin_address, nickname, first)
 })
 
@@ -959,8 +959,6 @@ async function saveContact(hugin_address, nickname = false, first = false) {
         known_keys.push(key)
     }
 
-    Hugin.send('saved-addr', hugin_address)
-
     saveThisContact(addr, key, name)
 
     if (first) {
@@ -974,6 +972,8 @@ async function saveContact(hugin_address, nickname = false, first = false) {
         })
         known_keys.pop(key)
     }
+
+    Hugin.send('saved-addr', hugin_address)
 }
 
 async function checkHistory(messageKey, addr) {

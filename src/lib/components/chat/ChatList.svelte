@@ -49,7 +49,6 @@ const getConversations = async () => {
 //Print our conversations from DBs
 const printConversations = async () => {
     newArray = await getConversations()
-
     //If it is not the same message and not our active chat, add unread boolean
     if (
         newArray[0].timestamp !== chatList[0].timestamp &&
@@ -66,7 +65,6 @@ const printConversations = async () => {
 
 //Dispatches the clicked conversation to parent
 const sendConversation = (message) => {
-    console.log('sending conversation')
     readMessage(message)
     let chat = message.chat
     let msgkey = message.key
@@ -88,7 +86,7 @@ const checkNew = async () => {
     let filterNew = []
     newArray.forEach(function (a) {
         chatList.some(function (b) {
-            if (b.new && a.chat === b.chat) {
+            if (b?.new && a.chat === b.chat) {
                 a.new = true
             }
         })
@@ -99,9 +97,8 @@ const checkNew = async () => {
 }
 
 const readMessage = (e) => {
-
     let readArray = chatList.map(function (a) {
-        if (e.new && a.chat === e.chat) {
+        if (e?.new && a.chat === e.chat) {
             a.new = false
         }
         return a
