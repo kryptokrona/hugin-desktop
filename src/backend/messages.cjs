@@ -19,7 +19,8 @@ const {
     getGroupReply,
     printGroup,
     getGroups,
-    loadGroups} = require("./database.cjs")
+    loadGroups,
+    deleteMessage} = require("./database.cjs")
 const {
     trimExtra, 
     sanitize_pm_message, 
@@ -101,6 +102,10 @@ ipcMain.on('block', async (e, block) => {
     blockContact(block.address, block.name)
     block_list = await loadBlockList()
     Hugin.send('update-blocklist', block_list)
+})
+
+ipcMain.on('deleteMessage', async (e, hash) => {
+    deleteMessage(hash)
 })
 
 

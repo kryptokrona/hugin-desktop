@@ -8,6 +8,7 @@ import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
 import RepliedArrow from '$lib/components/icons/RepliedArrow.svelte'
+import DeleteButton from '$lib/components/icons/Delete.svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
@@ -144,6 +145,13 @@ const toggleActions = () => {
     }
 }
 
+const deleteMsg = (e) => {
+    console.log('delete', e)
+    dispatch('deleteMsg', {
+        hash: hash
+    })
+}
+
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
@@ -251,6 +259,7 @@ const openLinkMessage = (url) => {
                 <div class="actions">
                     <EmojiSelector on:emoji="{reactTo}" />
                     <ReplyArrow on:click="{replyTo}" />
+                    <DeleteButton on:click="{deleteMsg}"/>
                     <Dots on:click="{toggleActions}"/>
                 </div>
             </div>

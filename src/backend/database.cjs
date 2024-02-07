@@ -28,6 +28,10 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
         database.rekey(Buffer.from(privKey[0]))
     }
 
+    let autoRemoveAfter = parseInt(Date.now()) - store.get('deleteAfter') * 86400000
+    console.log("amount of days: ", store.get('deleteAfter'))
+    console.log("auto remove after: " + autoRemoveAfter)
+
     
    
     createTables()
@@ -177,7 +181,7 @@ const blockListTable = () => {
 }
 
 const groupChannelsMessagesTable = () => {
-    const blockList = `
+    const channelMessage = `
                   CREATE TABLE IF NOT EXISTS channelmessage (
                      hash TEXT,
                      time TEXT,
@@ -187,7 +191,7 @@ const groupChannelsMessagesTable = () => {
                  )`
     return new Promise(
         (resolve, reject) => {
-            database.prepare(blockList).run()
+            database.prepare(channelMessage).run()
         },
         () => {
             resolve()
@@ -798,9 +802,14 @@ const saveThisContact = async (addr, key, name) => {
     ).run([addr, key, name])
 }
 
+const deleteMessage = async (hash) => {
+    console.log("Deleting message", hash)
+    database.prepare(`DELETE FROM groupmessages WHERE hash = ?`).run(hash)
+}
+
 process.on('exit', async () => await closeDB());
 process.on('SIGHUP', async () => process.exit(128 + 1));
 process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
-module.exports = {saveHash, firstContact, welcomeMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels}
+module.exports = {saveHash, firstContact, welcomeMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage}

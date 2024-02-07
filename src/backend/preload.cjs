@@ -36,6 +36,9 @@ const WINDOW_API = {
         console.log('key', key)
         ipcRenderer.send('decrypt_rtc_group_message', msg, key)
     },
+    deleteMessage: async(hash) => {
+        ipcRenderer.send('deleteMessage', hash)
+    },
     
 
     getMessages: async (data) => {
