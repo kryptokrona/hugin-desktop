@@ -63,7 +63,10 @@
         <br>
     </div>
     <style>
-    
+
+    h2 {
+    margin-bottom: 19px;
+    }
     .settings {
         margin-top: 2rem;
         border-radius: 10px;
@@ -74,10 +77,10 @@
     }
 
     .optimize {
-        margin-left: -15px;
+        margin-left: -5px;
     }
     .history {
-        margin-left: -15px;
+        margin-left: -5px;
         margin-top: 2rem;
     }
     input {

@@ -93,6 +93,14 @@ $: {
         overflow-wrap: break-word;
         padding-right: 10px;
     }
+
+    h2 {
+        margin-bottom: 10px;
+    }
+
+    h3 {
+        margin-bottom: 10px;
+    }
     
     .keys p {
         font-family: 'Montserrat';
@@ -131,11 +139,11 @@ $: {
     
     
     .button {
-        margin-left: -15px;
+        margin-left: -5px;
     }
 
     .rescan {
-        margin-left: -15px;
+        margin-left: -5px;
     }
     
 
