@@ -31,8 +31,8 @@ const {
     toHex
 } = require('./utils.cjs')
 
-const { sendBeamMessage} = require("./beam.cjs")
-const { sendSwarmMessage } = require("./swarm.cjs")
+const { send_beam_message} = require("./beam.cjs")
+const { send_swarm_message } = require("./swarm.cjs")
 
 const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
 const { extraDataToMessage } = require('hugin-crypto')
@@ -428,7 +428,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
             messageArray.push('group')
         }
         if (beam_this) {
-            sendBeamMessage(sendMsg, address)
+            send_beam_message(sendMsg, address)
         } else {
             Hugin.send('rtc_message', messageArray)
         }
@@ -691,7 +691,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         let sendMsg = random_key + '99' + sentMsg
         message_json.sent = true
         if (swarm) {
-            sendSwarmMessage(sendMsg, group)
+            send_swarm_message(sendMsg, group)
             saveGroupMessage(message_json, random_key, timestamp, false, true)
             Hugin.send('sent_rtc_group', {
                 hash: random_key,

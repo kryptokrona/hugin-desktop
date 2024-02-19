@@ -2,12 +2,12 @@ const HyperSwarm = require("hyperswarm");
 const DHT = require('@hyperswarm/dht')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash } = require('./utils.cjs');
+const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message } = require('./utils.cjs');
 const {saveGroupMsg, getChannels} = require("./database.cjs")
 const {
     ipcMain
 } = require('electron')
-const {verifySignature, decryptSwarmMessage, signMessage} = require("./crypto.cjs")
+const {verifySignature, decryptSwarmMessage, signMessage, keychain} = require("./crypto.cjs")
 const { 
     expand_sdp_answer, 
     expand_sdp_offer, 
@@ -16,6 +16,8 @@ const {
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
 const Keychain = require('keypear');
+const { add_local_file, start_download, add_remote_file, send_file } = require("./beam.cjs");
+const { Hugin } = require("./account.cjs");
 
 let localFiles = []
 let remoteFiles = []
@@ -28,9 +30,9 @@ let my_address
 let my_name = ""
 
 async function send_voice_channel_sdp(data) {
-    let active = active_swarms.find(a => a.topic === data.topic)
+    const active = active_swarms.find(a => a.topic === data.topic)
     if (!active) return
-    let con = active.connections.find(a => a.address === data.address)
+    const con = active.connections.find(a => a.address === data.address)
     if (!con) return
     //We switch data address because in this case, it is from, we can change this
     data.address = my_address
@@ -38,11 +40,11 @@ async function send_voice_channel_sdp(data) {
 }
 
 const send_voice_channel_status = async (joined, status) => {
-    let active = active_swarms.find(a => a.key === status.key)
+    const active = active_swarms.find(a => a.key === status.key)
     if (!active) return
-    let msg = active.topic
-    let sig = await signMessage(msg, chat_keys.privateSpendKey)
-    let data = JSON.stringify({
+    const msg = active.topic
+    const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
+    const data = JSON.stringify({
         address: my_address,
         signature: sig,
         message: msg,
@@ -55,7 +57,7 @@ const send_voice_channel_status = async (joined, status) => {
     update_local_voice_channel_status(data)
 
     //Send voice channel status to others in the group
-    sendSwarmMessage(data, status.key)
+    send_swarm_message(data, status.key)
 
     //If we joined the voice channel, make a call to those already announced their joined_voice_status
     if (joined) { 
@@ -85,10 +87,9 @@ const join_voice_channel = (key, topic, address) => {
 }
 
 
-const newSwarm = async (data, ipc, xkr_keys) => {
+const new_swarm = async (data, ipc) => {
     sender = ipc
-    chat_keys = xkr_keys
-    return await createSwarm(data)
+    return await create_swarm(data)
 }
 
 const update_local_voice_channel_status = (data) => {
@@ -97,10 +98,10 @@ const update_local_voice_channel_status = (data) => {
     return true
 }
 
-const endSwarm = async (key) => {
-    let active = active_swarms.find(a => a.key === key)
+const end_swarm = async (key) => {
+    const active = active_swarms.find(a => a.key === key)
     if (!active) return
-    let topic = active.topic
+    const topic = active.topic
     sender('swarm-disconnected', topic)
     console.log("Ending active swarm", topic)
     update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
@@ -119,7 +120,7 @@ const endSwarm = async (key) => {
     console.log("***** Ended swarm *****")
 }
 
-const createSwarm = async (data) => {
+const create_swarm = async (data) => {
     const key = data.key
     const name = data.name
 
@@ -177,7 +178,7 @@ const createSwarm = async (data) => {
     discovery = swarm.join(topic, {server: true, client: true})
     active.discovery = discovery
     await discovery.flushed()
-    checkIfOnline(hash)
+    check_if_online(hash)
 }
 
 const new_connection = (connection, hash, key, name) => {
@@ -218,10 +219,11 @@ const connection_closed = (conn, topic) => {
     if (!active) return
     try {
         conn.end()
+        conn.destroy()
     } catch (e) {
         console.log("failed close connection")
     }
-    let user = active.connections.find(a => a.connection === conn)
+    const user = active.connections.find(a => a.connection === conn)
     if (!user) return
     sender("close-voice-channel-with-peer", user.address)
     sender("peer-disconnected", {address: user.address, topic})
@@ -232,7 +234,7 @@ const connection_closed = (conn, topic) => {
 }
 
 const get_active_topic = (topic) => {
-    let active = active_swarms.find(a => a.topic === topic)
+    const active = active_swarms.find(a => a.topic === topic)
     if (!active) return false
     return active
 }
@@ -260,6 +262,15 @@ const check_data_message = async (data, connection, topic) => {
             connection_closed(connection, active.topic)
             return true
         }
+    }
+
+    if ('info' in data) {
+        const fileData = sanitize_file_message(data)
+        console.log("error?", fileData)
+        if (!fileData) return "Error"
+        console.log("******* Connection address ********", con.address)
+        check_file_message(fileData, topic, con.address)
+        return
     }
 
     //Double check if connection is joined voice?
@@ -315,6 +326,7 @@ const check_data_message = async (data, connection, topic) => {
             const verified = await verifySignature(joined.message, joined.address, joined.signature)
             if(!verified) return "Error"
             con.joined = true
+            console.log("joined address", joined.address)
             con.address = joined.address
             con.name = joined.name
             con.voice = joined.voice
@@ -409,7 +421,7 @@ const send_joined_message = async (key, topic, my_address) => {
     const msg = topic
     const active = get_active_topic(topic)
     if (!active) return
-    const sig = await signMessage(msg, chat_keys.privateSpendKey)
+    const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
     let [voice, video] = get_local_voice_status(topic)
     if (video) voice = true
     //const channels = await get_my_channels(key)
@@ -417,7 +429,7 @@ const send_joined_message = async (key, topic, my_address) => {
     console.log("Got local video", video)
 
     console.log("Voice", voice)
-    let data = JSON.stringify({
+    const data = JSON.stringify({
         address: my_address,
         signature: sig,
         message: msg,
@@ -430,23 +442,21 @@ const send_joined_message = async (key, topic, my_address) => {
         time: active.time
     })
     console.log("Sent joined mesg", data)
-    sendSwarmMessage(data, key)
+    send_swarm_message(data, key)
 }
 
 const incoming_message = async (data, topic, connection, key) => {
-          
-    console.log("Got data incoming", data)
     const str = new TextDecoder().decode(data);
     if (str === "Ping") return
-    let check = await check_data_message(data, connection, topic)
+    const check = await check_data_message(data, connection, topic)
     if (check === "Error") {
         connection_closed(connection, topic)
     }
     if (check) return
-    let hash = str.substring(0,64)
+    const hash = str.substring(0,64)
     let [message, time, hsh] = await decryptSwarmMessage(str, hash, key)
     if (!message) return
-    let msg = await saveGroupMsg(message, hsh, time, false, true)
+    const msg = await saveGroupMsg(message, hsh, time, false, true)
     if (!msg) return
         //Send new board message to frontend.
         sender('groupRtcMsg', msg)
@@ -455,12 +465,13 @@ const incoming_message = async (data, topic, connection, key) => {
 }
 
 
-const sendSwarmMessage = (message, key) => {
+const send_swarm_message = (message, key) => {
     console.log("Sending swarm msg", message)
     let active = active_swarms.find(a => a.key === key)
     if (!active) return
     active.connections.forEach(chat => {
         try {
+            console.log("Writing to channel")
             chat.connection.write(message)
         } catch(e) {
             errorMessage('Connection offline')
@@ -470,7 +481,7 @@ const sendSwarmMessage = (message, key) => {
     console.log("Swarm msg sent!")
 }
 
-const checkIfOnline = (topic) => {
+const check_if_online = (topic) => {
     let interval = setInterval(ping, 10 * 1000)
     function ping() {
         let active = active_swarms.find(a => a.topic === topic)
@@ -481,6 +492,122 @@ const checkIfOnline = (topic) => {
             active.connections.forEach((a) => a.connection.write('Ping'))
         }
     }
+}
+
+const upload_ready = async (file, topic, address) => {
+    const beam_key = await add_local_file(file.fileName, file.path, address, file.size, file.time, true)
+    const info = {
+        fileName: file.fileName,
+        address,
+        topic,
+        info: "file",
+        type: "upload-ready",
+        size: file.size, 
+        time: file.time,
+        key: beam_key
+    }
+    send_file_info(address, topic, info)
+    return beam_key
+    
+}
+
+ipcMain.on('group-download', (e, download) => {
+    request_download(download)
+})
+
+ipcMain.on('group-upload', async (e, fileName, path, topic, size, time, hash) => {
+    const upload = {
+        fileName, path, topic, size, time, hash
+    }
+    console.log("Upload this file to group", upload)
+    share_file(upload)
+})
+
+const get_active = (key) => {
+    return active_swarms.find(a => a.key === key)
+}
+
+const request_download = (download) => {
+    const active = get_active_topic(download.key)
+    const address = download.chat
+    const topic = active.topic
+    const info = {
+        fileName: download.fileName,
+        address: my_address,
+        topic: topic,
+        info: "file",
+        type: "download-request",
+        size: download.size,
+        time: download.time,
+        key: download.key
+    }
+    send_file_info(address, topic, info)
+
+}
+
+const send_file_info = (address, topic, file) => {
+    console.log("send file info", file)
+    const active = active_swarms.find(a => a.topic === topic)
+    if (!active) errorMessage('Swarm is not active')
+    const con = active.connections.find(a => a.address === address)
+    if (!con) errorMessage('Connection is closed')
+    con.connection.write(JSON.stringify(file))
+}
+
+
+const share_file = (file) => {
+    const active = get_active_topic(file.topic)
+    const fileInfo = {
+        fileName: file.fileName,
+        address: my_address,
+        topic: file.topic,
+        info: 'file-shared',
+        type: 'file',
+        size: file.size,
+        time: file.time,
+        hash: file.hash
+    }
+    const info = JSON.stringify(fileInfo)
+    localFiles.push(file)
+    //File shared, send info to peers
+    send_swarm_message(info, active.key)
+}
+
+
+const start_upload = async (file, topic) => {
+    const sendFile = localFiles.find(a => a.fileName === file.fileName && file.topic === topic)
+    if (!sendFile) {
+        errorMessage('File not found')
+        return
+    }
+    return await upload_ready(sendFile, topic, file.address)
+}
+
+const check_file_message = async (data, topic, address) => {
+
+    const type = data.type
+    const info = data.info
+
+    if (type === 'file') console.log("data file inf incoming", data)
+
+    if (info === 'file-shared') {
+        console.log("Peer added new file", data)
+        add_remote_file(data.fileName, address, data.size, topic, true, data.hash)
+    }
+
+    if (info === 'file-removed') console.log("'file removed", data)
+
+    if (type === 'upload-ready') {
+        console.log("address! upload ready", address)
+        await add_remote_file(data.fileName, address, data.size, data.key, true)
+        start_download(Hugin.downloadDir, data.fileName, address, data.key)
+    }
+
+    if (type === 'download-request') {
+        const key = await start_upload(data, topic)
+        send_file(data.fileName, data.size, address, key, true)
+    }
+
 }
 
 
@@ -497,7 +624,7 @@ ipcMain.on('exit-voice', async (e, key) => {
     console.log("exit voice", key)
     
     //Double check if we are active in voice or if the swarm is still active
-    let active = active_swarms.find(a => a.key === key)
+    const active = active_swarms.find(a => a.key === key)
     if (!active) return
     const [in_voice] = get_local_voice_status(active.topic)
     if (!in_voice) return
@@ -578,4 +705,4 @@ function get_new_peer_keys(key) {
 }
 
 
-module.exports = {newSwarm, sendSwarmMessage, endSwarm}
+module.exports = {new_swarm, send_swarm_message, end_swarm}

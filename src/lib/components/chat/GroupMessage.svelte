@@ -14,6 +14,10 @@ import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
 import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
 import { groupMessages } from '$lib/stores/groupmsgs.js'
+import FillButton from '../buttons/FillButton.svelte'
+import { remoteFiles } from '$lib/stores/files'
+import DownloadFile from './DownloadFile.svelte'
+import UploadFile from './UploadFile.svelte'
 
 export let msg
 export let msgFrom
@@ -27,6 +31,7 @@ export let message
 export let reply_to_this = false
 export let rtc = false
 export let joined = false
+export let file = false
 
 let thisreply = ''
 let has_reaction = false
@@ -165,7 +170,7 @@ $: if (message.react) {
 }
 
 
-$: if ($webRTC.groupCall && rtc) {
+$: if ($webRTC.groupCall || rtc) {
     offchain = true
 } else {
     offchain = false
@@ -242,7 +247,7 @@ const openLinkMessage = (url) => {
             <div class="header">
                 <div style="display: flex; align-items: center; margin-left: -10px">
                     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
-                    <h5 class="nickname">
+                    <h5 class="nickname" class:share={file} class:blink_me={file}>
                         {nickname}<span class="time" class:min="{rtc}"
                             >| <Time live={30 * 1_000} relative timestamp="{parseInt(message.time)}" /></span
                         >
@@ -264,6 +269,10 @@ const openLinkMessage = (url) => {
                 <p style="user-select: text;">{messageText}</p>
             {:else if emojiMessage}
                 <p class="emoji">{msg}</p>
+            {:else if rtc && file && !myMsg}
+                <DownloadFile file={file} group={true}/>
+            {:else if rtc && file && myMsg}
+                <UploadFile file={file} group={true}/>
             {:else}
                 <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}
@@ -292,7 +301,7 @@ const openLinkMessage = (url) => {
     flex-direction: column;
     box-sizing: border-box;
     color: rgba(255, 255, 255, 0.8);
-    padding: 10px 30px 10px 30px;
+    padding: 10px 10px 10px 20px;
     border: 1px solid transparent;
     white-space: pre-line;
     
@@ -438,5 +447,10 @@ p {
 
 .joined {
     font-style: italic;
+    color: var(--info-color)
+}
+
+.share {
+    color: var(--alert-color)
 }
 </style>

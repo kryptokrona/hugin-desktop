@@ -68,6 +68,9 @@ const disconnect_from_swarm = async () => {
 
 let firstConnect = false
 
+$:   console.log("$thisswarm", thisSwarm)
+$:   console.log("$thisswarm", $groups.thisGroup)
+
 const connecto_to_swarm = () => {
         if (!window.localStorage.getItem('swarm-info')) {
             $swarm.showInfo = true

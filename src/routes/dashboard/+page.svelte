@@ -16,13 +16,12 @@
     let date = new Date()
     let hrs = date.getHours()
     let greet
-    let welcome = true
+    let welcome = false
     onMount(async () => {
         if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
         if (!localStorage.getItem('guide')) {
             //Set welcome = true to enable guide popup
             //welcome = true
-            welcome = false
         }
         if (hrs < 12) greet = 'Good Morning'
         else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'

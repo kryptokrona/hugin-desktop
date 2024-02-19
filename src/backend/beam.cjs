@@ -5,9 +5,10 @@ const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep, sanitize_pm_message } = require('./utils.cjs');
+const { sleep, sanitize_pm_message, randomKey } = require('./utils.cjs');
 const { ipcMain } = require('electron')
-const {Hugin} = require('./account.cjs')
+const {Hugin} = require('./account.cjs');
+const { keychain } = require('./crypto.cjs');
 
 let active_beams = []
 let chat_keys
@@ -16,53 +17,55 @@ let remoteFiles = []
 let downloadDirectory
 let sender
 
+//STATUS
+
+ipcMain.on("end-beam", async (e, chat) => {
+    console.log("end beam");
+    end_beam(chat);
+});
+
+
+
 //FILES
 
 ipcMain.on('download', async (e, file, from) => {
-    requestDownload(Hugin.downloadDir, file, from)
+    start_download(Hugin.downloadDir, file, from)
 })
 
 ipcMain.on('upload', async (e, filename, path, address, fileSize, time) => {
-    addLocalFile(filename, path, address, fileSize, time)
+    add_local_file(filename, path, address, fileSize, time)
 })
 
 ipcMain.on('remove-local-file', async (e, filename, address, time) => {
-    removeLocalFile(filename, address, time)
+    remove_local_file(filename, address, time)
 })
 
-const newBeam = async (key, chat, xkr_keys, ipc, send = false) => {
-    //If we want to switch key set for decryption or add session key. 
+const new_beam = async (key, chat, send = false) => {
     //The beam is already encrypted. We add Hugin encryption inside.
-    setKeys(xkr_keys)
-    sender = ipc
-    return await startBeam(key, chat, false, send)
+    return await start_beam(key, chat, false, send)
 }
 
-const setKeys = (xkr) => {
-    chat_keys = xkr
-}
-
-const startBeam = async (key, chat, file = false, send) => {
+const start_beam = async (key, chat, file = false, send, group, filename, size) => {
     //Create new or join existing beam and start beamEvent()
     try {
         if (key === "new") {
             beam = new Hyperbeam()
             beam.write('Start')
             if (file) {
-                fileBeam(beam, chat, beam.key)
+                file_beam(beam, chat, beam.key, false, group, filename, size)
                 return {chat, key: beam.key}
             }
-            beamEvent(beam, chat, beam.key)
+            beam_event(beam, chat, beam.key)
             if (send) return  {msg:"BEAMFILE://" + beam.key, chat: chat}
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
             if (key.length !== 52) return false
             beam = new Hyperbeam(key)
             if (file) {
-                fileBeam(beam, chat, key, true)
+                file_beam(beam, chat, key, true, group, filename, size)
                 return true
             }
-            beamEvent(beam, chat, key)
+            beam_event(beam, chat, key)
             return false
         }
     } catch (e) {
@@ -73,17 +76,23 @@ const startBeam = async (key, chat, file = false, send) => {
     }
 }
 
-const fileBeam = (beam, chat, key, download = false) => {
-
+const file_beam = (beam, chat, key, download = false, group = false, filename, size) => {
     let start = false
-    active_beams.push({beam, chat, key})
+    active_beams.push({beam, chat, key, group})
 
     beam.on('data', (data) => {
         if (!start && download) {
             const str = new TextDecoder().decode(data);
-            if (str === "Start") {
+
+            if (group && str === "Start") {
+                download_file(filename, size, chat, key, true)
                 start = true
-                startDownload(chat, key)
+                return
+            }
+
+            if (!group && str === "Start") {
+                start = true
+                request_download(chat, key)
                 return
             }
         }
@@ -92,17 +101,17 @@ const fileBeam = (beam, chat, key, download = false) => {
      beam.on('error', function (e) {
         console.log('Beam error', e)
         errorMessage('Beam error, shutting down..')
-        endFileBeam(chat, key)
+        end_file_beam(chat, key)
       })
 
       beam.on('end', () => {
         console.log('File sent, end event')
-        endFileBeam(chat, key)
+        end_file_beam(chat, key)
     })
 
 }
 
-const beamEvent = (beam, chat, key) => {
+const beam_event = (beam, chat, key) => {
     const addr = chat.substring(0,99)
     const msgKey = chat.substring(99,163)
     active_beams.push({key, chat: addr, beam})
@@ -115,7 +124,7 @@ const beamEvent = (beam, chat, key) => {
 
     beam.on('connected', function () {
         console.log('Beam connected to peer')
-        checkIfOnline(addr)
+        check_if_online(addr)
         sender('beam-connected', [addr, beam.key])
     })
 
@@ -124,9 +133,9 @@ const beamEvent = (beam, chat, key) => {
         const str = new TextDecoder().decode(data);
         if (str === "Start") return
         if (str === "Ping") return
-        if (checkDataMessage(str, addr)) return
+        if (check_data_message(str, addr)) return
         let hash = str.substring(0,64)
-        decryptMessage(str, msgKey)
+        decrpyt_beam_message(str, msgKey)
     })
 
     beam.on('end', () => {
@@ -136,7 +145,7 @@ const beamEvent = (beam, chat, key) => {
     beam.on('error', function (e) {
         console.log('error', e)
         console.log('Beam error')
-        endBeam(addr)
+        end_beam(addr)
       })
 
     process.once('SIGINT', () => {
@@ -154,16 +163,16 @@ const beamEvent = (beam, chat, key) => {
     }
 }
 
-const decryptMessage = async (str, msgKey) => {
+const decrpyt_beam_message = async (str, msgKey) => {
 
-    let decrypted_message = await extraDataToMessage(str, [msgKey], chat_keys)
+    let decrypted_message = await extraDataToMessage(str, [msgKey], keychain.getXKRKeypair())
     decrypted_message.k = msgKey
     decrypted_message.sent = false
-    let [message, address, key, timestamp] = sanitize_pm_message(decrypted_message)
+    const [message, address, key, timestamp] = sanitize_pm_message(decrypted_message)
 
     if (!message) return
 
-    let newMsg = {
+    const newMsg = {
         msg: message,
         chat: address,
         sent: false,
@@ -177,37 +186,37 @@ const decryptMessage = async (str, msgKey) => {
     saveMsg(message, address, false, timestamp)
 }
 
-const sendBeamMessage = (message, to) => {
-    let active = active_beams.find(a => a.chat === to)
+const send_beam_message = (message, to) => {
+    const active = active_beams.find(a => a.chat === to)
     active.beam.write(message)
 }
 
-const endFileBeam = async (chat, key) => {
-    let file = active_beams.find(a => a.chat === chat && a.key === key)
+const end_file_beam = async (chat, key) => {
+    const file = active_beams.find(a => a.chat === chat && a.key === key)
     if (!file) return
     file.beam.end()
     await sleep(2000)
     file.beam.destroy()
-    let filter = active_beams.filter(a => a.key !== file.key)
+    const filter = active_beams.filter(a => a.key !== file.key)
     console.log('File beams cleared', filter)
     active_beams = filter
 }
 
 
-const endBeam = async (chat, file = false) => {
-    let active = active_beams.find(a => a.chat === chat)
+const end_beam = async (chat, file = false) => {
+    const active = active_beams.find(a => a.chat === chat)
     if (!active) return
-    sender('stop-beam', chat)
+    Hugin.send('stop-beam', chat)
     active.beam.end()
     await sleep(2000)
     active.beam.destroy()
-    let filter = active_beams.filter(a => a.chat !== chat)
+    const filter = active_beams.filter(a => a.chat !== chat)
     active_beams = filter
     console.log('Active beams', active_beams)
 }
 
-const checkIfOnline = (addr) => {
-    let interval = setInterval(ping, 10 * 1000)
+const check_if_online = (addr) => {
+    const interval = setInterval(ping, 10 * 1000)
     function ping() {
         let active = active_beams.find(a => a.chat === addr)
         if (!active) {
@@ -219,9 +228,9 @@ const checkIfOnline = (addr) => {
     }
 }
 
-const sendFile = async (fileName, size, chat, key) => {
-    let active = active_beams.find(a => a.chat === chat && a.key === key)
-    let file = localFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
+const send_file = async (fileName, size, chat, key, group) => {
+    const active = active_beams.find(a => a.chat === chat && a.key === key)
+    const file = localFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
     if (active.key !== key) return
     if (!file) {
         errorMessage(`Can't find the file, try share it again`)
@@ -238,13 +247,13 @@ const sendFile = async (fileName, size, chat, key) => {
 
     progressStream.on('progress', async progress => {
 
-        sender('upload-file-progress', {fileName, progress: progress.percentage, chat, time: file.time})
+        Hugin.send('upload-file-progress', {fileName, progress: progress.percentage, chat, time: file.time})
 
         if(progress.percentage === 100) {
             console.log('File uploaded')
             console.log('Done!')
             let message = `Uploaded ${fileName}`
-            saveMsg(message, chat, true, file.time)
+            if (!group) saveMsg(message, chat, true, file.time)
             return
         }
     })
@@ -256,9 +265,10 @@ const sendFile = async (fileName, size, chat, key) => {
     }
 }
 
-const downloadFile = async (fileName, size, chat, key) => {
-    let file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
-    let active = active_beams.find(a => a.key === key)
+const download_file = async (fileName, size, chat, key, group = false) => {
+    const file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
+    const active = active_beams.find(a => a.key === key)
+    console.log("active file?", file)
     if (!active) {
         errorMessage(`Can't download file, beam no longer active`)
         return
@@ -268,16 +278,17 @@ const downloadFile = async (fileName, size, chat, key) => {
         return
     }
     try {
-    sender('downloading', {fileName, chat, size})
+    Hugin.send('downloading', {fileName, chat, size, group})
     const downloadPath = downloadDirectory + "/" + fileName
     const stream = createWriteStream(downloadPath);
     const progressStream = progress({length: size, time: 100});
     progressStream.on("progress", (progress) => {
         
-        sender('download-file-progress', {fileName, progress: progress.percentage, chat, path: downloadPath})
+        Hugin.send('download-file-progress', {fileName, progress: progress.percentage, chat, path: downloadPath})
+        console.log("Downloading", progress.percentage)
         if (progress.percentage === 100) {
             let message = `Downloaded ${fileName}`
-            saveMsg(message, chat, false, file.time)
+            if (!group) saveMsg(message, chat, false, file.time)
         }
     });
     active.beam.pipe(progressStream).pipe(stream);
@@ -287,48 +298,74 @@ const downloadFile = async (fileName, size, chat, key) => {
     }
 }
 
-const addLocalFile = async (fileName, path, chat, size, time) => {
-    let active = active_beams.find(a => a.chat === chat)
-    if (!active) return
-    let fileBeam = await startBeam('new', chat, true)
-    let file = {fileName, chat, size, path, time, key: fileBeam.key}
+const add_local_file = async (fileName, path, chat, size, time, group = false) => {
+    const active = active_beams.find(a => a.chat === chat)
+    const fileBeam = await start_beam('new', chat, true, true, group, fileName, size)
+    const file = {fileName, chat, size, path, time, info: 'file', type: 'upload-ready', key: fileBeam.key}
     localFiles.unshift(file)
-    sender('local-files',  {localFiles, chat})
-    sender('uploading', {fileName, chat, size, time })
+    Hugin.send('local-files',  {localFiles, chat})
+    Hugin.send('uploading', {fileName, chat, size, time })
     await sleep(1000)
+    if (group) return fileBeam.key
+    if (!active) return
     active.beam.write(JSON.stringify({type: 'remote-file-added', fileName, size, key: fileBeam.key}))
 }
 
-const removeLocalFile = (fileName, chat, time) => {
-    let active = active_beams.find(a => a.chat === chat)
+const remove_local_file = (fileName, chat, time) => {
+    const active = active_beams.find(a => a.chat === chat)
     localFiles = localFiles.filter(x => x.fileName !== fileName && x.time !== time)
-    sender('local-files', {localFiles, chat})
+    Hugin.send('local-files', {localFiles, chat})
     if (!active) errorMessage(`Beam not active`)
     active.beam.write(JSON.stringify({type: 'remote-file-removed', fileName, chat}))
 }
 
-const addRemoteFile = (fileName, chat, size, key) => {
-    let time = Date.now()
-    file = {fileName, chat, size, time, key}
-    remoteFiles.unshift(file)
-    sender('remote-file-added', {remoteFiles, chat})
+const add_remote_file = async (fileName, chat, size, key, group = false, hash) => {
+    const time = Date.now()
+    const update = remoteFiles.some(a => group && a.fileName === fileName && a.chat === chat)
+    file = {fileName, chat, size, time, key, group}
+    if (update) {
+        let updateFile = remoteFiles.find(a => a.fileName === fileName)
+        updateFile.key = key
+    } else remoteFiles.unshift(file)
+    console.log("Updated remte", remoteFiles)
+    if (update) return
+    if (group) await add_group_file(fileName, remoteFiles, chat, group, time, hash)
+    else Hugin.send('remote-file-added', {remoteFiles, chat})
 }
 
-const removeRemoteFile = (fileName, chat) => {
+const add_group_file = async (fileName, remoteFiles, chat, group, time, hash) => {
+    Hugin.send('group-remote-file-added', {remoteFiles, chat, group})
+    const message = {
+            message: fileName,
+            address: chat,
+            group: group,
+            time: time,
+            name: 'File shared',
+            reply: false,
+            hash: hash,
+            sent: false,
+            channel: 'Room',
+            file: true
+    }
+    Hugin.send('groupRtcMsg', message)
+}
+
+const remote_remote_file = (fileName, chat) => {
     remoteFiles = remoteFiles.filter(x => x.fileName !== fileName && x.chat === chat)
     sender('remote-files', {remoteFiles, chat})
 }
 
-const requestDownload = async (downloadDir, file, chat) => {
+const start_download = async (downloadDir, file, chat, k) => {
     downloadDirectory = downloadDir
     let download = remoteFiles.find(a => a.fileName === file && a.chat === chat)
-    console.log('Found download file', download)
+    const key = k ? k : download?.key
+    const group = k ? true : false
     if (!download) return
-    let downloadBeam = await startBeam(download.key, chat, true)
+    let downloadBeam = await start_beam(key, chat, true, false, group, file, download.size)
     if (downloadBeam === "Error") errorMessage('Error creating download beam')
 }
 
-const startDownload = (chat, key) => {
+const request_download = (chat, key) => {
         let downloadFile = remoteFiles.find(a => a.key === key && a.chat === chat)
         let active = active_beams.find(a => a.key !== key && a.chat === chat)
         active.beam.write(JSON.stringify({
@@ -338,7 +375,7 @@ const startDownload = (chat, key) => {
         }))
     }
 
-const uploadReady = (file, size, chat, key) => {
+const upload_ready = (file, size, chat, key) => {
     let active = active_beams.find(a => a.chat === chat && a.key !== key )
         active.beam.write(JSON.stringify({
             type: 'upload-ready',
@@ -349,7 +386,7 @@ const uploadReady = (file, size, chat, key) => {
 }
 
 
-const checkDataMessage = (data, chat) => {
+const check_data_message = (data, chat) => {
     try {
         data = JSON.parse(data)
     } catch {
@@ -369,12 +406,12 @@ const checkDataMessage = (data, chat) => {
     }
 
     if (data.type === 'remote-file-added') {
-        addRemoteFile(fileName, chat, size, key)
+        add_remote_file(fileName, chat, size, key)
         return true
     }
 
     if (data.type === 'remote-file-removed') {
-        removeRemoteFile(fileName, chat)
+        remote_remote_file(fileName, chat)
         return true
     }
 
@@ -385,14 +422,14 @@ const checkDataMessage = (data, chat) => {
         sender('download-request', fileName)
         console.log('Download request')
         size = file.size
-        uploadReady(fileName, size, chat, key)
-        sendFile(fileName, size, chat, key)
+        upload_ready(fileName, size, chat, key)
+        send_file(fileName, size, chat, key)
         return true
     }
 
     if (data.type === 'upload-ready') {
         console.log('upload ready!')
-        downloadFile(fileName, size, chat, key)
+        download_file(fileName, size, chat, key)
         return true
     }
 
@@ -400,7 +437,7 @@ const checkDataMessage = (data, chat) => {
 }
 
 const errorMessage = (message) => {
-    sender('error-notify-message', message)
+    Hugin.send('error-notify-message', message)
 }
 
-module.exports = {endBeam, newBeam, sendBeamMessage, addLocalFile, requestDownload, removeLocalFile}
+module.exports = {end_beam, new_beam, send_beam_message, add_local_file, start_download, remove_local_file, add_remote_file, send_file, download_file, remote_remote_file}
