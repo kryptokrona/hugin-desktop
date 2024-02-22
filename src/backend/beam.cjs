@@ -15,8 +15,6 @@ let chat_keys
 let localFiles = []
 let remoteFiles = []
 let downloadDirectory
-let sender
-
 //STATUS
 
 ipcMain.on("end-beam", async (e, chat) => {
@@ -71,7 +69,7 @@ const start_beam = async (key, chat, file = false, send, group, filename, size) 
     } catch (e) {
         console.log('Beam DHT error', e)
         errorMessage(`Failed to start beam`)
-        sender('stop-beam', addr)
+        Hugin.send('stop-beam', chat)
         return "Error"
     }
 }
@@ -115,7 +113,7 @@ const beam_event = (beam, chat, key) => {
     const addr = chat.substring(0,99)
     const msgKey = chat.substring(99,163)
     active_beams.push({key, chat: addr, beam})
-    sender('new-beam', {key, chat: addr})
+    Hugin.send('new-beam', {key, chat: addr})
     beam.on('remote-address', function ({ host, port }) {
         if (!host) console.log('Could not find the host')
         else console.log('Connected to DHT with' + host + ':' + port)
@@ -125,7 +123,7 @@ const beam_event = (beam, chat, key) => {
     beam.on('connected', function () {
         console.log('Beam connected to peer')
         check_if_online(addr)
-        sender('beam-connected', [addr, beam.key])
+        Hugin.send('beam-connected', [addr, beam.key])
     })
 
     //Incoming message
@@ -181,8 +179,8 @@ const decrpyt_beam_message = async (str, msgKey) => {
         beam: true,
     }
 
-    sender('newMsg', newMsg)
-    sender('privateMsg', newMsg)
+    Hugin.send('newMsg', newMsg)
+    Hugin.send('privateMsg', newMsg)
     saveMsg(message, address, false, timestamp)
 }
 
@@ -352,7 +350,7 @@ const add_group_file = async (fileName, remoteFiles, chat, group, time, hash) =>
 
 const remote_remote_file = (fileName, chat) => {
     remoteFiles = remoteFiles.filter(x => x.fileName !== fileName && x.chat === chat)
-    sender('remote-files', {remoteFiles, chat})
+    Hugin.send('remote-files', {remoteFiles, chat})
 }
 
 const start_download = async (downloadDir, file, chat, k) => {
@@ -419,7 +417,7 @@ const check_data_message = (data, chat) => {
         let file = localFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
         if (!file) errorMessage(`Can't upload the file`)
         if (!file) return true
-        sender('download-request', fileName)
+        Hugin.send('download-request', fileName)
         console.log('Download request')
         size = file.size
         upload_ready(fileName, size, chat, key)
