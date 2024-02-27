@@ -357,6 +357,17 @@
         })
     })
 
+    window.api.receive('group-remote-file-added', (data)  => {
+        console.log("Group file!")
+        $remoteFiles = data.remoteFiles
+        const file = data.remoteFiles[0]
+        console.log("File shared", file)
+        toast.success(`${file.fileName} shared in room`, {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+    }) 
+
     window.api.receive('remote-files', (data)  => {
         let from = $user.contacts.find(a => a.chat === data.chat)
         $remoteFiles = data.remoteFiles

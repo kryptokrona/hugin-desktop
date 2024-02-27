@@ -186,6 +186,7 @@ async function dropFile(e) {
     dragover = false
     const { acceptedFiles, fileRejections } = e.detail
     let filename = acceptedFiles[0].name
+    acceptedFiles[0].fileName = filename
     let path = acceptedFiles[0].path
     let size = acceptedFiles[0].size
     let toHuginAddress = $user.activeChat.chat + $user.activeChat.key

@@ -26,8 +26,8 @@ const dev = !app.isPackaged
 
 const { expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
 const { loadHugin, loadAccount, loadWallet, createAccount } = require('./wallet.cjs')
-const { newBeam, endBeam } = require("./beam.cjs")
-const { newSwarm, endSwarm} = require("./swarm.cjs")
+const { new_beam } = require("./beam.cjs")
+const { new_swarm, end_swarm} = require("./swarm.cjs")
 const { sendMessage, startMessageSyncer } = require('./messages.cjs')
 const { keychain } = require('./crypto.cjs')
 
@@ -267,7 +267,7 @@ ipcMain.on('create-account', async (e, accountData) => {
 //BEAM
 
 ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
-    let beamMessage = await newBeam(link, chat, keychain.getXKRKeypair(), sender, send);
+    let beamMessage = await new_beam(link, chat, send);
     if (beamMessage === "Error") return
     if (!beamMessage) return
     sendMessage(beamMessage.msg, beamMessage.chat, offchain)
@@ -277,19 +277,14 @@ ipcMain.on("active-video", async (e, chat) => {
     mainWindow.webContents.send('activate-video')
 });
 
-ipcMain.on("end-beam", async (e, chat) => {
-    console.log("end beam");
-    endBeam(chat);
-});
-
 //SWARM
 
 
 ipcMain.on('new-swarm', async (e, data) => {
-    newSwarm(data, sender, keychain.getXKRKeypair())
+    new_swarm(data, sender, keychain.getXKRKeypair())
 })
 ipcMain.on('end-swarm', async (e, key) => {
-    endSwarm(key)
+    end_swarm(key)
 })
 
 ipcMain.on('exit-voice-channel', async (e, key) => {

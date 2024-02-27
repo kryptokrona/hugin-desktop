@@ -11,6 +11,8 @@
     import {groups, user} from '$lib/stores/user.js'
     import { sleep } from '$lib/utils/utils'
     import { Moon } from 'svelte-loading-spinners'
+import BigImage from '$lib/components/popups/BigImage.svelte'
+import { fileViewer } from '$lib/stores/files'
     
     let channels = []
     let voice_channel = []
@@ -82,9 +84,15 @@
     </script>
     
     <div in:fade out:fade class:show="{$swarm.showVideoGrid}" class="layout">
+        {#if $fileViewer.enhanceImage}
+            <BigImage />
+        {/if}
+
 
         <div class="video-wrapper">
-        
+            {#if thisSwarm?.connections.length && in_voice}
+                <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} active connections</h4>
+            {/if}
             <div class="video-grid">
             {#if in_voice}
                     <MyVideo active={active}/>
@@ -108,9 +116,12 @@
                     {/each}
 
                 {:else}
-                 <div in:fly={{ x: 150}}>
-                        <h4>Empty room</h4>
+                 <div class:blink_me={true} in:fly={{ x: 150}}>
+                        <h4 style="color: var(--info-color)">Searching for connections...</h4>
                  </div>
+                 {#if thisSwarm?.connections.length}
+                    <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} connected</h4>
+                 {/if}
                 {/if}
 
             {/if}

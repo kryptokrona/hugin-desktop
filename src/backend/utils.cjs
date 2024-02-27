@@ -241,4 +241,57 @@ const sanitize_pm_message = (msg) => {
     return [message, addr, key, timestamp, sent]
 }
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message}
+const sanitize_file_message = (data) => {
+    console.log("sanitize", data)
+     //Check standard message
+    const fileName = sanitizeHtml(data?.fileName)
+    if (typeof data?.fileName !== "string" || fileName.length > 100) return false
+
+    const address = sanitizeHtml(data?.address)
+    if (typeof data?.address !== "string" || address.length > 99) return false
+  
+    const topic = sanitizeHtml(data?.topic)
+    if (typeof data?.topic !== "string" || topic.length > 64) return false
+
+    const type = sanitizeHtml(data?.type)
+    if (typeof data?.type !== "string" || type.length > 25) return false
+ 
+    const info = sanitizeHtml(data?.info)
+    if (typeof data?.info !== "string" || info.length > 25) return false
+
+    const size = sanitizeHtml(data?.size)
+    if (size.length > 20) return false
+
+    const time = sanitizeHtml(data?.time)
+    if (time.length > 25) return false
+    
+    //Check optional
+    const key = sanitizeHtml(data?.key)
+    if (data?.key !== undefined) {
+        if (typeof data?.key !== "string" || key.length > 64) return false
+    }
+    const hash = sanitizeHtml(data?.hash)
+    if (data?.hash !== undefined) {
+        console.log("Hash not undefined", hash, data.hash)
+        if (typeof hash !== "string" || hash.length > 64) return false
+    }
+    
+    if (typeof data?.file === "boolean") return false
+
+
+    const object = {
+        fileName,
+        address,
+        topic,
+        info,
+        type,
+        size,
+        time,
+        hash,
+        key: key
+    }
+
+    return object
+}
+
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message}

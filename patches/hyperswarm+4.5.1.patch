@@ -1,36 +1,51 @@
 diff --git a/node_modules/hyperswarm/index.js b/node_modules/hyperswarm/index.js
-index ad0de06..354a05d 100644
+index ad0de06..b149996 100644
 --- a/node_modules/hyperswarm/index.js
 +++ b/node_modules/hyperswarm/index.js
-@@ -18,7 +18,7 @@ const ERR_DESTROYED = 'Swarm has been destroyed'
+@@ -10,35 +10,34 @@ const PeerDiscovery = require('./lib/peer-discovery')
+ 
+ const MAX_PEERS = 64
+ const MAX_PARALLEL = 3
+-const MAX_CLIENT_CONNECTIONS = Infinity // TODO: Change
+-const MAX_SERVER_CONNECTIONS = Infinity
++const MAX_CLIENT_CONNECTIONS = 100
++const MAX_SERVER_CONNECTIONS = 100
+ 
+ const ERR_MISSING_TOPIC = 'Topic is required and must be a 32-byte buffer'
+ const ERR_DESTROYED = 'Swarm has been destroyed'
  const ERR_DUPLICATE = 'Duplicate connection'
  
  module.exports = class Hyperswarm extends EventEmitter {
 -  constructor (opts = {}) {
-+  constructor (opts, sig, priv, keychain = {}) {
++  constructor (opts, sig, dht_keys, keychain = {}) {
      super()
      const {
        seed,
-@@ -30,15 +30,15 @@ module.exports = class Hyperswarm extends EventEmitter {
+-      keyPair = DHT.keyPair(seed),
++      keyPair = dht_keys.get(),
+       maxPeers = MAX_PEERS,
+       maxClientConnections = MAX_CLIENT_CONNECTIONS,
+       maxServerConnections = MAX_SERVER_CONNECTIONS,
+       maxParallel = MAX_PARALLEL,
        firewall = allowAll
      } = opts
-     this.keyPair = keyPair
+-    this.keyPair = keyPair
 -
-+    this.priv = priv
++    this.keyPair = dht_keys.get()
      this.dht = opts.dht || new DHT({
        bootstrap: opts.bootstrap,
        debug: opts.debug
 -    })
-+    }, sig, priv, keychain)
++    }, sig, dht_keys, keychain)
      this.server = this.dht.createServer({
        firewall: this._handleFirewall.bind(this)
      }, this._handleServerConnection.bind(this))
 -
-+    this.keychain = keychain
++    this.keychain = keychain.get()
      this.destroyed = false
      this.maxPeers = maxPeers
      this.maxClientConnections = maxClientConnections
-@@ -49,7 +49,7 @@ module.exports = class Hyperswarm extends EventEmitter {
+@@ -49,7 +48,7 @@ module.exports = class Hyperswarm extends EventEmitter {
      this.peers = new Map()
      this.explicitPeers = new Set()
      this.listening = null
@@ -39,7 +54,7 @@ index ad0de06..354a05d 100644
      this._discovery = new Map()
      this._timer = new RetryTimer(this._requeue.bind(this), {
        backoffs: opts.backoffs,
-@@ -65,7 +65,7 @@ module.exports = class Hyperswarm extends EventEmitter {
+@@ -65,7 +64,7 @@ module.exports = class Hyperswarm extends EventEmitter {
      this._clientConnections = 0
      this._serverConnections = 0
      this._firewall = firewall
@@ -48,55 +63,35 @@ index ad0de06..354a05d 100644
      this.dht.on('network-change', this._handleNetworkChange.bind(this))
    }
  
-@@ -139,6 +139,7 @@ module.exports = class Hyperswarm extends EventEmitter {
+@@ -209,13 +208,31 @@ module.exports = class Hyperswarm extends EventEmitter {
  
-     // TODO: Support async firewalling at some point.
-     if (this._handleFirewall(peerInfo.publicKey, null)) {
-+      console.log("This firewall bann")
-       peerInfo.ban(true)
-       this._flushMaybe(peerInfo)
-       return
-@@ -212,10 +213,44 @@ module.exports = class Hyperswarm extends EventEmitter {
- 
+   _handleFirewall (remotePublicKey, payload) {
+     if (b4a.equals(remotePublicKey, this.keyPair.publicKey)) return true
+-
      const peerInfo = this.peers.get(b4a.toString(remotePublicKey, 'hex'))
      if (peerInfo && peerInfo.banned) return true
 -
 +    if (payload !== null) {
 +    if (!payload.mpub) return true
 +    if (!payload.mid) return true
++    const checked = this.checkSignature(payload.mid, remotePublicKey)
++    if (!checked) return true
 +    //This id is already in use
 +    if (this.checkedSigs.some(a => a === payload.mid)) return true
-+    if (!this.checkTime(payload.mid)) return true
-+
-+    this.checkedSigs.push(payload.mid)
-+      if (!this.checkKey(payload.mpub, payload.mid, this.priv))  {
-+          console.log("Check failed")
-+          return true
-+      }
 +    }
      return this._firewall(remotePublicKey, payload)
    }
  
++  checkSignature(signature, remotePublicKey) {
++   const verify = this.keychain.verify(remotePublicKey, signature, this.keychain.publicKey)
++   return verify ? true : false
++  }
++
 +  checkTime = (date) => {
 +    const day = 1000 * 60 * 60 * 24;
 +    const dayAgo = Date.now() - day;
 +    return date > dayAgo;
 +  
-+  }
-+  //Add this check here aswell because firewall payload is null on connect. //TODO, Maybe i can fix that?
-+  checkKey(pub, sig, keys) {
-+      const sub = this.getSubKey(keys, sig)
-+      if (sub.publicKey.toString('hex') === pub.toString('hex')) {
-+        return true
-+      } else {
-+        return false
-+      }
-+    }
-+  
-+  getSubKey(keys, tweak) {
-+      const random_buf = Buffer.alloc(32).fill(tweak)
-+      const sub = keys.sub(random_buf).get()
-+      return sub
 +  }
 +
    _handleServerConnectionSwap (existing, conn) {

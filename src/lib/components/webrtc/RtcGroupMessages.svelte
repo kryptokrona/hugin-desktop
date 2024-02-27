@@ -8,6 +8,9 @@ import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { containsOnlyEmojis } from '$lib/utils/utils'
 import { fade } from 'svelte/transition'
+import BackDrop from '../popups/BackDrop.svelte'
+import Dropzone from "svelte-file-dropzone";
+import { remoteFiles } from '$lib/stores/files'
 
 let replyto = ''
 let filterRtcGroup = []
@@ -71,6 +74,10 @@ window.api.receive('groupRtcMsg', (data) => {
     console.log('Group rtc message', data.group)
     console.log('This group rtc key', $webRTC.groupCall)
     //Push new message to store
+    if (data.file) {
+        data.file = $remoteFiles.find(a => a.fileName === data.message && data.time === a.time)
+    }
+    console.log("groupRtcMsg", data)
     printGroupRtcMessage(data)
 })
 
@@ -133,14 +140,14 @@ const scrollDown = () => {
 //Prints any single board message. Takes boardmessage and updates to store.
 const printGroupRtcMessage = (groupMsg) => {
     if (
-        groupMsg.reply.length === 64 &&
-        groupMsg.message.length < 9 &&
+        groupMsg?.reply.length === 64 &&
+        groupMsg?.message.length < 9 &&
         containsOnlyEmojis(groupMsg.message)
     ) {
         updateReactions(groupMsg)
     } else if (
-        groupMsg.message.length > 0 &&
-        !(groupMsg.reply.length === 64 && containsOnlyEmojis(groupMsg.message))
+        groupMsg?.message.length > 0 &&
+        !(groupMsg?.reply.length === 64 && containsOnlyEmojis(groupMsg.message))
     ) {
         console.log('pushin')
         fixedRtcGroups.push(groupMsg)
@@ -259,14 +266,66 @@ function addHash(data) {
 window.api.receive('sent_rtc_group', (data) => {
     addHash(data)
 })
+
+async function dropFile(e) {
+    dragover = false
+    const { acceptedFiles, fileRejections } = e.detail
+    let filename = acceptedFiles[0].name
+    let path = acceptedFiles[0].path
+    let size = acceptedFiles[0].size
+    let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
+    let time = Date.now()
+    
+    acceptedFiles[0].time = time
+    acceptedFiles[0].chat = $user.activeChat.chat
+    
+    if (fileRejections.length) {
+        console.log('rejected file')
+        return
+    }
+
+    console.log("acceptedFiles[0]", acceptedFiles[0])
+    const hash = await window.api.createGroup()
+    const message = {
+        message: 'File shared',
+        grp: $swarm.activeSwarm.key,
+        name: 'File shared',
+        address: $user.myAddress,
+        reply: "",
+        timestamp: time,
+        file: acceptedFiles[0],
+        sent: true,
+        channel: "Room",
+        joined: true,
+        hash: hash,
+        time: time
+    }
+
+    printGroupRtcMessage(message)
+    console.log("$swarm.activeSwarm.topic", $swarm.activeSwarm)
+    window.api.groupUpload(filename, path, $swarm.activeSwarm.topic, size, time, hash)
+}
+
+let dragover = false
+
+function drag() {
+    dragover = true
+}
+
+function nodrag() {
+    dragover = false
+}
+
 </script>
 
 <!-- {#if $webRTC.call.length > 1} -->
 <div class="chat layered-shadow" class:show="{$videoGrid.showChat}">
+    {#if dragover}
+    <BackDrop />
+    {/if}
     <div class="outer" id="chat_window">
-        <!--    <div class="fade"></div>-->
-        <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> test()} on:dragleave={()=> fest()}
-              on:drop={dropFile}> -->
+           <div class="fade"></div>
+           <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
         <div class="inner">
             {#each fixedRtcGroups as message (message.hash)}
                 <GroupMessage
@@ -284,10 +343,11 @@ window.api.receive('sent_rtc_group', (data) => {
                     hash="{message.hash}"
                     rtc="{true}"
                     joined={message.joined ? true : false}
+                    file={message.file}
                 />
             {/each}
         </div>
-        <!-- </Dropzone> -->
+        </Dropzone>
     </div>
     <ChatInput rtc="{true}" on:message="{sendGroupRtCMsg}" />
 </div>
@@ -320,6 +380,7 @@ window.api.receive('sent_rtc_group', (data) => {
     display: flex;
     flex-direction: column-reverse;
     overflow: scroll;
+    padding-bottom: 10px;
 
     &::-webkit-scrollbar {
         display: none;
