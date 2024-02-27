@@ -6,6 +6,10 @@ const Store = require('electron-store')
 const store = new Store()
 
 const {sleep} = require('./utils.cjs')
+
+const fs = require('fs');
+
+
 const closeDB = async () => {
     
     store.set({
@@ -21,16 +25,21 @@ let database
 //CREATE DB
 const loadDB = async (userDataDir, dbPath, privKey) => {
     database = new sqlite3(dbPath)
-
     //If db is encrypted. Read with key
     if (store.get('sql.encrypted')) {
         database.key(Buffer.from(privKey[0]))
         database.rekey(Buffer.from(privKey[0]))
     }
-
-    let autoRemoveAfter = parseInt(Date.now()) - store.get('deleteAfter') * 86400000
-    console.log("amount of days: ", store.get('deleteAfter'))
-    console.log("auto remove after: " + autoRemoveAfter)
+    if(store.get('sql.deleteAfter') == undefined) {
+        store.set({
+            sql: {
+                deleteAfter: 0
+            }
+        })
+    }
+    let removeAfter = parseInt(Date.now()) - store.get('sql.deleteAfter') * 86400000
+    console.log("amount of days: ", store.get('sql.deleteAfter'))
+    console.log("auto remove after: " + removeAfter)
 
     
    
@@ -49,6 +58,10 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
     }
     } catch(e) {
         console.log(e)
+    }
+    if(store.get('sql.deleteAfter') != 0) {
+    
+     database.prepare(`DELETE FROM groupmessages WHERE time < ?`).run(removeAfter)
     }
 }
 

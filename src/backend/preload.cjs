@@ -39,7 +39,9 @@ const WINDOW_API = {
     deleteMessage: async(hash) => {
         ipcRenderer.send('deleteMessage', hash)
     },
-    
+    deleteMessageAfter: async(days) => {
+        ipcRenderer.send('deleteMessageAfter', days)
+    },
 
     getMessages: async (data) => {
         const res = await ipcRenderer.invoke('getMessages')

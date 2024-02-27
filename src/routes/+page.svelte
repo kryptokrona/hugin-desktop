@@ -50,12 +50,13 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
         $groups.blockList = block_list
         $groups.groupArray = my_groups
+        $misc.deleteAfter = deleteAfter
         loginSuccess()
     })
 

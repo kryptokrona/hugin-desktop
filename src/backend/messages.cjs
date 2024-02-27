@@ -108,6 +108,14 @@ ipcMain.on('deleteMessage', async (e, hash) => {
     deleteMessage(hash)
 })
 
+ipcMain.on('deleteMessageAfter', async (e, days) => {
+    store.set({
+        sql: {
+            deleteAfter: days
+        }
+    })
+})
+
 
 //PRIVATE MESSAGES
 

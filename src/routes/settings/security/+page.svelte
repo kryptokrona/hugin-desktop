@@ -2,13 +2,12 @@
     import { fade } from "svelte/transition"
     import { messageWallet} from '$lib/stores/user.js'
     import Button from "$lib/components/buttons/Button.svelte"
-    import { groups } from '$lib/stores/user.js'
+    import { groups, misc } from '$lib/stores/user.js'
 
-
-    let deleteAfter = window.localStorage.getItem('deleteAfter')
+    let deleteAfter = $misc.deleteAfter
     
     const setAutoDeleteAfter = (days) => {
-        window.localStorage.setItem('deleteAfter', deleteAfter)
+        window.api.deleteMessageAfter(days)
     }
 
     </script>
@@ -19,7 +18,7 @@
         <Button
         text="Set timeframe"
         disabled="{false}"
-        on:click="{setAutoDeleteAfter}"
+        on:click="{setAutoDeleteAfter(deleteAfter)}"
     />
     </div>
     <div class="settings" in:fade>
