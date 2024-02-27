@@ -28,6 +28,10 @@ import { fade } from "svelte/transition"
 
 <style lang="scss">
 
+h2 {
+    margin-bottom: 10px;
+}
+
 .card {
     display: flex;
     height: 80px;

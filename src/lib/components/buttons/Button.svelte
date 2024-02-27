@@ -2,9 +2,10 @@
 export let text = 'Button'
 export let disabled = true
 export let red = false
+export let hover = false
 </script>
 
-<button on:click disabled="{disabled}" class:red>{text}</button>
+<button class:hover={hover} on:click disabled="{disabled}" class:red>{text}</button>
 
 <style lang="scss">
 button {
@@ -12,7 +13,7 @@ button {
     padding: 10px 15px;
     border-radius: 5px;
     color: var(--title-color);
-    border: 1px solid var(--button-border);
+    border: 1px solid var(--border-color);
     background-color: var(--button-background);
     transition: 250ms ease-in-out;
     cursor: pointer;
@@ -20,6 +21,7 @@ button {
 
     &:hover {
         opacity: 80%;
+        border: 1px solid var(--success-color);
     }
 
     &:focus,

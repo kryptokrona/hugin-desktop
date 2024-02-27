@@ -21,7 +21,7 @@ async function removeToast() {
 }
 </script>
 
-<span>
+<span class="toast">
     {#if thisFile.progress === 100} 
     <p class="finish">UPLOADED</p>
     {:else}
@@ -47,6 +47,9 @@ async function removeToast() {
 </span>
 
 <style lang="scss">
+.toast {
+    z-index: 9999999;
+}
 .goal {
     box-sizing: border-box;
     display: flex;

@@ -241,6 +241,10 @@ const WINDOW_API = {
     successMessage: async (channel, successMessage) => {
         ipcRenderer.send('success-notify-message-main', channel, successMessage)
     },
+
+    groupUpload: async (filename, path, topic, fileSize, time, hash) => {
+        ipcRenderer.send('group-upload', filename, path, topic, fileSize, time, hash)
+    },
 }
 
 contextBridge.exposeInMainWorld('api', WINDOW_API)
