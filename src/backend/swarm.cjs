@@ -2,7 +2,7 @@ const HyperSwarm = require("hyperswarm");
 const DHT = require('@hyperswarm/dht')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message } = require('./utils.cjs');
+const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex } = require('./utils.cjs');
 const {saveGroupMsg, getChannels} = require("./database.cjs")
 const {
     ipcMain
@@ -130,8 +130,8 @@ const create_swarm = async (data) => {
     let discovery
     let swarm
 
-    const [keyPair, keys, sig] = get_new_peer_keys(key)
-    const hash = keys.publicKey.toString('hex')
+    const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
+    const hash = base_keys.publicKey.toString('hex')
 
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
@@ -142,7 +142,7 @@ const create_swarm = async (data) => {
             }
             //Allow connection
             return false
-        }}, sig, keys, keyPair)
+        }}, sig, dht_keys, base_keys)
     } catch (e) {
         console.log('Error starting swarm')
         return
@@ -698,10 +698,12 @@ function create_peer_base_keys(buf) {
 
 function get_new_peer_keys(key) {
     const secret = Buffer.alloc(32).fill(key)
-    const keys = create_peer_base_keys(secret)
-    const sig = Date.now() //This could change to a more random thing
-    const sub = get_sub_key(keys, sig)
-    return [sub, keys, sig]
+    const base_keys = create_peer_base_keys(secret)
+    const random_key = Buffer.alloc(32).fill(randomKey())
+    const dht_keys = create_peer_base_keys(random_key)
+    //Sign the dht public key with our base_keys
+    const signature = base_keys.get().sign(dht_keys.get().publicKey)
+    return [base_keys, dht_keys, signature]
 }
 
 
