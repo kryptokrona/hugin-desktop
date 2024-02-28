@@ -46,7 +46,7 @@ class Account {
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
-      const deleteAfter = store.get('sql.deleteAfter')
+      const deleteAfter = store.get('delete.after')
       
       this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter])
 

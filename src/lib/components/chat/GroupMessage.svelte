@@ -264,8 +264,10 @@ const openLinkMessage = (url) => {
                 <div class="actions">
                     <EmojiSelector on:emoji="{reactTo}" />
                     <ReplyArrow on:click="{replyTo}" />
+                    {#if !rtc}
                     <DeleteButton on:click="{deleteMsg}"/>
                     <Dots on:click="{toggleActions}"/>
+                    {/if}
                 </div>
             </div>
             {#if youtube}

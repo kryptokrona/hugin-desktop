@@ -7,9 +7,6 @@ const store = new Store()
 
 const {sleep} = require('./utils.cjs')
 
-const fs = require('fs');
-
-
 const closeDB = async () => {
     
     store.set({
@@ -26,23 +23,20 @@ let database
 const loadDB = async (userDataDir, dbPath, privKey) => {
     database = new sqlite3(dbPath)
     //If db is encrypted. Read with key
+
     if (store.get('sql.encrypted')) {
         database.key(Buffer.from(privKey[0]))
         database.rekey(Buffer.from(privKey[0]))
     }
-    if(store.get('sql.deleteAfter') == undefined) {
+    if(!store.get('delete.after')) {
         store.set({
-            sql: {
-                deleteAfter: 0
+            delete: {
+                after: 0
             }
         })
     }
-    let removeAfter = parseInt(Date.now()) - store.get('sql.deleteAfter') * 86400000
-    console.log("amount of days: ", store.get('sql.deleteAfter'))
-    console.log("auto remove after: " + removeAfter)
+    const removeAfter = parseInt(Date.now()) - store.get('delete.after') * 86400000
 
-    
-   
     createTables()
     try {
     const welcome = database.prepare('SELECT msg FROM messages WHERE timestamp = 1650919475320').get()
@@ -59,7 +53,7 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
     } catch(e) {
         console.log(e)
     }
-    if(store.get('sql.deleteAfter') != 0) {
+    if(store.get('delete.after') !== 0) {
     
      database.prepare(`DELETE FROM groupmessages WHERE time < ?`).run(removeAfter)
     }

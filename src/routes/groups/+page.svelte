@@ -417,7 +417,7 @@ function addHash(data) {
     }
 const deleteMessage = async (hash) => {
     window.api.deleteMessage(hash)
-    printGroup($groups.thisGroup)
+    fixedGroups = fixedGroups.filter(a => a.hash !== hash)
 }
 </script>
 

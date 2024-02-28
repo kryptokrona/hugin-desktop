@@ -110,8 +110,8 @@ ipcMain.on('deleteMessage', async (e, hash) => {
 
 ipcMain.on('deleteMessageAfter', async (e, days) => {
     store.set({
-        sql: {
-            deleteAfter: days
+        delete: {
+            after: days
         }
     })
 })
