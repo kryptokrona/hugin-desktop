@@ -10,6 +10,9 @@ const dbPath = userDataDir + '/SQLmessages.db'
 const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
 let sender
 
+const Store = require('electron-store')
+const store = new Store()
+
 async function startDatabase(privKey) {
   
   await loadDB(userDataDir, dbPath, privKey)
@@ -43,8 +46,9 @@ class Account {
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
+      const deleteAfter = store.get('sql.deleteAfter')
       
-      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts])
+      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter])
 
       this.known_keys = keys
       this.block_list = block_list

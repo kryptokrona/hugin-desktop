@@ -19,7 +19,8 @@ const {
     getGroupReply,
     printGroup,
     getGroups,
-    loadGroups} = require("./database.cjs")
+    loadGroups,
+    deleteMessage} = require("./database.cjs")
 const {
     trimExtra, 
     sanitize_pm_message, 
@@ -101,6 +102,18 @@ ipcMain.on('block', async (e, block) => {
     blockContact(block.address, block.name)
     block_list = await loadBlockList()
     Hugin.send('update-blocklist', block_list)
+})
+
+ipcMain.on('deleteMessage', async (e, hash) => {
+    deleteMessage(hash)
+})
+
+ipcMain.on('deleteMessageAfter', async (e, days) => {
+    store.set({
+        sql: {
+            deleteAfter: days
+        }
+    })
 })
 
 
@@ -967,7 +980,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
             k: key,
             from: addr,
             chat: addr,
-            sent: true,
+            sent: 1,
             t: Date.now(),
         })
         known_keys.pop(key)

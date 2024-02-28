@@ -415,7 +415,10 @@ function addHash(data) {
         console.log("Active channel messages",  $swarm.activeChannelMessages)
         //await checkReactions(channel)
     }
-
+const deleteMessage = async (hash) => {
+    window.api.deleteMessage(hash)
+    printGroup($groups.thisGroup)
+}
 </script>
 
 {#if $swarm.newChannel === true}
@@ -449,6 +452,7 @@ function addHash(data) {
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupMsg(e)}"
                     on:replyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                    on:deleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
                     reply="{message.reply}"
                     msg="{message.message}"

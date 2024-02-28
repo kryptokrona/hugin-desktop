@@ -43,6 +43,12 @@
             route: "/settings/messagesettings"
         },
 
+        {
+            name: 'Security',
+            text: 'security settings',
+            icon: nodeIcon,
+            route: "/settings/security"
+        },
     ]
 
 

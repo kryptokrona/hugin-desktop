@@ -32,7 +32,8 @@ export const groups = writable({
     groupArray: [],
     blockList: [],
     activeHugins: [],
-    historyTimeframe: 0
+    historyTimeframe: 0,
+    autoDeleteAfter: 0
 })
 
 export const rtc_groups = writable({
@@ -52,6 +53,7 @@ export const misc = writable({
     os: '',
     loading: false,
     syncStatus: false,
+    deleteAfter: null
 })
 
 export const webRTC = writable({
