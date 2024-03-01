@@ -79,8 +79,8 @@ const WINDOW_API = {
         let resp = await ipcRenderer.invoke('getGroups')
         return resp
     },
-    printGroup: async (grp) => {
-        let resp = await ipcRenderer.invoke('printGroup', grp)
+    printGroup: async (grp, page) => {
+        let resp = await ipcRenderer.invoke('printGroup', grp, page)
         return resp
     },
 

@@ -71,8 +71,8 @@ ipcMain.handle('getGroups', async (e) => {
     return groups.reverse()
 })
 
-ipcMain.handle('printGroup', async (e, grp) => {
-    return await printGroup(grp)
+ipcMain.handle('printGroup', async (e, grp, page) => {
+    return await printGroup(grp, page)
 })
 
 ipcMain.handle('getGroupReply', async (e, data) => {
@@ -155,17 +155,17 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
 })
 
 
-const startMessageSyncer = async () => {
+const start_message_syncer = async () => {
      //Load knownTxsIds to backgroundSyncMessages on startup
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
-     backgroundSyncMessages(await loadCheckedTxs())
+    background_sync_messages(await loadCheckedTxs())
      while (true) {
          try {
              //Start syncing
-             await sleep(1000 * 10)
+             await sleep(1000 * 5)
  
-             backgroundSyncMessages()
+             await background_sync_messages()
  
              const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
 
@@ -197,26 +197,56 @@ const startMessageSyncer = async () => {
      }
 }
 
-async function backgroundSyncMessages(checkedTxs = false) {
+let incoming_messages = []
+const incoming = () => { return incoming_messages.length > 0 ? true : false}
+
+async function background_sync_messages(checkedTxs = false) {
     console.log('Background syncing...')
     
     //First start, set known pool txs
     if (checkedTxs) {
-        known_pool_txs = await setKnownPoolTxs(checkedTxs)
+        known_pool_txs = await set_known_pooltxs(checkedTxs)
     }
     
-    let transactions = await fetchHuginMessages()
-    if (!transactions) return
-    decryptHuginMessages(transactions)
+    const transactions = await fetch_hugin_messages()
+        if (!transactions && !incoming) return
+        const large_batch = transactions.length > 99
+
+    if (large_batch || (large_batch && incoming)) {
+        //Add to que
+        console.log("Adding que:", transactions.length)
+        const known_hashes = transactions.map(a => {return a.transactionPrefixInfotxHash})
+        incoming_messages = transactions
+        known_pool_txs = [...known_pool_txs, ...known_hashes]
+        Hugin.send('incoming-que', true)
+    }
+
+    if(incoming) {
+        console.log("Checking incoming messages:", incoming_messages.length)
+        decrypt_hugin_messages(decrypt = update_que(), true)
+        return
+    }
+    
+    Hugin.send('incoming-que', false)
+    console.log("Incoming transactions", transactions.length)
+    decrypt_hugin_messages(transactions, false)
 }
 
+function update_que() {
+    const decrypt = incoming_messages.slice(0,99)
+    const update = incoming_messages.slice(decrypt.length)
+    incoming_messages = update
+    return decrypt
+}
 
-async function decryptHuginMessages(transactions) {
+async function decrypt_hugin_messages(transactions, que = false) {
+    console.log("Checking nr of txs:", transactions.length)
     for (const transaction of transactions) {
         try {
             let thisExtra = transaction.transactionPrefixInfo.extra
             let thisHash = transaction.transactionPrefixInfotxHash
-            if (!validateExtra(thisExtra, thisHash)) continue
+            
+            if (!validateExtra(thisExtra, thisHash, que)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
                 if (!saveHash(thisHash)) continue
                 //Check for viewtag
@@ -285,14 +315,15 @@ async function checkForGroupMessage(thisExtra, thisHash) {
 }
 
 //Validate extradata, here we can add more conditions
-function validateExtra(thisExtra, thisHash) {
+function validateExtra(thisExtra, thisHash, que) {
     //Extra too long
     if (thisExtra.length > 7000) {
         known_pool_txs.push(thisHash)
         if (!saveHash(thisHash)) return false
         return false;
     }
-    //Check if known tx
+    //Check if known tx, if que is true we already know it but should check anyway
+    if (que) return true
     if (known_pool_txs.indexOf(thisHash) === -1) {
         known_pool_txs.push(thisHash)
         return true
@@ -322,7 +353,7 @@ async function loadCheckedTxs() {
 
 
 //Set known pool txs on start
-function setKnownPoolTxs(checkedTxs) {
+function set_known_pooltxs(checkedTxs) {
     //Here we can adjust number of known we send to the node
     known_pool_txs = checkedTxs
     //Can't send undefined to node, it wont respond
@@ -331,7 +362,7 @@ function setKnownPoolTxs(checkedTxs) {
 }
 
 
-async function fetchHuginMessages() {
+async function fetch_hugin_messages() {
     const node = Hugin.node
     try {
         const resp = await fetch(
@@ -362,6 +393,7 @@ async function fetchHuginMessages() {
 
     } catch (e) {
         Hugin.send('sync', 'Error')
+        console.log("Sync error", e)
         return false
     }
 }
@@ -780,7 +812,6 @@ async function syncGroupHistory(timeframe, recommended_api, key=false, page=1) {
     fetch(`${recommended_api.url}/api/v1/posts-encrypted-group?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
     .then((response) => response.json())
     .then(async (json) => {
-        console.log(timeframe + " " + key)
         const items = json.encrypted_group_posts;
 
         for (message in items) {   
@@ -1014,4 +1045,4 @@ ipcMain.on('fetchGroupHistory', async (e, settings) => {
     await syncGroupHistory(timeframe, settings.recommended_api, settings.key)
 })
 
-module.exports = {checkHistory, saveMessage, startMessageSyncer, sendMessage, optimizeMessages}
+module.exports = {checkHistory, saveMessage, start_message_syncer, sendMessage, optimizeMessages}

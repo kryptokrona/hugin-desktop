@@ -86,6 +86,7 @@ export const notify = writable({
     success: [],
     unread: [],
     update: [],
+    notifications: []
 })
 
 export const transactions = writable({

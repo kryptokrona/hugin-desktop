@@ -15,7 +15,6 @@ const store = new Store()
 const {hash, sleep} = require('./utils.cjs')
 const { welcomeMessage, firstContact} = require("./database.cjs")
 const { Hugin } = require('./account.cjs')
-const { startMessageSyncer } = require('./messages.cjs')
 const { keychain } = require('./crypto.cjs')
 
 let js_wallet

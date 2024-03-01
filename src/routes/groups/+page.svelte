@@ -14,6 +14,7 @@ import { containsOnlyEmojis, sleep } from '$lib/utils/utils'
 import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
 import { getBestApi, nodelist } from '$lib/stores/nodes.js'
+import Button from '$lib/components/buttons/Button.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -26,7 +27,8 @@ let scrollGroups = []
 let windowHeight
 let windowChat
 let channelMessages = []
-
+let pageNum = 0;
+let loadMore = true
 const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 
 const hashPadding = () => {
@@ -266,60 +268,89 @@ $: if ($groupMessages.length == 0) {
     noMsgs = false
 }
 
-//Checks messages for reactions in chosen Group from printGroup() function
-async function checkReactions(array) {
-    //All group messages all messages except reactions
-    filterGroups = await array.filter(
-        (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
-    )
-    //Only reactions
-    filterEmojis = await array.filter(
-        (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
-    )
-    if (filterEmojis.length) {
-        //Adding emojis to the correct message.
-        addEmoji()
-    } else {
-        let uniq = {}
-        fixedGroups = filterGroups.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
-    }
-}
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
+    loadMore = true
+    pageNum = 0
     fixedGroups = []
+    filterEmojis = []
     scrollGroups = []
     channelMessages = []
+    filterGroups = []
     noMsgs = false
+    
     groups.update((data) => {
         return {
             ...data,
             thisGroup: { key: group.key, name: group.name, chat: true},
         }
     })
-   
-    const messages = await window.api.printGroup(group.key)
-    const chain_messages = messages.filter(a => !a.channel)
-    $swarm.activeChannelMessages = messages.filter(a => a.channel)
     
-    //setChannels()
+    //Return the latest messages
+    const messages = await getMessages(group)
+    //Only mempool messages
+    const chain_messages = messages.filter(a => !a.channel)
+    groupMessages.set(messages)
+    //Setting active channelmessages if they we need them
+    $swarm.activeChannelMessages = messages.filter(a => a.channel)
+    printChannel($swarm.activeChannel.name)
+    //Reset active channel if we toggle from Room view
+    $swarm.activeChannel = {name: "", key: ""}
 
-    // if ($swarm.activeChannel.key === group.key) {
-    //     console.log("Print channel!")
-        printChannel($swarm.activeChannel.name)
-    // } else {
-        //Prin
-        $swarm.activeChannel = {name: "", key: ""}
-        //Load GroupMessages from db
-        await groupMessages.set(chain_messages)
-        //Check for emojis and filter them
-        await checkReactions(chain_messages)
-        //Reactions should be set, update thisGroup in store and set reply to false.
-    // }
-
+    await checkReactions(chain_messages, false)
     replyExit()
     scrollDown()
 }
 
+
+
+//Checks messages for reactions in chosen Group from printGroup() function
+async function checkReactions(array, scroll) {
+    //All group messages all messages except reactions
+    filterGroups = array.filter(
+        (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
+    )
+    //Only reactions
+    filterEmojis = [...array.filter(
+        (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
+    ), ...filterEmojis]
+    if (filterEmojis.length) {
+        //Adding emojis to the correct message.
+        addEmoji(scroll)
+    } else {
+        if (scroll) fixedGroups = [...fixedGroups, ...array]
+        else fixedGroups = filterGroups
+    }
+}
+
+
+function addEmoji(scroll) {
+    let emojis = filterEmojis
+    let array = scroll ? [...fixedGroups, ...filterGroups] : filterGroups
+    const already = (a) => {
+     return fixedGroups.some(e => e === a)
+    }
+    //Check for replies and message hash that match and then adds reactions to the messages.
+    array.forEach(async function (a) {
+        for (const b of emojis) {
+            if (a.message && a.address === b.message && b.address) continue
+            if (!a.react && b.reply == a.hash) {
+                a.react = []
+                b.hash = b.hash + hashPadding
+                a.react.push(b)
+
+            } else if (b.reply == a.hash) {
+                b.hash = b.hash + hashPadding
+                a.react.push(b)
+            }
+        if (already(a)) continue
+        fixedGroups.push(a)
+        }
+    })
+    fixedGroups = fixedGroups
+    }
+
+   
 
 
 function setChannels() {
@@ -350,60 +381,20 @@ async function updateReactions(msg) {
     fixedGroups = fixedGroups
 }
 
- function addEmoji() {
+    //Reactive depending on user.addGroup boolean, displays AddGroup component.
+    $: wantToAdd = $groups.addGroup
 
-    let emojis = filterEmojis
-    //Check for replies and message hash that match and then adds reactions to the messages.
-    filterGroups.forEach(async function (a) {
-        emojis.forEach(function (b) {
-            if (!a.react && b.reply == a.hash) {
-                a.react = []
-                b.hash = b.hash + hashPadding
-                a.react.push(b)
+    $: replyTrue = $groups.replyTo.reply
 
-            } else if (b.reply == a.hash) {
-                b.hash = b.hash + hashPadding
-                a.react.push(b)
+    function addHash(data) {
+        fixedGroups.some(function (a) {
+            if (a.hash === data.time) {
+                a.hash = data.hash
             }
         })
-        fixedGroups.push(a)
-    })
-    fixedGroups = fixedGroups
-}
 
-//Reactive depending on user.addGroup boolean, displays AddGroup component.
-$: wantToAdd = $groups.addGroup
-
-$: replyTrue = $groups.replyTo.reply
-
-function addHash(data) {
-    fixedGroups.some(function (a) {
-        if (a.hash === data.time) {
-            a.hash = data.hash
-        }
-    })
-
-    fixedGroups = fixedGroups
-}
-
-    // let pageNum = 0;
-
-    // let size = 20
-    // $: console.log('scrollgroups', scrollGroups)
-    // $: console.log('scroll', fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1))
-    // $: {
-    //     console.log('reacting to scroll?')
-    //     scrollGroups = [
-    //     ...scrollGroups,
-
-    //     ...fixedGroups.splice(size * pageNum, size * (pageNum + 1) - 1),
-    //     ];
-    // }
-
-    // function loadMoreMessages() {
-    //     pageNum++
-    //     console.log('want to load more')
-    // }
+        fixedGroups = fixedGroups
+    }
 
     const printChannel = async (name) => {
         let filter = $notify.unread.filter((a) => a.channel !== name)
@@ -412,13 +403,32 @@ function addHash(data) {
         filterEmojis = []
         let channel = channelMessages.filter(a => a.channel === name)
         $swarm.activeChannelMessages = channel
-        console.log("Active channel messages",  $swarm.activeChannelMessages)
         //await checkReactions(channel)
     }
-const deleteMessage = async (hash) => {
-    window.api.deleteMessage(hash)
-    fixedGroups = fixedGroups.filter(a => a.hash !== hash)
-}
+    const deleteMessage = async (hash) => {
+        window.api.deleteMessage(hash)
+        fixedGroups = fixedGroups.filter(a => a.hash !== hash)
+    }
+
+    async function loadMoreMessages() {
+        pageNum++
+        const more = await getMoreMessages()
+        if (more.length === 0) {noLoad(); return}
+       await checkReactions(more, true)
+    }
+
+    const noLoad = () => {
+        pageNum--; loadMore = false; return
+    }
+
+    async function getMessages(group) {
+        return await window.api.printGroup(group.key, 0)
+    }
+
+    async function getMoreMessages() {
+        return await window.api.printGroup(thisGroup, pageNum)
+    }
+    
 </script>
 
 {#if $swarm.newChannel === true}
@@ -464,7 +474,9 @@ const deleteMessage = async (hash) => {
                     hash="{message.hash}"
                 />
             {/each}
-            <!-- <InfiniteScroll reverse={true} threshold={20} on:loadMore={() => loadMoreMessages()} /> -->
+            {#if (fixedGroups.length + filterEmojis.length) > 9 && loadMore } 
+                <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
+            {/if}
         </div>
     
         {#if replyTrue}
@@ -555,6 +567,7 @@ p {
     flex-direction: column-reverse;
     overflow: auto;
     padding-bottom: 5px;
+    padding-top: 22px;
 
     &::-webkit-scrollbar {
         display: none;

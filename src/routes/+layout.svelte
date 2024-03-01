@@ -148,27 +148,17 @@
         })
 
 
-        window.api.receive('newBoardMessage', (data) => {
-            if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
-            if ($boards.thisBoard === 'Home') return
-            if ($page.url.pathname !== '/boards') {
-                data.type = 'board'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-            }
-            new_messages = true
-            board_message_sound.play()
-            $notify.new.push(data)
-            $notify.new = $notify.new
-        })
-
         window.api.receive('newGroupMessage', (data) => {
             if (data.address == $user.myAddress) return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room") return
             new_messages = true
             data.key = data.address
-            if ($notify.new.length < 2) {
+            
+            //Future notifications page
+            $notify.notifications.push(data)
+
+            if ($notify.new.length < 2 && !$notify.que) {
                 board_message_sound.play()
                 $notify.new.push(data)
             }
@@ -397,6 +387,11 @@
         updateUploadProgress(data)
     })
 
+    window.api.receive('incoming-que', (data)  => { 
+        $notify.que = data
+    })
+
+
     window.api.receive('checked', (data)  => { 
         console.log("Got p2p data", data)
         if (data) {
@@ -541,10 +536,10 @@
 
     {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
         <div class="notifs">
-            {#if $notify.new.length < 2}
-            {#each $notify.new as notif}
-                <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
-            {/each}
+            {#if $notify.new.length < 2 && !$notify.que}
+                {#each $notify.new as notif}
+                    <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
+                {/each}
             {/if}
 
         </div>

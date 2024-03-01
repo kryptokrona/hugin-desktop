@@ -28,7 +28,7 @@ const { expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
 const { loadHugin, loadAccount, loadWallet, createAccount } = require('./wallet.cjs')
 const { new_beam } = require("./beam.cjs")
 const { new_swarm, end_swarm} = require("./swarm.cjs")
-const { sendMessage, startMessageSyncer } = require('./messages.cjs')
+const { sendMessage, start_message_syncer } = require('./messages.cjs')
 const { keychain } = require('./crypto.cjs')
 
 let mainWindow
@@ -236,7 +236,7 @@ const startCheck = async () => {
         //A misc database exits, probably we have an account
             loadHugin(mainWindow)
             ipcMain.on('login', async (event, data) => {
-               if (await loadAccount(data)) startMessageSyncer()
+               if (await loadAccount(data)) start_message_syncer()
             })
     } else {
         //No wallet found, probably first start
@@ -261,7 +261,7 @@ const { desktopCapturer } = require('electron')
 }
 
 ipcMain.on('create-account', async (e, accountData) => {
-    if(await createAccount(accountData)) startMessageSyncer()
+    if(await createAccount(accountData)) start_message_syncer()
 })
 
 //BEAM

@@ -644,9 +644,11 @@ const getConversation = async (chat) => {
 }
 
 //Print a chosen group from the shared key.
-const printGroup = async (group) => {
+const printGroup = async (group, page) => {
     const channels = await getChannels()
-
+    let limit = 10
+    let offset = 0
+    if (page !== 0) offset = page * limit
     const thisGroup = []
     return new Promise((resolve, reject) => {
         const getGroup = `SELECT
@@ -664,7 +666,8 @@ const printGroup = async (group) => {
         WHERE grp = ?
         ORDER BY
             time
-        DESC`
+        DESC
+        LIMIT ${offset}, ${limit}`
         const stmt = database.prepare(getGroup)
 
         for(const row of stmt.iterate(group)) {
