@@ -12,23 +12,16 @@ const WINDOW_API = {
     receive: (channel, func) => {
         ipcRenderer.on(channel, (event, ...args) => func(...args))
     },
-
     addChat: (hugin, name, first) => {
-        ipcRenderer.send('addChat', hugin, name, first)
+        ipcRenderer.send('add-chat', hugin, name, first)
     },
     // HANDLE MESSAGES
     sendMsg: (msg, address, offChain, grp = false, beam) => {
-        ipcRenderer.send('sendMsg', msg, address, offChain, grp, beam)
+        ipcRenderer.send('send-msg', msg, address, offChain, grp, beam)
     },
-    sendBoardMsg: (msg) => {
-        ipcRenderer.send('sendBoardMsg', msg)
-    },
-
     sendGroupMessage: (msg, offchain, swarm) => {
-        console.log('Send group msg', msg, offchain, swarm)
-        ipcRenderer.send('sendGroupsMessage', msg, offchain, swarm)
+        ipcRenderer.send('send-group-message', msg, offchain, swarm)
     },
-
     decryptMessage: (msg) => {
         ipcRenderer.send('decrypt_message', msg)
     },
@@ -37,83 +30,51 @@ const WINDOW_API = {
         ipcRenderer.send('decrypt_rtc_group_message', msg, key)
     },
     deleteMessage: async(hash) => {
-        ipcRenderer.send('deleteMessage', hash)
+        ipcRenderer.send('delete-message', hash)
     },
     deleteMessageAfter: async(days) => {
-        ipcRenderer.send('deleteMessageAfter', days)
+        ipcRenderer.send('delete-messages-after', days)
     },
-
-    getMessages: async (data) => {
-        const res = await ipcRenderer.invoke('getMessages')
-        return res
-    },
-    getBoardMsgs: async (data) => {
-        let resp = await ipcRenderer.invoke('getBoardMsgs')
-        return resp.boardMessages
-    },
-    printBoard: async (board) => {
-        let resp = await ipcRenderer.invoke('printBoard', board)
-        return resp
-    },
-    getReply: async (hash) => {
-        let resp = await ipcRenderer.invoke('getReply', hash)
-        return resp
+    getMessages: async () => {
+        return await ipcRenderer.invoke('get-messages')
     },
     getGroupReply: async (hash) => {
-        let resp = await ipcRenderer.invoke('getGroupReply', hash)
-        return resp
-    },
-    getMyBoards: async (board) => {
-        let resp = await ipcRenderer.invoke('getMyBoards')
-        return resp
-    },
-    getAllBoards: async () => {
-        let resp = await ipcRenderer.invoke('getAllBoards')
-        return resp
+        return await ipcRenderer.invoke('get-group-reply', hash)
     },
     getConversations: async () => {
-        let resp = await ipcRenderer.invoke('getConversations')
-        return resp
+        return await ipcRenderer.invoke('get-conversations')
     },
     getGroups: async () => {
-        let resp = await ipcRenderer.invoke('getGroups')
-        return resp
+        return await ipcRenderer.invoke('get-groups')
     },
     printGroup: async (grp, page) => {
-        let resp = await ipcRenderer.invoke('printGroup', grp, page)
-        return resp
+        return await ipcRenderer.invoke('print-group', grp, page)
     },
-
     printConversation: async (chat) => {
-        let resp = await ipcRenderer.invoke('printConversation', chat)
-        return resp
+        return await ipcRenderer.invoke('print-conversation', chat)
     },
     //HANDLE CALLS
     gotMedia: async (video, audio) => {
         ipcRenderer.send('got-media')
     },
-
     getPrivateKeys: async (data) => {
-        let resp = await ipcRenderer.invoke('getPrivateKeys')
-        return resp
+        return await ipcRenderer.invoke('get-private-keys')
     },
-
     getMnemonic: async (data) => {
-        let resp = await ipcRenderer.invoke('getMnemonic')
-        return resp
+        return await ipcRenderer.invoke('get-mnemonic')
     },
 
     //HANDLE CALLS
     startCall: async (contact, calltype) => {
-        ipcRenderer.send('startCall', contact, calltype)
+        ipcRenderer.send('start-call', contact, calltype)
     },
 
     answerCall: async (msg, contact, key, offchain) => {
-        ipcRenderer.send('answerCall', msg, contact, key, offchain)
+        ipcRenderer.send('answer-call', msg, contact, key, offchain)
     },
 
     endCall: async (peer, stream, contact) => {
-        ipcRenderer.send('endCall', peer, stream, contact)
+        ipcRenderer.send('end-call', peer, stream, contact)
     },
 
     expandSdp: async (data, address) => {
@@ -142,14 +103,14 @@ const WINDOW_API = {
 
     //HANDLE NODES
     getNodes: async () => {
-        ipcRenderer.send('getNodes')
+        ipcRenderer.send('get-nodes')
     },
     switchNode: (node) => {
-        ipcRenderer.send('switchNode', node)
+        ipcRenderer.send('switch-node', node)
     },
 
     shareScreen: async (start, conference) => {
-        ipcRenderer.send('shareScreen', false, conference)
+        ipcRenderer.send('share-screen', false, conference)
     },
 
     setCamera: async () => {
@@ -175,53 +136,45 @@ const WINDOW_API = {
     },
     //HANDLE FINANCE
     getBalance: async () => {
-        return await ipcRenderer.invoke('getBalance')
+        return await ipcRenderer.invoke('get-balance')
     },
 
     //HANDLE ADDRESS
     getAddress: async () => {
-        await ipcRenderer.invoke('getAddress')
+        await ipcRenderer.invoke('get-address')
     },
 
     //HANDLE FINANCE
     getHeight: async () => {
-        return await ipcRenderer.invoke('getHeight')
+        return await ipcRenderer.invoke('get-height')
     },
 
     getTransactions: async (data) => {
-        return await ipcRenderer.invoke('getTransactions', data)
+        return await ipcRenderer.invoke('get-transactions', data)
     },
 
     sendTransaction: async (tx) => {
-        ipcRenderer.send('sendTx', tx)
-    },
-
-    addBoard: async (board) => {
-        ipcRenderer.send('addBoard', board)
-    },
-
-    removeBoard: async (board) => {
-        ipcRenderer.send('removeBoard', board)
+        ipcRenderer.send('send-tx', tx)
     },
 
     addGroup: async (grp) => {
-        ipcRenderer.send('addGroup', grp)
+        ipcRenderer.send('add-group', grp)
     },
 
     removeGroup: async (grp) => {
-        ipcRenderer.send('removeGroup', grp)
+        ipcRenderer.send('remove-group', grp)
     },
 
     createGroup: async () => {
-        return await ipcRenderer.invoke('createGroup')
+        return await ipcRenderer.invoke('create-group')
     },
     
     fetchGroupHistory: async (settings) => {
-        ipcRenderer.send('fetchGroupHistory', settings)
+        ipcRenderer.send('fetch-group-history', settings)
     },
 
     removeContact: async (contact) => {
-        ipcRenderer.send('removeContact', contact)
+        ipcRenderer.send('remove-contact', contact)
     },
     
     removeAllListeners: (channel) => {

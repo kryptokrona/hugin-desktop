@@ -28,7 +28,7 @@ const { expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
 const { loadHugin, loadAccount, loadWallet, createAccount } = require('./wallet.cjs')
 const { new_beam } = require("./beam.cjs")
 const { new_swarm, end_swarm} = require("./swarm.cjs")
-const { sendMessage, start_message_syncer } = require('./messages.cjs')
+const { send_message, start_message_syncer } = require('./messages.cjs')
 const { keychain } = require('./crypto.cjs')
 
 let mainWindow
@@ -270,7 +270,7 @@ ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
     let beamMessage = await new_beam(link, chat, send);
     if (beamMessage === "Error") return
     if (!beamMessage) return
-    sendMessage(beamMessage.msg, beamMessage.chat, offchain)
+    send_message(beamMessage.msg, beamMessage.chat, offchain)
 });
 
 ipcMain.on("active-video", async (e, chat) => {
@@ -309,12 +309,12 @@ ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => 
 
 //CALLS
 
-ipcMain.on('answerCall', (e, msg, contact, key, offchain = false) => {
+ipcMain.on('answer-call', (e, msg, contact, key, offchain = false) => {
     console.log('Answer call', msg, contact, key, offchain)
     mainWindow.webContents.send('answer-call', msg, contact, key, offchain)
 })
 
-ipcMain.on('endCall', async (e, peer, stream, contact) => {
+ipcMain.on('end-call', async (e, peer, stream, contact) => {
     mainWindow.webContents.send('endCall', peer, stream, contact)
 })
 
@@ -330,7 +330,7 @@ ipcMain.on('get-sdp', (e, data) => {
 
 //CALL USER MEDIA
 
-ipcMain.on('startCall', async (e, contact, calltype) => {
+ipcMain.on('start-call', async (e, contact, calltype) => {
     if (process.platform === 'darwin') {
         const cameraAccess = systemPreferences.askForMediaAccess('camera')
         const microphoneAccess = systemPreferences.askForMediaAccess('microphone')
@@ -341,7 +341,7 @@ ipcMain.on('startCall', async (e, contact, calltype) => {
     mainWindow.webContents.send('start-call', contact, calltype)
 })
 
-ipcMain.on('shareScreen', async (e, start, conference) => {
+ipcMain.on('share-screen', async (e, start, conference) => {
     shareScreen(start, conference)
 })
 
@@ -434,12 +434,12 @@ function get_sdp(data)
     if (data.type == 'offer') 
     {
         let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        sendMessage(parsed_data, data.contact, data.offchain, data.group)
+        send_message(parsed_data, data.contact, data.offchain, data.group)
     } 
     else if (data.type == 'answer') 
     {
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        sendMessage(parsed_data, data.contact, data.offchain, data.group)
+        send_message(parsed_data, data.contact, data.offchain, data.group)
     }
 }
 

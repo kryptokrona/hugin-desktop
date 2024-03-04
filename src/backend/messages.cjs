@@ -58,37 +58,37 @@ let block_list = []
 //MISC
 
 ipcMain.on('optimize', async (e) => {
-    optimizeMessages(force = true)
+    optimize_message_inputs(force = true)
 })
 //GROUPS MESSAGES
 
-ipcMain.on('sendGroupsMessage', (e, msg, offchain, swarm) => {
-    sendGroupsMessage(msg, offchain, swarm)
+ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
+    send_group_message(msg, offchain, swarm)
 })
 
-ipcMain.handle('getGroups', async (e) => {
+ipcMain.handle('get-groups', async (e) => {
     let groups = await getGroups()
     return groups.reverse()
 })
 
-ipcMain.handle('printGroup', async (e, grp, page) => {
+ipcMain.handle('print-group', async (e, grp, page) => {
     return await printGroup(grp, page)
 })
 
-ipcMain.handle('getGroupReply', async (e, data) => {
+ipcMain.handle('get-group-reply', async (e, data) => {
     return await getGroupReply(data)
 })
 
-ipcMain.handle('createGroup', async () => {
+ipcMain.handle('create-group', async () => {
     return randomKey()
 })
 
-ipcMain.on('addGroup', async (e, grp) => {
+ipcMain.on('add-group', async (e, grp) => {
     addGroup(grp)
-    saveGroupMessage(grp, grp.hash, parseInt(Date.now()))
+    save_group_message(grp, grp.hash, parseInt(Date.now()))
 })
 
-ipcMain.on('removeGroup', async (e, grp) => {
+ipcMain.on('remove-group', async (e, grp) => {
     removeGroup(grp)
 })
 
@@ -104,11 +104,11 @@ ipcMain.on('block', async (e, block) => {
     Hugin.send('update-blocklist', block_list)
 })
 
-ipcMain.on('deleteMessage', async (e, hash) => {
+ipcMain.on('delete-message', async (e, hash) => {
     deleteMessage(hash)
 })
 
-ipcMain.on('deleteMessageAfter', async (e, days) => {
+ipcMain.on('delete-messages-after', async (e, days) => {
     store.set({
         delete: {
             after: days
@@ -119,26 +119,26 @@ ipcMain.on('deleteMessageAfter', async (e, days) => {
 
 //PRIVATE MESSAGES
 
-ipcMain.handle('getConversations', async (e) => {
+ipcMain.handle('get-conversations', async (e) => {
     let contacts = await getConversations()
     return contacts.reverse()
 })
 
-ipcMain.handle('getMessages', async (data) => {
+ipcMain.handle('get-messages', async (data) => {
     return await getMessages()
 })
 
-ipcMain.on('sendMsg', (e, msg, receiver, off_chain, grp, beam) => {
-    sendMessage(msg, receiver, off_chain, grp, beam)
+ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam) => {
+    send_message(msg, receiver, off_chain, grp, beam)
 })
 
 //Listens for event from frontend and saves contact and nickname.
-ipcMain.on('addChat', async (e, hugin_address, nickname, first) => {
-    saveContact(hugin_address, nickname, first)
+ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
+    save_contact(hugin_address, nickname, first)
 })
 
 
-ipcMain.on('removeContact', (e, contact) => {
+ipcMain.on('remove-contact', (e, contact) => {
     removeContact(contact)
     removeMessages(contact)
     Hugin.send('sent')
@@ -159,7 +159,7 @@ const start_message_syncer = async () => {
      //Load knownTxsIds to backgroundSyncMessages on startup
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
-    background_sync_messages(await loadCheckedTxs())
+    background_sync_messages(await load_checked_txs())
      while (true) {
          try {
              //Start syncing
@@ -246,19 +246,19 @@ async function decrypt_hugin_messages(transactions, que = false) {
             let thisExtra = transaction.transactionPrefixInfo.extra
             let thisHash = transaction.transactionPrefixInfotxHash
             
-            if (!validateExtra(thisExtra, thisHash, que)) continue
+            if (!validate_extra(thisExtra, thisHash, que)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
                 if (!saveHash(thisHash)) continue
                 //Check for viewtag
-                let checkTag = await checkForViewTag(thisExtra)
+                let checkTag = await check_for_viewtag(thisExtra)
                 if (checkTag) {
-                    await checkForPrivateMessage(thisExtra, thisHash)
+                    await check_for_pm_message(thisExtra, thisHash)
                     continue
                 }
                 //Check for private message //TODO remove this when viewtags are active
-                if (await checkForPrivateMessage(thisExtra, thisHash)) continue
+                if (await check_for_pm_message(thisExtra, thisHash)) continue
                 //Check for group message
-                if (await checkForGroupMessage(thisExtra, thisHash)) continue
+                if (await check_for_group_message(thisExtra, thisHash)) continue
             }
         } catch (err) {
             console.log(err)
@@ -267,18 +267,18 @@ async function decrypt_hugin_messages(transactions, que = false) {
 }
 
 //Try decrypt extra data
-async function checkForPrivateMessage(thisExtra) {
+async function check_for_pm_message(thisExtra) {
     let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair())
     if (!message) return false
     if (message.type === 'sealedbox' || 'box') {
         message.sent = false
-        saveMessage(message)
+        save_message(message)
         return true
     }
 }
 
 //Checks the message for a view tag
-async function checkForViewTag(extra) {
+async function check_for_viewtag(extra) {
     try {
     const rawExtra = trimExtra(extra)
     const parsed_box = JSON.parse(rawExtra)
@@ -300,12 +300,12 @@ async function checkForViewTag(extra) {
 
 
 //Checks if hugin message is from a group
-async function checkForGroupMessage(thisExtra, thisHash) {
+async function check_for_group_message(thisExtra, thisHash) {
     try {
     let group = trimExtra(thisExtra)
     let message = JSON.parse(group)
     if (message.sb) {
-            await decryptGroupMessage(message, thisHash)
+            await decrypt_group_message(message, thisHash)
             return true
     }
     } catch {
@@ -315,7 +315,7 @@ async function checkForGroupMessage(thisExtra, thisHash) {
 }
 
 //Validate extradata, here we can add more conditions
-function validateExtra(thisExtra, thisHash, que) {
+function validate_extra(thisExtra, thisHash, que) {
     //Extra too long
     if (thisExtra.length > 7000) {
         known_pool_txs.push(thisHash)
@@ -333,7 +333,7 @@ function validateExtra(thisExtra, thisHash, que) {
     }
 }
 
-async function loadCheckedTxs() {
+async function load_checked_txs() {
     
     //Load known pool txs from db.
     let checkedTxs = await loadKnownTxs()
@@ -399,7 +399,7 @@ async function fetch_hugin_messages() {
 }
 
 
-async function sendMessage(message, receiver, off_chain = false, group = false, beam_this = false) {
+async function send_message(message, receiver, off_chain = false, group = false, beam_this = false) {
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -410,7 +410,7 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
     //Split address and check history
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
-    let has_history = await checkHistory(messageKey, address)
+    let has_history = await check_history(messageKey, address)
     if (!beam_this) {
         let balance = await checkBalance()
         if (!balance) return
@@ -418,11 +418,10 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
 
     let timestamp = Date.now()
     let payload_hex
-    if (!has_history) {
-        payload_hex = await encryptMessage(message, messageKey, true, address)
-    } else {
-        payload_hex = await encryptMessage(message, messageKey, false, address)
-    }
+    const seal = has_history ? false : true
+    
+    payload_hex = await encrypt_hugin_message(message, messageKey, seal, address)
+
     //Choose subwallet with message inputs
     let messageWallet = Hugin.wallet.getAddresses()[1]
     let messageSubWallet = Hugin.wallet.getAddresses()[2]
@@ -449,15 +448,15 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
         if (result.success) {
             known_pool_txs.push(result.transactionHash)
             saveHash(result.transactionHash)
-            saveMessage(sentMsg)
-            optimizeMessages()
+            save_message(sentMsg)
+            optimize_message_inputs()
         } else {
             let error = {
                 message: `Failed to send, please wait a couple of minutes.`,
                 name: 'Error',
                 hash: Date.now(),
             }
-            optimizeMessages(true)
+            optimize_message_inputs(true)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             Hugin.send('error_msg', error)
         }
@@ -489,12 +488,12 @@ async function sendMessage(message, receiver, off_chain = false, group = false, 
                 t: timestamp,
                 chat: address,
             }
-            saveMessage(saveThisMessage, true)
+            save_message(saveThisMessage, true)
         }
     }
 }
 
-async function optimizeMessages(force = false) {
+async function optimize_message_inputs(force = false) {
 
     let [mainWallet, subWallet, messageSubWallet] = Hugin.wallet.getAddresses()
     const [walletHeight, localHeight, networkHeight] = await Hugin.wallet.getSyncStatus()
@@ -548,7 +547,7 @@ async function optimizeMessages(force = false) {
             }
         });
 
-        resetOptimizeTimer()
+        reset_optimize()
 
         let sent = {
             message: 'Your wallet is creating message inputs, please wait',
@@ -582,7 +581,7 @@ async function optimizeMessages(force = false) {
 
 }
 
-async function resetOptimizeTimer() {
+async function reset_optimize() {
     await sleep(600 * 1000)
     store.set({
         wallet: {
@@ -592,7 +591,7 @@ async function resetOptimizeTimer() {
 }
 
 
-async function encryptMessage(message, messageKey, sealed = false, toAddr) {
+async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr) {
     let timestamp = Date.now()
     let my_address = Hugin.wallet.getPrimaryAddress()
     const addr = await Address.fromAddress(toAddr)
@@ -643,7 +642,7 @@ async function encryptMessage(message, messageKey, sealed = false, toAddr) {
 }
 
 
-async function sendGroupsMessage(message, offchain = false, swarm = false) {
+async function send_group_message(message, offchain = false, swarm = false) {
     console.log("Sending group msg!")
     if (message.m.length === 0) return
     const my_address = message.k
@@ -711,14 +710,14 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         if (result.success) {
             console.log("Succces sending tx")
             message_json.sent = true
-            saveGroupMessage(message_json, result.transactionHash, timestamp)
+            save_group_message(message_json, result.transactionHash, timestamp)
             Hugin.send('sent_group', {
                 hash: result.transactionHash,
                 time: message.t,
             })
             known_pool_txs.push(result.transactionHash)
             saveHash(result.transactionHash)
-            optimizeMessages()
+            optimize_message_inputs()
         } else {
             let error = {
                 message: 'Failed to send, please wait a couple of minutes.',
@@ -727,7 +726,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
             }
             Hugin.send('error_msg', error)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
-            optimizeMessages(true)
+            optimize_message_inputs(true)
         }
     } else if (offchain) {
         //Generate a random hash
@@ -737,7 +736,7 @@ async function sendGroupsMessage(message, offchain = false, swarm = false) {
         message_json.sent = true
         if (swarm) {
             send_swarm_message(sendMsg, group)
-            saveGroupMessage(message_json, random_key, timestamp, false, true)
+            save_group_message(message_json, random_key, timestamp, false, true)
             Hugin.send('sent_rtc_group', {
                 hash: random_key,
                 time: message.t,
@@ -803,11 +802,11 @@ async function decryptRtcMessage(message) {
 
     if (!newMsg) return
 
-    saveMessage(newMsg, true)
+    save_message(newMsg, true)
 }
 
 
-async function syncGroupHistory(timeframe, recommended_api, key=false, page=1) {
+async function sync_group_history(timeframe, recommended_api, key=false, page=1) {
     if (recommended_api === undefined) return
     fetch(`${recommended_api.url}/api/v1/posts-encrypted-group?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
     .then((response) => response.json())
@@ -819,19 +818,19 @@ async function syncGroupHistory(timeframe, recommended_api, key=false, page=1) {
                     let tx = {}
                     tx.sb = items[message].tx_sb
                     tx.t = items[message].tx_timestamp
-                    await decryptGroupMessage(tx, items[message].tx_hash, key)
+                    await decrypt_group_message(tx, items[message].tx_hash, key)
                         
                 }
                  catch {
                 }
         }
         if(json.current_page != json.total_pages) {
-            syncGroupHistory(timeframe, recommended_api, key, page+1)
+            sync_group_history(timeframe, recommended_api, key, page+1)
         }
     })
 }
 
-async function decryptGroupMessage(tx, hash, group_key = false) {
+async function decrypt_group_message(tx, hash, group_key = false) {
 
     try {
     let decryptBox = false
@@ -886,7 +885,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 
     payload_json.sent = false
 
-    let saved = saveGroupMessage(payload_json, hash, tx.t, offchain)
+    const saved = save_group_message(payload_json, hash, tx.t, offchain)
     
     if (!saved) return false
 
@@ -900,7 +899,7 @@ async function decryptGroupMessage(tx, hash, group_key = false) {
 async function decryptGroupRtcMessage(message, key) {
     try {
         let hash = message.substring(0, 64)
-        let [groupMessage, time, txHash] = await decryptGroupMessage(message, hash, key)
+        let [groupMessage, time, txHash] = await decrypt_group_message(message, hash, key)
 
         if (!groupMessage) {
             return
@@ -931,7 +930,7 @@ const checkBalance = async () => {
     return true
 }
 
-async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
+async function save_group_message(msg, hash, time, offchain, channel = false) {
     console.log("Savin group message")
     let message = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!message) return false
@@ -947,7 +946,7 @@ async function saveGroupMessage(msg, hash, time, offchain, channel = false) {
 
 
 //Saves private message
-async function saveMessage(msg, offchain = false) {
+async function save_message(msg, offchain = false) {
     let [message, addr, key, timestamp, sent] = sanitize_pm_message(msg)
     if (!message) return
 
@@ -972,7 +971,7 @@ async function saveMessage(msg, offchain = false) {
     //New message from unknown contact
     if (msg.type === 'sealedbox' && !sent) {
         let hugin = addr + key
-        await saveContact(hugin)
+        await save_contact(hugin)
     }
 
     message = sanitizeHtml(text)
@@ -988,7 +987,7 @@ async function saveMessage(msg, offchain = false) {
 }
 
 //Saves contact and nickname to db.
-async function saveContact(hugin_address, nickname = false, first = false) {
+async function save_contact(hugin_address, nickname = false, first = false) {
 
     let name
     if (!nickname) {
@@ -1006,7 +1005,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     saveThisContact(addr, key, name)
 
     if (first) {
-        saveMessage({
+        save_message({
             msg: 'New friend added!',
             k: key,
             from: addr,
@@ -1020,7 +1019,7 @@ async function saveContact(hugin_address, nickname = false, first = false) {
     Hugin.send('saved-addr', hugin_address)
 }
 
-async function checkHistory(messageKey, addr) {
+async function check_history(messageKey, addr) {
     //Check history
     if (known_keys.indexOf(messageKey) > -1) {  
         console.log("Here we go " + addr)
@@ -1036,13 +1035,13 @@ async function checkHistory(messageKey, addr) {
 
 }
 
-ipcMain.on('fetchGroupHistory', async (e, settings) => {
+ipcMain.on('fetch-group-history', async (e, settings) => {
     let timeframe = Date.now() / 1000 - settings.timeframe * 86400
     //If key is not undefined we know which group to search messages from
     if (settings.key === undefined) settings.key = false
     //Clear known pool txs to look through messages we already marked as known
     known_pool_txs = []
-    await syncGroupHistory(timeframe, settings.recommended_api, settings.key)
+    await sync_group_history(timeframe, settings.recommended_api, settings.key)
 })
 
-module.exports = {checkHistory, saveMessage, start_message_syncer, sendMessage, optimizeMessages}
+module.exports = {check_history, save_message, start_message_syncer, send_message, optimize_message_inputs}

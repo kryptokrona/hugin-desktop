@@ -1,17 +1,11 @@
 const HyperSwarm = require("hyperswarm");
 const DHT = require('@hyperswarm/dht')
-const progress = require("progress-stream");
-const {createWriteStream, createReadStream} = require("fs");
 const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex } = require('./utils.cjs');
 const {saveGroupMsg, getChannels} = require("./database.cjs")
 const {
     ipcMain
 } = require('electron')
 const {verifySignature, decryptSwarmMessage, signMessage, keychain} = require("./crypto.cjs")
-const { 
-    expand_sdp_answer, 
-    expand_sdp_offer, 
-    parse_sdp } = require("./sdp.cjs")
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
@@ -23,9 +17,8 @@ let localFiles = []
 let remoteFiles = []
 let active_swarms = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
-let downloadDirectory
 let sender
-let chat_keys
+let dht_keys
 let my_address
 let my_name = ""
 
@@ -174,7 +167,7 @@ const create_swarm = async (data) => {
         setTimeout(() => process.exit(), 2000);
     });
     
-    let topic = Buffer.alloc(32).fill(hash)
+    const topic = Buffer.alloc(32).fill(hash)
     discovery = swarm.join(topic, {server: true, client: true})
     active.discovery = discovery
     await discovery.flushed()
@@ -215,7 +208,7 @@ const new_connection = (connection, hash, key, name) => {
 
 const connection_closed = (conn, topic) => {
     console.log("Closing connection...")
-    let active = get_active_topic(topic)
+    const active = get_active_topic(topic)
     if (!active) return
     try {
         conn.end()
@@ -227,7 +220,7 @@ const connection_closed = (conn, topic) => {
     if (!user) return
     sender("close-voice-channel-with-peer", user.address)
     sender("peer-disconnected", {address: user.address, topic})
-    let still_active = active.connections.filter(a => a.connection !== conn)
+    const still_active = active.connections.filter(a => a.connection !== conn)
     console.log("Connection closed")
     console.log("Still active:", still_active)
     active.connections = still_active
@@ -248,7 +241,7 @@ const check_data_message = async (data, connection, topic) => {
     }
 
     //Check if active in this topic
-    let active = get_active_topic(topic)
+    const active = get_active_topic(topic)
     if (!active) return "Error"
 
     //Check if this connection is still in our list
@@ -258,7 +251,6 @@ const check_data_message = async (data, connection, topic) => {
     //If the connections send us disconnect message, return. **todo double check closed connection
     if ('type' in data) {
         if (data.type === "disconnected") {
-            console.log("Got disconnected message!", data)
             connection_closed(connection, active.topic)
             return true
         }
@@ -266,44 +258,36 @@ const check_data_message = async (data, connection, topic) => {
 
     if ('info' in data) {
         const fileData = sanitize_file_message(data)
-        console.log("error?", fileData)
         if (!fileData) return "Error"
-        console.log("******* Connection address ********", con.address)
         check_file_message(fileData, topic, con.address)
-        return
+        return true
     }
 
     //Double check if connection is joined voice?
     if ('offer' in data) {
-        console.log("GOt offer or answer!!")
         //Check if this connection has voice status activated.
         if (active.connections.some(a => a.connection === connection && a.voice === true)) {
             const [voice, video] = get_local_voice_status(topic)
             if ((!voice && !video) || !voice) {
-                console.log("Not active! ***************")
                 //We are not connected to a voice channel
                 //Return true bc we do not need to check it again
                 return true
             }
 
             //There are too many in the voice call
-            let users = active.connections.filter(a => a.voice === true)
+            const users = active.connections.filter(a => a.voice === true)
             if (users.length > 9) return true
 
                 //Joining == offer
             if (data.offer === true) {
-                console.log("Answer call")
                 if ('retry' in data) {    
                     if (data.retry === true) {
-                        console.log("Retry connection!")
                         sender('got-expanded-voice-channel', [data.data, data.address])
                         return
                     }
                 }
                 answer_call(data)
             } else {
-                console.log("Got answer!")
-                //Already in voice == answer
                 got_answer(data)
             }
         }
@@ -314,7 +298,7 @@ const check_data_message = async (data, connection, topic) => {
 
         if ('joined' in data) {
 
-            let joined = sanitize_join_swarm_data(data)
+            const joined = sanitize_join_swarm_data(data)
             if (!joined) return "Error"
 
             if (con.joined) {
@@ -326,14 +310,13 @@ const check_data_message = async (data, connection, topic) => {
             const verified = await verifySignature(joined.message, joined.address, joined.signature)
             if(!verified) return "Error"
             con.joined = true
-            console.log("joined address", joined.address)
             con.address = joined.address
             con.name = joined.name
             con.voice = joined.voice
 
-            let time = parseInt(joined.time)
+            const time = parseInt(joined.time)
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
-            let [in_voice, video] = get_local_voice_status(topic)
+            const [in_voice, video] = get_local_voice_status(topic)
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
                 join_voice_channel(active.key, topic, joined.address)
             }
@@ -344,7 +327,7 @@ const check_data_message = async (data, connection, topic) => {
         }
 
         if ('voice' in data) {
-            let voice_status = check_peer_voice_status(data, con)
+            const voice_status = check_peer_voice_status(data, con)
             if (!voice_status) return "Error"
    
         }
@@ -355,10 +338,9 @@ const check_data_message = async (data, connection, topic) => {
 }
 
 const check_peer_voice_status = (data, con) => {
-    let voice_data = sanitize_voice_status_data(data) 
-    console.log("Not voice data", voice_data)
+    const voice_data = sanitize_voice_status_data(data) 
     if (!voice_data) return false
-    let updated = update_voice_channel_status(voice_data, con)
+    const updated = update_voice_channel_status(voice_data, con)
     if (!updated) return false
     return true
 }
@@ -373,7 +355,7 @@ const update_voice_channel_status = (data, con) => {
     //Set voice status
     con.voice = data.voice
     con.video = data.video
-    console.log("Updating voice channel status for this connection:", con.voice)
+    console.log("Updating voice channel status for this connection Voice, Video:", con.voice, con.video)
     //Send status to front-end
     sender("voice-channel-status", data)
     return true
@@ -400,8 +382,6 @@ const get_local_voice_status = (topic) => {
         return [false]
     }
 
-    console.log("channel video", channel)
-
     voice = channel.voice
     video = channel.video
 
@@ -418,17 +398,14 @@ const get_my_channels = async (key) => {
 
 const send_joined_message = async (key, topic, my_address) => {
     //Use topic as signed message?
-    const msg = topic
+    const msg = dht_keys.get().publicKey
     const active = get_active_topic(topic)
     if (!active) return
     const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
     let [voice, video] = get_local_voice_status(topic)
     if (video) voice = true
     //const channels = await get_my_channels(key)
-    console.log("Got local voice", voice)
-    console.log("Got local video", video)
 
-    console.log("Voice", voice)
     const data = JSON.stringify({
         address: my_address,
         signature: sig,
@@ -441,7 +418,7 @@ const send_joined_message = async (key, topic, my_address) => {
         video: video,
         time: active.time
     })
-    console.log("Sent joined mesg", data)
+
     send_swarm_message(data, key)
 }
 
@@ -451,6 +428,7 @@ const incoming_message = async (data, topic, connection, key) => {
     const check = await check_data_message(data, connection, topic)
     if (check === "Error") {
         connection_closed(connection, topic)
+        return
     }
     if (check) return
     const hash = str.substring(0,64)
@@ -466,7 +444,6 @@ const incoming_message = async (data, topic, connection, key) => {
 
 
 const send_swarm_message = (message, key) => {
-    console.log("Sending swarm msg", message)
     let active = active_swarms.find(a => a.key === key)
     if (!active) return
     active.connections.forEach(chat => {
@@ -588,25 +565,21 @@ const check_file_message = async (data, topic, address) => {
     const type = data.type
     const info = data.info
 
-    if (type === 'file') console.log("data file inf incoming", data)
-
-    if (info === 'file-shared') {
-        console.log("Peer added new file", data)
+    if (data.type === 'file-shared') {
         add_remote_file(data.fileName, address, data.size, topic, true, data.hash)
     }
 
-    if (info === 'file-removed') console.log("'file removed", data)
-
-    if (type === 'upload-ready') {
-        console.log("address! upload ready", address)
-        await add_remote_file(data.fileName, address, data.size, data.key, true)
-        start_download(Hugin.downloadDir, data.fileName, address, data.key)
-    }
-
-    if (type === 'download-request') {
+    if (data.type === 'download-request') {
         const key = await start_upload(data, topic)
         send_file(data.fileName, data.size, address, key, true)
     }
+
+    if (data.type === 'upload-ready') {
+        await add_remote_file(data.fileName, address, data.size, data.key, true)
+        start_download(Hugin.downloadDir, data.fileName, address, data.key)
+    }
+    
+    if (data.type === 'file-removed') console.log("'file removed", data) //TODO REMOVE FROM remoteFiles
 
 }
 
@@ -616,12 +589,11 @@ const errorMessage = (message) => {
 }
 
 ipcMain.on('join-voice', async (e, data) => {
-    console.log("Join voice", data.key)
     send_voice_channel_status(true, data)
 })
 
 ipcMain.on('exit-voice', async (e, key) => {
-    console.log("exit voice", key)
+    console.log("Exit voice")
     
     //Double check if we are active in voice or if the swarm is still active
     const active = active_swarms.find(a => a.key === key)

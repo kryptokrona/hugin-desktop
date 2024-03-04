@@ -23,11 +23,11 @@ let hashed_pass = ""
 
 //IPC LISTENERS
 
-ipcMain.on('switchNode', (e, node) => {
+ipcMain.on('switch-node', (e, node) => {
     pickNode(node) 
 })
 
-ipcMain.on('sendTx', (e, tx) => {
+ipcMain.on('send-tx', (e, tx) => {
     sendTx(tx)
 })
 
@@ -37,29 +37,29 @@ ipcMain.on('rescan', async (e, height) => {
     js_wallet.reset(parseInt(height))
 })
 
-ipcMain.handle('getPrivateKeys', async () => {
+ipcMain.handle('get-private-keys', async () => {
     return keychain.getPrivKeys()
 })
 
-ipcMain.handle('getMnemonic', async () => {
+ipcMain.handle('get-mnemonic', async () => {
     return await js_wallet.getMnemonicSeed()
 })
 
-ipcMain.handle('getBalance', async () => {
+ipcMain.handle('get-balance', async () => {
     return await js_wallet.getBalance()
 })
 
-ipcMain.handle('getAddress', async () => {
+ipcMain.handle('get-address', async () => {
     return js_wallet.getAddresses()
 })
 
-ipcMain.handle('getHeight', async () => {
+ipcMain.handle('get-height', async () => {
     let [walletHeight, daemonCount, networkHeight] = await getSyncStatus()
     return { walletHeight, networkHeight }
 })
 
 //Gets n transactions per page to view in frontend
-ipcMain.handle('getTransactions', async (e, startIndex) => {
+ipcMain.handle('get-transactions', async (e, startIndex) => {
     return await getTransactions()
 })
 
@@ -364,7 +364,7 @@ function incomingTx(transaction) {
     const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
         let synced = network_height - wallet_count <= 2
         if (!synced) return
-        optimizeMessages()
+        optimize_message_inputs()
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
         console.log('transaction', transaction)
         sender('new-message', transaction.toJSON())
