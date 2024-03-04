@@ -24,7 +24,7 @@
     let startTone = new Audio('/audio/startcall.mp3')
     let channels = []
     let voice_channel = []
-    let connected = false
+    let loading = false
     let topic = ""
     const dispatch = createEventDispatcher()
     const my_address = $user.myAddress
@@ -50,15 +50,17 @@
     
 
     const join_voice_channel = async (video = false, screen) => {
+        loading = true
         if (in_voice) return
         if (thisSwarm.voice_channel.length > 9) {
             window.api.errorMessage('There are too many in the call')
+            loading = false
             return
         }
         startTone.play()
         $swarm.showVideoGrid = true
         console.log("Joining!")
-
+        await sleep(100)
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
@@ -74,7 +76,8 @@
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
         //Set to true? here
         thisSwarm.voice_connected = true
-        $swarm = $swarm 
+        $swarm = $swarm
+        loading = false
         console.log("Should be joined and connected here in this swarm", thisSwarm)
     }
 
@@ -158,7 +161,7 @@
         <div>
         <div class="connectButton">
             {#if !in_voice}
-            <FillButton text={"Join call"} enabled={true} on:click={join_voice_channel}/>
+            <FillButton text={"Join call"} enabled={true} loading={loading} on:click={join_voice_channel}/>
             {:else}
             <p>{time}</p>
             {/if}
