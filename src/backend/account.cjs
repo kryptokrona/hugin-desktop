@@ -8,15 +8,9 @@ const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const dbPath = userDataDir + '/SQLmessages.db'
 const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
-let sender
 
 const Store = require('electron-store')
 const store = new Store()
-
-async function startDatabase(privKey) {
-  
-  await loadDB(userDataDir, dbPath, privKey)
-}
 
 class Account {
     constructor () {
@@ -42,7 +36,7 @@ class Account {
      }
     
     async load() {
-      await startDatabase(this.wallet.getPrimaryAddressPrivateKeys())
+      await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys())
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()

@@ -1,21 +1,12 @@
 
 const sqlite3 = require('better-sqlite3-multiple-ciphers')
 const sanitizeHtml = require('sanitize-html')
-
 const Store = require('electron-store')
 const store = new Store()
-
 const {sleep} = require('./utils.cjs')
 
 const closeDB = async () => {
-    
-    store.set({
-        sql: {
-            encrypted: true
-        }
-    });
-    database.close();
-    
+    database.close();    
 }
 
 let database
@@ -23,11 +14,15 @@ let database
 const loadDB = async (userDataDir, dbPath, privKey) => {
     database = new sqlite3(dbPath)
     //If db is encrypted. Read with key
-
-    if (store.get('sql.encrypted')) {
-        database.key(Buffer.from(privKey[0]))
-        database.rekey(Buffer.from(privKey[0]))
-    }
+    if (store.get('sql.encrypted')) database.key(Buffer.from(privKey[0]))
+    else  {
+        store.set({
+            sql: {
+                encrypted: true
+            }
+        });
+    }   
+    database.rekey(Buffer.from(privKey[0]))
     if(!store.get('delete.after')) {
         store.set({
             delete: {
@@ -646,7 +641,7 @@ const getConversation = async (chat) => {
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
     const channels = await getChannels()
-    let limit = 10
+    let limit = 50
     let offset = 0
     if (page !== 0) offset = page * limit
     const thisGroup = []

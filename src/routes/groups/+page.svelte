@@ -474,7 +474,7 @@ async function updateReactions(msg) {
                     hash="{message.hash}"
                 />
             {/each}
-            {#if (fixedGroups.length + filterEmojis.length) > 9 && loadMore } 
+            {#if (fixedGroups.length + filterEmojis.length) > 99 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
         </div>
