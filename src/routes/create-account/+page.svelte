@@ -172,10 +172,7 @@
         </div>
             <FillButton disabled="{false}" text="Custom" on:click="{() => (showNodes = true)}"/>
             
-            <FillButton disabled="{false}" info={true} text="Auto" on:click="{async () => await autoNode()}"/>
-                {#if loading}
-                    <Moon color="#000000" size="20" unit="px"/>
-                {/if}
+            <FillButton disabled="{false}" info={true} loading={loading} text="Auto" on:click="{async () => await autoNode()}"/>
          
         </div>
     </div>

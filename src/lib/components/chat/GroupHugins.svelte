@@ -67,29 +67,37 @@ const disconnect_from_swarm = async () => {
     }
 
 let firstConnect = false
+let loading = false
 
-const connecto_to_swarm = () => {
+const connecto_to_swarm = async () => {
+        loading = true
         if (!window.localStorage.getItem('swarm-info')) {
             $swarm.showInfo = true
             firstConnect = true
+            loading = false
             return
         }
         if (thisSwarm) {
             disconnect_from_swarm()
+            await sleep(200)
+            loading = false
             return
         } else if (!thisSwarm && $swarm.active.length) {
             //Temporary fix until we handle more 
             window.api.errorMessage('You are already in a room')
+            loading = false
             return
         }
         
         if ($webRTC.call.length) {
             window.api.errorMessage('You are already in a call')
+            loading = false
             return
         }
         
         if (timeout) {
             window.api.errorMessage('Please wait a couple of seconds')
+            loading = false
             return
         }
 
@@ -101,6 +109,8 @@ const connecto_to_swarm = () => {
             name: $user.username
         })
         timeout = true
+        await sleep(200)
+        loading = false
     }
 
     const show_video_room = () => {
@@ -122,7 +132,7 @@ const connecto_to_swarm = () => {
             <div class="connect" on:click={connecto_to_swarm}>
                 <!-- <Lightning connected={thisSwarm} /> -->
                 {#if !thisSwarm}
-                    <FillButton disabled={false} enabled={true} text={"Join room"} />
+                    <FillButton disabled={false} enabled={true} loading={loading} text={"Join room"} />
                     {:else}
                     <FillButton disabled={false} text={"Leave room"} />
                     {/if}    
