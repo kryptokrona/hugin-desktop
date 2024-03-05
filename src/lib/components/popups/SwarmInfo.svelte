@@ -26,7 +26,8 @@
     
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
                 <div >
-                <p>This feature is still experimental! 
+                <p>This feature is still experimental!
+                <br>
                     Join rooms only with friends.
                     
                 </p>
