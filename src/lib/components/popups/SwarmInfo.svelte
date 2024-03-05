@@ -12,6 +12,10 @@
         dispatch('join-room')
         $swarm.showInfo = false
     }
+
+    const close = () => {
+        $swarm.showInfo = false
+    }
     
     </script>
     
@@ -31,6 +35,14 @@
                     disabled="{false}"
                     enabled="{true}"
                     on:click="{() => enter()}"
+                    />
+                    <br>
+                    <br>
+                    <FillButton
+                    text="{"Close"}"
+                    disabled="{false}"
+                    enabled="{false}"
+                    on:click="{() => close()}"
                 />
         </div>
     
