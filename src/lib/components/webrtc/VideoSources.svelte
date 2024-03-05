@@ -83,7 +83,7 @@ $: activeDevice = $mediaSettings.cameraId
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
     z-index: 999;
-
+    max-height: 400px;
     div {
         text-align: center;
         border-radius: 5px;
@@ -94,6 +94,28 @@ $: activeDevice = $mediaSettings.cameraId
             background-color: var(--card-border);
         }
     }
+}
+
+.list {
+    --scrollbarBG: transparent;
+    --thumbBG: #3337;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+
+.list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.list::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+}
+
+.list::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 3px;
+    border: 3px solid var(--scrollbarBG);
 }
 
 .picked {
