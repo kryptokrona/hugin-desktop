@@ -20,7 +20,7 @@ const { keychain } = require('./crypto.cjs')
 let js_wallet
 let daemon
 let hashed_pass = ""
-
+let saving = false
 //IPC LISTENERS
 
 ipcMain.on('switch-node', (e, node) => {
@@ -105,13 +105,14 @@ async function startJsWallet(walletName, password, node) {
         'heightchange',
         async (walletBlockCount, localDaemonBlockCount, networkBlockCount) => {
             let synced = networkBlockCount - walletBlockCount <= 2
+            if (networkBlockCount === 0) return
             if (synced) {
                 //Send synced event to frontend
                 sender('sync', 'Synced')
 
                 // Save js wallet to file
                 console.log('///////******** SAVING WALLET *****\\\\\\\\')
-                await saveWallet(js_wallet, walletName, password)
+                if (!saving) await saveWallet(js_wallet, walletName, password)
             } else if (!synced) {
 
             }
@@ -249,15 +250,16 @@ const loginWallet = async (walletName, password) => {
 }
 
 const saveWallet = async (wallet, walletName, password) => {
+    saving = true
     let my_wallet = await encryptWallet(wallet, password)
     let wallet_json = JSON.stringify(my_wallet)
-
     try {
         await files.writeFile(userDataDir + '/' + walletName + '.json', wallet_json)
     } catch (err) {
         console.log('Wallet json saving error, revert to saving wallet file')
         wallet.saveWalletToFile(userDataDir + '/' + walletName + '.wallet', password)
     }
+    saving = false
 }
 
 const saveWalletToFile = (wallet, walletName, password) => {
