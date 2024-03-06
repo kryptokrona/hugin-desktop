@@ -36,6 +36,7 @@
     const focusImage = (image) => {
         $fileViewer.focusImage = file.path
         $fileViewer.enhanceImage = true
+        $fileViewer.size = file.size
     }
 
     async function loadFile(file) {
