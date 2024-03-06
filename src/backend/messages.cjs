@@ -198,19 +198,18 @@ const start_message_syncer = async () => {
 }
 
 let incoming_messages = []
-const incoming = () => { return incoming_messages.length > 0 ? true : false}
 
 async function background_sync_messages(checkedTxs = false) {
     console.log('Background syncing...')
-    
+    const incoming = incoming_messages.length > 0 ? true : false
     //First start, set known pool txs
     if (checkedTxs) {
         known_pool_txs = await set_known_pooltxs(checkedTxs)
     }
     
     const transactions = await fetch_hugin_messages()
-        if (!transactions && !incoming) return
-        const large_batch = transactions.length > 99
+    if (!transactions && !incoming) return
+    const large_batch = transactions.length > 99 ? true : false
 
     if (large_batch || (large_batch && incoming)) {
         //Add to que
@@ -226,7 +225,7 @@ async function background_sync_messages(checkedTxs = false) {
         decrypt_hugin_messages(decrypt = update_que(), true)
         return
     }
-    
+
     Hugin.send('incoming-que', false)
     console.log("Incoming transactions", transactions.length)
     decrypt_hugin_messages(transactions, false)
@@ -1001,8 +1000,9 @@ async function save_contact(hugin_address, nickname = false, first = false) {
     if (known_keys.indexOf(key) == -1) {
         known_keys.push(key)
     }
-
+    
     saveThisContact(addr, key, name)
+    Hugin.send('saved-addr', addr)
 
     if (first) {
         save_message({
@@ -1010,13 +1010,11 @@ async function save_contact(hugin_address, nickname = false, first = false) {
             k: key,
             from: addr,
             chat: addr,
-            sent: 1,
+            sent: true,
             t: Date.now(),
         })
         known_keys.pop(key)
     }
-
-    Hugin.send('saved-addr', hugin_address)
 }
 
 async function check_history(messageKey, addr) {

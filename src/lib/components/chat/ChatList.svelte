@@ -36,9 +36,9 @@ window.api.receive('newMsg', () => {
 })
 
 //Listen for sent message to update conversation list
-window.api.receive('saved-addr', async (data) => {
+window.api.receive('saved-addr', async (addr) => {
     await printConversations()
-    let sender = chatList.find((a) => a.chat === data.substring(0, 99))
+    let sender = chatList.find((a) => a.chat === addr)
     sendConversation(sender)
 })
 
@@ -50,8 +50,8 @@ const getConversations = async () => {
 const printConversations = async () => {
     newArray = await getConversations()
     //If it is not the same message and not our active chat, add unread boolean
-    if (
-        newArray[0].timestamp !== chatList[0].timestamp &&
+    if ( chatList.length &&
+        newArray[0].timestamp !== chatList[0]?.timestamp &&
         newArray[0].sent === 0 &&
         $user.activeChat.chat !== newArray[0].chat
     ) {

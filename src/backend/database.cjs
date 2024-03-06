@@ -578,10 +578,7 @@ const getConversations = async () => {
         removeContact(welcomeAddress)
        // removeMessages(welcomeAddress)
     }
-
-    let name
     let newRow
-    let key
     const myConversations = []
     return new Promise((resolve, reject) => {
         const getMyConversations = `
@@ -596,16 +593,14 @@ const getConversations = async () => {
 
         for(const conversation of stmt.iterate()) {
             contacts.some(function (chat) {
-                if (chat.address == conversation.chat) {
-                    name = chat.name
-                    key = chat.key
+                if (chat.address === conversation.chat) {
                     newRow = {
-                        name: name,
+                        name: chat.name,
                         msg: conversation.msg,
                         chat: conversation.chat,
                         timestamp: conversation.timestamp,
                         sent: conversation.sent,
-                        key: key,
+                        key: chat.key,
                     }
                     myConversations.push(newRow)
                 }
