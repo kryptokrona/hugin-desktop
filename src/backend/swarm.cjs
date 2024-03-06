@@ -18,7 +18,6 @@ let remoteFiles = []
 let active_swarms = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 let sender
-let dht_keys
 let my_address
 let my_name = ""
 
@@ -57,25 +56,17 @@ const send_voice_channel_status = async (joined, status) => {
    
         //If no others active in the voice channel, return
         if (!active.connections.some(a => a.voice === true)) return
-        console.log("Updating active voice connections...")
         //Check whos active and call them individually
         let active_voice = active.connections.filter(a => a.voice === true && a.address)
-        console.log("Active connections in voice channel...", active_voice)
         active_voice.forEach(async function(user) {
-            console.log("Joining voice with:", user.address)
             await sleep(100)
             //Call to VoiceChannel.svelte
             join_voice_channel(status.key, active.topic, user.address)
         })
-
-
     }
-    
-    console.log("Sent joined voice message", data)
 }
 
 const join_voice_channel = (key, topic, address) => {
-    //"Join the voice channel in with webRTC"
     sender("join-voice-channel", {key, topic, address})
 }
 
@@ -96,7 +87,6 @@ const end_swarm = async (key) => {
     if (!active) return
     const topic = active.topic
     sender('swarm-disconnected', topic)
-    console.log("Ending active swarm", topic)
     update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
     
     active.connections.forEach(chat => {
@@ -398,7 +388,7 @@ const get_my_channels = async (key) => {
 
 const send_joined_message = async (key, topic, my_address) => {
     //Use topic as signed message?
-    const msg = dht_keys.get().publicKey
+    const msg = topic
     const active = get_active_topic(topic)
     if (!active) return
     const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
