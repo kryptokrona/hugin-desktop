@@ -452,7 +452,7 @@ p {
 }
 
 .emoji {
-    font-size: 21px !important;
+    // font-size: 21px !important;
     user-select: text;
 }
 
