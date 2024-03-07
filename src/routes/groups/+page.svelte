@@ -157,7 +157,7 @@ const sendGroupMsg = async (e) => {
 
 
 const scrollDown = () => {
-    windowChat.scrollTop = windowHeight
+    windowChat.scrollTop = windowChat.scrollTopMax
 }
 
 //Prints any single group message. 

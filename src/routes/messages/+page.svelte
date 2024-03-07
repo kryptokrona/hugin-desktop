@@ -102,7 +102,7 @@ const printMessage = (data) => {
 
 
 const scrollDown = () => {
-    windowChat.scrollTop = windowHeight
+    windowChat.scrollTop = windowChat.scrollTopMax
 }
 
 const saveToStore = (data) => {
