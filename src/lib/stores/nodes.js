@@ -183,7 +183,7 @@ export async function getBestApi() {
   
         recommended_node = `${this_node.url}:${this_node.port}`;
         console.log("resp ok!", recommended_node)
-        return(recommended_node);
+        return recommended_node;
       }
     } catch (e) {
       console.log(e);

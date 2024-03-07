@@ -7,7 +7,7 @@
 
   let nodeInput = ''
   let selectedNode
-
+  let loading = false
   const dispatch = new createEventDispatcher()
 
   const back = () => {
@@ -15,6 +15,7 @@
   }
 
   const auto = async () => {
+    loading = true
     const randomNode = await getBestNode();
 
     if (!randomNode) {
@@ -22,7 +23,9 @@
         return
     }
 
-    nodeInput = `${randomNode.url}:${randomNode.port}`
+    loading = false
+
+    nodeInput = randomNode
   }
 
   const connectTo = () => {
@@ -55,7 +58,7 @@
     </div>
     <div class="button_wrapper">
         <FillButton text="Back" disabled="{false}" on:click="{back}"/>
-        <FillButton text="Auto" disabled="{false}" on:click="{auto}"/>
+        <FillButton text="Auto" disabled="{false}" info={true} loading={loading} on:click="{auto}"/>
         <FillButton
                 text="Connect"
                 disabled="{!(nodeInput.length > 0)}"
