@@ -223,7 +223,7 @@
                     {:else if beamInvite || oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p in:fade class="message">Beam connected ⚡️</p>
+                        <p in:fade class="message blink_me finish">Beam connected ⚡️</p>
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
@@ -283,7 +283,7 @@
                     {:else if oldInvite}
                         <p in:fade class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p class="message" in:fade>Beam connected ⚡️</p>
+                        <p class="message blink_me finish" in:fade>Beam connected ⚡️</p>
                     {:else if codeBlock}
                         <CodeBlock lang={lang} code={codeMessage} />
                     {:else if youtube}
