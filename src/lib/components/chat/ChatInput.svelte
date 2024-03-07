@@ -23,6 +23,7 @@
 
   onMount(async () => {
     mount = true
+    fieldFocus()
     await sleep(1000)
     //Not sure why it takes so long to find the emoji picker.
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
