@@ -45,6 +45,7 @@
     async function loadFile(file) {
         await sleep(200)
         let arr = await window.api.loadFile(file.path, file.size)
+        thisFile = arr
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
@@ -86,7 +87,10 @@
     {:else if downloadDone && !group}
         {#if !video}
                 {#if thisFile === "File"}
-                <p>{file.name}</p>
+                <div in:fade>
+                    <Progress file={file} send={false}/>
+                </div>
+                <p class="message done">File downloaded!</p>
                 {:else if thisFile === "File not found"}
                 <p class="message error">File not found</p>
                 {:else}
