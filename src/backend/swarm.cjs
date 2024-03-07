@@ -552,10 +552,7 @@ const start_upload = async (file, topic) => {
 
 const check_file_message = async (data, topic, address) => {
 
-    const type = data.type
-    const info = data.info
-
-    if (data.type === 'file-shared') {
+    if (data.info === 'file-shared') {
         add_remote_file(data.fileName, address, data.size, topic, true, data.hash)
     }
 
