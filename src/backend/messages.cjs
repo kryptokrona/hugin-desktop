@@ -209,7 +209,7 @@ async function background_sync_messages(checkedTxs = false) {
     
     const transactions = await fetch_hugin_messages()
     if (!transactions && !incoming) return
-    const large_batch = transactions.length > 99 ? true : false
+    const large_batch = transactions.length > 149 ? true : false
 
     if (large_batch || (large_batch && incoming)) {
         //Add to que
@@ -232,7 +232,7 @@ async function background_sync_messages(checkedTxs = false) {
 }
 
 function update_que() {
-    const decrypt = incoming_messages.slice(0,99)
+    const decrypt = incoming_messages.slice(0,149)
     const update = incoming_messages.slice(decrypt.length)
     incoming_messages = update
     return decrypt
