@@ -392,7 +392,7 @@ const pickNode = async (node) => {
     loadDaemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
     sender('switch-node', picked)
-    saveNode(node)
+    saveNode(picked)
     Hugin.node = picked
 }
 
@@ -418,12 +418,8 @@ const loadMiscData = async () => {
     await db.read()
     let node = db.data.node.node
     let port = db.data.node.port
-
-    if (node || port === undefined) {
-        node = 'privacymine.net'
-        port = 11898
-    }
-    return [{ node, port}, db.data.walletNames]
+    
+    return [{node, port}, db.data.walletNames]
   }
 
 

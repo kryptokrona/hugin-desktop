@@ -163,7 +163,7 @@ const start_message_syncer = async () => {
      while (true) {
          try {
              //Start syncing
-             await sleep(1000 * 5)
+             await sleep(1000 * 10)
  
              await background_sync_messages()
  
