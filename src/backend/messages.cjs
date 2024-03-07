@@ -52,6 +52,7 @@ const store = new Store()
 let known_pool_txs = []
 let known_keys = []
 let block_list = []
+let incoming_messages = []
 
 //IPC MAIN LISTENERS
 
@@ -197,8 +198,6 @@ const start_message_syncer = async () => {
      }
 }
 
-let incoming_messages = []
-
 async function background_sync_messages(checkedTxs = false) {
     console.log('Background syncing...')
     const incoming = incoming_messages.length > 0 ? true : false
@@ -220,7 +219,7 @@ async function background_sync_messages(checkedTxs = false) {
         Hugin.send('incoming-que', true)
     }
 
-    if(incoming) {
+    if(incoming || large_batch) {
         console.log("Checking incoming messages:", incoming_messages.length)
         decrypt_hugin_messages(decrypt = update_que(), true)
         return
@@ -360,30 +359,93 @@ function set_known_pooltxs(checkedTxs) {
     return known
 }
 
+async function trimTxs(json) {
+    json = JSON.stringify(json)
+    .replaceAll('.txPrefix', '')
+    .replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash')
+
+    json = JSON.parse(json)
+
+    return json.addedTxs
+}
+
+async function check_node_version(node) {
+    try {
+    const version =  await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
+    const json = await version.json()
+    if (json.version === "1.1.4") return true
+    else return false
+    } catch(e) {
+        return false
+    }
+}
+
+async function get_pool_changes_lite(node) {
+    try {
+    const resp = await fetch(
+        'http://' + node.node + ':' + node.port.toString() + '/get_pool_changes_lite',
+        {
+            method: 'POST',
+            body: JSON.stringify({ knownTxsIds: known_pool_txs }),
+        }
+    )
+    return await resp.json()
+
+    } catch(e) {
+        //Node error
+        return false
+    }
+}
+
+
+async function get_pool(node) {
+    try {
+    const lastChecked = store.get('pool.checked')
+    store.set({
+        pool: {
+            checked: Math.floor(Date.now() / 1000)
+        }
+    })
+    const resp = await fetch(
+        'http://' + node.node + ':' + node.port.toString() + '/get_pool',
+        {
+            method: 'POST',
+            body: JSON.stringify({ timestampBegin: lastChecked }),
+        }
+    )
+    return await resp.json()
+
+    } catch (e) {
+        //Node error
+        return false
+    }
+}
 
 async function fetch_hugin_messages() {
     const node = Hugin.node
+    const incoming = incoming_messages.length > 0 ? true : false
+    let json
     try {
-        const resp = await fetch(
-            'http://' + node.node + ':' + node.port.toString() + '/get_pool_changes_lite',
-            {
-                method: 'POST',
-                body: JSON.stringify({ knownTxsIds: known_pool_txs }),
-            }
-        )
-
-        let json = await resp.json()
-        json = JSON.stringify(json)
-            .replaceAll('.txPrefix', '')
-            .replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash')
-
-        json = JSON.parse(json)
-
-        let transactions = json.addedTxs
+        const latest = await check_node_version(node)
+        console.log("Latest?", latest)
+        if (latest) {
+            //If we already have pending incoming unchecked messages, return
+            //So we do not update the latest checked timestmap and miss any messages.
+            if (incoming) return false
+            //Latest version, fetch more messages with last checked timestamp
+            json = await get_pool(node)
+        } else {
+            //Old node version, use get pool changes endpoint
+            json = await get_pool_changes_lite(node)
+        }
+        if (!json) {
+            Hugin.send('sync', 'Error')
+            return false
+        }
+        const transactions = trimTxs(json)
         //Try clearing known pool txs from checked
         known_pool_txs = known_pool_txs.filter((n) => !json.deletedTxsIds.includes(n))
         if (transactions.length === 0) {
-            console.log('Empty array...')
             console.log('No incoming messages...')
             return false
         }

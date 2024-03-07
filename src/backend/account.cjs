@@ -31,6 +31,18 @@ class Account {
       this.sender = s
       this.node = node
       this.downloadDir = downloadDir
+  
+      if (!store.get('pool.checked')) {
+        //If no value is set, check from 24h back on first check.
+        store.set({
+          pool: {
+              checked: Math.floor((Date.now() / 1000) - 84600)
+          }
+      })
+      }
+
+      console.log("Pool checked time:", store.get('pool.checked'))
+
       await this.load()
 
      }
