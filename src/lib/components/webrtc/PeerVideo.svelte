@@ -299,6 +299,7 @@ p {
       opacity: 0;
       transition: 200ms ease-in-out;
       border-radius: 0 0 10px 10px;
+      margin-bottom: -5px;
     
     &:hover {
         opacity: 0.9;

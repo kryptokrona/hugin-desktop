@@ -128,7 +128,6 @@ function startDataChannel(video, this_call, contact) {
         initiator: true,
         trickle: false,
         wrtc: wrtc,
-        config: { iceServers: [{ urls: 'stun:stun.bahnhof.net:3478' }, { urls: 'stun:global.stun.twilio.com:3478' }] },
     })
     const address = this_call.chat
     this_call.channel = channel
@@ -264,7 +263,6 @@ async function startPeer1(stream, video, contact) {
         initiator: true,
         trickle: false,
         wrtc: wrtc,
-        config: { iceServers: [{ urls: 'stun:stun.bahnhof.net:3478' }, { urls: 'stun:stun.ipfire.org:3478' }] },
     })
 
     peer1.on('close', (e) => {

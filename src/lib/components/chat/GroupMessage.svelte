@@ -409,7 +409,7 @@ p {
 }
 
 .rtc {
-    width: 240px;
+    max-width: 240px;
 }
 
 .min {
