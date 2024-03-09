@@ -21,7 +21,7 @@
     const enter = (e) => {
         if (e.key === 'Enter' && password.length && step === 3) {
             handleLogin()
-        } else if (e.key === 'Enter' && step < 3) {
+        } else if (e.key === 'Enter' && username.length && step < 3) {
             step++
         }
     }
