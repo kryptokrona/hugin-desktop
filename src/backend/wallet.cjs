@@ -411,7 +411,6 @@ const loadMiscData = async () => {
     await db.read()
     let node = db.data.node.node
     let port = db.data.node.port
-    node = undefined
     if (node === undefined) {
         node = "techy.ddns.net"
         port = 11898
