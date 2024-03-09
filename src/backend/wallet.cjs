@@ -69,7 +69,7 @@ const loadWallet = (ipc) => {
     sender = ipc
 }
 
-async function startJsWallet(walletName, password, node) {
+async function startHugin(walletName, password, node) {
     
     if (await checkPassword(password, node)) return false
 
@@ -137,7 +137,7 @@ async function createAccount(accountData) {
     }
     const [js_wallet, error] =
         accountData.mnemonic.length > 0
-            ? await importFromSeed(
+            ? await importFromSeed(daemon,
                 accountData.blockheight,
                 accountData.mnemonic)
             : await createWallet()
@@ -155,13 +155,8 @@ async function createAccount(accountData) {
     //Saving wallet name
     db.data.walletNames.push(walletName)
     await db.write()
-    // console.log('creating dbs...')
-    // //Create welcome PM message
-    // welcomeMessage()
-    // //Create Hugin welcome contact
-    // firstContact()
 
-    return await startJsWallet(walletName, myPassword, node)
+    return await startHugin(walletName, myPassword, node)
 
 }
 
@@ -199,8 +194,6 @@ const createWallet = async () => {
 const loadDaemon = (nodeUrl, nodePort) => {
   daemon = new WB.Daemon(nodeUrl, nodePort)
 }
-
-
 
 const checkPassword = async (password, node) => {
     //If we are already logged in
@@ -409,7 +402,7 @@ async function loadHugin(send) {
 
 async function loadAccount(data) {
     let node = {node: data.node, port: data.port}
-    return await startJsWallet(data.thisWallet, data.myPassword, node)
+    return await startHugin(data.thisWallet, data.myPassword, node)
 }
 
 
@@ -418,6 +411,11 @@ const loadMiscData = async () => {
     await db.read()
     let node = db.data.node.node
     let port = db.data.node.port
+    node = undefined
+    if (node === undefined) {
+        node = "techy.ddns.net"
+        port = 11898
+    }
     
     return [{node, port}, db.data.walletNames]
   }
