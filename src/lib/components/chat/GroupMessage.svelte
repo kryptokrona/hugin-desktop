@@ -221,7 +221,7 @@ const openLinkMessage = (url) => {
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div class="message" id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}">
+<div class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}">
     <div>
         {#if replyMessage}
             {#if thisReply}
@@ -272,14 +272,14 @@ const openLinkMessage = (url) => {
             </div>
             {#if youtube}
                 <Youtube id={embed_code} />
-                <p style="user-select: text;">{messageText}</p>
+                <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
             {:else if link}
-                <p style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
-                <p style="user-select: text;">{messageText}</p>
+                <p class:rtc style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if emojiMessage}
-                <p class="emoji">{msg}</p>
+                <p class:rtc class="emoji">{msg}</p>
             {:else if rtc && file && !myMsg}
                 <DownloadFile file={file} group={true}/>
             {:else if rtc && file && myMsg}
@@ -463,5 +463,9 @@ p {
 
 .share {
     color: var(--alert-color)
+}
+
+.yt {
+    max-width: 350px;
 }
 </style>
