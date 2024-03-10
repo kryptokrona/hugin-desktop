@@ -47,6 +47,9 @@ const groupRouteAndMenu = () => {
     if ($page.url.pathname === '/groups') {
         $layoutState.hideGroupList = !$layoutState.hideGroupList
     } else {
+        setTimeout(() => {
+            $layoutState.hideGroupList = false
+        }, 300)
         goto('/groups')
     }
 }
