@@ -23,13 +23,7 @@ const userDataDir = app.getPath('userData')
 const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
-
-const { expand_sdp_offer, parse_sdp } = require("./sdp.cjs")
-const { loadHugin, loadAccount, loadWallet, createAccount } = require('./wallet.cjs')
-const { new_beam } = require("./beam.cjs")
-const { new_swarm, end_swarm} = require("./swarm.cjs")
-const { send_message, start_message_syncer } = require('./messages.cjs')
-const { keychain } = require('./crypto.cjs')
+const { loadHugin, loadWallet } = require('./wallet.cjs')
 
 let mainWindow
 
@@ -235,9 +229,6 @@ const startCheck = async () => {
     if (fs.existsSync(userDataDir + '/misc.db')) {
         //A misc database exits, probably we have an account
             loadHugin(mainWindow)
-            ipcMain.on('login', async (event, data) => {
-               if (await loadAccount(data)) start_message_syncer()
-            })
     } else {
         //No wallet found, probably first start
         console.log('wallet not found')
@@ -260,32 +251,10 @@ const { desktopCapturer } = require('electron')
     })
 }
 
-ipcMain.on('create-account', async (e, accountData) => {
-    if(await createAccount(accountData)) start_message_syncer()
-})
-
-//BEAM
-
-ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
-    let beamMessage = await new_beam(link, chat, send);
-    if (beamMessage === "Error") return
-    if (!beamMessage) return
-    send_message(beamMessage.msg, beamMessage.chat, offchain)
-});
 
 ipcMain.on("active-video", async (e, chat) => {
     mainWindow.webContents.send('activate-video')
 });
-
-//SWARM
-
-
-ipcMain.on('new-swarm', async (e, data) => {
-    new_swarm(data, sender, keychain.getXKRKeypair())
-})
-ipcMain.on('end-swarm', async (e, key) => {
-    end_swarm(key)
-})
 
 ipcMain.on('exit-voice-channel', async (e, key) => {
     mainWindow.webContents.send('leave-active-voice-channel')
@@ -322,10 +291,6 @@ ipcMain.on('start_group_call', async (e, contacts) => { })
 
 ipcMain.on('create-room', async (e, type) => {
     mainWindow.webContents.send('start-room', type)
-})
-
-ipcMain.on('get-sdp', (e, data) => {
-    get_sdp(data)
 })
 
 //CALL USER MEDIA
@@ -382,12 +347,6 @@ ipcMain.on('openLink', (e, url) => {
     shell.openExternal(url)
 })
 
-ipcMain.on('expand-sdp', (e, data, address) => {
-    let recovered_data = expand_sdp_offer(data, true)
-    let expanded_data = [recovered_data, address]
-    mainWindow.webContents.send('got-expanded', expanded_data)
-})
-
 
 //UPDATES
 
@@ -429,18 +388,6 @@ ipcMain.on('install-update', async (e, data) => {
 })
 
 
-function get_sdp(data) 
-{
-    if (data.type == 'offer') 
-    {
-        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        send_message(parsed_data, data.contact, data.offchain, data.group)
-    } 
-    else if (data.type == 'answer') 
-    {
-        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        send_message(parsed_data, data.contact, data.offchain, data.group)
-    }
-}
+
 
 

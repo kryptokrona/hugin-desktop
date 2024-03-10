@@ -32,8 +32,8 @@ const {
     toHex
 } = require('./utils.cjs')
 
-const { send_beam_message} = require("./beam.cjs")
-const { send_swarm_message } = require("./swarm.cjs")
+const { send_beam_message, new_beam} = require("./beam.cjs")
+const { send_swarm_message, new_swarm, end_swarm } = require("./swarm.cjs")
 
 const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
 const { extraDataToMessage } = require('hugin-crypto')
@@ -47,6 +47,7 @@ const xkrUtils = new CryptoNote()
 const { ipcMain } = require('electron')
 const Store = require('electron-store');
 const { Hugin } = require('./account.cjs')
+const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs')
 const store = new Store()
 
 let known_pool_txs = []
@@ -155,6 +156,34 @@ ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
     decryptGroupRtcMessage(message, key)
 })
 
+ipcMain.on('get-sdp', (e, data) => {
+    get_sdp(data)
+})
+
+ipcMain.on('expand-sdp', (e, data, address) => {
+    let recovered_data = expand_sdp_offer(data, true)
+    let expanded_data = [recovered_data, address]
+    Hugin.send('got-expanded', expanded_data)
+})
+
+//BEAM
+
+ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
+    let beamMessage = await new_beam(link, chat, send);
+    if (beamMessage === "Error") return
+    if (!beamMessage) return
+    send_message(beamMessage.msg, beamMessage.chat, offchain)
+});
+
+//SWARM
+
+
+ipcMain.on('new-swarm', async (e, data) => {
+    new_swarm(data, sender, keychain.getXKRKeypair())
+})
+ipcMain.on('end-swarm', async (e, key) => {
+    end_swarm(key)
+})
 
 const start_message_syncer = async () => {
      //Load knownTxsIds to backgroundSyncMessages on startup
@@ -314,6 +343,8 @@ async function check_for_group_message(thisExtra, thisHash) {
 
 //Validate extradata, here we can add more conditions
 function validate_extra(thisExtra, thisHash, que) {
+    if (typeof thisExtra !== "string") return false
+    if (typeof thisHash !== "string") return false
     //Extra too long
     if (thisExtra.length > 7000) {
         known_pool_txs.push(thisHash)
@@ -1094,6 +1125,22 @@ async function check_history(messageKey, addr) {
 
 
 }
+
+function get_sdp(data) 
+{
+    if (data.type == 'offer') 
+    {
+        let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
+        send_message(parsed_data, data.contact, data.offchain, data.group)
+    } 
+    else if (data.type == 'answer') 
+    {
+        let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
+        send_message(parsed_data, data.contact, data.offchain, data.group)
+    }
+}
+
+
 
 ipcMain.on('fetch-group-history', async (e, settings) => {
     let timeframe = Date.now() / 1000 - settings.timeframe * 86400

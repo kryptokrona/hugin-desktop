@@ -13,15 +13,23 @@ const Store = require('electron-store');
 const store = new Store()
 
 const {hash, sleep} = require('./utils.cjs')
-const { welcomeMessage, firstContact} = require("./database.cjs")
 const { Hugin } = require('./account.cjs')
 const { keychain } = require('./crypto.cjs')
+const { start_message_syncer } = require('./messages.cjs')
 
 let js_wallet
 let daemon
 let hashed_pass = ""
 let saving = false
 //IPC LISTENERS
+
+ipcMain.on('login', async (event, data) => {
+    if (await loadAccount(data)) start_message_syncer()
+ })
+
+ipcMain.on('create-account', async (e, accountData) => {
+    if(await createAccount(accountData)) start_message_syncer()
+})
 
 ipcMain.on('switch-node', (e, node) => {
     pickNode(node) 
