@@ -396,9 +396,11 @@
         $user.idleTime = data
     })
 
-    $: if ($user.idleTime >= 10) {
+    $: if ($user.idleTime >= 300) {
+        if ($webRTC.call.length === 0 && !$swarm.active.some(a => a.voice_connected)) {
         $user.loggedIn = false
         goto('/login');
+        }
     }
 
     window.api.receive('checked', (data)  => { 

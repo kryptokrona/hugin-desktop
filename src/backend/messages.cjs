@@ -1118,7 +1118,6 @@ async function check_history(messageKey, addr) {
     if (known_keys.indexOf(messageKey) > -1) {  
         console.log("Here we go " + addr)
         let [conv] = await getConversation(addr)
-        console.log(conv)
         if (parseInt(conv.timestamp) < parseInt(store.get("db.versionDate"))) return false
         return true
     } else {
