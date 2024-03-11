@@ -45,7 +45,7 @@
 
         {
             name: 'Security',
-            text: 'security settings',
+            text: 'Set your security preferences',
             icon: nodeIcon,
             route: "/settings/security"
         },
