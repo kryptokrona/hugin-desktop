@@ -325,27 +325,32 @@ const getSyncStatus = () => {
     return js_wallet.getSyncStatus()
 }
 
-const getTransactions = async (startIndex) => {
-    let startFrom = startIndex
-    const showPerPage = 10
-    const allTx = await js_wallet.getTransactions()
-    const pages = Math.ceil(allTx.length / showPerPage)
-    const pageTx = []
-    for (const tx of await js_wallet.getTransactions(startFrom, showPerPage)) {
-        let amount = WB.prettyPrintAmount(tx.totalAmount())
-        tx.transfers.forEach(function (value) {
-            if (value === -1000) {
-                amount = -0.01000
-            }
-        })
-        pageTx.push({
-            hash: tx.hash,
-            amount: amount.toString(),
-            time: tx.timestamp,
-        })
-    }
-
-    return { pageTx, pages }
+const getTransactions = async (startIndex, all = false) => {
+        const showPerPage = 10
+        let txs = []
+        const allTx = await js_wallet.getTransactions()
+        const pages = Math.ceil(allTx.length / showPerPage)
+        const pageTx = []
+        if (all) txs = allTx
+        else txs = await js_wallet.getTransactions(startIndex, showPerPage)
+        for (const tx of txs) {
+          //Unconfirmed txs do not have a blockheight or timestamp yet.
+          if (tx.timestamp === 0) {
+            tx.timestamp = Date.now() / 1000
+            tx.blockHeight = "Unconfirmed"
+          }
+          //Exclude optimize txs
+          if (tx.totalAmount() === 0) continue
+            pageTx.push({
+                hash: tx.hash,
+                amount: (tx.totalAmount() / 100000).toFixed(5).toString(),
+                time: tx.timestamp,
+                height: tx.blockHeight,
+                confirmed: true
+            })
+        }
+    
+        return { pageTx, pages }
 }
 
 async function createMessageSubWallet() {
