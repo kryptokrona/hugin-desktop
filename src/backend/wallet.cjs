@@ -68,7 +68,7 @@ ipcMain.handle('get-height', async () => {
 
 //Gets n transactions per page to view in frontend
 ipcMain.handle('get-transactions', async (e, startIndex) => {
-    return await getTransactions()
+    return await getTransactions(startIndex)
 })
 
 ///FUNCTIONS
