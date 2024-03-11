@@ -69,7 +69,7 @@
     {#if !downloadDone && !downloading}
          {#if !clicked}
         <p class="message loading blink_me" in:fade>{file.fileName}</p>
-        <Button on:click={downloadFile(file)} disabled={false} text="Download file"/>
+        <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
         {:else}
         <p class="message loading blink_me" in:fade>Connecting</p>
         {/if}
