@@ -51,6 +51,8 @@ const handleLogin = async (e) => {
        port = parseInt(e.detail.node.split(':')[1])
    }
 
+   $user.idleTime = 0
+
     loadSpin = true
     if (!$user.started) {
         $misc.loading = true

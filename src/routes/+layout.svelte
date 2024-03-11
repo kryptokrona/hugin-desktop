@@ -34,6 +34,7 @@
     import Conference from '/src/routes/groups/components/Conference.svelte'
     import ConferenceFloater from '/src/routes/groups/components/ConferenceFloater.svelte'
     import Rooms from '/src/routes/groups/components/Rooms.svelte'
+    import { goto } from '$app/navigation'
 
     let ready = false
     let incoming_call
@@ -391,6 +392,14 @@
         $notify.que = data
     })
 
+    window.api.receive('idle', (data) => {
+        $user.idleTime = data
+    })
+
+    $: if ($user.idleTime >= 10) {
+        $user.loggedIn = false
+        goto('/login');
+    }
 
     window.api.receive('checked', (data)  => { 
         console.log("Got p2p data", data)
@@ -457,6 +466,7 @@
                 time: file.time
         })
     }
+
     const setUploadStatus = (data) => {
         let file = $localFiles.find(a => a.fileName === data.fileName && a.chat === data.chat && data.time === a.time)
         file.progress = 0
@@ -472,6 +482,8 @@
                 time: file.time
         })
     }
+    
+    
 
 
 

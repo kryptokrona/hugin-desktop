@@ -44,7 +44,7 @@ const naclSealed = require('tweetnacl-sealed-box')
 const sanitizeHtml = require('sanitize-html')
 const crypto = new Crypto()
 const xkrUtils = new CryptoNote()
-const { ipcMain } = require('electron')
+const { ipcMain, powerMonitor } = require('electron')
 const Store = require('electron-store');
 const { Hugin } = require('./account.cjs')
 const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs')
@@ -196,6 +196,9 @@ const start_message_syncer = async () => {
              await sleep(1000 * 10)
  
              await background_sync_messages()
+
+             const idle = powerMonitor.getSystemIdleTime();
+             Hugin.send('idle', idle)
  
              const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
 
