@@ -173,7 +173,7 @@
             <Emoji/>
         </div>
     </div>
-    <div class="button" disabled="{!enableSend}" class:enableSend on:click|once="{sendMsg}">
+    <div class="button" disabled="{!enableSend}" class:enableSend on:click="{sendMsg}">
         <SendIcon/>
     </div>
 </div>
