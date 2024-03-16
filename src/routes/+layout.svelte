@@ -168,9 +168,7 @@
         })
 
         window.api.receive('privateMsg', (data) => {
-            console.log('newmsg in layout', data)
-            if (data.chat === $user.myAddress) return
-            if (data.chat !== $user.activeChat.chat) {
+            if (data.chat !== $user.activeChat.chat && data.chat !== $user.myAddress) {
                 new_message_sound.play()
             }
             if ($page.url.pathname !== '/messages') {

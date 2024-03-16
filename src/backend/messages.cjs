@@ -1116,7 +1116,6 @@ async function save_contact(hugin_address, nickname = false, first = false) {
 async function check_history(messageKey, addr) {
     //Check history
     if (known_keys.indexOf(messageKey) > -1) {  
-        console.log("Here we go " + addr)
         let [conv] = await getConversation(addr)
         if (parseInt(conv.timestamp) < parseInt(store.get("db.versionDate"))) return false
         return true
