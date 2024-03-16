@@ -1026,7 +1026,6 @@ const checkBalance = async () => {
 }
 
 async function save_group_message(msg, hash, time, offchain, channel = false) {
-    console.log("Savin group message")
     let message = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!message) return false
     if (!offchain) {

@@ -49,6 +49,13 @@
             icon: nodeIcon,
             route: "/settings/security"
         },
+
+        {
+            name: 'Files',
+            text: 'Change file settings',
+            icon: nodeIcon,
+            route: "/settings/files"
+        },
     ]
 
 

@@ -256,9 +256,9 @@ const addNewGroup = async (e) => {
     settings.recommended_api = await getBestApi()
     settings.timeframe = 14
     settings.key = group.key
-    if (settings.recommended_api) window.api.fetchGroupHistory(settings)
     await sleep(200)
     printGroup(group)
+    if (settings.recommended_api) window.api.fetchGroupHistory(settings)
 }
 
 //Svelte reactive. Sets noMsgs boolean for welcome message.
@@ -270,6 +270,7 @@ $: if ($groupMessages.length == 0) {
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
+    console.log("Print! new?", group)
     loadMore = true
     pageNum = 0
     fixedGroups = []

@@ -12,6 +12,16 @@ const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
 const Store = require('electron-store')
 const store = new Store()
 
+
+ipcMain.on('change-download-dir', (e, dir) => {
+    store.set({
+      download: {
+        dir: dir
+      }
+    })
+  Hugin.downloadDir = dir
+})
+
 class Account {
     constructor () {
       
@@ -25,13 +35,12 @@ class Account {
     }
 
     async init(wallet, name, node, s) {
-  
       this.wallet = wallet
       this.walletName = name
       this.sender = s
       this.node = node
-      this.downloadDir = downloadDir
-  
+      this.downloadDir = store.get('download.dir') ?? downloadDir
+
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({

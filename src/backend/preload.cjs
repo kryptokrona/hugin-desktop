@@ -200,6 +200,10 @@ const WINDOW_API = {
     groupUpload: async (filename, path, topic, fileSize, time, hash) => {
         ipcRenderer.send('group-upload', filename, path, topic, fileSize, time, hash)
     },
+
+    changeDowndloadDir: async (path) => {
+        ipcRenderer.send('change-download-dir', path)
+    },
 }
 
 contextBridge.exposeInMainWorld('api', WINDOW_API)
