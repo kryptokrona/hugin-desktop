@@ -596,7 +596,7 @@ const check_file_message = async (data, topic, address) => {
     if (data.type === 'upload-ready') {
         if (data.info === "file")  { 
             await add_remote_file(data.fileName, address, data.size, data.key, true)
-            start_download(downloadDir, data.fileName, address, data.key)
+            start_download(Hugin.downloadDir, data.fileName, address, data.key)
             return
         }
         // if (data.info === "profile") {
