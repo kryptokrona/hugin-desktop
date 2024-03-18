@@ -12,21 +12,14 @@ $: thispage = $page.url.pathname === '/dashboard'
 {/if}
 
 <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <rect width="24" height="24" id="artboard_1" />
-      <clipPath id="clip_1">
-        <use xlink:href="#artboard_1" clip-rule="evenodd" />
-      </clipPath>
-    </defs>
-    <g id="vuesaxlinearhouse" clip-path="url(#clip_1)">
-      <g id="vuesaxlinearhouse" artboard="eed04435-f0a9-47b4-861e-2f48a4f3e291">
-        <g id="house">
-          <path d="M2 22L22 22" id="Vector" fill="none" fill-rule="evenodd" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M2.94995 22L2.99995 9.96999C2.99995 9.35999 3.28995 8.78004 3.76995 8.40004L10.77 2.95003C11.49 2.39003 12.4999 2.39003 13.2299 2.95003L20.23 8.39003C20.72 8.77003 21 9.34999 21 9.96999L21 22" id="Vector" fill="none" stroke="#f5f5f5" stroke-width="1.5" stroke-linejoin="round" />
-          <path d="M11 17C10.17 17 9.5 17.67 9.5 18.5L9.5 22L14.5 22L14.5 18.5C14.5 17.67 13.83 17 13 17L11 17Z" id="Vector" fill="none" stroke="#f5f5f5" stroke-width="1.5" stroke-linejoin="round" />
-          <path d="M7.5 13.75C6.95 13.75 6.5 13.3 6.5 12.75L6.5 11.25C6.5 10.7 6.95 10.25 7.5 10.25L9.5 10.25C10.05 10.25 10.5 10.7 10.5 11.25L10.5 12.75C10.5 13.3 10.05 13.75 9.5 13.75L7.5 13.75Z" id="Vector" fill="none" stroke="#f5f5f5" stroke-width="1.5" stroke-linejoin="round" />
-          <path d="M14.5 13.75C13.95 13.75 13.5 13.3 13.5 12.75L13.5 11.25C13.5 10.7 13.95 10.25 14.5 10.25L16.5 10.25C17.05 10.25 17.5 10.7 17.5 11.25L17.5 12.75C17.5 13.3 17.05 13.75 16.5 13.75L14.5 13.75Z" id="Vector" fill="none" stroke="#f5f5f5" stroke-width="1.5" stroke-linejoin="round" />
-          <path d="M19.0001 7L18.9701 4L14.5701 4" id="Vector" fill="none" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <g id="vuesaxlinearelement-equal">
+      <g id="vuesaxlinearelement-equal">
+        <g id="element-equal">
+          <path d="M22 4.23C22 2.64 21.36 2 19.77 2L15.73 2C14.14 2 13.5 2.64 13.5 4.23L13.5 8.27C13.5 9.86 14.14 10.5 15.73 10.5L19.77 10.5C21.36 10.5 22 9.86 22 8.27L22 4.23Z" id="Vector" fill="none" fill-rule="evenodd" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M10.5 3.98C10.5 2.57 9.86 2 8.27 2L4.23 2C2.64 2 2 2.57 2 3.98L2 8.51C2 9.93 2.64 10.49 4.23 10.49L8.27 10.49C9.86 10.5 10.5 9.93 10.5 8.52L10.5 3.98Z" id="Vector" fill="none" fill-rule="evenodd" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M10.5 15.73C10.5 14.14 9.86 13.5 8.27 13.5L4.23 13.5C2.64 13.5 2 14.14 2 15.73L2 19.77C2 21.36 2.64 22 4.23 22L8.27 22C9.86 22 10.5 21.36 10.5 19.77L10.5 15.73Z" id="Vector" fill="none" fill-rule="evenodd" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M15 15.5L21 15.5" id="Vector" fill="none" fill-rule="evenodd" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" />
+          <path d="M15 19.5L21 19.5" id="Vector" fill="none" fill-rule="evenodd" stroke="#f5f5f5" stroke-width="1.5" stroke-linecap="round" />
           <path d="M24 0L24 24L0 24L0 0L24 0Z" id="Vector" fill="none" fill-rule="evenodd" stroke="none" />
         </g>
       </g>
