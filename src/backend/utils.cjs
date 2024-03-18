@@ -16,7 +16,7 @@ function checkImageOrVideoType(path, size) {
     if (size >= 50000000) return false
     const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
     for (a in types) {
-        if (path.endsWith(types[a])) {
+        if (path.toLowerCase().endsWith(types[a])) {
             return true
         }
     }

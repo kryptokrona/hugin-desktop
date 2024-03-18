@@ -2,13 +2,14 @@
     import { fade } from "svelte/transition"
     import Button from "$lib/components/buttons/Button.svelte"
     import { sleep } from "$lib/utils/utils"
-
+    import { user } from '$lib/stores/user.js'
     let loading = false
     let path = ""
-    
+
     const changeDownloadPath = async () => {
         loading = true
         window.api.changeDowndloadDir(path)
+        $user.downloadPath = path
         await sleep(200)
         loading = false
         window.api.successMessage('Download directory changed')
@@ -20,6 +21,7 @@
     <div class="settings" in:fade>
         <p>Change download directory
         <br>
+        <p>{$user.downloadPath}</p>
     <div class="changedir">
         <input spellcheck="false" type="text" placeholder="Enter new directory" bind:value="{path}"/>
         <Button

@@ -10,16 +10,28 @@ import { page } from '$app/stores'
 import { layoutState } from '$lib/stores/layout-state.js'
 import AlphaIcon from '$lib/components/icons/AlphaIcon.svelte'
 import Logout from '$lib/components/icons/Logout.svelte'
+import Home from '../icons/Home.svelte'
+import { onMount } from 'svelte'
 
 let sync
 let avatar
 let in_voice = false
+let fileList
+let files
 
+onMount(async () => {
+//    const profile = await window.api.getProfile()
+//    console.log("Got profile info!", profile)
+})
 $: sync = $misc.syncState
 
-userAvatar.subscribe((output) => {
-    avatar = output
-})
+$: if (!$user.customAvatar) {
+    userAvatar.subscribe((output) => {
+        avatar = output
+    })
+} else {
+    avatar = $user.customAvatar
+}
 $: avatar
 
 const handleLogout = () => {
@@ -54,6 +66,22 @@ const groupRouteAndMenu = () => {
     }
 }
 
+const changeProfilePic = () => {
+    return
+   fileList.click()
+}
+
+const selectAvatar = async () => {
+    return
+    console.log('Selected', files[0]);
+    const file = files[0];
+    window.api.send('set-avatar', [file.path, file.name, file.size])
+    const arr = await window.api.loadFile(file.path, file.size)
+    const blob = new Blob( [ arr ]);
+    const imageUrl = URL.createObjectURL( blob );
+    $user.customAvatar = imageUrl
+  };
+
 $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {
     in_voice = true
 } else in_voice = false
@@ -62,8 +90,23 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
 
 <div class="leftMenu">
     <div class="nav">
-        <div class:border_rgb={in_voice} class="button myavatar" on:click="{() => goto('/dashboard')}">
+        <input
+        bind:this={fileList}
+        bind:files
+        class="open"
+        type="file"
+        on:change={() => selectAvatar()}
+        style="width: 0; height: 0;"
+      />
+        <div class:border_rgb={in_voice} class="button myavatar" on:click="{() => changeProfilePic()}">
+            {#if !$user.customAvatar}
             <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+            {:else}
+            <img class="avatar custom" src={$user.customAvatar} alt="" />
+            {/if}
+        </div>
+        <div on:click="{() => goto('/dashboard')}" class="button">
+            <Home />
         </div>
         <div on:click="{messagesRouteAndMenu}" class="button">
             <MessageIcon />
@@ -149,5 +192,11 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
 
 .avatar {
     height: 55px;
+}
+
+.custom {
+    height: 40px !important;
+    border-radius: 5px;
+    max-width: 60px;
 }
 </style>

@@ -197,12 +197,16 @@ const WINDOW_API = {
         ipcRenderer.send('success-notify-message-main', channel, successMessage)
     },
 
-    groupUpload: async (filename, path, topic, fileSize, time, hash) => {
-        ipcRenderer.send('group-upload', filename, path, topic, fileSize, time, hash)
+    groupUpload: async (filename, path, topic, fileSize, time, hash, profile) => {
+        ipcRenderer.send('group-upload', filename, path, topic, fileSize, time, hash, profile)
     },
 
     changeDowndloadDir: async (path) => {
         ipcRenderer.send('change-download-dir', path)
+    },
+
+    getProfile: async () => {
+        return await ipcRenderer.invoke('get-profile')
     },
 }
 

@@ -132,6 +132,7 @@ ipcMain.on('min', () => {
     mainWindow.minimize()
 })
 
+
 let tray
 app.whenReady().then(() => {
     console.log(appBin)

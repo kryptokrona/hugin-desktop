@@ -15,6 +15,8 @@ export const user = writable({
     transactions: [],
     block: false,
     started: false,
+    downloadPath: "",
+    customAvatar: false
 })
 
 export const boards = writable({

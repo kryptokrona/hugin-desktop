@@ -8,10 +8,37 @@ const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const dbPath = userDataDir + '/SQLmessages.db'
 const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
+const fs = require('fs')
 
 const Store = require('electron-store')
 const store = new Store()
 
+
+function createAvatarDir() {
+  if (!fs.existsSync(userDataDir + "/avatars")) {
+    fs.mkdirSync(userDataDir + "/avatars")
+  }
+}
+
+ipcMain.on('set-avatar', (e, [filePath, fileName, size]) => {
+  
+  console.log("Set avatar!", filePath, fileName)
+  const newPath = userDataDir + "/" + fileName
+
+  fs.copyFile(filePath, newPath, (err) => {
+    if (err)
+    console.log("errror", err)
+  });
+
+  store.set({
+    avatar: { path: newPath, name: fileName, size }
+  })
+
+})
+
+ipcMain.handle('get-profile', () => {
+  return store.get('avatar')
+})
 
 ipcMain.on('change-download-dir', (e, dir) => {
     store.set({
@@ -57,13 +84,15 @@ class Account {
      }
     
     async load() {
+      createAvatarDir()
       await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys())
+      const myAvatar = store.get('avatar.path') ?? false
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
       const deleteAfter = store.get('delete.after')
       
-      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter])
+      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter, Hugin.downloadDir, myAvatar])
 
       this.known_keys = keys
       this.block_list = block_list

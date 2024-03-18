@@ -47,7 +47,14 @@
     onDestroy(() => {
         clearInterval(timer)
     })
-    
+
+    const share_profile = async () => {
+        return
+        const profile = await window.api.getProfile()
+        const hash = await window.api.createGroup()
+        const time = Date.now()
+        window.api.groupUpload(profile.name, profile.path, $swarm.activeSwarm.topic, profile.size, time, hash, true)
+}
 
     const join_voice_channel = async (video = false, screen) => {
         loading = true

@@ -2,7 +2,7 @@ const HyperSwarm = require("hyperswarm");
 const DHT = require('@hyperswarm/dht')
 const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex } = require('./utils.cjs');
 const {saveGroupMsg, getChannels} = require("./database.cjs")
-const {
+const { app,
     ipcMain
 } = require('electron')
 const {verifySignature, decryptSwarmMessage, signMessage, keychain} = require("./crypto.cjs")
@@ -12,6 +12,7 @@ let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, to
 const Keychain = require('keypear');
 const { add_local_file, start_download, add_remote_file, send_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
+const userDataDir = app.getPath('userData')
 
 let localFiles = []
 let remoteFiles = []
@@ -467,7 +468,7 @@ const upload_ready = async (file, topic, address) => {
         fileName: file.fileName,
         address,
         topic,
-        info: "file",
+        info: file.profile ? "profile" : "file",
         type: "upload-ready",
         size: file.size, 
         time: file.time,
@@ -482,11 +483,13 @@ ipcMain.on('group-download', (e, download) => {
     request_download(download)
 })
 
-ipcMain.on('group-upload', async (e, fileName, path, topic, size, time, hash) => {
+ipcMain.on('group-upload', async (e, fileName, path, topic, size, time, hash, profile = false) => {
     const upload = {
-        fileName, path, topic, size, time, hash
+        fileName, path, topic, size, time, hash, profile
     }
     console.log("Upload this file to group", upload)
+    if (profile) share_avatar(upload)
+    else
     share_file(upload)
 })
 
@@ -502,7 +505,7 @@ const request_download = (download) => {
         fileName: download.fileName,
         address: my_address,
         topic: topic,
-        info: "file",
+        info: download.profile ? "profile" : "file",
         type: "download-request",
         size: download.size,
         time: download.time,
@@ -540,6 +543,30 @@ const share_file = (file) => {
     send_swarm_message(info, active.key)
 }
 
+const share_avatar = (file) => {
+    console.log("Share avatar!")
+    const active = get_active_topic(file.topic)
+    const profileInfo = {
+        fileName: file.fileName,
+        address: my_address,
+        topic: file.topic,
+        info: 'profile-shared',
+        type: 'profile',
+        size: file.size,
+        time: Date.now(),
+        hash: file.hash,
+        profile: true
+    }
+    console.log("Share this!", profileInfo)
+    const info = JSON.stringify(profileInfo)
+    localFiles.push(file)
+    send_swarm_message(info, active.key)
+}
+
+const download_avatar = () => {
+    
+}
+
 
 const start_upload = async (file, topic) => {
     const sendFile = localFiles.find(a => a.fileName === file.fileName && file.topic === topic)
@@ -555,6 +582,11 @@ const check_file_message = async (data, topic, address) => {
     if (data.info === 'file-shared') {
         add_remote_file(data.fileName, address, data.size, topic, true, data.hash)
     }
+    
+    //
+    // if (data.info === 'profile-shared') {
+    //     add_remote_file(data.fileName, address, data.size, topic, true, data.hash, true)
+    // }
 
     if (data.type === 'download-request') {
         const key = await start_upload(data, topic)
@@ -562,10 +594,19 @@ const check_file_message = async (data, topic, address) => {
     }
 
     if (data.type === 'upload-ready') {
-        await add_remote_file(data.fileName, address, data.size, data.key, true)
-        start_download(Hugin.downloadDir, data.fileName, address, data.key)
+        if (data.info === "file")  { 
+            await add_remote_file(data.fileName, address, data.size, data.key, true)
+            start_download(downloadDir, data.fileName, address, data.key)
+            return
+        }
+        // if (data.info === "profile") {
+        //     await add_remote_file(data.fileName, address, data.size, data.key, true, undefined, true)
+        //     start_download(userDataDir + "/avatars", data.fileName, address, data.key)
+        //     return
+
+        // }
     }
-    
+
     if (data.type === 'file-removed') console.log("'file removed", data) //TODO REMOVE FROM remoteFiles
 
 }
