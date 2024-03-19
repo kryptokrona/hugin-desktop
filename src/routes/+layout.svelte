@@ -563,8 +563,6 @@
         {#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard'}
             <RightMenu/>
         {/if}
-        <Webrtc/>
-        <Group_Webrtc/>
     {/if}
 
     {#if $appUpdateState.openPopup}
@@ -574,6 +572,8 @@
     <slot/>
 {/if}
 
+<Webrtc/>
+<Group_Webrtc/>
 </main>
 <style>
 
