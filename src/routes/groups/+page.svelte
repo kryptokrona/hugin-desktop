@@ -319,6 +319,8 @@ async function checkReactions(array, scroll) {
         //Adding emojis to the correct message.
         addEmoji(scroll)
     } else {
+        let uniq = {}
+        array = array.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
         if (scroll) fixedGroups = [...fixedGroups, ...array]
         else fixedGroups = filterGroups
     }
