@@ -23,9 +23,9 @@
         <br>
         <p>{$user.downloadPath}</p>
     <div class="changedir">
-        <input spellcheck="false" type="text" placeholder="Enter new directory" bind:value="{path}"/>
+        <input spellcheck="false" type="text" placeholder="Enter new directory path" bind:value="{path}"/>
         <Button
-        text="Change"
+        text="Set"
         loading={loading}
         disabled="{false}"
         on:click="{changeDownloadPath}"
