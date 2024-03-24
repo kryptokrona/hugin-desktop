@@ -270,7 +270,6 @@ $: if ($groupMessages.length == 0) {
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
-    console.log("Print! new?", group)
     loadMore = true
     pageNum = 0
     fixedGroups = []
@@ -315,6 +314,7 @@ async function checkReactions(array, scroll) {
     filterEmojis = [...array.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
     ), ...filterEmojis]
+
     if (filterEmojis.length) {
         //Adding emojis to the correct message.
         addEmoji(scroll)
@@ -334,9 +334,9 @@ function addEmoji(scroll) {
      return fixedGroups.some(e => e === a)
     }
     //Check for replies and message hash that match and then adds reactions to the messages.
-    array.forEach(async function (a) {
+    for (const a of array) {
         for (const b of emojis) {
-            if (a.message && a.address === b.message && b.address) continue
+            if (already(a)) continue
             if (!a.react && b.reply == a.hash) {
                 a.react = []
                 b.hash = b.hash + hashPadding
@@ -346,10 +346,10 @@ function addEmoji(scroll) {
                 b.hash = b.hash + hashPadding
                 a.react.push(b)
             }
-        if (already(a)) continue
+            
         fixedGroups.push(a)
         }
-    })
+    }
     fixedGroups = fixedGroups
     }
 
