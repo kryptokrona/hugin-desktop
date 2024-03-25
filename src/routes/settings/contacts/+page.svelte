@@ -12,11 +12,6 @@ import { fade } from "svelte/transition"
             <h4>Block list</h4>
             {#each $groups.blockList as blocked (blocked.address)}
                 <div class="card">
-                    <img
-                        class="avatar"
-                        src="data:image/png;base64,{get_avatar(blocked.address)}"
-                        alt=""
-                    />
                     <p class="name">{blocked.name}</p>
                     <br />
                     <p class="unblock" on:click={() => window.api.send('unblock', blocked.address)}>Unblock</p>
