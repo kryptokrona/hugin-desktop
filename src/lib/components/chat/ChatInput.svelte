@@ -165,7 +165,7 @@
      class:border-top="{$page.url.pathname !== '/boards'}">
     <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
-    <div style="position: relative; display: flex:">
+    <div style="display: flex">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
             <emoji-picker bind:this={emojiPicker}></emoji-picker>
         </div>

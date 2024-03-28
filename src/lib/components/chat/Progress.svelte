@@ -13,7 +13,7 @@
     <div
         style="display: flex; justify-content: space-between; align-items: center; text-overflow: ellipsis;"
     >
-        <h5>{name}</h5>
+        <h5 style="word-break: break-all">{name}</h5>
     </div>
     <div class="goal">
       
