@@ -635,7 +635,7 @@ const getConversation = async (chat) => {
 
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
-    const channels = await getChannels()
+    //const channels = await getChannels()
     let limit = 50
     let offset = 0
     if (page !== 0) offset = page * limit
@@ -663,11 +663,11 @@ const printGroup = async (group, page) => {
         for(const row of stmt.iterate(group)) {
             if (row.address.length === 0) row.address = row.grp
                     
-                const msg = channels.find(a => a.hash === row.hash)
+                //const msg = channels.find(a => a.hash === row.hash)
 
-                if (msg) {
-                    row.channel = msg.channel
-                }
+                // if (msg) {
+                //     row.channel = msg.channel
+                // }
                 
                 thisGroup.push(row)
         }
