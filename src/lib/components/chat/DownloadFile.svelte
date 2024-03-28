@@ -79,7 +79,7 @@
             <Progress file={file} send={false}/>
         </div>
     {:else if downloadDone && group}
-        <div in:fade>
+        <div style="cursor: pointer" in:fade on:click={() => window.api.openFolder()}>
             <Progress file={file} send={false}/>
         </div>
         <p class="message done">File downloaded!</p>

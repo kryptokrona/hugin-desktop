@@ -24,6 +24,7 @@ const serveURL = serve({ directory: '.' })
 const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 const { loadHugin, loadWallet } = require('./wallet.cjs')
+const { Hugin } = require('./account.cjs')
 
 let mainWindow
 
@@ -348,6 +349,10 @@ ipcMain.on('openLink', (e, url) => {
     shell.openExternal(url)
 })
 
+ipcMain.on('open-download-folder', (e) => {
+    const {shell} = require('electron')
+    shell.showItemInFolder(Hugin.downloadDir)
+})
 
 //UPDATES
 

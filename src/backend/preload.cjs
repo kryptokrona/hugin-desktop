@@ -208,6 +208,10 @@ const WINDOW_API = {
     getProfile: async () => {
         return await ipcRenderer.invoke('get-profile')
     },
+
+    openFolder: async () => {
+        ipcRenderer.send('open-download-folder')
+    }
 }
 
 contextBridge.exposeInMainWorld('api', WINDOW_API)
