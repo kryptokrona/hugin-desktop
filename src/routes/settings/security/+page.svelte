@@ -1,32 +1,53 @@
 <script>
     import { fade } from "svelte/transition"
-    import { messageWallet} from '$lib/stores/user.js'
+    import { messageWallet, user} from '$lib/stores/user.js'
     import Button from "$lib/components/buttons/Button.svelte"
     import { groups, misc } from '$lib/stores/user.js'
 
     let deleteAfter = $misc.deleteAfter
-    
+    let autoLogout = $user.idleLimit
+
     const setAutoDeleteAfter = (days) => {
         window.api.deleteMessageAfter(days)
     }
 
+    const changeIdleLimit = () => {
+        $user.idleLimit = autoLogout
+        window.api.successMessage('Idle time changed')
+    } 
+
     </script>
     
     <h2>Security</h2>
+    <div class="settings" in:fade>
+        <p>Set the amount of days to preserve messages,
+        <br>
+        0 means preserve forever</p>
+        <br>
+   </div>
     <div class="autodelete">
-        <input spellcheck="false" type="number" placeholder="Enter amount of days" bind:value="{deleteAfter}"/>
+        <input spellcheck="false" placeholder="Enter amount of days" bind:value="{deleteAfter}"/>
         <Button
         text="Set timeframe"
         disabled="{false}"
         on:click="{setAutoDeleteAfter(deleteAfter)}"
     />
     </div>
+
     <div class="settings" in:fade>
-     <p>Set the amount of days to preserve messages,
-     <br>
-     0 means preserve forever</p>
-     <br>
-</div>
+        <p>Choose how long time in seconds before auto logout.
+        <br></p>
+        <br>
+   </div>
+    <div class="autodelete">
+        <input spellcheck="false" placeholder="Enter number of seconds" bind:value="{autoLogout}"/>
+        <Button
+        text="Change"
+        disabled="{false}"
+        on:click="{changeIdleLimit}"
+    />
+    </div>
+
     <style>
     
     .settings {
