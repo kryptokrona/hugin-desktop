@@ -91,7 +91,7 @@ import { fileViewer } from '$lib/stores/files'
 
         <div class="video-wrapper">
             {#if thisSwarm?.connections.length && in_voice}
-                <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} active connections</h4>
+                <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} Active connections</h4>
             {/if}
             <div class="video-grid">
             {#if in_voice}
