@@ -16,7 +16,9 @@ export const user = writable({
     block: false,
     started: false,
     downloadPath: "",
-    customAvatar: false
+    customAvatar: false,
+    idleTime: 0,
+    idleLimit: 300
 })
 
 export const boards = writable({
