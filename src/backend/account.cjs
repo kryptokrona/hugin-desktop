@@ -49,6 +49,15 @@ ipcMain.on('change-download-dir', (e, dir) => {
   Hugin.downloadDir = dir
 })
 
+
+ipcMain.on('change-idle-time', (e, time) => {
+  store.set({
+    idle: {
+      time: time
+    }
+  })
+})
+
 class Account {
     constructor () {
       
@@ -91,8 +100,8 @@ class Account {
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
       const deleteAfter = store.get('delete.after')
-      
-      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter, Hugin.downloadDir, myAvatar])
+      const idle = store.get('idle.time') ?? 300
+      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter, Hugin.downloadDir, myAvatar, idle])
 
       this.known_keys = keys
       this.block_list = block_list

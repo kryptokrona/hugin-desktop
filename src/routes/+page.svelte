@@ -50,7 +50,7 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
@@ -58,6 +58,7 @@
         $groups.groupArray = my_groups
         $misc.deleteAfter = deleteAfter
         $user.downloadPath = path
+        $user.idleLimit = idle
         if (avatar) setCustomAvatar()
         loginSuccess()
     })

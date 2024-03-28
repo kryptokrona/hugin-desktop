@@ -13,6 +13,7 @@
 
     const changeIdleLimit = () => {
         $user.idleLimit = autoLogout
+        window.api.send('change-idle-time', autoLogout)
         window.api.successMessage('Idle time changed')
     } 
 

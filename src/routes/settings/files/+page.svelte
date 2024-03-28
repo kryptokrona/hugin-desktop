@@ -7,6 +7,7 @@
     let path = ""
 
     const changeDownloadPath = async () => {
+        if (path.length === 0) return
         loading = true
         window.api.changeDowndloadDir(path)
         $user.downloadPath = path
