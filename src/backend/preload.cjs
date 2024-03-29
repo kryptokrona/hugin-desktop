@@ -209,8 +209,12 @@ const WINDOW_API = {
         return await ipcRenderer.invoke('get-profile')
     },
 
-    openFolder: async () => {
+    openFolder: () => {
         ipcRenderer.send('open-download-folder')
+    },
+
+    changeIdleTime: (time) => {
+        ipcRenderer.send('change-idle-time', time)
     }
 }
 
