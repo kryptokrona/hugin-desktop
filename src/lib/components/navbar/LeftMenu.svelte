@@ -11,6 +11,7 @@ import { layoutState } from '$lib/stores/layout-state.js'
 import AlphaIcon from '$lib/components/icons/AlphaIcon.svelte'
 import Logout from '$lib/components/icons/Logout.svelte'
 import Home from '../icons/Home.svelte'
+import Tooltip from "$lib/components/popups/Tooltip.svelte"
 import { onMount } from 'svelte'
 
 let sync
@@ -98,22 +99,30 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
         on:change={() => selectAvatar()}
         style="width: 0; height: 0;"
       />
-        <div class:border_rgb={in_voice} class="button myavatar" on:click="{() => changeProfilePic()}">
-            {#if !$user.customAvatar}
-            <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
-            {:else}
-            <img class="avatar custom" src={$user.customAvatar} alt="" />
-            {/if}
-        </div>
-        <div on:click="{() => goto('/dashboard')}" class="button">
-            <Home />
-        </div>
-        <div on:click="{messagesRouteAndMenu}" class="button">
-            <MessageIcon />
-        </div>
-        <div on:click="{groupRouteAndMenu}" class="button">
-            <GroupIcon />
-        </div>
+        <Tooltip title="Avatar">
+            <div class:border_rgb={in_voice} class="button myavatar" on:click="{() => changeProfilePic()}">
+                {#if !$user.customAvatar}
+                <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+                {:else}
+                <img class="avatar custom" src={$user.customAvatar} alt="" />
+                {/if}
+            </div>
+        </Tooltip>
+        <Tooltip title="Dashboard">
+            <div on:click="{() => goto('/dashboard')}" class="button">
+                <Home />
+            </div>
+        </Tooltip>
+        <Tooltip title="Messages">
+            <div on:click="{messagesRouteAndMenu}" class="button">
+                <MessageIcon />
+            </div>
+        </Tooltip>
+        <Tooltip title="Groups">
+            <div on:click="{groupRouteAndMenu}" class="button">
+                <GroupIcon />
+            </div>
+        </Tooltip> 
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
@@ -121,19 +130,25 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
     </div>
     <div class="draggable"></div>
     <div class="nav">
-        <div on:click="{() => goto('/settings/node')}" class="button">
-            <SettingsIcon />
-        </div>
-        <a class='button' href="/" on:click={handleLogout}>
-            <Logout/>
-        </a>
+        <Tooltip title="Settings">
+            <div on:click="{() => goto('/settings/node')}" class="button">
+                <SettingsIcon />
+            </div>
+        </Tooltip>
+        <Tooltip title="Logout">
+            <a class='button' href="/" on:click={handleLogout}>
+                <Logout/>
+            </a>
+        </Tooltip>      
         <XkrLogo grey="{true}" />
-        <div
+        <Tooltip title="Github">
+            <div
             on:click="{() =>
                 openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}"
         >
             <AlphaIcon />
         </div>
+        </Tooltip> 
     </div>
 </div>
 
