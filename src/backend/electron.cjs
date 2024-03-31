@@ -82,7 +82,15 @@ function createWindow() {
     mainWindow.on('close', () => {
         windowState.saveState(mainWindow)
     })
+
+    mainWindow.on('blur', () => {
+        mainWindow.webContents.send('blur')
+    })
     
+    mainWindow.on('focus', () => {
+        mainWindow.webContents.send('focus')
+    })
+
     return mainWindow
 }
 
@@ -123,10 +131,7 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on('close', () => {
-    mainWindow.hide()
-    if (process.platform === 'darwin') {
-        app.dock.hide()
-    }
+    app.quit()
 })
 
 ipcMain.on('min', () => {
