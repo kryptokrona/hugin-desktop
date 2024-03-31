@@ -152,7 +152,7 @@
         window.api.receive('newGroupMessage', (data) => {
             if (data.address == $user.myAddress) return
             if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
-            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room") return
+            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room" && $misc.focus) return
             new_messages = true
             data.key = data.address
             
@@ -392,6 +392,14 @@
 
     window.api.receive('idle', (data) => {
         $user.idleTime = data
+    })
+    
+    window.api.receive('focus', (data) => {
+        $misc.focus = true
+    })
+    
+    window.api.receive('blur', (data) => {
+        $misc.focus = false
     })
 
     $: if ($user.idleTime >= $user.idleLimit) {
