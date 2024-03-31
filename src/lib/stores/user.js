@@ -57,7 +57,8 @@ export const misc = writable({
     os: '',
     loading: false,
     syncStatus: false,
-    deleteAfter: null
+    deleteAfter: null,
+    focus: false
 })
 
 export const webRTC = writable({
