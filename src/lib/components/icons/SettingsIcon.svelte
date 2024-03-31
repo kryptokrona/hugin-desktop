@@ -1,3 +1,14 @@
+
+<script>
+    import { page } from "$app/stores"
+    import { fade } from "svelte/transition"
+    $: thispage = $page.url.pathname.includes('/settings');
+</script>
+
+{#if thispage}
+    <div class="dot" in:fade></div>
+{/if}
+
 <svg
     on:click
     width="22px"
@@ -82,5 +93,15 @@ svg {
     &:hover {
         opacity: 80%;
     }
+}
+
+.dot {
+        position: absolute;
+        background-color: white;
+        border-radius: 2px;
+        height: 16px;
+        width: 10px;
+        left: -8px;
+        box-shadow: 0 0 10px white;
 }
 </style>
