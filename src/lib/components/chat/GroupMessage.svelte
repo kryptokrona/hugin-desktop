@@ -92,10 +92,10 @@ function checkMessage() {
         return
     }
 
-    if (containsOnlyEmojis(msg)) {
-        emojiMessage = true
-        return
-    }
+    // if (containsOnlyEmojis(msg)) {
+    //     emojiMessage = true
+    //     return
+    // }
 
 }
 
