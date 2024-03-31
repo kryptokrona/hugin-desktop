@@ -212,9 +212,11 @@ const WINDOW_API = {
     openFolder: () => {
         ipcRenderer.send('open-download-folder')
     },
-
     changeIdleTime: (time) => {
         ipcRenderer.send('change-idle-time', time)
+    },
+    getDirectoryPath: async () => {
+        return await ipcRenderer.invoke('select-directory')
     }
 }
 

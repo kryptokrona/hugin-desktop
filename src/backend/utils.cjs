@@ -1,7 +1,7 @@
 const nacl = require('tweetnacl')
 const sanitizeHtml = require('sanitize-html')
 const { Crypto } = require('kryptokrona-utils')
-const {ipcMain} = require('electron')
+const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
 const {createReadStream} = require("fs");
 
@@ -9,6 +9,13 @@ ipcMain.handle('load-file', async (e, path, size) => {
     return await load_file(path, size)
 })
 
+ipcMain.handle('select-directory', () => {
+    let dir = dialog.showOpenDialog({
+        properties: ['openDirectory']
+
+    });
+    return dir;
+});
 
 //Check if it is an image or video with allowed type
 function checkImageOrVideoType(path, size) {

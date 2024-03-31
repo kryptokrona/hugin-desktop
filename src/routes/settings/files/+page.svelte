@@ -6,6 +6,11 @@
     let loading = false
     let path = ""
 
+    const openDirectoryDialog = async () => {
+        let dir = await window.api.getDirectoryPath();
+        path = dir.filePaths ? dir.filePaths[0] : "";
+    }
+
     const changeDownloadPath = async () => {
         if (path.length === 0) return
         loading = true
@@ -26,13 +31,22 @@
     <div class="changedir">
         <input spellcheck="false" type="text" placeholder="Enter new directory path" bind:value="{path}"/>
         <Button
-        text="Set"
+        color="green"
+        text="Browse"
+        disabled="{false}"
+        on:click="{openDirectoryDialog}"
+    />
+    </div>
+     <br>
+     <div>
+        <Button
+        color="green"
+        text="Save"
         loading={loading}
         disabled="{false}"
         on:click="{changeDownloadPath}"
     />
     </div>
-     <br>
 </div>
     <style>
     
@@ -71,3 +85,4 @@
     } */
     }
 </style>
+
