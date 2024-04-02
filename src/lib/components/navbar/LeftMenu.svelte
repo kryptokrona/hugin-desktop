@@ -99,15 +99,15 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
         on:change={() => selectAvatar()}
         style="width: 0; height: 0;"
       />
-        <Tooltip title="Avatar">
-            <div class:border_rgb={in_voice} class="button myavatar" on:click="{() => changeProfilePic()}">
+        <!-- <Tooltip title="Avatar"> -->
+            <div class:border_rgb={in_voice} style="cursor: default;" class="button myavatar" on:click="{() => changeProfilePic()}">
                 {#if !$user.customAvatar}
                 <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                 {:else}
                 <img class="avatar custom" src={$user.customAvatar} alt="" />
                 {/if}
             </div>
-        </Tooltip>
+        <!-- </Tooltip> -->
         <Tooltip title="Dashboard">
             <div on:click="{() => goto('/dashboard')}" class="button">
                 <Home />
