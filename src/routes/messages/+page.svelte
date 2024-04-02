@@ -60,6 +60,12 @@ onMount(async () => {
         }
     })
 
+    window.api.receive('pm-send-error', async (data) => {
+        let failed = savedMsg.find(a => a.msg === data.message)
+        failed.error = true
+        savedMsg = savedMsg
+    })
+
 })
 
 onDestroy(() => {
@@ -292,6 +298,7 @@ const hideModal = () => {
                         msgFrom="{message.chat}"
                         timestamp="{message.timestamp}"
                         beamMsg="{message.beam}"
+                        error="{message?.error}"
                     />
                 {/each}
             </div>

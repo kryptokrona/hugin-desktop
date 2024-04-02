@@ -19,7 +19,7 @@
     export let files = false
     export let timestamp
     export let beamMsg = false
-    
+    export let error = false
     let torrent = false
     let oldInvite = false
     let beamInvite = false
@@ -194,7 +194,7 @@
 {:else}
     <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
     {#if ownMsg}
-        <div class="wrapper">
+        <div class="wrapper" class:error={error}>
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -377,6 +377,11 @@
 
 .finish {
     color: var(--success-color) !important;
+}
+
+.error {
+    border: 1px solid;
+    border-color: var(--warn-color) !important;
 }
 
 
