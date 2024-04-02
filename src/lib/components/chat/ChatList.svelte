@@ -6,6 +6,7 @@
     import {layoutState} from '$lib/stores/layout-state.js'
     import {fade, fly} from 'svelte/transition'
     import {flip} from 'svelte/animate'
+    import { notify } from '$lib/stores/user.js'
 
     const dispatch = createEventDispatcher()
 
@@ -50,12 +51,11 @@ const getConversations = async () => {
 const printConversations = async () => {
     newArray = await getConversations()
     //If it is not the same message and not our active chat, add unread boolean
-    if ( chatList.length &&
-        newArray[0].timestamp !== chatList[0]?.timestamp &&
-        newArray[0].sent === 0 &&
-        $user.activeChat.chat !== newArray[0].chat
-    ) {
-        newArray[0].new = true
+
+    for (const a of newArray) {
+        for (const b of $notify.unread) {
+            if (a.chat === b.chat) a.new = true
+        }
     }
 
     let conversations = await checkNew()
@@ -97,6 +97,10 @@ const checkNew = async () => {
 }
 
 const readMessage = (e) => {
+    
+    const clear = $notify.unread.filter(unread => unread.chat !== e.chat)
+    $notify.unread = clear
+
     let readArray = chatList.map(function (a) {
         if (e?.new && a.chat === e.chat) {
             a.new = false

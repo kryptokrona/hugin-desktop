@@ -2,7 +2,7 @@
     import {createEventDispatcher, onDestroy, onMount} from 'svelte'
     import {fade, fly} from 'svelte/transition'
     import {groupMessages} from '$lib/stores/groupmsgs.js'
-    import {groups, swarm} from '$lib/stores/user.js'
+    import {groups, notify, swarm} from '$lib/stores/user.js'
     import Group from '$lib/components/chat/Group.svelte'
     import Plus from '$lib/components/icons/Plus.svelte'
     import RemoveGroup from '$lib/components/chat/RemoveGroup.svelte'
@@ -86,14 +86,10 @@ async function printGroups() {
     let groupmessages = await window.api.getGroups()
     let uniq = {}
     newArray = groupmessages.filter((obj) => !uniq[obj.key] && (uniq[obj.key] = true))
-
-    if (groupList.length) {
-        if (
-            newArray[0].timestamp !== groupList[0].timestamp &&
-            newArray[0].sent === 0 &&
-            $groups.thisGroup.key !== newArray[0].chat
-        ) {
-            newArray[0].new = true
+    for (const a of newArray) {
+        for (const b of $notify.unread) {
+            console.elog
+            if (a.key === b.group) a.new = true
         }
     }
 
@@ -134,6 +130,8 @@ const removeGroup = async () => {
 
 //Read message
 function readMessage(e) {
+    const clear = $notify.unread.filter(unread => unread.group !== e.key)
+    $notify.unread = clear
 
     groupList = groupList.map(function (a) {
         if (e.new && a.key === e.key) {
