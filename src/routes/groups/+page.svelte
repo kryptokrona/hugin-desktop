@@ -36,8 +36,6 @@ const hashPadding = () => {
 }
 
 onMount(async () => {
-    let filter = $notify.unread.filter((a) => (a.type !== 'group'))
-    $notify.unread = filter
     scrollDown()
 
     //Listens for new messages from backend
