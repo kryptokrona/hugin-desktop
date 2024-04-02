@@ -37,9 +37,6 @@ onMount(async () => {
         }
     })
 
-    let filter = $notify.unread.filter((a) => a.type !== 'message')
-    $notify.unread = filter
-
     //If we have an active chat in store we show that conversation
     if ($user.activeChat) {
         printConversation($user.activeChat)
