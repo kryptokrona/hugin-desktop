@@ -502,6 +502,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
     if (message.length === 0) {
         return
     }
+
     //Split address and check history
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
@@ -554,6 +555,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
             optimize_message_inputs(true)
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             Hugin.send('error_msg', error)
+            Hugin.send('pm-send-error', {message, address})
         }
     } else if (off_chain) {
         //Offchain messages
@@ -819,7 +821,9 @@ async function send_group_message(message, offchain = false, swarm = false) {
                 name: 'Error',
                 hash: Date.now(),
             }
+            Hugin.send('group-send-error', {message: message.m, group})
             Hugin.send('error_msg', error)
+            
             console.log(`Failed to send transaction: ${result.error.toString()}`)
             optimize_message_inputs(true)
         }
