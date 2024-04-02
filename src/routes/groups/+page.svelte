@@ -252,13 +252,13 @@ const addNewGroup = async (e) => {
     $groupMessages = []
     window.api.addGroup(add)
     await sleep(100)
-    let settings = {}
-    settings.recommended_api = await getBestApi()
-    settings.timeframe = 14
-    settings.key = group.key
-    await sleep(200)
+    // let settings = {}
+    // settings.recommended_api = await getBestApi()
+    // settings.timeframe = 14
+    // settings.key = group.key
+    //await sleep(200)
     printGroup(group)
-    if (settings.recommended_api) window.api.fetchGroupHistory(settings)
+    //if (settings.recommended_api) window.api.fetchGroupHistory(settings)
 }
 
 //Svelte reactive. Sets noMsgs boolean for welcome message.
@@ -572,9 +572,9 @@ p {
     padding-bottom: 5px;
     padding-top: 22px;
 
-    &::-webkit-scrollbar {
-        display: none;
-    }
+    // &::-webkit-scrollbar {
+    //     display: none;
+    // }
 }
 
 .fade {
@@ -584,5 +584,27 @@ p {
     height: 40px;
     background: linear-gradient(180deg, #121212, #12121200);
     z-index: 100;
+}
+
+.outer {
+    --scrollbarBG: transparent;
+    --thumbBG: #3337;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+
+.outer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.outer::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+}
+
+.outer::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 3px;
+    border: 3px solid var(--scrollbarBG);
 }
 </style>
