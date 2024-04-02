@@ -88,7 +88,6 @@ async function printGroups() {
     newArray = groupmessages.filter((obj) => !uniq[obj.key] && (uniq[obj.key] = true))
     for (const a of newArray) {
         for (const b of $notify.unread) {
-            console.elog
             if (a.key === b.group) a.new = true
         }
     }

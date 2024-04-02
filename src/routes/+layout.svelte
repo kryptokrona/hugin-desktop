@@ -163,7 +163,7 @@
                 board_message_sound.play()
                 $notify.new.push(data)
             }
-            
+            data.type = "group"
             $notify.unread.push(data)
             $notify.new = $notify.new
         })
