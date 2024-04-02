@@ -172,7 +172,7 @@
 
             if (!$misc.focus) new_message_sound.play()
             
-            if ($page.url.pathname !== '/messages') {
+            if ($page.url.pathname !== '/messages' && !$misc.focus) {
                 data.type = 'message'
                 $notify.unread.push(data)
                 $notify.unread = $notify.unread
