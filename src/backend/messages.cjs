@@ -273,8 +273,8 @@ async function decrypt_hugin_messages(transactions, que = false) {
     console.log("Checking nr of txs:", transactions.length)
     for (const transaction of transactions) {
         try {
-            let thisExtra = transaction.transactionPrefixInfo.extra
-            let thisHash = transaction.transactionPrefixInfotxHash
+            const thisExtra = transaction.transactionPrefixInfo.extra
+            const thisHash = transaction.transactionPrefixInfotxHash
             
             if (!validate_extra(thisExtra, thisHash, que)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
