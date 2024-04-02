@@ -164,20 +164,29 @@
                 $notify.new.push(data)
             }
             
+            $notify.unread.push(data)
             $notify.new = $notify.new
         })
 
         window.api.receive('privateMsg', (data) => {
-            if (data.chat === $user.activeChat.chat || data.chat === $user.myAddress) return
-
-            if (!$misc.focus) new_message_sound.play()
+            //If active chat, focused and in message page, return
+            if (
+            data.chat === $user.activeChat.chat 
+            && $misc.focus 
+            && $page.url.pathname === '/messages'
+            )
+            return
             
-            if ($page.url.pathname !== '/messages' && !$misc.focus) {
-                data.type = 'message'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-                console.log('unread', $notify.unread)
-            }
+            //If address is our own, maybe sent from mobile
+            if (data.chat === $user.myAddress) return
+            
+            new_message_sound.play()
+            
+            data.type = 'message'
+            $notify.unread.push(data)
+            $notify.unread = $notify.unread
+            console.log('unread', $notify.unread)
+
             saveToStore(data)
         })
 
