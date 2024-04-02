@@ -168,9 +168,10 @@
         })
 
         window.api.receive('privateMsg', (data) => {
-            if (data.chat !== $user.activeChat.chat && data.chat !== $user.myAddress) {
-                new_message_sound.play()
-            }
+            if (data.chat === $user.activeChat.chat || data.chat === $user.myAddress) return
+
+            if (!$misc.focus) new_message_sound.play()
+            
             if ($page.url.pathname !== '/messages') {
                 data.type = 'message'
                 $notify.unread.push(data)
