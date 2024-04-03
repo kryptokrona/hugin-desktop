@@ -54,7 +54,8 @@ let known_pool_txs = []
 let known_keys = []
 let block_list = []
 let incoming_messages = []
-
+let incoming_pm_que = []
+let incoming_group_que = []
 //IPC MAIN LISTENERS
 
 //MISC
@@ -253,8 +254,12 @@ async function background_sync_messages(checkedTxs = false) {
 
     if(incoming || large_batch) {
         console.log("Checking incoming messages:", incoming_messages.length)
-        decrypt_hugin_messages(decrypt = update_que(), true)
+        decrypt_hugin_messages(update_que(), true)
         return
+    }
+
+    if (incoming_group_que.length) {
+        clear_group_que()
     }
 
     if (incoming_pm_que.length) {
@@ -293,15 +298,13 @@ async function decrypt_hugin_messages(transactions, que = false) {
                 //Check for private message //TODO remove this when viewtags are active
                 if (await check_for_pm_message(thisExtra, que)) continue
                 //Check for group message
-                if (await check_for_group_message(thisExtra, thisHash)) continue
+                if (await check_for_group_message(thisExtra, thisHash, que)) continue
             }
         } catch (err) {
             console.log(err)
         }
     }
 }
-
-let incoming_pm_que = []
 
 //Try decrypt extra data
 async function check_for_pm_message(thisExtra, que) {
@@ -322,10 +325,17 @@ async function clear_pm_que() {
     const sorted = incoming_pm_que.sort((a, b) => a.t - b.t );
     for (const message of sorted) {
         save_message(message)
-        await sleep(200)
+        await sleep(100)
     }
-
     incoming_pm_que = []
+}
+
+async function clear_group_que() {
+    const sorted = incoming_group_que.sort((a, b) => a.t - b.t );
+    for (const message of sorted) {
+        await decrypt_group_message(message, message.hash)
+    }
+    incoming_group_que = []
 }
 //Checks the message for a view tag
 async function check_for_viewtag(extra) {
@@ -348,13 +358,17 @@ async function check_for_viewtag(extra) {
     return false
 }
 
-
 //Checks if hugin message is from a group
-async function check_for_group_message(thisExtra, thisHash) {
+async function check_for_group_message(thisExtra, thisHash, que) {
     try {
     let group = trimExtra(thisExtra)
     let message = JSON.parse(group)
     if (message.sb) {
+        if (que) {
+            message.hash = thisHash
+            incoming_group_que.push(message)
+            return true
+        }
             await decrypt_group_message(message, thisHash)
             return true
     }
