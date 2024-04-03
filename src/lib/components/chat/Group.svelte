@@ -2,7 +2,7 @@
     import {createEventDispatcher} from 'svelte'
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import {groups, swarm, user} from '$lib/stores/user.js'
+    import {groups, notify, swarm, user} from '$lib/stores/user.js'
     import { swarmGroups } from '$lib/stores/layout-state'
     import Lightning from '../icons/Lightning.svelte'
     import {standardGroups} from "$lib/stores/standardgroups.js";
@@ -45,6 +45,8 @@
     
     $: if (thisSwarm) channels = thisSwarm.channels
     
+    $: counter = $notify.unread.filter(a => a.type === "group" && a.group === group.key).length
+
     const createNewChannel = () => {
         //Add to channels and notify others in the swarm
     }
@@ -60,7 +62,7 @@
         on:click="{(e) => print_group(group)}"
     >
         {#if group.new}
-            <div class:unread="{group.new}"></div>
+            <div in:fade out:fade class:unread="{group.new}">{counter}</div>
         {/if}
     
         <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
@@ -157,14 +159,18 @@
     }
     
     .unread {
-        animation: border_rgb 30s infinite;
+        animation: s-xTk4sJOIoQE_-border_rgb 30s infinite;
         background-color: white;
-        width: 5px;
-        height: 2px;
+        width: 15px;
+        height: 17px;
         border-radius: 30%;
         left: 340px;
-        margin-top: 25px;
+        padding: 2px;
+        margin-top: 15px;
+        color: black;
         position: absolute;
+        font-size: 12px;
+        padding-left: 3px;
     }
     
     .active {
