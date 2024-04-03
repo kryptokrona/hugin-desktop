@@ -240,7 +240,7 @@ async function background_sync_messages(checkedTxs = false) {
     
     const transactions = await fetch_hugin_messages()
     if (!transactions && !incoming) return
-    const large_batch = transactions.length > 149 ? true : false
+    const large_batch = transactions.length > 199 ? true : false
 
     if (large_batch || (large_batch && incoming)) {
         //Add to que
@@ -257,13 +257,18 @@ async function background_sync_messages(checkedTxs = false) {
         return
     }
 
+    if (incoming_pm_que.length) {
+        clear_pm_que()
+        return
+    }
+
     Hugin.send('incoming-que', false)
     console.log("Incoming transactions", transactions.length)
     decrypt_hugin_messages(transactions, false)
 }
 
 function update_que() {
-    const decrypt = incoming_messages.slice(0,149)
+    const decrypt = incoming_messages.slice(0,199)
     const update = incoming_messages.slice(decrypt.length)
     incoming_messages = update
     return decrypt
@@ -280,13 +285,13 @@ async function decrypt_hugin_messages(transactions, que = false) {
             if (thisExtra !== undefined && thisExtra.length > 200) {
                 if (!saveHash(thisHash)) continue
                 //Check for viewtag
-                let checkTag = await check_for_viewtag(thisExtra)
+                const checkTag = await check_for_viewtag(thisExtra)
                 if (checkTag) {
-                    await check_for_pm_message(thisExtra, thisHash)
+                    await check_for_pm_message(thisExtra, que)
                     continue
                 }
                 //Check for private message //TODO remove this when viewtags are active
-                if (await check_for_pm_message(thisExtra, thisHash)) continue
+                if (await check_for_pm_message(thisExtra, que)) continue
                 //Check for group message
                 if (await check_for_group_message(thisExtra, thisHash)) continue
             }
@@ -296,17 +301,32 @@ async function decrypt_hugin_messages(transactions, que = false) {
     }
 }
 
+let incoming_pm_que = []
+
 //Try decrypt extra data
-async function check_for_pm_message(thisExtra) {
+async function check_for_pm_message(thisExtra, que) {
     let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair())
     if (!message) return false
     if (message.type === 'sealedbox' || 'box') {
         message.sent = false
+        if (que) {
+            incoming_pm_que.push(message)
+            return true
+        }
         save_message(message)
         return true
     }
 }
 
+async function clear_pm_que() {
+    const sorted = incoming_pm_que.sort((a, b) => a.t - b.t );
+    for (const message of sorted) {
+        save_message(message)
+        await sleep(200)
+    }
+
+    incoming_pm_que = []
+}
 //Checks the message for a view tag
 async function check_for_viewtag(extra) {
     try {
