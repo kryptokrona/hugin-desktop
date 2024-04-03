@@ -180,9 +180,9 @@ const WINDOW_API = {
     removeAllListeners: (channel) => {
         ipcRenderer.removeAllListeners(channel)
     },
-     //HANDLE ADDRESS
-     checkPass: async (pass, hash) => {
-        await ipcRenderer.invoke('check-pass', pass, hash)
+    
+    verifyPass: async (pass) => {
+        return await ipcRenderer.invoke('verify-pass', pass)
     },
 
     exitVoiceChannel: async () => {

@@ -39,6 +39,10 @@ ipcMain.on('send-tx', (e, tx) => {
     sendTx(tx)
 })
 
+ipcMain.handle('verify-pass', async (e, pass) => {
+   return await verifyPassword(pass, true)
+})
+
 
 //Rescan wallet
 ipcMain.on('rescan', async (e, height) => {
@@ -206,7 +210,7 @@ const loadDaemon = (nodeUrl, nodePort) => {
 const checkPassword = async (password, node) => {
     //If we are already logged in
     if (hashed_pass.length) {
-       verifyPassword(password, hashed_pass)
+       verifyPassword(password, false)
        return true
    }
 
@@ -214,20 +218,19 @@ const checkPassword = async (password, node) => {
    return false
 }
 
-const verifyPassword = async (password, hashed_pass) => {
-    if (await checkPass(password, hashed_pass)) {
-        await sleep(1000)
-        sender('login-success')
+const verifyPassword = async (password, verify) => {
+    if (await checkPass(password)) {
+        await sleep(500)
+        if (!verify) sender('login-success')
         return true
-    } else {
-        sender('login-failed')
-        return false
     }
+    if (!verify) sender('login-failed')
+    return false
 }
 
-const checkPass = async (pass, oldHash) => {
+const checkPass = async (pass) => {
     let passHash = await hash(pass)
-    if (oldHash === passHash) return true
+    if (hashed_pass === passHash) return true
     return false
 }
 
