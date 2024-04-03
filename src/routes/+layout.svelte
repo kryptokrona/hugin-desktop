@@ -150,9 +150,10 @@
 
 
         window.api.receive('newGroupMessage', (data) => {
+            const thisgroup = data.group === $groups.thisGroup.key
             if (data.address == $user.myAddress) return
-            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
-            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel !== "Chat room" && $misc.focus) return
+            if (thisgroup && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
+            if (thisgroup && $page.url.pathname === '/groups' && data.channel !== "Chat room" && $misc.focus) return
             new_messages = true
             data.key = data.address
             
@@ -163,6 +164,7 @@
                 board_message_sound.play()
                 $notify.new.push(data)
             }
+            if (!$misc.focus && thisgroup) return
             data.type = "group"
             $notify.unread.push(data)
             $notify.new = $notify.new
