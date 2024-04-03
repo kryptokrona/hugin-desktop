@@ -62,7 +62,7 @@
         on:click="{(e) => print_group(group)}"
     >
         {#if group.new}
-            <div in:fade out:fade class:unread="{group.new}">{counter}</div>
+            <div in:fade class:unread="{group.new}">{counter}</div>
         {/if}
     
         <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
@@ -159,7 +159,7 @@
     }
     
     .unread {
-        animation: s-xTk4sJOIoQE_-border_rgb 30s infinite;
+        animation: border_rgb 30s infinite;
         background-color: white;
         width: 15px;
         height: 17px;
