@@ -299,7 +299,7 @@ const loadBlockList = async () => {
     return new Promise((resolve, reject) => {
         const getBlockList = `SELECT * FROM blocklist`
         const blockLists = database.prepare(getBlockList).all()
-        for(const block in blockLists) {
+        for(const block of blockLists) {
             blockList.push(block)
         }
         resolve(blockList)
