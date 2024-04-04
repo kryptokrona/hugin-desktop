@@ -62,7 +62,11 @@
         on:click="{(e) => print_group(group)}"
     >
         {#if group.new}
-            <div in:fade class:unread="{group.new}">{counter}</div>
+            <div in:fade class:unread="{group.new}">
+                <div class="count">
+                {#if counter > 0}{counter}{/if}
+                </div>
+            </div>
         {/if}
     
         <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
@@ -159,18 +163,14 @@
     }
     
     .unread {
-        animation: border_rgb 30s infinite;
-        background-color: white;
-        width: 15px;
+        width: 17px;
         height: 17px;
-        border-radius: 30%;
-        left: 340px;
+        border-radius: 33%;
+        background: #ce4141;
         padding: 2px;
-        margin-top: 15px;
-        color: black;
-        position: absolute;
-        font-size: 12px;
-        padding-left: 3px;
+        margin-left: -15px;
+        display: flex;
+        justify-content: center;
     }
     
     .active {
@@ -196,5 +196,10 @@
         color: white;
         height: 100px;
         border-bottom: 1px solid var(--border-color);
+    }
+
+    .count {
+        font-size: 12px;
+        color: white;
     }
     </style>

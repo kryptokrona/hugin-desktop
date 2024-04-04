@@ -2,12 +2,13 @@
 import {createEventDispatcher} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar} from '$lib/utils/hugin-utils.js'
-import {user, webRTC} from '$lib/stores/user.js'
+import {notify, user, webRTC} from '$lib/stores/user.js'
 
 export let contact
 let thisCall = false
 let beamInvite = false
 
+$: counter = $notify.unread.filter(a => a.type === 'message').length
 $: if (contact.msg.substring(0,7) === "BEAM://") {
     beamInvite = true
 }
@@ -49,7 +50,11 @@ const rename = () => {
     on:click="{() => printThis(contact)}"
 >
     {#if contact.new}
-        <div class:unread="{contact.new}"></div>
+        <div class:unread="{contact.new}">
+            <div class="count">
+                {#if counter > 0}{counter}{/if}
+                </div>
+        </div>
     {/if}
 
     <img
@@ -124,18 +129,23 @@ p {
 }
 
 .unread {
-    animation: border_rgb 30s infinite;
-    background-color: white;
-    width: 5px;
-    height: 5px;
-    border-radius: 30%;
-    left: 340px;
-    margin-top: 25px;
-    position: sticky;
+    width: 17px;
+    height: 17px;
+    border-radius: 33%;
+    background: #ce4141;
+    padding: 2px;
+    margin-left: -15px;
+    display: flex;
+    justify-content: center;
 }
 
 .active {
     background-color: var(--border-color);
     border-bottom: 1px solid transparent;
 }
+
+.count {
+        font-size: 12px;
+        color: white;
+    }
 </style>
