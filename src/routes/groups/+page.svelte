@@ -301,15 +301,17 @@ async function printGroup(group) {
 
 //Checks messages for reactions in chosen Group from printGroup() function
 async function checkReactions(array, scroll) {
-    //All group messages all messages except reactions
-    filterGroups = array.filter(
-        (m) => m.message.length > 0 && !(m.reply.length === 64 && containsOnlyEmojis(m.message))
-    )
+ 
     //Only reactions
     filterEmojis = [...array.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
     ), ...filterEmojis]
-
+    
+       //All group messages all messages except reactions
+       filterGroups = array.filter(
+        (m) => m.message.length > 0 && !(m.reply.length === 64 && filterEmojis.includes(m))
+    )
+    
     if (filterEmojis.length) {
         //Adding emojis to the correct message.
         addEmoji(scroll)
