@@ -191,44 +191,47 @@ const start_message_syncer = async () => {
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
     background_sync_messages(await load_checked_txs())
+    let i = 0
      while (true) {
          try {
-             //Start syncing
-             await sleep(1000 * 10)
- 
-             await background_sync_messages()
+            //Start syncing
+            //Faster sync on start
+            if (i < 4) await sleep(1000 * 4)
+            else await sleep(1000 * 10)
+            i++
+            await background_sync_messages()
 
-             const idle = powerMonitor.getSystemIdleTime();
-             Hugin.send('idle', idle)
- 
-             const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
+            const idle = powerMonitor.getSystemIdleTime();
+            Hugin.send('idle', idle)
 
-             Hugin.send('node-sync-data', {
-                 walletBlockCount,
-                 localDaemonBlockCount,
-                 networkBlockCount,
-             })
- 
-             if (localDaemonBlockCount - walletBlockCount < 2) {
-                 // Diff between wallet height and node height is 1 or 0, we are synced
-                 console.log('**********SYNCED**********')
-                 console.log('My Wallet ', walletBlockCount)
-                 console.log('The Network', networkBlockCount)
-                 Hugin.send('sync', 'Synced')
-             } else {
-                 //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
-                 if (walletBlockCount === 0) {
-                     await Hugin.wallet.reset(networkBlockCount - 100)
-                 }
-                 console.log('*.[~~~].SYNCING BLOCKS.[~~~].*')
-                 console.log('My Wallet ', walletBlockCount)
-                 console.log('The Network', networkBlockCount)
-                 Hugin.send('sync', 'Syncing')
-             }
-         } catch (err) {
-             console.log(err)
-         }
-     }
+            const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
+
+            Hugin.send('node-sync-data', {
+                walletBlockCount,
+                localDaemonBlockCount,
+                networkBlockCount,
+            })
+
+            if (localDaemonBlockCount - walletBlockCount < 2) {
+                // Diff between wallet height and node height is 1 or 0, we are synced
+                console.log('**********SYNCED**********')
+                console.log('My Wallet ', walletBlockCount)
+                console.log('The Network', networkBlockCount)
+                Hugin.send('sync', 'Synced')
+            } else {
+                //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
+                if (walletBlockCount === 0) {
+                    await Hugin.wallet.reset(networkBlockCount - 100)
+                }
+                console.log('*.[~~~].SYNCING BLOCKS.[~~~].*')
+                console.log('My Wallet ', walletBlockCount)
+                console.log('The Network', networkBlockCount)
+                Hugin.send('sync', 'Syncing')
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
 }
 
 async function background_sync_messages(checkedTxs = false) {
