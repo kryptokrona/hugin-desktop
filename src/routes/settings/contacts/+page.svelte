@@ -11,11 +11,13 @@ import { fade } from "svelte/transition"
         <div class="list-wrapper">
             <h4>Block list</h4>
             {#each $groups.blockList as blocked (blocked.address)}
+            {#if blocked.name !== undefined}
                 <div class="card">
                     <p class="name">{blocked.name}</p>
                     <br />
                     <p class="unblock" on:click={() => window.api.send('unblock', blocked.address)}>Unblock</p>
                 </div>
+            {/if}
             {/each}
         </div>
     </div>
