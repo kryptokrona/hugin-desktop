@@ -145,11 +145,7 @@ const printGroupRtcMessage = (groupMsg) => {
         containsOnlyEmojis(groupMsg.message)
     ) {
         updateReactions(groupMsg)
-    } else if (
-        groupMsg?.message.length > 0 &&
-        !(groupMsg?.reply.length === 64 && containsOnlyEmojis(groupMsg.message))
-    ) {
-        console.log('pushin')
+    } else {
         fixedRtcGroups.push(groupMsg)
     }
     rtcgroupMessages.update((current) => {

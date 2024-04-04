@@ -166,10 +166,7 @@ const printGroupMessage = (groupMsg) => {
         containsOnlyEmojis(groupMsg.message)
     ) {
         updateReactions(groupMsg)
-    } else if (
-        groupMsg.message.length > 0 &&
-        !(groupMsg.reply.length === 64 && containsOnlyEmojis(groupMsg.message))
-    ) {
+    } else {
         fixedGroups.unshift(groupMsg)
     }
     groupMessages.update((current) => {
