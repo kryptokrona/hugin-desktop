@@ -338,10 +338,6 @@ main {
     display: flex;
     flex-direction: column-reverse;
     overflow: scroll;
-
-    &::-webkit-scrollbar {
-        display: none;
-    }
 }
 
 .fade {
@@ -351,5 +347,27 @@ main {
     height: 40px;
     background: linear-gradient(180deg, #121212, #12121200);
     z-index: 100;
+}
+
+.outer {
+    --scrollbarBG: transparent;
+    --thumbBG: #3337;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+
+.outer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.outer::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+}
+
+.outer::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 3px;
+    border: 3px solid var(--scrollbarBG);
 }
 </style>
