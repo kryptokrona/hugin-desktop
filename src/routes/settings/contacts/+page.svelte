@@ -14,7 +14,7 @@ import { fade } from "svelte/transition"
             {#if blocked.name !== undefined}
                 <div class="card">
                     <p class="name">{blocked.name}</p>
-                    <br />
+                    <br>
                     <p class="unblock" on:click={() => window.api.send('unblock', blocked.address)}>Unblock</p>
                 </div>
             {/if}
@@ -55,6 +55,11 @@ h2 {
 
 .list-wrapper {
     padding: 10%;
+}
+
+p {
+    font-family: "Montserrat";
+    margin-right: 15px;
 }
 
 </style>
