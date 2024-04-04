@@ -41,9 +41,13 @@ function hideNotification(id) {
     >
         <div class="inner-card">
             <div class="header">
+                {#if message?.group}
                 <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="" />
+                {:else}
+                <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="" />
+                {/if}
                 <h4 class="name">{message.name}</h4>
-                {#if message.group}<p>in {group.name}</p>{/if}
+                {#if message?.group}<p>in {group.name}</p>{/if}
             </div>
             <p class="message">{message.message}</p>
             <br />

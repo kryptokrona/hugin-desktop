@@ -181,11 +181,15 @@
             
             //If address is our own, maybe sent from mobile
             if (data.chat === $user.myAddress) return
-            
+            const contact = $user.contacts.find((a) => a.chat === data.chat)
+            data.name = contact.name
+            data.message = data.msg
             new_message_sound.play()
-            
+            new_messages = true
             data.type = 'message'
+           
             $notify.unread.push(data)
+            $notify.new.push(data)
             $notify.unread = $notify.unread
             console.log('unread', $notify.unread)
 
