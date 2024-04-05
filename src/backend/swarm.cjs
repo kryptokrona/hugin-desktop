@@ -429,7 +429,7 @@ const incoming_message = async (data, topic, connection, key) => {
     if (!msg) return
         //Send new board message to frontend.
         sender('groupRtcMsg', msg)
-        sender('newGroupMessage', msg)
+        sender('newGroupMessage', [msg, false])
 
 }
 

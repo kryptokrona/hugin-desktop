@@ -74,6 +74,8 @@ onDestroy(() => {
 
 //Prints conversation from active contact
 const printConversation = (active) => {
+    const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
+    $notify.unread = clear
     chat = active.chat
     key = active.key
     active_contact = chat + key

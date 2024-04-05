@@ -61,13 +61,6 @@
         class:swarm="{swarmGroup}"
         on:click="{(e) => print_group(group)}"
     >
-        {#if group.new}
-            <div in:fade class:unread="{group.new}">
-                <div class="count">
-                {#if counter > 0}{counter}{/if}
-                </div>
-            </div>
-        {/if}
     
         <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
         <div class="content">
@@ -77,6 +70,13 @@
                 <p>{group.msg}</p>
             </div>
         </div>
+        {#if counter > 0}
+        <div in:fade class:unread="{group.new}">
+            <div class="count">
+                {counter}
+            </div>
+        </div>
+        {/if}
     </div>
     
     <!-- Here we can hover / or and show details from this active group *** <--
@@ -140,6 +140,7 @@
         flex-direction: column;
         justify-content: center;
         overflow: hidden;
+        width: 90%;
     }
     
     h4 {
@@ -168,8 +169,8 @@
         border-radius: 33%;
         background: #ce4141;
         padding: 2px;
-        margin-left: -15px;
         display: flex;
+        margin-top: 10px;
         justify-content: center;
     }
     
