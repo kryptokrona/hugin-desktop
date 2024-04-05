@@ -71,7 +71,7 @@
             </div>
         </div>
         {#if counter > 0}
-        <div in:fade class:unread="{group.new}">
+        <div in:fade class="unread">
             <div class="count">
                 {counter}
             </div>
