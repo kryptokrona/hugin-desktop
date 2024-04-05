@@ -8,7 +8,7 @@ export let contact
 let thisCall = false
 let beamInvite = false
 
-$: counter = $notify.unread.filter(a => a.type === 'message').length
+$: counter = $notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length
 $: if (contact.msg.substring(0,7) === "BEAM://") {
     beamInvite = true
 }
@@ -49,13 +49,7 @@ const rename = () => {
     class:active="{contact.chat === $user.activeChat.chat}"
     on:click="{() => printThis(contact)}"
 >
-    {#if contact.new}
-        <div class:unread="{contact.new}">
-            <div class="count">
-                {#if counter > 0}{counter}{/if}
-                </div>
-        </div>
-    {/if}
+
 
     <img
         class="avatar"
@@ -72,6 +66,13 @@ const rename = () => {
         <p>Started a beam ⚡️</p>
         {/if}
     </div>
+    {#if counter > 0}
+        <div class="unread">
+            <div class="count">
+                {counter}
+                </div>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -106,6 +107,7 @@ const rename = () => {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 90%;
 }
 
 h4 {
@@ -134,8 +136,8 @@ p {
     border-radius: 33%;
     background: #ce4141;
     padding: 2px;
-    margin-left: -15px;
     display: flex;
+    margin-top: 10px;
     justify-content: center;
 }
 
