@@ -176,8 +176,10 @@
             data.chat === $user.activeChat.chat 
             && $misc.focus 
             && $page.url.pathname === '/messages'
-            )
+            ) {
+            saveToStore(data)  
             return
+            }
             
             //If address is our own, maybe sent from mobile
             if (data.chat === $user.myAddress) return
