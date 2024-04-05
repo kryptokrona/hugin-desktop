@@ -27,6 +27,12 @@
             h: parseInt(Date.now()),
         }
         window.api.addGroup(data)
+        groups.update((data) => {
+        return {
+            ...data,
+            thisGroup: { key: group.key, name: group.name, chat: true},
+        }
+      })
         goto('/groups')
     }
 
