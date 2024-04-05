@@ -91,6 +91,10 @@ function createWindow() {
         mainWindow.webContents.send('focus')
     })
 
+    mainWindow.on("system-context-menu", (event, _point) => {
+        event.preventDefault();
+    });
+
     return mainWindow
 }
 
@@ -118,6 +122,7 @@ function createMainWindow() {
     if (dev) loadVite(port)
     else serveURL(mainWindow)
 }
+
 
 const gotTheLock = app.requestSingleInstanceLock()
     
