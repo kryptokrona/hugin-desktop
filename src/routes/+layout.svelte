@@ -42,7 +42,7 @@
     let new_messages = false
     let board_message_sound
     let new_message_sound
-    
+    document.addEventListener('contextmenu', event => event.preventDefault());
     const closePopup = () => {
         incoming_call = false
     }
@@ -149,7 +149,7 @@
         })
 
 
-        window.api.receive('newGroupMessage', (data) => {
+        window.api.receive('newGroupMessage', ([data, add = false]) => {
             const thisgroup = data.group === $groups.thisGroup.key
             if (data.address == $user.myAddress) return
             if (thisgroup && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
@@ -160,11 +160,12 @@
             //Future notifications page
             $notify.notifications.push(data)
 
-            if ($notify.new.length < 2 && !$notify.que) {
+            if ($notify.new.length < 2 && !$notify.que && !add) {
                 board_message_sound.play()
                 $notify.new.push(data)
             }
             if (!$misc.focus && thisgroup) return
+            if (add) return
             data.type = "group"
             $notify.unread.push(data)
             $notify.new = $notify.new
@@ -628,4 +629,5 @@ main {
         right: 20px;
         height: 100%;
     }
+
 </style>

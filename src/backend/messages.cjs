@@ -88,7 +88,7 @@ ipcMain.handle('create-group', async () => {
 
 ipcMain.on('add-group', async (e, grp) => {
     addGroup(grp)
-    save_group_message(grp, grp.hash, parseInt(Date.now()))
+    save_group_message(grp, grp.hash, parseInt(Date.now()), false, false, true)
 })
 
 ipcMain.on('remove-group', async (e, grp) => {
@@ -1066,13 +1066,13 @@ const checkBalance = async () => {
     return true
 }
 
-async function save_group_message(msg, hash, time, offchain, channel = false) {
+async function save_group_message(msg, hash, time, offchain, channel = false, add = false) {
     let message = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!message) return false
     if (!offchain) {
         //Send new board message to frontend.
         Hugin.send('groupMsg', message)
-        Hugin.send('newGroupMessage', message)
+        Hugin.send('newGroupMessage', [message, add])
     } else if (offchain) {
         if (message.message === 'ᛊNVITᛊ') return
         Hugin.send('groupRtcMsg', message)
