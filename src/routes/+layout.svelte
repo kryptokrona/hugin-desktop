@@ -175,7 +175,7 @@
             //If active chat, focused and in message page, return
             if (
             data.chat === $user.activeChat.chat 
-            && $misc.focus 
+            && $misc.focus
             && $page.url.pathname === '/messages'
             ) {
             saveToStore(data)  
@@ -185,20 +185,26 @@
             //If address is our own, maybe sent from mobile
             if (data.chat === $user.myAddress) return
             //Convert message to notification
+            
             const contact = $user.contacts.find((a) => a.chat === data.chat)
             data.name = contact.name
             data.message = data.msg
             data.type = 'message'
             
             new_message_sound.play()
+            saveToStore(data)
+            if (
+                data.chat === $user.activeChat.chat 
+                && !$misc.focus 
+                && $page.url.pathname === '/messages'
+            )
+            return
+
             new_messages = true
-           
             $notify.unread.push(data)
             $notify.new.push(data)
             $notify.unread = $notify.unread
             console.log('unread', $notify.unread)
-
-            saveToStore(data)
         })
 
         window.api.receive('addr', (huginAddr) => {
