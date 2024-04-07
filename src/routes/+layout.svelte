@@ -43,6 +43,9 @@
     let board_message_sound
     let new_message_sound
     document.addEventListener('contextmenu', event => event.preventDefault());
+    window.addEventListener('beforeunload', (ev) => {
+        ev.returnValue = true;
+    });
     const closePopup = () => {
         incoming_call = false
     }
@@ -184,15 +187,16 @@
             
             //If address is our own, maybe sent from mobile
             if (data.chat === $user.myAddress) return
-            //Convert message to notification
             
+            //Convert message to notification
             const contact = $user.contacts.find((a) => a.chat === data.chat)
             data.name = contact.name
             data.message = data.msg
             data.type = 'message'
-            
             new_message_sound.play()
             saveToStore(data)
+
+            //If we are active in the chat, but minimized.
             if (
                 data.chat === $user.activeChat.chat 
                 && !$misc.focus 
