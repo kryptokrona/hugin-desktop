@@ -59,7 +59,7 @@
         "electron-store": "^8.1.0",
         "electron-updater": "5.3.0",
         "electron-window-state": "^5.0.3",
-        "emoji-picker-element": "^1.13.1",
+        "emoji-picker-element": "^1.21.2",
         "hugin-crypto": "^0.0.2",
         "hyperbeam": "^3.0.0",
         "hyperswarm": "^4.5.1",
