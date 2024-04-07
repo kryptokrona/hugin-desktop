@@ -46,6 +46,8 @@
   }
 
   const keydown = (e) => {
+    if (e.key === 'PageDown') e.preventDefault()
+    if (e.key === 'PageUp') e.preventDefault()
     if (e.key === 'Shift') shiftKey = true
     if (messageInput && !shiftKey && e.key === 'Enter') { 
       e.preventDefault()
