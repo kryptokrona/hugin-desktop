@@ -42,10 +42,9 @@
     let new_messages = false
     let board_message_sound
     let new_message_sound
+
     document.addEventListener('contextmenu', event => event.preventDefault());
-    window.addEventListener('beforeunload', (ev) => {
-        ev.returnValue = true;
-    });
+
     const closePopup = () => {
         incoming_call = false
     }
