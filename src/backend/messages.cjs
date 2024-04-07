@@ -197,7 +197,7 @@ const start_message_syncer = async () => {
             //Start syncing
             //Faster sync on start
             if (i < 4) await sleep(1000 * 4)
-            else await sleep(1000 * 10)
+            else await sleep(1000 * 7)
             i++
             await background_sync_messages()
 
