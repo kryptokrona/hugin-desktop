@@ -7,6 +7,7 @@ const {
     Menu,
     nativeTheme,
     systemPreferences,
+    globalShortcut
 } = require('electron')
 const serve = require('electron-serve')
 const { join } = require('path')
@@ -95,6 +96,9 @@ function createWindow() {
         event.preventDefault();
     });
 
+    globalShortcut.unregisterAll()
+
+
     return mainWindow
 }
 
@@ -151,7 +155,10 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on('close', () => {
-    app.quit()
+    mainWindow.hide()
+    if (process.platform === 'darwin') {
+        app.dock.hide()
+    }
 })
 
 ipcMain.on('min', () => {
