@@ -92,9 +92,15 @@ function createWindow() {
         mainWindow.webContents.send('focus')
     })
 
-    mainWindow.on("system-context-menu", (event, _point) => {
-        event.preventDefault();
-    });
+    if (!dev) {
+
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.control && input.key.toLowerCase() === 'r') {
+            event.preventDefault()
+        }
+    })
+    
+    }
 
     globalShortcut.unregisterAll()
 
@@ -119,9 +125,6 @@ function loadVite(port) {
 
 function createMainWindow() {
     mainWindow = createWindow()
-    mainWindow.once('close', () => {
-        mainWindow = null
-    })
 
     if (dev) loadVite(port)
     else serveURL(mainWindow)
@@ -170,6 +173,9 @@ app.whenReady().then(() => {
     console.log(appBin)
     let isDark = nativeTheme.shouldUseDarkColors
     tray = new Tray(appBin + `tray${isDark ? '-dark' : ''}@2x.png`)
+      tray.on('double-click', function(e) {
+        showWindow()
+    })
     const contextMenu = Menu.buildFromTemplate([
         {
             label: 'Show',
@@ -198,15 +204,15 @@ app.whenReady().then(() => {
     ])
     tray.setContextMenu(contextMenu)
     tray.setIgnoreDoubleClickEvents(true)
-    tray.on('click', function(e) {
-        showWindow()
-    })
 })
 
 function showWindow() {
     mainWindow.restore()
     mainWindow.show()
     mainWindow.focus()
+    if (process.platform === 'darwin') {
+        app.dock.show()
+    }
 }
 
 
