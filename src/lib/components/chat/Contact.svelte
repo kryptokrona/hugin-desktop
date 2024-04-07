@@ -67,10 +67,10 @@ const rename = () => {
         {/if}
     </div>
     {#if counter > 0}
-        <div class="unread">
+        <div in:fade class="unread">
             <div class="count">
                 {counter}
-                </div>
+            </div>
         </div>
     {/if}
 </div>
