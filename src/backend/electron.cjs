@@ -136,8 +136,7 @@ if (!gotTheLock) {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window.
     if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show()
-      mainWindow.focus()
+      if (mainWindow.isMinimized()) showWindow()
     }
   })
     
@@ -199,7 +198,17 @@ app.whenReady().then(() => {
     ])
     tray.setContextMenu(contextMenu)
     tray.setIgnoreDoubleClickEvents(true)
+    tray.on('click', function(e) {
+        showWindow()
+    })
 })
+
+function showWindow() {
+    mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+}
+
 
 ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
