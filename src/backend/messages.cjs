@@ -1073,7 +1073,7 @@ async function save_group_message(msg, hash, time, offchain, channel = false, ad
     if (!offchain) {
         //Send new board message to frontend.
         Hugin.send('groupMsg', message)
-        Hugin.send('newGroupMessage', [message, add])
+        Hugin.send('group-notification', [message, add])
     } else if (offchain) {
         if (message.message === 'ᛊNVITᛊ') return
         Hugin.send('groupRtcMsg', message)

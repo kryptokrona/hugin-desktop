@@ -151,11 +151,12 @@
         })
 
 
-        window.api.receive('newGroupMessage', ([data, add = false]) => {
+        window.api.receive('group-notification', ([data, add = false]) => {
             const thisgroup = data.group === $groups.thisGroup.key
+            const ingroups = $page.url.pathname === '/groups'
             if (data.address == $user.myAddress) return
-            if (thisgroup && $page.url.pathname === '/groups' && $swarm.showVideoGrid && data.channel === "Chat room") return
-            if (thisgroup && $page.url.pathname === '/groups' && data.channel !== "Chat room" && $misc.focus) return
+            if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
+            if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
             new_messages = true
             data.key = data.address
             
@@ -166,7 +167,7 @@
                 board_message_sound.play()
                 $notify.new.push(data)
             }
-            if (!$misc.focus && thisgroup) return
+            if (!$misc.focus && thisgroup && ingroups) return
             if (add) return
             data.type = "group"
             $notify.unread.push(data)
