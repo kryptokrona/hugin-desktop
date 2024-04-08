@@ -190,13 +190,13 @@ const start_message_syncer = async () => {
      //Load knownTxsIds to backgroundSyncMessages on startup
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
-    background_sync_messages(await load_checked_txs())
+    await background_sync_messages(await load_checked_txs())
     let i = 0
      while (true) {
          try {
             //Start syncing
             //Faster sync on start
-            if (i < 4) await sleep(1000 * 4)
+            if (i < 4) await sleep(1000 * 5)
             else await sleep(1000 * 7)
             i++
             await background_sync_messages()
@@ -262,7 +262,7 @@ async function background_sync_messages(checkedTxs = false) {
     }
 
     if (incoming_group_que.length) {
-        clear_group_que()
+        await clear_group_que()
     }
 
     if (incoming_pm_que.length) {
@@ -337,6 +337,7 @@ async function clear_group_que() {
     const sorted = incoming_group_que.sort((a, b) => a.t - b.t );
     for (const message of sorted) {
         await decrypt_group_message(message, message.hash)
+        await sleep(50)
     }
     incoming_group_que = []
 }
