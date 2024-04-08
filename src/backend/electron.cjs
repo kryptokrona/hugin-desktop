@@ -101,6 +101,9 @@ function createWindow() {
     })
     
     }
+    
+    //Disable windows animations because of flash in window.show()
+    app.commandLine.appendSwitch('wm-window-animations-disabled');
 
     globalShortcut.unregisterAll()
 
@@ -167,14 +170,13 @@ ipcMain.on('min', () => {
     mainWindow.minimize()
 })
 
-
 let tray
 app.whenReady().then(() => {
     console.log(appBin)
     let isDark = nativeTheme.shouldUseDarkColors
     tray = new Tray(appBin + `tray${isDark ? '-dark' : ''}@2x.png`)
-      tray.on('double-click', function(e) {
-        showWindow()
+    tray.on('click', function(e) {
+    showWindow()
     })
     const contextMenu = Menu.buildFromTemplate([
         {
@@ -207,9 +209,7 @@ app.whenReady().then(() => {
 })
 
 function showWindow() {
-    mainWindow.restore()
-    mainWindow.show()
-    mainWindow.focus()
+     mainWindow.show()
     if (process.platform === 'darwin') {
         app.dock.show()
     }
