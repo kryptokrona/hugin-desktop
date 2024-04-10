@@ -81,7 +81,7 @@
 
     const loginSuccess = async () => {
         console.log('login success')
-        await sleep(4000)
+        await sleep(3000)
         await goto('/dashboard')
         $user.loggedIn = true
         $user.started = true
