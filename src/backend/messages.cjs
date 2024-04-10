@@ -186,7 +186,7 @@ const start_message_syncer = async () => {
          try {
             //Start syncing
             //Faster sync on start
-            if (i < 4) await sleep(1000 * 3)
+            if (i < 4) await sleep(1000 * 4)
             else await sleep(1000 * 7)
             i++
             await background_sync_messages()
@@ -398,7 +398,7 @@ async function load_checked_txs() {
     let checkedTxs = await loadKnownTxs()
     let arrayLength = checkedTxs.length
     
-    if (arrayLength > 0) {
+    if (arrayLength > 500) {
         checkedTxs = checkedTxs.slice(arrayLength - 500, arrayLength - 1).map(function (knownTX) {
             return knownTX.hash
         })
