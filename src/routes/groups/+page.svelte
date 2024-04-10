@@ -85,8 +85,8 @@ window.api.receive('sent_group', (data) => {
 
 window.api.receive('set-channels', async () => { 
     //Await swarm data to be set
-    await sleep(200)
-    setChannels()
+    // await sleep(200)
+    // setChannels()
 })
 
 //Check for possible errors
@@ -283,16 +283,16 @@ async function printGroup(group) {
     
     //Return the latest messages
     const messages = await getMessages(group)
+    groupMessages.set(messages)
     //Only mempool messages
     const chain_messages = messages.filter(a => !a.channel)
-    groupMessages.set(messages)
     //Setting active channelmessages if they we need them
-    $swarm.activeChannelMessages = messages.filter(a => a.channel)
-    printChannel($swarm.activeChannel.name)
+    //$swarm.activeChannelMessages = messages.filter(a => a.channel)
+    //printChannel($swarm.activeChannel.name)
     //Reset active channel if we toggle from Room view
     $swarm.activeChannel = {name: "", key: ""}
 
-    await checkReactions(chain_messages, false)
+    checkReactions(chain_messages, false)
     replyExit()
     scrollDown()
 }
@@ -300,7 +300,7 @@ async function printGroup(group) {
 
 
 //Checks messages for reactions in chosen Group from printGroup() function
-async function checkReactions(array, scroll) {
+function checkReactions(array, scroll) {
  
     //Only reactions
     filterEmojis = [...array.filter(
@@ -316,8 +316,6 @@ async function checkReactions(array, scroll) {
         //Adding emojis to the correct message.
         addEmoji(scroll)
     } else {
-        let uniq = {}
-        array = array.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
         if (scroll) fixedGroups = [...fixedGroups, ...array]
         else fixedGroups = filterGroups
     }
@@ -414,7 +412,7 @@ async function updateReactions(msg) {
         pageNum++
         const more = await getMoreMessages()
         if (more.length === 0) {noLoad(); return}
-       await checkReactions(more, true)
+        checkReactions(more, true)
     }
 
     const noLoad = () => {
