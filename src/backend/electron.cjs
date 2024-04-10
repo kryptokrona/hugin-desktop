@@ -102,6 +102,8 @@ function createWindow() {
     })
     
     }
+
+    mainWindow.setMenu(null)
     
     //Disable windows animations because of flash in window.show()
     app.commandLine.appendSwitch('wm-window-animations-disabled');
