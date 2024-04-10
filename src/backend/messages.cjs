@@ -57,7 +57,6 @@ let incoming_messages = []
 let incoming_pm_que = []
 let incoming_group_que = []
 //IPC MAIN LISTENERS
-
 //MISC
 
 ipcMain.on('optimize', async (e) => {
@@ -67,15 +66,6 @@ ipcMain.on('optimize', async (e) => {
 
 ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
     send_group_message(msg, offchain, swarm)
-})
-
-ipcMain.handle('get-groups', async (e) => {
-    let groups = await getGroups()
-    return groups.reverse()
-})
-
-ipcMain.handle('print-group', async (e, grp, page) => {
-    return await printGroup(grp, page)
 })
 
 ipcMain.handle('get-group-reply', async (e, data) => {
@@ -187,7 +177,7 @@ ipcMain.on('end-swarm', async (e, key) => {
 })
 
 const start_message_syncer = async () => {
-     //Load knownTxsIds to backgroundSyncMessages on startup
+    //Load knownTxsIds to backgroundSyncMessages on startup
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
     await background_sync_messages(await load_checked_txs())
@@ -196,7 +186,7 @@ const start_message_syncer = async () => {
          try {
             //Start syncing
             //Faster sync on start
-            if (i < 4) await sleep(1000 * 5)
+            if (i < 4) await sleep(1000 * 3)
             else await sleep(1000 * 7)
             i++
             await background_sync_messages()
@@ -262,7 +252,7 @@ async function background_sync_messages(checkedTxs = false) {
     }
 
     if (incoming_group_que.length) {
-        await clear_group_que()
+        clear_group_que()
     }
 
     if (incoming_pm_que.length) {
@@ -293,8 +283,8 @@ async function decrypt_hugin_messages(transactions, que = false) {
             if (thisExtra !== undefined && thisExtra.length > 200) {
                 if (!saveHash(thisHash)) continue
                 //Check for viewtag
-                const checkTag = await check_for_viewtag(thisExtra)
-                if (checkTag) {
+                 
+                if (await check_for_viewtag(thisExtra)) {
                     await check_for_pm_message(thisExtra, que)
                     continue
                 }
@@ -310,7 +300,7 @@ async function decrypt_hugin_messages(transactions, que = false) {
 }
 
 //Try decrypt extra data
-async function check_for_pm_message(thisExtra, que) {
+async function check_for_pm_message(thisExtra, que = false) {
     let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair())
     if (!message) return false
     if (message.type === 'sealedbox' || 'box') {
@@ -328,7 +318,6 @@ async function clear_pm_que() {
     const sorted = incoming_pm_que.sort((a, b) => a.t - b.t );
     for (const message of sorted) {
         save_message(message)
-        await sleep(100)
     }
     incoming_pm_que = []
 }
@@ -363,7 +352,7 @@ async function check_for_viewtag(extra) {
 }
 
 //Checks if hugin message is from a group
-async function check_for_group_message(thisExtra, thisHash, que) {
+async function check_for_group_message(thisExtra, thisHash, que = false)  {
     try {
     let group = trimExtra(thisExtra)
     let message = JSON.parse(group)
@@ -404,11 +393,11 @@ function validate_extra(thisExtra, thisHash, que) {
 }
 
 async function load_checked_txs() {
-    
+
     //Load known pool txs from db.
     let checkedTxs = await loadKnownTxs()
     let arrayLength = checkedTxs.length
-
+    
     if (arrayLength > 0) {
         checkedTxs = checkedTxs.slice(arrayLength - 500, arrayLength - 1).map(function (knownTX) {
             return knownTX.hash
