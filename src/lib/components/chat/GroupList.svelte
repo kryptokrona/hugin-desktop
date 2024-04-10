@@ -11,7 +11,6 @@
     import {flip} from 'svelte/animate'
 
     let activeHugins = []
-    let newArray = []
     let groupList = []
     let group = ''
     let groupName
@@ -27,8 +26,9 @@
     
 onMount( async () => {
     await printGroups()
-    filterActiveHugins($groupMessages)
     checkGroup()
+    filterActiveHugins($groupMessages)
+    
 })
 
 onDestroy(() => {
@@ -83,25 +83,15 @@ function filterActiveHugins(arr) {
 
 //Print our conversations from DBs
 async function printGroups() {
-    let groupmessages = await window.api.getGroups()
-    let uniq = {}
-    newArray = groupmessages.filter((obj) => !uniq[obj.key] && (uniq[obj.key] = true))
-    for (const a of newArray) {
-        for (const b of $notify.unread) {
-            if (a.key === b.group) a.new = true
-        }
-    }
-
-    let my_groups = await checkNew()
+    groupList = await window.api.getGroups()
 
     groups.update((current) => {
         return {
             ...current,
-            groupArray: my_groups,
+            groupArray: groupList,
         }
     })
 
-    groupList = my_groups
 
     filterActiveHugins($groupMessages)
 }
@@ -132,33 +122,11 @@ function readMessage(e) {
     const clear = $notify.unread.filter(unread => unread.group !== e.key)
     $notify.unread = clear
 
-    groupList = groupList.map(function (a) {
-        if (e.new && a.key === e.key) {
-            a.new = false
-        }
-        return a
-    })
-
     groupList = groupList
     filterActiveHugins($groupMessages)
 }
 
 $: groupList
-
-//Check new messages
-async function checkNew() {
-    let filterNew = []
-    newArray.forEach(function (a) {
-        groupList.some(function (b) {
-            if (b.new && a.chat === b.chat) {
-                a.new = true
-            }
-        })
-        filterNew.push(a)
-    })
-
-    return filterNew
-}
 
 function sendPM() {
     // Add friend request here?
