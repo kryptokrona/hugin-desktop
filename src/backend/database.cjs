@@ -1,3 +1,4 @@
+const { ipcMain } = require('electron')
 
 const sqlite3 = require('better-sqlite3-multiple-ciphers')
 const sanitizeHtml = require('sanitize-html')
@@ -241,29 +242,15 @@ const firstContact = () => {
 
 //DATABASE REQUESTS
 
-const loadGroups = async () => {
+const loadGroups = () => {
     const rows = []
-    return new Promise((resolve, reject) => {
         const getAllGroups = `SELECT * FROM pgroups`
         const groups = database.prepare(getAllGroups).all()
 
         for(const group of groups) {
             rows.push(group)
         }
-        resolve(rows)
-        // database.each(
-        //     getAllGroups,
-        //     (err, row) => {
-        //         if (err) {
-        //             console.log('Error', err)
-        //         }
-        //         rows.push(row)
-        //     },
-        //     () => {
-        //         resolve(rows)
-        //     }
-        // )
-    })
+        return rows
 }
 
 const loadKeys = async (start = false) => {
@@ -306,45 +293,46 @@ const loadBlockList = async () => {
     })
 }
 
+ipcMain.handle('get-groups', async (e) => {
+    const groups = await getGroups()
+    return groups.reverse()
+})
+
 //Get one message from every unique user sorted by latest timestmap.
 const getGroups = async () => {
-    let my_groups = await loadGroups()
-    let name
-    let newRow
-    let key
+    const my_groups = loadGroups()
+    const groupInfo = []
     const myGroups = []
-    return new Promise((resolve, reject) => {
-        const getMyGroups = `
-          SELECT *
-          FROM groupmessages D
-          WHERE time = (SELECT MAX(time) FROM groupmessages WHERE grp = D.grp)
-          ORDER BY
-              time
-          ASC
-          `
-        const stmt = database.prepare(getMyGroups)
-        for (const group of stmt.iterate()) {
-                my_groups.some(function (chat) {
-                    if (chat.key === group.grp) {
-                        name = chat.name
-                        key = chat.key
-                        newRow = {
-                            name: name,
-                            msg: group.message,
-                            chat: group.grp,
-                            timestamp: group.time,
-                            sent: group.sent,
-                            key: key,
-                            hash: group.hash,
-                            nick: group.name,
-                        }
-                        myGroups.push(newRow)
-                    }
-                })
+    for (const chat of my_groups) {
+    const getThis = `
+        SELECT *
+        FROM groupmessages
+        WHERE grp = ?
+        ORDER BY time
+        DESC
+        LIMIT 1
+    `
+    const got = database.prepare(getThis).get(chat.key)
+    groupInfo.push(got)
+    }
+    for (const group of groupInfo.sort((a, b) => a.time - b.time)) {
+        const chat = my_groups.find(a => a.key === group.grp)
+        if (chat === undefined) continue 
+            const newRow = {
+            name: chat.name,
+            msg: group.message,
+            chat: group.grp,
+            timestamp: group.time,
+            sent: group.sent,
+            key: chat.key,
+            hash: group.hash,
+            nick: group.name,
             }
-            resolve(myGroups)
-        })
-    }   
+        myGroups.push(newRow)
+    }
+        
+    return myGroups
+}   
 
 const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
 
@@ -633,8 +621,13 @@ const getConversation = async (chat) => {
     })
 }
 
+ipcMain.handle('print-group', async (e, grp, page) => {
+    return await printGroup(grp, page)
+})
+
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
+
     //const channels = await getChannels()
     let limit = 50
     let offset = 0
@@ -663,12 +656,6 @@ const printGroup = async (group, page) => {
         for(const row of stmt.iterate(group)) {
             if (row.address.length === 0) row.address = row.grp
                     
-                //const msg = channels.find(a => a.hash === row.hash)
-
-                // if (msg) {
-                //     row.channel = msg.channel
-                // }
-                
                 thisGroup.push(row)
         }
         resolve(thisGroup)

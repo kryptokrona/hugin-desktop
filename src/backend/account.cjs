@@ -86,8 +86,6 @@ class Account {
       })
       }
 
-      console.log("Pool checked time:", store.get('pool.checked'))
-
       await this.load()
 
      }
@@ -101,7 +99,7 @@ class Account {
       const block_list = await loadBlockList()
       const deleteAfter = store.get('delete.after')
       const idle = store.get('idle.time') ?? 300
-      this.sender('wallet-started', [this.node, my_groups, block_list, my_contacts, deleteAfter, Hugin.downloadDir, myAvatar, idle])
+      this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts, deleteAfter, Hugin.downloadDir, myAvatar, idle])
 
       this.known_keys = keys
       this.block_list = block_list
