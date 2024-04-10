@@ -12,7 +12,7 @@ import { sleep } from '$lib/utils/utils'
 
 let myPassword = ""
 let enableLogin = false
-let loadSpin
+let loadSpin = false
 let errNode = false
 let passwordField
 
@@ -45,15 +45,14 @@ const enter = (e) => {
 const handleLogin = async (e) => {
     let node = $misc.node.node
     let port = $misc.node.port
-
+    loadSpin = true
    if(e.detail.node) {
        node = e.detail.node.split(':')[0]
        port = parseInt(e.detail.node.split(':')[1])
    }
-
+  
    $user.idleTime = 0
 
-    loadSpin = true
     if (!$user.started) {
         $misc.loading = true
     }
@@ -95,7 +94,7 @@ window.api.receive('login-failed', async () => {
             <h1>Hugin</h1>
             <div class="field">
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
-                <button on:click={handleLogin} class:enableLogin={enableLogin === true}>
+                <button on:click={handleLogin} disabled={!loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
                         <Moon color="#000000" size="20" unit="px"/>
                     {:else}
