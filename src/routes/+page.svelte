@@ -6,6 +6,7 @@
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
     import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
+    import { sleep } from '$lib/utils/utils'
 
     let wallet
     let nodeFailed
@@ -80,6 +81,7 @@
 
     const loginSuccess = async () => {
         console.log('login success')
+        await sleep(4000)
         await goto('/dashboard')
         $user.loggedIn = true
         $user.started = true
