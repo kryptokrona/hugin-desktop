@@ -36,6 +36,8 @@
       border: 1px solid var(--text-color);
       color: var(--text-color);
       background-color: var(--backgound-color);
+      font-family: "Montserrat";
+      font-size: 14px;
     }
   </style>
   
