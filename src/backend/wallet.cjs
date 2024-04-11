@@ -86,6 +86,10 @@ async function startHugin(walletName, password, node) {
     if (await checkPassword(password, node)) return false
 
     if (!await login(walletName, password)) return false
+    
+    Hugin.send('success-notify-message', 'Login success!')
+    //Sleep 300ms
+    await sleep(200)
 
     await Hugin.init(js_wallet, walletName, node, sender)
     
@@ -96,6 +100,8 @@ async function startHugin(walletName, password, node) {
     pickNode(node.node + ":" + node.port.toString())
 
     await startWallet(walletName, password)
+    
+    await sleep(200)
 
     //Incoming transaction event
     js_wallet.on('incomingtx', (transaction) => {
@@ -127,7 +133,6 @@ async function startHugin(walletName, password, node) {
     )
 
     return true
-    
    
 }
 
@@ -209,7 +214,7 @@ const checkPassword = async (password, node) => {
        return true
    }
 
-   await checkNodeStatus(node)
+   checkNodeStatus(node)
    return false
 }
 
