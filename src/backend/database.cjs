@@ -15,6 +15,7 @@ let database
 const loadDB = async (userDataDir, dbPath, privKey) => {
     database = new sqlite3(dbPath)
     //If db is encrypted. Read with key
+    try {
     if (store.get('sql.encrypted')) database.key(Buffer.from(privKey[0]))
     else  {
         store.set({
@@ -22,8 +23,13 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
                 encrypted: true
             }
         });
-    }   
+    }
+
     database.rekey(Buffer.from(privKey[0]))
+    } catch(e) {
+        Hugin.send('error-notify-message', 'Database could not load...')
+        return
+    }
     if(!store.get('delete.after')) {
         store.set({
             delete: {
@@ -316,6 +322,7 @@ const getGroups = async () => {
     groupInfo.push(got)
     }
     for (const group of groupInfo.sort((a, b) => a.time - b.time)) {
+        if (group === undefined) continue 
         const chat = my_groups.find(a => a.key === group.grp)
         if (chat === undefined) continue 
             const newRow = {
