@@ -94,7 +94,7 @@ window.api.receive('login-failed', async () => {
             <h1>Hugin</h1>
             <div class="field">
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
-                <button on:click={handleLogin} disabled={!loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
+                <button on:click={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
                         <Moon color="#000000" size="20" unit="px"/>
                     {:else}
