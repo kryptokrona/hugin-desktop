@@ -86,12 +86,12 @@ async function startHugin(walletName, password, node) {
     if (await checkPassword(password, node)) return false
 
     if (!await login(walletName, password)) return false
-    
-    Hugin.send('success-notify-message', 'Login success!')
     //Sleep 300ms
     await sleep(200)
 
     await Hugin.init(js_wallet, walletName, node, sender)
+    
+    Hugin.send('success-notify-message', 'Login success!')
     
     await fuseHuginAddress()
 
