@@ -326,12 +326,11 @@ function addEmoji(scroll) {
     let emojis = filterEmojis
     let array = scroll ? [...fixedGroups, ...filterGroups] : filterGroups
     const already = (a) => {
-     return fixedGroups.some(e => e === a)
+        return fixedGroups.some(e => e === a)
     }
     //Check for replies and message hash that match and then adds reactions to the messages.
     for (const a of array) {
         for (const b of emojis) {
-            if (already(a)) continue
             if (!a.react && b.reply == a.hash) {
                 a.react = []
                 b.hash = b.hash + hashPadding
@@ -341,7 +340,8 @@ function addEmoji(scroll) {
                 b.hash = b.hash + hashPadding
                 a.react.push(b)
             }
-            
+        
+        if (already(a)) continue
         fixedGroups.push(a)
         }
     }
