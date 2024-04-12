@@ -1,28 +1,43 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import { fade } from 'svelte/transition'
-
-    </script>
+    import { createEventDispatcher } from 'svelte';
     
-    <div on:click|self in:fade="{{ duration: 100 }}" out:fade="{{ duration: 170 }}" class="backdrop">
+    const dispatch = createEventDispatcher()
+
+    const close = () => {
+        dispatch('close')
+    }
+    
+    </script>
+
+
+<div
+    on:click|self="{close}"
+    in:fade="{{ duration: 100 }}"
+    out:fade="{{ duration: 100 }}"
+    class="backdrop">
         <slot>
         </slot>
     </div>
 
 
     <style lang="scss">
+
+
     .backdrop {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(10, 10, 10, 0.8);
-        -webkit-backdrop-filter: blur(9px);
-        backdrop-filter: blur(9px);
-        margin-right: 85px;
-        z-index: 101;
-        pointer-events: all;
-    }
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--backdrop-color);
+    -webkit-backdrop-filter: blur(9px);
+    z-index: 103;
+    border-radius: 15px;
+}
+
     </style>

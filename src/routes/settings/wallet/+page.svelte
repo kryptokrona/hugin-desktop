@@ -2,6 +2,7 @@
 <script>
 import Button from "$lib/components/buttons/Button.svelte"
 import RescanHeight from "$lib/components/popups/RescanHeight.svelte"
+import Verify from "$lib/components/popups/Verify.svelte"
 import { js_wallet } from "$lib/stores/wallet"
 import { fade } from "svelte/transition"
 
@@ -10,6 +11,8 @@ let showMnemonic = false
 let seedPhrase = ''
 let privateSpendKey = ''
 let privateViewKey = ''
+let verify = false
+let keys = false
 
 const getMnemonic = async () => {
     let mnemonic = await window.api.getMnemonic()
@@ -22,6 +25,20 @@ const getPrivateKeys = async () => {
     privateSpendKey = keys[0]
     privateViewKey = keys[1]
     showKeys = true
+}
+
+const showInfo = async () => {
+    verify = false
+    if (keys) {
+        getPrivateKeys()
+        return
+    }
+    getMnemonic()
+}
+
+const prompt = (a) => {
+    keys = a
+    verify = true
 }
 
 
@@ -38,6 +55,10 @@ $: {
 {#if $js_wallet.rescan}
     <RescanHeight />
  {/if}
+
+ {#if verify}
+    <Verify on:ok={() => showInfo()} on:close={() => verify = false}/>
+ {/if}
  
 <h2>Wallet</h2>
 <div class="rescan">
@@ -51,7 +72,7 @@ $: {
             <Button
                 disabled="{false}"
                 text="Show private keys"
-                on:click="{getPrivateKeys}"
+                on:click="{() => prompt(true)}"
             />
         </div>
         <br />
@@ -71,7 +92,7 @@ $: {
     <div class="inner mnemonic">
         <h3>Mnemonic seed</h3>
         <div class="button">
-            <Button disabled="{false}" text="Show mnemonic seed" on:click="{getMnemonic}" />
+            <Button disabled="{false}" text="Show mnemonic seed" on:click="{() =>  prompt(false)}" />
         </div>
         <br />
         {#if showMnemonic}

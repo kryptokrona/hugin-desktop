@@ -7,10 +7,9 @@ import ChatInput from '$lib/components/chat/ChatInput.svelte'
 //Use for filesharing later
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { containsOnlyEmojis } from '$lib/utils/utils'
-import { fade } from 'svelte/transition'
-import BackDrop from '../popups/BackDrop.svelte'
 import Dropzone from "svelte-file-dropzone";
 import { remoteFiles } from '$lib/stores/files'
+import DropFile from '../popups/DropFile.svelte'
 
 let replyto = ''
 let filterRtcGroup = []
@@ -317,7 +316,7 @@ function nodrag() {
 <!-- {#if $webRTC.call.length > 1} -->
 <div class="chat layered-shadow" class:show="{$videoGrid.showChat}">
     {#if dragover}
-    <BackDrop />
+    <DropFile />
     {/if}
     <div class="outer" id="chat_window">
            <div class="fade"></div>

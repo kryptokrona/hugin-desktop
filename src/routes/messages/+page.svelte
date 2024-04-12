@@ -8,13 +8,13 @@ import ChatList from '$lib/components/chat/ChatList.svelte'
 import AddChat from '$lib/components/chat/AddChat.svelte'
 import {boards, notify, transactions, user, beam, webRTC} from '$lib/stores/user.js'
 import Rename from '$lib/components/chat/Rename.svelte'
-import BackDrop from '$lib/components/popups/BackDrop.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
 import { sleep } from '$lib/utils/utils'
 import FileViewer from '$lib/components/popups/FileViewer.svelte'
 import { fileSettings, fileViewer } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
+import DropFile from '$lib/components/popups/DropFile.svelte'
 
 let chat
 let active_contact
@@ -272,7 +272,7 @@ const hideModal = () => {
 {/if}
 
 {#if dragover}
-    <BackDrop />
+    <DropFile />
 {/if}
 
 {#if $transactions.tip}
