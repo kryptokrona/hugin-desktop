@@ -70,8 +70,7 @@ function createWindow() {
         x: windowState.x,
         y: windowState.y,
         width: windowState.width,
-        height: windowState.height,
-        backgroundColor: '#121212'
+        height: windowState.height
     })
 
     windowState.manage(mainWindow)
