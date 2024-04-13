@@ -254,10 +254,8 @@ async function background_sync_messages(checkedTxs = false) {
         if (incoming_group_que.length) {
             await clear_group_que()
         }
-
         return
     }
-
 
     if (transactions.length < 9) Hugin.send('incoming-que', false)
     console.log("Incoming transactions", transactions.length)
@@ -395,7 +393,7 @@ async function load_checked_txs() {
     //Load known pool txs from db.
     let checkedTxs = await loadKnownTxs()
     let arrayLength = checkedTxs.length
-    
+
     if (arrayLength > 500) {
         checkedTxs = checkedTxs.slice(arrayLength - 500, arrayLength - 1).map(function (knownTX) {
             return knownTX.hash
