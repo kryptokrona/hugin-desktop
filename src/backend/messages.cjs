@@ -186,7 +186,7 @@ const start_message_syncer = async () => {
          try {
             //Start syncing
             //Faster sync on start
-            if (i < 4) await sleep(1000 * 4)
+            if (i < 4) await sleep(1000 * 3)
             else await sleep(1000 * 7)
             i++
             await background_sync_messages()
@@ -231,10 +231,9 @@ async function background_sync_messages(checkedTxs = false) {
     if (checkedTxs) {
         known_pool_txs = await set_known_pooltxs(checkedTxs)
     }
-    
     const transactions = await fetch_hugin_messages()
     if (!transactions && !incoming) return
-    const large_batch = transactions.length > 199 ? true : false
+    const large_batch = transactions.length > 299 ? true : false
 
     if (large_batch || (large_batch && incoming)) {
         //Add to que
@@ -245,28 +244,28 @@ async function background_sync_messages(checkedTxs = false) {
         Hugin.send('incoming-que', true)
     }
 
+    if (incoming_pm_que.length) {
+       clear_pm_que()
+    }
+
     if(incoming || large_batch) {
         console.log("Checking incoming messages:", incoming_messages.length)
-        decrypt_hugin_messages(update_que(), true)
+        await decrypt_hugin_messages(update_que(), true)
+        if (incoming_group_que.length) {
+            await clear_group_que()
+        }
+
         return
     }
 
-    if (incoming_group_que.length) {
-        clear_group_que()
-    }
 
-    if (incoming_pm_que.length) {
-        clear_pm_que()
-        return
-    }
-
-    Hugin.send('incoming-que', false)
+    if (transactions.length < 9) Hugin.send('incoming-que', false)
     console.log("Incoming transactions", transactions.length)
     decrypt_hugin_messages(transactions, false)
 }
 
 function update_que() {
-    const decrypt = incoming_messages.slice(0,199)
+    const decrypt = incoming_messages.slice(0,299)
     const update = incoming_messages.slice(decrypt.length)
     incoming_messages = update
     return decrypt
@@ -326,7 +325,6 @@ async function clear_group_que() {
     const sorted = incoming_group_que.sort((a, b) => a.t - b.t );
     for (const message of sorted) {
         await decrypt_group_message(message, message.hash)
-        await sleep(50)
     }
     incoming_group_que = []
 }
