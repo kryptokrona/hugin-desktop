@@ -48,8 +48,6 @@ $: activeHugins = $groups.activeHugins
 
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
-$: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
-
 $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
 
 $: muteGroup = $notify.off.some(a => a === groupName)
@@ -67,9 +65,7 @@ const toggleSettings = () => {
 }
 
 const toggleNotification = () => {
-    let on = true
     if (muteGroup) {
-        on = false
         const filter = $notify.off.filter(a => a !== groupName)
         $notify.off = filter
     } else {
