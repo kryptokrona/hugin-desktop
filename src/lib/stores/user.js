@@ -37,7 +37,8 @@ export const groups = writable({
     blockList: [],
     activeHugins: [],
     historyTimeframe: 0,
-    autoDeleteAfter: 0
+    autoDeleteAfter: 0,
+    settings: false
 })
 
 export const rtc_groups = writable({
@@ -91,7 +92,8 @@ export const notify = writable({
     success: [],
     unread: [],
     update: [],
-    notifications: []
+    notifications: [],
+    off: []
 })
 
 export const transactions = writable({

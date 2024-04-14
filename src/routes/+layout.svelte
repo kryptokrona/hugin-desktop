@@ -154,6 +154,7 @@
         window.api.receive('group-notification', ([data, add = false]) => {
             const thisgroup = data.group === $groups.thisGroup.key
             const ingroups = $page.url.pathname === '/groups'
+            const group = $groups.groupArray.find(a => a.key === data.group)
             if (data.address == $user.myAddress) return
             if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
             if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
@@ -162,10 +163,11 @@
             
             //Future notifications page
             $notify.notifications.push(data)
-
             if ($notify.new.length < 2 && !$notify.que && !add) {
-                board_message_sound.play()
-                $notify.new.push(data)
+                if (!$notify.off.some(a => a === group.name)) {
+                    board_message_sound.play()
+                    $notify.new.push(data)
+                }
             }
             if (!$misc.focus && thisgroup && ingroups) return
             if (add) return

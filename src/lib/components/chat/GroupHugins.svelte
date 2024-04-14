@@ -1,23 +1,27 @@
 <script>
     import {fade, fly} from 'svelte/transition'
-    import {groups, swarm, user, webRTC} from '$lib/stores/user.js'
+    import {groups, swarm, user, webRTC, notify} from '$lib/stores/user.js'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
     import { standardGroups } from '$lib/stores/standardgroups.js'
     import FillButton from '../buttons/FillButton.svelte'
     import SwarmInfo from '../popups/SwarmInfo.svelte'
     import { sleep } from '$lib/utils/utils'
+    import Dots from '../icons/Dots.svelte'
 
     let activeHugins = []
     let group = ''
     let groupName
+    $: settings = $groups.settings
     const standardGroup = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
+    
+    //Settings list
+    const groupSetting = [
+       {name: 'Notifications'} 
+    ]
+
 function sendPM() {
     // Add friend request here?
-}
-
-const clickbutton = () => {
-    console.log('Click this for somethin?')
 }
 
 function copyThis(copy) {
@@ -48,12 +52,31 @@ $: activeSwarm = $swarm.active.some(a => a.key === $groups.thisGroup.key)
 
 $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
 
+$: muteGroup = $notify.off.some(a => a === groupName)
+
 let timeout = false
 
 $: if (thisSwarm) {
     activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
 } else {
     activeUsers = []
+}
+
+const toggleSettings = () => {
+    $groups.settings = !$groups.settings
+}
+
+const toggleNotification = () => {
+    let on = true
+    if (muteGroup) {
+        on = false
+        const filter = $notify.off.filter(a => a !== groupName)
+        $notify.off = filter
+    } else {
+        $notify.off.push(groupName)
+    }
+    $notify = $notify
+    window.api.send('group-notifications', $notify.off)
 }
 
 const disconnect_from_swarm = async () => {
@@ -145,11 +168,17 @@ const connecto_to_swarm = async () => {
                 {/if} 
             {/if}
         <br />
-        <div class="swarm">
-            {#if thisSwarm}
-            <!-- <div  on:click={show_video_room}>
-                <ShowVideoMenu />
-            </div> -->
+        <Dots on:click="{toggleSettings}"/>
+        <div style="display: flex; flex-direction: column">
+            {#if settings}
+                <div in:fade class="list layered-shadow">
+                    {#each groupSetting as setting}
+                        <div>
+                            <h5>{setting.name}</h5>
+                            <p class="notification" class:muted={muteGroup} on:click={toggleNotification}>{muteGroup ? "Off" : "On"}</p>
+                        </div>
+                    {/each}
+                </div>
             {/if}
         </div>
     </div>
@@ -339,4 +368,37 @@ p {
     position: relative;
 }
 
+.notification {
+    font-family: "Montserrat";
+    font-size: 15px;
+    color: var(--success-color);
+    font-weight: 500;
+
+}
+
+.muted {
+    color: var(--warn-color) !important;
+}
+
+.list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    padding: inherit;
+    background-color: var(--card-color);
+    border-radius: 0.4rem;
+    z-index: 999;
+    right: 18px;
+    div {
+        text-align: center;
+        border-radius: 5px;
+        padding: 10px;
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--card-border);
+        }
+    }
+}
 </style>
