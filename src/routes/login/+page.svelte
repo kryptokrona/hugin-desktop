@@ -1,6 +1,6 @@
 <script>
 import {fade} from 'svelte/transition'
-import { misc, user} from '$lib/stores/user.js'
+import { misc, notify, user} from '$lib/stores/user.js'
 import {Moon} from "svelte-loading-spinners";
 import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
 import {goto} from '$app/navigation'
@@ -103,7 +103,8 @@ window.api.receive('login-failed', async () => {
                 </button>
             </div>
             <p style="color: white; opacity: 30%">v{$misc.version}</p>
-            <p in:fade style="color: var(--info-color); position; absolute; opacity: 80%; height: 15px;" class="blink_me">{#if !$misc.started && loadSpin}Loading account...{/if}</p>
+            <p in:fade style="color: var(--info-color); position; absolute; opacity: 80%; height: 5px;" class="blink_me">{#if !$misc.started && loadSpin}Loading account...{/if}</p>
+            <p in:fade style="color: var(--alert-color); position; absolute; opacity: 80%; height: 5px;" class="blink_me">{#if !$misc.started && loadSpin && $notify.que}Synchronizing messages...{/if}</p>
         </div>
 </div>
 

@@ -257,7 +257,7 @@ async function background_sync_messages(checkedTxs = false) {
         return
     }
 
-    if (transactions.length < 9) Hugin.send('incoming-que', false)
+    if (transactions.length < 5) Hugin.send('incoming-que', false)
     console.log("Incoming transactions", transactions.length)
     decrypt_hugin_messages(transactions, false)
 }

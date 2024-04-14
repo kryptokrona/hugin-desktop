@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {groups, misc, user} from '$lib/stores/user.js'
+    import {groups, misc, notify, user} from '$lib/stores/user.js'
     import {onMount} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
@@ -81,7 +81,8 @@
 
     const loginSuccess = async () => {
         console.log('login success')
-        await sleep(3000)
+        await sleep(5000)
+        if ($notify.que) await sleep(4000)
         await goto('/dashboard')
         $user.loggedIn = true
         $user.started = true
