@@ -273,7 +273,6 @@ async function printGroup(group) {
     channelMessages = []
     filterGroups = []
     noMsgs = false
-    $groups.settings = false
     
     groups.update((data) => {
         return {

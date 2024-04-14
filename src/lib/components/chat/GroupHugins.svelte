@@ -8,11 +8,11 @@
     import SwarmInfo from '../popups/SwarmInfo.svelte'
     import { sleep } from '$lib/utils/utils'
     import Dots from '../icons/Dots.svelte'
+import Bell from '../icons/Bell.svelte'
 
     let activeHugins = []
     let group = ''
     let groupName
-    $: settings = $groups.settings
     const standardGroup = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
     
     //Settings list
@@ -58,10 +58,6 @@ $: if (thisSwarm) {
     activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
 } else {
     activeUsers = []
-}
-
-const toggleSettings = () => {
-    $groups.settings = !$groups.settings
 }
 
 const toggleNotification = () => {
@@ -164,17 +160,12 @@ const connecto_to_swarm = async () => {
                 {/if} 
             {/if}
         <br />
-        <Dots on:click="{toggleSettings}"/>
-        <div style="display: flex; flex-direction: column">
-            {#if settings}
-                <div in:fade class="list layered-shadow">
-                    {#each groupSetting as setting}
-                        <div>
-                            <h5>{setting.name}</h5>
-                            <p class="notification" class:muted={muteGroup} on:click={toggleNotification}>{muteGroup ? "Off" : "On"}</p>
-                        </div>
-                    {/each}
-                </div>
+        
+        <div style="cursor: pointer; display: flex; width: 25px;" on:click={toggleNotification}>
+            {#if !muteGroup}
+                <Bell active={true}/>
+            {:else}
+                <Bell active={false}/>
             {/if}
         </div>
     </div>
