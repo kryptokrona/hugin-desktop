@@ -125,6 +125,7 @@ window.api.receive('login-failed', async () => {
     gap: 2rem;
     justify-content: center;
     align-items: center;
+    margin-top: 50px;
   }
 
   .init {

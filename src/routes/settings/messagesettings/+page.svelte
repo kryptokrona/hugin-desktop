@@ -45,7 +45,7 @@
              Press the button <b>Optimize inputs</b> to create more.</p>
         <br>
     </div>
-    <h2>Message History</h2>
+    <h3>Message history</h3>
     <div class="history">
         <input spellcheck="false" type="number" placeholder="Enter amount of days" bind:value="{timeframeDays}"/>
         <Button
@@ -85,7 +85,6 @@
     }
     input {
     /* margin: 0 auto; */
-    margin-left: 15px;
     max-width: 300px;
     width: 100%;
     height: 48px;
