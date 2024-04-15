@@ -8,7 +8,7 @@
     import SwarmInfo from '../popups/SwarmInfo.svelte'
     import { sleep } from '$lib/utils/utils'
     import Dots from '../icons/Dots.svelte'
-import Bell from '../icons/Bell.svelte'
+    import Bell from '../icons/Bell.svelte'
 
     let activeHugins = []
     let group = ''

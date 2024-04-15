@@ -9,7 +9,7 @@ import { videoGrid } from '$lib/stores/layout-state.js'
 import { containsOnlyEmojis } from '$lib/utils/utils'
 import Dropzone from "svelte-file-dropzone";
 import { remoteFiles } from '$lib/stores/files'
-import DropFile from '../popups/DropFile.svelte'
+import DropFile from '$lib/components/popups/DropFile.svelte'
 
 let replyto = ''
 let filterRtcGroup = []
