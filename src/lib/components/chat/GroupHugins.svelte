@@ -243,6 +243,7 @@ const connecto_to_swarm = async () => {
     width: 100%;
     height: calc(100% - 103px);
     overflow: scroll;
+    padding-bottom: 20px;
 }
 
 .wrapper::-webkit-scrollbar,
