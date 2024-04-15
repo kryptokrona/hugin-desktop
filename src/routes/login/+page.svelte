@@ -4,7 +4,7 @@ import { misc, notify, user} from '$lib/stores/user.js'
 import {Moon} from "svelte-loading-spinners";
 import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
 import {goto} from '$app/navigation'
-import { onDestroy, onMount } from 'svelte'
+import { getContext, onDestroy, onMount, setContext } from 'svelte'
 import toast from 'svelte-french-toast'
 import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 import {layoutState} from "$lib/stores/layout-state.js";
@@ -15,6 +15,7 @@ let enableLogin = false
 let loadSpin = false
 let errNode = false
 let passwordField
+$: started = $user.started
 
 $: if (errNode) {
   $layoutState.showNodeSelector = true
@@ -28,49 +29,64 @@ onMount(async () => {
 
 onDestroy(() => {
   window.api.removeAllListeners('login-failed')
-  window.api.removeAllListeners('login-success')
 })
+
 $: {
     enableLogin = myPassword.length > 1
 }
 
 const enter = (e) => {
-    if (enableLogin && e.keyCode === 13) {
-        handleLogin(e)
-        enableLogin = false
+  if (enableLogin && e.keyCode === 13) {
+    if (started) {
+      checkPass()
+      return
     }
+    handleLogin(e)
+    enableLogin = false
+  }
+}
+
+const checkPass = async () => {
+  loadSpin = true
+  const verify = await window.api.verifyPass(myPassword)
+  if (!verify) window.api.errorMessage('Wrong password')
+  if (verify) {
+      loadSpin = false
+      $layoutState.showNodeSelector = false
+      $user.loggedIn = true
+      $misc.loading = false
+      await goto('/dashboard')
+  }
 }
 
 //Handle login, sets logeged in to true and gets user address
-const handleLogin = async (e) => {
-    let node = $misc.node.node
-    let port = $misc.node.port
-    loadSpin = true
-   if(e.detail.node) {
-       node = e.detail.node.split(':')[0]
-       port = parseInt(e.detail.node.split(':')[1])
-   }
+const handleLogin = (e) => {
+  if (started) {
+    checkPass()
+    return
+  }
+    
+  let node = $misc.node.node
+  let port = $misc.node.port
+  loadSpin = true
+  if(e.detail.node) {
+      node = e.detail.node.split(':')[0]
+      port = parseInt(e.detail.node.split(':')[1])
+  }
   
    $user.idleTime = 0
 
-    if (!$user.started) {
-        $misc.loading = true
-    }
-    let accountData = {
-        node: node,
-        port: port,
-        thisWallet: $user.thisWallet,
-        myPassword: myPassword,
-    }
+  if (!$user.started) {
+      $misc.loading = true
+  }
+  let accountData = {
+      node: node,
+      port: port,
+      thisWallet: $user.thisWallet,
+      myPassword: myPassword,
+  }
   window.api.send('login', accountData)
 }
-
-window.api.receive('login-success', async () => {
-    await goto('/dashboard')
-    $layoutState.showNodeSelector = false
-    $user.loggedIn = true
-    $misc.loading = false
-})
 
 window.api.receive('login-failed', async () => {
     toast.error('Wrong password', {
@@ -94,7 +110,7 @@ window.api.receive('login-failed', async () => {
             <h1>Hugin</h1>
             <div class="field">
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
-                <button on:click={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
+                <button on:click={started ? checkPass : handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
                         <Moon color="#000000" size="20" unit="px"/>
                     {:else}

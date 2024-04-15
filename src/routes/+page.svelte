@@ -2,7 +2,7 @@
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {groups, misc, notify, user} from '$lib/stores/user.js'
-    import {onMount} from 'svelte'
+    import {onMount, setContext} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
     import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
@@ -11,12 +11,7 @@
     let wallet
     let nodeFailed
 
-    onMount(() => {
-        if ($user.started) {
-            wallet = true
-            goto('/login')
-        return
-        }
+    onMount( async () => {
         window.api.send('app', true)
         window.api.receive('version', version => {
             $misc.version = version

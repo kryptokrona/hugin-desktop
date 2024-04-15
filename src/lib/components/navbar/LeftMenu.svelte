@@ -35,14 +35,9 @@ $: if (!$user.customAvatar) {
 }
 $: avatar
 
-const handleLogout = () => {
-    user.update((data) => {
-        return {
-            ...data,
-            loggedIn: false,
-        }
-    })
-     goto("/login")
+const handleLogout = () => { 
+    $user.loggedIn = false
+    goto("/login")
 }
 
 const messagesRouteAndMenu = () => {
@@ -136,9 +131,9 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
             </div>
         </Tooltip>
         <Tooltip title="Logout">
-            <a class='button' href="/" on:click={handleLogout}>
+            <div class='button' on:click={handleLogout}>
                 <Logout/>
-            </a>
+            </div>
         </Tooltip>      
         <XkrLogo grey="{true}" />
         <Tooltip title="Github">

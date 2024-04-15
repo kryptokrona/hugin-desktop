@@ -40,7 +40,7 @@ ipcMain.on('send-tx', (e, tx) => {
 })
 
 ipcMain.handle('verify-pass', async (e, pass) => {
-   return await verifyPassword(pass, true)
+   return await checkPass(pass)
 })
 
 
@@ -82,8 +82,6 @@ const loadWallet = (ipc) => {
 }
 
 async function startHugin(walletName, password, node) {
-    
-    if (await checkPassword(password, node)) return false
 
     if (!await login(walletName, password)) return false
     //Sleep 300ms
@@ -205,27 +203,6 @@ const createWallet = async () => {
 
 const loadDaemon = (nodeUrl, nodePort) => {
   daemon = new WB.Daemon(nodeUrl, nodePort)
-}
-
-const checkPassword = async (password, node) => {
-    //If we are already logged in
-    if (hashed_pass.length) {
-       verifyPassword(password, false)
-       return true
-   }
-
-   checkNodeStatus(node)
-   return false
-}
-
-const verifyPassword = async (password, verify) => {
-    if (await checkPass(password)) {
-        await sleep(500)
-        if (!verify) sender('login-success')
-        return true
-    }
-    if (!verify) sender('login-failed')
-    return false
 }
 
 const checkPass = async (pass) => {
