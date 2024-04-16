@@ -601,13 +601,11 @@ async function play_video() {
             return
         }
         
-        if ($swarm.call.length === 0 && !in_voice) {
-            //Not active anymore, stop all tracks here.
-                $swarm.myStream.getTracks().forEach(function (track) {
-                    console.log('track stopped')
-                    track.stop()
-                })
-        }
+        //Not active anymore, stop all tracks here.
+        $swarm.myStream.getTracks().forEach(function (track) {
+            console.log('track stopped')
+            track.stop()
+        })
         //
         $swarm.initiator = false
         $videoSettings.myVideo = false
