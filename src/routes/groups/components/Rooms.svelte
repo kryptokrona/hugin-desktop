@@ -47,10 +47,7 @@
             console.log("Want to exit old voice")
             $swarm.voice_channel = []
             
-            //Stop any active tracks
-            if (active && $swarm.myStream) {
-                $swarm.myStream.getVideoTracks().forEach((track) => track.stop())
-            }
+            $swarm.myStream.getTracks().forEach((track) => track.stop())
             
             //Stop any active stream
             if (!old) return true
