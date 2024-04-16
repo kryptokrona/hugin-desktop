@@ -50,14 +50,14 @@ export const formatBytes = (bytes, decimals = 2) => {
 
 //Checks for messages that only coinatins emojis.
 export const containsOnlyEmojis = (text) => {
-    if (!checkLang(text)) return false
+    if (!isLatin(text)) return false
     const onlyEmojis = text.replace(new RegExp('[\u0000-\u1eeff]', 'g'), '')
     const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '')
     return onlyEmojis.length === visibleChars.length
 
 }
 
-const checkLang = (text) => {
+export const isLatin = (text) => {
     const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
     const isChinese = text.match(REGEX_CHINESE);
     if(isChinese) return false
