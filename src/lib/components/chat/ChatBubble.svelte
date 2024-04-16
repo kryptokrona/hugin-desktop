@@ -7,7 +7,7 @@
     import Time from 'svelte-time'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import Lightning from "$lib/components/icons/Lightning.svelte";
-    import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
+    import { containsOnlyEmojis, isLatin, openURL } from '$lib/utils/utils'
     import CodeBlock from './CodeBlock.svelte'
     import Youtube from "svelte-youtube-embed";
     import DownloadFile from '$lib/components/chat/DownloadFile.svelte'
@@ -20,6 +20,7 @@
     export let timestamp
     export let beamMsg = false
     export let error = false
+    
     let torrent = false
     let oldInvite = false
     let beamInvite = false
@@ -40,6 +41,7 @@
     let clicked = false
     let beam_key = ""
     let youtube_shared_link_type = false
+    let asian = false
 
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
@@ -90,10 +92,16 @@
             checkCodeLang(message)
             return
         }
+        
+        if (ownMsg) {
+            if (!isLatin($user.username)) {
+                asian = true
+            }
+        return
+        }
 
-        if (containsOnlyEmojis(message)) {
-            emojiMessage = true
-            return
+        if (!isLatin($user.activeChat.name)) {
+            asian = true
         }
     }
 
@@ -204,7 +212,7 @@
             </div>
             <div class="content">
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
-                    <p class="nickname">
+                    <p class:asian class="nickname">
                         {$user.username}
                         <span class="time">
                             | <Time live={30 * 1_000} relative timestamp="{parseInt(timestamp)}" /></span
@@ -250,7 +258,7 @@
             </div>
             <div class="content">
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
-                    <p class="nickname">
+                    <p class:asian class="nickname">
                         {$user.activeChat.name}
                         <span class="time">
                             | <Time live={30 * 1_000} relative timestamp="{parseInt(timestamp)}"/></span
@@ -382,6 +390,12 @@
 .error {
     border: 1px solid;
     border-color: var(--warn-color) !important;
+}
+
+.asian {
+    font: menu;
+    font-size: 15px;
+    font-weight: 500 !important;
 }
 
 

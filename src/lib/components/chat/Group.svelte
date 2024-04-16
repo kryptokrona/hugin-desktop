@@ -6,11 +6,13 @@
     import { swarmGroups } from '$lib/stores/layout-state'
     import Lightning from '../icons/Lightning.svelte'
     import {standardGroups} from "$lib/stores/standardgroups.js";
+    import { isLatin } from '$lib/utils/utils'
     
     export let group
     let channels = []
     let voice_channel = []
-    
+    let asian = false
+
     $: channels
     
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
@@ -47,6 +49,8 @@
     
     $: counter = $notify.unread.filter(a => a.type === "group" && a.group === group.key).length
 
+    $: if (!isLatin(group.name)) asian = true
+
     const createNewChannel = () => {
         //Add to channels and notify others in the swarm
     }
@@ -64,9 +68,9 @@
     
         <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
         <div class="content">
-            <h4>{group.name}</h4>
+            <h4 class:asian class:big={asian}>{group.name}</h4>
             <div class="text">
-                <p class="from">{group.nick}:</p>
+                <p class:asian class="from">{group.nick}:</p>
                 <p>{group.msg}</p>
             </div>
         </div>
@@ -202,5 +206,13 @@
     .count {
         font-size: 12px;
         color: white;
+    }
+
+    .asian {
+        font: menu;
+    }
+
+    .big {
+        font-size: 17px;
     }
     </style>

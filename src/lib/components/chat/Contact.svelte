@@ -3,15 +3,19 @@ import {createEventDispatcher} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar} from '$lib/utils/hugin-utils.js'
 import {notify, user, webRTC} from '$lib/stores/user.js'
+import { isLatin } from '$lib/utils/utils'
 
 export let contact
 let thisCall = false
 let beamInvite = false
+let asian = false
 
 $: counter = $notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length
 $: if (contact.msg.substring(0,7) === "BEAM://") {
     beamInvite = true
 }
+
+$: if (!isLatin(contact.name)) asian = true
 
 $: if (contact.msg.substring(0,11) === "BEAMFILE://") { 
     contact.msg = "File shared ⚡️"
@@ -58,7 +62,7 @@ const rename = () => {
         alt=""
     />
     <div class="content">
-        <h4>{contact.name}</h4>
+        <h4 class:asian class:big={asian}>{contact.name}</h4>
         
         {#if !beamInvite}
         <p>{contact.msg}</p>
@@ -147,7 +151,15 @@ p {
 }
 
 .count {
-        font-size: 12px;
-        color: white;
-    }
+    font-size: 12px;
+    color: white;
+}
+
+.asian {
+    font: menu;
+}
+
+.big {
+    font-size: 17px;
+}
 </style>

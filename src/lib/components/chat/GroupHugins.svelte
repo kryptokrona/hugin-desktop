@@ -6,13 +6,15 @@
     import { standardGroups } from '$lib/stores/standardgroups.js'
     import FillButton from '../buttons/FillButton.svelte'
     import SwarmInfo from '../popups/SwarmInfo.svelte'
-    import { sleep } from '$lib/utils/utils'
+    import { isLatin, sleep } from '$lib/utils/utils'
     import Dots from '../icons/Dots.svelte'
     import Bell from '../icons/Bell.svelte'
 
     let activeHugins = []
     let group = ''
     let groupName
+    let asian = false
+
     const standardGroup = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
     
     //Settings list
@@ -42,6 +44,9 @@ let activeUsers = []
 
 //This group name
 $: groupName = $groups.thisGroup.name
+
+$: if (groupName)
+if (!isLatin(groupName)) asian = true
 
 //Active hugins
 $: activeHugins = $groups.activeHugins
@@ -140,7 +145,7 @@ const connecto_to_swarm = async () => {
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
     <div class="top">
-        <h2 style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>
+        <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>
         <br />
             {#if !$standardGroups.some(a => a.key === group || (group === standardGroup))}
             
@@ -388,5 +393,11 @@ p {
             background-color: var(--card-border);
         }
     }
+}
+
+.asian {
+    font: menu;
+    font-size: 20px !important;
+    font-weight: 500;
 }
 </style>

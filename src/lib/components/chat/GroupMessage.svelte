@@ -13,7 +13,7 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
+import { containsOnlyEmojis, isLatin, openURL } from '$lib/utils/utils'
 import { groupMessages } from '$lib/stores/groupmsgs.js'
 import FillButton from '../buttons/FillButton.svelte'
 import { remoteFiles } from '$lib/stores/files'
@@ -49,6 +49,7 @@ let link = false
 let messageText
 let messageLink = ""
 let youtube_shared_link_type = false
+let asian = false
 
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
@@ -91,11 +92,11 @@ function checkMessage() {
         if (myMsg) checkLink()
         return
     }
+    
+    if (!isLatin(nickname)) {
+        asian = true
+    }
 
-    // if (containsOnlyEmojis(msg)) {
-    //     emojiMessage = true
-    //     return
-    // }
 
 }
 
@@ -229,7 +230,7 @@ const openLinkMessage = (url) => {
                     <div style="display: flex; gap: 10px; align-items: center">
                         <RepliedArrow />
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <p class="reply_nickname">{thisReply.name}</p>
+                            <p class:asian class="reply_nickname">{thisReply.name}</p>
                             <p>{thisReply.message}</p>
                         </div>
                     </div>
@@ -255,8 +256,8 @@ const openLinkMessage = (url) => {
             <div class="header">
                 <div style="display: flex; align-items: center; margin-left: -10px">
                     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
-                    <h5 class="nickname" class:share={file} class:blink_me={file}>
-                        {nickname}<span class="time" class:min="{rtc}"
+                    <h5 class:asian class="nickname" class:share={file} class:blink_me={file}>
+                        {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
                             >| <Time live={30 * 1_000} relative timestamp="{parseInt(message.time)}" /></span
                         >
                     </h5>
@@ -342,7 +343,7 @@ const openLinkMessage = (url) => {
 p {
     margin: 0 0 0 30px;
     word-break: break-word;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .actions {
@@ -366,7 +367,7 @@ p {
 }
 
 .reply_nickname {
-    font-size: 12px;
+    font-size: 12px !important;
     font-weight: bold;
 }
 
@@ -467,5 +468,10 @@ p {
 
 .yt {
     max-width: 350px;
+}
+
+.asian {
+    font: menu;
+    font-size: 15px;
 }
 </style>
