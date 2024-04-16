@@ -155,6 +155,7 @@ const sendMsg = (e) => {
 //Check for possible errors
 const checkErr = (e) => {
     let error = false
+    if (e.detail.text.length === 0) return true
     if (e.detail.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false

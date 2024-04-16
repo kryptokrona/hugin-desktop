@@ -92,6 +92,7 @@ window.api.receive('set-channels', async () => {
 //Check for possible errors
 const checkErr = (e) => {
     let error = false
+    if (e.detail.text.length === 0) return true 
     if (e.detail.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
@@ -102,7 +103,7 @@ const checkErr = (e) => {
 
 //Send message to store and DB
 const sendGroupMsg = async (e) => {
-    let error = checkErr(e)
+    const error = checkErr(e)
     if (error) return
     let msg = e.detail.text
     let myaddr = $user.myAddress
@@ -273,7 +274,7 @@ async function printGroup(group) {
     channelMessages = []
     filterGroups = []
     noMsgs = false
-    
+
     groups.update((data) => {
         return {
             ...data,
