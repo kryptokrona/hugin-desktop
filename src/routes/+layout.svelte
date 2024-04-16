@@ -190,13 +190,14 @@
             //If address is our own, maybe sent from mobile
             if (data.chat === $user.myAddress) return
             
+            saveToStore(data)
             //Convert message to notification
             const contact = $user.contacts.find((a) => a.chat === data.chat)
-            data.name = contact.name
+            if (contact) data.name = contact.name
+            
             data.message = data.msg
             data.type = 'message'
             new_message_sound.play()
-            saveToStore(data)
 
             //If we are active in the chat, but minimized.
             if (
