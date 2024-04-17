@@ -45,8 +45,10 @@ let activeUsers = []
 //This group name
 $: groupName = $groups.thisGroup.name
 
-$: if (groupName)
-if (!isLatin(groupName)) asian = true
+$: if (groupName) {
+    if (!isLatin(groupName)) asian = true
+    else asian = false
+}
 
 //Active hugins
 $: activeHugins = $groups.activeHugins
