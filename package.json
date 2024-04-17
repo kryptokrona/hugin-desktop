@@ -111,7 +111,7 @@
         "sass": "^1.50.0",
         "svelte": "^3.46.4",
         "svelte-check": "^1.6.0",
-        "svelte-highlight": "^6.2.1",
+        "svelte-highlight": "^7.6.0",
         "svelte-preprocess": "^4.10.4",
         "svelte-time": "^0.7.1",
         "svelte-youtube-embed": "^0.2.1",
