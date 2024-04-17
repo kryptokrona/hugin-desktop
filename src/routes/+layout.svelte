@@ -7,15 +7,17 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm} from '$lib/stores/user.js'
+    import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
-
+    import { mediaSettings } from '$lib/stores/mediasettings'
     import {onMount} from 'svelte'
     import LeftMenu from '$lib/components/navbar/LeftMenu.svelte'
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
     import IncomingCall from '$lib/components/webrtc/IncomingCall.svelte'
     import Webrtc from '$lib/components/webrtc/Calls.svelte'
+    import Group_Webrtc from '/src/routes/groups/components/VoiceChannel.svelte'
     import TrafficLights from '$lib/components/TrafficLights.svelte'
     import CallerMenu from '$lib/components/webrtc/CallerMenu.svelte'
     import PeerAudio from '$lib/components/webrtc/PeerAudio.svelte'
@@ -28,6 +30,11 @@
     import OptimizeToast from '$lib/components/custom-toasts/OptimizeToast.svelte'
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
+    import { sleep } from '$lib/utils/utils'
+    import Conference from '/src/routes/groups/components/Conference.svelte'
+    import ConferenceFloater from '/src/routes/groups/components/ConferenceFloater.svelte'
+    import Rooms from '/src/routes/groups/components/Rooms.svelte'
+    import { goto } from '$app/navigation'
 
     let ready = false
     let incoming_call
@@ -35,7 +42,9 @@
     let new_messages = false
     let board_message_sound
     let new_message_sound
-    
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
     const closePopup = () => {
         incoming_call = false
     }
@@ -52,6 +61,9 @@
         incoming_call = false
         console.log('incoming clean', $webRTC.incoming)
         console.log('webRTC call ', $webRTC.call)
+        window.api.send("exit-voice",$groups.thisGroup.key)
+        window.api.send("end-swarm", $groups.thisGroup.key)
+        $swarm.showVideoGrid = false
     }
 
     let startAnimation
@@ -75,11 +87,6 @@
         board_message_sound = new Audio('/audio/boardmessage.mp3')
         new_message_sound = new Audio('/audio/message.mp3')
 
-        window.api.receive('contacts', async (my_contacts) => {
-            console.log('contacts!', my_contacts)
-            //Set contacts to store
-            $user.contacts = my_contacts
-        })
 
     })
 
@@ -92,18 +99,29 @@
 
 
         //Handle incoming call
-        window.api.receive('call-incoming', async (msg, chat, group = false) => {
-            console.log('chat', chat)
+        window.api.receive('call-incoming', async (data) => {
+            let msg = data.msg
+            let chat = data.sender
+            let group = data.group
+            let timestamp = data.timestamp
+            console.log('Incoming call', data)
+            await sleep(500)
             let incoming = $user.contacts.find((a) => a.chat === chat)
-            console.log('contacts set???', $user.contacts)
+            //Missed call
+            if (Date.now() - timestamp >= 1000 * 360) {
+                    toast.success(`Missed call from ${incoming.name}`, {
+                    position: 'top-right',
+                    style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+                })
+             return
+            }
             incoming_call = true
-            console.log('INCMING CALL')
-            console.log('new call', msg, chat)
 
             let type = 'incoming'
             if ($webRTC.groupCall) {
                 type = 'groupinvite'
             }
+
             $webRTC.incoming.push({
                 msg,
                 chat,
@@ -133,53 +151,70 @@
         })
 
 
-        window.api.receive('newBoardMessage', (data) => {
-            if (data.board === $boards.thisBoard && $page.url.pathname === '/boards') return
-            if ($boards.thisBoard === 'Home') return
-            if ($page.url.pathname !== '/boards') {
-                data.type = 'board'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-            }
-            new_messages = true
-            board_message_sound.play()
-            $notify.new.push(data)
-            $notify.new = $notify.new
-        })
-
-        window.api.receive('newGroupMessage', (data) => {
-            if (data.address == $user.huginAddress.substring(0, 99)) return
-            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups') return
-            if ($page.url.pathname !== '/groups') {
-                data.type = 'group'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-            }
+        window.api.receive('group-notification', ([data, add = false]) => {
+            const thisgroup = data.group === $groups.thisGroup.key
+            const ingroups = $page.url.pathname === '/groups'
+            const group = $groups.groupArray.find(a => a.key === data.group)
+            if (data.address == $user.myAddress) return
+            if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
+            if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
             new_messages = true
             data.key = data.address
-            if ($notify.new.length < 5) {
-                board_message_sound.play()
-                $notify.new.push(data)
+            
+            //Future notifications page
+            $notify.notifications.push(data)
+            if ($notify.new.length < 2 && !$notify.que && !add) {
+                if (!$notify.off.some(a => a === group.name)) {
+                    board_message_sound.play()
+                    $notify.new.push(data)
+                }
             }
+            if (!$misc.focus && thisgroup && ingroups) return
+            if (add) return
+            data.type = "group"
+            $notify.unread.push(data)
             $notify.new = $notify.new
         })
 
-        window.api.receive('privateMsg', async (data) => {
-            console.log('newmsg in layout', data)
-            if (data.chat === $user.huginAddress.substring(0, 99)) return
-            if (data.chat !== $user.activeChat.chat) {
-                new_message_sound.play()
+        window.api.receive('privateMsg', (data) => {
+            //If active chat, focused and in message page, return
+            if (
+            data.chat === $user.activeChat.chat 
+            && $misc.focus
+            && $page.url.pathname === '/messages'
+            ) {
+            saveToStore(data)  
+            return
             }
-            if ($page.url.pathname !== '/messages') {
-                data.type = 'message'
-                $notify.unread.push(data)
-                $notify.unread = $notify.unread
-                console.log('unread', $notify.unread)
-            }
+            
+            //If address is our own, maybe sent from mobile
+            if (data.chat === $user.myAddress) return
+            
             saveToStore(data)
+            //Convert message to notification
+            const contact = $user.contacts.find((a) => a.chat === data.chat)
+            if (contact) data.name = contact.name
+            
+            data.message = data.msg
+            data.type = 'message'
+            new_message_sound.play()
+
+            //If we are active in the chat, but minimized.
+            if (
+                data.chat === $user.activeChat.chat 
+                && !$misc.focus 
+                && $page.url.pathname === '/messages'
+            )
+            return
+
+            new_messages = true
+            $notify.unread.push(data)
+            $notify.new.push(data)
+            $notify.unread = $notify.unread
+            console.log('unread', $notify.unread)
         })
 
-        window.api.receive('addr', async (huginAddr) => {
+        window.api.receive('addr', (huginAddr) => {
             console.log('Addr incoming')
             user.update((data) => {
                 return {
@@ -201,8 +236,11 @@
             endThisCall()
         })
 
+        window.api.receive('screen-share-sources', async (data) => {
+            $mediaSettings.screenSources = data
+        })
 
-        window.api.receive('group_invited_contact', async (data) => {
+        window.api.receive('group_invited_contact', (data) => {
             console.log('***** GROUP INVITED ****', data)
             let name
             let key
@@ -224,11 +262,8 @@
 
 
     function removeNotification(e) {
-        
-       $notify.new.some((a) => {
-            if (a.hash === e.detail.hash) $notify.new.pop(a)
-        })
-        $notify.new = $notify.new
+        let filter = $notify.new.filter(a => a.hash !== e.detail.hash)
+        $notify.new = filter
     }
 
     //APP UPDATER
@@ -345,12 +380,23 @@
         })
     })
 
+    window.api.receive('group-remote-file-added', (data)  => {
+        console.log("Group file!")
+        $remoteFiles = data.remoteFiles
+        const file = data.remoteFiles[0]
+        console.log("File shared", file)
+        toast.success(`${file.fileName} shared in room`, {
+            position: 'top-right',
+            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        })
+    }) 
+
     window.api.receive('remote-files', (data)  => {
         let from = $user.contacts.find(a => a.chat === data.chat)
         $remoteFiles = data.remoteFiles
     })
 
-    window.api.receive('local-files', async (data)  => { 
+    window.api.receive('local-files', (data)  => { 
         console.log(
             'Local files n data', data
         )
@@ -374,7 +420,47 @@
         updateUploadProgress(data)
     })
 
-    const updateUploadProgress = async (data) => {
+    window.api.receive('incoming-que', (data)  => { 
+        $notify.que = data
+    })
+
+    window.api.receive('idle', (data) => {
+        $user.idleTime = data
+    })
+    
+    window.api.receive('focus', (data) => {
+        $misc.focus = true
+    })
+    
+    window.api.receive('blur', (data) => {
+        $misc.focus = false
+    })
+
+    $: if ($user.idleTime >= $user.idleLimit) {
+        if ($webRTC.call.length === 0 && !$swarm.active.some(a => a.voice_connected) && !$beam.active.length) {
+        $user.loggedIn = false
+        goto('/login');
+        }
+    }
+
+    window.api.receive('checked', (data)  => { 
+        console.log("Got p2p data", data)
+        if (data) {
+            toast.success(`P2P connection esablished`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+            return
+        }
+
+        toast.error('P2P connection failed', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+         })
+        
+    })
+
+    const updateUploadProgress = (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
         $upload.some(a => { 
@@ -386,7 +472,7 @@
         $upload = $upload
     }
 
-    const updateDownloadProgress = async (data) => {
+    const updateDownloadProgress = (data) => {
         const thisAddr = data.chat
         const thisFile = data.fileName
         $download.some(a => { 
@@ -397,7 +483,7 @@
             }
         })
 
-        $upload = $upload
+        $download = $download
 
         if (data.progress === 100) {
             toast.success(`${thisFile} finished downloading`, {
@@ -422,6 +508,7 @@
                 time: file.time
         })
     }
+
     const setUploadStatus = (data) => {
         let file = $localFiles.find(a => a.fileName === data.fileName && a.chat === data.chat && data.time === a.time)
         file.progress = 0
@@ -437,6 +524,8 @@
                 time: file.time
         })
     }
+    
+    
 
 
 
@@ -446,19 +535,40 @@
 <Toaster/>
 
 {#if ready}
-
+    <StoreFunctions/>
     {#if startAnimation}
         <div class="shine"></div>
     {/if}
 
+    {#if $swarm.active.length}
+            <Conference />
+            {#if $swarm.voice_channel.some(a => a.address === $user.myAddress)}
+                <ConferenceFloater />
+            {/if}
+    {/if}
+    
+    <Rooms />
+  
+
+    {#if ($user.loggedIn && $swarm.call.length)}
+
+    {#each $swarm.call as connection}
+        {#if $swarm.call.some((a) => a.peerAudio === true)}
+            <PeerAudio audioCall="{connection}"/>
+        {/if}
+    {/each}
+
+    {/if}
+
     {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
         <VideoGrid/>
-
+    {#if $webRTC.call.length}
         <CallerMenu
                 on:click="{endThisCall}"
                 on:endCall="{endThisCall}"
                 paused="{!showCallerMenu}"
         />
+    {/if}
 
         {#each $webRTC.call as thiscall}
             {#if $webRTC.call.some((a) => a.peerAudio === true)}
@@ -480,27 +590,21 @@
 
     {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
         <div class="notifs">
-            {#each $notify.new as notif}
-                <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
-            {/each}
+            {#if $notify.new.length < 2 && !$notify.que}
+                {#each $notify.new as notif}
+                    <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
+                {/each}
+            {/if}
+
         </div>
     {/if}
 
-
-    {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
-        <div class="notifs">
-            {#each $notify.new as notif}
-                <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
-            {/each}
-        </div>
-    {/if}
 
     {#if $user.loggedIn}
         <LeftMenu/>
         {#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard'}
             <RightMenu/>
         {/if}
-        <Webrtc/>
     {/if}
 
     {#if $appUpdateState.openPopup}
@@ -510,6 +614,8 @@
     <slot/>
 {/if}
 
+<Webrtc/>
+<Group_Webrtc/>
 </main>
 <style>
 
@@ -536,4 +642,5 @@ main {
         right: 20px;
         height: 100%;
     }
+
 </style>

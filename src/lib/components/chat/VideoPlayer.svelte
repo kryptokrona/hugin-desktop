@@ -59,7 +59,7 @@ import { onMount } from "svelte"
 	}
 
     async function loadVideo(file) {
-        let arr = await window.api.loadFile(file.path)
+        let arr = await window.api.loadFile(file.path, file.size)
         if (arr === "File") return arr
         let blob = new Blob( [ arr ] );
         video.src = URL.createObjectURL( blob );

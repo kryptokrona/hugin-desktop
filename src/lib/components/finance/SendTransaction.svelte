@@ -13,6 +13,8 @@ let addr = $transactions.send.to
 let amount
 let paymentId = ''
 let avatar = get_avatar($transactions.send.to)
+let pass
+let verify = false
 
 $: {
     if (amount > 0) {
@@ -20,9 +22,13 @@ $: {
     }
 }
 
-const keyDown = (e) => {
-    if (e.key === 'Enter' && amount.length > 0) {
-        sendTransaction()
+$: pass
+
+const keyDown = async (e) => {
+    if (e.key === 'Enter' && amount.length > 0 && !verify) {
+        verify = true
+    } else if(e.key === 'Enter' && amount.length > 0 && verify) {
+        await confirmTx()
     } else if (e.key === 'Escape') {
         close()
     }
@@ -41,6 +47,16 @@ const sendTransaction = () => {
         paymentId: undefined,
     })
 }
+
+const confirmTx = async () => {
+    const confirm = await window.api.verifyPass(pass)
+    if (!confirm) {
+        window.api.errorMessage('Wrong password')
+        close()
+        return
+    }
+    sendTransaction()
+}
 </script>
 
 <svelte:window on:keyup|preventDefault="{keyDown}" />
@@ -51,6 +67,7 @@ const sendTransaction = () => {
     out:fade="{{ duration: 100 }}"
     class="backdrop"
 >
+    {#if !verify}
     <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
         <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
         <input
@@ -62,12 +79,29 @@ const sendTransaction = () => {
             oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
         />
         <FillButton
-            on:click="{sendTransaction}"
+            on:click="{() => verify = true}"
             enabled="{amount > 0}"
             disabled="{!enableButton}"
             text="Send"
         />
     </div>
+    {:else}
+    <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
+        <input
+            placeholder="Enter password"
+            spellcheck="false"
+            type="password"
+            autocomplete="false"
+            bind:value="{pass}"
+        />
+        <FillButton
+            on:click="{confirmTx}"
+            enabled="{amount > 0}"
+            disabled="{!enableButton}"
+            text="Confirm"
+        />
+    </div>
+    {/if}
 </div>
 
 <style lang="scss">

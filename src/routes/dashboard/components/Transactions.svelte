@@ -12,12 +12,9 @@
         getTransactions(pageNum)
     })
 
-    async function getTransactions() {
-        let startIndex = pageNum * 10
-
-        if (pageNum === 0) {
-            startIndex = 0
-        }
+    async function getTransactions(pageNum) {
+      let startIndex = pageNum * 10;
+      if (pageNum === 0) startIndex = pageNum;
 
         let transactions = await window.api.getTransactions(startIndex)
         $user.transactions = transactions.pageTx

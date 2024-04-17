@@ -22,7 +22,7 @@ const remove = async () => {
 <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
     <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
         <h3 in:fade>Remove group?</h3>
-        <FillButton disabled="{false}" red={true} text="Remove" on:click="{remove}" />
+        <FillButton disabled="{false}" red={true} text="Remove" on:click|once="{remove}" />
     </div>
 </div>
 

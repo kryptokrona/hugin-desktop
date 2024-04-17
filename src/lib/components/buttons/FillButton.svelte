@@ -36,9 +36,11 @@
     font-size: 1rem;
     transition: 250ms ease-in-out;
     font-family: 'Montserrat', sans-serif;
+    opacity: 0.9;
 
     &:hover {
-      background-color: var(--card-border);
+      opacity: 1;
+      border-color: var(--success-color);;
     }
   }
 
@@ -47,7 +49,7 @@
   }
 
   .enabled {
-    background-color: #3fd782;
+    background-color: var(--success-color);
     border-color: #63e79f;
     color: #ffffff;
     font-size: 1rem;
@@ -55,6 +57,7 @@
     font-weight: 600;
 
     &:hover {
+      opacity: 1;
       background-color: #63e79f;
     }
   }
@@ -65,6 +68,7 @@
     color: white;
 
     &:hover {
+      opacity: 1;
       background-color: #83a4ff;
     }
   }

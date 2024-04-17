@@ -1,6 +1,6 @@
 <script>
     import { onMount } from "svelte"
-    import { download, fileViewer } from '$lib/stores/files'
+    import { download, fileViewer, remoteFiles } from '$lib/stores/files'
     import Button from "../buttons/Button.svelte"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import { fade } from "svelte/transition"
@@ -9,6 +9,7 @@
     import { sleep } from "$lib/utils/utils"
 
     export let file
+    export let group = false
 
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.mov','.wmv', '.mkv', '.mpeg']
@@ -16,9 +17,9 @@
     let downloading = false
     let thisFile
     let clicked = false
-
+    let downloaders = []
     onMount(() => {   
-        if (videoTypes.some(a => file.fileName.endsWith(a)))
+        if (videoTypes.some(a => file.fileName.endsWith(a) && file.size < 50000000))
         {
             video = true
             return
@@ -29,6 +30,7 @@
         downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
         downloadDone = $download.some(a => downloading && a.progress === 100)
     }
+   
 
     $: if (downloadDone) {
          if (!video) loadFile(file)
@@ -37,11 +39,13 @@
     const focusImage = (image) => {
         $fileViewer.focusImage = file.path
         $fileViewer.enhanceImage = true
+        $fileViewer.size = file.size
     }
 
     async function loadFile(file) {
         await sleep(200)
-        let arr = await window.api.loadFile(file.path)
+        let arr = await window.api.loadFile(file.path, file.size)
+        thisFile = arr
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );
@@ -50,6 +54,11 @@
     
     const downloadFile = (file) => {
         clicked = true
+        if (group) {
+            const thisFile = $remoteFiles.find(a => a.fileName === file.fileName && file.time === a.time)
+            window.api.send('group-download', thisFile)
+            return
+        }
         window.api.download(file.fileName, $user.activeChat.chat)
     };
 
@@ -59,19 +68,29 @@
 <div class="file" in:fade="{{ duration: 150 }}">
     {#if !downloadDone && !downloading}
          {#if !clicked}
-        <Button on:click={downloadFile(file)} disabled={false} text="Download file {file.fileName}"/>
+        <p class="message loading blink_me" in:fade>{file.fileName}</p>
+        <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
         {:else}
-        <p class="message finish" in:fade>Connecting</p>
+        <p class="message loading blink_me" in:fade>Connecting</p>
         {/if}
     {:else if downloading && !downloadDone}
-        <p class="message" in:fade>Downloading</p>
+        <p class="message done blink_me" in:fade>Downloading</p>
         <div in:fade>
-        <Progress file={file} send={false}/>
+            <Progress file={file} send={false}/>
         </div>
-    {:else if downloadDone}
+    {:else if downloadDone && group}
+        <div style="cursor: pointer" in:fade on:click={() => window.api.openFolder()}>
+            <Progress file={file} send={false}/>
+        </div>
+        <p class="message done">File downloaded!</p>
+        
+    {:else if downloadDone && !group}
         {#if !video}
                 {#if thisFile === "File"}
-                <p>{file.name}</p>
+                <div in:fade>
+                    <Progress file={file} send={false}/>
+                </div>
+                <p class="message done">File downloaded!</p>
                 {:else if thisFile === "File not found"}
                 <p class="message error">File not found</p>
                 {:else}
@@ -93,6 +112,9 @@
 
 .file {
     background: none !important;
+    background: none !important;
+    max-width: 300px;
+    display: block;
     img {
         max-width: 70%;
     }
@@ -106,6 +128,7 @@
         color: var(--text-color);
         font-size: 15px;
         user-select: all;
+        margin-bottom: 5px;
     }
 
     
@@ -120,4 +143,9 @@
 .finish {
     color: var(--success-color);
 }
+
+.loading {
+    color: var(--alert-color)  !important;
+}
+
 </style>

@@ -21,7 +21,7 @@ const pauseVideo = () => {
 }
 
 const playAudio = () => {
-    console.log('play video')
+    console.log('play audio')
     peerAudio.play()
 }
 

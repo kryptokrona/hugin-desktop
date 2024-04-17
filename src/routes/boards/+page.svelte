@@ -72,7 +72,7 @@ window.api.receive('sent_board', (data) => {
 function sendboardMsg(e) {
     console.log('wanna send this', e)
     let msg = e.detail.text
-    let myaddr = $user.huginAddress.substring(0, 99)
+    let myaddr = $user.myAddress
     let time = parseInt(Date.now() / 1000)
     let myName = $user.username
     let brd = thisBoard

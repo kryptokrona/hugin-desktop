@@ -1,21 +1,17 @@
 <script>
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {groups, misc, user} from '$lib/stores/user.js'
-    import {onMount} from 'svelte'
+    import {groups, misc, notify, user} from '$lib/stores/user.js'
+    import {onMount, setContext} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
     import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
+    import { sleep } from '$lib/utils/utils'
 
     let wallet
     let nodeFailed
 
-    onMount(() => {
-        if ($user.started) {
-            wallet = true
-            goto('/login')
-        return
-        }
+    onMount( async () => {
         window.api.send('app', true)
         window.api.receive('version', version => {
             $misc.version = version
@@ -50,24 +46,39 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async (node, my_groups, block_list) => {
-
-        console.log('Got wallet started')
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications]) => {
+        $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
         $groups.blockList = block_list
         $groups.groupArray = my_groups
+        $misc.deleteAfter = deleteAfter
+        $user.downloadPath = path
+        $user.idleLimit = idle
+        $notify.off = notifications
+        if (avatar) setCustomAvatar()
         loginSuccess()
     })
 
+    const setCustomAvatar = async () => {
+      return
+      const profile = await window.api.getProfile()
+      const arr = await window.api.loadFile(profile.path, profile.size)
+      const blob = new Blob( [ arr ]);
+      const imageUrl = URL.createObjectURL( blob );
+      $user.customAvatar = imageUrl
+    }
+
     //Sets our own address in svelte store
     window.api.receive('addr', async (huginAddr) => {
-        console.log('Addr incoming')
         $user.huginAddress = huginAddr
+        $user.myAddress = huginAddr.substring(0,99)
     })
 
     const loginSuccess = async () => {
         console.log('login success')
+        await sleep(5000)
+        if ($notify.que) await sleep(4000)
         await goto('/dashboard')
         $user.loggedIn = true
         $user.started = true

@@ -4,8 +4,9 @@
     import AddCircle from '$lib/components/icons/AddCircle.svelte'
     import Contact from '$lib/components/chat/Contact.svelte'
     import {layoutState} from '$lib/stores/layout-state.js'
-    import {fade} from 'svelte/transition'
+    import {fade, fly} from 'svelte/transition'
     import {flip} from 'svelte/animate'
+    import { notify } from '$lib/stores/user.js'
 
     const dispatch = createEventDispatcher()
 
@@ -36,9 +37,9 @@ window.api.receive('newMsg', () => {
 })
 
 //Listen for sent message to update conversation list
-window.api.receive('saved-addr', async (data) => {
+window.api.receive('saved-addr', async (addr) => {
     await printConversations()
-    let sender = chatList.find((a) => a.chat === data.substring(0, 99))
+    let sender = chatList.find((a) => a.chat === addr)
     sendConversation(sender)
 })
 
@@ -49,14 +50,12 @@ const getConversations = async () => {
 //Print our conversations from DBs
 const printConversations = async () => {
     newArray = await getConversations()
-
     //If it is not the same message and not our active chat, add unread boolean
-    if (
-        newArray[0].timestamp !== chatList[0].timestamp &&
-        newArray[0].sent === 0 &&
-        $user.activeChat.chat !== newArray[0].chat
-    ) {
-        newArray[0].new = true
+
+    for (const a of newArray) {
+        for (const b of $notify.unread) {
+            if (a.chat === b.chat) a.new = true
+        }
     }
 
     let conversations = await checkNew()
@@ -66,7 +65,6 @@ const printConversations = async () => {
 
 //Dispatches the clicked conversation to parent
 const sendConversation = (message) => {
-    console.log('sending conversation')
     readMessage(message)
     let chat = message.chat
     let msgkey = message.key
@@ -88,7 +86,7 @@ const checkNew = async () => {
     let filterNew = []
     newArray.forEach(function (a) {
         chatList.some(function (b) {
-            if (b.new && a.chat === b.chat) {
+            if (b?.new && a.chat === b.chat) {
                 a.new = true
             }
         })
@@ -99,9 +97,12 @@ const checkNew = async () => {
 }
 
 const readMessage = (e) => {
+    
+    const clear = $notify.unread.filter(unread => unread.chat !== e.chat)
+    $notify.unread = clear
 
     let readArray = chatList.map(function (a) {
-        if (e.new && a.chat === e.chat) {
+        if (e?.new && a.chat === e.chat) {
             a.new = false
         }
         return a
@@ -114,12 +115,12 @@ const readMessage = (e) => {
 $: chatList
 </script>
 
-<div class="wrapper" class:hide="{$layoutState.hideChatList === true}">
-    <div class="top" in:fade>
+<div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly="{{ y: 50 }}">
+    <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
         <h2>Messages</h2>
         <AddCircle on:click="{() => dispatch('open')}" />
     </div>
-    <div class="list-wrapper">
+    <div class="list-wrapper" in:fly="{{ y: 50 }}">
         {#each chatList as message (message.chat)}
             <div animate:flip="{{duration: 250}}">
             <Contact

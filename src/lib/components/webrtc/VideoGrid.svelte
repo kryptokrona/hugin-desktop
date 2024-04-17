@@ -6,6 +6,7 @@ import { videoGrid } from '$lib/stores/layout-state.js'
 import { fade } from 'svelte/transition'
 import RtcGroupMessages from '$lib/components/webrtc/RtcGroupMessages.svelte'
 import Controls from '$lib/components/webrtc/Controls.svelte'
+import { Moon } from 'svelte-loading-spinners'
 
 let drag = false
 let videoCalls = []
@@ -31,26 +32,27 @@ const joinGroupChat = () => {
     join = false
 }
 
+let isConnecting = false
+
+//If the user is connecting to our call
+$: if ($webRTC.call.some(a => !a.connected)) {
+    isConnecting = true
+} else {
+    isConnecting = false
+}
+
+
 $: groupKey
 
-$: videoCalls = $webRTC.call.filter((a) => a.peerVideo === true)
+$: videoCalls = $webRTC.call.filter((a) => a.connected === true)
 
-$: console.log('video calls', videoCalls)
 </script>
 
-<div in:fade out:fade class:hide="{!$videoGrid.showVideoGrid}" class="layout">
-    <!--
-    <p on:click={close}>Close</p>
-    <p on:click={()=> join = !join}>Join chat</p>
-    <div class="exit">
-      <div class="join_group" class:hide={!join}><input placeholder="Input group key" type="text" bind:value={groupKey}>
-        <FillButton on:click={joinGroupChat} enabled={groupKey.length > 1} disabled={false} text="Join" />
-      </div>
-    </div>
-    -->
+<div in:fade out:fade class:show="{$videoGrid.showVideoGrid}" class="layout">
+
     <div class="video-wrapper">
         <div class="video-grid">
-            {#if $webRTC.myVideo}
+            {#if $webRTC.call.length}
                 <MyVideo />
             {/if}
 
@@ -58,6 +60,11 @@ $: console.log('video calls', videoCalls)
                 {#each videoCalls as peer (peer.chat)}
                     <PeerVideo call="{peer}" />
                 {/each}
+            {/if}
+            {#if isConnecting}
+            <div class="loader">
+                <Moon color="#f5f5f5" size="60" unit="px"/>
+            </div>
             {/if}
         </div>
         <Controls />
@@ -79,6 +86,8 @@ $: console.log('video calls', videoCalls)
     transition: all 500ms ease-in-out;
     border-radius: 15px;
     overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
 }
 
 .video-wrapper {
@@ -120,18 +129,19 @@ $: console.log('video calls', videoCalls)
     }
 }
 
-.hide {
+.show {
     @keyframes fadeLayout {
         from {
-            opacity: 100%;
-            visibility: visible;
-        }
-        to {
             opacity: 0;
             visibility: hidden;
         }
+        to {
+            opacity: 100%;
+            visibility: visible;
+        }
     }
-
+    
+    pointer-events: all !important;
     animation: fadeLayout ease-out 300ms;
     animation-fill-mode: forwards;
 }

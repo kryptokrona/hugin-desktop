@@ -103,6 +103,10 @@
 
 <style lang="scss">
 
+h2 {
+    margin-bottom: 10px;
+}
+
 .settings {
 
     margin-top: 2rem;
@@ -125,7 +129,7 @@
 }
 
 .button {
-    margin-left: -15px;
+    margin-left: -5px;
     margin-bottom: 10px;
 }
 
@@ -148,7 +152,7 @@
 }
 
 .change_node {
-    margin-left: -15px;
+    margin-left: -5px;
 }
 
 </style>

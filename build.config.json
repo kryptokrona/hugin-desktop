@@ -1,5 +1,5 @@
 {
-    "appId": "com.electron.hugin",
+    "appId": "org.kryptokrona.hugin",
     "productName": "Hugin Messenger",
     "afterSign": "./afterSignHook.cjs",
     "directories": {
@@ -38,6 +38,11 @@
         "src/backend/preload.cjs",
         "src/backend/sdp.cjs",
         "src/backend/utils.cjs",
+        "src/backend/crypto.cjs",
+        "src/backend/swarm.cjs",
+        "src/backend/messages.cjs",
+        "src/backend/wallet.cjs",
+        "src/backend/account.cjs",
         {
             "from": "build",
             "to": ""

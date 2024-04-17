@@ -1,6 +1,6 @@
 <script>
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { notify } from '$lib/stores/user.js'
+import { groups, notify } from '$lib/stores/user.js'
 import { fly } from 'svelte/transition'
 import { cubicIn, cubicOut } from 'svelte/easing'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
@@ -10,6 +10,8 @@ let timer
 export let error
 export let message
 export let success
+
+const group = $groups.groupArray.find(a => a.key === message.group)
 
 onMount(
     () =>
@@ -39,9 +41,13 @@ function hideNotification(id) {
     >
         <div class="inner-card">
             <div class="header">
+                {#if message?.group}
                 <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="" />
+                {:else}
+                <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="" />
+                {/if}
                 <h4 class="name">{message.name}</h4>
-                {#if message.board}<p>in {message.board}</p>{/if}
+                {#if message?.group}<p>in {group.name}</p>{/if}
             </div>
             <p class="message">{message.message}</p>
             <br />
@@ -124,7 +130,8 @@ function hideNotification(id) {
 
 p {
     margin-top: 0px;
-    font-size: 12px;
+    font-size: 11px;
+    font-family: 'Montserrat';
     display: contents;
 }
 

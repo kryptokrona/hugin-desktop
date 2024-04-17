@@ -11,22 +11,23 @@ import { fade } from "svelte/transition"
         <div class="list-wrapper">
             <h4>Block list</h4>
             {#each $groups.blockList as blocked (blocked.address)}
+            {#if blocked.name !== undefined}
                 <div class="card">
-                    <img
-                        class="avatar"
-                        src="data:image/png;base64,{get_avatar(blocked.address)}"
-                        alt=""
-                    />
                     <p class="name">{blocked.name}</p>
-                    <br />
+                    <br>
                     <p class="unblock" on:click={() => window.api.send('unblock', blocked.address)}>Unblock</p>
                 </div>
+            {/if}
             {/each}
         </div>
     </div>
 </div>
 
 <style lang="scss">
+
+h2 {
+    margin-bottom: 10px;
+}
 
 .card {
     display: flex;
@@ -54,6 +55,11 @@ import { fade } from "svelte/transition"
 
 .list-wrapper {
     padding: 10%;
+}
+
+p {
+    font-family: "Montserrat";
+    margin-right: 15px;
 }
 
 </style>

@@ -43,6 +43,19 @@
             route: "/settings/messagesettings"
         },
 
+        {
+            name: 'Security',
+            text: 'Set your security preferences',
+            icon: nodeIcon,
+            route: "/settings/security"
+        },
+
+        {
+            name: 'Files',
+            text: 'Change file settings',
+            icon: nodeIcon,
+            route: "/settings/files"
+        },
     ]
 
 

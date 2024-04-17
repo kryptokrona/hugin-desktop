@@ -1,5 +1,5 @@
 <script>
-import {fade} from 'svelte/transition'
+import {fade, fly} from 'svelte/transition'
 import {onDestroy, onMount} from 'svelte'
 import {messages} from '$lib/stores/messages.js'
 import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
@@ -8,13 +8,13 @@ import ChatList from '$lib/components/chat/ChatList.svelte'
 import AddChat from '$lib/components/chat/AddChat.svelte'
 import {boards, notify, transactions, user, beam, webRTC} from '$lib/stores/user.js'
 import Rename from '$lib/components/chat/Rename.svelte'
-import BackDrop from '$lib/components/popups/BackDrop.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
 import { sleep } from '$lib/utils/utils'
 import FileViewer from '$lib/components/popups/FileViewer.svelte'
 import { fileSettings, fileViewer } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
+import DropFile from '$lib/components/popups/DropFile.svelte'
 
 let chat
 let active_contact
@@ -37,9 +37,6 @@ onMount(async () => {
         }
     })
 
-    let filter = $notify.unread.filter((a) => a.type !== 'message')
-    $notify.unread = filter
-
     //If we have an active chat in store we show that conversation
     if ($user.activeChat) {
         printConversation($user.activeChat)
@@ -58,7 +55,15 @@ onMount(async () => {
     })
 
     window.api.receive('privateMsg', async (data) => {
-        scrollDown()
+        if (data.chat === $user.activeChat.chat) {
+            scrollDown()
+        }
+    })
+
+    window.api.receive('pm-send-error', async (data) => {
+        let failed = savedMsg.find(a => a.msg === data.message)
+        failed.error = true
+        savedMsg = savedMsg
     })
 
 })
@@ -69,6 +74,8 @@ onDestroy(() => {
 
 //Prints conversation from active contact
 const printConversation = (active) => {
+    const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
+    $notify.unread = clear
     chat = active.chat
     key = active.key
     active_contact = chat + key
@@ -100,7 +107,7 @@ const printMessage = (data) => {
 
 
 const scrollDown = () => {
-    windowChat.scrollTop = windowHeight
+    windowChat.scrollTop = windowChat.scrollTopMax
 }
 
 const saveToStore = (data) => {
@@ -148,6 +155,7 @@ const sendMsg = (e) => {
 //Check for possible errors
 const checkErr = (e) => {
     let error = false
+    if (e.detail.text.length === 0) return true
     if (e.detail.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
@@ -184,6 +192,7 @@ async function dropFile(e) {
     dragover = false
     const { acceptedFiles, fileRejections } = e.detail
     let filename = acceptedFiles[0].name
+    acceptedFiles[0].fileName = filename
     let path = acceptedFiles[0].path
     let size = acceptedFiles[0].size
     let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
@@ -264,7 +273,7 @@ const hideModal = () => {
 {/if}
 
 {#if dragover}
-    <BackDrop />
+    <DropFile />
 {/if}
 
 {#if $transactions.tip}
@@ -280,9 +289,9 @@ const hideModal = () => {
 
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="chat_window" bind:this={windowChat} bind:clientHeight={windowHeight}>
+        <div class="outer" id="chat_window" in:fly="{{ y: 50 }}">
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
-            <div class="inner">
+            <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
                 {#each savedMsg as message (message.timestamp)}
                     <ChatBubble
                         on:download="{() => download(message.msg)}"
@@ -292,6 +301,7 @@ const hideModal = () => {
                         msgFrom="{message.chat}"
                         timestamp="{message.timestamp}"
                         beamMsg="{message.beam}"
+                        error="{message?.error}"
                     />
                 {/each}
             </div>
@@ -331,10 +341,6 @@ main {
     display: flex;
     flex-direction: column-reverse;
     overflow: scroll;
-
-    &::-webkit-scrollbar {
-        display: none;
-    }
 }
 
 .fade {
@@ -344,5 +350,27 @@ main {
     height: 40px;
     background: linear-gradient(180deg, #121212, #12121200);
     z-index: 100;
+}
+
+.outer {
+    --scrollbarBG: transparent;
+    --thumbBG: #3337;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+
+.outer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.outer::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+}
+
+.outer::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 3px;
+    border: 3px solid var(--scrollbarBG);
 }
 </style>

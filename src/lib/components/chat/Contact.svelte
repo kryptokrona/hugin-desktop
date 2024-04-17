@@ -2,15 +2,20 @@
 import {createEventDispatcher} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar} from '$lib/utils/hugin-utils.js'
-import {user, webRTC} from '$lib/stores/user.js'
+import {notify, user, webRTC} from '$lib/stores/user.js'
+import { isLatin } from '$lib/utils/utils'
 
 export let contact
 let thisCall = false
 let beamInvite = false
+let asian = false
 
+$: counter = $notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length
 $: if (contact.msg.substring(0,7) === "BEAM://") {
     beamInvite = true
 }
+
+$: if (!isLatin(contact.name)) asian = true
 
 $: if (contact.msg.substring(0,11) === "BEAMFILE://") { 
     contact.msg = "File shared ⚡️"
@@ -48,9 +53,7 @@ const rename = () => {
     class:active="{contact.chat === $user.activeChat.chat}"
     on:click="{() => printThis(contact)}"
 >
-    {#if contact.new}
-        <div class:unread="{contact.new}"></div>
-    {/if}
+
 
     <img
         class="avatar"
@@ -59,7 +62,7 @@ const rename = () => {
         alt=""
     />
     <div class="content">
-        <h4>{contact.name}</h4>
+        <h4 class:asian class:big={asian}>{contact.name}</h4>
         
         {#if !beamInvite}
         <p>{contact.msg}</p>
@@ -67,6 +70,13 @@ const rename = () => {
         <p>Started a beam ⚡️</p>
         {/if}
     </div>
+    {#if counter > 0}
+        <div in:fade class="unread">
+            <div class="count">
+                {counter}
+            </div>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -101,6 +111,7 @@ const rename = () => {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 90%;
 }
 
 h4 {
@@ -124,18 +135,31 @@ p {
 }
 
 .unread {
-    animation: border_rgb 30s infinite;
-    background-color: white;
-    width: 5px;
-    height: 2px;
-    border-radius: 30%;
-    left: 340px;
-    margin-top: 25px;
-    position: absolute;
+    width: 17px;
+    height: 17px;
+    border-radius: 33%;
+    background: #ce4141;
+    padding: 2px;
+    display: flex;
+    margin-top: 10px;
+    justify-content: center;
 }
 
 .active {
     background-color: var(--border-color);
     border-bottom: 1px solid transparent;
+}
+
+.count {
+    font-size: 12px;
+    color: white;
+}
+
+.asian {
+    font: menu;
+}
+
+.big {
+    font-size: 17px;
 }
 </style>

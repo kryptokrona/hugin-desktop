@@ -1,75 +1,31 @@
 <script>
   import FillButton from '$lib/components/buttons/FillButton.svelte'
-  import {nodelist} from '$lib/stores/nodes.js'
+  import {getBestNode, nodelist} from '$lib/stores/nodes.js'
   import {fade} from 'svelte/transition'
   import {createEventDispatcher} from 'svelte'
   import {misc} from "$lib/stores/user.js";
 
   let nodeInput = ''
   let selectedNode
-
+  let loading = false
   const dispatch = new createEventDispatcher()
 
   const back = () => {
     dispatch('back')
   }
 
-  const getBestNode = async (ssl=true) => {
-
-  let recommended_node = undefined;
-
-  let node_requests = [];
-  let ssl_nodes =[];
-  if (ssl) {
-      ssl_nodes = $nodelist.filter(node => {return node.ssl});
-  } else {
-      ssl_nodes =  $nodelist.filter(node => {return !node.ssl});
-  }
-
-  ssl_nodes = ssl_nodes.sort((a, b) => 0.5 - Math.random());
-
-  console.log(ssl_nodes);
-
-  let i = 0;
-
-  while (i < ssl_nodes.length) {
-
-    const controller = new AbortController();
-
-    const timeoutId = setTimeout(() => controller.abort(), 1000);
-
-
-    let this_node = ssl_nodes[i];
-
-    let nodeURL = `${this_node.ssl ? 'https://' : 'http://'}${this_node.url}:${this_node.port}/info`;
-    try {
-      const resp = await fetch(nodeURL, {
-         method: 'GET',
-         signal: controller.signal
-      });
-
-     if (resp.ok) {
-
-       recommended_node = this_node;
-       return(this_node);
-     }
-  } catch (e) {
-    console.log(e);
-  }
-  i++;
-}
-
-if (recommended_node == undefined) {
-  const recommended_non_ssl_node = await getBestNode(false);
-  return recommended_non_ssl_node;
-}
-
-}
-
   const auto = async () => {
+    loading = true
     const randomNode = await getBestNode();
 
-    nodeInput = `${randomNode.url}:${randomNode.port}`
+    if (!randomNode) {
+        window.api.errorMessage('Auto node did not load')
+        return
+    }
+
+    loading = false
+
+    nodeInput = randomNode
   }
 
   const connectTo = () => {
@@ -88,7 +44,7 @@ if (recommended_node == undefined) {
     <h1>Pick a node</h1>
     <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}"/>
     <div class="node-list">
-        {#each $nodelist as node, i}
+        {#each $nodelist.nodes as node, i}
             <div
                     class="node-card"
                     class:selected="{selectedNode === i}"
@@ -102,7 +58,7 @@ if (recommended_node == undefined) {
     </div>
     <div class="button_wrapper">
         <FillButton text="Back" disabled="{false}" on:click="{back}"/>
-        <FillButton text="Auto" disabled="{false}" on:click="{auto}"/>
+        <FillButton text="Auto" disabled="{false}" info={true} loading={loading} on:click="{auto}"/>
         <FillButton
                 text="Connect"
                 disabled="{!(nodeInput.length > 0)}"

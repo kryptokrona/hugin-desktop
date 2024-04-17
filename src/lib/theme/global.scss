@@ -21,7 +21,7 @@
     --mobile-padding: 0 20px;
     --website-width: 1400px;
 
-    --success-color: #3fd782;
+    --success-color: #2fa362;
     --warn-color: #f25f61;
     --info-color: #5f86f2;
     --alert-color: #f2cb5f;
@@ -393,4 +393,9 @@ code {
 @keyframes slide {
     0% {transform:translateY(100%);}
     100% {transform:translateY(-100%);}
+}
+
+#context-selectall
+{ 
+    display: none !important; 
 }

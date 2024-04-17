@@ -3,16 +3,18 @@ import VideoIcon from '$lib/components/icons/VideoIcon.svelte'
 import VideoSlash from '$lib/components/icons/VideoSlash.svelte'
 import MicIcon from '$lib/components/icons/MicIcon.svelte'
 import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
-import Screenshare from '$lib/components/icons/Screenshare.svelte'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { webRTC, rtc_groups } from '$lib/stores/user.js'
-import VideoSources from '$lib/components/chat/VideoSources.svelte'
+import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
 import Contacts from '$lib/components/chat/Contacts.svelte'
 import { onDestroy, onMount } from 'svelte'
 import { calcTime } from '$lib/utils/utils.js'
 import HideVideoGrid from '$lib/components/icons/HideVideoGrid.svelte'
+import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
+import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
+import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
 
 let muted = false
 let video = true
@@ -34,10 +36,7 @@ onDestroy(() => {
 
 //Share screenpmn
 const switchStream = async () => {
-    if (!$webRTC.screenshare) {
-        await window.api.shareScreen(false)
-        $webRTC.screenshare = true
-    }
+    await window.api.shareScreen(false)
 }
 
 //End call with all peers
@@ -51,21 +50,35 @@ const endCall = () => {
 }
 
 const toggleAudio = () => {
-    muted = !muted
+    $webRTC.audio = !$webRTC.audio
     $webRTC.call.forEach((a) => {
         a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
     })
 }
+const add_video = async (add) => {
+        if ($mediaSettings.cameraId === "none") return
+        window.api.changeSource($webRTC.cameraId, false, add)
+        $videoSettings.screenshare = false
+    }
+
 
 const toggleVideo = () => {
-    if ($webRTC.screenshare) {
-        let camera = $webRTC.cameraId
+    $videoSettings.loading = true
+    if ($videoSettings.screenshare) {
+        let camera = $mediaSettings.cameraId
         window.api.changeSource(camera)
-        $webRTC.screenshare = false
+        $videoSettings.screenshare = false
         return
     }
+
+    if (!$videoSettings.myVideo) {
+        add_video(true)
+        return
+    }
+    
     video = !video
     $webRTC.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+    $videoSettings.loading = false
 }
 
 const showMessages = () => {
@@ -95,14 +108,14 @@ const hideGrid = () => {
             {/if}
         </div>
         <div class="icon" on:click="{toggleAudio}">
-            {#if !muted}
+            {#if $webRTC.audio}
                 <MicIcon />
             {:else}
                 <MuteIcon />
             {/if}
         </div>
         <div class="icon" on:click="{switchStream}">
-            <Screenshare />
+            <ScreenSources />
         </div>
         <div class="icon" on:click="{endCall}">
             <CallSlash />
@@ -115,9 +128,9 @@ const hideGrid = () => {
         <div class="icon">
             <Contacts />
         </div>
-        <!-- <div class="icon">
-            <AudioSources />
-        </div> -->
+        <div class="icon">
+            <AudioSources conference={false}/>
+        </div>
     </div>
     <div class="icon" on:click="{() => hideGrid()}">
         <HideVideoGrid />

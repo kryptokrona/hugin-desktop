@@ -7,6 +7,7 @@ export const user = writable({
     username: 'Anon',
     activeChat: false,
     huginAddress: '',
+    myAddress: '',
     callerMenu: false,
     contacts: null,
     addChat: false,
@@ -14,6 +15,10 @@ export const user = writable({
     transactions: [],
     block: false,
     started: false,
+    downloadPath: "",
+    customAvatar: false,
+    idleTime: 0,
+    idleLimit: 300
 })
 
 export const boards = writable({
@@ -30,7 +35,10 @@ export const groups = writable({
     thisGroup: {key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false},
     groupArray: [],
     blockList: [],
-    activeHugins: []
+    activeHugins: [],
+    historyTimeframe: 0,
+    autoDeleteAfter: 0,
+    settings: false
 })
 
 export const rtc_groups = writable({
@@ -40,7 +48,7 @@ export const rtc_groups = writable({
 })
 
 export const misc = writable({
-    syncState: '',
+    syncState: 'Syncing',
     walletBlockCount: null,
     localDaemonBlockCount: null,
     networkBlockCount: null,
@@ -50,6 +58,8 @@ export const misc = writable({
     os: '',
     loading: false,
     syncStatus: false,
+    deleteAfter: null,
+    focus: false
 })
 
 export const webRTC = writable({
@@ -68,7 +78,8 @@ export const webRTC = writable({
     invited: false,
     initiator: false,
     devices: [],
-    cameraId: false
+    cameraId: false,
+    audio: true
 })
 
 export const audioLevel = writable({
@@ -81,6 +92,8 @@ export const notify = writable({
     success: [],
     unread: [],
     update: [],
+    notifications: [],
+    off: []
 })
 
 export const transactions = writable({
@@ -96,8 +109,23 @@ export const beam = writable({
     active: []
 })
 
+export const swarm = writable({
+    active: [],
+    myVideo: false,
+    voice_channel: [],
+    call: [],
+    newChannel: false,
+    activeChannel: {name: ""},
+    activeChannelMessages: [],
+    audio: true,
+    showVideoGrid: false,
+    myStream: false,
+    screenshare: false,
+    showInfo: true,
+})
+
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
-        return get_avatar($user.huginAddress.substring(0, 99))
+        return get_avatar($user.myAddress)
     }
 })

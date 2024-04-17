@@ -2,17 +2,23 @@
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onMount } from 'svelte'
-import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
 import RepliedArrow from '$lib/components/icons/RepliedArrow.svelte'
+import DeleteButton from '$lib/components/icons/Delete.svelte'
 import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { containsOnlyEmojis, openURL } from '$lib/utils/utils'
+import { containsOnlyEmojis, isLatin, openURL } from '$lib/utils/utils'
+import { groupMessages } from '$lib/stores/groupmsgs.js'
+import FillButton from '../buttons/FillButton.svelte'
+import { remoteFiles } from '$lib/stores/files'
+import DownloadFile from './DownloadFile.svelte'
+import UploadFile from './UploadFile.svelte'
 
 export let msg
 export let msgFrom
@@ -25,6 +31,8 @@ export let hash
 export let message
 export let reply_to_this = false
 export let rtc = false
+export let joined = false
+export let file = false
 
 let thisreply = ''
 let has_reaction = false
@@ -41,6 +49,7 @@ let link = false
 let messageText
 let messageLink = ""
 let youtube_shared_link_type = false
+let asian = false
 
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
@@ -53,6 +62,8 @@ let page
 let offchain = false
 let thisReply = false
 let replyError = false
+
+let in_swarm
 
 onMount( async () => {
         if (reply.length === 64) 
@@ -81,24 +92,30 @@ function checkMessage() {
         if (myMsg) checkLink()
         return
     }
-
-    if (containsOnlyEmojis(msg)) {
-        emojiMessage = true
-        return
+    
+    if (!isLatin(nickname)) {
+        asian = true
     }
-
 
 
 }
+
+//Add extra number to avoid collision for keys in Svelte each loop
+const svelteHashPadding = Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+
 async function checkreply(reply) {
+    let group_reply
+    
     if (offchain) {
-        let group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
-        return group_reply
+        //Search in rtc messages
+        group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
+        group_reply.hash + svelteHashPadding
+        if (group_reply) return group_reply
     }
+    //Check in db if we can find it
     let thisreply = await window.api.getGroupReply(reply)
     if (!thisreply) return false
-    //Add extra number to avoid collision for keys in Svelte each loop
-    thisreply.hash = thisreply.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+    thisreply.hash = thisreply.hash + svelteHashPadding
     return thisreply
 }
 
@@ -134,6 +151,13 @@ const toggleActions = () => {
     }
 }
 
+const deleteMsg = (e) => {
+    console.log('delete', e)
+    dispatch('deleteMsg', {
+        hash: hash
+    })
+}
+
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
@@ -155,7 +179,7 @@ $: if (message.react) {
 }
 
 
-$: if ($webRTC.groupCall && rtc) {
+$: if ($webRTC.groupCall || rtc) {
     offchain = true
 } else {
     offchain = false
@@ -198,7 +222,7 @@ const openLinkMessage = (url) => {
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div class="message" id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}">
+<div class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}">
     <div>
         {#if replyMessage}
             {#if thisReply}
@@ -206,7 +230,7 @@ const openLinkMessage = (url) => {
                     <div style="display: flex; gap: 10px; align-items: center">
                         <RepliedArrow />
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <p class="reply_nickname">{thisReply.name}</p>
+                            <p class:asian class="reply_nickname">{thisReply.name}</p>
                             <p>{thisReply.message}</p>
                         </div>
                     </div>
@@ -232,30 +256,37 @@ const openLinkMessage = (url) => {
             <div class="header">
                 <div style="display: flex; align-items: center; margin-left: -10px">
                     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
-                    <h5 class="nickname">
-                        {nickname}<span class="time" class:min="{rtc}"
-                            >| <Time relative timestamp="{parseInt(message.time)}" /></span
+                    <h5 class:asian class="nickname" class:share={file} class:blink_me={file}>
+                        {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
+                            >| <Time live={30 * 1_000} relative timestamp="{parseInt(message.time)}" /></span
                         >
                     </h5>
                 </div>
                 <div class="actions">
                     <EmojiSelector on:emoji="{reactTo}" />
                     <ReplyArrow on:click="{replyTo}" />
+                    {#if !rtc}
+                    <DeleteButton on:click="{deleteMsg}"/>
                     <Dots on:click="{toggleActions}"/>
+                    {/if}
                 </div>
             </div>
             {#if youtube}
                 <Youtube id={embed_code} />
-                <p style="user-select: text;">{messageText}</p>
+                <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
             {:else if link}
-                <p style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
-                <p style="user-select: text;">{messageText}</p>
+                <p class:rtc style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if emojiMessage}
-                <p class="emoji">{msg}</p>
+                <p class:rtc class="emoji">{msg}</p>
+            {:else if rtc && file && !myMsg}
+                <DownloadFile file={file} group={true}/>
+            {:else if rtc && file && myMsg}
+                <UploadFile file={file} group={true}/>
             {:else}
-                <p class:rtc style="user-select: text;">{msg}</p>
+                <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}
         </div>
 
@@ -282,7 +313,7 @@ const openLinkMessage = (url) => {
     flex-direction: column;
     box-sizing: border-box;
     color: rgba(255, 255, 255, 0.8);
-    padding: 10px 30px 10px 30px;
+    padding: 10px 10px 10px 20px;
     border: 1px solid transparent;
     white-space: pre-line;
     
@@ -312,7 +343,7 @@ const openLinkMessage = (url) => {
 p {
     margin: 0 0 0 30px;
     word-break: break-word;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .actions {
@@ -336,7 +367,7 @@ p {
 }
 
 .reply_nickname {
-    font-size: 12px;
+    font-size: 12px !important;
     font-weight: bold;
 }
 
@@ -379,7 +410,7 @@ p {
 }
 
 .rtc {
-    width: 240px;
+    max-width: 240px;
 }
 
 .min {
@@ -422,6 +453,25 @@ p {
 }
 
 .emoji {
-    font-size: 21px !important;
+    // font-size: 21px !important;
+    user-select: text;
+}
+
+.joined {
+    font-style: italic;
+    color: var(--info-color)
+}
+
+.share {
+    color: var(--alert-color)
+}
+
+.yt {
+    max-width: 350px;
+}
+
+.asian {
+    font: menu;
+    font-size: 15px;
 }
 </style>

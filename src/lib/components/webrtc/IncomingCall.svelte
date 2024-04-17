@@ -4,10 +4,13 @@ import { fly } from 'svelte/transition'
 import { cubicIn, cubicOut } from 'svelte/easing'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { notify, user, webRTC } from '$lib/stores/user.js'
+import { notify, user, webRTC, swarm } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import CallIcon from '$lib/components/icons/CallIcon.svelte'
 import CallSlash from '$lib/components/icons/CallSlash.svelte'
+import { sleep } from '$lib/utils/utils'
+import { videoGrid } from '$lib/stores/layout-state'
+import { mediaSettings } from '$lib/stores/mediasettings'
 
 export let paused = false
 export let thisCall
@@ -19,20 +22,19 @@ let video = true
 
 const dispatch = createEventDispatcher()
 // When incoming call and this get mounted we play the ringtone
-onMount(() => {
+onMount( async () => {
     ringtone.play()
     avatar = get_avatar(thisCall.chat)
     console.log('this call!', thisCall)
+    await sleep(1000)
     if (thisCall.type === 'groupinvite') {
         invite = true
     }
-    video = $webRTC.devices.some((a) => a.kind == 'videoinput')
+    video = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
     if (video) return
     console.log('no video device found')
     video = false
 })
-
-$: console.log('video status', video)
 
 //When a user clicks answer
 const handleAnswer = async () => {
@@ -41,21 +43,24 @@ const handleAnswer = async () => {
     //Variable to activate visual feedback
     answered = true
     let caller = $user.contacts.find((a) => a.chat === thisCall.chat)
-    console.log('caller', caller)
     let offchain = false
+    let msg = thisCall.msg
 
     if ($webRTC.groupCall) {
         offchain = true
     }
+
+    if ($swarm.voice_channel.length) window.api.exitVoiceChannel()
+
+    if (video) $videoGrid.showVideoGrid = true
     //If video call incoming and no video device is plugged in
     if (thisCall.msg.substring(0, 1) == 'Δ' && !video) {
         let errMessage = 'You have no video device'
         window.api.errorMessage(errMessage)
-        return
+        msg = thisCall.msg.replace("Δ", "Λ")
     }
-    console.log('offchain?', offchain)
     //We delay the answerCall for routing purposes
-    window.api.answerCall(thisCall.msg, thisCall.chat, caller.key, offchain)
+    window.api.answerCall(msg, thisCall.chat, caller.key, offchain)
 
     //We pause the ringtone and destroy the popup
     ringtone.pause()
@@ -86,7 +91,7 @@ const declineCall = () => {
             {#if invite}<p>wants to join the call</p>{:else}<p>is calling</p>{/if}
         </div>
         <div class="options">
-            <div class="answer hover" on:click="{handleAnswer}">
+            <div class="answer hover" on:click|once="{handleAnswer}">
                 <CallIcon />
             </div>
             <div class="decline hover" on:click="{declineCall}">
@@ -119,7 +124,7 @@ const declineCall = () => {
     align-items: center;
     width: 100%;
     border-radius: 3px;
-    background-color: #202020;
+    background-color: #181818;
 }
 
 .caller {

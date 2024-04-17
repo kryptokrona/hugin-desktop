@@ -10,20 +10,31 @@
     import StandardGroups from '$routes/dashboard/components/StandardGroups.svelte'
     import Transactions from "$routes/dashboard/components/Transactions.svelte";
     import {messages} from '$lib/stores/messages.js'
+    import { fly } from 'svelte/transition'
+    import Welcome from './components/Welcome.svelte'
     
     let date = new Date()
     let hrs = date.getHours()
     let greet
-
+    let welcome = false
     onMount(async () => {
+        $user.started = true
         if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
+        if (!localStorage.getItem('guide')) {
+            //Set welcome = true to enable guide popup
+            //welcome = true
+        }
         if (hrs < 12) greet = 'Good Morning'
         else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'
         else if (hrs >= 17 && hrs <= 24) greet = 'Good Evening'
     })
 </script>
 
-<div class="header">
+{#if welcome} 
+    <Welcome on:close={() => (welcome = false)}/>
+{/if}
+
+<div class="header" in:fly="{{ y: 100 }}">
     <div style="display: flex; align-items: center; gap: 0.5rem">
         <h1>{greet}, {$user.username}!</h1>
         <EditName/>
@@ -36,10 +47,7 @@
                     disabled="{false}"
                     on:click="{() =>
                     openURL(
-                        `https:faucet.kryptokrona.org/?address=${$user.huginAddress.substring(
-                            0,
-                            99
-                        )}`
+                        `https://xkr.network/faucet`
                     )}"/>
         {/if}
         <Share/>
@@ -47,7 +55,7 @@
 </div>
 
 <Funds/>
-<div class="grid">
+<div class="grid"  in:fly="{{ y: 100 }}">
     <StandardGroups/>
     <Transactions/>
     <!-- <CreateRoom/> -->

@@ -1,5 +1,5 @@
 <script>
-import { misc, user, userAvatar } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm, webRTC } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -10,25 +10,34 @@ import { page } from '$app/stores'
 import { layoutState } from '$lib/stores/layout-state.js'
 import AlphaIcon from '$lib/components/icons/AlphaIcon.svelte'
 import Logout from '$lib/components/icons/Logout.svelte'
+import Home from '../icons/Home.svelte'
+import Tooltip from "$lib/components/popups/Tooltip.svelte"
+import { onMount } from 'svelte'
 
 let sync
 let avatar
+let in_voice = false
+let fileList
+let files
 
+onMount(async () => {
+//    const profile = await window.api.getProfile()
+//    console.log("Got profile info!", profile)
+})
 $: sync = $misc.syncState
 
-userAvatar.subscribe((output) => {
-    avatar = output
-})
+$: if (!$user.customAvatar) {
+    userAvatar.subscribe((output) => {
+        avatar = output
+    })
+} else {
+    avatar = $user.customAvatar
+}
 $: avatar
 
-const handleLogout = () => {
-    user.update((data) => {
-        return {
-            ...data,
-            loggedIn: false,
-        }
-    })
-     goto("/login")
+const handleLogout = () => { 
+    $user.loggedIn = false
+    goto("/login")
 }
 
 const messagesRouteAndMenu = () => {
@@ -46,22 +55,69 @@ const groupRouteAndMenu = () => {
     if ($page.url.pathname === '/groups') {
         $layoutState.hideGroupList = !$layoutState.hideGroupList
     } else {
+        setTimeout(() => {
+            $layoutState.hideGroupList = false
+        }, 300)
         goto('/groups')
     }
 }
+
+const changeProfilePic = () => {
+    return
+   fileList.click()
+}
+
+const selectAvatar = async () => {
+    return
+    console.log('Selected', files[0]);
+    const file = files[0];
+    window.api.send('set-avatar', [file.path, file.name, file.size])
+    const arr = await window.api.loadFile(file.path, file.size)
+    const blob = new Blob( [ arr ]);
+    const imageUrl = URL.createObjectURL( blob );
+    $user.customAvatar = imageUrl
+  };
+
+$: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {
+    in_voice = true
+} else in_voice = false
+
 </script>
 
 <div class="leftMenu">
     <div class="nav">
-        <div class="button myavatar" on:click="{() => goto('/dashboard')}">
-            <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
-        </div>
-        <div on:click="{messagesRouteAndMenu}" class="button">
-            <MessageIcon />
-        </div>
-        <div on:click="{groupRouteAndMenu}" class="button">
-            <GroupIcon />
-        </div>
+        <input
+        bind:this={fileList}
+        bind:files
+        class="open"
+        type="file"
+        on:change={() => selectAvatar()}
+        style="width: 0; height: 0;"
+      />
+        <!-- <Tooltip title="Avatar"> -->
+            <div class:border_rgb={in_voice} style="cursor: default;" class="button myavatar" on:click="{() => changeProfilePic()}">
+                {#if !$user.customAvatar}
+                <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+                {:else}
+                <img class="avatar custom" src={$user.customAvatar} alt="" />
+                {/if}
+            </div>
+        <!-- </Tooltip> -->
+        <Tooltip title="Dashboard">
+            <div on:click="{() => goto('/dashboard')}" class="button">
+                <Home />
+            </div>
+        </Tooltip>
+        <Tooltip title="Messages">
+            <div on:click="{messagesRouteAndMenu}" class="button">
+                <MessageIcon />
+            </div>
+        </Tooltip>
+        <Tooltip title="Groups">
+            <div on:click="{groupRouteAndMenu}" class="button">
+                <GroupIcon />
+            </div>
+        </Tooltip> 
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
@@ -69,19 +125,25 @@ const groupRouteAndMenu = () => {
     </div>
     <div class="draggable"></div>
     <div class="nav">
-        <div on:click="{() => goto('/settings/node')}" class="button">
-            <SettingsIcon />
-        </div>
-        <a class='button' href="/" on:click={handleLogout}>
-            <Logout/>
-        </a>
+        <Tooltip title="Settings">
+            <div on:click="{() => goto('/settings/node')}" class="button">
+                <SettingsIcon />
+            </div>
+        </Tooltip>
+        <Tooltip title="Logout">
+            <div class='button' on:click={handleLogout}>
+                <Logout/>
+            </div>
+        </Tooltip>      
         <XkrLogo grey="{true}" />
-        <div
+        <Tooltip title="Github">
+            <div
             on:click="{() =>
                 openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}"
         >
             <AlphaIcon />
         </div>
+        </Tooltip> 
     </div>
 </div>
 
@@ -140,5 +202,11 @@ const groupRouteAndMenu = () => {
 
 .avatar {
     height: 55px;
+}
+
+.custom {
+    height: 40px !important;
+    border-radius: 5px;
+    max-width: 60px;
 }
 </style>

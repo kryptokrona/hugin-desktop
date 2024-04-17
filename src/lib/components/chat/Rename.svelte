@@ -85,7 +85,7 @@ const remove = () => {
                 disabled="{false}"
                 red="{true}"
                 text="Remove"
-                on:click="{remove}" />
+                on:click|once="{remove}" />
         </div>
     </div>
     {/if}

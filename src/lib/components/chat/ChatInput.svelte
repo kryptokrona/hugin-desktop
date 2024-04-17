@@ -1,7 +1,7 @@
 <script>
   import {createEventDispatcher, onDestroy, onMount} from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
-  import {boards, webRTC, groups, beam} from '$lib/stores/user.js'
+  import {boards, webRTC, groups, beam, swarm} from '$lib/stores/user.js'
   import {page} from '$app/stores'
   import {user} from '$lib/stores/user.js'
   import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -23,14 +23,13 @@
 
   onMount(async () => {
     mount = true
+    fieldFocus()
     await sleep(1000)
     //Not sure why it takes so long to find the emoji picker.
-    emojiPicker = document.querySelector('emoji-picker')
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
   })
 
   onDestroy(() => {
-    emojiPicker = ''
     window.api.removeAllListeners("emoji-click");
   })
 
@@ -47,6 +46,8 @@
   }
 
   const keydown = (e) => {
+    if (e.key === 'PageDown') e.preventDefault()
+    if (e.key === 'PageUp') e.preventDefault()
     if (e.key === 'Shift') shiftKey = true
     if (messageInput && !shiftKey && e.key === 'Enter') { 
       e.preventDefault()
@@ -74,7 +75,8 @@
     dispatch('message', {
       text: msg,
       offChain: off_chain,
-      beam: activeBeam
+      beam: activeBeam,
+      swarm: activeSwarm
     })
     resetInputHeight()
     messageInput = ''
@@ -122,6 +124,16 @@
     }
   }
 
+  let activeSwarm = false
+
+  $: {
+    if ($swarm.active.length) {
+      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key && $swarm.showVideoGrid);
+    } else {
+      activeSwarm = false
+    }
+  }
+
   function autosize() {
     console.log(messageField.scrollHeight)
     if(messageInput !== '') {
@@ -134,6 +146,10 @@
     if (mount) {
     if ($page.url.pathname === '/groups') {
       to = $groups.thisGroup.name
+      if (activeSwarm) {
+        //Show channel name
+        if ($swarm.activeChannel.name.length) to = "#" + $swarm.activeChannel.name
+      }
     }
 
     if ($page.url.pathname === '/messages') {
@@ -151,9 +167,9 @@
      class:border-top="{$page.url.pathname !== '/boards'}">
     <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
-    <div style="position: relative; display: flex:">
+    <div style="display: flex">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
-            <emoji-picker></emoji-picker>
+            <emoji-picker bind:this={emojiPicker}></emoji-picker>
         </div>
         <div class="emoji-button" on:click={() => openEmoji = !openEmoji}>
             <Emoji/>

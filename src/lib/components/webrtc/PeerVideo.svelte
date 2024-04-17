@@ -1,50 +1,72 @@
 <script>
 //To handle true and false, or in this case show and hide.
-import { fade } from 'svelte/transition'
+import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { audioLevel, user } from '$lib/stores/user.js'
+import { audioLevel, user, swarm } from '$lib/stores/user.js'
 import Minus from '../icons/Minus.svelte'
 import Plus from '../icons/Plus.svelte'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
+import { get_avatar } from '$lib/utils/hugin-utils'
+import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
+import { audioSettings } from '$lib/stores/mediasettings'
 let peerVideo = document.getElementById('peerVideo')
+let peerAudio
 let peerStream
 let thisWindow = false
 let windowCheck = false
+let audio = false
+export let active = true
 export let call
+export let channel = []
 
 const dispatch = createEventDispatcher()
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
-    console.log('peerVideo call', call)
-    console.log('before', call.peerStream)
+    if (!active) return
     peerVideo.srcObject = call.peerStream
+    peerAudio.srcObject = call.peerStream
     $videoGrid.peerVideos.push({chat: call.chat, size: 1})
     $videoGrid.peerVideos = $videoGrid.peerVideos
     thisWindow = $videoGrid.peerVideos.find(a => a.chat === call.chat)
-    console.log('This window', thisWindow)
     playVideo()
     windowCheck = true
 })
 
 async function setName() {
-    return $user.contacts.find(a => a.chat === call.chat)
-}
-
-//When a user clicks answer
-const pauseVideo = () => {
-    console.log('pausevideo')
-    peerVideo.pause()
+    if (!active) {
+        return channel.find(a => call.address === a.address)
+    }
+    else if ($swarm.call.length) return channel.find(a => call.chat === a.address)
+    else return $user.contacts.find(a => a.chat === call.chat)
 }
 
 const playVideo = () => {
-    console.log('play video')
     peerVideo.play()
+}
+
+window.api.receive('set-audio-input-group', (src, input) => {
+        console.log('want to change in peervideo', src)
+        if (input) return
+        changeAudioSource(src, input)
+})
+
+window.api.receive('set-audio-input', (src, input) => {
+        console.log('want to change in peervideo', src)
+        if (input) return
+        changeAudioSource(src, input)
+})
+    
+
+const changeAudioSource = async (src, input) => {
+    $audioSettings.audioOutput = src
+    if (peerVideo === null) return
+    peerVideo.setSinkId(src)
 }
 
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {
-    peerVideo.pause()
+   // peerVideo.pause()
 })
 let isTalking = false
 
@@ -62,7 +84,7 @@ $:  if (thisWindow && windowCheck) {
             $videoGrid.hideMyVideo = true
             
         }
-        //Multiview reset test
+        //Multiview reset test 
         if ($videoGrid.multiView && thisWindow.size !== 1) {
             thisWindow.size = 1
             $videoGrid.showChat = false
@@ -71,6 +93,7 @@ $:  if (thisWindow && windowCheck) {
     }
 
 const resize = (size) => {
+    if (!active) return
     $videoGrid.multiView = false
      //Right now we only have two modes, medium and min
      //Medium is fullscreen
@@ -81,7 +104,6 @@ const resize = (size) => {
       //Reset size to multiview if we minimize one fullscreen
     if (thisWindow.size === 2 && size == 'min') {
         $videoGrid.multiView = true
-        return
     }
     
     //Size switch
@@ -108,22 +130,44 @@ const resize = (size) => {
     console.log('Updating resize thiswindow', thisWindow.size)
   }
 
-  $: thisWindow
+  let showWindow = false
 
+  $: thisWindow
+    
+  $: {
+    if ($swarm.showVideoGrid) {
+        showWindow = true
+    } else if ($videoGrid.showVideoGrid) showWindow = true
+    else showWindow = false
+  }
+
+  let many = false
+
+  $: if ($swarm.call.length > 4) {
+    many = true
+  } else many = false
 
 </script>
 
-<div class="card" class:talking="{isTalking}" class:min={thisWindow.size === 1} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+<div class="card" in:fly={{ x: -150}} class:many={many} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1 && !many} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
+    <audio autoplay  bind:this="{peerAudio}"></audio>
     {#await setName() then contact}
+    <div class:in_call="{true}"></div>
     <div class="name">{contact.name}</div>
     {/await}
-    <!-- <div class="fade">
+    {#if !active}
+    <img src="data:image/png;base64,{get_avatar(call.address, 'png', true)}" alt="" />
+    {:else}
+    <img src="data:image/png;base64,{get_avatar(call.chat, 'png', true)}" alt="" />
+    {/if}
+    <div in:fade class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
           <Plus on:click={()=> resize('medium')}/>
         </div>
-      </div> -->
+      </div>
 </div>
 
 <style lang="scss">
@@ -137,9 +181,9 @@ const resize = (size) => {
     z-index: 500;
     width: 47.652%;
     height: 47.652%;
-    pointer-events: all;
     transition: 0.35s;
     aspect-ratio: 16/9;
+    pointer-events: none;
 
     video {
         position: absolute;
@@ -147,9 +191,18 @@ const resize = (size) => {
         height: 100%;
         object-fit: cover;
         border-radius: inherit;
+        z-index: 5;
     }
 }
 
+img {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    left: calc(50% - 100px);
+    top: calc(50% - 100px);
+    z-index: 4;
+}
 .caller {
     display: flex;
     justify-content: center;
@@ -157,6 +210,27 @@ const resize = (size) => {
     padding: 10px;
 }
 
+.many {
+    height: 30.52% !important;
+    width: 30.52% !important;
+}
+
+.in_call {
+    left: 9px;
+    top: 92.4%;
+    border-radius: 5px;
+    height: 10px;
+    width: 10px;
+    padding: 5px;
+    line-height: 15px;
+    font-family: "Montserrat";
+    width: fit-content;
+    background: var(--success-color);
+    position: relative;
+    opacity: 0.9;
+    border-radius: 50%;
+    z-index: 5;
+}
 .options {
     display: flex;
 }
@@ -207,10 +281,10 @@ p {
     line-height: 15px;
     font-family: "Montserrat";
     width: fit-content;
-    background: white;
     position: relative;
-    opacity: 0.6;
-    color: black;
+    opacity: 0.8;
+    color: white;
+    z-index: 5;
 }
 
 .fade {
@@ -222,22 +296,22 @@ p {
       width: 100%;
       height: 100px;
       z-index: 501;
-      opacity: 1;
+      opacity: 0;
       transition: 200ms ease-in-out;
       border-radius: 0 0 10px 10px;
+      margin-bottom: -5px;
     
     &:hover {
-        .fade {
-        opacity: 100%;
+        opacity: 0.9;
         background-image: linear-gradient(180deg, #00000000, #000000);
         pointer-events: visible;
-      }
     }
     .toggles {
       display: flex;
       width: 100%;
       justify-content: space-evenly;
       align-items: center;
+      cursor: pointer;
     }
 
 }
@@ -254,6 +328,10 @@ p {
 .min {
     width: 47.652% !important;
     height: 47.652% !important;
+}
+
+.show {
+    pointer-events: all !important;
 }
 
 </style>

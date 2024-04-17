@@ -1,10 +1,11 @@
 <script>
 import { fade } from 'svelte/transition'
 import { webRTC } from '$lib/stores/user.js'
+import { mediaSettings } from '$lib/stores/mediasettings'
 
 let open
 let changed
-let audioDevices = $webRTC.devices.filter((a) => a.kind == 'audioinput')
+let audioDevices = $mediaSettings.devices.filter((a) => a.kind == 'audioinput')
 
 function pickSource(src) {
     console.log('pick', src)

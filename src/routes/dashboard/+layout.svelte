@@ -2,7 +2,7 @@
     import {layoutState} from "$lib/stores/layout-state.js";
     import {boards, misc} from "$lib/stores/user.js";
     import {onMount} from "svelte";
-    import { fade } from "svelte/transition"
+    import { fade, fly } from "svelte/transition"
 
     onMount( async () => {
         $layoutState.showFaucetButton = window.localStorage.getItem('faucet')
@@ -12,7 +12,7 @@
 
 </script>
 
-<div class="main" in:fade="{{ duration: 350 }}">
+<div class="main" in:fly="{{ y: 100 }}">
     <slot/>
 </div>
 

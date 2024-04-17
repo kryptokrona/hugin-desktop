@@ -1,5 +1,6 @@
 <script>
     import {goto} from '$app/navigation'
+    import Boxcard from '$lib/components/layouts/Boxcard.svelte'
 
     const createRoom = () => {
     let video = true
@@ -9,9 +10,7 @@
 </script>
 
 <div class="cards">
-    <div class="card" on:click="{createRoom}">
-        <h4>Create video room</h4>
-    </div>
+        <Boxcard bigtext={'Create video room'} on:click="{createRoom}" />
     <div class="card" on:click="{() => goto('/groups')}">
         <h4>Create group chat</h4>
     </div>
@@ -25,26 +24,5 @@
     cursor: pointer;
     height: 100%;
     margin-right: 1rem;
-
-    .card {
-        height: 100px;
-        width: 230px;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-        background-color: var(--card-background);
-        border: 1px solid var(--card-border);
-        border-radius: 0.4rem;
-        grid-column: span 3 / span 3;
-
-        p {
-            margin: 0;
-        }
-
-        &:hover {
-            opacity: 80%;
-        }
-    }
 }
 </style>
