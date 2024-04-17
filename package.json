@@ -74,7 +74,7 @@
         "node-pre-gyp": "^0.17.0",
         "patch-package": "^6.5.0",
         "progress-stream": "^2.0.0",
-        "sanitize-html": "^2.7.0",
+        "sanitize-html": "^2.12.1",
         "simple-peer": "^9.11.1",
         "sqlite3": "^5.1.5",
         "svelte-emoji-selector": "^1.0.1",
