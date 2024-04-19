@@ -135,7 +135,7 @@ p {
 }
 
 .unread {
-    width: 17px;
+    min-width: 17px;
     height: 17px;
     border-radius: 33%;
     background: #ce4141;
