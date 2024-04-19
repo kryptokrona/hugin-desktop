@@ -263,6 +263,8 @@ window.api.receive('sent_rtc_group', (data) => {
 })
 
 async function dropFile(e) {
+    //Disable drop file in private calls until implementation is done.
+    if ($webRTC.call.length) return
     dragover = false
     const { acceptedFiles, fileRejections } = e.detail
     let filename = acceptedFiles[0].name
