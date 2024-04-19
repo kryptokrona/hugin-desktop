@@ -35,10 +35,10 @@ $: {
     enableLogin = myPassword.length > 1
 }
 
-const enter = (e) => {
+const enter = async (e) => {
   if (enableLogin && e.keyCode === 13) {
     if (started) {
-      checkPass()
+      await checkPass()
       return
     }
     handleLogin(e)
@@ -60,9 +60,9 @@ const checkPass = async () => {
 }
 
 //Handle login, sets logeged in to true and gets user address
-const handleLogin = (e) => {
+const handleLogin = async (e) => {
   if (started) {
-    checkPass()
+    await checkPass()
     return
   }
     
