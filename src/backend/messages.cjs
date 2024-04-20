@@ -181,14 +181,10 @@ const start_message_syncer = async () => {
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
     await background_sync_messages(await load_checked_txs())
-    let i = 0
      while (true) {
          try {
             //Start syncing
-            //Faster sync on start
-            if (i < 4) await sleep(1000 * 3)
-            else await sleep(1000 * 7)
-            i++
+            await sleep(1000 * 3)
             await background_sync_messages()
 
             const idle = powerMonitor.getSystemIdleTime();
