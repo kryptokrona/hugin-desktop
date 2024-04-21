@@ -16,10 +16,8 @@ import { fileSettings, fileViewer } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
 import DropFile from '$lib/components/popups/DropFile.svelte'
 
-let chat
 let active_contact
 let savedMsg = []
-let key
 let contact
 let dragover = false
 let toggleRename = false
@@ -74,14 +72,12 @@ onDestroy(() => {
 
 //Prints conversation from active contact
 const printConversation = (active) => {
+    const active_chat = { chat: active.chat, key: active.key, name: active.name }
+    $user.activeChat = active_chat
     const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
     $notify.unread = clear
-    chat = active.chat
-    key = active.key
-    active_contact = chat + key
-    savedMsg = $messages.filter((x) => x.chat === chat)
-    let active_chat = { chat: chat, key: key, name: active.name }
-    $user.activeChat = active_chat
+    active_contact = active.chat + active.key
+    savedMsg = $messages.filter((x) => x.chat === active.chat)
     scrollDown()
 }
 //Chat to add
@@ -139,7 +135,7 @@ const sendMsg = (e) => {
     }
 
     let myMessage = {
-        chat: chat,
+        chat: $user.activeChat.chat,
         msg: msg,
         sent: true,
         timestamp: Date.now(),
@@ -169,7 +165,7 @@ const openAdd = () => {
     wantToAdd = !wantToAdd
 }
 
-$: savedMsg = $messages.filter((x) => x.chat === chat)
+$: savedMsg = $messages.filter((x) => x.chat === $user.activeChat.chat)
 
 function renameContact(e) {
     let thisContact = $user.rename.chat + $user.rename.key
