@@ -11,11 +11,9 @@
     const dispatch = createEventDispatcher()
 
     let chatList = []
-    let newArray
 
 onMount(async () => {
-    newArray = await getConversations()
-    chatList = newArray
+    chatList = await getConversations()
     if ($user.activeChat) return
     sendConversation(chatList[0])
 })
@@ -49,18 +47,9 @@ const getConversations = async () => {
 
 //Print our conversations from DBs
 const printConversations = async () => {
-    newArray = await getConversations()
+    chatList = await getConversations()
     //If it is not the same message and not our active chat, add unread boolean
-
-    for (const a of newArray) {
-        for (const b of $notify.unread) {
-            if (a.chat === b.chat) a.new = true
-        }
-    }
-
-    let conversations = await checkNew()
-    $user.contacts = conversations
-    chatList = conversations
+    $user.contacts = chatList
 }
 
 //Dispatches the clicked conversation to parent
@@ -80,35 +69,11 @@ const sendConversation = (message) => {
     printConversations()
 }
 
-const checkNew = async () => {
-    console.log('Checking new chatlist')
-
-    let filterNew = []
-    newArray.forEach(function (a) {
-        chatList.some(function (b) {
-            if (b?.new && a.chat === b.chat) {
-                a.new = true
-            }
-        })
-        filterNew.push(a)
-    })
-
-    return filterNew
-}
-
 const readMessage = (e) => {
     
     const clear = $notify.unread.filter(unread => unread.chat !== e.chat)
     $notify.unread = clear
 
-    let readArray = chatList.map(function (a) {
-        if (e?.new && a.chat === e.chat) {
-            a.new = false
-        }
-        return a
-    })
-
-    chatList = readArray
 }
 
 
