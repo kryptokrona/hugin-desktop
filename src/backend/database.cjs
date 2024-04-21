@@ -573,36 +573,31 @@ const getConversations = async () => {
         removeContact(welcomeAddress)
        // removeMessages(welcomeAddress)
     }
-    let newRow
+    let row
     const myConversations = []
-    return new Promise((resolve, reject) => {
-        const getMyConversations = `
-          SELECT *
-          FROM messages D
-          WHERE timestamp = (SELECT MAX(timestamp) FROM messages WHERE chat = D.chat)
-          ORDER BY
-              timestamp
-          ASC
-          `
-        const stmt = database.prepare(getMyConversations)
-
-        for(const conversation of stmt.iterate()) {
-            contacts.some(function (chat) {
-                if (chat.address === conversation.chat) {
-                    newRow = {
-                        name: chat.name,
-                        msg: conversation.msg,
-                        chat: conversation.chat,
-                        timestamp: conversation.timestamp,
-                        sent: conversation.sent,
-                        key: chat.key,
-                    }
-                    myConversations.push(newRow)
-                }
-            })
+    for (const chat of contacts) {
+        if (chat === undefined) continue
+        const getThis = `
+            SELECT *
+            FROM messages
+            WHERE chat = ?
+            ORDER BY timestamp
+            ASC
+            LIMIT 1
+        `
+        const conv = database.prepare(getThis).get(chat.address)
+        row = {
+            name: chat.name,
+            msg: conv.msg,
+            chat: conv.chat,
+            timestamp: conv.timestamp,
+            sent: conv.sent,
+            key: chat.key,
         }
-        resolve(myConversations)
-    })
+        myConversations.push(row)
+    }
+
+    return myConversations
 }
 
 //Get a chosen conversation from the reciepients xkr address.
@@ -622,6 +617,7 @@ const getConversation = async (chat) => {
         DESC`
         const stmt = database.prepare(getChat)
         for(const row of stmt.iterate(chat)) {
+            if (row === undefined) continue
             thisConversation.push(row)
         }
         resolve(thisConversation)
@@ -720,9 +716,9 @@ const getContacts = async () => {
         const contacts = stmt.all()
 
         for(const contact of contacts) {
+            if (contact === undefined) continue
             let newRow = contact
                 newRow.chat = contact.address
-                if (!contact.key) return
                 myContactList.push(newRow)
         }
         resolve(myContactList)
