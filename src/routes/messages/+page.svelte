@@ -324,6 +324,7 @@ main {
     position: relative;
     width: 100%;
     margin-right: 170px;
+    position: relative;
 }
 
 .inner {

@@ -4,7 +4,6 @@ import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import { boards } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
-import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
 import RepliedArrom from '$lib/components/icons/RepliedArrow.svelte'
@@ -140,7 +139,7 @@ $: if (message.react) {
                     </h5>
                 </div>
                 <div class="actions">
-                    <EmojiSelector on:emoji="{reactTo}" />
+                   <!-- <EmojiSelector on:emoji="{reactTo}" />-->
                     <ReplyArrow on:click="{replyTo}" />
                 </div>
             </div>
