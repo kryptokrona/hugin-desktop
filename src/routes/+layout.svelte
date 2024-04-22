@@ -284,6 +284,7 @@
                     $appUpdateState.step = 4
                     $appUpdateState.openPopup = true
                 }
+                window.api.successMessage('Hugin is up to date.')
                 break
             case 'downloaded':
                 $appUpdateState.openPopup = true
