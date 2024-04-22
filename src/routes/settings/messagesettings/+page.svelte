@@ -13,6 +13,7 @@
     const fetchHistory = async () => {
         let settings = {}
         settings.timeframe = timeframeDays
+        window.api.successMessage('Fetching history')
         settings.recommended_api = await getBestApi()
         if (settings.recommended_api === false) {
             window.api.errorMessage("Could not connect to Hugin API")
