@@ -1,5 +1,6 @@
 <script>
     export let title = '';
+    export let leftAlign = false;
 
     let isHovered = false;
     let x;
@@ -7,11 +8,11 @@
   
     function mouseOver(event) {
       isHovered = true;
-      x = event.pageX + 5;
+      x = leftAlign ? -45 : event.pageX + 5;
       y = event.pageY + 5;
     }
     function mouseMove(event) {
-      x = event.pageX + 5;
+      x = leftAlign ? -45 : event.pageX + 5;
       y = event.pageY + 5;
     }
     function mouseLeave() {
