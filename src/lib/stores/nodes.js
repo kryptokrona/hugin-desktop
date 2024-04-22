@@ -130,19 +130,18 @@ export async function getBestApi() {
     let apis = get(nodelist).apis
     apis = apis.sort((a, b) => 0.5 - Math.random())
 
-    for(const item in apis) {
-        let this_api = apis[item]
-        let apiURL = `${this_api.url}/api/v1/posts-encrypted-group`
-        console.log("api url")
+    for(const api of apis) {
+        console.log("this_api", api)
+        const apiURL = `${api.url}/api/v1/posts-encrypted-group`
         try {
             const resp = await fetch(apiURL, {
-               method: 'GET'
+                method: 'GET',
             }, 1000);
            if (resp.ok) {
-             console.log("selecting " + this_api )
-             return(this_api);
+            return apiURL;
            }
         } catch (e) {
+            continue
           console.log(e);
         }
     }
@@ -153,8 +152,6 @@ export async function getBestApi() {
   export const getBestNode = async (ssl=true) => {
 
     let recommended_node = undefined;
-  
-    let node_requests = [];
     let ssl_nodes =[];
     if (ssl) {
         ssl_nodes = get(nodelist).nodes.filter(node => {return node.ssl});
@@ -163,8 +160,7 @@ export async function getBestApi() {
     }
   
     ssl_nodes = ssl_nodes.sort((a, b) => 0.5 - Math.random());
-  
-    console.log(ssl_nodes);
+
   
     let i = 0;
   

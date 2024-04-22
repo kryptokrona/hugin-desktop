@@ -926,17 +926,17 @@ async function decryptRtcMessage(message) {
 
 async function sync_group_history(timeframe, recommended_api, key=false, page=1) {
     if (recommended_api === undefined) return
-    fetch(`${recommended_api.url}/api/v1/posts-encrypted-group?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
+    fetch(`${recommended_api}?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
     .then((response) => response.json())
     .then(async (json) => {
         const items = json.encrypted_group_posts;
-
-        for (message in items) {   
+        Hugin.send('success-notify-message', 'Found messages! Syncing...')
+        for (const message of items) {   
             try {
                     let tx = {}
-                    tx.sb = items[message].tx_sb
-                    tx.t = items[message].tx_timestamp
-                    await decrypt_group_message(tx, items[message].tx_hash, key)
+                    tx.sb = message.tx_sb
+                    tx.t = message.tx_timestamp
+                    await decrypt_group_message(tx, message.tx_hash, key)
                         
                 }
                  catch {
