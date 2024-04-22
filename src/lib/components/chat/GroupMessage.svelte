@@ -1,10 +1,9 @@
 <script>
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { createEventDispatcher, onMount } from 'svelte'
-import { groups, rtc_groups, webRTC, user, swarm } from '$lib/stores/user.js'
+import { createEventDispatcher, onMount, onDestroy } from 'svelte'
+import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
-import EmojiSelector from 'svelte-emoji-selector'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
 import RepliedArrow from '$lib/components/icons/RepliedArrow.svelte'
@@ -13,12 +12,11 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { containsOnlyEmojis, isLatin, openURL } from '$lib/utils/utils'
-import { groupMessages } from '$lib/stores/groupmsgs.js'
-import FillButton from '../buttons/FillButton.svelte'
-import { remoteFiles } from '$lib/stores/files'
+import { isLatin, openURL } from '$lib/utils/utils'
 import DownloadFile from './DownloadFile.svelte'
 import UploadFile from './UploadFile.svelte'
+import Emoji from "$lib/components/icons/Emoji.svelte";
+import 'emoji-picker-element';
 
 export let msg
 export let msgFrom
@@ -34,7 +32,12 @@ export let rtc = false
 export let joined = false
 export let file = false
 
+$: positionEmojiContainer(openEmoji);
+
 let thisreply = ''
+let openEmoji  = false
+let messageContainer
+let emojiPicker
 let has_reaction = false
 let reactions = []
 let react = false
@@ -58,12 +61,10 @@ let geturl = new RegExp(
 
 const dispatch = createEventDispatcher()
 
-let page
 let offchain = false
 let thisReply = false
 let replyError = false
 
-let in_swarm
 
 onMount( async () => {
         if (reply.length === 64) 
@@ -74,6 +75,15 @@ onMount( async () => {
         replyError = true
         }
         checkMessage()
+
+        emojiPicker.addEventListener('emoji-click', (e) => {
+            openEmoji = false
+            reactTo(e)
+        })
+})
+
+onDestroy(() => {
+    window.api.removeAllListeners("emoji-click")
 })
 
 function checkMessage() {
@@ -96,8 +106,6 @@ function checkMessage() {
     if (!isLatin(nickname)) {
         asian = true
     }
-
-
 }
 
 //Add extra number to avoid collision for keys in Svelte each loop
@@ -138,9 +146,35 @@ const sendReactMsg = (e) => {
 const reactTo = (e) => {
     console.log('reactto', e)
     dispatch('reactTo', {
-        text: e.detail,
+        text: e.detail.unicode,
         reply: hash,
     })
+}
+
+const positionEmojiContainer = (open) => {
+    let emojiContainer = messageContainer?.querySelector(".emojiContainer");
+
+    if(!open) {
+        if(emojiContainer) emojiContainer.style.display = "none";
+        return;
+    } 
+    
+    emojiContainer.style.display = "block";
+    let emojiButton = messageContainer.querySelector(".emoji-button");
+    let buttonRect = emojiButton.getBoundingClientRect();
+    let popupRect = emojiContainer.getBoundingClientRect();
+    let initialTop = buttonRect.top + buttonRect.height;
+
+    if (initialTop + popupRect.height > window.innerHeight && buttonRect.top - popupRect.height < 0) {
+        // If any part of the popup would be out of sight both above and below the button, position it in the middle vertically
+        emojiContainer.style.top = (window.innerHeight - popupRect.height) / 2 + 'px';
+    } else if (initialTop + popupRect.height > window.innerHeight) {
+        // If the popup would be out of sight below the button, position it above the button
+        emojiContainer.style.top = (buttonRect.top - popupRect.height) + 'px';
+    } else {
+        // Otherwise, position it below the button
+        emojiContainer.style.top = initialTop + 'px';
+    }
 }
 
 const toggleActions = () => {
@@ -222,7 +256,7 @@ const openLinkMessage = (url) => {
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}">
+<div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}" on:mouseleave="{ () => { openEmoji = false}}">
     <div>
         {#if replyMessage}
             {#if thisReply}
@@ -263,7 +297,14 @@ const openLinkMessage = (url) => {
                     </h5>
                 </div>
                 <div class="actions">
-                    <EmojiSelector on:emoji="{reactTo}" />
+                    <div style="display: flex;">
+                        <div class="emojiContainer">
+                            <emoji-picker bind:this={emojiPicker}></emoji-picker>
+                        </div>
+                        <button alt="React with emoji" class="emoji-button" on:click={() => { openEmoji = !openEmoji }}>
+                            <Emoji size="16px" stroke={"var(--text-color)"}/>
+                        </button>
+                    </div>
                     <ReplyArrow on:click="{replyTo}" />
                     {#if !rtc}
                     <DeleteButton on:click="{deleteMsg}"/>
@@ -352,6 +393,16 @@ p {
     transition: 100ms ease-in-out;
     cursor: pointer;
     opacity: 0;
+}
+
+.emoji-button {
+    opacity: 50%;
+    cursor: pointer;
+    transition: 200ms ease-in-out;
+
+    &:hover {
+        opacity: 80%;
+    }
 }
 
 .user_actions {
@@ -452,9 +503,10 @@ p {
     bottom: -120px;
 }
 
-.emoji {
-    // font-size: 21px !important;
-    user-select: text;
+.emojiContainer {
+   position: absolute;
+   right: 7rem;
+   display: none;
 }
 
 .joined {
@@ -473,5 +525,12 @@ p {
 .asian {
     font: menu;
     font-size: 15px;
+}
+
+button {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
 }
 </style>

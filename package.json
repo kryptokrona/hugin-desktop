@@ -77,7 +77,6 @@
         "sanitize-html": "^2.12.1",
         "simple-peer": "^9.11.1",
         "sqlite3": "^5.1.5",
-        "svelte-emoji-selector": "^1.0.1",
         "svelte-file-dropzone": "^1.0.0",
         "svelte-french-toast": "^1.0.3",
         "svelte-infinite-scroll": "^2.0.1",
