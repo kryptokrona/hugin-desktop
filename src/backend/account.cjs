@@ -108,7 +108,7 @@ class Account {
       const deleteAfter = store.get('delete.after')
       const idle = store.get('idle.time') ?? 300
       const notifications = store.get('off.notifications') ?? []
-      this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts, deleteAfter, Hugin.downloadDir, myAvatar, idle, notifications])
+      this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts.reverse(), deleteAfter, Hugin.downloadDir, myAvatar, idle, notifications])
 
       this.known_keys = keys
       this.block_list = block_list
