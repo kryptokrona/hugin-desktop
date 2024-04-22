@@ -318,27 +318,21 @@ const getGroups = async () => {
         DESC
         LIMIT 1
     `
-    const got = database.prepare(getThis).get(chat.key)
-    groupInfo.push(got)
+    const group = database.prepare(getThis).get(chat.key)
+    if (group === undefined) continue 
+        const newRow = {
+        name: chat.name,
+        msg: group.message,
+        chat: group.grp,
+        timestamp: group.time,
+        sent: group.sent,
+        key: chat.key,
+        hash: group.hash,
+        nick: group.name,
     }
-    for (const group of groupInfo.sort((a, b) => a.time - b.time)) {
-        if (group === undefined) continue 
-        const chat = my_groups.find(a => a.key === group.grp)
-        if (chat === undefined) continue 
-            const newRow = {
-            name: chat.name,
-            msg: group.message,
-            chat: group.grp,
-            timestamp: group.time,
-            sent: group.sent,
-            key: chat.key,
-            hash: group.hash,
-            nick: group.name,
-            }
-        myGroups.push(newRow)
-    }
-        
-    return myGroups
+    myGroups.push(newRow)
+    }  
+return myGroups.sort((a, b) => a.timestamp - b.timestamp)
 }   
 
 const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
@@ -582,7 +576,7 @@ const getConversations = async () => {
             FROM messages
             WHERE chat = ?
             ORDER BY timestamp
-            ASC
+            DESC
             LIMIT 1
         `
         const conv = database.prepare(getThis).get(chat.address)
@@ -597,7 +591,7 @@ const getConversations = async () => {
         myConversations.push(row)
     }
 
-    return myConversations
+    return myConversations.sort((a,b) => a.timestamp - b.timestamp)
 }
 
 //Get a chosen conversation from the reciepients xkr address.
