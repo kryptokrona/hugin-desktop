@@ -1,8 +1,8 @@
 <script>
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
-import { boards, groups, notify, transactions, user, webRTC, beam, swarm } from '$lib/stores/user.js'
-import {remoteFiles, localFiles, fileSettings} from '$lib/stores/files.js'
+import { boards, groups, transactions, user, webRTC, beam, swarm } from '$lib/stores/user.js'
+import { remoteFiles, localFiles } from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher } from 'svelte'
 import SimpleAdd from '$lib/components/icons/SimpleAdd.svelte'
@@ -18,9 +18,9 @@ import VideoIcon from '$lib/components/icons/VideoIcon.svelte'
 import VideoSlash from '$lib/components/icons/VideoSlash.svelte'
 import { layoutState, videoGrid } from '$lib/stores/layout-state.js'
 import ListButton from '$lib/components/icons/ListButton.svelte'
-import Exit from '$lib/components/icons/Exit.svelte'
 import Lightning from '$lib/components/icons/Lightning.svelte'
 import { mediaSettings } from '$lib/stores/mediasettings'
+import Tooltip from "$lib/components/popups/Tooltip.svelte"
 
 const dispatch = createEventDispatcher()
 let contact
@@ -242,37 +242,46 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                 alt=""
                 on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}"
             />
-
-            <div class="button" on:click={() => {
-                if (connectedBeam || activeBeam) {
-                    window.api.send('end-beam', $user.activeChat.chat)
-                } else newBeam()}
-                }>
-                <Lightning connected={connectedBeam} connecting={activeBeam} />
-            </div>
-
+            <Tooltip title="P2P Chat" leftAlign={true}>
+                <div class="button" on:click={() => {
+                    if (connectedBeam || activeBeam) {
+                        window.api.send('end-beam', $user.activeChat.chat)
+                    }   else newBeam()}
+                    }>
+                
+                    <Lightning connected={connectedBeam} connecting={activeBeam} />
+                </div>
+            </Tooltip>
             {#if !connectedBeam }
+            
                 <button class="button">
                     {#if thisCall && !video}
                         <CallSlash on:click="{() => endCall()}"/>
                     {:else}
+                    <Tooltip title="Audio call" leftAlign={true}>
                         <CallIcon on:click="{() => startCall(contact, false)}"/>
+                    </Tooltip>
                     {/if}
                 </button>
-
-                <button class="button">
-                    {#if thisCall && video}
-                        <VideoSlash on:click="{() => endCall()}"/>
-                    {:else if !thisCall}
-                        <VideoIcon menu="{true}" on:click="{() => startCall(contact, true)}"/>
-                    {/if}
-                </button>
+            
+                
+                    <button class="button">
+                        {#if thisCall && video}
+                            <VideoSlash on:click="{() => endCall()}"/>
+                        {:else if !thisCall}
+                        <Tooltip title="Video call" leftAlign={true}>
+                            <VideoIcon menu="{true}" on:click="{() => startCall(contact, true)}"/>
+                        </Tooltip>
+                        {/if}
+                    </button>
             {/if}
 
             {#if $page.url.pathname === '/messages'}
+            <Tooltip title="Send XKR" leftAlign={true}>
                 <div on:click="{() => sendMoney(contact)}" class="button">
                     <PayIcon />
                 </div>
+            </Tooltip>
             {/if}
 
             {#if thisCall}
@@ -337,7 +346,6 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
     position: fixed;
     right: 0;
     z-index: 100;
-    overflow: hidden;
 }
 
 .rightMenu::-webkit-scrollbar {
