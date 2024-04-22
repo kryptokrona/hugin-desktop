@@ -3,6 +3,11 @@ import Button from "$lib/components/buttons/Button.svelte"
 import { fade } from "svelte/transition"
 import {misc} from '$lib/stores/user.js'
 
+const getUpdates = () => {
+    window.api.successMessage('Looking for updates...')
+    window.api.send('check-new-release')
+}
+
 </script>
 
 <h2>Update</h2>
@@ -10,7 +15,7 @@ import {misc} from '$lib/stores/user.js'
     <Button
     text="Check updates"
     disabled="{false}"
-    on:click="{() => window.api.send('check-new-release')}"
+    on:click="{getUpdates}"
 />
 </div>
 <div class="settings" in:fade>
