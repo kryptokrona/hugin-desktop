@@ -9,6 +9,7 @@ const {
     systemPreferences,
     globalShortcut
 } = require('electron')
+const gotTheLock = app.requestSingleInstanceLock()
 const serve = require('electron-serve')
 const { join } = require('path')
 const { JSONFile, Low } = require('@commonify/lowdb')
@@ -92,6 +93,12 @@ function createWindow() {
         mainWindow.webContents.send('focus')
     })
 
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        if (mainWindow) {
+           showWindow()
+        }
+    })
+
     if (!dev) {
 
     mainWindow.webContents.on('before-input-event', (event, input) => {
@@ -135,22 +142,19 @@ function createMainWindow() {
     else serveURL(mainWindow)
 }
 
+    
+function checkIfStarted() {
+    if (!gotTheLock) {
+        app.quit()
+        return true
+      }
 
-const gotTheLock = app.requestSingleInstanceLock()
-    
-if (!gotTheLock) {
-  app.quit()
-} else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Someone tried to run a second instance, we should focus our window.
-    if (mainWindow) {
-       showWindow()
-    }
-  })
-    
+return false
 }
 
-app.on('ready', createMainWindow)
+app.on('ready', () => {
+    createMainWindow()
+})
 app.on('activate', () => {
     if (!mainWindow) {
         createMainWindow()
@@ -174,6 +178,7 @@ ipcMain.on('min', () => {
 
 let tray
 app.whenReady().then(() => {
+    if (checkIfStarted()) return
     console.log(appBin)
     let isDark = nativeTheme.shouldUseDarkColors
     tray = new Tray(appBin + `tray${isDark ? '-dark' : ''}@2x.png`)
