@@ -590,7 +590,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
         if (beam_this) {
             send_beam_message(sendMsg, address)
         } else {
-            Hugin.send('rtc_message', messageArray)
+            Hugin.send('rtc_message', [messageArray])
         }
         //Do not save invite message.
         if (message.msg && 'invite' in message.msg) {
@@ -862,7 +862,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
             return
         }
         let messageArray = [sendMsg]
-        Hugin.send('rtc_message', messageArray, true)
+        Hugin.send('rtc_message', [messageArray, true])
         Hugin.send('sent_rtc_group', {
             hash: random_key,
             time: message.t,
@@ -1002,7 +1002,7 @@ async function decrypt_group_message(tx, hash, group_key = false) {
     if (block_list.some(a => a.address === from)) return false
 
     payload_json.sent = false
-
+    
     const saved = save_group_message(payload_json, hash, tx.t, offchain)
     
     if (!saved) return false
