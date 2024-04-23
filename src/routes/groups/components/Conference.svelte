@@ -11,8 +11,8 @@
     import {groups, user} from '$lib/stores/user.js'
     import { sleep } from '$lib/utils/utils'
     import { Moon } from 'svelte-loading-spinners'
-import BigImage from '$lib/components/popups/BigImage.svelte'
-import { fileViewer } from '$lib/stores/files'
+    import BigImage from '$lib/components/popups/BigImage.svelte'
+    import { fileViewer } from '$lib/stores/files'
     
     let channels = []
     let voice_channel = []

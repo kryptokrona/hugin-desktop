@@ -7,11 +7,16 @@ import { fade } from 'svelte/transition'
 import RtcGroupMessages from '$lib/components/webrtc/RtcGroupMessages.svelte'
 import Controls from '$lib/components/webrtc/Controls.svelte'
 import { Moon } from 'svelte-loading-spinners'
+import {onMount} from 'svelte'
 
 let drag = false
 let videoCalls = []
 let join = false
 let groupKey = ''
+
+onMount(async () => {
+    $videoGrid.showChat = true
+})
 
 const dragWindow = () => {
     console.log('dragwindow', drag)
@@ -77,6 +82,7 @@ $: videoCalls = $webRTC.call.filter((a) => a.connected === true)
 .layout {
     display: flex;
     position: absolute;
+    opacity: 0;
     gap: 1rem;
     padding: 1.5rem;
     background-color: var(--backgound-color);
@@ -87,7 +93,6 @@ $: videoCalls = $webRTC.call.filter((a) => a.connected === true)
     border-radius: 15px;
     overflow: hidden;
     pointer-events: none;
-    opacity: 0;
 }
 
 .video-wrapper {
