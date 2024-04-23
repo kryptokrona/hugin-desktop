@@ -69,7 +69,7 @@ window.api.receive('got-callback', (callerdata) => {
 })
 
 
-window.api.receive('rtc_message', (msg, to_group = false) => {
+window.api.receive('rtc_message', ([msg, to_group = false]) => {
     sendRtcMessage(msg, to_group)
 })
 
@@ -503,7 +503,6 @@ async function shareScreen(id) {
 }
 
 function sendRtcMessage(msg, to_group) {
-
     if (to_group) {
         console.log('Sending webrtc data channel message')
         let connected = $webRTC.call.filter((a) => a.connected == true)
@@ -530,7 +529,6 @@ function sendRtcMessage(msg, to_group) {
         sendMsg = JSON.stringify(message)
         to.peer.send(sendMsg)
     }
-    console.log('sent')
 }
 
 function sendInviteNotification(contact, contact_address) {
@@ -673,8 +671,6 @@ function checkMessage(event, address) {
     } catch (e) {
         return
     }
-
-    console.log("Checking incoming message", message)
     
     if (typeof message === 'object') {
         if (message.type === 'offer' || 'answer' || 'renegotiate') {

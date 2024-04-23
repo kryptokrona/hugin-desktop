@@ -70,19 +70,15 @@ window.api.receive('groupRtcMsg', (data) => {
         $rtc_groups.unread = $rtc_groups.unread
     }
     if (data.address === $user.myAddress) return
-    console.log('Group rtc message', data.group)
-    console.log('This group rtc key', $webRTC.groupCall)
     //Push new message to store
     if (data.file) {
         data.file = $remoteFiles.find(a => a.fileName === data.message && data.time === a.time)
     }
-    console.log("groupRtcMsg", data)
     printGroupRtcMessage(data)
 })
 
 //Send message to store and DB
 function sendGroupRtCMsg(e) {
-    console.log('wanna send this', e)
     let msg = e.detail.text
     let myaddr = $user.myAddress
     let time = Date.now()
@@ -153,13 +149,8 @@ const printGroupRtcMessage = (groupMsg) => {
     fixedRtcGroups = fixedRtcGroups
 }
 
-//Reactive, updates thisGroup.
-
-$: console.log('this GroupCall chat', $webRTC.groupCall)
-
 //Exit reply mode
 const replyExit = () => {
-    console.log('reply exit')
     replyto = false
     rtc_groups.update((data) => {
         return {
@@ -209,7 +200,6 @@ async function checkReactions() {
     filterEmojis = await $rtcgroupMessages.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
     )
-    console.log('filter emoji ', filterEmojis)
     if (filterEmojis.length) {
         //Adding emojis to the correct message.
         await addEmoji()
@@ -299,7 +289,6 @@ async function dropFile(e) {
     }
 
     printGroupRtcMessage(message)
-    console.log("$swarm.activeSwarm.topic", $swarm.activeSwarm)
     window.api.groupUpload(filename, path, $swarm.activeSwarm.topic, size, time, hash)
 }
 
