@@ -15,6 +15,8 @@ import Loader from '$lib/components/popups/Loader.svelte'
 import GroupHugins from '$lib/components/chat/GroupHugins.svelte'
 import { getBestApi, nodelist } from '$lib/stores/nodes.js'
 import Button from '$lib/components/buttons/Button.svelte'
+import Dropzone from "svelte-file-dropzone";
+import DropFile from '$lib/components/popups/DropFile.svelte'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -427,8 +429,57 @@ async function updateReactions(msg) {
     async function getMoreMessages() {
         return await window.api.printGroup(thisGroup, pageNum)
     }
+
+    async function sendTorrent(e) {
+
+    const { acceptedFiles, fileRejections } = e.detail
+    if (fileRejections.length) {
+        return
+    }
+    const filename = acceptedFiles[0].name
+    const path = acceptedFiles[0].path
+    const size = acceptedFiles[0].size
+    const time = Date.now()
+    acceptedFiles[0].time = time
+    acceptedFiles[0].chat = $user.activeChat.chat
+
+    console.log("acceptedFiles[0]", acceptedFiles[0])
+    const hash = await window.api.createGroup()
+    const message = {
+        message: 'File shared',
+        grp: $groups.thisGroup.key,
+        name: 'File shared',
+        address: $user.myAddress,
+        reply: "",
+        timestamp: time,
+        file: acceptedFiles[0],
+        sent: true,
+        channel: "",
+        hash: hash,
+        time: time
+    }
+
+    window.api.send('upload-torrent', [filename, path, size, time, $groups.thisGroup.key, hash])
+    return message
+}
+
+let dragover = false
+
+function drag() {
+    dragover = true
+}
+
+function nodrag() {
+    dragover = false
+}
+
     
 </script>
+
+
+{#if dragover}
+    <DropFile />
+{/if}
 
 {#if $swarm.newChannel === true}
  <!-- <NewChannel/> -->
@@ -448,8 +499,9 @@ async function updateReactions(msg) {
         on:removeGroup="{() => printGroup($groups.groupArray[0])}"
         on:printChannel="{(e) => printChannel(e.detail)}"
     />
-
+    
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
+       
         <div class="fade"></div>
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
             {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress) && !$groups.thisGroup.chat}
@@ -457,6 +509,7 @@ async function updateReactions(msg) {
                     <Loader/>
                 </div>
             {/if}
+            <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => sendTorrent(e)}>
             {#each fixedGroups as message (message.hash)}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupMsg(e)}"
@@ -476,8 +529,9 @@ async function updateReactions(msg) {
             {#if (fixedGroups.length + filterEmojis.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
+            
+        </Dropzone>
         </div>
-    
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">
                 {reply_exit_icon} Reply to {$groups.replyTo.nick}

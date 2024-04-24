@@ -307,6 +307,50 @@ const { desktopCapturer } = require('electron')
     })
 }
 
+ipcMain.on('upload-torrent', ([path, fileName, size, time, group, hash]) => {
+    console.log("Upload this!", path, fileName, size, time)
+    const client = new WebTorrent([])
+    client.seed(path, torrent => {
+        Hugin.send('uploading', {fileName, progress: torrent.progress, size, group, time})
+        console.log('Client is seeding ' + torrent.magnetURI)
+        torrent.on('wire', (wire, addr) => {
+            Hugin.send('torrent-connection')
+            Hugin.send('uploading-torrent')
+            console.log("New torrent peer connection")
+            console.log("New torrent peer connection")
+            console.log("New torrent peer connection")
+            console.log("New torrent peer connection")
+          })
+        torrent.on('upload', function (uploaded) {
+            console.log("Uploaded", uploaded)
+            Hugin.send('upload-file-progress', {fileName, progress: (uploaded / size) * 100, chat, time: file.time})
+         })
+    })
+
+    //magnet uri and filename === send
+})
+
+ipcMain.on('download-torrent', ([uri, fileName, size, time, group]) => {
+    const client = new WebTorrent([])
+    const path = Hugin.downloadDir
+
+    Hugin.send('downloading', {fileName, progress: torrent.progress, size, group})
+    client.add(uri, { path }, torrent => {
+        torrent.on('download', function (bytes) { 
+            console.log("Downloading!!!! --------->")
+            console.log("Downloading!!!! --------->")
+            console.log("Downloading!!!! --------->")
+            console.log("Downloading!!!! --------->")
+            Hugin.send('download-file-progress', {fileName, progress: torrent.progress, chat: group, path })
+        } )
+        torrent.on('done', () => {
+        console.log("Downloaded torrent!")
+        Hugin.send('downloading-torrent')
+        console.log('torrent download finished')
+        })
+    })
+})
+
 
 ipcMain.on("active-video", async (e, chat) => {
     mainWindow.webContents.send('activate-video')
