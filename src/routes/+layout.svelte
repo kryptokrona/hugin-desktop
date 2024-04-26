@@ -35,7 +35,6 @@
     import ConferenceFloater from '/src/routes/groups/components/ConferenceFloater.svelte'
     import Rooms from '/src/routes/groups/components/Rooms.svelte'
     import { goto } from '$app/navigation'
-
     let ready = false
     let incoming_call
     let showCallerMenu = false
@@ -419,6 +418,11 @@
 
     window.api.receive('upload-file-progress', (data)  => { 
         updateUploadProgress(data)
+    })
+
+    window.api.receive('torrent-shared', (data) => {
+        $groups.fileList.push(data)
+        $groups.fileList = $groups.fileList
     })
 
     window.api.receive('incoming-que', (data)  => { 

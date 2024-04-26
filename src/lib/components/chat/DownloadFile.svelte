@@ -4,13 +4,14 @@
     import Button from "../buttons/Button.svelte"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import { fade } from "svelte/transition"
-    import { user } from '$lib/stores/user.js'
+    import { groups, user } from '$lib/stores/user.js'
     import Progress from "$lib/components/chat/Progress.svelte"
     import { sleep } from "$lib/utils/utils"
 
     export let file
     export let group = false
-
+    export let rtc = false
+    
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.mov','.wmv', '.mkv', '.mpeg']
     let downloadDone = false
@@ -18,7 +19,8 @@
     let thisFile
     let clicked = false
     let downloaders = []
-    onMount(() => {   
+    onMount(() => {
+        if (group) return
         if (videoTypes.some(a => file.fileName.endsWith(a) && file.size < 50000000))
         {
             video = true
@@ -54,6 +56,11 @@
     
     const downloadFile = (file) => {
         clicked = true
+        if (group && !rtc) {
+            const thisFile = $groups.fileList.find(a => a.fileName === file.fileName && file.hash === a.hash)
+            window.api.send('download-torrent', thisFile)
+            return
+        }
         if (group) {
             const thisFile = $remoteFiles.find(a => a.fileName === file.fileName && file.time === a.time)
             window.api.send('group-download', thisFile)
@@ -65,7 +72,7 @@
 
 </script>
 
-<div class="file" in:fade="{{ duration: 150 }}">
+<div class="file" class:group in:fade="{{ duration: 150 }}">
     {#if !downloadDone && !downloading}
          {#if !clicked}
         <p class="message loading blink_me" in:fade>{file.fileName}</p>
@@ -84,7 +91,7 @@
         </div>
         <p class="message done">File downloaded!</p>
         
-    {:else if downloadDone && !group}
+    {:else if downloadDone && (!group || !rtc)}
         {#if !video}
                 {#if thisFile === "File"}
                 <div in:fade>
@@ -146,6 +153,10 @@
 
 .loading {
     color: var(--alert-color)  !important;
+}
+
+.group {
+    margin-left: 30px;
 }
 
 </style>

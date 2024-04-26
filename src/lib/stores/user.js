@@ -38,7 +38,8 @@ export const groups = writable({
     activeHugins: [],
     historyTimeframe: 0,
     autoDeleteAfter: 0,
-    settings: false
+    settings: false,
+    fileList: []
 })
 
 export const rtc_groups = writable({

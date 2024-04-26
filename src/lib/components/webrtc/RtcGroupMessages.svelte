@@ -276,7 +276,7 @@ async function dropFile(e) {
     const message = {
         message: 'File shared',
         grp: $swarm.activeSwarm.key,
-        name: 'File shared',
+        name: $user.username,
         address: $user.myAddress,
         reply: "",
         timestamp: time,

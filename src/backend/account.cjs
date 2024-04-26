@@ -13,7 +13,6 @@ const fs = require('fs')
 const Store = require('electron-store')
 const store = new Store()
 
-
 function createAvatarDir() {
   if (!fs.existsSync(userDataDir + "/avatars")) {
     fs.mkdirSync(userDataDir + "/avatars")
@@ -66,6 +65,10 @@ ipcMain.on('group-notifications', (e, list) => {
   })
 })
 
+ipcMain.on('set-nickname', (e, name) => { 
+  Hugin.nickname = name
+})
+
 class Account {
     constructor () {
       
@@ -76,6 +79,7 @@ class Account {
     this.wallet = {}
     this.sender = null
     this.downloadDir = ""
+    this.nickname = ""
     }
 
     async init(wallet, name, node, s) {
@@ -98,7 +102,7 @@ class Account {
 
      }
     
-    async load() {
+  async load() {
       createAvatarDir()
       await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys())
       const myAvatar = store.get('avatar.path') ?? false
@@ -118,7 +122,6 @@ class Account {
       
       this.sender(channel, send)
      }
-
 
 }
 

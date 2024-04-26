@@ -24,7 +24,8 @@ const {
 const {
     trimExtra, 
     sanitize_pm_message, 
-    parseCall, 
+    parse_call,
+    parse_torrent,
     sleep, 
     hexToUint,
     randomKey,
@@ -49,7 +50,7 @@ const Store = require('electron-store');
 const { Hugin } = require('./account.cjs')
 const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs')
 const store = new Store()
-
+const WebTorrent = require('webtorrent')
 let known_pool_txs = []
 let known_keys = []
 let block_list = []
@@ -174,6 +175,65 @@ ipcMain.on('new-swarm', async (e, data) => {
 })
 ipcMain.on('end-swarm', async (e, key) => {
     end_swarm(key)
+})
+
+
+//TORRENT
+
+ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
+    console.log("Upload this!", path, fileName, size, time)
+    const client = new WebTorrent()
+    Hugin.send('uploading', {fileName, progress: 0, size, chat: group, time, hash})
+    client.seed(path, torrent => {
+        console.log('Client is seeding ' + torrent.magnetURI)
+        torrent.on('wire', (wire, addr) => {
+            Hugin.send('torrent-connection')
+            Hugin.send('uploading-torrent')
+            console.log("New torrent peer connection")
+            console.log("New torrent peer connection")
+            console.log("New torrent peer connection")
+            console.log("New torrent peer connection")
+          })
+        torrent.on('upload', function (uploaded) {
+            console.log("Uploaded", uploaded)
+            Hugin.send('upload-file-progress', {fileName, progress: (uploaded / size) * 100, chat: group, time})
+         })
+         const message = {m: 'TORRENT://' + torrent.magnetURI, g: group, t: time}
+
+         send_group_message(message, false, false)
+    })
+
+})
+
+ipcMain.on('download-torrent', (e, file) => {
+    const client = new WebTorrent()
+    const path = Hugin.downloadDir
+
+    Hugin.send('downloading', {
+        fileName: file.fileName,
+        group: file.group,
+        chat: file.group
+    })
+    console.log("Downloading", file.message)
+    client.add(file.message, { path }, torrent => {
+        console.log("torrent added!")
+        torrent.on('download', function (bytes) { 
+            console.log("Downloading!!!! --------->")
+            console.log("Downloading!!!! --------->")
+            Hugin.send('download-file-progress',{
+                fileName: file.fileName,
+                progress: torrent.progress,
+                group,
+                chat: file.group,
+                path
+            })
+        } )
+        torrent.on('done', () => {
+        console.log("Downloaded torrent!")
+        Hugin.send('downloading-torrent')
+        console.log('torrent download finished')
+        })
+    })
 })
 
 const start_message_syncer = async () => {
@@ -480,7 +540,6 @@ async function fetch_hugin_messages() {
     let json
     try {
         const latest = await check_node_version(node)
-        console.log("Latest?", latest)
         if (latest) {
             //If we already have pending incoming unchecked messages, return
             //So we do not update the latest checked timestmap and miss any messages.
@@ -527,7 +586,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
     let messageKey = receiver.substring(99, 163)
     let has_history = await check_history(messageKey, address)
     if (!beam_this) {
-        let balance = await checkBalance()
+        let balance = await check_balance()
         if (!balance) return
     }
 
@@ -761,16 +820,13 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
 async function send_group_message(message, offchain = false, swarm = false) {
     console.log("Sending group msg!")
     if (message.m.length === 0) return
-    const my_address = message.k
+    const my_address = Hugin.wallet.getPrimaryAddress()
     const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
     const signature = await xkrUtils.signMessage(message.m, privateSpendKey)
-    const timestamp = parseInt(Date.now())
+    const timestamp = message.t
+    const group = message.g
     const nonce = nonceFromTimestamp(timestamp)
-
-    let group
     let reply = ''
-
-    group = message.g
     
     if (group === undefined) return
     if (group.length !== 64) {
@@ -778,7 +834,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
     }
 
     if (!offchain) {
-        let balance = await checkBalance()
+        const balance = await check_balance()
         if (!balance) return
     }
  
@@ -787,7 +843,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
         k: my_address,
         s: signature,
         g: group,
-        n: message.n,
+        n: Hugin.nickname,
         r: reply,
     }
 
@@ -826,7 +882,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
         if (result.success) {
             console.log("Succces sending tx")
             message_json.sent = true
-            save_group_message(message_json, result.transactionHash, timestamp)
+            save_group_message(message_json, result.transactionHash, timestamp, false, false, false)
             Hugin.send('sent_group', {
                 hash: result.transactionHash,
                 time: message.t,
@@ -854,7 +910,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
         message_json.sent = true
         if (swarm) {
             send_swarm_message(sendMsg, group)
-            save_group_message(message_json, random_key, timestamp, false, true)
+            save_group_message(message_json, random_key, timestamp, false, true, false)
             Hugin.send('sent_rtc_group', {
                 hash: random_key,
                 time: message.t,
@@ -1034,7 +1090,7 @@ async function decryptGroupRtcMessage(message, key) {
     }
 }
 
-const checkBalance = async () => {
+const check_balance = async () => {
     try {
         let [munlockedBalance, mlockedBalance] = await Hugin.wallet.getBalance()
 
@@ -1048,16 +1104,42 @@ const checkBalance = async () => {
     return true
 }
 
+function torrent_shared(incoming, [uri, fileName, infoHash]) {
+    const file = {
+        message: uri,
+        address: incoming.address,
+        time: incoming.time,
+        hash: incoming.hash,
+        group: incoming.group,
+        torrent: true,
+        file: true,
+        reply: '',
+        sent: false,
+        fileName: fileName,
+        infoHash: infoHash
+    }
+    Hugin.send('torrent-shared', file)
+}
+
 async function save_group_message(msg, hash, time, offchain, channel = false, add = false) {
-    let message = await saveGroupMsg(msg, hash, time, offchain, channel)
-    if (!message) return false
+    const saved = await saveGroupMsg(msg, hash, time, offchain, channel)
+    if (!saved) return false
+    const [check, torrent, uri, fileName, infoHash] = parse_torrent(saved.message)
+    if (check && !torrent) {
+        //Incorrect torrent link, delete message
+        deleteMessage(hash)
+        return
+    }
+    if (check && torrent) {
+        torrent_shared(saved, [uri, fileName, infoHash])
+    }
     if (!offchain) {
         //Send new board message to frontend.
-        Hugin.send('groupMsg', message)
-        Hugin.send('group-notification', [message, add])
+        Hugin.send('groupMsg', saved)
+        Hugin.send('group-notification', [saved, add])
     } else if (offchain) {
-        if (message.message === 'ᛊNVITᛊ') return
-        Hugin.send('groupRtcMsg', message)
+        if (saved.message === 'ᛊNVITᛊ') return
+        Hugin.send('groupRtcMsg', saved)
     }
 }
 
@@ -1070,7 +1152,7 @@ async function save_message(msg, offchain = false) {
     if (await messageExists(timestamp)) return
     
     //Checking if private msg is a call
-    let [text, data, is_call, if_sent] = parseCall(msg.msg, addr, sent, offchain, timestamp)
+    let [text, data, is_call, if_sent] = parse_call(msg.msg, addr, sent, offchain, timestamp)
 
     if (text === "Audio call started" || text === "Video call started" && is_call && !if_sent) {
         //Incoming calll

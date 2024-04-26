@@ -17,6 +17,7 @@ import { getBestApi, nodelist } from '$lib/stores/nodes.js'
 import Button from '$lib/components/buttons/Button.svelte'
 import Dropzone from "svelte-file-dropzone";
 import DropFile from '$lib/components/popups/DropFile.svelte'
+import { localFiles } from '$lib/stores/files'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -37,20 +38,23 @@ const hashPadding = () => {
     return Date.now().toString() + Math.floor(Math.random() * 1000).toString()
 }
 
+
+
 onMount(async () => {
     scrollDown()
 
     //Listens for new messages from backend
     window.api.receive('groupMsg', (data) => {
+        const thisgroup = data.group === $groups.thisGroup.key
+        const ingroups = $page.url.pathname === '/groups'
         if (data.address === $user.myAddress) return
-
         if (data.channel.length) {
 
-            if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && data.channel === $swarm.activeChannel.name) {
+            if (thisgroup && ingroups && data.channel === $swarm.activeChannel.name) {
                 printGroupMessage(data)
             }
 
-            if (!channelMessages.some(a => a.channel === data.channel) && data.group === $groups.thisGroup.key) {
+            if (!channelMessages.some(a => a.channel === data.channel) && thisgroup) {
                 //Must set message before updating channels
                 //channelMessages.unshift(data)
                 //setChannels()
@@ -62,7 +66,7 @@ onMount(async () => {
             $swarm.activeChannelMessages.unshift(data)
             return
         } else {
-        if (data.group === $groups.thisGroup.key && $page.url.pathname === '/groups' && $swarm.activeChannel.name.length < 1) {
+        if (thisgroup && ingroups && $swarm.activeChannel.name.length < 1) {
             //Push new message to store
             printGroupMessage(data)
         } else {
@@ -71,7 +75,6 @@ onMount(async () => {
         }
     })
     
-
 })
 
 onDestroy(() => {
@@ -161,8 +164,20 @@ const scrollDown = () => {
     windowChat.scrollTop = windowChat.scrollTopMax
 }
 
+const isTorrent = (msg) => {
+    if (msg.message.startsWith('TORRENT://')) {
+    const torrent = $groups.fileList.find(file => file.hash === msg.hash)
+    if (torrent) return [torrent, true]
+    return [true, false]
+    }
+return [false, false]
+}
+
 //Prints any single group message. 
 const printGroupMessage = (groupMsg) => {
+    const [torrent, found] = isTorrent(groupMsg)
+    if (torrent) groupMsg.file = torrent
+    if (torrent && !found) groupMsg.message = "Torrent shared ⚡️"
     if (
         groupMsg.reply.length === 64 &&
         groupMsg.message.length < 9 &&
@@ -300,11 +315,28 @@ async function printGroup(group) {
     scrollDown()
 }
 
-
+function addFileMessage(array) {
+    for (const msg of array) {
+        const [file, found] = isTorrent(msg)
+        if (file && !found) {
+            msg.message = "Torrent shared ⚡️"
+            continue
+        }
+        if (file && found) {
+            if (file.time === parseInt(msg.time) || file.hash === msg.hash) {
+            const i = array.indexOf(msg)
+            array[i].file = file
+        }
+        }
+    }
+    return array
+}
 
 //Checks messages for reactions in chosen Group from printGroup() function
 function checkReactions(array, scroll) {
- 
+    
+    //Add any pending file message
+    array = addFileMessage(array)
     //Only reactions
     filterEmojis = [...array.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
@@ -382,64 +414,66 @@ async function updateReactions(msg) {
     fixedGroups = fixedGroups
 }
 
-    //Reactive depending on user.addGroup boolean, displays AddGroup component.
-    $: wantToAdd = $groups.addGroup
+//Reactive depending on user.addGroup boolean, displays AddGroup component.
+$: wantToAdd = $groups.addGroup
 
-    $: replyTrue = $groups.replyTo.reply
+$: replyTrue = $groups.replyTo.reply
 
-    function addHash(data) {
-        fixedGroups.some(function (a) {
-            if (a.hash === data.time) {
-                a.hash = data.hash
-            }
-        })
+function addHash(data) {
+    fixedGroups.some(function (a) {
+        if (a.hash === data.time) {
+            a.hash = data.hash
+        }
+    })
 
-        fixedGroups = fixedGroups
-    }
+    fixedGroups = fixedGroups
+}
 
-    const printChannel = async (name) => {
-        let filter = $notify.unread.filter((a) => a.channel !== name)
-        $notify.unread = filter
-        fixedGroups = []
-        filterEmojis = []
-        let channel = channelMessages.filter(a => a.channel === name)
-        $swarm.activeChannelMessages = channel
-        //await checkReactions(channel)
-    }
-    const deleteMessage = async (hash) => {
-        window.api.deleteMessage(hash)
-        fixedGroups = fixedGroups.filter(a => a.hash !== hash)
-    }
+const printChannel = async (name) => {
+    let filter = $notify.unread.filter((a) => a.channel !== name)
+    $notify.unread = filter
+    fixedGroups = []
+    filterEmojis = []
+    let channel = channelMessages.filter(a => a.channel === name)
+    $swarm.activeChannelMessages = channel
+    //await checkReactions(channel)
+}
+const deleteMessage = async (hash) => {
+    window.api.deleteMessage(hash)
+    fixedGroups = fixedGroups.filter(a => a.hash !== hash)
+}
 
-    async function loadMoreMessages() {
-        pageNum++
-        const more = await getMoreMessages()
-        if (more.length === 0) {noLoad(); return}
-        checkReactions(more, true)
-    }
+async function loadMoreMessages() {
+    pageNum++
+    const more = await getMoreMessages()
+    if (more.length === 0) {noLoad(); return}
+    checkReactions(more, true)
+}
 
-    const noLoad = () => {
-        pageNum--; loadMore = false; return
-    }
+const noLoad = () => {
+    pageNum--; loadMore = false; return
+}
 
-    async function getMessages(group) {
-        return await window.api.printGroup(group.key, 0)
-    }
+async function getMessages(group) {
+    return await window.api.printGroup(group.key, 0)
+}
 
-    async function getMoreMessages() {
-        return await window.api.printGroup(thisGroup, pageNum)
-    }
+async function getMoreMessages() {
+    return await window.api.printGroup(thisGroup, pageNum)
+}
 
-    async function sendTorrent(e) {
+async function sendTorrent(e) {
 
     const { acceptedFiles, fileRejections } = e.detail
     if (fileRejections.length) {
         return
     }
-    const filename = acceptedFiles[0].name
+    dragover = false
+    const fileName = acceptedFiles[0].name
     const path = acceptedFiles[0].path
     const size = acceptedFiles[0].size
     const time = Date.now()
+    const chat = thisGroup
     acceptedFiles[0].time = time
     acceptedFiles[0].chat = $user.activeChat.chat
 
@@ -447,8 +481,8 @@ async function updateReactions(msg) {
     const hash = await window.api.createGroup()
     const message = {
         message: 'File shared',
-        grp: $groups.thisGroup.key,
-        name: 'File shared',
+        grp: chat,
+        name: $user.username,
         address: $user.myAddress,
         reply: "",
         timestamp: time,
@@ -458,9 +492,13 @@ async function updateReactions(msg) {
         hash: hash,
         time: time
     }
-
-    window.api.send('upload-torrent', [filename, path, size, time, $groups.thisGroup.key, hash])
-    return message
+    const file = {fileName, chat, time, size, hash}
+    $localFiles.push(file)
+    $localFiles = $localFiles
+    $groups.fileList.push(message)
+    $groups.fileList = $groups.fileList
+    printGroupMessage(message)
+    window.api.send('upload-torrent', [fileName, path, size, time, $groups.thisGroup.key, hash])
 }
 
 let dragover = false
@@ -492,7 +530,7 @@ function nodrag() {
 {#if $user.block}
     <BlockContact />
 {/if}
-
+<Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => sendTorrent(e)}>
 <main in:fade="{{ duration: 350 }}">
     <GroupList
         on:printGroup="{(e) => printGroup(e.detail)}"
@@ -509,7 +547,6 @@ function nodrag() {
                     <Loader/>
                 </div>
             {/if}
-            <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => sendTorrent(e)}>
             {#each fixedGroups as message (message.hash)}
                 <GroupMessage
                     on:reactTo="{(e) => sendGroupMsg(e)}"
@@ -524,13 +561,13 @@ function nodrag() {
                     msgFrom="{message.address}"
                     timestamp="{message.time}"
                     hash="{message.hash}"
+                    file="{message?.file}"
                 />
             {/each}
             {#if (fixedGroups.length + filterEmojis.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
             
-        </Dropzone>
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">
@@ -541,6 +578,7 @@ function nodrag() {
     </div>
     <GroupHugins />
 </main>
+</Dropzone>
 
 <style lang="scss">
 h3 {

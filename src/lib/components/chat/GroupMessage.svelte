@@ -322,10 +322,10 @@ const openLinkMessage = (url) => {
                 <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if emojiMessage}
                 <p class:rtc class="emoji">{msg}</p>
-            {:else if rtc && file && !myMsg}
-                <DownloadFile file={file} group={true}/>
-            {:else if rtc && file && myMsg}
-                <UploadFile file={file} group={true}/>
+            {:else if file && !myMsg}
+                <DownloadFile file={file} group={true} rtc={rtc}/>
+            {:else if file && myMsg}
+                <UploadFile file={file} group={true} rtc={rtc}/>
             {:else}
                 <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}

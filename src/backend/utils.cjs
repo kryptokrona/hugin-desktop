@@ -122,7 +122,7 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function parseCall(msg, sender, sent, group = false, timestamp) {
+function parse_call(msg, sender, sent, group = false, timestamp) {
     const {expand_sdp_answer} = require("./sdp.cjs")
 
     switch (msg.substring(0, 1)) {
@@ -148,6 +148,26 @@ function parseCall(msg, sender, sent, group = false, timestamp) {
         default:
             return [msg, false, false, false]
     }
+}
+
+function parse_torrent(m) {
+    if (m.startsWith('TORRENT://')) {
+        const link = m.split('TORRENT://')[1]
+        try {
+            const torrent = link.replaceAll(/&amp;/g, "&")
+            const fileName = torrent.split('&dn=').pop().split('&tr=')[0];
+            const infoHash = torrent.split('?xt=urn:btih:').pop().split('&dn=')[0]
+            console.log("Got torrent!", torrent)
+            console.log('Got filename', fileName)
+            console.log("Got hash!", infoHash)
+            if (!torrent || !fileName || !infoHash) return [true, false]
+            if (infoHash.length > 64) return [true, false]
+            return [true, true, torrent, fileName, infoHash]
+        }catch (e) {
+            return [true, false]
+        }
+    }
+    return [false, false]
 }
 
 const sanitize_join_swarm_data = (data) => {
@@ -301,4 +321,4 @@ const sanitize_file_message = (data) => {
     return object
 }
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parseCall, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message}
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message}

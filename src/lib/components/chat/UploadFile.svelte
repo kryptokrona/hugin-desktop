@@ -6,12 +6,13 @@
     import Progress from "$lib/components/chat/Progress.svelte"
     export let file
     export let group = false
+    export let rtc = false
     let uploadDone = false
     let uploading = false
     let image = ""
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
-
+    
     onMount( async () =>
     {   
         if (videoTypes.some(a => file.path.endsWith(a) && file.size < 50000000))
@@ -52,7 +53,7 @@
 
 </script>
 
-<div class="file" in:fade="{{ duration: 150 }}">
+<div class="file" class:group in:fade="{{ duration: 150 }}">
     {#if !uploadDone && !uploading}
         <p in:fade class="message sending blink_me">{file.name} </p>
     {:else if uploading}
@@ -75,7 +76,7 @@
         <p>{file.name}</p>
     {:else if image === "File not found"}
         <p class="message error">File not found</p>
-    {:else if !group}
+    {:else if !group || !rtc}
         {#if video}
             <VideoPlayer src={file}/>
         {:else}
@@ -136,6 +137,10 @@
 
 .error {
     color: var(--warn-color) !important; 
+}
+
+.group {
+    margin-left: 30px;
 }
 
 
