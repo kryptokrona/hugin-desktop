@@ -53,9 +53,9 @@ const checkPass = async () => {
   if (verify) {
       loadSpin = false
       $layoutState.showNodeSelector = false
-      $user.loggedIn = true
       $misc.loading = false
       await goto('/dashboard')
+      $user.loggedIn = true
   }
 }
 
@@ -102,7 +102,7 @@ window.api.receive('login-failed', async () => {
 
 <svelte:window on:keyup|preventDefault="{enter}"/>
 
-<div class="wrapper" in:fly={{ delay: 300, duration: 300, y : 50 }} out:fly={{ delay: 200, duration: 200, y : -50 }}>
+<div class="wrapper" in:fly={{ delay: 300, duration: 300, y : 50 }} out:fly={{ delay: 100, duration: 100, y : -50 }}>
     {#if $layoutState.showNodeSelector}
         <NodeSelector on:back="{() => (errNode = false)}" on:connect="{(e) => handleLogin(e)}"/>
     {/if}
