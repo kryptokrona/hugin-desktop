@@ -80,7 +80,7 @@ const readMessage = (e) => {
 $: chatList
 </script>
 
-<div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly="{{ y: 50 }}">
+<div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}">
     <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
         <h2>Messages</h2>
         <AddCircle on:click="{() => dispatch('open')}" />

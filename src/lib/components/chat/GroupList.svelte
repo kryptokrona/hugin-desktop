@@ -178,7 +178,7 @@ $: show_groups = true
 
 </script>
 
-<div class="wrapper" in:fade>
+<div class="wrapper" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
     <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
         {#if show_groups}
             <h2>Groups</h2>

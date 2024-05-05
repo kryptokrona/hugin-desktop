@@ -1,5 +1,5 @@
 <script>
-import {fade} from 'svelte/transition'
+import {fade, fly} from 'svelte/transition'
 import { misc, notify, user} from '$lib/stores/user.js'
 import {Moon} from "svelte-loading-spinners";
 import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
@@ -102,7 +102,7 @@ window.api.receive('login-failed', async () => {
 
 <svelte:window on:keyup|preventDefault="{enter}"/>
 
-<div class="wrapper" in:fade>
+<div class="wrapper" in:fly={{ delay: 300, duration: 300, y : 50 }} out:fly={{ delay: 200, duration: 200, y : -50 }}>
     {#if $layoutState.showNodeSelector}
         <NodeSelector on:back="{() => (errNode = false)}" on:connect="{(e) => handleLogin(e)}"/>
     {/if}
