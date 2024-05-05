@@ -396,7 +396,6 @@ p {
 }
 
 .emoji-button {
-    opacity: 50%;
     cursor: pointer;
     transition: 200ms ease-in-out;
 
