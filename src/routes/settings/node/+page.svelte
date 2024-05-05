@@ -9,6 +9,7 @@
     let synced = false
     let networkHeight
     let walletHeight
+    let connecting = false
     
     onMount(() => {
         getHeight();
@@ -23,6 +24,16 @@
     $: {
         networkHeight
         walletHeight
+    }
+
+    $: activeNode = $misc.node.node ?? "Connecting"
+
+    $: if (activeNode === "Connecting") {
+        connecting = true
+        synced = false
+    } else {
+        connecting = false
+        synced = true
     }
 
     async function getHeight() {
@@ -74,7 +85,7 @@
 
     <div class="node">
         <h4>Address</h4>
-            <p class="nodeinfo">{$misc.node.node}</p>
+            <p class:syncstatus={connecting} class="nodeinfo">{activeNode}</p>
     </div>
         <div class="status">
             <h4>Status</h4>
