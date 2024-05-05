@@ -186,61 +186,48 @@ ipcMain.on('download-torrent', (e, file) => {
 
 const download_torrent = (file) => {
     return
-    const client = new WebTorrent({utp: true,  dht: false})
-    const path = Hugin.downloadDir
-
-    Hugin.send('downloading', file)
-    const dht = Buffer.from(file.message.split('&tr=').pop().split('&dn=')[0])
-    console.log("Downloading", dht)
-    client.add(file.message, { path: path, utp: true }, torrent => {
-        console.log("torrent added!")
-        torrent.on('download', function (bytes) { 
-            console.log("bytes!!!", bytes)
-            console.log("bytes!!!", bytes)
-            console.log("bytes!!!", bytes)
-            console.log("bytes!!!", bytes)
-            console.log("bytes!!!", bytes)
-            console.log("Downloading!!!! --------->")
-            console.log("Downloading!!!! --------->")
-            Hugin.send('download-file-progress', {
-                fileName: file.fileName,
-                progress: torrent.progress,
-                group: file.group,
-                chat: file.group,
-                path
-            })
-        } )
-        torrent.on('done', () => {
-        console.log("Downloaded torrent!")
-        Hugin.send('downloading-torrent')
-        console.log('torrent download finished')
-        })
-    })
+    // const client = new WebTorrent({utp: true,  dht: false})
+    // const path = Hugin.downloadDir
+    // Hugin.send('downloading', file)
+    // client.add(file.message, { path: path, utp: true }, torrent => {
+    //     console.log("torrent added!")
+    //     torrent.on('download', function (bytes) { 
+    //         console.log("Downloading!!!! --------->")
+    //         Hugin.send('download-file-progress', {
+    //             fileName: file.fileName,
+    //             progress: torrent.progress,
+    //             group: file.group,
+    //             chat: file.group,
+    //             path
+    //         })
+    //     } )
+    //     torrent.on('done', () => {
+    //     console.log("Downloaded torrent!")
+    //     Hugin.send('downloading-torrent')
+    //     console.log('torrent download finished')
+    //     })
+    // })
 }
 
 ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
     return
-    console.log("Upload this!", path, fileName, size, time)
-    const client = new WebTorrent()
-    Hugin.send('uploading', {fileName, progress: 0, size, chat: group, time, hash})
-    client.seed(path, {}, (torrent) => {
-        console.log('Client is seeding ' + torrent.magnetURI)
-        torrent.on('wire', (wire, addr) => {
-            Hugin.send('torrent-connection')
-            Hugin.send('uploading-torrent')
-            console.log("New torrent peer connection")
-            console.log("New torrent peer connection")
-            console.log("New torrent peer connection")
-            console.log("New torrent peer connection")
-          })
-        torrent.on('upload', function (uploaded) {
-            console.log("Uploaded", uploaded)
-            Hugin.send('upload-file-progress', {fileName, progress: (uploaded / size) * 100, chat: group, time})
-         })
-         const message = {m: 'TORRENT://' + torrent.magnetURI, g: group, t: time}
+    // console.log("Upload this!", path, fileName, size, time)
+    // const client = new WebTorrent()
+    // Hugin.send('uploading', {fileName, progress: 0, size, chat: group, time, hash})
+    // client.seed(path, {}, (torrent) => {
+    //     console.log('Client is seeding ' + torrent.magnetURI)
+    //     torrent.on('wire', (wire, addr) => {
+    //         Hugin.send('torrent-connection')
+    //         Hugin.send('uploading-torrent')
+    //       })
+    //     torrent.on('upload', function (uploaded) {
+    //         console.log("Uploaded", uploaded)
+    //         Hugin.send('upload-file-progress', {fileName, progress: (uploaded / size) * 100, chat: group, time})
+    //      })
+    //      const message = {m: 'TORRENT://' + torrent.magnetURI, g: group, t: time}
 
-         send_group_message(message, false, false)
-    })
+    //      send_group_message(message, false, false)
+    // })
 
 })
 
