@@ -165,8 +165,9 @@ const scrollDown = () => {
 }
 
 const isTorrent = (msg) => {
+    return [false, false]
     if (msg.message.startsWith('TORRENT://')) {
-    const torrent = $groups.fileList.find(file => file.hash === msg.hash)
+    const torrent = $groups.fileList.find(file => file.hash === msg.hash || file.time === msg.time)
     if (torrent) return [torrent, true]
     return [true, false]
     }
@@ -318,6 +319,7 @@ async function printGroup(group) {
 function addFileMessage(array) {
     for (const msg of array) {
         const [file, found] = isTorrent(msg)
+        if (!file && !found) continue
         if (file && !found) {
             msg.message = "Torrent shared ⚡️"
             continue
@@ -463,6 +465,7 @@ async function getMoreMessages() {
 }
 
 async function sendTorrent(e) {
+    return
 
     const { acceptedFiles, fileRejections } = e.detail
     if (fileRejections.length) {
@@ -498,7 +501,7 @@ async function sendTorrent(e) {
     $groups.fileList.push(message)
     $groups.fileList = $groups.fileList
     printGroupMessage(message)
-    window.api.send('upload-torrent', [fileName, path, size, time, $groups.thisGroup.key, hash])
+    window.api.send('upload-torrent', [fileName, path, size, time, chat, hash])
 }
 
 let dragover = false
@@ -530,7 +533,7 @@ function nodrag() {
 {#if $user.block}
     <BlockContact />
 {/if}
-<Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => sendTorrent(e)}>
+<!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => sendTorrent(e)}> -->
 <main in:fade="{{ duration: 350 }}">
     <GroupList
         on:printGroup="{(e) => printGroup(e.detail)}"
@@ -578,7 +581,7 @@ function nodrag() {
     </div>
     <GroupHugins />
 </main>
-</Dropzone>
+<!-- </Dropzone> -->
 
 <style lang="scss">
 h3 {

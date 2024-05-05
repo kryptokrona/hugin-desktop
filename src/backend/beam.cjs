@@ -11,7 +11,6 @@ const {Hugin} = require('./account.cjs');
 const { keychain } = require('./crypto.cjs');
 
 let active_beams = []
-let chat_keys
 let localFiles = []
 let remoteFiles = []
 let downloadDirectory

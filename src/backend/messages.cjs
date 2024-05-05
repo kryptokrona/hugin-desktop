@@ -180,11 +180,50 @@ ipcMain.on('end-swarm', async (e, key) => {
 
 //TORRENT
 
+ipcMain.on('download-torrent', (e, file) => {
+    download_torrent(file)
+})
+
+const download_torrent = (file) => {
+    return
+    const client = new WebTorrent({utp: true,  dht: false})
+    const path = Hugin.downloadDir
+
+    Hugin.send('downloading', file)
+    const dht = Buffer.from(file.message.split('&tr=').pop().split('&dn=')[0])
+    console.log("Downloading", dht)
+    client.add(file.message, { path: path, utp: true }, torrent => {
+        console.log("torrent added!")
+        torrent.on('download', function (bytes) { 
+            console.log("bytes!!!", bytes)
+            console.log("bytes!!!", bytes)
+            console.log("bytes!!!", bytes)
+            console.log("bytes!!!", bytes)
+            console.log("bytes!!!", bytes)
+            console.log("Downloading!!!! --------->")
+            console.log("Downloading!!!! --------->")
+            Hugin.send('download-file-progress', {
+                fileName: file.fileName,
+                progress: torrent.progress,
+                group: file.group,
+                chat: file.group,
+                path
+            })
+        } )
+        torrent.on('done', () => {
+        console.log("Downloaded torrent!")
+        Hugin.send('downloading-torrent')
+        console.log('torrent download finished')
+        })
+    })
+}
+
 ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
+    return
     console.log("Upload this!", path, fileName, size, time)
     const client = new WebTorrent()
     Hugin.send('uploading', {fileName, progress: 0, size, chat: group, time, hash})
-    client.seed(path, torrent => {
+    client.seed(path, {}, (torrent) => {
         console.log('Client is seeding ' + torrent.magnetURI)
         torrent.on('wire', (wire, addr) => {
             Hugin.send('torrent-connection')
@@ -203,37 +242,6 @@ ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
          send_group_message(message, false, false)
     })
 
-})
-
-ipcMain.on('download-torrent', (e, file) => {
-    const client = new WebTorrent()
-    const path = Hugin.downloadDir
-
-    Hugin.send('downloading', {
-        fileName: file.fileName,
-        group: file.group,
-        chat: file.group
-    })
-    console.log("Downloading", file.message)
-    client.add(file.message, { path }, torrent => {
-        console.log("torrent added!")
-        torrent.on('download', function (bytes) { 
-            console.log("Downloading!!!! --------->")
-            console.log("Downloading!!!! --------->")
-            Hugin.send('download-file-progress',{
-                fileName: file.fileName,
-                progress: torrent.progress,
-                group,
-                chat: file.group,
-                path
-            })
-        } )
-        torrent.on('done', () => {
-        console.log("Downloaded torrent!")
-        Hugin.send('downloading-torrent')
-        console.log('torrent download finished')
-        })
-    })
 })
 
 const start_message_syncer = async () => {
@@ -1116,7 +1124,8 @@ function torrent_shared(incoming, [uri, fileName, infoHash]) {
         reply: '',
         sent: false,
         fileName: fileName,
-        infoHash: infoHash
+        infoHash: infoHash,
+        progress: 0
     }
     Hugin.send('torrent-shared', file)
 }
@@ -1124,15 +1133,15 @@ function torrent_shared(incoming, [uri, fileName, infoHash]) {
 async function save_group_message(msg, hash, time, offchain, channel = false, add = false) {
     const saved = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!saved) return false
-    const [check, torrent, uri, fileName, infoHash] = parse_torrent(saved.message)
-    if (check && !torrent) {
-        //Incorrect torrent link, delete message
-        deleteMessage(hash)
-        return
-    }
-    if (check && torrent) {
-        torrent_shared(saved, [uri, fileName, infoHash])
-    }
+    // const [check, torrent, uri, fileName, infoHash] = parse_torrent(saved.message)
+    // if (check && !torrent) {
+    //     //Incorrect torrent link, delete message
+    //     deleteMessage(hash)
+    //     return
+    // }
+    // if (check && torrent) {
+    //     torrent_shared(saved, [uri, fileName, infoHash])
+    // }
     if (!offchain) {
         //Send new board message to frontend.
         Hugin.send('groupMsg', saved)

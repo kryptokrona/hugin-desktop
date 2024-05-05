@@ -507,6 +507,7 @@ p {
    position: absolute;
    right: 7rem;
    display: none;
+   z-index: 3;
 }
 
 .joined {
