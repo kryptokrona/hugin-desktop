@@ -19,9 +19,7 @@ let downloadDirectory
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
     end_beam(chat);
-});
-
-
+})
 
 //FILES
 
