@@ -2,17 +2,15 @@
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher } from 'svelte'
-import { groups } from '$lib/stores/user.js'
+import { groups, rooms } from '$lib/stores/user.js'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
-
+export let r = false
 const dispatch = createEventDispatcher()
-
-let enableAddGroupButton = false
-let create_group = 'Create'
-let name = ''
-let key = ''
-let avatar = get_avatar($groups.thisGroup.key)
+let avatar
+$ : if (r) {
+   avatar = get_avatar($rooms.thisRoom.key)
+} else avatar = get_avatar($groups.thisGroup.key)
 
 const remove = async () => {
     dispatch('remove')

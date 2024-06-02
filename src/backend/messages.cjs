@@ -82,9 +82,6 @@ ipcMain.on('add-group', async (e, grp) => {
     save_group_message(grp, grp.hash, parseInt(Date.now()), false, false, true)
 })
 
-ipcMain.on('remove-group', async (e, grp) => {
-    removeGroup(grp)
-})
 
 ipcMain.on('unblock', async (e, address) => {
     unBlockContact(address)
@@ -103,6 +100,7 @@ ipcMain.on('delete-message', async (e, hash) => {
 })
 
 ipcMain.on('delete-messages-after', async (e, days) => {
+    if (days === 0) days = 100000
     store.set({
         delete: {
             after: days
@@ -807,7 +805,6 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
     let payload_box = { box: Buffer.from(box).toString('hex'), t: timestamp, txKey: keys.public_key, vt: viewTag  }
     // Convert json to hex
     let payload_hex = toHex(JSON.stringify(payload_box))
-
     return payload_hex
 }
 

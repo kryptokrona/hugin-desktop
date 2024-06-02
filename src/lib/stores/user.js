@@ -60,7 +60,8 @@ export const misc = writable({
     loading: false,
     syncStatus: false,
     deleteAfter: null,
-    focus: false
+    focus: false,
+    welcomeAddress: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
 })
 
 export const webRTC = writable({
@@ -124,6 +125,17 @@ export const swarm = writable({
     screenshare: false,
     showInfo: true,
 })
+
+
+export const rooms = writable({
+    addRoom: false,
+    replyTo: {reply: false},
+    thisRoom: {key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false},
+    roomArray: [],
+    blockList: [],
+    activeHugins: [],
+    settings: false,
+ })
 
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {

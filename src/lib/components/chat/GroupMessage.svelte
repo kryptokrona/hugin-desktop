@@ -12,7 +12,7 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { isLatin, openURL } from '$lib/utils/utils'
+import { hashPadding, isLatin, openURL } from '$lib/utils/utils'
 import DownloadFile from './DownloadFile.svelte'
 import UploadFile from './UploadFile.svelte'
 import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -108,22 +108,19 @@ function checkMessage() {
     }
 }
 
-//Add extra number to avoid collision for keys in Svelte each loop
-const svelteHashPadding = Date.now().toString() + Math.floor(Math.random() * 1000).toString()
-
 async function checkreply(reply) {
     let group_reply
     
     if (offchain) {
         //Search in rtc messages
         group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
-        group_reply.hash + svelteHashPadding
+        group_reply.hash + hashPadding()
         if (group_reply) return group_reply
     }
     //Check in db if we can find it
     let thisreply = await window.api.getGroupReply(reply)
     if (!thisreply) return false
-    thisreply.hash = thisreply.hash + svelteHashPadding
+    thisreply.hash = thisreply.hash + hashPadding()
     return thisreply
 }
 

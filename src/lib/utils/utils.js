@@ -93,3 +93,7 @@ export const checkWait = async (data) => {
 
 }
 
+export const hashPadding = () => {
+    return Date.now().toString() + Math.floor(Math.random() * 1000).toString()
+}
+

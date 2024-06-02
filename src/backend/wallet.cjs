@@ -173,6 +173,8 @@ async function createAccount(accountData) {
 const startWallet = async (walletName, password) => {
     //Disable wallet optimization
     await js_wallet.enableAutoOptimization(false)
+    //Disable scanning for transactions in pool
+    await js_wallet.scanPoolTransactions(false)
     //Start wallet sync process
     await js_wallet.start()
     //Create extra message subwallets for small inputs

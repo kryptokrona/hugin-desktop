@@ -198,7 +198,7 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
 
 </script>
 
-<div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length || $page.url.pathname === '/groups'}">
+<div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length || $page.url.pathname === '/groups' || $page.url.pathname === '/rooms'}">
     {#if $page.url.pathname === '/boards'}
         <div class="nav" style="display:block !important;">
             <div class="add" on:click="{openAdd}">

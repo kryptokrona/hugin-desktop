@@ -4,6 +4,7 @@ import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte'
+import RoomIcon from '$lib/components/icons/RoomIcon.svelte'
 import XkrLogo from '$lib/components/icons/XkrLogo.svelte'
 import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores'
@@ -62,6 +63,16 @@ const groupRouteAndMenu = () => {
     }
 }
 
+const roomRouteAndMenu = () => {
+    if ($page.url.pathname === '/room') {
+        // $layoutState.hideGroupList = !$layoutState.hideGroupList
+    } else {
+        setTimeout(() => {
+            $layoutState.hideGroupList = false
+        }, 300)
+        goto('/rooms')
+    }
+}
 const changeProfilePic = () => {
     return
    fileList.click()
@@ -118,6 +129,11 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
                 <GroupIcon />
             </div>
         </Tooltip> 
+        <!-- <Tooltip title="Rooms">
+            <div on:click="{roomRouteAndMenu}" class="button">
+                <RoomIcon />
+            </div>
+        </Tooltip>  -->
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->

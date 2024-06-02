@@ -9,6 +9,7 @@
 
     const setAutoDeleteAfter = (days) => {
         window.api.deleteMessageAfter(days)
+        window.api.successMessage('Timeframe changed')
     }
 
     const changeIdleLimit = () => {

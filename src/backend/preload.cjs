@@ -47,6 +47,9 @@ const WINDOW_API = {
     getGroups: async () => {
         return await ipcRenderer.invoke('get-groups')
     },
+    getRooms: async () => {
+        return await ipcRenderer.invoke('get-rooms')
+    },
     printGroup: async (grp, page) => {
         return await ipcRenderer.invoke('print-group', grp, page)
     },
@@ -161,8 +164,16 @@ const WINDOW_API = {
         ipcRenderer.send('add-group', grp)
     },
 
+    addRoom: async (grp) => {
+        ipcRenderer.send('add-room', grp)
+    },
+
     removeGroup: async (grp) => {
         ipcRenderer.send('remove-group', grp)
+    },
+
+    removeRoom: async (rm) => {
+        ipcRenderer.send('remove-room', rm)
     },
 
     createGroup: async () => {

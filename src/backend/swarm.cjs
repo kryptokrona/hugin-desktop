@@ -128,7 +128,7 @@ const create_swarm = async (data) => {
             return false
         }}, sig, dht_keys, base_keys)
     } catch (e) {
-        console.log('Error starting swarm')
+        console.log('Error starting swarm', e)
         return
     }
     
@@ -146,7 +146,7 @@ const create_swarm = async (data) => {
 
     swarm.on('connection', (connection, information) => {
         console.log("New connection ", information)
-        new_connection(connection, hash, key, name)
+        new_connection(connection, hash, key)
 
     })
 
@@ -165,7 +165,7 @@ const create_swarm = async (data) => {
     check_if_online(hash)
 }
 
-const new_connection = (connection, hash, key, name) => {
+const new_connection = (connection, hash, key) => {
     console.log("New connection incoming")
     let active = get_active_topic(hash)
     

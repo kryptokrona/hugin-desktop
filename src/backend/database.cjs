@@ -70,6 +70,7 @@ const createTables = () => {
     contactsTable()
     groupMessageTable()
     groupsTable()
+    roomsTable()
     blockListTable()
     groupChannelsMessagesTable()
 }
@@ -141,6 +142,23 @@ const groupsTable = () => {
     return new Promise(
         (resolve, reject) => {
            database.prepare(groupsTable).run()
+        },
+        () => {
+            resolve()
+        }
+    )
+}
+
+const roomsTable = () => {
+    const roomTable = `
+            CREATE TABLE IF NOT EXISTS rooms (
+              key TEXT,
+              name TEXT,
+              UNIQUE (key)
+          )`
+    return new Promise(
+        (resolve, reject) => {
+           database.prepare(roomTable).run()
         },
         () => {
             resolve()
@@ -259,6 +277,17 @@ const loadGroups = () => {
         return rows
 }
 
+const loadRooms = () => {
+    const rows = []
+        const getAllRooms = `SELECT * FROM rooms`
+        const rooms = database.prepare(getAllRooms).all()
+
+        for(const room of rooms) {
+            rows.push(room)
+        }
+        return rows
+}
+
 const loadKeys = async (start = false) => {
     //Load known public keys from db and push them to known_keys
     let contacts = await getContacts()
@@ -304,36 +333,52 @@ ipcMain.handle('get-groups', async (e) => {
     return groups.reverse()
 })
 
-//Get one message from every unique user sorted by latest timestmap.
+
+ipcMain.handle('get-rooms', async (e) => {
+    const rooms = await getRooms()
+    return rooms.reverse()
+})
+
+//Get one message from every unique user from Group sorted by latest timestmap.
 const getGroups = async () => {
     const my_groups = loadGroups()
-    const groupInfo = []
-    const myGroups = []
-    for (const chat of my_groups) {
-    const getThis = `
-        SELECT *
-        FROM groupmessages
-        WHERE grp = ?
-        ORDER BY time
-        DESC
-        LIMIT 1
-    `
-    const group = database.prepare(getThis).get(chat.key)
-    if (group === undefined) continue 
-        const newRow = {
-        name: chat.name,
-        msg: group.message,
-        chat: group.grp,
-        timestamp: group.time,
-        sent: group.sent,
-        key: chat.key,
-        hash: group.hash,
-        nick: group.name,
-    }
-    myGroups.push(newRow)
-    }  
-return myGroups.sort((a, b) => a.timestamp - b.timestamp)
+    return getLatestList(my_groups)
+}
+
+//Get one message from every unique user from Room sorted by latest timestmap.
+const getRooms = async () => {
+    const my_rooms = loadRooms()
+    return getLatestList(my_rooms)
 }   
+
+
+const getLatestList = async (list) => {
+    const myGroups = []
+    for (const chat of list) {
+        const getThis = `
+            SELECT *
+            FROM groupmessages
+            WHERE grp = ?
+            ORDER BY time
+            DESC
+            LIMIT 1
+        `
+        const group = database.prepare(getThis).get(chat.key)
+        if (group === undefined) continue 
+            const newRow = {
+            name: chat.name,
+            msg: group.message,
+            chat: group.grp,
+            timestamp: group.time,
+            sent: group.sent,
+            key: chat.key,
+            hash: group.hash,
+            nick: group.name,
+        }
+        myGroups.push(newRow)
+    }  
+    return myGroups.sort((a, b) => a.timestamp - b.timestamp)
+}
 
 const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
 
@@ -378,11 +423,9 @@ const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
         channel: channel
     }
 
-    if (offchain) {
-        return message
-    } 
     msg.sent = changeBool(msg.sent)
-try {
+    
+    try {
     database.prepare(
         `REPLACE INTO groupmessages  (
     message,
@@ -493,6 +536,10 @@ const addGroup = (group) => {
     console.log('saved group', group)
 }
 
+ipcMain.on('remove-group', async (e, grp) => {
+    removeGroup(grp)
+})
+
 const removeGroup = (group) => {
     database.prepare(
         `DELETE FROM
@@ -502,6 +549,41 @@ const removeGroup = (group) => {
     ).run([group])
 
     console.log('removed grp', group)
+}
+
+//ADD ROOM
+
+ipcMain.on('add-room', async (e, room) => {
+    addRoom(room)
+})
+
+const addRoom = (room) => {
+    console.log('adding', room)
+    database.prepare(
+        `REPLACE INTO room
+      (key, name)
+        VALUES
+          (?, ?)`
+    ).run([room.k, room.n])
+
+    console.log('saved group', room)
+}
+
+//REMOVE ROOM
+
+ipcMain.on('remove-room', async (e, room) => {
+    removeRoom(room)
+})
+
+const removeRoom = (room) => {
+    database.prepare(
+        `DELETE FROM
+        rooms
+      WHERE
+        key = ?`
+    ).run([room])
+
+    console.log('removed grp', room)
 }
 
 const removeContact = (contact) => {
