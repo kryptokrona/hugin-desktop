@@ -549,7 +549,7 @@ async function fetch_hugin_messages() {
         }
         const transactions = trimTxs(json)
         //Try clearing known pool txs from checked
-        known_pool_txs = known_pool_txs.filter((n) => !json.deletedTxsIds.includes(n))
+        if (!latest) known_pool_txs = known_pool_txs.filter((n) => !json.deletedTxsIds.includes(n))
         if (transactions.length === 0) {
             console.log('No incoming messages...')
             return false
@@ -588,7 +588,6 @@ async function send_message(message, receiver, off_chain = false, group = false,
     const seal = has_history ? false : true
     
     payload_hex = await encrypt_hugin_message(message, messageKey, seal, address)
-
     //Choose subwallet with message inputs
     let messageWallet = Hugin.wallet.getAddresses()[1]
     let messageSubWallet = Hugin.wallet.getAddresses()[2]
