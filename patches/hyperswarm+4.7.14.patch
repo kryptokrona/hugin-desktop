@@ -1,5 +1,5 @@
 diff --git a/node_modules/hyperswarm/index.js b/node_modules/hyperswarm/index.js
-index 2b56c73..6e6f4da 100644
+index 2b56c73..7922637 100644
 --- a/node_modules/hyperswarm/index.js
 +++ b/node_modules/hyperswarm/index.js
 @@ -10,8 +10,8 @@ const PeerDiscovery = require('./lib/peer-discovery')
@@ -22,7 +22,7 @@ index 2b56c73..6e6f4da 100644
      super()
      const {
        seed,
-@@ -32,12 +32,16 @@ module.exports = class Hyperswarm extends EventEmitter {
+@@ -32,12 +32,15 @@ module.exports = class Hyperswarm extends EventEmitter {
        maxParallel = MAX_PARALLEL,
        firewall = allowAll
      } = opts
@@ -37,14 +37,17 @@ index 2b56c73..6e6f4da 100644
 +    this.keyPair = dht_keys.get()
 +    this.keychain = keychain.get()
 +    this.checkedSigs = [sig]
-+
      this.server = this.dht.createServer({
        firewall: this._handleFirewall.bind(this),
        relayThrough: this._maybeRelayConnection.bind(this)
-@@ -237,10 +241,22 @@ module.exports = class Hyperswarm extends EventEmitter {
- 
+@@ -234,13 +237,23 @@ module.exports = class Hyperswarm extends EventEmitter {
+   _handleFirewall (remotePublicKey, payload) {
+     if (this.suspended) return true
+     if (b4a.equals(remotePublicKey, this.keyPair.publicKey)) return true
+-
      const peerInfo = this.peers.get(b4a.toString(remotePublicKey, 'hex'))
      if (peerInfo && peerInfo.banned) return true
+-
 +    if (payload !== null) {
 +    if (!payload.mid) return true
 +    const checked = this.checkSignature(payload.mid, remotePublicKey)
@@ -52,7 +55,6 @@ index 2b56c73..6e6f4da 100644
 +    //This id is already in use
 +    if (this.checkedSigs.some(a => a === payload.mid)) return true
 +    }
-   
      return this._firewall(remotePublicKey, payload)
    }
  
