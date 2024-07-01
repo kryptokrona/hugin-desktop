@@ -23,7 +23,8 @@ function sendPM() {
 function copyThis(copy) {
     let msg = 'You copied a Room key'
     window.api.successMessage(msg)
-    navigator.clipboard.writeText(copy)
+    const invite = 'hugin://' + roomName + copy
+    navigator.clipboard.writeText(invite)
 }
 
 const myAddress = $user.myAddress
