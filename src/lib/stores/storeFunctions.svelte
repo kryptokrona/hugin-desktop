@@ -1,5 +1,6 @@
 <script>
-     import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm} from '$lib/stores/user.js'
+     import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms} from '$lib/stores/user.js'
+import { roomMessages } from './roommsgs'
 
      window.api.receive('peer-disconnected', async (data)  => { 
         peer_disconnected(data)
@@ -25,6 +26,20 @@
         new_channel(data)
     })
 
+    window.api.receive('joined-room', async (data) => {
+        console.log("Joining room!")
+        connecto_to_swarm()
+    })
+
+    const connecto_to_swarm = async () => {
+
+    window.api.send("new-swarm", {
+        key: $rooms.thisRoom.key, 
+        address: $user.myAddress,
+        name: $user.username
+    })
+}
+
     function swarm_connected(data) {
         console.log( 'Swarm connected', data)
         $swarm.active.push(data)
@@ -46,8 +61,27 @@
         //     joined.channels = known_channels
         // }
         joined.connections.push(data)
+        add_user(data, joined.key)
         updateActiveSwarm()
         voice_channel_status(data)
+    }
+
+    async function add_user(data, key) {
+        const joined = {
+            message: "Joined the lobby",
+            grp: key,
+            reply: false,
+            address: data.address,
+            time: parseInt(data.time),
+            name: data.name,
+            hash: data.time,
+            joined: true,
+            channel: "Chat room",
+            hash: await window.api.createGroup()
+        }
+        
+        $roomMessages.push(joined)
+        $roomMessages = $roomMessages
     }
 
     function peer_disconnected(data) {
