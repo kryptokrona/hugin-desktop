@@ -1,9 +1,15 @@
 const nacl = require('tweetnacl')
 const sanitizeHtml = require('sanitize-html')
-const { Crypto } = require('kryptokrona-utils')
+const { Crypto, Keys } = require('kryptokrona-utils')
 const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
 const {createReadStream} = require("fs");
+const DHT = require('@hyperswarm/dht')
+const Keychains = require('keypear');
+
+ipcMain.handle('get-room-invite', async () => {
+    return create_room_invite()
+})
 
 ipcMain.handle('load-file', async (e, path, size) => {
     return await load_file(path, size)
@@ -173,11 +179,11 @@ function parse_torrent(m) {
 const sanitize_join_swarm_data = (data) => {
 
     const address = sanitizeHtml(data.address)
-    if (address.length !== 99) return false
+    // if (address.length !== 99) return false
     const message = sanitizeHtml(data.message)
     if (message.length > 64) return false 
     const signature = sanitizeHtml(data.signature)
-    if (signature.length !== 128) return false
+    // if (signature.length !== 128) return false
     const topic = sanitizeHtml(data.topic)
     if (topic.length !== 64) return false
     const name = sanitizeHtml(data.name) 
@@ -194,22 +200,22 @@ const sanitize_join_swarm_data = (data) => {
 
     const channels = []
     
-    if (data.channels.length) {
-        //Disable channels
+    // if (data.channels.length) {
+    //     //Disable channels
         
-        // if (data.channels.length > 100) return false
-        // for (const a of data.channels) {
-        //     let channel = sanitizeHtml(a)
-        //     if (channel.length > 50) return false
-        //     channels.push(channel)
-        // }
-        return false
-    }
+    //     // if (data.channels.length > 100) return false
+    //     // for (const a of data.channels) {
+    //     //     let channel = sanitizeHtml(a)
+    //     //     if (channel.length > 50) return false
+    //     //     channels.push(channel)
+    //     // }
+    //     return false
+    // }
 
     const clean_object = {
         address: address,
         message: message,
-        signature: signature,
+        signature: '',
         topic: topic,
         name: name,
         voice: voice,
@@ -225,11 +231,11 @@ const sanitize_join_swarm_data = (data) => {
 const sanitize_voice_status_data = (data) => {
 
     const address = sanitizeHtml(data.address)
-    if (address.length !== 99) return false
+    // if (address.length !== 99) return false
     const message = sanitizeHtml(data.message)
     if (message.length > 64) return false 
     const signature = sanitizeHtml(data.signature)
-    if (signature.length !== 128) return false
+    // if (signature.length !== 128) return false
     const topic = sanitizeHtml(data.topic)
     if (topic.length !== 64) return false
     const name = sanitizeHtml(data.name) 
@@ -321,4 +327,70 @@ const sanitize_file_message = (data) => {
     return object
 }
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message}
+const sanitize_group_message = (msg) => {
+    let timestamp = sanitizeHtml(msg.t);
+    if (timestamp.length > 20) return false;
+    let group = sanitizeHtml(msg.g);
+    if (group.length > 128) return false;
+    let text = sanitizeHtml(msg.m);
+    if (text.length === 0) return false
+    if (text.length > 777) return false;
+    let addr = sanitizeHtml(msg.k);
+    // if (addr.length > 99) return false;
+    let reply = sanitizeHtml(msg.r);
+    if (reply.length > 64) return false;
+    let sig = sanitizeHtml(msg.s);
+    if (sig.length > 200) return false;
+    let nick = sanitizeHtml(msg.n);
+    if (nick.length > 50) return false;
+    let txHash = sanitizeHtml(msg.hash);
+    if (txHash.length > 64) return false;
+  
+    const clean_object = {
+      message: text,
+      address: addr,
+      signature: '',
+      group: group,
+      time: timestamp,
+      name: nick,
+      reply: reply,
+      hash: txHash,
+      sent: false,
+      channel: 'channel',
+      hash: txHash,
+    };
+  
+    return clean_object;
+  };
+
+  function create_peer_base_keys(buf) { 
+    const keypair = DHT.keyPair(buf)
+    const keys = Keychains.from(keypair) 
+    return keys
+}
+
+function get_new_peer_keys(key) {
+    const secret = Buffer.alloc(32).fill(key)
+    const base_keys = create_peer_base_keys(secret)
+    const seed = randomKey()
+    const dht_keys = create_keys_from_seed(seed)
+    //Sign the dht public key with our base_keys
+    console.log("DHt keys?", dht_keys.get().publicKey)
+    const signature = base_keys.get().sign(dht_keys.get().publicKey)
+    return [base_keys, dht_keys, signature]
+}
+
+function create_keys_from_seed(seed) {
+    const random_key = Buffer.alloc(32).fill(seed)
+    return create_peer_base_keys(random_key)
+}
+
+function create_room_invite() {
+    const seed = randomKey()
+    const rand = randomKey()
+    const admin = create_keys_from_seed(seed)
+    //[invite, admin seed]
+    return [rand + admin.get().publicKey.toString('hex'), seed]
+}
+
+module.exports = {sleep, get_new_peer_keys, create_keys_from_seed, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
