@@ -15,27 +15,37 @@
     let newgroup = false
     let name = ''
     let key = ''
+    let invite = ''
     let test
     let avatar
-    
+    let lockName = false
+    let link = ''
+    let adm = false
     $: create_group = create ? 'Create' : 'Join'
     
     const enter = (e) => {
-        if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
+        if (enableAddGroupButton && invite.length === 128 && e.keyCode === 13) {
             addRoom()
         }
     }
     
     $: {
-        if (key.length === 64) {
-            avatar = get_avatar(key)
+        if (invite.length) {
+            console.log("Invite link avatar", invite)
+            avatar = get_avatar(invite)
     
-            if (name.length > 0) {
+            if (invite.length === 128) {
                 //Enable add button
                 enableAddGroupButton = true
             }
         } else {
             enableAddGroupButton = false
+        }
+    }
+
+    $: {
+        if (link.startsWith('hugin://') && link.length > 128 && !create) {
+            parseInvite(link)
         }
     }
     
@@ -59,12 +69,15 @@
     
     // Dispatch the inputted data
     const addRoom = async () => {
+        console.log("add room!")
         let error = checkError()
         if (error) return
         // Dispatch the inputted data
+        console.log("Dispatch!")
         dispatch('addRoom', {
-            key: key,
+            key: invite,
             name: name,
+            admin: adm
         })
     
         window.api.successMessage('Joined Room')
@@ -74,11 +87,32 @@
         $rooms.addRoom = false
     }
     
-    const createGroup = async () => {
-        key = await window.api.createGroup()
+    const createInvite = async () => {
+        lockName = true
+        const [inv, admin] = await window.api.createInvite()
+        console.log("invite!", invite)
+        invite = inv
+        adm = admin
+        link = 'hugin://' + name + invite
+        console.log("Invite key!", invite)
+        console.log("Room link!", link)
+        //invite  = group key + admin pubkey
+    }
+
+    const parseInvite = (link) => {
+        const inviteKey = link.slice(-128)
+        console.log("invite key", inviteKey)
+        const parse = link.split('hugin://')[1]
+        const roomName = parse.slice(0, parse.length - inviteKey.length)
+        console.log("Room name!", roomName)
+        invite = inviteKey
+        name = roomName
+        link = link
+        if (invite.length)
+        enableAddGroupButton = true
     }
     
-    $: key
+    $: invite
     $: avatar
     
     const createNewRoom = () => {
@@ -121,24 +155,45 @@
                 </div>
              {/if}
     
-            {#if newgroup}
+            {#if create}
     
-                <h3 in:fade>Name your group</h3>
-                <input placeholder="Name your Room" type="text" bind:value="{name}" />
-                {#if create}
-                <Button disabled="{false}" text="Generate key" on:click="{() => createGroup()}" />
+                <h3 in:fade>Name your Room</h3>
+                <input placeholder="Name your Room" type="text" disabled={lockName} bind:value="{name}" />
+                {#if name.length}
+                <Button disabled="{false}" text="Generate invite" on:click="{() => createInvite()}" />
                 {/if}
                 <div class="key-wrapper" in:fade>
-                    <input placeholder="Input room key" type="text" bind:value="{key}" />
-                    {#if key.length}
+                    {#if invite.length}
+                    <div in:fade><h3 style="color: var(--success-color)">Invite created</h3></div>
+                    <!-- <input placeholder="Input room key" type="text" bind:value="{link}" /> -->
+                    {/if}
+                    {#if link.length}
                         <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                     {/if}
                 </div>
                 <FillButton
+                text="{create_group}"
+                disabled="{!enableAddGroupButton}"
+                enabled="{enableAddGroupButton}"
+                on:click|once="{() => addRoom()}"
+                />
+            {:else if !create && newgroup}
+            <div>
+                {#if invite.length}
+                    <h3>{name}</h3>
+                {/if}
+            </div>
+            <div class="key-wrapper" in:fade>
+                <input placeholder="Invite link" type="text" bind:value="{link}" />
+                {#if invite.length}
+                    <img in:fade class="avatar" src="data:image/png;base64,{get_avatar(invite)}" alt="" />
+                {/if}
+            </div>
+                <FillButton
                     text="{create_group}"
                     disabled="{!enableAddGroupButton}"
                     enabled="{enableAddGroupButton}"
-                    on:click|once="{() => addRoom()}"
+                    on:click|once="{() => addRoom(false)}"
                 />
             {/if}
         </div>
