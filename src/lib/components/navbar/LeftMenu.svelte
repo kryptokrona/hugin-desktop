@@ -129,11 +129,11 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
                 <GroupIcon />
             </div>
         </Tooltip> 
-        <!-- <Tooltip title="Rooms">
+        <Tooltip title="Rooms">
             <div on:click="{roomRouteAndMenu}" class="button">
                 <RoomIcon />
             </div>
-        </Tooltip>  -->
+        </Tooltip> 
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
