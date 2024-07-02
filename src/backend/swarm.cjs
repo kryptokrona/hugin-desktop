@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm");
-const DHT = require('@hyperswarm/dht')
-const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex } = require('./utils.cjs');
+
+const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex, sanitize_group_message, get_new_peer_keys, create_keys_from_seed } = require('./utils.cjs');
 const {saveGroupMsg, getChannels} = require("./database.cjs")
 const { app,
     ipcMain
@@ -9,7 +9,6 @@ const {verifySignature, decryptSwarmMessage, signMessage, keychain} = require(".
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
-const Keychain = require('keypear');
 const { add_local_file, start_download, add_remote_file, send_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
 const userDataDir = app.getPath('userData')
@@ -18,8 +17,6 @@ let localFiles = []
 let remoteFiles = []
 let active_swarms = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
-let sender
-let my_address
 let my_name = ""
 
 async function send_voice_channel_sdp(data) {
@@ -28,7 +25,7 @@ async function send_voice_channel_sdp(data) {
     const con = active.connections.find(a => a.address === data.address)
     if (!con) return
     //We switch data address because in this case, it is from, we can change this
-    data.address = my_address
+    data.address = Hugin.address
     con.connection.write(JSON.stringify(data))
 }
 
@@ -38,7 +35,7 @@ const send_voice_channel_status = async (joined, status) => {
     const msg = active.topic
     const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
     const data = JSON.stringify({
-        address: my_address,
+        address: Hugin.address,
         signature: sig,
         message: msg,
         voice: joined,
@@ -68,12 +65,11 @@ const send_voice_channel_status = async (joined, status) => {
 }
 
 const join_voice_channel = (key, topic, address) => {
-    sender("join-voice-channel", {key, topic, address})
+    Hugin.send("join-voice-channel", {key, topic, address})
 }
 
 
 const new_swarm = async (data, ipc) => {
-    sender = ipc
     return await create_swarm(data)
 }
 
@@ -87,7 +83,7 @@ const end_swarm = async (key) => {
     const active = active_swarms.find(a => a.key === key)
     if (!active) return
     const topic = active.topic
-    sender('swarm-disconnected', topic)
+    Hugin.send('swarm-disconnected', topic)
     update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
     
     active.connections.forEach(chat => {
@@ -105,21 +101,22 @@ const end_swarm = async (key) => {
 }
 
 const create_swarm = async (data) => {
-    const key = data.key
-    const name = data.name
-
-    my_address = data.address
+    console.log("Joining swarm!")
+    const key = await hash(data.key)
+    const invite = data.key
+    const name = Hugin.nickname
     my_name = name
 
     let discovery
     let swarm
 
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
-    const hash = base_keys.publicKey.toString('hex')
+    const topicHash = base_keys.publicKey.toString('hex')
 
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
         swarm = new HyperSwarm({firewall (remotePublicKey, payload) {
+            console.log("Got connection in firewall swarm")
             //We are already checking payloads in hyperswarm
             if (payload !== null) {
                 //Moved checkKey to hyperswarm
@@ -134,19 +131,17 @@ const create_swarm = async (data) => {
     
     const startTime = Date.now().toString()
 
-    sender('swarm-connected', {topic: hash, key, channels: [], voice_channel: [], connections: [], time: startTime})
+    Hugin.send('swarm-connected', {topic: topicHash, key: invite, channels: [], voice_channel: [], connections: [], time: startTime})
     
     //The topic is public so lets use the pubkey from the new base keypair
 
-    active_swarms.push({key, topic: hash, connections: [], call: [], time: startTime})
-    let active = active_swarms.find(a => a.key === key) 
-    active.swarm = swarm
+    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery})
     
-    sender('set-channels')
+    Hugin.send('set-channels')
 
     swarm.on('connection', (connection, information) => {
         console.log("New connection ", information)
-        new_connection(connection, hash, key)
+        new_connection(connection, topicHash, data.key, dht_keys)
 
     })
 
@@ -157,42 +152,41 @@ const create_swarm = async (data) => {
         swarm.destroy();
         setTimeout(() => process.exit(), 2000);
     });
-    
-    const topic = Buffer.alloc(32).fill(hash)
+    console.log("hash topic", topicHash)
+    const topic = Buffer.alloc(32).fill(topicHash)
     discovery = swarm.join(topic, {server: true, client: true})
-    active.discovery = discovery
     await discovery.flushed()
-    check_if_online(hash)
+    check_if_online(topicHash)
 }
 
-const new_connection = (connection, hash, key) => {
+const new_connection = (connection, topic, invite, dht_keys) => {
     console.log("New connection incoming")
-    let active = get_active_topic(hash)
+    let active = get_active_topic(topic)
     
     if (!active) {
         console.log("no longer active in topic")
-        connection_closed(connection, hash)
+        connection_closed(connection, topic)
         return
     }
 
     console.log("*********Got new Connection! ************")
-    active.connections.push({connection, topic: hash, voice: false, name: "", address: "", video: false})
-    send_joined_message(key, hash, my_address)
+    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false})
+    send_joined_message(invite, topic, dht_keys)
     //checkIfOnline(hash)
     connection.on('data', async data => {
 
-        incoming_message(data, hash, connection, key)
+        incoming_message(data, topic, connection, invite)
 
     })
 
     connection.on('close', () => {
         console.log("Got close signal")
-        connection_closed(connection, hash)
+        connection_closed(connection, topic)
     })
 
     connection.on('error', () => {
         console.log("Got error connection signal")
-        connection_closed(connection, hash)
+        connection_closed(connection, topic)
     })
 
 }
@@ -209,8 +203,8 @@ const connection_closed = (conn, topic) => {
     }
     const user = active.connections.find(a => a.connection === conn)
     if (!user) return
-    sender("close-voice-channel-with-peer", user.address)
-    sender("peer-disconnected", {address: user.address, topic})
+    Hugin.send("close-voice-channel-with-peer", user.address)
+    Hugin.send("peer-disconnected", {address: user.address, topic})
     const still_active = active.connections.filter(a => a.connection !== conn)
     console.log("Connection closed")
     console.log("Still active:", still_active)
@@ -223,14 +217,14 @@ const get_active_topic = (topic) => {
     return active
 }
 
-const check_data_message = async (data, connection, topic) => {
+const check_data_message = async (data, connection, topic, invite) => {
 
     try {
         data = JSON.parse(data)
     } catch (e) {
-        return false
+        return "Error"
     }
-
+    console.log("Data parsed", data)
     //Check if active in this topic
     const active = get_active_topic(topic)
     if (!active) return "Error"
@@ -273,7 +267,7 @@ const check_data_message = async (data, connection, topic) => {
             if (data.offer === true) {
                 if ('retry' in data) {    
                     if (data.retry === true) {
-                        sender('got-expanded-voice-channel', [data.data, data.address])
+                        Hugin.send('got-expanded-voice-channel', [data.data, data.address])
                         return
                     }
                 }
@@ -290,16 +284,18 @@ const check_data_message = async (data, connection, topic) => {
         if ('joined' in data) {
 
             const joined = sanitize_join_swarm_data(data)
+            console.log("Joined?", joined)
             if (!joined) return "Error"
 
             if (con.joined) {
                 //Connection is already joined
                 return
             }
-
             //Check signature
-            const verified = await verifySignature(joined.message, joined.address, joined.signature)
-            if(!verified) return "Error"
+            // const verified = await verifySignature(joined.message, joined.address, joined.signature)
+            const admin = verify_admin(connection.remotePublicKey, Buffer.from(data.signature), Buffer.from(invite.slice(0, -64)))
+            console.log("Admin?", admin)
+            // if(!verified) return "Error"
             con.joined = true
             con.address = joined.address
             con.name = joined.name
@@ -314,7 +310,7 @@ const check_data_message = async (data, connection, topic) => {
 
             con.video = joined.video
             console.log("Connection updated: Joined:", con.joined)
-            sender("peer-connected", joined)
+            Hugin.send("peer-connected", joined)
         }
 
         if ('voice' in data) {
@@ -326,6 +322,16 @@ const check_data_message = async (data, connection, topic) => {
     }
 
     return false
+}
+
+const verify_admin = (remotePub, signature, invite) => {
+
+    const keys = create_keys_from_seed(randomKey())
+    console.log("con.remotePublicKey", remotePub)
+    const verify = keys.get().verify(remotePub, signature, invite)
+    console.log("Verify admin?", verify)
+    return verify
+
 }
 
 const check_peer_voice_status = (data, con) => {
@@ -348,16 +354,16 @@ const update_voice_channel_status = (data, con) => {
     con.video = data.video
     console.log("Updating voice channel status for this connection Voice, Video:", con.voice, con.video)
     //Send status to front-end
-    sender("voice-channel-status", data)
+    Hugin.send("voice-channel-status", data)
     return true
 }
 
 const answer_call = (offer) => {
-    sender('answer-voice-channel', offer)
+    Hugin.send('answer-voice-channel', offer)
 }
 
 const got_answer = (answer) => {
-    sender('got-answer-voice-channel', answer)
+    Hugin.send('got-answer-voice-channel', answer)
 }
 
 const get_local_voice_status = (topic) => {
@@ -387,18 +393,21 @@ const get_my_channels = async (key) => {
     return channels.map(a => { if (a.channel === "Chat room") return a.channel })
 }
 
-const send_joined_message = async (key, topic, my_address) => {
+const send_joined_message = async (invite, topic, dht_keys) => {
+    console.log("DHT keys!", dht_keys)
     //Use topic as signed message?
     const msg = topic
     const active = get_active_topic(topic)
     if (!active) return
-    const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
+    const sig = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
+
+    console.log("Signature admini?", sig)
     let [voice, video] = get_local_voice_status(topic)
     if (video) voice = true
     //const channels = await get_my_channels(key)
 
     const data = JSON.stringify({
-        address: my_address,
+        address: Hugin.address,
         signature: sig,
         message: msg,
         joined: true,
@@ -407,40 +416,44 @@ const send_joined_message = async (key, topic, my_address) => {
         voice: voice,
         channels: [],
         video: video,
-        time: active.time
+        time: active.time,
     })
 
-    send_swarm_message(data, key)
+    send_swarm_message(data, invite)
 }
 
-const incoming_message = async (data, topic, connection, key) => {
+const incoming_message = async (data, topic, connection, invite) => {
     const str = new TextDecoder().decode(data);
+    console.log("Data incoming", str)
     if (str === "Ping") return
-    const check = await check_data_message(data, connection, topic)
+    const check = await check_data_message(data, connection, topic, invite)
     if (check === "Error") {
-        connection_closed(connection, topic)
+        console.log("Check failed")
+        //connection_closed(connection, topic)
         return
     }
+    console.log("Check", check)
     if (check) return
-    const hash = str.substring(0,64)
-    let [message, time, hsh] = await decryptSwarmMessage(str, hash, key)
+    const message = sanitize_group_message(JSON.parse(data))
+    console.log("Got incoming message!", message)
     if (!message) return
-    const msg = await saveGroupMsg(message, hsh, time, false, true)
+    const msg = await saveGroupMsg(message, false, true)
     if (!msg) return
         //Send new board message to frontend.
-        sender('groupRtcMsg', msg)
-        sender('group-notification', [msg, false])
+    Hugin.send('roomMsg', message)
+    Hugin.send('room-notification', [message, false])
 
 }
 
 
 const send_swarm_message = (message, key) => {
-    let active = active_swarms.find(a => a.key === key)
+    let active = get_active(key)
+    console.log("Send to active", active)
     if (!active) return
     active.connections.forEach(chat => {
         try {
             console.log("Writing to channel")
-            chat.connection.write(message)
+            chat.connection.write(message) 
         } catch(e) {
             errorMessage('Connection offline')
         }
@@ -468,7 +481,7 @@ const upload_ready = async (file, topic, address) => {
         fileName: file.fileName,
         address,
         topic,
-        info: file.profile ? "profile" : "file",
+        info: "file",
         type: "upload-ready",
         size: file.size, 
         time: file.time,
@@ -483,13 +496,13 @@ ipcMain.on('group-download', (e, download) => {
     request_download(download)
 })
 
-ipcMain.on('group-upload', async (e, fileName, path, topic, size, time, hash, profile = false) => {
+ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = false) => {
+    const active = get_active(key)
+    const topic = active.topic
     const upload = {
-        fileName, path, topic, size, time, hash, profile
+        fileName, path, topic, size, time, hash, room
     }
     console.log("Upload this file to group", upload)
-    if (profile) share_avatar(upload)
-    else
     share_file(upload)
 })
 
@@ -503,9 +516,9 @@ const request_download = (download) => {
     const topic = active.topic
     const info = {
         fileName: download.fileName,
-        address: my_address,
+        address: Hugin.address,
         topic: topic,
-        info: download.profile ? "profile" : "file",
+        info: "file",
         type: "download-request",
         size: download.size,
         time: download.time,
@@ -529,7 +542,7 @@ const share_file = (file) => {
     const active = get_active_topic(file.topic)
     const fileInfo = {
         fileName: file.fileName,
-        address: my_address,
+        address: Hugin.address,
         topic: file.topic,
         info: 'file-shared',
         type: 'file',
@@ -540,31 +553,8 @@ const share_file = (file) => {
     const info = JSON.stringify(fileInfo)
     localFiles.push(file)
     //File shared, send info to peers
+    console.log("Send file info!", info)
     send_swarm_message(info, active.key)
-}
-
-const share_avatar = (file) => {
-    console.log("Share avatar!")
-    const active = get_active_topic(file.topic)
-    const profileInfo = {
-        fileName: file.fileName,
-        address: my_address,
-        topic: file.topic,
-        info: 'profile-shared',
-        type: 'profile',
-        size: file.size,
-        time: Date.now(),
-        hash: file.hash,
-        profile: true
-    }
-    console.log("Share this!", profileInfo)
-    const info = JSON.stringify(profileInfo)
-    localFiles.push(file)
-    send_swarm_message(info, active.key)
-}
-
-const download_avatar = () => {
-    
 }
 
 
@@ -580,15 +570,12 @@ const start_upload = async (file, topic) => {
 const check_file_message = async (data, topic, address) => {
 
     if (data.info === 'file-shared') {
-        add_remote_file(data.fileName, address, data.size, topic, true, data.hash)
+        console.log("File shared!!", data)
+        add_remote_file(data.fileName, address, data.size, topic, true, data.hash, true)
     }
-    
-    //
-    // if (data.info === 'profile-shared') {
-    //     add_remote_file(data.fileName, address, data.size, topic, true, data.hash, true)
-    // }
 
     if (data.type === 'download-request') {
+        console.log("download request!!", data)
         const key = await start_upload(data, topic)
         send_file(data.fileName, data.size, address, key, true)
     }
@@ -599,12 +586,6 @@ const check_file_message = async (data, topic, address) => {
             start_download(Hugin.downloadDir, data.fileName, address, data.key)
             return
         }
-        // if (data.info === "profile") {
-        //     await add_remote_file(data.fileName, address, data.size, data.key, true, undefined, true)
-        //     start_download(userDataDir + "/avatars", data.fileName, address, data.key)
-        //     return
-
-        // }
     }
 
     if (data.type === 'file-removed') console.log("'file removed", data) //TODO REMOVE FROM remoteFiles
@@ -613,7 +594,7 @@ const check_file_message = async (data, topic, address) => {
 
 
 const errorMessage = (message) => {
-    sender('error-notify-message', message)
+    Hugin.send('error-notify-message', message)
 }
 
 ipcMain.on('join-voice', async (e, data) => {
@@ -630,8 +611,8 @@ ipcMain.on('exit-voice', async (e, key) => {
     if (!in_voice) return
     
     //We should only be active in one channel. Close all connections
-    sender('leave-active-voice-channel')
-    sender("leave-voice-channel")
+    Hugin.send('leave-active-voice-channel')
+    Hugin.send("leave-voice-channel")
     send_voice_channel_status(false, {key: key, video: false})
 })
 
@@ -641,14 +622,14 @@ ipcMain.on('get-sdp-voice-channel', async (e, data) => {
 
 ipcMain.on('new-channel', async (e, data) => {
    console.log("New channel!", data)
-   sender('channel-created', data)
+   Hugin.send('channel-created', data)
  })
 
 ipcMain.on('expand-voice-channel-sdp', async (e, expand) => {
     //This roundtrip is not needed when we do not expand sdps anymore
     let [data, address] = expand
     let expanded_data = [data, address]
-    sender('got-expanded-voice-channel', expanded_data)
+    Hugin.send('got-expanded-voice-channel', expanded_data)
  })
  
 
@@ -682,28 +663,6 @@ function get_sdp(data) {
 
     console.log("Send voice channel sdp reconnect?:", sendMessage.retry)
     send_voice_channel_sdp(sendMessage)
-}
-
-function get_sub_key(keys, tweak) {
-    const random_buf = Buffer.alloc(32).fill(tweak)
-    const sub = keys.sub(random_buf).get()
-    return sub
-}
-
-function create_peer_base_keys(buf) { 
-    const keypair = DHT.keyPair(buf)
-    const keys = Keychain.from(keypair) 
-    return keys
-}
-
-function get_new_peer_keys(key) {
-    const secret = Buffer.alloc(32).fill(key)
-    const base_keys = create_peer_base_keys(secret)
-    const random_key = Buffer.alloc(32).fill(randomKey())
-    const dht_keys = create_peer_base_keys(random_key)
-    //Sign the dht public key with our base_keys
-    const signature = base_keys.get().sign(dht_keys.get().publicKey)
-    return [base_keys, dht_keys, signature]
 }
 
 
