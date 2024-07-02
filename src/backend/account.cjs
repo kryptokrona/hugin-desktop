@@ -80,6 +80,7 @@ class Account {
     this.sender = null
     this.downloadDir = ""
     this.nickname = ""
+    this.address = ""
     }
 
     async init(wallet, name, node, s) {
@@ -88,7 +89,7 @@ class Account {
       this.sender = s
       this.node = node
       this.downloadDir = store.get('download.dir') ?? downloadDir
-
+      this.address = wallet.getPrimaryAddress()
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({
