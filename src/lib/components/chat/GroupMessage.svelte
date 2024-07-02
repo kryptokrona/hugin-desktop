@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -17,6 +17,7 @@ import DownloadFile from './DownloadFile.svelte'
 import UploadFile from './UploadFile.svelte'
 import Emoji from "$lib/components/icons/Emoji.svelte";
 import 'emoji-picker-element';
+import { roomMessages } from '$lib/stores/roommsgs'
 
 export let msg
 export let msgFrom
@@ -31,6 +32,7 @@ export let reply_to_this = false
 export let rtc = false
 export let joined = false
 export let file = false
+export let room = false
 
 $: positionEmojiContainer(openEmoji);
 
@@ -67,6 +69,10 @@ let replyError = false
 
 
 onMount( async () => {
+    emojiPicker.addEventListener('emoji-click', (e) => {
+            openEmoji = false
+            reactTo(e)
+        })
         if (reply.length === 64) 
         {
         thisReply = await checkreply(reply)
@@ -76,10 +82,7 @@ onMount( async () => {
         }
         checkMessage()
 
-        emojiPicker.addEventListener('emoji-click', (e) => {
-            openEmoji = false
-            reactTo(e)
-        })
+    
 })
 
 onDestroy(() => {
@@ -118,7 +121,10 @@ async function checkreply(reply) {
         if (group_reply) return group_reply
     }
     //Check in db if we can find it
+    let local = $roomMessages.find(a => a.hash === reply)
+    if (local) return local
     let thisreply = await window.api.getGroupReply(reply)
+    console.log("this reply", thisreply)
     if (!thisreply) return false
     thisreply.hash = thisreply.hash + hashPadding()
     return thisreply
@@ -192,6 +198,12 @@ const deleteMsg = (e) => {
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
+    reply_to_this = true
+}
+
+$: if ($rooms.replyTo.reply == false) {
+    reply_to_this = false
+} else if ($rooms.replyTo.to == hash) {
     reply_to_this = true
 }
 
