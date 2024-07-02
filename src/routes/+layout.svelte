@@ -7,7 +7,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms} from '$lib/stores/user.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -42,7 +42,7 @@
     let board_message_sound
     let new_message_sound
 
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    //document.addEventListener('contextmenu', event => event.preventDefault());
 
     const closePopup = () => {
         incoming_call = false
@@ -173,6 +173,33 @@
             data.type = "group"
             $notify.unread.push(data)
             $notify.new = $notify.new
+        })
+
+        window.api.receive('room-notification', ([data, add = false]) => {
+            console.log("room notification", data)
+            const thisgroup = data.group === $rooms.thisRoom.key
+            const ingroups = $page.url.pathname === '/rooms'
+            const group = $rooms.roomArray.find(a => a.key === data.group)
+            if (data.address == $user.myAddress) return
+            if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
+            if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
+            new_messages = true
+            data.key = data.address
+            
+            //Future notifications page
+            $notify.notifications.push(data)
+            if ($notify.new.length < 2 && !$notify.que && !add) {
+                if (!$notify.off.some(a => a === group.name)) {
+                    board_message_sound.play()
+                    $notify.new.push(data)
+                }
+            }
+            if (!$misc.focus && thisgroup && ingroups) return
+            if (add) return
+            data.type = 'room'
+            $notify.unread.push(data)
+            console.log("unread!", $notify.unread)
+            $notify = $notify
         })
 
         window.api.receive('privateMsg', (data) => {
