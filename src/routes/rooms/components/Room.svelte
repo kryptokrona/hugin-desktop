@@ -11,14 +11,15 @@
     let asian = false
 
     $: channels
-    
+    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
     
     const dispatch = createEventDispatcher()
     
     const printRoom = (rm) => {
-  
+    
         if (rm.key === $rooms.thisRoom.key) return
+        $swarm.activeSwarm = thisSwarm
         dispatch('print')
     }
     
@@ -49,7 +50,6 @@
         in:fade
         out:fade
         class:active="{$rooms.thisRoom.key === r.key}"
-        class:swarm="{swarmGroup}"
         on:click="{(e) => printRoom(r)}"
     >
     
@@ -178,10 +178,6 @@
     .text {
         display: flex;
         gap: 4px;
-    }
-    
-    .swarm {
-        border: 1px solid var(--success-color);
     }
     
     .swarm_info {
