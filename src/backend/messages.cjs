@@ -20,7 +20,11 @@ const {
     printGroup,
     getGroups,
     loadGroups,
-    deleteMessage} = require("./database.cjs")
+    deleteMessage,
+    addRoom,
+    loadRooms,
+    addRoomKeys,
+    getRooms} = require("./database.cjs")
 const {
     trimExtra, 
     sanitize_pm_message, 
@@ -30,7 +34,8 @@ const {
     hexToUint,
     randomKey,
     nonceFromTimestamp,
-    toHex
+    toHex,
+    sanitize_group_message
 } = require('./utils.cjs')
 
 const { send_beam_message, new_beam} = require("./beam.cjs")
@@ -69,6 +74,10 @@ ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
     send_group_message(msg, offchain, swarm)
 })
 
+ipcMain.on('send-room-message', (e, m) => {
+    send_room_message(m)
+})
+
 ipcMain.handle('get-group-reply', async (e, data) => {
     return await getGroupReply(data)
 })
@@ -79,7 +88,18 @@ ipcMain.handle('create-group', async () => {
 
 ipcMain.on('add-group', async (e, grp) => {
     addGroup(grp)
-    save_group_message(grp, grp.hash, parseInt(Date.now()), false, false, true)
+    const message = sanitize_group_message(grp)
+    save_group_message(message, grp.hash, parseInt(Date.now()), false, false, true)
+})
+
+
+ipcMain.on('add-room', async (e, room, admin) => {
+    addRoom(room)
+    const message = sanitize_group_message(room)
+    save_group_message(message, room.hash, parseInt(Date.now()), false, false, true, true)
+    if (admin) addRoomKeys(room.k, admin)
+    // sender('joined-room', room)
+    new_swarm({key: room.k})
 })
 
 
@@ -229,10 +249,19 @@ ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
 
 })
 
+const join_rooms = async () => {
+    const rooms = await getRooms()
+    for (const room of rooms) {
+        new_swarm({key: room.key}, Hugin.send)
+        await sleep(200)
+    }
+}
+
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
+    join_rooms()
     await background_sync_messages(await load_checked_txs())
      while (true) {
          try {
@@ -807,6 +836,15 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
     return payload_hex
 }
 
+async function send_room_message(message) {
+    console.log("Send this!", message)
+    const swarmMessage = JSON.stringify(message)
+    //Swarm message is already encrypted over the connection
+    send_swarm_message(swarmMessage, message.g)
+    const save = sanitize_group_message(message)
+    save_group_message(save, message.hash, message.t, false, true, false, true)
+}
+
 
 async function send_group_message(message, offchain = false, swarm = false) {
     console.log("Sending group msg!")
@@ -895,20 +933,24 @@ async function send_group_message(message, offchain = false, swarm = false) {
         }
     } else if (offchain) {
         //Generate a random hash
-        let random_key = randomKey()
-        let sentMsg = Buffer.from(payload_encrypted_hex, 'hex')
-        let sendMsg = random_key + '99' + sentMsg
+        let hash = message.h
+        let rtcMessage = Buffer.from(payload_encrypted_hex, 'hex')
+        message_json.t = timestamp
+        let swarmMessage = JSON.stringify(message_json)
+        let webRTCmessage = random_key + '99' + rtcMessage
+        //Swarm message is already encrypted over the connection
         message_json.sent = true
         if (swarm) {
-            send_swarm_message(sendMsg, group)
-            save_group_message(message_json, random_key, timestamp, false, true, false)
+            console.log("Send to swarm!", message_json)
+            send_swarm_message(swarmMessage, group)
+            save_group_message(message_json, hash, timestamp, false, true, false)
             Hugin.send('sent_rtc_group', {
-                hash: random_key,
+                hash: hash,
                 time: message.t,
             })
             return
         }
-        let messageArray = [sendMsg]
+        let messageArray = [webRTCmessage]
         Hugin.send('rtc_message', [messageArray, true])
         Hugin.send('sent_rtc_group', {
             hash: random_key,
@@ -1049,12 +1091,12 @@ async function decrypt_group_message(tx, hash, group_key = false) {
     if (block_list.some(a => a.address === from)) return false
 
     payload_json.sent = false
-    
-    const saved = save_group_message(payload_json, hash, tx.t, offchain)
+    const message = sanitize_group_message(payload_json)
+    const saved = save_group_message(message, hash, tx.t, offchain)
     
     if (!saved) return false
 
-    return [payload_json, tx.t, hash]
+    return [saved, tx.t, hash]
 
     } catch {
         return false
@@ -1113,18 +1155,14 @@ function torrent_shared(incoming, [uri, fileName, infoHash]) {
     Hugin.send('torrent-shared', file)
 }
 
-async function save_group_message(msg, hash, time, offchain, channel = false, add = false) {
+async function save_group_message(msg, hash, time, offchain, channel = false, add = false, room = false) {
     const saved = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!saved) return false
-    // const [check, torrent, uri, fileName, infoHash] = parse_torrent(saved.message)
-    // if (check && !torrent) {
-    //     //Incorrect torrent link, delete message
-    //     deleteMessage(hash)
-    //     return
-    // }
-    // if (check && torrent) {
-    //     torrent_shared(saved, [uri, fileName, infoHash])
-    // }
+    if (room) {
+        Hugin.send('roomMsg', saved)
+        Hugin.send('sent_room')
+        return
+    }
     if (!offchain) {
         //Send new board message to frontend.
         Hugin.send('groupMsg', saved)
