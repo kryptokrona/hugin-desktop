@@ -73,6 +73,7 @@ const createTables = () => {
     roomsTable()
     blockListTable()
     groupChannelsMessagesTable()
+    roomKeysTable()
 }
 
 const welcomeAddress =
@@ -262,6 +263,22 @@ const firstContact = () => {
     )
 }
 
+const roomKeysTable = () => {
+    const roomKeys = `
+    CREATE TABLE IF NOT EXISTS roomkeys (
+       priv TEXT,
+       invite TEXT,
+       UNIQUE (invite)
+   )`
+   return new Promise(
+    (resolve, reject) => {
+        database.prepare(roomKeys).run()
+    },
+    () => {
+        resolve()
+    })
+}
+
 
 
 //DATABASE REQUESTS
@@ -286,6 +303,17 @@ const loadRooms = () => {
             rows.push(room)
         }
         return rows
+}
+
+const loadRoomKeys = () => {
+    const rows = []
+    const getAllRooms = `SELECT * FROM roomkeys`
+    const rooms = database.prepare(getAllRooms).all()
+
+    for(const keys of rooms) {
+        rows.push(keys)
+    }
+    return rows
 }
 
 const loadKeys = async (start = false) => {
@@ -380,47 +408,19 @@ const getLatestList = async (list) => {
     return myGroups.sort((a, b) => a.timestamp - b.timestamp)
 }
 
-const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
-
-    let timestamp = sanitizeHtml(time)
-    if (timestamp.length > 20) return false
-    if (await groupMessageExists(timestamp)) return false
-    let group = sanitizeHtml(msg.g)
-    if (group.length > 64) return false
-    let text = sanitizeHtml(msg.m)
-    if (text.length > 777) return false
-    let addr = sanitizeHtml(msg.k)
-    if (addr.length > 99) return false
-    let reply = sanitizeHtml(msg.r)
-    if (reply.length > 64) return false
-    let sig = sanitizeHtml(msg.s)
-    if (sig.length > 200) return false
-    let nick = sanitizeHtml(msg.n)
-    if (nick.length > 50) return false
-    let txHash = sanitizeHtml(hash)
-    if (txHash.length > 64) return false
+const saveGroupMsg = async (msg, offchain, channels = false) => {
+    
+    if (await groupMessageExists(msg.time)) return false
+   
     let channel = false
 
-    if (channels) {
-        channel = sanitizeHtml(msg.c)
-        saveChannelMessage(txHash, timestamp, channel, group) 
-    }
+    // if (channels) {
+    //     channel = sanitizeHtml(msg.c)
+    //     saveChannelMessage(txHash, timestamp, channel, group) 
+    // }
 
-    if (nick === '') {
-        nick = 'Anonymous'
-    }
-    
-    let message = {
-        message: text,
-        address: addr,
-        signature: "",
-        group: group,
-        time: timestamp,
-        name: nick,
-        reply: reply,
-        hash: txHash,
-        sent: msg.sent,
-        channel: channel
+    if (msg.name === '') {
+        msg.name = 'Anonymous'
     }
 
     msg.sent = changeBool(msg.sent)
@@ -441,13 +441,13 @@ const saveGroupMsg = async (msg, hash, time, offchain, channels = false) => {
        VALUES
            (? ,?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(text, addr, sig, group, timestamp, nick, reply, txHash, msg.sent)
+    ).run(msg.message, msg.address, '', msg.group, msg.time, msg.name, msg.reply, msg.hash, msg.sent)
 
         } catch(a) {
             console.log("Sql lite", a)
         }
 
-    return message
+    return msg
 }
 
 const changeBool = (b) => {
@@ -553,20 +553,26 @@ const removeGroup = (group) => {
 
 //ADD ROOM
 
-ipcMain.on('add-room', async (e, room) => {
-    addRoom(room)
-})
-
 const addRoom = (room) => {
     console.log('adding', room)
     database.prepare(
-        `REPLACE INTO room
+        `REPLACE INTO rooms
       (key, name)
         VALUES
           (?, ?)`
     ).run([room.k, room.n])
 
-    console.log('saved group', room)
+    console.log('saved room', room)
+}
+
+const addRoomKeys = (invite, priv) => {
+    database.prepare(
+        `REPLACE INTO roomkeys
+      (invite, priv)
+        VALUES
+          (?, ?)`
+    ).run([invite, priv])
+
 }
 
 //REMOVE ROOM
@@ -878,4 +884,5 @@ process.on('SIGHUP', async () => process.exit(128 + 1));
 process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
-module.exports = {saveHash, firstContact, welcomeMessage, loadDB, loadGroups, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage}
+
+module.exports = {saveHash, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
