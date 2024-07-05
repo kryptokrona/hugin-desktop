@@ -22,6 +22,9 @@ const WINDOW_API = {
     sendGroupMessage: (msg, offchain, swarm) => {
         ipcRenderer.send('send-group-message', msg, offchain, swarm)
     },
+    sendRoomMessage: (msg) => {
+        ipcRenderer.send('send-room-message', msg)
+    },
     decryptMessage: (msg) => {
         ipcRenderer.send('decrypt_message', msg)
     },
@@ -50,6 +53,9 @@ const WINDOW_API = {
     getRooms: async () => {
         return await ipcRenderer.invoke('get-rooms')
     },
+    printRoom: async (room, page) => {
+        return await ipcRenderer.invoke('print-group', room, page)
+    },
     printGroup: async (grp, page) => {
         return await ipcRenderer.invoke('print-group', grp, page)
     },
@@ -63,8 +69,14 @@ const WINDOW_API = {
     getPrivateKeys: async (data) => {
         return await ipcRenderer.invoke('get-private-keys')
     },
+    getPublicKey: async (data) => {
+        return await ipcRenderer.invoke('get-public-key')
+    },
     getMnemonic: async (data) => {
         return await ipcRenderer.invoke('get-mnemonic')
+    },
+    createInvite: async () => {
+        return await ipcRenderer.invoke('get-room-invite')
     },
 
     //HANDLE CALLS
@@ -164,8 +176,8 @@ const WINDOW_API = {
         ipcRenderer.send('add-group', grp)
     },
 
-    addRoom: async (grp) => {
-        ipcRenderer.send('add-room', grp)
+    addRoom: async (rm, adm) => {
+        ipcRenderer.send('add-room', rm, adm)
     },
 
     removeGroup: async (grp) => {
