@@ -60,16 +60,16 @@ import { roomMessages } from './roommsgs'
 
         //     joined.channels = known_channels
         // }
-        joined.connections.push(data)
-        add_user(data, joined.key)
+        
+        add_user(data, joined)
         updateActiveSwarm()
         voice_channel_status(data)
     }
 
-    async function add_user(data, key) {
-        const joined = {
+    async function add_user(data, joined) {
+        const user = {
             message: "Joined the lobby",
-            grp: key,
+            grp: joined.key,
             reply: false,
             address: data.address,
             time: parseInt(data.time),
@@ -79,9 +79,9 @@ import { roomMessages } from './roommsgs'
             channel: "Chat room",
             hash: await window.api.createGroup()
         }
-        
-        $roomMessages.push(joined)
-        $roomMessages = $roomMessages
+        joined.connections.push(user)
+        // $roomMessages.push(user)
+        // $roomMessages = $roomMessages
     }
 
     function peer_disconnected(data) {
