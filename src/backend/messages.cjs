@@ -95,8 +95,12 @@ ipcMain.on('add-group', async (e, grp) => {
 
 ipcMain.on('add-room', async (e, room, admin) => {
     addRoom(room)
-    const message = sanitize_group_message(room)
+    let message = sanitize_group_message(room)
     save_group_message(message, room.hash, parseInt(Date.now()), false, false, true, true)
+    message.address = Hugin.address
+    message.message = "Joined the lobby"
+    message.sent = true
+    save_group_message(message, room.hash + 1, parseInt(Date.now()), false, false, true, true)
     if (admin) addRoomKeys(room.k, admin)
     // sender('joined-room', room)
     new_swarm({key: room.k})
