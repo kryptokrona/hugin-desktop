@@ -324,7 +324,7 @@ const add_remote_file = async (fileName, chat, size, key, group = false, hash, r
     } else remoteFiles.unshift(file)
     console.log("Updated remte", remoteFiles)
     if (update) return
-    if (group) await add_group_file(fileName, remoteFiles, chat, group, time, hash, room)
+    if (group) return await add_group_file(fileName, remoteFiles, chat, group, time, hash, room)
     else Hugin.send('remote-file-added', {remoteFiles, chat})
 }
 
@@ -343,6 +343,7 @@ const add_group_file = async (fileName, remoteFiles, chat, group, time, hash, ro
             file: true
     }
     Hugin.send('roomMsg', message)
+    return time
 }
 
 const remote_remote_file = (fileName, chat) => {
