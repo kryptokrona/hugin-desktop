@@ -16,7 +16,8 @@ import Loader from '$lib/components/popups/Loader.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Dropzone from "svelte-file-dropzone";
 import DropFile from '$lib/components/popups/DropFile.svelte'
-import { localFiles } from '$lib/stores/files'
+import { localFiles, remoteFiles } from '$lib/stores/files'
+import AddRoom from "./components/AddRoom.svelte"
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -39,6 +40,15 @@ $: wantToAdd = $rooms.addRoom
 
 $: replyTrue = $rooms.replyTo.reply
 
+const isFile = (data) => {
+    const findIt = (arr) => {
+        arr.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
+    }
+    const file = $remoteFiles.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
+    if (!file) return $localFiles.find(a => a.name === data.message && parseInt(data.time) === a.time)
+    return file
+}
+
 onMount(async () => {
     scrollDown()
 
@@ -46,17 +56,18 @@ onMount(async () => {
     window.api.receive('roomMsg', (data) => {
         const thisroom = data.group === $rooms.thisRoom.key
         const inrooms = $page.url.pathname === '/rooms'
-        if (data.address === $user.myAddress) return
-        if (data.channel.length) {
-            if (thisroom && inrooms && data.channel === $swarm.activeChannel.name) {
-                printRoomMessage(data)
-            }
-
-            return
-        } else {
-    
-        console.log('Another group', data)
+        const file = isFile(data)
+        if (file) {
+            data.file = file
         }
+        if (data.address === $user.myAddress) return
+            if (thisroom && inrooms) {
+                printRoomMessage(data)
+            } else {
+                console.log("Another room")
+            }
+            
+            return
     })
     
 })
@@ -92,16 +103,17 @@ const checkErr = (e) => {
 
 //Send message to store and DB
 const sendRoomMsg = async (e) => {
+    console.log("Event!", e)
     const error = checkErr(e)
     if (error) return
     let msg = e.detail.text
     let myaddr = $user.myAddress
     let time = Date.now()
+    const hash = await window.api.createGroup()
     let myName = $user.username
     let group = thisRoom
     let in_swarm = true
     let in_channel = $swarm.activeChannel.name
-    let offchain = true
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
@@ -115,7 +127,7 @@ const sendRoomMsg = async (e) => {
         address: myaddr,
         time: time,
         name: myName,
-        hash: time,
+        hash: hash,
         sent: true
     }
     let sendMsg = {
@@ -125,15 +137,16 @@ const sendRoomMsg = async (e) => {
         k: myaddr,
         t: time,
         n: myName,
-        hash: time,
-        swarm: in_swarm
+        hash: hash,
+        swarm: in_swarm,
+        sent: true
     }
 
     if (in_channel) {
         sendMsg.c = in_channel
     }
     
-    window.api.sendGroupMessage(sendMsg, offchain, in_swarm)
+    window.api.sendRoomMessage(sendMsg)
     printRoomMessage(myRoomMessage)
     replyExit()
     scrollDown()
@@ -203,7 +216,7 @@ const openAddRoom = () => {
         rooms.update((data) => {
             return {
                 ...data,
-                addGroup: false,
+                addRoom: false,
             }
         })
     }
@@ -212,26 +225,26 @@ const openAddRoom = () => {
 //Adds new Group to groArray and prints that Group, its probably empty.
 const addNewRoom = async (e) => {
     let room = e.detail
+    const admin = e.detail.admin
     if (room.length < 32) return
     openAddRoom()
     //Avoid svelte collision
     let hash = Date.now().toString() + hashPadding()
     let add = {
-        m: 'Joined group',
-        n: group.name,
+        m: 'Joined Room',
+        n: room.name,
         hash: hash,
         t: Date.now().toString(),
         s: '',
         sent: false,
         r: '',
-        k: group.key,
-        g: group.key,
+        k: room.key,
+        g: room.key,
         h: parseInt(Date.now() * 1000),
     }
     $roomMessages = []
-    window.api.addRoom(add)
-    await sleep(100)
-    printRoom(group)
+    window.api.addRoom(add, admin)
+    printRoom(room)
 }
 
 //Svelte reactive. Sets noMsgs boolean for welcome message.
@@ -258,6 +271,8 @@ async function printRoom(room) {
             thisRoom: { key: room.key, name: room.name, chat: true},
         }
     })
+
+    console.log("this room updated!")
     
     //Return the latest messages
     const messages = await getMessages(room)
@@ -266,6 +281,19 @@ async function printRoom(room) {
     checkReactions(messages, false)
     replyExit()
     scrollDown()
+}
+
+function addFileMessage(array) {
+    for (const msg of array) {
+        const file = isFile(msg)
+        console.log("File meesage found?", file)
+        if (!file) continue
+        if (file.time === parseInt(msg.time) || file.hash === msg.hash) {
+        const i = array.indexOf(msg)
+        array[i].file = file
+        }
+    }
+    return array
 }
 
 //Checks messages for reactions in chosen Room from printRoom() function
@@ -368,6 +396,42 @@ function nodrag() {
     dragover = false
 }
 
+async function dropFile(e) {
+    dragover = false
+    const { acceptedFiles, fileRejections } = e.detail
+    const filename = acceptedFiles[0].name
+    const path = acceptedFiles[0].path
+    const size = acceptedFiles[0].size
+    const time = Date.now()
+    
+    acceptedFiles[0].time = time
+    
+    if (fileRejections.length) {
+        console.log('rejected file')
+        return
+    }
+
+    console.log("acceptedFiles[0]", acceptedFiles[0])
+    const hash = await window.api.createGroup()
+    const message = {
+        message: 'File shared',
+        grp: thisRoom,
+        name: $user.username,
+        address: $user.myAddress,
+        reply: "",
+        timestamp: time,
+        file: acceptedFiles[0],
+        sent: true,
+        channel: "Room",
+        joined: true,
+        hash: hash,
+        time: time
+    }
+    $localFiles.push(acceptedFiles[0])
+    printRoomMessage(message)
+    window.api.groupUpload(filename, path, thisRoom, size, time, hash)
+}
+
 // function setChannels() {
 //     let in_swarm = $swarm.active.find(a => a.key === thisRoom)
 //     if (in_swarm) {
@@ -412,7 +476,7 @@ function nodrag() {
     <BlockContact />
 {/if}
 
-<Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => console.log(e)}>
+<Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => dropFile(e)}>
 <main in:fade="{{ duration: 350 }}">
     <RoomList
         on:printRoom="{(e) => printRoom(e.detail)}"
@@ -443,6 +507,7 @@ function nodrag() {
                     timestamp="{message.time}"
                     hash="{message.hash}"
                     file="{message?.file}"
+                    room="{true}"
                 />
             {/each}
             {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 
