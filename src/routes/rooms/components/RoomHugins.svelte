@@ -45,18 +45,20 @@ $: if (roomName) {
     else asian = false
 }
 
-//Active hugins
-$: activeHugins = $rooms.activeHugins
-
-$: activeList = activeHugins.filter(a => a.grp !== a.address)
-
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
 
 $: muteGroup = $notify.off.some(a => a === roomName)
 
+//Active hugins
+$: activeList = activeHugins.filter(a => a.grp !== a.address)
+
+$: console.log("activeList", activeList)
+
 let timeout = false
 
 $: if (thisSwarm) {
+    let uniq = {}
+    activeHugins = [...thisSwarm.connections.filter(a => !activeHugins.includes(a.address)), ...$rooms.activeHugins].filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
     activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
 } else {
     activeUsers = []
@@ -85,6 +87,7 @@ const disconnect_from_swarm = async () => {
 
 
 const connecto_to_swarm = async () => {
+    return
     loading = true
     if (!window.localStorage.getItem('swarm-info')) {
         $swarm.showInfo = true
