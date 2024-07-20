@@ -244,7 +244,7 @@ const check_data_message = async (data, connection, topic, invite) => {
     if ('info' in data) {
         const fileData = sanitize_file_message(data)
         if (!fileData) return "Error"
-        check_file_message(fileData, topic, con.address)
+        check_file_message(fileData, topic, con.address, con)
         return true
     }
 
@@ -504,6 +504,8 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
     }
     console.log("Upload this file to group", upload)
     share_file(upload)
+    save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname)
+
 })
 
 const get_active = (key) => {
@@ -567,11 +569,26 @@ const start_upload = async (file, topic) => {
     return await upload_ready(sendFile, topic, file.address)
 }
 
-const check_file_message = async (data, topic, address) => {
+const save_file_info = (data, topic, address, time, sent, name) => {
+    const active = get_active_topic(topic)
+    let message = {
+        message: data.fileName,
+        address: address,
+        name: name,
+        time: time,
+        group: active.key,
+        hash: data.hash,
+        reply: "",
+        sent: sent,
+    }
+    saveGroupMsg(message)
+}
+
+const check_file_message = async (data, topic, address, con) => {
 
     if (data.info === 'file-shared') {
-        console.log("File shared!!", data)
-        add_remote_file(data.fileName, address, data.size, topic, true, data.hash, true)
+        const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, true)
+        save_file_info(data, topic, con.address, added, false, con.name)
     }
 
     if (data.type === 'download-request') {
