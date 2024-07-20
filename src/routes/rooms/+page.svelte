@@ -41,9 +41,6 @@ $: wantToAdd = $rooms.addRoom
 $: replyTrue = $rooms.replyTo.reply
 
 const isFile = (data) => {
-    const findIt = (arr) => {
-        arr.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
-    }
     const file = $remoteFiles.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
     if (!file) return $localFiles.find(a => a.name === data.message && parseInt(data.time) === a.time)
     return file
@@ -103,7 +100,6 @@ const checkErr = (e) => {
 
 //Send message to store and DB
 const sendRoomMsg = async (e) => {
-    console.log("Event!", e)
     const error = checkErr(e)
     if (error) return
     let msg = e.detail.text
@@ -271,8 +267,6 @@ async function printRoom(room) {
             thisRoom: { key: room.key, name: room.name, chat: true},
         }
     })
-
-    console.log("this room updated!")
     
     //Return the latest messages
     const messages = await getMessages(room)
@@ -286,7 +280,6 @@ async function printRoom(room) {
 function addFileMessage(array) {
     for (const msg of array) {
         const file = isFile(msg)
-        console.log("File meesage found?", file)
         if (!file) continue
         if (file.time === parseInt(msg.time) || file.hash === msg.hash) {
         const i = array.indexOf(msg)
@@ -410,8 +403,6 @@ async function dropFile(e) {
         console.log('rejected file')
         return
     }
-
-    console.log("acceptedFiles[0]", acceptedFiles[0])
     const hash = await window.api.createGroup()
     const message = {
         message: 'File shared',
