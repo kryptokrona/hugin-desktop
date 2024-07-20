@@ -16,7 +16,9 @@ $: roomList
 
 //This group name
 $: roomName = $rooms.thisRoom.name
-
+$: {
+    $swarm.activeSwarm = $rooms.thisRoom
+}
 $: show_groups = true
 	
 const dispatch = createEventDispatcher()
@@ -25,7 +27,7 @@ const nogroup = {
         chat: 'Hugin Rooms',
         key:  $misc.welcomeAddress,
         msg: 'Click the + icon',
-        name: 'Private groups',
+        name: 'Private Rooms',
     }
     
 onMount( async () => {
@@ -43,6 +45,9 @@ onDestroy(() => {
 window.api.receive('roomMsg', () => {
     filterActiveHugins($roomMessages)
     printRooms()
+})
+window.api.receive('peer-connected', () => {
+    filterActiveHugins($roomMessages)
 })
 
 //Check active group status
@@ -102,7 +107,6 @@ async function printRooms() {
 
 //Remove active group
 const removeGroup = async () => {
-    console.log($rooms.thisRoom.key)
     window.api.removeRoom($rooms.thisRoom.key)
     let filter = $rooms.roomArray.filter((a) => a.key !== $rooms.thisRoom.key)
     $rooms.roomArray = filter
@@ -115,7 +119,7 @@ const removeGroup = async () => {
         setEmptyGroup()
         $rooms.thisRoom = nogroup
     }
-    $rooms.removeGroup = false
+    $rooms.removeRoom = false
     dispatch('removeGroup')
     await sleep(100)
     filterActiveHugins($roomMessages)
@@ -123,7 +127,7 @@ const removeGroup = async () => {
 
 //Read message
 function readMessage(e) {
-    const clear = $notify.unread.filter(unread => unread.room !== e.key)
+    const clear = $notify.unread.filter(unread => unread.group !== e.key)
     $notify.unread = clear
 
     roomList = roomList
