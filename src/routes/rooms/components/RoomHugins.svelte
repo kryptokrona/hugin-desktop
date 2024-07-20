@@ -52,8 +52,6 @@ $: muteGroup = $notify.off.some(a => a === roomName)
 //Active hugins
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
-$: console.log("activeList", activeList)
-
 let timeout = false
 
 $: if (thisSwarm) {
