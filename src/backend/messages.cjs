@@ -357,7 +357,6 @@ async function decrypt_hugin_messages(transactions, que = false) {
         try {
             const thisExtra = transaction.transactionPrefixInfo.extra
             const thisHash = transaction.transactionPrefixInfotxHash
-            
             if (!validate_extra(thisExtra, thisHash, que)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
                 if (!saveHash(thisHash)) continue
@@ -915,7 +914,8 @@ async function send_group_message(message, offchain = false, swarm = false) {
         if (result.success) {
             console.log("Succces sending tx")
             message_json.sent = true
-            save_group_message(message_json, result.transactionHash, timestamp, false, false, false)
+            const send = sanitize_group_message(message_json)
+            await save_group_message(send, result.transactionHash, timestamp, false, false, false)
             Hugin.send('sent_group', {
                 hash: result.transactionHash,
                 time: message.t,
@@ -1075,7 +1075,7 @@ async function decrypt_group_message(tx, hash, group_key = false) {
         } catch (err) {
         }
     }
-
+    
     if (!decryptBox) {
         return false
     }
@@ -1094,13 +1094,15 @@ async function decrypt_group_message(tx, hash, group_key = false) {
     if (!verified) return false
     if (block_list.some(a => a.address === from)) return false
 
+    payload_json.hash = hash
+    payload_json.t = tx.t
     payload_json.sent = false
-    const message = sanitize_group_message(payload_json)
-    const saved = save_group_message(message, hash, tx.t, offchain)
     
+    const message = sanitize_group_message(payload_json)
+    await save_group_message(message, hash, tx.t, offchain)
     if (!saved) return false
 
-    return [saved, tx.t, hash]
+    return [message, tx.t, hash]
 
     } catch {
         return false
