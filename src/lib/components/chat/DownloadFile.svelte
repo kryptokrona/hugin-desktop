@@ -56,11 +56,6 @@
     
     const downloadFile = (file) => {
         clicked = true
-        if (group && !rtc) {
-            const thisFile = $groups.fileList.find(a => a.fileName === file.fileName && file.hash === a.hash)
-            window.api.send('download-torrent', thisFile)
-            return
-        }
         if (group) {
             const thisFile = $remoteFiles.find(a => a.fileName === file.fileName && file.time === a.time)
             window.api.send('group-download', thisFile)
@@ -85,13 +80,13 @@
         <div in:fade>
             <Progress file={file} send={false}/>
         </div>
-    {:else if downloadDone && group}
+    <!-- {:else if downloadDone && group}
         <div style="cursor: pointer" in:fade on:click={() => window.api.openFolder()}>
             <Progress file={file} send={false}/>
         </div>
-        <p class="message done">File downloaded!</p>
+        <p class="message done">File downloaded!</p> -->
         
-    {:else if downloadDone && (!group || !rtc)}
+    {:else if downloadDone}
         {#if !video}
                 {#if thisFile === "File"}
                 <div in:fade>
