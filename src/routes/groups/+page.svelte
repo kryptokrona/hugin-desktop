@@ -159,21 +159,9 @@ const scrollDown = () => {
     windowChat.scrollTop = windowChat.scrollTopMax
 }
 
-const isTorrent = (msg) => {
-    return [false, false]
-    if (msg.message.startsWith('TORRENT://')) {
-    const torrent = $groups.fileList.find(file => file.hash === msg.hash || file.time === msg.time)
-    if (torrent) return [torrent, true]
-    return [true, false]
-    }
-return [false, false]
-}
-
 //Prints any single group message. 
 const printGroupMessage = (groupMsg) => {
-    const [torrent, found] = isTorrent(groupMsg)
-    if (torrent) groupMsg.file = torrent
-    if (torrent && !found) groupMsg.message = "Torrent shared ⚡️"
+
     if (
         groupMsg.reply.length === 64 &&
         groupMsg.message.length < 9 &&
@@ -333,7 +321,7 @@ function addFileMessage(array) {
 function checkReactions(array, scroll) {
     
     //Add any pending file message
-    array = addFileMessage(array)
+    // array = addFileMessage(array)
     //Only reactions
     filterEmojis = [...array.filter(
         (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
