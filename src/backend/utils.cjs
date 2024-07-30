@@ -356,7 +356,7 @@ const sanitize_group_message = (msg) => {
       reply: reply,
       hash: txHash,
       sent: false,
-      channel: 'channel',
+      channel: '',
       hash: txHash,
     };
   
@@ -375,7 +375,6 @@ function get_new_peer_keys(key) {
     const seed = randomKey()
     const dht_keys = create_keys_from_seed(seed)
     //Sign the dht public key with our base_keys
-    console.log("DHt keys?", dht_keys.get().publicKey)
     const signature = base_keys.get().sign(dht_keys.get().publicKey)
     return [base_keys, dht_keys, signature]
 }
@@ -393,4 +392,8 @@ function create_room_invite() {
     return [rand + admin.get().publicKey.toString('hex'), seed]
 }
 
-module.exports = {sleep, get_new_peer_keys, create_keys_from_seed, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
+function naclHash(val) {
+    return nacl.hash(hexToUint(val))
+}
+
+module.exports = {sleep, naclHash, get_new_peer_keys, create_keys_from_seed, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
