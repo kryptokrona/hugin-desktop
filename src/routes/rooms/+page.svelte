@@ -54,11 +54,13 @@ onMount(async () => {
         const thisroom = data.group === $rooms.thisRoom.key
         const inrooms = $page.url.pathname === '/rooms'
         const file = isFile(data)
+        let thistopic = false
         if (file) {
             data.file = file
+            thistopic = data.key === $rooms.thisRoom.topic
         }
         if (data.address === $user.myAddress) return
-            if (thisroom && inrooms) {
+            if ((thisroom || thistopic) && inrooms) {
                 printRoomMessage(data)
             } else {
                 console.log("Another room")
