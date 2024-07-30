@@ -1,6 +1,6 @@
 <script>
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { groups, notify } from '$lib/stores/user.js'
+import { groups, notify, rooms } from '$lib/stores/user.js'
 import { fly } from 'svelte/transition'
 import { cubicIn, cubicOut } from 'svelte/easing'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
@@ -11,7 +11,17 @@ export let error
 export let message
 export let success
 
-const group = $groups.groupArray.find(a => a.key === message.group)
+const group_or_room = () => {
+    const findit = (arr) => {
+       return arr.find(a => a.key === message.group)
+    }
+    const room = findit($rooms.roomArray)
+    if (!room) return findit($groups.groupArray)
+    return room
+    
+}
+
+let group = group_or_room()
 
 onMount(
     () =>
