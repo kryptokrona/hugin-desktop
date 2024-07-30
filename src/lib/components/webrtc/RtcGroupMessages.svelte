@@ -45,22 +45,22 @@ const clearMessages = () => {
 }
 
 window.api.receive('peer-connected', (data) => { 
-    if ($swarm.active.length) {
-            let joinedMessage = {
-            message: "Joined the lobby",
-            grp: $swarm.activeSwarm.key,
-            reply: false,
-            address: data.address,
-            time: parseInt(data.time),
-            name: data.name,
-            hash: data.time,
-            joined: true,
-            channel: "Chat room"
-        }
+    // if ($swarm.active.length) {
+    //         let joinedMessage = {
+    //         message: "Joined the lobby",
+    //         grp: $swarm.activeSwarm.key,
+    //         reply: false,
+    //         address: data.address,
+    //         time: parseInt(data.time),
+    //         name: data.name,
+    //         hash: data.time,
+    //         joined: true,
+    //         channel: "Chat room"
+    //     }
         
-    fixedRtcGroups.push(joinedMessage)
-    fixedRtcGroups = fixedRtcGroups
-    }
+    // fixedRtcGroups.push(joinedMessage)
+    // fixedRtcGroups = fixedRtcGroups
+    // }
 })
 
 //Listens for new messages from backend
