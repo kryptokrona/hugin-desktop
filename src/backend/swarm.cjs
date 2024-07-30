@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm");
 
-const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex, sanitize_group_message, get_new_peer_keys, create_keys_from_seed } = require('./utils.cjs');
+const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex, sanitize_group_message, get_new_peer_keys, create_keys_from_seed, naclHash } = require('./utils.cjs');
 const {saveGroupMsg, getChannels} = require("./database.cjs")
 const { app,
     ipcMain
@@ -17,7 +17,6 @@ let localFiles = []
 let remoteFiles = []
 let active_swarms = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
-let my_name = ""
 
 async function send_voice_channel_sdp(data) {
     const active = active_swarms.find(a => a.topic === data.topic)
@@ -40,7 +39,7 @@ const send_voice_channel_status = async (joined, status) => {
         message: msg,
         voice: joined,
         topic: active.topic,
-        name: my_name,
+        name: Hugin.nickname,
         video: status.video
     })
     
@@ -101,11 +100,8 @@ const end_swarm = async (key) => {
 }
 
 const create_swarm = async (data) => {
-    console.log("Joining swarm!")
-    const key = await hash(data.key)
+    const key = naclHash(data.key)
     const invite = data.key
-    const name = Hugin.nickname
-    my_name = name
 
     let discovery
     let swarm
@@ -394,7 +390,6 @@ const get_my_channels = async (key) => {
 }
 
 const send_joined_message = async (invite, topic, dht_keys) => {
-    console.log("DHT keys!", dht_keys)
     //Use topic as signed message?
     const msg = topic
     const active = get_active_topic(topic)
@@ -412,7 +407,7 @@ const send_joined_message = async (invite, topic, dht_keys) => {
         message: msg,
         joined: true,
         topic: topic,
-        name: my_name,
+        name: Hugin.nickname,
         voice: voice,
         channels: [],
         video: video,
@@ -448,7 +443,6 @@ const incoming_message = async (data, topic, connection, invite) => {
 
 const send_swarm_message = (message, key) => {
     let active = get_active(key)
-    console.log("Send to active", active)
     if (!active) return
     active.connections.forEach(chat => {
         try {
@@ -592,7 +586,6 @@ const check_file_message = async (data, topic, address, con) => {
     }
 
     if (data.type === 'download-request') {
-        console.log("download request!!", data)
         const key = await start_upload(data, topic)
         send_file(data.fileName, data.size, address, key, true)
     }
