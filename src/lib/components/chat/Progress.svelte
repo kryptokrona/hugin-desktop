@@ -4,7 +4,7 @@
     export let send
     console.log("This file!", file)
     console.log("$upload", $upload)
-    let name = send ? file.name : file.fileName
+    let name = file.fileName
     $: loader = send ? $upload : $download
     $: progress = loader.find(a => a.fileName === name && file.time === a.time)
     

@@ -12,7 +12,7 @@
     let image = ""
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
-    
+    $: console.log("Uploadfile!", file)
     onMount( async () =>
     {   
         if (videoTypes.some(a => file.path.endsWith(a) && file.size < 50000000))
@@ -26,11 +26,11 @@
     })
 
     $: {
-        uploading = $upload.some(a => file.name === a.fileName && file.time === a.time)
+        uploading = $upload.some(a => file.fileName === a.fileName && file.time === a.time)
         uploadDone = $upload.some(a => uploading && a.progress === 100)
     }
 
-    $: downloaders = $upload.filter(a => a.progress === 100 && file.name == a.fileName).length
+    $: downloaders = $upload.filter(a => a.progress === 100 && file.fileName == a.fileName).length
 
     $: console.log("downloaders", downloaders)
 
@@ -55,7 +55,7 @@
 
 <div class="file" class:group in:fade="{{ duration: 150 }}">
     {#if !uploadDone && !uploading}
-        <p in:fade class="message sending blink_me">{file.name} </p>
+        <p in:fade class="message sending blink_me">{file.fileName} </p>
     {:else if uploading}
         <div in:fade>
             <Progress file={file} send={true}/>
@@ -73,10 +73,10 @@
         {/if}
     {/if}
     {#if image === "File"}
-        <p>{file.name}</p>
+        <p>{file.fileName}</p>
     {:else if image === "File not found"}
         <p class="message error">File not found</p>
-    {:else if !group || !rtc}
+    {:else}
         {#if video}
             <VideoPlayer src={file}/>
         {:else}

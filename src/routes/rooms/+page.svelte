@@ -41,8 +41,11 @@ $: wantToAdd = $rooms.addRoom
 $: replyTrue = $rooms.replyTo.reply
 
 const isFile = (data) => {
-    const file = $remoteFiles.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
-    if (!file) return $localFiles.find(a => a.name === data.message && parseInt(data.time) === a.time)
+    const findit = (arr) => {
+        return arr.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
+    }
+    const file = findit($remoteFiles)
+    if (!file) return findit($localFiles)
     return file
 }
 
@@ -281,10 +284,15 @@ async function printRoom(room) {
 
 function addFileMessage(array) {
     for (const msg of array) {
+        const i = array.indexOf(msg)
+        if (!msg.message) {
+            array[i].message = ""
+            continue
+        }
         const file = isFile(msg)
         if (!file) continue
         if (file.time === parseInt(msg.time) || file.hash === msg.hash) {
-        const i = array.indexOf(msg)
+       
         array[i].file = file
         }
     }
@@ -400,7 +408,8 @@ async function dropFile(e) {
     const time = Date.now()
     
     acceptedFiles[0].time = time
-    
+    acceptedFiles[0].fileName = filename
+
     if (fileRejections.length) {
         console.log('rejected file')
         return

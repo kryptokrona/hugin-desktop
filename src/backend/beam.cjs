@@ -335,7 +335,7 @@ const add_group_file = async (fileName, remoteFiles, chat, group, time, hash, ro
             address: chat,
             group: group,
             time: time,
-            name: 'File shared',
+            name:  Hugin.nickname,
             reply: false,
             hash: hash,
             sent: false,
