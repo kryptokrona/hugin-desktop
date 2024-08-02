@@ -147,25 +147,7 @@ const connecto_to_swarm = async () => {
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
     <div class="top">
-        <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>
-        <br />
-            {#if !$standardGroups.some(a => a.key === group || (group === standardGroup))}
-            
-            <div class="connect" on:click={connecto_to_swarm}>
-                <!-- <Lightning connected={thisSwarm} /> -->
-                {#if !thisSwarm}
-                    <FillButton disabled={false} enabled={true} loading={loading} text={"Join room"} />
-                    {:else}
-                    <FillButton disabled={false} text={"Leave room"} />
-                    {/if}    
-                </div>
-                <br>
-                {#if thisSwarm}
-                <div in:fly={{x : -150}} style="width: 170px;">
-                    <FillButton disabled={false} enabled={true} text={"Open room"} on:click={show_video_room} />
-                </div>
-                {/if} 
-            {/if}
+        <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>    
         <br />
         
         <div style="cursor: pointer; display: flex; width: 25px;" on:click={toggleNotification}>
