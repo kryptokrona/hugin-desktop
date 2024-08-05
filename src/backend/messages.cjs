@@ -100,6 +100,7 @@ ipcMain.on('add-room', async (e, room, admin) => {
     message.address = Hugin.address
     message.message = "Joined the lobby"
     message.sent = true
+    message.name = Hugin.nickname
     save_group_message(message, room.hash + 1, parseInt(Date.now()), false, false, true, true)
     if (admin) addRoomKeys(room.k, admin)
     // sender('joined-room', room)
