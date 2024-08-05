@@ -16,8 +16,9 @@ import Loader from '$lib/components/popups/Loader.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Dropzone from "svelte-file-dropzone";
 import DropFile from '$lib/components/popups/DropFile.svelte'
-import { localFiles, remoteFiles } from '$lib/stores/files'
+import { fileViewer, localFiles, remoteFiles } from '$lib/stores/files'
 import AddRoom from "./components/AddRoom.svelte"
+import BigImage from "$lib/components/popups/BigImage.svelte"
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -50,6 +51,8 @@ const isFile = (data) => {
 }
 
 onMount(async () => {
+    $fileViewer.enhanceImage = false
+    $fileViewer.focusImage = ""
     scrollDown()
 
     //Listens for new messages from backend
@@ -477,6 +480,11 @@ async function dropFile(e) {
 {#if $user.block}
     <BlockContact />
 {/if}
+
+{#if $fileViewer.enhanceImage && $page.url.pathname === '/rooms'}
+    <BigImage />
+{/if}
+
 
 <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => dropFile(e)}>
 <main in:fade="{{ duration: 350 }}">
