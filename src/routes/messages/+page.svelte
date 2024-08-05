@@ -27,7 +27,8 @@ let windowChat
 
 //Get messages on mount.
 onMount(async () => {
-
+    $fileViewer.enhanceImage = false
+    $fileViewer.focusImage = ""
     boards.update((data) => {
         return {
             ...data,
@@ -187,14 +188,14 @@ const download = (link) => {
 async function dropFile(e) {
     dragover = false
     const { acceptedFiles, fileRejections } = e.detail
-    let filename = acceptedFiles[0].fileName
-    acceptedFiles[0].fileName = filename
+    let filename = acceptedFiles[0].name
     let path = acceptedFiles[0].path
     let size = acceptedFiles[0].size
     let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
     let time = Date.now()
     let offchain = false
     
+    acceptedFiles[0].fileName = filename
     acceptedFiles[0].time = time
     acceptedFiles[0].chat = $user.activeChat.chat
     
