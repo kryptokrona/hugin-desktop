@@ -12,7 +12,6 @@
     let image = ""
     let video = false
     let videoTypes = ['.mp4', '.webm', '.avi', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
-    $: console.log("Uploadfile!", file)
     onMount( async () =>
     {   
         if (videoTypes.some(a => file.path.endsWith(a) && file.size < 50000000))
