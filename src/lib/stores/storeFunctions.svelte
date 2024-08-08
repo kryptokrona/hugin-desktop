@@ -79,6 +79,12 @@ import { roomMessages } from './roommsgs'
             channel: "Chat room",
             hash: await window.api.createGroup()
         }
+        //Do this to hacky trick to trigger reactivity in RoomHugins for updating the online list
+        $rooms.activeHugins.push(user)
+        $rooms.activeHugins.pop()
+        $rooms.activeHugins = $rooms.activeHugins
+
+        //Add connection to the active swarm
         joined.connections.push(user)
         // $roomMessages.push(user)
         // $roomMessages = $roomMessages
