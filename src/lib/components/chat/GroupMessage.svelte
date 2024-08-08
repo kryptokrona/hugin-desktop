@@ -131,7 +131,7 @@ async function checkreply(reply) {
 }
 
 const replyTo = () => {
-    reply_to_this = true
+    // reply_to_this = true
     // Dispatch the inputted data
     dispatch('replyTo', {
         reply: 'reply',
@@ -201,7 +201,7 @@ $: if ($groups.replyTo.reply == false) {
     reply_to_this = true
 }
 
-$: if ($rooms.replyTo.reply == false) {
+$: if ($rooms.replyTo.to !== hash) {
     reply_to_this = false
 } else if ($rooms.replyTo.to == hash) {
     reply_to_this = true
