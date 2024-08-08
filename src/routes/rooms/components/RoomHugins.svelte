@@ -8,6 +8,7 @@ import Bell from '$lib/components/icons/Bell.svelte'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import SwarmInfo from '$lib/components/popups/SwarmInfo.svelte'
 import Lightning from '$lib/components/icons/Lightning.svelte'
+import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
 
 let activeHugins = []
 let room = ''
@@ -15,13 +16,14 @@ let roomName
 let asian = false
 let firstConnect = false
 let loading = false
+let voice_channel = []
 
 function sendPM() {
     // Add friend request here?
 }
 
 function copyThis(copy) {
-    let msg = 'You copied a Room key'
+    let msg = 'You copied a Room invite'
     window.api.successMessage(msg)
     const invite = 'hugin://' + roomName + copy
     navigator.clipboard.writeText(invite)
@@ -46,7 +48,8 @@ $: if (roomName) {
 }
 
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
-
+$: in_voice = voice_channel.some(a => a.address === $user.myAddress)
+$: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 $: muteGroup = $notify.off.some(a => a === roomName)
 
 //Active hugins
@@ -54,12 +57,20 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
 let timeout = false
 
+$ : if ($rooms.activeHugins) {
+    updateOnline()
+}
+
 $: if (thisSwarm) {
     let uniq = {}
     activeHugins = [...thisSwarm.connections.filter(a => !activeHugins.includes(a.address)), ...$rooms.activeHugins].filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
-    activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
+    updateOnline()
 } else {
     activeUsers = []
+}
+
+const updateOnline = () => {
+    activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
 }
 
 const toggleNotification = () => {
@@ -73,64 +84,6 @@ const toggleNotification = () => {
     window.api.send('group-notifications', $notify.off)
 }
 
-const disconnect_from_swarm = async () => {
-        let key = $rooms.thisRoom.key
-        window.api.send("exit-voice",key)
-        window.api.send("end-swarm", key)
-        $swarmGroups.showGroups = true
-        $swarm.showVideoGrid = false
-        await sleep(2000)
-        timeout = false
-}
-
-
-const connecto_to_swarm = async () => {
-    return
-    loading = true
-    if (!window.localStorage.getItem('swarm-info')) {
-        $swarm.showInfo = true
-        firstConnect = true
-        loading = false
-        return
-    }
-    if (thisSwarm) {
-        disconnect_from_swarm()
-        await sleep(200)
-        loading = false
-        return
-    } else if (!thisSwarm && $swarm.active.length) {
-        //Temporary fix until we handle more 
-        window.api.errorMessage('You are already in a room')
-        loading = false
-        return
-    }
-    
-    if ($webRTC.call.length) {
-        window.api.errorMessage('You are already in a call')
-        loading = false
-        return
-    }
-    
-    if (timeout) {
-        window.api.errorMessage('Please wait a couple of seconds')
-        loading = false
-        return
-    }
-
-    window.api.send("new-swarm", {
-        key: $rooms.thisRoom.key, 
-        address: $user.myAddress,
-        name: $user.username
-    })
-    timeout = true
-    await sleep(200)
-    loading = false
-}
-
-    // const show_video_room = () => {
-    //     $swarm.showVideoGrid = true
-    // }
-
 </script>
 
 <!-- {#if $swarm.showInfo && firstConnect}
@@ -142,11 +95,11 @@ const connecto_to_swarm = async () => {
         <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(room)}>{roomName}</h2>
         <br />
             
-            <div class="connect" on:click={connecto_to_swarm}>
+            <div class="connect">
                 <Lightning connected={thisSwarm} />
             </div>
             <br />
-        
+        <div  style="cursor: pointer; display: flex; gap: 4px;">
         <div style="cursor: pointer; display: flex; width: 25px;" on:click={toggleNotification}>
             {#if !muteGroup}
                 <Bell active={true}/>
@@ -154,11 +107,15 @@ const connecto_to_swarm = async () => {
                 <Bell active={false}/>
             {/if}
         </div>
+        <div style="width: 20px;" on:click={() => $swarm.showVideoGrid = true}>
+            <ShowVideoMenu size={20}/>
+        </div>
+        </div>
     </div>
         <div class="list-wrapper">
             {#each activeList as user}     
             
-                    <div in:fade class="card" on:click="{() => sendPM(user)}">
+                    <div class:invoice={voice_channel.some(a => a.address === user.address)} in:fade class="card" on:click="{() => sendPM(user)}">
                         {#if (thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
                             <div class:unread="{(thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}"></div>
                         {/if}
@@ -262,6 +219,11 @@ const connecto_to_swarm = async () => {
     &:hover {
         background-color: #333333;
     }
+}
+
+.invoice {
+    border: 1px solid var(--success-color);
+    border-radius: 5px;
 }
 
 .avatar {
