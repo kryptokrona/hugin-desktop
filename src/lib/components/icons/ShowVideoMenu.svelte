@@ -1,5 +1,9 @@
+<script>
+    export let size = 24
+</script>
+
 <svg
-    width="24px"
+    width="{size}px"
     height="24px"
     viewBox="0 0 24 24"
     version="1.1"
