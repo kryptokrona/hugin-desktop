@@ -1,6 +1,6 @@
 <script>
     import MyVideo from '$lib/components/webrtc/MyVideo.svelte'
-    import { swarm } from '$lib/stores/user.js'
+    import { rooms, swarm } from '$lib/stores/user.js'
     import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
     import { fade, fly } from 'svelte/transition'
@@ -21,7 +21,7 @@
     const dispatch = createEventDispatcher()
     const my_address = $user.myAddress
     
-    $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
+    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
     $: in_voice = voice_channel.some(a => a.address === my_address)
 
     $: if (thisSwarm) channels = thisSwarm.channels
@@ -30,7 +30,7 @@
     let active = thisSwarm
 
     onMount(async () => {
-        $videoGrid.showChat = true
+        $videoGrid.showChat = false
         await sleep(200)
         $swarm.activeSwarm = thisSwarm
     })
@@ -40,10 +40,6 @@
         // dispatch('print-channel', channel)
         // $swarm.activeChannel = {name: channel, key: thisSwarm.key}
         console.log("Print this channel, deactivated!")
-    }
-    
-    const openRemove = () => {
-        $groups.removeGroup = !$groups.removeGroup
     }
     
     let drag = false
@@ -117,11 +113,11 @@
 
                 {:else}
                  <div class:blink_me={true} in:fly={{ x: 150}}>
-                        <h4 style="color: var(--info-color)">Searching for connections...</h4>
+                        <h4 style="color: var(--info-color)">Click join call to enter...</h4>
                  </div>
-                 {#if thisSwarm?.connections.length}
+                 <!-- {#if thisSwarm?.connections.length}
                     <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} connected</h4>
-                 {/if}
+                 {/if} -->
                 {/if}
 
             {/if}
@@ -131,7 +127,7 @@
             </div>
         </div>
 
-        <RtcGroupMessages />
+        <!-- <RtcGroupMessages /> -->
     </div>
     
     <style lang="scss">

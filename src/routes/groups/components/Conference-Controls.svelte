@@ -6,7 +6,7 @@
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
-    import { swarm, user, groups, rtc_groups } from '$lib/stores/user.js'
+    import { swarm, user, groups, rtc_groups, rooms } from '$lib/stores/user.js'
     import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
     import { onDestroy, onMount } from 'svelte'
     import { calcTime, sleep } from '$lib/utils/utils.js'
@@ -29,7 +29,7 @@
     const dispatch = createEventDispatcher()
     const my_address = $user.myAddress
 
-    $: thisSwarm = $swarm.active.find(a => a.key === $groups.thisGroup.key)
+    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
     $: in_voice = voice_channel.some(a => a.address === my_address)
 
     $: if (thisSwarm) channels = thisSwarm.channels
@@ -215,9 +215,9 @@
             <HideVideoGrid />
         </div>
         <div>
-            <div class="icon" style="padding: 5px;" on:click="{() => showMessages()}">
+            <!-- <div class="icon" style="padding: 5px;" on:click="{() => showMessages()}">
                 <MessageIcon />
-            </div>
+            </div> -->
         </div>
     </div>
     
