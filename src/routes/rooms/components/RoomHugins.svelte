@@ -9,6 +9,8 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
 import SwarmInfo from '$lib/components/popups/SwarmInfo.svelte'
 import Lightning from '$lib/components/icons/Lightning.svelte'
 import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
+import Groupcall from '$lib/components/icons/Groupcall.svelte'
+import Tooltip from '$lib/components/popups/Tooltip.svelte'
 
 let activeHugins = []
 let room = ''
@@ -57,7 +59,7 @@ $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
 let timeout = false
 
-$ : if ($rooms.activeHugins) {
+$ : if (thisSwarm && $rooms.activeHugins) {
     updateOnline()
 }
 
@@ -94,10 +96,11 @@ const toggleNotification = () => {
     <div class="top">
         <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(room)}>{roomName}</h2>
         <br />
-            
+        <Tooltip title="Status: Connected">
             <div class="connect">
                 <Lightning connected={thisSwarm} />
             </div>
+        </Tooltip>
             <br />
         <div  style="cursor: pointer; display: flex; gap: 4px;">
         <div style="cursor: pointer; display: flex; width: 25px;" on:click={toggleNotification}>
@@ -108,7 +111,7 @@ const toggleNotification = () => {
             {/if}
         </div>
         <div style="width: 20px;" on:click={() => $swarm.showVideoGrid = true}>
-            <ShowVideoMenu size={20}/>
+            <Groupcall/>
         </div>
         </div>
     </div>
