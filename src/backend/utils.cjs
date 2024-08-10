@@ -4,12 +4,7 @@ const { Crypto, Keys } = require('kryptokrona-utils')
 const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
 const {createReadStream} = require("fs");
-const DHT = require('@hyperswarm/dht')
-const Keychains = require('keypear');
 
-ipcMain.handle('get-room-invite', async () => {
-    return create_room_invite()
-})
 
 ipcMain.handle('load-file', async (e, path, size) => {
     return await load_file(path, size)
@@ -183,7 +178,7 @@ const sanitize_join_swarm_data = (data) => {
     const message = sanitizeHtml(data.message)
     if (message.length > 64) return false 
     const signature = sanitizeHtml(data.signature)
-    // if (signature.length !== 128) return false
+    if (signature.length > 128) return false
     const topic = sanitizeHtml(data.topic)
     if (topic.length !== 64) return false
     const name = sanitizeHtml(data.name) 
@@ -215,7 +210,7 @@ const sanitize_join_swarm_data = (data) => {
     const clean_object = {
         address: address,
         message: message,
-        signature: '',
+        signature: signature,
         topic: topic,
         name: name,
         voice: voice,
@@ -363,37 +358,6 @@ const sanitize_group_message = (msg) => {
     return clean_object;
   };
 
-  function create_peer_base_keys(buf) { 
-    const keypair = DHT.keyPair(buf)
-    const keys = Keychains.from(keypair) 
-    return keys
-}
+ 
 
-function get_new_peer_keys(key) {
-    const secret = Buffer.alloc(32).fill(key)
-    const base_keys = create_peer_base_keys(secret)
-    const seed = randomKey()
-    const dht_keys = create_keys_from_seed(seed)
-    //Sign the dht public key with our base_keys
-    const signature = base_keys.get().sign(dht_keys.get().publicKey)
-    return [base_keys, dht_keys, signature]
-}
-
-function create_keys_from_seed(seed) {
-    const random_key = Buffer.alloc(32).fill(seed)
-    return create_peer_base_keys(random_key)
-}
-
-function create_room_invite() {
-    const seed = randomKey()
-    const rand = randomKey()
-    const admin = create_keys_from_seed(seed)
-    //[invite, admin seed]
-    return [rand + admin.get().publicKey.toString('hex'), seed]
-}
-
-function naclHash(val) {
-    return nacl.hash(hexToUint(val))
-}
-
-module.exports = {sleep, naclHash, get_new_peer_keys, create_keys_from_seed, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}

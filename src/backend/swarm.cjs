@@ -1,11 +1,11 @@
 const HyperSwarm = require("hyperswarm");
 
-const { sleep, trimExtra, sanitize_join_swarm_data, sanitize_voice_status_data, hash, randomKey, sanitize_file_message, toHex, sanitize_group_message, get_new_peer_keys, create_keys_from_seed, naclHash } = require('./utils.cjs');
-const {saveGroupMsg, getChannels} = require("./database.cjs")
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message} = require('./utils.cjs');
+const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
-const {verifySignature, decryptSwarmMessage, signMessage, keychain} = require("./crypto.cjs")
+const {keychain,  get_new_peer_keys, naclHash, verify_admins, sign_admin_message } = require("./crypto.cjs")
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
@@ -112,7 +112,6 @@ const create_swarm = async (data) => {
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
         swarm = new HyperSwarm({firewall (remotePublicKey, payload) {
-            console.log("Got connection in firewall swarm")
             //We are already checking payloads in hyperswarm
             if (payload !== null) {
                 //Moved checkKey to hyperswarm
@@ -136,7 +135,6 @@ const create_swarm = async (data) => {
     Hugin.send('set-channels')
 
     swarm.on('connection', (connection, information) => {
-        console.log("New connection ", information)
         new_connection(connection, topicHash, data.key, dht_keys)
 
     })
@@ -148,7 +146,6 @@ const create_swarm = async (data) => {
         swarm.destroy();
         setTimeout(() => process.exit(), 2000);
     });
-    console.log("hash topic", topicHash)
     const topic = Buffer.alloc(32).fill(topicHash)
     discovery = swarm.join(topic, {server: true, client: true})
     await discovery.flushed()
@@ -287,10 +284,8 @@ const check_data_message = async (data, connection, topic, invite) => {
                 //Connection is already joined
                 return
             }
-            //Check signature
-            // const verified = await verifySignature(joined.message, joined.address, joined.signature)
-            const admin = verify_admin(connection.remotePublicKey, Buffer.from(data.signature), Buffer.from(invite.slice(0, -64)))
-            console.log("Admin?", admin)
+            //Check admin signature
+            const admin = verify_admins(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(invite.slice(-64), 'hex'))
             // if(!verified) return "Error"
             con.joined = true
             con.address = joined.address
@@ -318,16 +313,6 @@ const check_data_message = async (data, connection, topic, invite) => {
     }
 
     return false
-}
-
-const verify_admin = (remotePub, signature, invite) => {
-
-    const keys = create_keys_from_seed(randomKey())
-    console.log("con.remotePublicKey", remotePub)
-    const verify = keys.get().verify(remotePub, signature, invite)
-    console.log("Verify admin?", verify)
-    return verify
-
 }
 
 const check_peer_voice_status = (data, con) => {
@@ -389,21 +374,27 @@ const get_my_channels = async (key) => {
     return channels.map(a => { if (a.channel === "Chat room") return a.channel })
 }
 
+
 const send_joined_message = async (invite, topic, dht_keys) => {
-    //Use topic as signed message?
-    const msg = topic
+    let sig = ""
+    const msg = invite
     const active = get_active_topic(topic)
     if (!active) return
-    const sig = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
+    const adminkeys = loadRoomKeys()
+    if (is_room_admin(adminkeys, invite)) {
+        //We got an adminkey for this room
+        //Sign our joined message with this
+        sig = sign_admin_message(dht_keys, invite, adminkeys)
+    }
+    // const sig = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
 
-    console.log("Signature admini?", sig)
     let [voice, video] = get_local_voice_status(topic)
     if (video) voice = true
     //const channels = await get_my_channels(key)
 
     const data = JSON.stringify({
         address: Hugin.address,
-        signature: sig,
+        signature: sig.toString('hex'),
         message: msg,
         joined: true,
         topic: topic,
@@ -504,6 +495,10 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 
 const get_active = (key) => {
     return active_swarms.find(a => a.key === key)
+}
+
+const is_room_admin = (adminkeys, invite) => {
+    return adminkeys.some(a => a.invite === invite)
 }
 
 const request_download = (download) => {
