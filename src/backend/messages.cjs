@@ -24,7 +24,8 @@ const {
     addRoom,
     loadRooms,
     addRoomKeys,
-    getRooms} = require("./database.cjs")
+    getRooms,
+    removeRoom} = require("./database.cjs")
 const {
     trimExtra, 
     sanitize_pm_message, 
@@ -105,6 +106,11 @@ ipcMain.on('add-room', async (e, room, admin) => {
     if (admin) addRoomKeys(room.k, admin)
     // sender('joined-room', room)
     new_swarm({key: room.k})
+})
+
+ipcMain.on('remove-room', async (e, room) => {
+    end_swarm(room)
+    removeRoom(room)
 })
 
 
