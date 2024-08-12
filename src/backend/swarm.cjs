@@ -5,7 +5,7 @@ const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
-const {keychain,  get_new_peer_keys, naclHash, verify_admins, sign_admin_message } = require("./crypto.cjs")
+const {keychain,  get_new_peer_keys, naclHash, verify_admins, sign_admin_message, signMessage } = require("./crypto.cjs")
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
