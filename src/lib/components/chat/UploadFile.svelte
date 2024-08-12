@@ -113,6 +113,7 @@
         color: var(--text-color);
         font-size: 15px;
         user-select: all;
+        margin-bottom: 5px;
 }
 
 .count {
