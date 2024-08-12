@@ -921,7 +921,9 @@ async function send_group_message(message, offchain = false, swarm = false) {
         if (result.success) {
             console.log("Succces sending tx")
             message_json.sent = true
-            const send = sanitize_group_message(message_json)
+            let send = sanitize_group_message(message_json)
+            send.hash = result.transactionHash
+            send.time = timestamp
             await save_group_message(send, result.transactionHash, timestamp, false, false, false)
             Hugin.send('sent_group', {
                 hash: result.transactionHash,
