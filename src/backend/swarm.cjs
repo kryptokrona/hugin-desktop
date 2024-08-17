@@ -84,16 +84,16 @@ const end_swarm = async (key) => {
     const topic = active.topic
     Hugin.send('swarm-disconnected', topic)
     update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
-    
+
     active.connections.forEach(chat => {
         console.log("Disconnecting from:", chat.address)
         chat.connection.write(JSON.stringify({type: "disconnected"}))
+        connection_closed(chat.connection, topic)
     })
-  
-
+    
     await active.swarm.leave(Buffer.from(topic))
-    await active.discovery.destroy()
     await active.swarm.destroy()
+
     const still_active = active_swarms.filter(a => a.topic !== topic)
     active_swarms = still_active
     console.log("***** Ended swarm *****")
