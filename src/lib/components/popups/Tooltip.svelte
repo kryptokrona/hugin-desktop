@@ -8,11 +8,11 @@
   
     function mouseOver(event) {
       isHovered = true;
-      x = leftAlign ? -45 : event.pageX + 5;
+      x = leftAlign ? event.pageX-120 : event.pageX + 5;
       y = event.pageY + 5;
     }
     function mouseMove(event) {
-      x = leftAlign ? -45 : event.pageX + 5;
+      x = leftAlign ? event.pageX-120 : event.pageX + 5;
       y = event.pageY + 5;
     }
     function mouseLeave() {
@@ -20,7 +20,7 @@
     }
   </script>
   
-  <div on:mouseover={mouseOver} on:mouseleave={mouseLeave} on:mousemove={mouseMove}>
+  <div style="display: inline-block" on:mouseover={mouseOver} on:mouseleave={mouseLeave} on:mousemove={mouseMove}>
     <slot />
   </div>
   

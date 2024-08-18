@@ -12,7 +12,7 @@
     position: fixed;
     top: 0;
     display: flex;
-    width: 100%;
+    width: 365px;
     z-index: 9999;
   }
 

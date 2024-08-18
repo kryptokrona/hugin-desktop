@@ -19,6 +19,7 @@ import DropFile from '$lib/components/popups/DropFile.svelte'
 import { fileViewer, localFiles, remoteFiles } from '$lib/stores/files'
 import AddRoom from "./components/AddRoom.svelte"
 import BigImage from "$lib/components/popups/BigImage.svelte"
+import TopBar from "./components/TopBar.svelte"
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -494,8 +495,9 @@ async function dropFile(e) {
     />
     
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
-       
-        <div class="fade"></div>
+      
+        <TopBar />
+        
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
             {#if fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat}
                 <div>
@@ -614,7 +616,6 @@ p {
     flex-direction: column-reverse;
     overflow: auto;
     padding-bottom: 5px;
-    padding-top: 22px;
     position: initial !important;
     // &::-webkit-scrollbar {
     //     display: none;
