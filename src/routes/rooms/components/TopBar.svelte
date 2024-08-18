@@ -1,5 +1,6 @@
 <script>
 import Bell from "$lib/components/icons/Bell.svelte"
+import Groupcall from "$lib/components/icons/Groupcall.svelte"
 import Lightning from "$lib/components/icons/Lightning.svelte"
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
 import { notify, rooms, swarm } from "$lib/stores/user"
@@ -58,6 +59,9 @@ $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
             {:else}
                 <Bell active={false}/>
             {/if}
+        </div>
+        <div style="cursor: pointer; display: inline-block; width: 20px;" on:click={() => $swarm.showVideoGrid = true}>
+            <Groupcall/>
         </div>
     </div>
 </div>
