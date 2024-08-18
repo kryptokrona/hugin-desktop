@@ -617,6 +617,7 @@ p {
     overflow: auto;
     padding-bottom: 5px;
     position: initial !important;
+    height: calc(100% - 131px);
     // &::-webkit-scrollbar {
     //     display: none;
     // }

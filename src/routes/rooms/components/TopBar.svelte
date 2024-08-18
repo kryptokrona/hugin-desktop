@@ -45,7 +45,7 @@ $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
 
 </script>
 
-<div class="top" style="padding: 15px; border-bottom: 1px solid var(--border-color); height: 57px">
+<div class="top" style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px; border-bottom: 1px solid var(--border-color); height: 57px">
     <div style="display: flex; padding-bottom: 10px">
         <h3 title={roomName} class:asian style="padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" on:click={() => copyThis(room)}>{roomName}</h3>
     <div style="display: inline-block; margin-left: auto">
