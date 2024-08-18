@@ -24,13 +24,6 @@ function sendPM() {
     // Add friend request here?
 }
 
-function copyThis(copy) {
-    let msg = 'You copied a Room invite'
-    window.api.successMessage(msg)
-    const invite = 'hugin://' + roomName + copy
-    navigator.clipboard.writeText(invite)
-}
-
 const myAddress = $user.myAddress
 
 //Set group key
@@ -41,18 +34,9 @@ $: if ($rooms.thisRoom.key) {
 //Active users in p2p chat
 let activeUsers = []
 
-//This group name
-$: roomName = $rooms.thisRoom.name
-
-$: if (roomName) {
-    if (!isLatin(roomName)) asian = true
-    else asian = false
-}
-
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
 $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
 $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
-$: muteGroup = $notify.off.some(a => a === roomName)
 
 //Active hugins
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
@@ -75,16 +59,7 @@ const updateOnline = () => {
     activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
 }
 
-const toggleNotification = () => {
-    if (muteGroup) {
-        const filter = $notify.off.filter(a => a !== roomName)
-        $notify.off = filter
-    } else {
-        $notify.off.push(roomName)
-    }
-    $notify = $notify
-    window.api.send('group-notifications', $notify.off)
-}
+
 
 </script>
 
@@ -93,28 +68,7 @@ const toggleNotification = () => {
 {/if} -->
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
-    <div class="top">
-        <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(room)}>{roomName}</h2>
-        <br />
-        <Tooltip title="Status: Connected">
-            <div class="connect">
-                <Lightning connected={thisSwarm} />
-            </div>
-        </Tooltip>
-            <br />
-        <div  style="cursor: pointer; display: flex; gap: 4px;">
-        <div style="cursor: pointer; display: flex; width: 25px;" on:click={toggleNotification}>
-            {#if !muteGroup}
-                <Bell active={true}/>
-            {:else}
-                <Bell active={false}/>
-            {/if}
-        </div>
-        <div style="width: 20px;" on:click={() => $swarm.showVideoGrid = true}>
-            <Groupcall/>
-        </div>
-        </div>
-    </div>
+
         <div class="list-wrapper">
             {#each activeList as user}     
             
@@ -172,15 +126,14 @@ const toggleNotification = () => {
 
 .wrapper {
     width: 100%;
-    max-width: 280px;
+    max-width: 210px;
     overflow: hidden;
     border-right: 1px solid var(--border-color);
     z-index: 0;
     transition: all 0.3s ease-in-out;
-    max-width: 210px;
     border-left: 1px solid var(--border-color);
     border-right: none;
-    margin-right: 85px;
+    margin-right: 86px;
 }
 
 .list-wrapper {
@@ -198,12 +151,11 @@ const toggleNotification = () => {
 }
 
 .top {
-    height: 85px;
     top: 0;
     width: 100%;
-    max-width: 280px;
+    max-width: 210px;
     padding: 20px;
-    display: inline-table;
+    display: inline-block;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
@@ -339,11 +291,5 @@ p {
             background-color: var(--card-border);
         }
     }
-}
-
-.asian {
-    font: menu;
-    font-size: 20px !important;
-    font-weight: 500;
 }
 </style>
