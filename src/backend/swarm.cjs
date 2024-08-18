@@ -522,9 +522,15 @@ const request_download = (download) => {
 const send_file_info = (address, topic, file) => {
     console.log("send file info", file)
     const active = active_swarms.find(a => a.topic === topic)
-    if (!active) errorMessage('Swarm is not active')
+    if (!active) {
+        errorMessage('Swarm is not active')
+        return
+    }
     const con = active.connections.find(a => a.address === address)
-    if (!con) errorMessage('Connection is closed')
+    if (!con) {
+        errorMessage('Connection is closed')
+        return
+    }
     con.connection.write(JSON.stringify(file))
 }
 
