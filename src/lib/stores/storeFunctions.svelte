@@ -62,8 +62,6 @@ import { roomMessages } from './roommsgs'
         // }
         
         add_user(data, joined)
-        updateActiveSwarm()
-        voice_channel_status(data)
     }
 
     async function add_user(data, joined) {
@@ -88,6 +86,9 @@ import { roomMessages } from './roommsgs'
         joined.connections.push(user)
         // $roomMessages.push(user)
         // $roomMessages = $roomMessages
+        updateActiveSwarm()
+        
+        voice_channel_status(data)
     }
 
     function peer_disconnected(data) {
