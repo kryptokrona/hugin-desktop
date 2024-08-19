@@ -113,10 +113,11 @@ const join_voice_channel = async (video = false, screen) => {
         <div class="list-wrapper">
 
             <div class="voice" style="cursor: pointer;border-bottom: 1px solid var(--border-color);">
-                <div class="voice-list" on:click={() => $swarm.showVideoGrid = true}>
-                <Groupcall size="{17}" />
-                    <p style="margin-top: -4px; margin-left: 3px" on:click={join_voice_channel}>Voice channel</p>
+                <div class="voice-list" on:click={join_voice_channel}>
                 
+                    <p style="margin-top: -4px; margin-right: 5px">Voice channel</p>
+                    <Groupcall size="{17}" />
+
                 </div>
                 {#each voice_channel as voice}
                 <VoiceUser voice_channel={voice_channel} voice_user={voice} />

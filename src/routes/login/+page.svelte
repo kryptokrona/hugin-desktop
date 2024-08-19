@@ -120,8 +120,6 @@ window.api.receive('login-failed', async () => {
                 </button>
             </div>
             <p style="color: white; opacity: 30%">v{$misc.version}</p>
-            <p in:fade style="color: var(--info-color); position; absolute; opacity: 80%; height: 5px;" class="blink_me">{#if !$misc.started && loadSpin}Loading account...{/if}</p>
-            <p in:fade style="color: var(--alert-color); position; absolute; opacity: 80%; height: 5px;" class="blink_me">{#if !$misc.started && loadSpin && $notify.que}Synchronizing messages...{/if}</p>
         </div>
 </div>
 

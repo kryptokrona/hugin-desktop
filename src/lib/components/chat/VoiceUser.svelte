@@ -59,7 +59,7 @@
     border: 1px solid transparent;
 
     &:hover {
-        background-color: #333333;
+        opacity: 0.8;
     }
 }
 
@@ -91,7 +91,6 @@
         height: 24px;
         opacity: 0.92;
         cursor: pointer;
-        transform: scale(1.5);
         margin-right: 5px;
     }
 
