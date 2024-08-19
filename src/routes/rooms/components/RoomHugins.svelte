@@ -44,6 +44,8 @@ $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 //Active hugins
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
+$: voice_channel
+
 let timeout = false
 
 $ : if (thisSwarm && $rooms.activeHugins) {
@@ -110,22 +112,31 @@ const join_voice_channel = async (video = false, screen) => {
 
         <div class="list-wrapper">
 
-            <div class="voice" style="cursor: pointer;">
-                <div style="padding: 10px; display: flex;" on:click={() => $swarm.showVideoGrid = true}>
-                <Groupcall/>
-                    <p on:click={join_voice_channel}>Voice channel</p>
+            <div class="voice" style="cursor: pointer;border-bottom: 1px solid var(--border-color);">
+                <div class="voice-list" on:click={() => $swarm.showVideoGrid = true}>
+                <Groupcall size="{17}" />
+                    <p style="margin-top: -4px; margin-left: 3px" on:click={join_voice_channel}>Voice channel</p>
                 
                 </div>
                 {#each voice_channel as voice}
                 <VoiceUser voice_channel={voice_channel} voice_user={voice} />
                 {/each} 
-                <div style="padding: 10px; display: flex;">
-                    <AddToCall/>
-                    <p>Users</p>
-                </div>
 
             </div>
-            {#each activeList as user}     
+
+            <div class="user-list" >
+            <div style="padding: 10px;
+            padding-top: 4px;
+            display: flex;
+            border-bottom: 1px solid var(--border-color);">
+                <p>Users ({activeList.length})</p>
+            </div>
+
+            
+            
+            {#each activeList as user}    
+            
+                
             
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
                         {#if (thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
@@ -141,6 +152,8 @@ const join_voice_channel = async (video = false, screen) => {
                       
                     </div>
             {/each}
+
+        </div>
         </div>
 
 </div>
@@ -349,4 +362,13 @@ p {
         }
     }
 }
+
+.voice-list {
+    text-align: center; padding-bottom: 0; padding: 17px 10px 17px 10px; display: flex;
+    
+    &:hover {
+        background-color: #333333;
+    }
+}
+
 </style>

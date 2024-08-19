@@ -1,4 +1,7 @@
-<svg width="22px" height="22px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+<script>
+  export let size = 22;
+</script>
+<svg width="{size}px" height="{size}px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
     <g id="vuesaxlinearcall-calling">
       <g id="vuesaxlinearcall-calling">
         <g id="call-calling">

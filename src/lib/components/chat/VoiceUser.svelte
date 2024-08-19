@@ -32,7 +32,7 @@
     
 </script>
 
-<div class:talking={isTalking} in:fade class="card" on:click="{() => console.log("Click")}">
+<div class:talking={isTalking} in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
     <img
         class="voice-avatar"
         src="data:image/png;base64,{get_avatar(voice_user.address)}"
@@ -50,13 +50,12 @@
  .card {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0 0 0 1.5rem;
     width: 100%;
     color: white;
     border-bottom: 1px solid var(--border-color);
     transition: 177ms ease-in-out;
     cursor: pointer;
-    border-radius: 5px;
     border: 1px solid transparent;
 
     &:hover {
@@ -84,14 +83,16 @@
         display: contents;
         font-family: 'Montserrat' !important;
         font-size: 12px;
+        line-height: 33px;
     }
 
     .voice-avatar {
-        width: 33px;
-        height: 33px;
-        margin-bottom: 5px;
+        width: 24px;
+        height: 24px;
         opacity: 0.92;
         cursor: pointer;
+        transform: scale(1.5);
+        margin-right: 5px;
     }
 
     .talking {
