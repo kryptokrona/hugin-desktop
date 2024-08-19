@@ -15,7 +15,7 @@ import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
 import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
 const startTone = new Audio('/audio/startcall.mp3')
-let activeHugins = []
+let knownUsers = []
 let room = ''
 let roomName
 let asian = false
@@ -35,31 +35,42 @@ $: if ($rooms.thisRoom.key) {
 }
 
 //Active users in p2p chat
-let activeUsers = []
+let onlineUsers = []
 
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
 $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
 $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 
 //Active hugins
-$: activeList = activeHugins.filter(a => a.grp !== a.address)
+$: fullUserList = knownUsers
 
 let timeout = false
+
+const removeDuplicates = (arr) => {
+    let uniq = {}
+    return arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
+}
+
+const notIncludes = (a) => {
+    return !knownUsers.includes(a.address)
+}
 
 $ : if (thisSwarm && $rooms.activeHugins) {
     updateOnline()
 }
 
 $: if (thisSwarm) {
-    let uniq = {}
-    activeHugins = [...thisSwarm.connections.filter(a => !activeHugins.includes(a.address)), ...$rooms.activeHugins].filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
+    //Adds connected and known users to one array
+    knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)), ...$rooms.activeHugins])
     updateOnline()
 } else {
-    activeUsers = []
+    onlineUsers = []
 }
 
 const updateOnline = () => {
-    activeUsers = activeHugins.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
+     //Updates the online status and checks known users
+    onlineUsers = knownUsers.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
+    knownUsers = removeDuplicates([...onlineUsers.filter(a => notIncludes(a)), ...knownUsers])
 }
 
 
@@ -127,18 +138,18 @@ const join_voice_channel = async (video = false, screen) => {
             padding-top: 4px;
             display: flex;
             border-bottom: 1px solid var(--border-color);">
-                <p>Users ({activeList.length})</p>
+                <p>Users ({fullUserList.length})</p>
             </div>
 
             
             
-            {#each activeList as user}    
+            {#each fullUserList as user}    
             
                 
             
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
-                        {#if (thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
-                            <div class:unread="{(thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}"></div>
+                        {#if (thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)}
+                            <div class:unread="{(thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)}"></div>
                         {/if}
                         <img
                             class="avatar"
