@@ -60,9 +60,6 @@ $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
                 <Bell active={false}/>
             {/if}
         </div>
-        <div style="cursor: pointer; display: inline-block; width: 20px;" on:click={() => $swarm.showVideoGrid = true}>
-            <Groupcall/>
-        </div>
     </div>
 </div>
 </div>
