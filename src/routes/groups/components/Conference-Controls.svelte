@@ -70,10 +70,7 @@
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
             //We already have an active call.
-            return
-            if (thisSwarm.voice_connected === true) return
-             //Replace this with our new call
-            if (!disconnect_from_active_voice()) return
+            disconnect_from_active_voice()
         }
         startTone.play()
         $swarm.showVideoGrid = true

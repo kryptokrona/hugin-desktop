@@ -44,8 +44,6 @@ $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
 //Active hugins
 $: activeList = activeHugins.filter(a => a.grp !== a.address)
 
-$: voice_channel
-
 let timeout = false
 
 $ : if (thisSwarm && $rooms.activeHugins) {
@@ -78,11 +76,8 @@ const join_voice_channel = async (video = false, screen) => {
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
+            disconnect_from_active_voice()
             //We already have an active call.
-            return
-            if (thisSwarm.voice_connected === true) return
-             //Replace this with our new call
-            if (!disconnect_from_active_voice()) return
         }
         startTone.play()
         console.log("Want to Join new voice")
