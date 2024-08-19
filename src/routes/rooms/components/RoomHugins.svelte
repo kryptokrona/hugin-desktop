@@ -76,6 +76,8 @@ const join_voice_channel = async (video = false, screen) => {
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
+            window.api.errorMessage('You are already in a voice channel')
+            return
             disconnect_from_active_voice()
             //We already have an active call.
         }

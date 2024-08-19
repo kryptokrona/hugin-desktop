@@ -69,6 +69,8 @@
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
+            window.api.errorMessage('You are already in a voice channel')
+            return
             //We already have an active call.
             disconnect_from_active_voice()
         }
