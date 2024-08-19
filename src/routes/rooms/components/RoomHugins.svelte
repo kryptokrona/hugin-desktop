@@ -22,7 +22,7 @@ let asian = false
 let firstConnect = false
 let loading = false
 let voice_channel = []
-
+const me = {address: $user.myAddress, name: $user.username }
 function sendPM() {
     // Add friend request here?
 }
@@ -61,7 +61,7 @@ $ : if (thisSwarm && $rooms.activeHugins) {
 
 $: if (thisSwarm) {
     //Adds connected and known users to one array
-    knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)), ...$rooms.activeHugins])
+    knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)), ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
     updateOnline()
 } else {
     onlineUsers = []
@@ -71,6 +71,7 @@ const updateOnline = () => {
      //Updates the online status and checks known users
     onlineUsers = knownUsers.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
     knownUsers = removeDuplicates([...onlineUsers.filter(a => notIncludes(a)), ...knownUsers])
+    knownUsers.unshift(me)
 }
 
 
@@ -108,7 +109,10 @@ const join_voice_channel = async (video = false, screen) => {
     function disconnect_from_active_voice() {
         window.api.exitVoiceChannel()
     }
-
+    
+    const isOnline = (user) => {
+       return (thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)
+    }
 
 </script>
 
@@ -148,8 +152,8 @@ const join_voice_channel = async (video = false, screen) => {
                 
             
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
-                        {#if (thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)}
-                            <div class:unread="{(thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)}"></div>
+                        {#if isOnline(user)}
+                            <div class:online="{isOnline(user)}"></div>
                         {/if}
                         <img
                             class="avatar"
@@ -330,7 +334,7 @@ p {
     border: 1px solid var(--success-color);
 }
 
-.unread {
+.online {
     background-color: var(--success-color);
     width: 8px;
     height: 8px;
