@@ -291,6 +291,7 @@ const check_data_message = async (data, connection, topic, invite) => {
             con.address = joined.address
             con.name = joined.name
             con.voice = joined.voice
+            con.admin = admin
 
             const time = parseInt(joined.time)
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
