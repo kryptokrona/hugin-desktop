@@ -13,11 +13,11 @@
     let isConnecting = false
     const myAddress = $user.myAddress
 
-    // $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
-    //     isTalking = true
-    // } else {
-    //     isTalking = false
-    // }
+    $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
+        isTalking = true
+    } else {
+        isTalking = false
+    }
 
     
     //Check if we are also online in this channel
@@ -32,7 +32,7 @@
     
 </script>
 
-<div class:talking={isTalking} in:fade class="card voice-user-card" on:click="{() => console.log("Click")}">
+<div class:talking={isTalking} in:fade class="card" on:click="{() => console.log("Click")}">
     <img
         class="voice-avatar"
         src="data:image/png;base64,{get_avatar(voice_user.address)}"
@@ -41,54 +41,49 @@
     {#if isConnecting}
        <p class="connecting">Connecting</p> <div class="moon"><Moon color="#f2f2f2" size="15" unit="px"/></div>
     {:else}
-        <p class="voice-nickname">{voice_user.name}</p>
+        <p class="nickname">{voice_user.name}</p>
     {/if}
     <br />
 </div>
 
 <style lang="scss">
-    .card {
-        display: flex;
-        height: 80px;
-        padding: 1rem;
-        width: 100%;
-        color: var(--title-color);
-        border-bottom: 1px solid var(--border-color);
-        background-color: var(--backgound-color);
-        transition: 200ms ease-in-out;
-        cursor: pointer;
-        opacity: 0.9;
+ .card {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    width: 100%;
+    color: white;
+    border-bottom: 1px solid var(--border-color);
+    transition: 177ms ease-in-out;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid transparent;
 
-        &:hover {
-            color: white;
-            opacity: 1;
-            background-color: var(--card-border);
-            border-bottom: 1px solid transparent;
-        }
+    &:hover {
+        background-color: #333333;
     }
+}
 
     p {
-        margin: 5px 0 0 0;
+        margin: 0;
         white-space: nowrap;
         max-width: 200px;
         overflow: hidden;
-        font-size: 14px;
+        font-size: 12px;
+        margin-top: 5px;
         text-overflow: ellipsis;
-        font-family: 'Montserrat', sans-serif;
     }
     
     .avatar {
-        opacity: 0.92;
-        cursor: pointer;
+        height: 30px;
     }
 
-    .voice-user-card {
-        height: 55px;
-        padding: 0.5rem;
-    }
-
-    .voice-nickname {
-        margin: 10px;
+    .nickname {
+        margin: 0;
+        word-break: break-word;
+        display: contents;
+        font-family: 'Montserrat' !important;
+        font-size: 12px;
     }
 
     .voice-avatar {
