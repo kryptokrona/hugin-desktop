@@ -81,7 +81,6 @@
         {#if video}
             <VideoPlayer src={file}/>
         {:else}
-        <p in:fade class="message">{file.fileName} </p>
         <div style="-webkit-user-drag: none;" on:click={focusImage}>
             <img
                 in:fade="{{ duration: 150 }}"
