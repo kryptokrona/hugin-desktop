@@ -70,7 +70,7 @@
 <div class="file" class:group in:fade="{{ duration: 150 }}">
     {#if !downloadDone && !downloading}
          {#if !clicked}
-        <p class="message loading blink_me" in:fade>{file.fileName}</p>
+        <p class="message" in:fade>{file.fileName}</p>
         <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
         {:else}
         <p class="message loading blink_me" in:fade>Connecting</p>

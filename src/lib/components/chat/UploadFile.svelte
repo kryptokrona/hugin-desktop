@@ -54,13 +54,15 @@
 
 <div class="file" class:group in:fade="{{ duration: 150 }}">
     {#if !uploadDone && !uploading}
-        <p in:fade class="message sending blink_me">{file.fileName} </p>
+        <p in:fade class="message">{file.fileName} </p>
     {:else if uploading}
         <div in:fade>
+            {#if !group}
             <Progress file={file} send={true}/>
+            {/if}
         </div>
         {#if uploadDone}
-            <p class="message done" in:fade>File uploaded!</p>
+            <!-- <p class="message done" in:fade>File uploaded!</p> -->
             <!-- {#if downloaders > 0} 
                 <p class="count">{downloaders}</p>
             {/if} -->
@@ -79,6 +81,7 @@
         {#if video}
             <VideoPlayer src={file}/>
         {:else}
+        <p in:fade class="message">{file.fileName} </p>
         <div style="-webkit-user-drag: none;" on:click={focusImage}>
             <img
                 in:fade="{{ duration: 150 }}"
