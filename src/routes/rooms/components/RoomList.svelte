@@ -79,6 +79,7 @@ const setEmptyGroup = () => {
 
 //Print chosen group key
 const printRoom = async (grp) => {
+    $rooms.activeHugins = []
     dispatch('printRoom', grp)
     await sleep(150)
     readMessage(grp)
@@ -88,6 +89,7 @@ const printRoom = async (grp) => {
 function filterActiveHugins(arr) {
     let uniq = {}
     $rooms.activeHugins = arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
+    
 }
 
 //Print our conversations from DBs
