@@ -86,9 +86,9 @@
 
 
         <div class="video-wrapper">
-            {#if thisSwarm?.connections.length && in_voice}
+            <!-- {#if thisSwarm?.connections.length && in_voice}
                 <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} Active connections</h4>
-            {/if}
+            {/if} -->
             <div class="video-grid">
             {#if in_voice}
                     <MyVideo active={active}/>

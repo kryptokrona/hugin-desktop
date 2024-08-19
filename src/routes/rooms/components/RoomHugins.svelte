@@ -11,7 +11,10 @@ import Lightning from '$lib/components/icons/Lightning.svelte'
 import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
 import Groupcall from '$lib/components/icons/Groupcall.svelte'
 import Tooltip from '$lib/components/popups/Tooltip.svelte'
-
+import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
+import AddToCall from '$lib/components/icons/AddToCall.svelte'
+import { videoSettings } from '$lib/stores/mediasettings'
+const startTone = new Audio('/audio/startcall.mp3')
 let activeHugins = []
 let room = ''
 let roomName
@@ -60,6 +63,42 @@ const updateOnline = () => {
 }
 
 
+const join_voice_channel = async (video = false, screen) => {
+        loading = true
+        if (in_voice) return
+        if (thisSwarm.voice_channel.length > 9) {
+            window.api.errorMessage('There are too many in the call')
+            loading = false
+            return
+        }
+        console.log("Joining!")
+        await sleep(50)
+        //Leave any active first
+        if ($swarm.voice_channel.length) {
+            console.log("Still in voice")
+            //We already have an active call.
+            return
+            if (thisSwarm.voice_connected === true) return
+             //Replace this with our new call
+            if (!disconnect_from_active_voice()) return
+        }
+        startTone.play()
+        console.log("Want to Join new voice")
+        thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
+        $swarm.voice_channel = thisSwarm.voice_channel
+        console.log("Voice channel", voice_channel)
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
+        //Set to true? here
+        thisSwarm.voice_connected = true
+        $swarm = $swarm
+        loading = false
+        console.log("Should be joined and connected here in this swarm", thisSwarm)
+    }
+
+    function disconnect_from_active_voice() {
+        window.api.exitVoiceChannel()
+    }
+
 
 </script>
 
@@ -70,9 +109,25 @@ const updateOnline = () => {
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
 
         <div class="list-wrapper">
+
+            <div class="voice" style="cursor: pointer;">
+                <div style="padding: 10px; display: flex;" on:click={() => $swarm.showVideoGrid = true}>
+                <Groupcall/>
+                    <p on:click={join_voice_channel}>Voice channel</p>
+                
+                </div>
+                {#each voice_channel as voice}
+                <VoiceUser voice_channel={voice_channel} voice_user={voice} />
+                {/each} 
+                <div style="padding: 10px; display: flex;">
+                    <AddToCall/>
+                    <p>Users</p>
+                </div>
+
+            </div>
             {#each activeList as user}     
             
-                    <div class:invoice={voice_channel.some(a => a.address === user.address)} in:fade class="card" on:click="{() => sendPM(user)}">
+                    <div in:fade class="card" on:click="{() => sendPM(user)}">
                         {#if (thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
                             <div class:unread="{(thisSwarm && user.address === myAddress) || activeUsers.some(a => a.address === user.address)}"></div>
                         {/if}
@@ -91,7 +146,9 @@ const updateOnline = () => {
 </div>
 
 <style lang="scss">
-
+p {
+    padding: 5px;
+}
 .connectto {
     color: var(--success-color);
     margin-left: 5px;

@@ -64,18 +64,19 @@
             loading = false
             return
         }
-        startTone.play()
-        $swarm.showVideoGrid = true
         console.log("Joining!")
-        await sleep(100)
+        await sleep(50)
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
-            //We already have an active call.  
+            //We already have an active call.
+            return
             if (thisSwarm.voice_connected === true) return
              //Replace this with our new call
             if (!disconnect_from_active_voice()) return
         }
+        startTone.play()
+        $swarm.showVideoGrid = true
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
