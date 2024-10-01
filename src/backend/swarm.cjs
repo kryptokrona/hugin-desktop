@@ -5,7 +5,7 @@ const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
-const {keychain,  get_new_peer_keys, naclHash, verify_admins, sign_admin_message, signMessage } = require("./crypto.cjs")
+const {keychain, get_new_peer_keys, naclHash, verify_admins, sign_admin_message, signMessage } = require("./crypto.cjs")
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
@@ -83,7 +83,10 @@ const end_swarm = async (key) => {
     if (!active) return
     const topic = active.topic
     Hugin.send('swarm-disconnected', topic)
-    update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE)
+    const [in_voice] = get_local_voice_status(topic);
+    if (in_voice) {
+      update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE);
+    }
 
     active.connections.forEach(chat => {
         console.log("Disconnecting from:", chat.address)
@@ -102,12 +105,14 @@ const end_swarm = async (key) => {
 const create_swarm = async (data) => {
     const key = naclHash(data.key)
     const invite = data.key
-
     let discovery
     let swarm
-
+    console.log("Key hashed", key)
+    console.log("key string", data.key)
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
     const topicHash = base_keys.publicKey.toString('hex')
+
+    console.log("Topic", topicHash)
 
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
@@ -135,7 +140,7 @@ const create_swarm = async (data) => {
     Hugin.send('set-channels')
 
     swarm.on('connection', (connection, information) => {
-        new_connection(connection, topicHash, data.key, dht_keys)
+        new_connection(connection, topicHash, dht_keys)
 
     })
 
@@ -152,7 +157,7 @@ const create_swarm = async (data) => {
     check_if_online(topicHash)
 }
 
-const new_connection = (connection, topic, invite, dht_keys) => {
+const new_connection = (connection, topic, dht_keys) => {
     console.log("New connection incoming")
     let active = get_active_topic(topic)
     
@@ -164,11 +169,11 @@ const new_connection = (connection, topic, invite, dht_keys) => {
 
     console.log("*********Got new Connection! ************")
     active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false})
-    send_joined_message(invite, topic, dht_keys)
+    send_joined_message(topic, dht_keys)
     //checkIfOnline(hash)
     connection.on('data', async data => {
 
-        incoming_message(data, topic, connection, invite)
+        incoming_message(data, topic, connection)
 
     })
 
@@ -210,7 +215,7 @@ const get_active_topic = (topic) => {
     return active
 }
 
-const check_data_message = async (data, connection, topic, invite) => {
+const check_data_message = async (data, connection, topic) => {
 
     try {
         data = JSON.parse(data)
@@ -285,7 +290,7 @@ const check_data_message = async (data, connection, topic, invite) => {
                 return
             }
             //Check admin signature
-            const admin = verify_admins(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(invite.slice(-64), 'hex'))
+            const admin = verify_admins(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
             // if(!verified) return "Error"
             con.joined = true
             con.address = joined.address
@@ -376,16 +381,16 @@ const get_my_channels = async (key) => {
 }
 
 
-const send_joined_message = async (invite, topic, dht_keys) => {
+const send_joined_message = async (topic, dht_keys) => {
     let sig = ""
-    const msg = invite
     const active = get_active_topic(topic)
     if (!active) return
+    const key = active.key
     const adminkeys = loadRoomKeys()
-    if (is_room_admin(adminkeys, invite)) {
+    if (is_room_admin(adminkeys, active.key)) {
         //We got an adminkey for this room
         //Sign our joined message with this
-        sig = sign_admin_message(dht_keys, invite, adminkeys)
+        sig = sign_admin_message(dht_keys, active.key, adminkeys)
     }
     // const sig = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
 
@@ -396,7 +401,7 @@ const send_joined_message = async (invite, topic, dht_keys) => {
     const data = JSON.stringify({
         address: Hugin.address,
         signature: sig.toString('hex'),
-        message: msg,
+        message: key,
         joined: true,
         topic: topic,
         name: Hugin.nickname,
@@ -406,14 +411,14 @@ const send_joined_message = async (invite, topic, dht_keys) => {
         time: active.time,
     })
 
-    send_swarm_message(data, invite)
+    send_swarm_message(data, active.key)
 }
 
-const incoming_message = async (data, topic, connection, invite) => {
+const incoming_message = async (data, topic, connection) => {
     const str = new TextDecoder().decode(data);
     console.log("Data incoming", str)
     if (str === "Ping") return
-    const check = await check_data_message(data, connection, topic, invite)
+    const check = await check_data_message(data, connection, topic)
     if (check === "Error") {
         console.log("Check failed")
         //connection_closed(connection, topic)
