@@ -289,6 +289,7 @@ const check_data_message = async (data, connection, topic) => {
                 //Connection is already joined
                 return
             }
+            
             //Check admin signature
             const admin = verify_admins(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
             // if(!verified) return "Error"
@@ -304,10 +305,11 @@ const check_data_message = async (data, connection, topic) => {
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
                 join_voice_channel(active.key, topic, joined.address)
             }
-
+            
             con.video = joined.video
             console.log("Connection updated: Joined:", con.joined)
             Hugin.send("peer-connected", joined)
+            return true
         }
 
         if ('voice' in data) {
@@ -315,7 +317,6 @@ const check_data_message = async (data, connection, topic) => {
             if (!voice_status) return "Error"
    
         }
-
     }
 
     return false
@@ -589,7 +590,7 @@ const check_file_message = async (data, topic, address, con) => {
 
     if (data.info === 'file-shared') {
         const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, true, con.name)
-        save_file_info(data, topic, con.address, added, false, con.name)
+        save_file_info(data, topic, address, added, false, con.name)
     }
 
     if (data.type === 'download-request') {
