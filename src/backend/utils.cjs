@@ -296,7 +296,7 @@ const sanitize_file_message = (data) => {
     //Check optional
     const key = sanitizeHtml(data?.key)
     if (data?.key !== undefined) {
-        if (typeof data?.key !== "string" || key.length > 64) return false
+        if (typeof data?.key !== "string" || key.length > 128) return false
     }
     const hash = sanitizeHtml(data?.hash)
     if (data?.hash !== undefined) {
