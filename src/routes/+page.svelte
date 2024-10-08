@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {groups, misc, notify, user} from '$lib/stores/user.js'
+    import {groups, misc, notify, rooms, user} from '$lib/stores/user.js'
     import {onMount, setContext} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
@@ -57,6 +57,8 @@
         $user.downloadPath = path
         $user.idleLimit = idle
         $notify.off = notifications
+        $rooms.roomArray = await window.api.getRooms()
+
         if (avatar) setCustomAvatar()
         loginSuccess()
     })
