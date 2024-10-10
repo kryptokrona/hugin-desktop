@@ -32,7 +32,7 @@ const nogroup = {
     
 onMount( async () => {
     await printRooms()
-    checkGroup()
+    checkRoom()
     filterActiveHugins($roomMessages)
     
 })
@@ -50,34 +50,34 @@ window.api.receive('peer-connected', () => {
     filterActiveHugins($roomMessages)
 })
 
-//Check active group status
-const checkGroup = () => {
-    //If we have an active group
+//Check active room status
+const checkRoom = () => {
+    //If we have an active room
     if ($rooms.thisRoom.chat) {
         printRoom($rooms.thisRoom)
         return
     }
-    //If we have groups but no active, print the first.
+    //If we have rooms but no active, print the first.
     if ($rooms.roomArray.length && !$rooms.thisRoom.chat) {
         $rooms.thisRoom = $rooms.roomArray[0]
         printRoom($rooms.thisRoom)
         return
     }
-    //IF we have no groups and no active group. Set default
+    //IF we have no groups and no active room. Set default
     if (!$rooms.thisRoom.chat || !$rooms.roomArray.length) {
-        setEmptyGroup()
+        setEmptyRoom()
         printRoom(nogroup)
         return
     }
 }
 
-//Display empty group for new accounts
-const setEmptyGroup = () => {
+//Display empty room for new accounts
+const setEmptyRoom = () => {
     $rooms.roomArray.push(nogroup)
     roomList = $rooms.roomArray
 }
 
-//Print chosen group key
+//Print chosen room key
 const printRoom = async (grp) => {
     $rooms.activeHugins = []
     dispatch('printRoom', grp)
@@ -108,7 +108,7 @@ async function printRooms() {
 }
 
 //Remove active group
-const removeGroup = async () => {
+const removeRoom = async () => {
     window.api.removeRoom($rooms.thisRoom.key)
     let filter = $rooms.roomArray.filter((a) => a.key !== $rooms.thisRoom.key)
     $rooms.roomArray = filter
@@ -118,11 +118,11 @@ const removeGroup = async () => {
         await printRooms()
     } else {
         $rooms.roomArray = []
-        setEmptyGroup()
+        setEmptyRoom()
         $rooms.thisRoom = nogroup
     }
     $rooms.removeRoom = false
-    dispatch('removeGroup')
+    dispatch('removeRoom')
     await sleep(100)
     filterActiveHugins($roomMessages)
 }
@@ -142,7 +142,7 @@ function sendPM() {
 
 
 //Add group
-const addGroup = () => {
+const addRoom = () => {
     $rooms.addRoom = true
 }
 
@@ -180,7 +180,7 @@ function flipper(node, {
             <h2>Rooms</h2>
             <br />
             <div class="buttons">
-                <Plus on:click="{addGroup}" />
+                <Plus on:click="{addRoom}" />
             </div>
         {:else}
             <!-- <p class="back" on:click={back}>Back</p>
@@ -205,7 +205,7 @@ function flipper(node, {
 {#if $rooms.removeRoom}
     <RemoveGroup r={true}
         on:click="{() => ($rooms.removeRoom = false)}"
-        on:remove="{() => removeGroup($rooms.thisRoom)}"
+        on:remove="{() => removeRoom($rooms.thisRoom)}"
     />
 {/if}
 
