@@ -8,7 +8,7 @@ const iconGlow = () => {
     color = '#4dbb45'
     let timer = setTimeout(function () {
         color = '#f5f5f5'
-    }, 900)
+    }, 300)
 
     dispatch('copy')
 }
@@ -16,8 +16,8 @@ const iconGlow = () => {
 
 <svg
     on:click="{iconGlow}"
-    width="24px"
-    height="24px"
+    width="22px"
+    height="22px"
     viewBox="0 0 24 24"
     version="1.1"
     xmlns:xlink="http://www.w3.org/1999/xlink"
