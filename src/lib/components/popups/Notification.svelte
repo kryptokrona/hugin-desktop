@@ -42,7 +42,7 @@ function hideNotification(id) {
 
 </script>
 
-{#if !error && !success}
+{#if !error && !success && group}
     <div
         on:click="{hideNotification}"
         in:fly="{{ x: 200, duration: 200, easing: cubicOut }}"
