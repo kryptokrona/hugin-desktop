@@ -27,7 +27,7 @@
         $rooms.removeRoom = !$rooms.removeRoom
     }
 
-    $: swarmGroup = $swarm.active.some(a => a.key === r.key)
+    $: swarmRoom = $swarm.active.some(a => a.key === r.key)
     
     $: thisSwarm = $swarm.active.find(a => a.key === r.key)
 
