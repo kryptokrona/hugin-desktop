@@ -286,6 +286,19 @@ const download_file = async (fileName, size, chat, key, group = false) => {
             if (!group) saveMsg(message, chat, false, file.time)
         }
     });
+
+    let downloaded = 0
+    active.beam.on('data', (data) => {
+        downloaded += data.length;
+        console.log('Size:', file.size);
+        console.log('Downloaded:', downloaded);
+        if (downloaded > file.size) {
+        stream.destroy();
+        end_file_beam(chat, key);
+        errorMessage('Download exceeded file size... Closing connection');
+        return;
+    }})
+    
     active.beam.pipe(progressStream).pipe(stream);
 
     } catch (err) {
