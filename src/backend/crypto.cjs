@@ -138,9 +138,9 @@ function naclHash(val) {
     return nacl.hash(hexToUint(val))
 }
 
-function verify_admins(remotePub, signature, invite) {
+function verify_signature(message, signature, pub) {
     if (signature.length !== 64) return false
-    return Keychains.verify(remotePub, signature, invite)
+    return Keychains.verify(message, signature, pub)
 }
 
 const sign_admin_message = (dht_keys, invite, adminkeys) => {
@@ -149,5 +149,11 @@ const sign_admin_message = (dht_keys, invite, adminkeys) => {
     return keys.get().sign(dht_keys.get().publicKey)
 }
 
+const sign_joined_message = (dht_keys) => {
+    const key = keychain.getXKRKeypair().privateSpendKey
+    const keys = create_keys_from_seed(key)
+    //return [signature, publickey]
+    return [keys.get().sign(dht_keys.get().publicKey).toString('hex'), keys.publicKey.toString('hex')]
+}
 
-module.exports = {sign_admin_message, verify_admins, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_admins, naclHash, get_new_peer_keys, create_keys_from_seed}
+module.exports = {sign_admin_message, sign_joined_message, verify_signature, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}

@@ -174,24 +174,29 @@ function parse_torrent(m) {
 const sanitize_join_swarm_data = (data) => {
 
     const address = sanitizeHtml(data.address)
-    // if (address.length !== 99) return false
+    if (address?.length > 99) return false
     const message = sanitizeHtml(data.message)
-    if (message.length > 200) return false 
+    if (message?.length > 200) return false 
     const signature = sanitizeHtml(data.signature)
-    if (signature.length > 128) return false
+    if (signature?.length > 128) return false
     const topic = sanitizeHtml(data.topic)
-    if (topic.length !== 64) return false
+    if (topic?.length !== 64) return false
     const name = sanitizeHtml(data.name) 
-    if (name.length > 50) return false
-    let voice = data.voice
+    if (name?.length > 50) return false
+    let voice = data?.voice
     if (typeof voice !== 'boolean') return false
-    const joined = data.joined
+    const joined = data?.joined
     if (typeof joined !== 'boolean') return false
-    const video = data.video
+    const video = data?.video
     if (typeof video !== 'boolean') return false
-    const time = sanitizeHtml(data.time) 
+    const time = sanitizeHtml(data?.time) 
     if (typeof time !== 'string') return false
-    if (time.length > 50) return false
+    if (time?.length > 50) return false
+    
+    const idPub = data.idPub
+    if (typeof idPub !== 'string' || idPub?.length > 64) return false
+    const idSig = data.idSig
+    if (typeof idSig !== 'string' || idPub?.length > 128) return false
 
     const channels = []
     
@@ -217,7 +222,9 @@ const sanitize_join_swarm_data = (data) => {
         joined: joined,
         channels: channels,
         video: video,
-        time: time
+        time: time,
+        idSig,
+        idPub
     }
 
     return clean_object
@@ -228,16 +235,16 @@ const sanitize_voice_status_data = (data) => {
     const address = sanitizeHtml(data.address)
     // if (address.length !== 99) return false
     const message = sanitizeHtml(data.message)
-    if (message.length > 64) return false 
+    if (message?.length > 64) return false 
     const signature = sanitizeHtml(data.signature)
     // if (signature.length !== 128) return false
     const topic = sanitizeHtml(data.topic)
-    if (topic.length !== 64) return false
+    if (topic?.length !== 64) return false
     const name = sanitizeHtml(data.name) 
-    if (name.length > 50) return false
-    const voice = data.voice
+    if (name?.length > 50) return false
+    const voice = data?.voice
     if (typeof voice !== 'boolean') return false
-    const video = data.video
+    const video = data?.video
     if (typeof video !== 'boolean') return false
 
     const clean_object = {
@@ -259,12 +266,12 @@ const sanitize_pm_message = (msg) => {
     let timestamp = sanitizeHtml(msg.t)
     let key = sanitizeHtml(msg.k)
     let message = sanitizeHtml(msg.msg)
-    if (message.length > 777) return [false]
-    if (addr.length > 99) return [false]
+    if (message?.length > 777) return [false]
+    if (addr?.length > 99) return [false]
     if (typeof sent !== 'boolean') return [false]
-    if (timestamp.length > 25) return f[false]
-    if (key.length > 64) return [false]
-    if (message.length > 777) return [false]
+    if (timestamp?.length > 25) return f[false]
+    if (key?.length > 64) return [false]
+    if (message?.length > 777) return [false]
 
     return [message, addr, key, timestamp, sent]
 }
@@ -292,6 +299,11 @@ const sanitize_file_message = (data) => {
 
     const time = sanitizeHtml(data?.time)
     if (time.length > 25) return false
+
+    const sig = sanitizeHtml(data?.sig);
+    if (size.length > 128) return false;
+
+    //Verify sig here?
     
     //Check optional
     const key = sanitizeHtml(data?.key)
@@ -316,7 +328,8 @@ const sanitize_file_message = (data) => {
         size,
         time,
         hash,
-        key: key
+        key: key,
+        sig
     }
 
     return object
@@ -324,22 +337,22 @@ const sanitize_file_message = (data) => {
 
 const sanitize_group_message = (msg) => {
     let timestamp = sanitizeHtml(msg.t);
-    if (timestamp.length > 20) return false;
+    if (timestamp?.length > 20) return false;
     let group = sanitizeHtml(msg.g);
-    if (group.length > 128) return false;
+    if (group?.length > 128) return false;
     let text = sanitizeHtml(msg.m);
-    if (text.length === 0) return false
-    if (text.length > 777) return false;
+    if (text?.length === 0) return false
+    if (text?.length > 777) return false;
     let addr = sanitizeHtml(msg.k);
     // if (addr.length > 99) return false;
     let reply = sanitizeHtml(msg.r);
-    if (reply.length > 64) return false;
+    if (reply?.length > 64) return false;
     let sig = sanitizeHtml(msg.s);
-    if (sig.length > 200) return false;
+    if (sig?.length > 200) return false;
     let nick = sanitizeHtml(msg.n);
-    if (nick.length > 50) return false;
+    if (nick?.length > 50) return false;
     let txHash = sanitizeHtml(msg.hash);
-    if (txHash.length > 64) return false;
+    if (txHash?.length > 64) return false;
   
     const clean_object = {
       message: text,

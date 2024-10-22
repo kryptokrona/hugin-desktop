@@ -5,7 +5,7 @@ const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
-const {keychain, get_new_peer_keys, naclHash, verify_admins, sign_admin_message, signMessage } = require("./crypto.cjs")
+const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_message, signMessage, sign_joined_message } = require("./crypto.cjs")
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
@@ -291,22 +291,29 @@ const check_data_message = async (data, connection, topic) => {
             }
             
             //Check admin signature
-            const admin = verify_admins(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
-            // if(!verified) return "Error"
+            const admin = verify_signature(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
+            
+            //If we swtich to picture avatars, we need to sign our connection with our id. So fakenicking etc becomes harder.
+            const verified = verify_signature(connection.remotePublicKey, Buffer.from(data.idSig, 'hex'), Buffer.from(data.idPub, 'hex'))
+
+            if (!verified) {
+                return "Error"
+            }
+
             con.joined = true
             con.address = joined.address
             con.name = joined.name
             con.voice = joined.voice
             con.admin = admin
-
+            con.video = joined.video
             const time = parseInt(joined.time)
+            
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
             const [in_voice, video] = get_local_voice_status(topic)
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
                 join_voice_channel(active.key, topic, joined.address)
             }
             
-            con.video = joined.video
             console.log("Connection updated: Joined:", con.joined)
             Hugin.send("peer-connected", joined)
             return true
@@ -388,6 +395,7 @@ const send_joined_message = async (topic, dht_keys) => {
     if (!active) return
     const key = active.key
     const adminkeys = loadRoomKeys()
+    const [idSig, idPub] = sign_joined_message(dht_keys)
     if (is_room_admin(adminkeys, active.key)) {
         //We got an adminkey for this room
         //Sign our joined message with this
@@ -410,6 +418,8 @@ const send_joined_message = async (topic, dht_keys) => {
         channels: [],
         video: video,
         time: active.time,
+        idSig,
+        idPub
     })
 
     send_swarm_message(data, active.key)
