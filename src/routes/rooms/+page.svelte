@@ -59,15 +59,14 @@ onMount(async () => {
     //Listens for new messages from backend
     window.api.receive('roomMsg', (data) => {
         const thisroom = data.group === $rooms.thisRoom.key
+        const thistopic = data.key === $rooms.thisRoom.topic
         const inrooms = $page.url.pathname === '/rooms'
         const file = isFile(data)
-        let thistopic = false
         if (file) {
             data.file = file
-            thistopic = data.key === $rooms.thisRoom.topic
         }
         if (data.address === $user.myAddress) return
-            if ((thisroom || thistopic) && inrooms) {
+            if (thisroom || thistopic && inrooms) {
                 printRoomMessage(data)
             } else {
                 console.log("Another room")
@@ -261,6 +260,7 @@ $: if ($roomMessages.length == 0) {
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.
 async function printRoom(room) {
+    const active = $swarm.active.find(a => a.key === room.key)
     loadMore = true
     pageNum = 0
     fixedRooms = []
@@ -269,11 +269,10 @@ async function printRoom(room) {
     channelMessages = []
     filterRooms = []
     noMsgs = false
-
     rooms.update((data) => {
         return {
             ...data,
-            thisRoom: { key: room.key, name: room.name, chat: true},
+            thisRoom: { key: room.key, name: room.name, chat: true, topic: active.topic},
         }
     })
     
