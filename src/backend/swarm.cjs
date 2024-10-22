@@ -103,16 +103,12 @@ const end_swarm = async (key) => {
 }
 
 const create_swarm = async (data) => {
-    const key = naclHash(data.key)
-    const invite = data.key
     let discovery
     let swarm
-    console.log("Key hashed", key)
-    console.log("key string", data.key)
+    const key = naclHash(data.key)
+    const invite = data.key
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
     const topicHash = base_keys.publicKey.toString('hex')
-
-    console.log("Topic", topicHash)
 
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
@@ -307,7 +303,7 @@ const check_data_message = async (data, connection, topic) => {
             con.admin = admin
             con.video = joined.video
             const time = parseInt(joined.time)
-            
+
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
             const [in_voice, video] = get_local_voice_status(topic)
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
