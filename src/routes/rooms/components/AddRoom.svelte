@@ -90,21 +90,16 @@
     const createInvite = async () => {
         lockName = true
         const [inv, admin] = await window.api.createInvite()
-        console.log("invite!", invite)
         invite = inv
         adm = admin
-        link = 'hugin://' + name + invite
-        console.log("Invite key!", invite)
-        console.log("Room link!", link)
+        link = 'hugin://' + name + '/' + invite
         //invite  = group key + admin pubkey
     }
 
     const parseInvite = (link) => {
         const inviteKey = link.slice(-128)
-        console.log("invite key", inviteKey)
         const parse = link.split('hugin://')[1]
-        const roomName = parse.slice(0, parse.length - inviteKey.length)
-        console.log("Room name!", roomName)
+        const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
         invite = inviteKey
         name = roomName
         link = link
