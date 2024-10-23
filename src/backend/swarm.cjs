@@ -185,6 +185,11 @@ const new_connection = (connection, topic, dht_keys) => {
 
 }
 
+const ban_connection = (conn, topic) => {
+    conn.ban(true)
+    connection_closed(conn, topic)
+}
+
 const connection_closed = (conn, topic) => {
     console.log("Closing connection...")
     const active = get_active_topic(topic)
@@ -216,7 +221,7 @@ const check_data_message = async (data, connection, topic) => {
     try {
         data = JSON.parse(data)
     } catch (e) {
-        return "Error"
+        return "Ban"
     }
     console.log("Data parsed", data)
     //Check if active in this topic
@@ -237,7 +242,7 @@ const check_data_message = async (data, connection, topic) => {
 
     if ('info' in data) {
         const fileData = sanitize_file_message(data)
-        if (!fileData) return "Error"
+        if (!fileData) return "Ban"
         check_file_message(fileData, topic, con.address, con)
         return true
     }
@@ -279,7 +284,7 @@ const check_data_message = async (data, connection, topic) => {
 
             const joined = sanitize_join_swarm_data(data)
             console.log("Joined?", joined)
-            if (!joined) return "Error"
+            if (!joined) return "Ban"
 
             if (con.joined) {
                 //Connection is already joined
@@ -293,7 +298,7 @@ const check_data_message = async (data, connection, topic) => {
             const verified = verify_signature(connection.remotePublicKey, Buffer.from(data.idSig, 'hex'), Buffer.from(data.idPub, 'hex'))
 
             if (!verified) {
-                return "Error"
+                return "Ban"
             }
 
             con.joined = true
@@ -317,7 +322,7 @@ const check_data_message = async (data, connection, topic) => {
 
         if ('voice' in data) {
             const voice_status = check_peer_voice_status(data, con)
-            if (!voice_status) return "Error"
+            if (!voice_status) return "Ban"
    
         }
     }
@@ -426,9 +431,14 @@ const incoming_message = async (data, topic, connection) => {
     console.log("Data incoming", str)
     if (str === "Ping") return
     const check = await check_data_message(data, connection, topic)
+    if (check === "Ban") {
+        console.log("Check failed")
+        ban_connection(connection, topic)
+        return
+    }
     if (check === "Error") {
         console.log("Check failed")
-        //connection_closed(connection, topic)
+        connection_closed(connection, topic)
         return
     }
     console.log("Check", check)
