@@ -42,31 +42,15 @@ onMount(async () => {
     window.api.receive('groupMsg', (data) => {
         const thisgroup = data.group === $groups.thisGroup.key
         const ingroups = $page.url.pathname === '/groups'
+        console.log("thisgroup?", thisgroup)
+        console.log("groupmsg", data)
         if (data.address === $user.myAddress) return
-        if (data.channel.length) {
-
-            if (thisgroup && ingroups && data.channel === $swarm.activeChannel.name) {
-                printGroupMessage(data)
-            }
-
-            if (!channelMessages.some(a => a.channel === data.channel) && thisgroup) {
-                //Must set message before updating channels
-                //channelMessages.unshift(data)
-                //setChannels()
-                return
-            }
-
-            channelMessages.unshift(data)
-                //This store is not used yet, not sure if we need it, these messages are only relevant in /groups atm
-            $swarm.activeChannelMessages.unshift(data)
-            return
-        } else {
-        if (thisgroup && ingroups && $swarm.activeChannel.name.length < 1) {
+        if (thisgroup && ingroups) {
+            console.log("print!")
             //Push new message to store
             printGroupMessage(data)
         } else {
             console.log('Another group', data)
-        }
         }
     })
     
