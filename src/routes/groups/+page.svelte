@@ -42,11 +42,8 @@ onMount(async () => {
     window.api.receive('groupMsg', (data) => {
         const thisgroup = data.group === $groups.thisGroup.key
         const ingroups = $page.url.pathname === '/groups'
-        console.log("thisgroup?", thisgroup)
-        console.log("groupmsg", data)
         if (data.address === $user.myAddress) return
         if (thisgroup && ingroups) {
-            console.log("print!")
             //Push new message to store
             printGroupMessage(data)
         } else {

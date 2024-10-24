@@ -24,6 +24,7 @@ import TopBar from "./components/TopBar.svelte"
 let replyto = ''
 let reply_exit_icon = 'x'
 let noMsgs = false
+let loader = false
 let filterRooms = []
 let filterEmojis = []
 let fixedRooms = []
@@ -266,6 +267,7 @@ async function printRoom(room, create = false) {
     channelMessages = []
     filterRooms = []
     if (create) {
+        loader = true
         await sleep(1337)
     }
     const active = $swarm.active.find(a => a.key === room.key)
@@ -279,10 +281,11 @@ async function printRoom(room, create = false) {
     //Return the latest messages
     const messages = await getMessages(room)
     roomMessages.set(messages)
-
+    
     checkReactions(messages, false)
     replyExit()
     scrollDown()
+    loader = false
 }
 
 function addFileMessage(array) {
@@ -498,7 +501,7 @@ async function dropFile(e) {
         <TopBar />
         
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
-            {#if fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat}
+            {#if (fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat) || loader}
                 <div>
                     <Loader/>
                 </div>
