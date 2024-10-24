@@ -58,15 +58,13 @@ onMount(async () => {
 
     //Listens for new messages from backend
     window.api.receive('roomMsg', (data) => {
-        const thisroom = data.group === $rooms.thisRoom.key
-        const thistopic = data.key === $rooms.thisRoom.topic
-        const inrooms = $page.url.pathname === '/rooms'
         const file = isFile(data)
-        if (file) {
-            data.file = file
-        }
+        if (file) data.file = file
+        const thisroom = data.group === $rooms.thisRoom.key
+        const thistopic = data.file?.key === $rooms.thisRoom.topic
+        const inrooms = $page.url.pathname === '/rooms'
         if (data.address === $user.myAddress) return
-            if (thisroom || thistopic && inrooms) {
+            if ((thisroom || thistopic) && inrooms) {
                 printRoomMessage(data)
             } else {
                 console.log("Another room")
@@ -248,7 +246,7 @@ const addNewRoom = async (e) => {
     }
     $roomMessages = []
     window.api.addRoom(add, admin)
-    printRoom(room)
+    printRoom(room, true)
 }
 
 //Svelte reactive. Sets noMsgs boolean for welcome message.
@@ -259,8 +257,7 @@ $: if ($roomMessages.length == 0) {
 }
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.
-async function printRoom(room) {
-    const active = $swarm.active.find(a => a.key === room.key)
+async function printRoom(room, create = false) {
     loadMore = true
     pageNum = 0
     fixedRooms = []
@@ -268,11 +265,14 @@ async function printRoom(room) {
     scrollGroups = []
     channelMessages = []
     filterRooms = []
-    noMsgs = false
+    if (create) {
+        await sleep(1337)
+    }
+    const active = $swarm.active.find(a => a.key === room.key)
     rooms.update((data) => {
         return {
             ...data,
-            thisRoom: { key: room.key, name: room.name, chat: true, topic: active.topic},
+            thisRoom: { key: room.key, name: room.name, chat: true, topic: active?.topic},
         }
     })
     
