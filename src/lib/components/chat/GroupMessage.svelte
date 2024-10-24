@@ -18,6 +18,7 @@ import UploadFile from './UploadFile.svelte'
 import Emoji from "$lib/components/icons/Emoji.svelte";
 import 'emoji-picker-element';
 import { roomMessages } from '$lib/stores/roommsgs'
+import { groupMessages } from '$lib/stores/groupmsgs'
 
 export let msg
 export let msgFrom
@@ -120,12 +121,17 @@ async function checkreply(reply) {
         group_reply.hash + hashPadding()
         if (group_reply) return group_reply
     }
-    //Check in db if we can find it
+    //Check in local chat if we can find it
     let local = $roomMessages.find(a => a.hash === reply)
     if (local) return local
+
+    let group_local = $groupMessages.find((a) => a.hash == reply)
+    if (group_local) return group_local
+    
+    //Otherwise check in db
     let thisreply = await window.api.getGroupReply(reply)
-    console.log("this reply", thisreply)
     if (!thisreply) return false
+    
     thisreply.hash = thisreply.hash + hashPadding()
     return thisreply
 }
