@@ -327,7 +327,7 @@ const remove_local_file = (fileName, chat, time) => {
     active.beam.write(JSON.stringify({type: 'remote-file-removed', fileName, chat}))
 }
 
-const add_remote_file = async (fileName, chat, size, key, group = false, hash, room = false, name) => {
+const add_remote_file = async (fileName, chat, size, key, group = false, hash, room, name) => {
     const time = Date.now()
     const update = remoteFiles.some(a => group && a.fileName === fileName && a.chat === chat)
     file = {fileName, chat, size, time, key, group, room}
@@ -341,12 +341,12 @@ const add_remote_file = async (fileName, chat, size, key, group = false, hash, r
     else Hugin.send('remote-file-added', {remoteFiles, chat})
 }
 
-const add_group_file = async (fileName, remoteFiles, chat, group, time, hash, room = true, name) => {
+const add_group_file = async (fileName, remoteFiles, chat, group, time, hash, room, name) => {
     Hugin.send('group-remote-file-added', {remoteFiles, chat, group})
     const message = {
             message: fileName,
             address: chat,
-            group: group,
+            group: room,
             time: time,
             name:  name,
             reply: false,
