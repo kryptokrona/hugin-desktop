@@ -22,7 +22,7 @@ ipcMain.handle('select-directory', () => {
 function checkImageOrVideoType(path, size) {
     if (path === undefined) return false
     if (size >= 50000000) return false
-    const types = ['.png','.jpg','.gif', '.jpeg', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
+    const types = ['.png','.jpg','.gif', '.jpeg', '.jfif', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
     for (a in types) {
         if (path.toLowerCase().endsWith(types[a])) {
             return true
@@ -151,226 +151,186 @@ function parse_call(msg, sender, sent, group = false, timestamp) {
     }
 }
 
-function parse_torrent(m) {
-    if (m.startsWith('TORRENT://')) {
-        const link = m.split('TORRENT://')[1]
-        try {
-            const torrent = link.replaceAll(/&amp;/g, "&")
-            const fileName = torrent.split('&dn=').pop().split('&tr=')[0];
-            const infoHash = torrent.split('?xt=urn:btih:').pop().split('&dn=')[0]
-            console.log("Got torrent!", torrent)
-            console.log('Got filename', fileName)
-            console.log("Got hash!", infoHash)
-            if (!torrent || !fileName || !infoHash) return [true, false]
-            if (infoHash.length > 64) return [true, false]
-            return [true, true, torrent, fileName, infoHash]
-        }catch (e) {
-            return [true, false]
-        }
-    }
-    return [false, false]
-}
-
-const sanitize_join_swarm_data = (data) => {
-
-    const address = sanitizeHtml(data.address)
-    if (address?.length > 99) return false
-    const message = sanitizeHtml(data.message)
-    if (message?.length > 200) return false 
-    const signature = sanitizeHtml(data.signature)
-    if (signature?.length > 128) return false
-    const topic = sanitizeHtml(data.topic)
-    if (topic?.length !== 64) return false
-    const name = sanitizeHtml(data.name) 
-    if (name?.length > 50) return false
-    let voice = data?.voice
-    if (typeof voice !== 'boolean') return false
-    const joined = data?.joined
-    if (typeof joined !== 'boolean') return false
-    const video = data?.video
-    if (typeof video !== 'boolean') return false
-    const time = sanitizeHtml(data?.time) 
-    if (typeof time !== 'string') return false
-    if (time?.length > 50) return false
-    
-    const idPub = data.idPub
-    if (typeof idPub !== 'string' || idPub?.length > 64) return false
-    const idSig = data.idSig
-    if (typeof idSig !== 'string' || idPub?.length > 128) return false
-
-    const channels = []
-    
-    // if (data.channels.length) {
-    //     //Disable channels
-        
-    //     // if (data.channels.length > 100) return false
-    //     // for (const a of data.channels) {
-    //     //     let channel = sanitizeHtml(a)
-    //     //     if (channel.length > 50) return false
-    //     //     channels.push(channel)
-    //     // }
-    //     return false
-    // }
-
-    const clean_object = {
-        address: address,
-        message: message,
-        signature: signature,
-        topic: topic,
-        name: name,
-        voice: voice,
-        joined: joined,
-        channels: channels,
-        video: video,
-        time: time,
-        idSig,
-        idPub
-    }
-
-    return clean_object
-}
-
-const sanitize_voice_status_data = (data) => {
-
-    const address = sanitizeHtml(data.address)
-    // if (address.length !== 99) return false
-    const message = sanitizeHtml(data.message)
-    if (message?.length > 64) return false 
-    const signature = sanitizeHtml(data.signature)
-    // if (signature.length !== 128) return false
-    const topic = sanitizeHtml(data.topic)
-    if (topic?.length !== 64) return false
-    const name = sanitizeHtml(data.name) 
-    if (name?.length > 50) return false
-    const voice = data?.voice
-    if (typeof voice !== 'boolean') return false
-    const video = data?.video
-    if (typeof video !== 'boolean') return false
-
-    const clean_object = {
-        address: address,
-        message: message,
-        signature: signature,
-        topic: topic,
-        name: name,
-        voice: voice,
-        video: video
-    }
-
-    return clean_object
-}
-
 const sanitize_pm_message = (msg) => {
     let sent = msg.sent
     let addr = sanitizeHtml(msg.from)
     let timestamp = sanitizeHtml(msg.t)
     let key = sanitizeHtml(msg.k)
     let message = sanitizeHtml(msg.msg)
-    if (message?.length > 777) return [false]
-    if (addr?.length > 99) return [false]
+    if (message?.length > 777 || msg.msg === undefined) return [false]
+    if (addr?.length > 99 || msg.from === undefined) return [false]
     if (typeof sent !== 'boolean') return [false]
-    if (timestamp?.length > 25) return f[false]
+    if (timestamp?.length > 25) return [false]
     if (key?.length > 64) return [false]
-    if (message?.length > 777) return [false]
 
     return [message, addr, key, timestamp, sent]
 }
 
-const sanitize_file_message = (data) => {
-    console.log("sanitize", data)
-     //Check standard message
-    const fileName = sanitizeHtml(data?.fileName)
-    if (typeof data?.fileName !== "string" || fileName.length > 100) return false
-
-    const address = sanitizeHtml(data?.address)
-    if (typeof data?.address !== "string" || address.length > 99) return false
+const sanitize_join_swarm_data = (data) => {
+    if (data?.address.length > 99 || data.address === undefined) return false;
+    const address = sanitizeHtml(data.address);
+    if (data?.message.length > 128 || data.message === undefined) return false;
+    const message = sanitizeHtml(data.message);
+    if (data?.signature.length > 128 || data.signature === undefined) return false;
+    const signature = sanitizeHtml(data.signature);
+    if (data?.topic.length !== 64 || data.topic === undefined) return false;
+    const topic = sanitizeHtml(data.topic);
+    if (data?.name.length > 50 || data.name === undefined) return false;
+    const name = sanitizeHtml(data.name);
+    if (data?.time.length > 50 || data.time === undefined) return false;
+    const time = sanitizeHtml(data.time);
   
-    const topic = sanitizeHtml(data?.topic)
-    if (typeof data?.topic !== "string" || topic.length > 64) return false
-
-    const type = sanitizeHtml(data?.type)
-    if (typeof data?.type !== "string" || type.length > 25) return false
- 
-    const info = sanitizeHtml(data?.info)
-    if (typeof data?.info !== "string" || info.length > 25) return false
-
-    const size = sanitizeHtml(data?.size)
-    if (size.length > 20) return false
-
-    const time = sanitizeHtml(data?.time)
-    if (time.length > 25) return false
-
-    const sig = sanitizeHtml(data?.sig);
-    if (size.length > 128) return false;
-
-    //Verify sig here?
-    
-    //Check optional
-    const key = sanitizeHtml(data?.key)
-    if (data?.key !== undefined) {
-        if (typeof data?.key !== "string" || key.length > 128) return false
-    }
-    const hash = sanitizeHtml(data?.hash)
-    if (data?.hash !== undefined) {
-        console.log("Hash not undefined", hash, data.hash)
-        if (typeof hash !== "string" || hash.length > 64) return false
-    }
-    
-    if (typeof data?.file === "boolean") return false
-
-
-    const object = {
-        fileName,
-        address,
-        topic,
-        info,
-        type,
-        size,
-        time,
-        hash,
-        key: key,
-        sig
-    }
-
-    return object
-}
-
-const sanitize_group_message = (msg) => {
-    let timestamp = sanitizeHtml(msg.t);
-    if (timestamp?.length > 20) return false;
-    let group = sanitizeHtml(msg.g);
-    if (group?.length > 128) return false;
-    let text = sanitizeHtml(msg.m);
-    if (text?.length === 0) return false
-    if (text?.length > 777) return false;
-    let addr = sanitizeHtml(msg.k);
-    // if (addr.length > 99) return false;
-    let reply = sanitizeHtml(msg.r);
-    if (reply?.length > 64) return false;
-    let sig = sanitizeHtml(msg.s);
+    if (data.voice === undefined) return false;
+    if (typeof data.voice !== 'boolean') return false;
+    const voice = data.voice;
+    if (typeof data.joined !== 'boolean') return false;
+    const joined = data.joined;
+    if (typeof data.video !== 'boolean') return false;
+    const video = data.video;
+  
+    const idPub = data.idPub;
+    if (typeof idPub !== 'string' || idPub.length > 64) return false;
+    const idSig = data.idSig;
+    if (typeof idSig !== 'string' || idSig.length > 128) return false;
+  
+    const channels = [];
+  
+    const clean_object = {
+      address: address,
+      message: message,
+      signature: signature,
+      topic: topic,
+      name: name,
+      voice: voice,
+      joined: joined,
+      channels: channels,
+      video: video,
+      time: time,
+      idSig,
+      idPub,
+    };
+  
+    return clean_object;
+  };
+  
+  const sanitize_group_message = (data) => {
+    let timestamp = sanitizeHtml(data.t);
+    if (timestamp?.length > 20 || data.t === undefined) return false;
+    let room = sanitizeHtml(data.g);
+    if (room?.length > 128 || data.g === undefined) return false;
+    let text = sanitizeHtml(data.m);
+    if (text?.length > 777 || data.m === undefined) return false;
+    let addr = sanitizeHtml(data.k);
+    if (addr?.length > 128 || data.k === undefined) return false;
+    let reply = sanitizeHtml(data.r);
+    if (reply?.length > 64 || data.r === undefined) return false;
+    let sig = sanitizeHtml(data.s);
     if (sig?.length > 200) return false;
-    let nick = sanitizeHtml(msg.n);
-    if (nick?.length > 50) return false;
-    let txHash = sanitizeHtml(msg.hash);
-    if (txHash?.length > 64) return false;
+    let nick = sanitizeHtml(data.n);
+    if (nick?.length > 50 || data.n === undefined) return false;
+    let txHash = sanitizeHtml(data.hash);
+    if (txHash?.length > 128 || data.hash === undefined) return false;
   
     const clean_object = {
       message: text,
       address: addr,
-      signature: '',
-      group: group,
+      signature: sig,
+      group: room,
       time: timestamp,
       name: nick,
       reply: reply,
       hash: txHash,
-      sent: false,
-      channel: '',
+      sent: data.sent,
+      channel: 'channel',
       hash: txHash,
     };
   
     return clean_object;
   };
+  
+  const sanitize_voice_status_data = (data) => {
+    const address = sanitizeHtml(data.address);
+    if (address?.length > 99 || data.address === undefined) return false;
+    const message = sanitizeHtml(data.message);
+    if (message?.length > 64 || data.message === undefined) return false;
+    const signature = sanitizeHtml(data.signature);
+    if (signature?.length > 128 || data.signature === undefined) return false;
+    const topic = sanitizeHtml(data.topic);
+    if (topic?.length !== 64 || data.topic === undefined) return false;
+    const name = sanitizeHtml(data.name);
+    if (name?.length > 50 || data.name === undefined) return false;
+    const voice = data.voice;
+    if (typeof voice !== 'boolean') return false;
+    const video = data.video;
+    if (typeof video !== 'boolean') return false;
+  
+    const clean_object = {
+      address: address,
+      message: message,
+      signature: signature,
+      topic: topic,
+      name: name,
+      voice: voice,
+      video: video,
+    };
+  
+    return clean_object;
+  };
+  
+  const sanitize_file_message = (data) => {
+    //Check standard message
+    const fileName = sanitizeHtml(data?.fileName);
+    if (typeof data?.fileName !== 'string' || fileName.length > 100) return false;
+  
+    const address = sanitizeHtml(data?.address);
+    if (typeof data?.address !== 'string' || address.length > 99) return false;
+  
+    const topic = sanitizeHtml(data?.topic);
+    if (typeof data?.topic !== 'string' || topic.length > 64) return false;
+  
+    const type = sanitizeHtml(data?.type);
+    if (typeof data?.type !== 'string' || type.length > 25) return false;
+  
+    const info = sanitizeHtml(data?.info);
+    if (typeof data?.info !== 'string' || info.length > 25) return false;
+  
+    const size = sanitizeHtml(data?.size);
+    if (size?.length > 20) return false;
+  
+    const time = sanitizeHtml(data?.time);
+    if (time?.length > 25) return false;
+  
+    const sig = sanitizeHtml(data?.sig);
+    if (size?.length > 128) return false;
+  
+    //Check optional
+    const key = sanitizeHtml(data?.key);
+    if (data?.key !== undefined) {
+      if (typeof data?.key !== 'string' || key.length > 128) return false;
+    }
+    const hash = sanitizeHtml(data?.hash);
+    if (data?.hash !== undefined) {
+      if (typeof hash !== 'string' || hash.length > 64) return false;
+    }
+  
+    if (typeof data?.file === 'boolean') return false;
+  
+    const object = {
+      fileName,
+      address,
+      topic,
+      info,
+      type,
+      size,
+      time,
+      hash,
+      key: key,
+      sig,
+    };
+  
+    return object;
+  };
 
  
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, parse_torrent, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
+module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
