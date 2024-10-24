@@ -30,7 +30,6 @@ const {
     trimExtra, 
     sanitize_pm_message, 
     parse_call,
-    parse_torrent,
     sleep, 
     hexToUint,
     randomKey,
@@ -96,13 +95,13 @@ ipcMain.on('add-group', async (e, grp) => {
 
 ipcMain.on('add-room', async (e, room, admin) => {
     addRoom(room)
-    let message = sanitize_group_message(room)
-    save_group_message(message, room.hash, parseInt(Date.now()), false, false, true, true)
+    //Make sure the format is correct to save.
+    const message = sanitize_group_message(room)
     message.address = Hugin.address
     message.name = Hugin.nickname
     message.message = "Joined the lobby"
     message.sent = true
-    save_group_message(message, room.hash + 1, parseInt(Date.now()), false, false, true, true)
+    save_group_message(message, room.hash, parseInt(message.timestamp), false, false, true, true)
     if (admin) addRoomKeys(room.k, admin)
     // sender('joined-room', room)
     new_swarm({key: room.k})
@@ -919,15 +918,15 @@ async function send_group_message(message, offchain = false, swarm = false) {
         )
 
         if (result.success) {
-            console.log("Succces sending tx")
             message_json.sent = true
-            let send = sanitize_group_message(message_json)
+            message_json.t = timestamp
+            message_json.hash = result.transactionHash
+            const send = sanitize_group_message(message_json)
             send.hash = result.transactionHash
-            send.time = timestamp
             await save_group_message(send, result.transactionHash, timestamp, false, false, false)
             Hugin.send('sent_group', {
                 hash: result.transactionHash,
-                time: message.t,
+                time: timestamp,
             })
             known_pool_txs.push(result.transactionHash)
             saveHash(result.transactionHash)
@@ -1108,6 +1107,7 @@ async function decrypt_group_message(tx, hash, group_key = false) {
     payload_json.sent = false
     
     const message = sanitize_group_message(payload_json)
+    if (!message) return false
     await save_group_message(message, hash, tx.t, offchain)
     if (!saved) return false
 
@@ -1150,24 +1150,6 @@ const check_balance = async () => {
         return false
     }
     return true
-}
-
-function torrent_shared(incoming, [uri, fileName, infoHash]) {
-    const file = {
-        message: uri,
-        address: incoming.address,
-        time: incoming.time,
-        hash: incoming.hash,
-        group: incoming.group,
-        torrent: true,
-        file: true,
-        reply: '',
-        sent: false,
-        fileName: fileName,
-        infoHash: infoHash,
-        progress: 0
-    }
-    Hugin.send('torrent-shared', file)
 }
 
 async function save_group_message(msg, hash, time, offchain, channel = false, add = false, room = false) {
