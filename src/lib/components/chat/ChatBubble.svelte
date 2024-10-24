@@ -42,7 +42,11 @@
     let beam_key = ""
     let youtube_shared_link_type = false
     let asian = false
-
+    let timeformat = "HH:mm"
+    if ((Date.now() - 40000000) > timestamp) {
+        //Show date also for older messages
+        timeformat = "D MMM, HH:mm"
+    }
     let geturl = new RegExp(
               "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
              ,"g"
@@ -215,7 +219,7 @@
                     <p class:asian class="nickname">
                         {$user.username}
                         <span class="time">
-                            | <Time live={30 * 1_000} relative timestamp="{parseInt(timestamp)}" /></span
+                            | <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}" /></span
                         >
                     </p>
                     {#if beamMsg}
@@ -261,7 +265,7 @@
                     <p class:asian class="nickname">
                         {$user.activeChat.name}
                         <span class="time">
-                            | <Time live={30 * 1_000} relative timestamp="{parseInt(timestamp)}"/></span
+                            | <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}"/></span
                         >
                     </p>
                     {#if beamMsg}

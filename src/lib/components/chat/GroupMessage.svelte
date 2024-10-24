@@ -67,6 +67,11 @@ const dispatch = createEventDispatcher()
 let offchain = false
 let thisReply = false
 let replyError = false
+let timeformat = "HH:mm"
+if ((Date.now() - 40000000) > timestamp) {
+    //Show date also for older messages
+    timeformat = "D MMM, HH:mm"
+}
 
 
 onMount( async () => {
@@ -131,7 +136,7 @@ async function checkreply(reply) {
     //Otherwise check in db
     let thisreply = await window.api.getGroupReply(reply)
     if (!thisreply) return false
-    
+
     thisreply.hash = thisreply.hash + hashPadding()
     return thisreply
 }
@@ -307,7 +312,7 @@ const openLinkMessage = (url) => {
                     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
                     <h5 class:asian class="nickname" class:share={file} class:blink_me={file}>
                         {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
-                            >| <Time live={30 * 1_000} relative timestamp="{parseInt(message.time)}" /></span
+                            >| <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(message.time)}" /></span
                         >
                     </h5>
                 </div>
