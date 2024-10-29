@@ -79,6 +79,10 @@ jobs:
         if: matrix.config.os == 'ubuntu-latest'
         run: sudo snap install snapcraft --classic
 
+      - name: Install libudev on Linux
+        if: matrix.config.os == 'ubuntu-latest'
+        run: sudo apt-get install -y libudev-dev
+
       - name: Install the Apple certificate and provisioning profile
         if: matrix.config.os == 'macos-latest'
         env:
