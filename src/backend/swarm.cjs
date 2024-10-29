@@ -1,4 +1,4 @@
-const HyperSwarm = require("hyperswarm");
+const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")

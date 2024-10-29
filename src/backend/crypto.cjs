@@ -5,7 +5,7 @@ const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
 const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
 const crypto = new Crypto()
-const DHT = require('@hyperswarm/dht')
+const DHT = require('hyperdht')
 const Keychains = require('keypear');
 const { ipcMain } = require('electron');
 
