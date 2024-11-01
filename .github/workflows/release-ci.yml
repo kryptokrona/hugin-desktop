@@ -121,7 +121,7 @@ jobs:
           security find-identity -p codesigning -v
 
       - name: Install dependencies
-        run: npm install --quiet
+        run: npm i node-gyp && npm install --quiet
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'windows-latest'
