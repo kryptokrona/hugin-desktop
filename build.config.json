@@ -1,7 +1,7 @@
 {
     "appId": "org.kryptokrona.hugin",
     "productName": "Hugin Messenger",
-    "afterSign": "./afterSignHook.cjs",
+    "afterSign": "./afterSignHook.mjs",
     "directories": {
         "output": "dist"
     },
