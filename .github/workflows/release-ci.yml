@@ -149,8 +149,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/Hugin Messenger_${{ env.VERSION }}_amd64.deb
-          asset_name: Hugin Messenger_${{ env.VERSION }}_amd64.deb
+          asset_path: dist/hugin-messenger_${{ env.VERSION }}_amd64.deb
+          asset_name: hugin-messenger_${{ env.VERSION }}_amd64.deb
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset macOS x64
