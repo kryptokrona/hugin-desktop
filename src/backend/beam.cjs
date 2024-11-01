@@ -207,7 +207,6 @@ const end_beam = async (chat, file = false) => {
     active.beam.destroy()
     const filter = active_beams.filter(a => a.chat !== chat)
     active_beams = filter
-    console.log('Active beams', active_beams)
 }
 
 const check_if_online = (addr) => {
@@ -263,7 +262,6 @@ const send_file = async (fileName, size, chat, key, group) => {
 const download_file = async (fileName, size, chat, key, group = false) => {
     const file = remoteFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
     const active = active_beams.find(a => a.key === key)
-    console.log("active file?", file)
     if (!active) {
         errorMessage(`Can't download file, beam no longer active`)
         return
@@ -311,6 +309,7 @@ const add_local_file = async (fileName, path, chat, size, time, group = false) =
     const fileBeam = await start_beam('new', chat, true, true, group, fileName, size)
     const file = {fileName, chat, size, path, time, info: 'file', type: 'upload-ready', key: fileBeam.key}
     localFiles.unshift(file)
+    console.log("local files", localFiles)
     Hugin.send('local-files',  {localFiles, chat})
     Hugin.send('uploading', {fileName, chat, size, time })
     await sleep(1000)
@@ -327,16 +326,16 @@ const remove_local_file = (fileName, chat, time) => {
     active.beam.write(JSON.stringify({type: 'remote-file-removed', fileName, chat}))
 }
 
-const add_remote_file = async (fileName, chat, size, key, group = false, hash, room, name) => {
-    const time = Date.now()
-    const update = remoteFiles.some(a => group && a.fileName === fileName && a.chat === chat)
-    file = {fileName, chat, size, time, key, group, room}
+const update_remote_file = (fileName, chat, size, key, time ) => {
+    const update = remoteFiles.find(a => a.fileName === fileName && a.chat === chat && a.time === time)
     if (update) {
-        let updateFile = remoteFiles.find(a => a.fileName === fileName)
-        updateFile.key = key
-    } else remoteFiles.unshift(file)
-    console.log("Updated remte", remoteFiles)
-    if (update) return
+        update.key = key
+    }
+}
+
+const add_remote_file = async (fileName, chat, size, key, group = false, hash, room, name, time) => {
+    file = {fileName, chat, size, time, key, group, room, hash}
+    remoteFiles.unshift(file)
     if (group) return await add_group_file(fileName, remoteFiles, chat, group, time, hash, room, name)
     else Hugin.send('remote-file-added', {remoteFiles, chat})
 }
@@ -449,4 +448,4 @@ const errorMessage = (message) => {
     Hugin.send('error-notify-message', message)
 }
 
-module.exports = {end_beam, new_beam, send_beam_message, add_local_file, start_download, remove_local_file, add_remote_file, send_file, download_file, remote_remote_file}
+module.exports = {end_beam, new_beam, send_beam_message, add_local_file, start_download, remove_local_file, add_remote_file, update_remote_file, send_file, download_file, remote_remote_file}
