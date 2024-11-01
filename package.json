@@ -53,7 +53,7 @@
         "better-sqlite3-multiple-ciphers": "^9.4.1",
         "electron-context-menu": "^3.6.0",
         "electron-fetch": "^1.9.1",
-        "electron-notarize": "^1.2.2",
+        "@electron/notarize": "2.2.0",
         "electron-reloader": "^1.2.3",
         "electron-serve": "^1.1.0",
         "electron-store": "^8.1.0",
