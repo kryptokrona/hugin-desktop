@@ -24,10 +24,10 @@
         "build:mac-arm64-gh": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --config build.config.json -p never",
         "build:mac-x64-gh": "cross-env NODE_ENV=production vite build && electron-builder --mac --x64 --config build.config.json -p never",
         "build:electron": "electron-builder --x64 --win --config build.config.json",
-        "build:mac-arm64": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --config build.config.json",
-        "build:mac-x64": "cross-env NODE_ENV=production vite build && electron-builder --mac --x64 --config build.config.json",
-        "build:linux-x64": "cross-env NODE_ENV=production vite build && electron-builder --linux --x64 --config build.config.json",
-        "publish:mac": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --x64 --config build.config.json -p always",
+        "build:mac-arm64": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --config build.config.json -p never",
+        "build:mac-x64": "cross-env NODE_ENV=production vite build && electron-builder --mac --x64 --config build.config.json -p never",
+        "build:linux-x64": "cross-env NODE_ENV=production vite build && electron-builder --linux --x64 --config build.config.json -p never",
+        "publish:mac": "cross-env NODE_ENV=production vite build && electron-builder --mac --arm64 --x64 --config build.config.json -p never",
         "start": "vite start"
     },
     "build": {
@@ -56,7 +56,7 @@
         "debounceify": "^1.1.0",
         "electron-context-menu": "^3.6.0",
         "electron-fetch": "^1.9.1",
-        "electron-notarize": "^1.2.2",
+        "@electron/notarize": "2.2.0",
         "electron-reloader": "^1.2.3",
         "electron-serve": "^1.1.0",
         "electron-store": "^8.1.0",
