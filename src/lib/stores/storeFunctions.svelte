@@ -143,7 +143,9 @@ import { roomMessages } from './roommsgs'
         
         //We only have one active voice channel at every given time, so update the $swarm.voice_channel
         if ($swarm?.voice_channel.length) {
-            if (status.topic === (data.topic && $swarm.voice_channel[0].topic)) $swarm.voice_channel = status.voice_channel
+            if (status.key === $swarm.voice_channel[0].key) {
+                $swarm.voice_channel = status.voice_channel
+            }
         }
         
        updateActiveSwarm()
