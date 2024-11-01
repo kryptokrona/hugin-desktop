@@ -141,7 +141,7 @@ import { roomMessages } from './roommsgs'
            status.voice_channel = still_active
         }
         
-        //We only have one active voice channel at every given time, so update the $swarm.voice_channel
+        //We are only active in one voice channel, if someone disconnects. Update status.
         if ($swarm?.voice_channel.length) {
             if (status.key === $swarm.voice_channel[0].key) {
                 $swarm.voice_channel = status.voice_channel
