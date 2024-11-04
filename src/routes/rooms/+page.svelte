@@ -114,7 +114,7 @@ const sendRoomMsg = async (e) => {
     let time = Date.now()
     const hash = await window.api.createGroup()
     let myName = $user.username
-    let group = thisRoom
+    let group = $rooms.thisRoom.key
     let in_swarm = true
     let in_channel = $swarm.activeChannel.name
     //Reaction switch
@@ -277,6 +277,7 @@ async function printRoom(room, create = false) {
             thisRoom: { key: room.key, name: room.name, chat: true, topic: active?.topic},
         }
     })
+    
     
     //Return the latest messages
     const messages = await getMessages(room)
