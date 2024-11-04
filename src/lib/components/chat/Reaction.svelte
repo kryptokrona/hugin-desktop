@@ -80,6 +80,8 @@ $: reactCount
     border-radius: 2px;
     font-size: 11px;
     display: inline-block;
+    z-index: 1;
+    background-color: #222222;
 }
 
 .count {
