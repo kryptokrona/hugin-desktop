@@ -128,7 +128,7 @@ const join_voice_channel = async (video = false, screen) => {
                 <div class="voice-list" on:click={join_voice_channel}>
                 
                     <p style="margin-top: -4px; margin-right: 5px; font-family: Montserrat">Voice channel</p>
-                    <Groupcall size="{17}" />
+                    <Groupcall size="{14}" />
 
                 </div>
                 {#each voice_channel as voice}
