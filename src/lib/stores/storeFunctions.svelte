@@ -110,7 +110,7 @@ import { roomMessages } from './roommsgs'
         //     let filter = $swarm.call.filter(a => a.chat !== data.address)
         //     $swarm.call = filter
         // }
-
+        voice_channel_status(data)
         //Update store
         updateActiveSwarm()
     }
