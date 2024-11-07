@@ -29,7 +29,7 @@
     const dispatch = createEventDispatcher()
     const my_address = $user.myAddress
 
-    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
+    $: thisSwarm = $swarm.active.find(a => a.voice_connected)
     $: in_voice = voice_channel.some(a => a.address === my_address)
 
     $: if (thisSwarm) channels = thisSwarm.channels
