@@ -225,7 +225,6 @@ const check_if_online = (addr) => {
 const send_file = async (fileName, size, chat, key, group) => {
     const active = active_beams.find(a => a.chat === chat && a.key === key)
     const file = localFiles.find(a => a.fileName === fileName && a.chat === chat && a.key === key)
-    if (active.key !== key) return
     if (!file) {
         errorMessage(`Can't find the file, try share it again`)
         return
@@ -234,6 +233,7 @@ const send_file = async (fileName, size, chat, key, group) => {
         errorMessage(`Can't send file, beam no longer active`)
         return
     }
+    if (active.key !== key) return
     try {
     const filePath = file.path
     const stream = createReadStream(filePath)

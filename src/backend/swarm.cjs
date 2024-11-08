@@ -325,6 +325,8 @@ const check_data_message = async (data, connection, topic) => {
         }
     }
 
+    if (!con.joined) return "Error"
+
     return false
 }
 
@@ -441,6 +443,8 @@ const incoming_message = async (data, topic, connection) => {
     }
     console.log("Check", check)
     if (check) return
+    data.sent = false
+    data.address = connection.address
     const message = sanitize_group_message(JSON.parse(data))
     console.log("Got incoming message!", message)
     if (!message) return
@@ -502,7 +506,7 @@ ipcMain.on('group-download', (e, download) => {
     request_download(download)
 })
 
-ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = false) => {
+ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
     const active = get_active(key)
     const topic = active.topic
     const upload = {
