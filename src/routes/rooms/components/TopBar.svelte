@@ -3,6 +3,7 @@ import Bell from "$lib/components/icons/Bell.svelte"
 import Groupcall from "$lib/components/icons/Groupcall.svelte"
 import Lightning from "$lib/components/icons/Lightning.svelte"
 import Lock from "$lib/components/icons/Lock.svelte"
+import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
 import { notify, rooms, swarm } from "$lib/stores/user"
 import { isLatin } from "$lib/utils/utils"
@@ -53,7 +54,7 @@ $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
     <div style="display: inline-block; margin-left: auto">
         <Tooltip title="Invite key">
             <div on:click={() => copyThis(room)}>
-        <Lock />
+        <AddToCall />
             </div>
         </Tooltip>
             <Tooltip title="Status: Connected">
