@@ -25,7 +25,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          draft: false
+          draft: true
           prerelease: false
 
   build:
@@ -60,7 +60,8 @@ jobs:
 
     env:
       PLATFORM: ${{ matrix.config.platform }}
-      VERSION: ${{ github.ref_name }}  # This extracts the tag name
+      VERSION: ${{ github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Check out Git repository
@@ -138,50 +139,3 @@ jobs:
           appleIdPassword: ${{ secrets.APP_SPECIFIC_PASSWORD }}
           teamId: ${{ secrets.TEAM_ID }}
         run: npm run build:mac-$PLATFORM
-
-      - name: Check artifacts --DEBUG--
-        run: ls dist
-
-      - name: Upload Release Asset Ubuntu
-        if: matrix.config.os == 'ubuntu-latest'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/hugin-messenger_${{ env.VERSION }}_amd64.deb
-          asset_name: hugin-messenger_${{ env.VERSION }}_amd64.deb
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Asset macOS x64
-        if: matrix.config.os == 'macos-latest' && matrix.config.platform == 'x64'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/Hugin Messenger-${{ env.VERSION }}.dmg
-          asset_name: Hugin Messenger_${{ env.VERSION }}_x64.dmg
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Asset macOS arm64
-        if: matrix.config.os == 'macos-latest' && matrix.config.platform == 'arm64'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/Hugin Messenger-${{ env.VERSION }}-arm64.dmg
-          asset_name: Hugin Messenger_${{ env.VERSION }}_arm64.dmg
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Asset Windows
-        if: matrix.config.os == 'windows-latest'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: dist/Hugin Messenger Setup ${{ env.VERSION }}.exe
-          asset_name: Hugin Messenger_Setup_${{ env.VERSION }}.exe
-          asset_content_type: application/x-msdownload
