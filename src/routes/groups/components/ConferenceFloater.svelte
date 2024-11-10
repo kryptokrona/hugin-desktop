@@ -138,7 +138,7 @@
         justify-content: center;
         align-items: center;
         padding: 10px;
-        margin-top: 4px;
+        margin-top: 2px;
     }
     
     .controls {
