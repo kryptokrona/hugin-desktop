@@ -492,6 +492,34 @@ async function play_video() {
         $mediaSettings.cameraId = camera[0].deviceId
     }
     
+    async function checkMyVolume(stream) {
+        let interval
+        if (!$swarm.audio) {
+            stream.getAudioTracks().forEach((track) => (track.enabled = false))
+        }
+        $swarm.myStream = stream
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        const source = audioContext.createMediaStreamSource(stream)
+        const analyser = audioContext.createAnalyser()
+        analyser.fftSize = 32
+        const dataArray = new Uint8Array(analyser.frequencyBinCount)
+        source.connect(analyser);
+
+        interval = setInterval(checkAudioPresence,100)
+
+        function checkAudioPresence() {
+            if ($swarm.myStream) {
+            analyser.getByteFrequencyData(dataArray);
+            $audioLevel.meTalking = dataArray.some(value => value > 160)
+            } else {
+                clearInterval(interval)
+                $audioLevel.meTalking = false
+            }
+        }
+        
+    }
+    
     async function checkVolume(peer) {
         let interval
         let array = new Array(10)
@@ -521,7 +549,7 @@ async function play_video() {
                         if (speaker.chat == contact.chat) {
                             if (
                                 array.some((volume) => volume > $audioLevel.sensitivity) &&
-                                source.audioLevel > 0.001
+                                source.audioLevel > 0.002
                             ) {
                                 speaker.activeVoice = true
                                 speaker.volume = source.audioLevel
@@ -543,19 +571,7 @@ async function play_video() {
         }
     }
     
-    async function checkMyVolume(stream) {
-        //Check if active stream already exists
-        if (!$swarm.audio) {
-            stream.getAudioTracks().forEach((track) => (track.enabled = false))
-        }
-        $swarm.myStream = stream
-        return
 
-        //TODO ** Here we should add function like checkVolume() but for our input to display in UI.
-        
-        $swarm.myStream = stream
-        
-    }
     
     //End call
     function endCall(peer, stream, contact) {
