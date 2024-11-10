@@ -130,7 +130,7 @@ jobs:
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'ubuntu-latest'
-        run: npm run build:linux-$PLATFORM-gh
+        run: npm run build:linux-x64-gh
 
       - name: Build ${{ matrix.config.name }}
         if: matrix.config.os == 'macos-latest'
