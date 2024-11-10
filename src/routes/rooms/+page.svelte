@@ -45,7 +45,7 @@ $: replyTrue = $rooms.replyTo.reply
 
 const isFile = (data) => {
     const findit = (arr) => {
-        return arr.find(a => a.fileName === data.message && data.time === a.time)
+        return arr.find(a => a.fileName === data.message && parseInt(data.time) === parseInt(a.time))
     }
     const file = findit($remoteFiles)
     if (!file) return findit($localFiles)
