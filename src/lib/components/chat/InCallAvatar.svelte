@@ -20,12 +20,14 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.add
 <style lang="scss">
       .talking {
         border-radius: 5px;
-        border: 1px solid var(--success-color) !important;
+        border: 2px solid var(--success-color) !important;
         transition: 200ms ease-in-out;
     }
 
     .img {
-        border: 1px solid transparent;
+        border: 2px solid transparent;
+        border-radius: 50%;
+
     }
 </style>
 

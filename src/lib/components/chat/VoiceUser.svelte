@@ -82,10 +82,12 @@
         opacity: 0.92;
         cursor: pointer;
         margin-right: 5px;
+        border-radius: 50%;
+        border: 2px solid transparent;
     }
 
-    .talking {
-        border: 1px solid var(--success-color);
+    .talking .voice-avatar {
+        border: 2px solid var(--success-color);
     }
 
     .connecting {

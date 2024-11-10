@@ -138,12 +138,14 @@
         justify-content: center;
         align-items: center;
         padding: 10px;
+        margin-top: 4px;
     }
     
     .controls {
         display: flex;
         gap: 1rem;
         align-items: center;
+        margin-top: 4px;
     
         .icon {
             cursor: pointer;

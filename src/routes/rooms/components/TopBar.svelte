@@ -57,9 +57,6 @@ $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
         <AddToCall />
             </div>
         </Tooltip>
-            <Tooltip title="Status: Connected">
-                    <Lightning connected={thisSwarm} />
-            </Tooltip>
           
         <div style="cursor: pointer; display: inline-block; width: 25px;" on:click={toggleNotification}>
             {#if !muteGroup}
