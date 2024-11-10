@@ -8,6 +8,7 @@ import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { get_avatar } from '$lib/utils/hugin-utils'
 import { videoSettings, video } from '$lib/stores/mediasettings'
 import { Moon } from 'svelte-loading-spinners'
+import { audioLevel } from '$lib/stores/user.js'
 
 let myVideo = document.getElementById('myVideo')
 let window_medium = false
@@ -60,7 +61,7 @@ $: window_medium
 
 <!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:many={many} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo}>
+<div class="card" class:many={many} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo} class:talking="{$audioLevel.meTalking}">
     <video
         class:reverse={$videoSettings.screenshare && !$videoSettings.loading}
         on:click="{playVideo}"
@@ -109,6 +110,10 @@ $: window_medium
         transition: 100ms ease-in-out;
         
     }
+}
+
+.talking {
+    border: 1px solid var(--success-color);
 }
 
 .reverse {

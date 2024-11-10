@@ -503,12 +503,12 @@ async function play_video() {
         const source = audioContext.createMediaStreamSource(stream)
         const analyser = audioContext.createAnalyser()
         analyser.fftSize = 32
-        const dataArray = new Uint8Array(analyser.frequencyBinCount)
         source.connect(analyser);
 
         interval = setInterval(checkAudioPresence,100)
 
         function checkAudioPresence() {
+            const dataArray = new Uint8Array(analyser.frequencyBinCount)
             if ($swarm.myStream) {
             analyser.getByteFrequencyData(dataArray);
             $audioLevel.meTalking = dataArray.some(value => value > 160)
