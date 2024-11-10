@@ -110,7 +110,7 @@ import { roomMessages } from './roommsgs'
         //     let filter = $swarm.call.filter(a => a.chat !== data.address)
         //     $swarm.call = filter
         // }
-
+        voice_channel_status(data)
         //Update store
         updateActiveSwarm()
     }
@@ -141,9 +141,11 @@ import { roomMessages } from './roommsgs'
            status.voice_channel = still_active
         }
         
-        //We only have one active voice channel at every given time, so update the $swarm.voice_channel
+        //We are only active in one voice channel, if someone disconnects. Update status.
         if ($swarm?.voice_channel.length) {
-            if (status.topic === (data.topic && $swarm.voice_channel[0].topic)) $swarm.voice_channel = status.voice_channel
+            if (status.key === $swarm.voice_channel[0].key) {
+                $swarm.voice_channel = status.voice_channel
+            }
         }
         
        updateActiveSwarm()

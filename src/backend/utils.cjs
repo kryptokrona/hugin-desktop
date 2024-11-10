@@ -322,7 +322,7 @@ const sanitize_join_swarm_data = (data) => {
       info,
       type,
       size,
-      time,
+      time: parseInt(time),
       hash,
       key: key,
       sig,

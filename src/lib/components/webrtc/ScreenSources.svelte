@@ -2,7 +2,9 @@
     import { fade } from 'svelte/transition'
     import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
     import Screenshare from '$lib/components/icons/Screenshare.svelte'
-
+    import Button from '../buttons/Button.svelte'
+    import { sleep } from '$lib/utils/utils'
+    import { swarm } from '$lib/stores/user.js'
     let open
     let changed
     let add = false
@@ -16,6 +18,27 @@
         $mediaSettings.screenId = src
         window.api.send('pick-screen-source', src)
         buttonGlow()
+    }
+
+   async function stop() {
+        $videoSettings.loading = true
+        $videoSettings.screenshare = false
+        $videoSettings.active = false
+        $videoSettings.myVideo = false
+        $mediaSettings.screenId = "none"
+        console.log("Stop called")
+        if ($swarm.call.length === 0) {
+            $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+            console.log("Mysream ended")
+        }
+
+        console.log("Mysream ")
+
+        $swarm.call.forEach((a) => {
+            a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
+        })
+        await sleep(200)
+        $videoSettings.loading = false
     }
     
     const buttonGlow = () => {
@@ -41,6 +64,9 @@
                         <img src={src.img} />
                     </div>
                 {/each}
+                    {#if $videoSettings.screenshare}
+                        <Button text="Stop" disabled={false} on:click={() => stop()}/>
+                    {/if}
             </div>
         {/if}
     </div>

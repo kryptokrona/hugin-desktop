@@ -45,7 +45,7 @@ $: replyTrue = $rooms.replyTo.reply
 
 const isFile = (data) => {
     const findit = (arr) => {
-        return arr.find(a => a.fileName === data.message && parseInt(data.time) === a.time)
+        return arr.find(a => a.fileName === data.message && data.time === a.time)
     }
     const file = findit($remoteFiles)
     if (!file) return findit($localFiles)
@@ -114,7 +114,7 @@ const sendRoomMsg = async (e) => {
     let time = Date.now()
     const hash = await window.api.createGroup()
     let myName = $user.username
-    let group = thisRoom
+    let group = $rooms.thisRoom.key
     let in_swarm = true
     let in_channel = $swarm.activeChannel.name
     //Reaction switch
@@ -278,6 +278,7 @@ async function printRoom(room, create = false) {
         }
     })
     
+    
     //Return the latest messages
     const messages = await getMessages(room)
     roomMessages.set(messages)
@@ -342,11 +343,11 @@ function addEmoji(scroll) {
             if (!a.react && b.reply == a.hash) {
                 a.react = []
                 b.hash = b.hash + hashPadding
-                a.react.push(b)
+                a.react.unshift(b)
 
             } else if (b.reply == a.hash) {
                 b.hash = b.hash + hashPadding
-                a.react.push(b)
+                a.react.unshift(b)
             }
         
         if (already(a)) continue

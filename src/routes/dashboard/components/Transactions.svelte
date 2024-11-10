@@ -4,6 +4,7 @@
     import {onMount} from 'svelte'
     import Forward from '$lib/components/icons/Forward.svelte'
     import Backward from '$lib/components/icons/Backward.svelte'
+    import Time from 'svelte-time'
 
     let pageNum = 0
     let pages
@@ -12,9 +13,10 @@
         getTransactions(pageNum)
     })
 
-    async function getTransactions(pageNum) {
-      let startIndex = pageNum * 10;
-      if (pageNum === 0) startIndex = pageNum;
+    async function getTransactions(num) {
+      let startIndex = num * 10;
+      pageNum = num
+      if (num === 0) startIndex = num;
 
         let transactions = await window.api.getTransactions(startIndex)
         $user.transactions = transactions.pageTx
@@ -36,10 +38,10 @@
             <p>{page}/{pages}</p>
             <div>
                 {#if pageNum > 0}
-                    <Backward on:click="{() => getTransactions(pageNum--)}"/>
+                    <Backward on:click="{() => getTransactions(pageNum - 1)}"/>
                 {/if}
                 {#if pages >= page + 1}
-                    <Forward on:click="{() => getTransactions(pageNum++)}"/>
+                    <Forward on:click="{() => getTransactions(pageNum + 1)}"/>
                 {/if}
             </div>
         </div>
@@ -49,7 +51,7 @@
             {#each txList as tx}
                 <div class="row">
                     <p style="opacity: 80%;">
-                        {tx.hash.substring(0, 8) + '...' + tx.hash.substring(56, tx.hash.length)}
+                        <Time live={30 * 1_000} format={"D MMM, HH:mm"} timestamp="{parseInt(tx.time * 1000)}" />
                     </p>
                     <p
                             class="tx"

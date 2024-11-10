@@ -29,7 +29,7 @@
     const dispatch = createEventDispatcher()
     const my_address = $user.myAddress
 
-    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
+    $: thisSwarm = $swarm.active.find(a => a.voice_connected)
     $: in_voice = voice_channel.some(a => a.address === my_address)
 
     $: if (thisSwarm) channels = thisSwarm.channels
@@ -177,11 +177,7 @@
         <div class="controls">
             {#if in_voice}
             <div class="icon" on:click="{toggleVideo}">
-                {#if !$videoSettings.myVideo}
-                    <VideoSlash />
-                {:else}
-                    <VideoIcon grid="{true}" />
-                {/if}
+                <VideoIcon grid="{true}" />
             </div>
             <div class="icon" on:click="{toggleAudio}">
                 {#if $swarm.audio}

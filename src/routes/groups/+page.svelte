@@ -335,11 +335,11 @@ function addEmoji(scroll) {
             if (!a.react && b.reply == a.hash) {
                 a.react = []
                 b.hash = b.hash + hashPadding
-                a.react.push(b)
+                a.react.unshift(b)
 
             } else if (b.reply == a.hash) {
                 b.hash = b.hash + hashPadding
-                a.react.push(b)
+                a.react.unshift(b)
             }
         
         if (already(a)) continue

@@ -62,7 +62,8 @@
             {/if}
         </div>
         {#if uploadDone}
-            <!-- <p class="message done" in:fade>File uploaded!</p> -->
+            <p class="message done" in:fade>File uploaded!</p>
+            <p in:fade class="message">{file.fileName} </p>
             <!-- {#if downloaders > 0} 
                 <p class="count">{downloaders}</p>
             {/if} -->

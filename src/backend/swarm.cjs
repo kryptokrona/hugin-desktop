@@ -1,4 +1,4 @@
-const HyperSwarm = require("hyperswarm");
+const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")
@@ -9,7 +9,7 @@ const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_messa
    
 let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
 
-const { add_local_file, start_download, add_remote_file, send_file } = require("./beam.cjs");
+const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
 const userDataDir = app.getPath('userData')
 
@@ -89,7 +89,6 @@ const end_swarm = async (key) => {
     }
 
     active.connections.forEach(chat => {
-        console.log("Disconnecting from:", chat.address)
         chat.connection.write(JSON.stringify({type: "disconnected"}))
         connection_closed(chat.connection, topic)
     })
@@ -206,7 +205,7 @@ const connection_closed = (conn, topic) => {
     Hugin.send("peer-disconnected", {address: user.address, topic})
     const still_active = active.connections.filter(a => a.connection !== conn)
     console.log("Connection closed")
-    console.log("Still active:", still_active)
+    console.log("Still active:", still_active.length)
     active.connections = still_active
 }
 
@@ -223,7 +222,6 @@ const check_data_message = async (data, connection, topic) => {
     } catch (e) {
         return "Ban"
     }
-    console.log("Data parsed", data)
     //Check if active in this topic
     const active = get_active_topic(topic)
     if (!active) return "Error"
@@ -326,6 +324,8 @@ const check_data_message = async (data, connection, topic) => {
    
         }
     }
+
+    if (!con.joined) return "Error"
 
     return false
 }
@@ -443,6 +443,8 @@ const incoming_message = async (data, topic, connection) => {
     }
     console.log("Check", check)
     if (check) return
+    data.sent = false
+    data.address = connection.address
     const message = sanitize_group_message(JSON.parse(data))
     console.log("Got incoming message!", message)
     if (!message) return
@@ -504,7 +506,7 @@ ipcMain.on('group-download', (e, download) => {
     request_download(download)
 })
 
-ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = false) => {
+ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
     const active = get_active(key)
     const topic = active.topic
     const upload = {
@@ -543,7 +545,6 @@ const request_download = (download) => {
 }
 
 const send_file_info = (address, topic, file) => {
-    console.log("send file info", file)
     const active = active_swarms.find(a => a.topic === topic)
     if (!active) {
         errorMessage('Swarm is not active')
@@ -579,7 +580,7 @@ const share_file = (file) => {
 
 
 const start_upload = async (file, topic) => {
-    const sendFile = localFiles.find(a => a.fileName === file.fileName && file.topic === topic)
+    const sendFile = localFiles.find(a => a.fileName === file.fileName && file.topic === topic && a.time === file.time)
     if (!sendFile) {
         errorMessage('File not found')
         return
@@ -606,7 +607,7 @@ const check_file_message = async (data, topic, address, con) => {
     const active = get_active_topic(topic)
     if (!active) return
     if (data.info === 'file-shared') {
-        const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, active.key, con.name)
+        const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, active.key, con.name, data.time)
         save_file_info(data, topic, address, added, false, con.name)
     }
 
@@ -617,7 +618,7 @@ const check_file_message = async (data, topic, address, con) => {
 
     if (data.type === 'upload-ready') {
         if (data.info === "file")  { 
-            await add_remote_file(data.fileName, address, data.size, data.key, true)
+            update_remote_file(data.fileName, address, data.size, data.key, data.time)
             start_download(Hugin.downloadDir, data.fileName, address, data.key)
             return
         }
@@ -670,8 +671,6 @@ ipcMain.on('expand-voice-channel-sdp', async (e, expand) => {
 
 function get_sdp(data) {
 
-    console.log("Get sdp!", data.retry)
-
     let sendMessage
     let offer = true
     let reconnect = false
@@ -696,7 +695,6 @@ function get_sdp(data) {
         retry: reconnect,
     }
 
-    console.log("Send voice channel sdp reconnect?:", sendMessage.retry)
     send_voice_channel_sdp(sendMessage)
 }
 
