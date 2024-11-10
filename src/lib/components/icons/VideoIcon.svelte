@@ -8,7 +8,7 @@ let color = '#f5f5f5'
 
 $: if ($videoSettings.myVideo && !$videoSettings.screenshare && grid) {
     color = '#4dbb45'
-} else if ($videoSettings.screenshare || (!$videoSettings.screenshare && !$videoSettings.myVideo)) {
+} else if ($videoSettings.screenshare || !$videoSettings.myVideo) {
     color = '#f5f5f5'
 }
 </script>

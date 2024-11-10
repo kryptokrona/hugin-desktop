@@ -177,11 +177,7 @@
         <div class="controls">
             {#if in_voice}
             <div class="icon" on:click="{toggleVideo}">
-                {#if !$videoSettings.myVideo}
-                    <VideoSlash />
-                {:else}
-                    <VideoIcon grid="{true}" />
-                {/if}
+                <VideoIcon grid="{true}" />
             </div>
             <div class="icon" on:click="{toggleAudio}">
                 {#if $swarm.audio}
