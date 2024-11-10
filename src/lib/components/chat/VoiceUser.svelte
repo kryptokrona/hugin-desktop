@@ -8,26 +8,25 @@
     //
     export let voice_user
     export let voice_channel
-
     let isTalking = false
     let isConnecting = false
-    const myAddress = $user.myAddress
+    let me = voice_user.address === $user.myAddress
 
     $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
         isTalking = true
     } else {
         isTalking = false
     }
-
+  
     
     //Check if we are also online in this channel
-    $: in_voice = voice_channel.some(a => a.address === myAddress)
+    $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
 
     
 </script>
 
-<div class:talking={isTalking} in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
+<div class:talking={isTalking || (me && $audioLevel.meTalking)} in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
     <img
         class="voice-avatar"
         src="data:image/png;base64,{get_avatar(voice_user.address)}"

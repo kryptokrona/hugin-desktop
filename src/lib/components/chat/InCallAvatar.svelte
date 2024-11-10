@@ -1,9 +1,10 @@
 <script>
 import { get_avatar } from "$lib/utils/hugin-utils"
-import { audioLevel } from '$lib/stores/user.js'
+import { audioLevel, user } from '$lib/stores/user.js'
 export let call
 let isTalking = false
-
+let me = call.address === $user.myAddress
+    
 $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.address)) {
     isTalking = true
 } else {
@@ -12,7 +13,7 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.add
 
 </script>
 
-<div class="img" class:talking={isTalking}>
+<div class="img" class:talking={isTalking || (me && $audioLevel.meTalking)}>
 <img class="avatar" src="data:image/png;base64,{get_avatar(call.address)}" alt="" />
 </div>
 
