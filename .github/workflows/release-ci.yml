@@ -48,11 +48,6 @@ jobs:
             platform: x64
           }
           - {
-            name: "macOS-x64",
-            os: macos-latest,
-            platform: x64
-          }
-          - {
             name: "macOS arm64",
             os: macos-latest,
             platform: arm64
