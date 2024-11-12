@@ -26,11 +26,8 @@
     
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
                 <div >
-                    <p>Ban
+                    <p>{user.name}</p>
                     <br>
-                    {user.name}
-                        
-                    </p>
                         <FillButton
                         red="{true}"
                         text="{"Ban"}"
@@ -57,15 +54,15 @@
         border: 1px solid var(--card-border);
         padding: 30px;
         border-radius: 8px;
-        width: 250px;
-        height: 300px;
+        width: 200px;
+        height: 200px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
     
     p {
-        font-size: 15px;
+        font-size: 17px;
         color: white;
         font-family: 'Montserrat';
     }

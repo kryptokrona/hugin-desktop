@@ -71,8 +71,10 @@ $: window_medium
         playsinline
         autoplay
         bind:this="{myVideo}"></video>
-        <div class:in_call="{true}"></div>
-        <div class="name">{$user.username}</div>
+        <div class="status">
+            <div class:in_call="{true}"></div>
+            <div class="name">{$user.username}</div>
+        </div>
         {#if $videoSettings.loading}
         <div class="loader">
             <Moon color="#f5f5f5" size="77" unit="px"/>
@@ -112,6 +114,24 @@ $: window_medium
     }
 }
 
+.status {
+    display: flex;
+    top: 90%;
+    margin-left: 10px;
+    border-radius: 5px;
+    height: 20px;
+    width: 10px;
+    padding: 5px;
+    gap: 5px;
+    line-height: 9px;
+    font-family: "Montserrat";
+    width: fit-content;
+    position: relative;
+    opacity: 0.9;
+    border-radius: 50%;
+    z-index: 5;
+}
+
 .talking {
     border: 1px solid var(--success-color);
 }
@@ -133,19 +153,13 @@ $: window_medium
     padding: 10px;
 }
 
-
 .in_call {
-    left: 9px;
-    top: 92.4%;
-    border-radius: 5px;
+    padding: 5px;
     height: 10px;
     width: 10px;
-    padding: 5px;
-    line-height: 15px;
     font-family: "Montserrat";
     width: fit-content;
     background: var(--success-color);
-    position: relative;
     opacity: 0.9;
     border-radius: 50%;
     z-index: 5;
@@ -224,14 +238,7 @@ p {
 }
 
 .name {
-    left: 10px;
-    top: 90%;
-    border-radius: 5px;
-    height: 25px;
-    padding: 5px;
-    line-height: 15px;
     font-family: "Montserrat";
-    width: fit-content;
     position: relative;
     opacity: 0.8;
     color: white;

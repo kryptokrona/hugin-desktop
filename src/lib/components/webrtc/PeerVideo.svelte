@@ -9,12 +9,15 @@ import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import { get_avatar } from '$lib/utils/hugin-utils'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { audioSettings } from '$lib/stores/mediasettings'
+import MuteIcon from '../icons/MuteIcon.svelte'
+import Screenshare from '../icons/Screenshare.svelte'
 let peerVideo = document.getElementById('peerVideo')
 let peerAudio
 let peerStream
 let thisWindow = false
 let windowCheck = false
 let audio = false
+let status = {}
 export let active = true
 export let call
 export let channel = []
@@ -32,6 +35,9 @@ onMount(() => {
     playVideo()
     windowCheck = true
 })
+
+$: status = channel.find(a => a.address === call.chat)
+$: console.log("status?", status)
 
 async function setName() {
     if (!active) {
@@ -154,8 +160,15 @@ const resize = (size) => {
     <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
     <audio autoplay  bind:this="{peerAudio}"></audio>
     {#await setName() then contact}
-    <div class:in_call="{true}"></div>
-    <div class="name">{contact.name}</div>
+    <div class="status">
+        <div class:in_call="{true}"></div>
+        <div class="name">{contact.name}</div>
+        <div class="voicestatus">
+            {#if status?.audioMute}
+                <MuteIcon size={"20px"}/>
+            {/if}
+        </div>
+    </div>
     {/await}
     {#if !active}
     <img src="data:image/png;base64,{get_avatar(call.address, 'png', true)}" alt="" />
@@ -195,6 +208,23 @@ const resize = (size) => {
     }
 }
 
+.status {
+    display: flex;
+    top: 90%;
+    margin-left: 10px;
+    border-radius: 5px;
+    height: 20px;
+    width: 10px;
+    padding: 5px;
+    gap: 5px;
+    line-height: 9px;
+    font-family: "Montserrat";
+    width: fit-content;
+    position: relative;
+    opacity: 0.9;
+    border-radius: 50%;
+    z-index: 5;
+}
 img {
     width: 200px;
     height: 200px;
@@ -216,17 +246,12 @@ img {
 }
 
 .in_call {
-    left: 9px;
-    top: 92.4%;
-    border-radius: 5px;
+    padding: 5px;
     height: 10px;
     width: 10px;
-    padding: 5px;
-    line-height: 15px;
     font-family: "Montserrat";
     width: fit-content;
     background: var(--success-color);
-    position: relative;
     opacity: 0.9;
     border-radius: 50%;
     z-index: 5;
@@ -273,14 +298,7 @@ p {
 }
 
 .name {
-    left: 10px;
-    top: 90%;
-    border-radius: 5px;
-    height: 25px;
-    padding: 5px;
-    line-height: 15px;
     font-family: "Montserrat";
-    width: fit-content;
     position: relative;
     opacity: 0.8;
     color: white;
@@ -333,5 +351,13 @@ p {
 .show {
     pointer-events: all !important;
 }
+
+.voicestatus {
+    bottom: 5px;
+    display: block;
+    position: relative;
+    left: 5px;
+}
+    
 
 </style>
