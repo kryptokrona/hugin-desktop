@@ -39,11 +39,11 @@ let loadMore = true
 let admin = false
 const welcomeAddress = $misc.welcomeAddress
 
-$: thisRoom = $rooms.thisRoom.key
+$: thisRoom = $rooms.thisRoom?.key
 
 $: wantToAdd = $rooms.addRoom
 
-$: replyTrue = $rooms.replyTo.reply
+$: replyTrue = $rooms.replyTo?.reply
 
 $: thisSwarm = $swarm.active.find(a => a.key === thisRoom)
 
@@ -272,19 +272,19 @@ async function printRoom(room, create = false) {
     scrollGroups = []
     channelMessages = []
     filterRooms = []
+    rooms.update((data) => {
+        return {
+            ...data,
+            thisRoom: { key: room.key, name: room.name, chat: true, topic: "",},
+        }
+    })
     if (create) {
         loader = true
         await sleep(1337)
     }
     const active = $swarm.active.find(a => a.key === room.key)
-    rooms.update((data) => {
-        return {
-            ...data,
-            thisRoom: { key: room.key, name: room.name, chat: true, topic: active?.topic},
-        }
-    })
-    
-    
+    $rooms.thisRoom.topic = active.topic
+
     //Return the latest messages
     const messages = await getMessages(room)
     roomMessages.set(messages)
@@ -293,6 +293,7 @@ async function printRoom(room, create = false) {
     replyExit()
     scrollDown()
     loader = false
+    $rooms = $rooms
 }
 
 function addFileMessage(array) {
@@ -507,7 +508,7 @@ async function dropFile(e) {
         <TopBar />
         
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
-            {#if !$rooms.banned.some(a => a === thisRoom)}
+            {#if !$rooms.banned.some(a => a === $rooms.thisRoom?.key)}
             {#if (fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat) || loader}
                 <div>
                     <Loader/>

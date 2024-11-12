@@ -14,7 +14,8 @@ import Tooltip from '$lib/components/popups/Tooltip.svelte'
 import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
 import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
-import UserInfo from './UserInfo.svelte'
+import UserOptions from './UserOptions.svelte'
+import BlockInfo from './BlockInfo.svelte'
 const startTone = new Audio('/audio/startcall.mp3')
 let knownUsers = []
 let room = ''
@@ -26,19 +27,21 @@ let in_voice = false
 let admin = false
 let showUserInfo = false
 let userInfo = {}
+let showMenu = false
+let infoUser = {}
 const me = {address: $user.myAddress, name: $user.username }
 
 const myAddress = $user.myAddress
 
 //Set group key
-$: if ($rooms.thisRoom.key) {
+$: if ($rooms.thisRoom?.key) {
     room = $rooms.thisRoom.key
 }
 
 //Active users in p2p chat
 let onlineUsers = []
 
-$: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
+$: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom?.key)
 $: if (thisSwarm && $swarm.active.length) in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
 $: if (thisSwarm) admin = thisSwarm.admin
 //Active hugins
@@ -77,8 +80,8 @@ const updateOnline = () => {
 function showUser(user) {
     // Add friend request/tip/send pm etc here?
     if (!admin || user.address === myAddress) return
-    $rooms.showUserInfo = true
-    userInfo = user
+    showMenu = true
+    infoUser = user
 }
 
 
@@ -122,8 +125,8 @@ const join_voice_channel = async (video = false, screen) => {
 
 </script>
 
-{#if $rooms.showUserInfo}
-    <UserInfo user={userInfo} on:close={() => $rooms.showUserInfo = false}/>
+{#if $rooms.showBlockInfo}
+    <BlockInfo on:close={() => $rooms.showBlockInfo = false}/>
 {/if}
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
@@ -157,9 +160,7 @@ const join_voice_channel = async (video = false, screen) => {
             
             {#each fullUserList as user}    
             
-                
-            
-                    <div in:fade class="card" on:click="{() => showUser(user)}">
+                    <div in:fade class="card" on:click="{() => showUser(user)}" on:mouseleave="{() => { showMenu = false}}">
                         {#if isOnline(user)}
                             <div class:online="{isOnline(user)}"></div>
                         {/if}
@@ -173,6 +174,10 @@ const join_voice_channel = async (video = false, screen) => {
                       
                     </div>
             {/each}
+
+            {#if showMenu && user.address !== myAddress}
+                <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
+            {/if}
 
         </div>
         </div>

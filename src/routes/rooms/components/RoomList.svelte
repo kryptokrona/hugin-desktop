@@ -15,7 +15,7 @@ let roomName
 $: roomList
 
 //This group name
-$: roomName = $rooms.thisRoom.name
+$: roomName = $rooms.thisRoom?.name
 $: {
     $swarm.activeSwarm = $rooms.thisRoom
 }
@@ -156,7 +156,7 @@ const addChannel = () => {
 }
 
 //Set group key
-$: if ($rooms.thisRoom.key) {
+$: if ($rooms.thisRoom?.key) {
     room = $rooms.thisRoom.key
 }
 

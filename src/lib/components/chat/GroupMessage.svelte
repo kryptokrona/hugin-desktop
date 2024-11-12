@@ -19,7 +19,7 @@ import Emoji from "$lib/components/icons/Emoji.svelte";
 import 'emoji-picker-element';
 import { roomMessages } from '$lib/stores/roommsgs'
 import { groupMessages } from '$lib/stores/groupmsgs'
-import UserInfo from '/src/routes/rooms/components/UserInfo.svelte'
+import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 
 export let msg
 export let msgFrom
@@ -59,7 +59,6 @@ let messageLink = ""
 let youtube_shared_link_type = false
 let asian = false
 let showMenu = false
-let showUserInfo = false
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
@@ -194,13 +193,6 @@ const positionEmojiContainer = (open) => {
     }
 }
 
-const toggleActions = () => {
-    showUserActions = !showUserActions
-    $user.block = {
-        address: msgFrom,
-        name: nickname
-    }
-}
 
 const deleteMsg = (e) => {
     console.log('delete', e)
@@ -209,9 +201,6 @@ const deleteMsg = (e) => {
     })
 }
 
-const toggleBan = () => {
-   showUserInfo = !showUserInfo
-}
 
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
@@ -281,9 +270,7 @@ const openLinkMessage = (url) => {
 
 </script>
 
-{#if showUserInfo}
-    <UserInfo user={{address: msgFrom, name: nickname}} on:close={toggleBan}/>
-{/if}
+
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
 <div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}" on:mouseleave="{ () => { openEmoji = false;  showMenu = false}}">
@@ -340,12 +327,7 @@ const openLinkMessage = (url) => {
                     <DeleteButton on:click="{deleteMsg}"/>
                     <Dots on:click="{() => showMenu = true}"/>
                     {#if showMenu && !myMsg}
-                    <div style="display: grid; position: fixed; margin-top: 20px;">
-                        <p on:click={toggleActions} class="action">Block</p>
-                        {#if admin}
-                        <p on:click={toggleBan} class="action">Ban</p>
-                        {/if}
-                    </div>
+                        <UserOptions admin={admin} info={user}/>
                     {/if}
                     {/if}
                 </div>

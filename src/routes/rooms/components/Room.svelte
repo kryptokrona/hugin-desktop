@@ -11,7 +11,7 @@
     let asian = false
 
     $: channels
-    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
+    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom?.key)
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
     
     const dispatch = createEventDispatcher()
@@ -49,7 +49,7 @@
         class="card"
         in:fade
         out:fade
-        class:active="{$rooms.thisRoom.key === r.key}"
+        class:active="{$rooms.thisRoom?.key === r.key}"
         on:click="{(e) => printRoom(r)}"
     >
     
