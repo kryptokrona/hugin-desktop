@@ -25,7 +25,7 @@
     
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
                 <div >
-                    <p>{user.name}</p>
+                    <p>{$rooms.ban.name}</p>
                     <br>
                         <FillButton
                         red="{true}"
