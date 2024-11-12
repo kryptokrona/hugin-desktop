@@ -14,6 +14,7 @@ import Tooltip from '$lib/components/popups/Tooltip.svelte'
 import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
 import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
+import UserInfo from './UserInfo.svelte'
 const startTone = new Audio('/audio/startcall.mp3')
 let knownUsers = []
 let room = ''
@@ -21,11 +22,11 @@ let roomName
 let asian = false
 let firstConnect = false
 let loading = false
-let voice_channel = []
+let in_voice = false
+let admin = false
+let showUserInfo = false
+let userInfo = {}
 const me = {address: $user.myAddress, name: $user.username }
-function sendPM() {
-    // Add friend request here?
-}
 
 const myAddress = $user.myAddress
 
@@ -38,9 +39,8 @@ $: if ($rooms.thisRoom.key) {
 let onlineUsers = []
 
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
-$: in_voice = voice_channel.some(a => a.address === $user.myAddress)
-$: if (thisSwarm) voice_channel = thisSwarm.voice_channel
-
+$: if (thisSwarm && $swarm.active.length) in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
+$: if (thisSwarm) admin = thisSwarm.admin
 //Active hugins
 $: fullUserList = knownUsers
 
@@ -74,6 +74,13 @@ const updateOnline = () => {
     knownUsers.unshift(me)
 }
 
+function showUser(user) {
+    // Add friend request/tip/send pm etc here?
+    if (!admin || user.address === myAddress) return
+    $rooms.showUserInfo = true
+    userInfo = user
+}
+
 
 const join_voice_channel = async (video = false, screen) => {
         loading = true
@@ -97,8 +104,7 @@ const join_voice_channel = async (video = false, screen) => {
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
-        console.log("Voice channel", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
+        window.api.send("join-voice", {key: thisSwarm.key, video: !$videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm
@@ -116,9 +122,9 @@ const join_voice_channel = async (video = false, screen) => {
 
 </script>
 
-<!-- {#if $swarm.showInfo && firstConnect}
-    <SwarmInfo on:join-room={connecto_to_swarm}/>
-{/if} -->
+{#if $rooms.showUserInfo}
+    <UserInfo user={userInfo} on:close={() => $rooms.showUserInfo = false}/>
+{/if}
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
 
@@ -131,9 +137,11 @@ const join_voice_channel = async (video = false, screen) => {
                     <span style="margin-top: 4px"><Groupcall size="{14}" /></span>
 
                 </div>
-                {#each voice_channel as voice}
-                <VoiceUser voice_channel={voice_channel} voice_user={voice} />
-                {/each} 
+                {#if thisSwarm}
+                    {#each thisSwarm?.voice_channel as voice (voice.address)}
+                        <VoiceUser voice_user={voice} voice_channel={thisSwarm.voice_channel} />
+                    {/each} 
+                {/if}
 
             </div>
 
@@ -151,7 +159,7 @@ const join_voice_channel = async (video = false, screen) => {
             
                 
             
-                    <div in:fade class="card" on:click="{() => sendPM(user)}">
+                    <div in:fade class="card" on:click="{() => showUser(user)}">
                         {#if isOnline(user)}
                             <div class:online="{isOnline(user)}"></div>
                         {/if}

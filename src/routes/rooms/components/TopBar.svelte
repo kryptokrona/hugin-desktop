@@ -52,7 +52,6 @@ function toggleActions() {
 
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
 
-$: if (thisSwarm) console.log("thisSwarm admin:", thisSwarm.admin)
 $: if (thisSwarm) admin = thisSwarm.admin
 
 </script>
