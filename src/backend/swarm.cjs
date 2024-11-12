@@ -355,7 +355,7 @@ const check_data_message = async (data, connection, topic) => {
     
     if ('type' in data) {
         if (data.type === "ban") {
-            if (data.address === Hugin.address) {
+            if ((data.address === Hugin.address) && con.admin) {
                 Hugin.send('banned', active.key)
                 end_swarm(active.key)
                 removeRoom(active.key)
@@ -422,7 +422,6 @@ const send_joined_message = async (topic, dht_keys) => {
     const [isAdmin, adminkeys] = is_room_admin(active.key)
     const [idSig, idPub] = sign_joined_message(dht_keys)
     if (isAdmin) {
-        //We got an adminkey for this room
         //Sign our joined message with this
         sig = sign_admin_message(dht_keys, active.key, adminkeys)
     }
@@ -430,7 +429,6 @@ const send_joined_message = async (topic, dht_keys) => {
 
     let [voice, video, audioMute, videoMute, screenshare] = get_local_voice_status(topic)
     if (video) voice = true
-    //const channels = await get_my_channels(key)
 
     const data = JSON.stringify({
         address: Hugin.address,
