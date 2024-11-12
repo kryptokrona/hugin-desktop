@@ -3,12 +3,12 @@
     "author": "Kryptokrona Developers <info@kryptokrona.org>",
     "email": "info@kryptokrona.org",
     "productName": "Hugin Messenger",
-    "version": "0.6.1",
+    "version": "0.6.0",
     "private": true,
     "description": "A messenger app built on top of the kryptokrona blockchain",
     "main": "src/backend/electron.cjs",
     "type": "module",
-    "repository": "https://github.com/f-r00t/hugin-svelte",
+    "repository": "https://github.com/kryptokrona/hugin-messenger",
     "scripts": {
         "postinstall": "patch-package && electron-rebuild -f -w better-sqlite3-multiple-ciphers",
         "patch": "patch-package",
@@ -35,8 +35,8 @@
         "publish": [
             {
                 "provider": "github",
-                "owner": "f-r00t",
-                "repo": "hugin-svelte"
+                "owner": "kryptokrona",
+                "repo": "hugin-messenger"
             }
         ],
         "mac": {
