@@ -5,6 +5,9 @@
     import {Moon} from "svelte-loading-spinners";
     //Inactive
     import { audioLevel } from '$lib/stores/user.js'
+    import { videoSettings } from "$lib/stores/mediasettings"
+    import MuteIcon from "../icons/MuteIcon.svelte"
+    import Screenshare from "../icons/Screenshare.svelte"
     //
     export let voice_user
     export let voice_channel
@@ -23,7 +26,6 @@
     $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
 
-    
 </script>
 
 <div class:talking={isTalking || (me && $audioLevel.meTalking)} in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
@@ -34,6 +36,14 @@
     />
         <p class="nickname">{voice_user.name}</p>
     <br />
+    <div class="voicestatus">
+    {#if voice_user.audioMute || (me && !$swarm.audio)}
+        <MuteIcon size={"14px"}/>
+    {/if}
+    {#if voice_user.screenshare || (me && $videoSettings.screenshare)}
+        <Screenshare voice={true} size={"14px"}/>
+    {/if} 
+    </div>
 </div>
 
 <style lang="scss">
@@ -74,6 +84,7 @@
         font-family: 'Montserrat' !important;
         font-size: 12px;
         line-height: 33px;
+        margin-right: 3px;
     }
 
     .voice-avatar {
@@ -99,6 +110,12 @@
 
     .moon {
         margin-top: 10px;
+    }
+
+    .voicestatus {
+        display: flex;
+        gap: 3px;
+        margin-left: 5px;
     }
     
     

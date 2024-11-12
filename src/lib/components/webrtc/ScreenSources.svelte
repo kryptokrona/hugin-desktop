@@ -11,7 +11,7 @@
     let screenSources = []
 
     $: screenSources = $mediaSettings.screenSources
-    
+
     function pickSource(src) {
         $videoSettings.loading = true
         $videoSettings.screenshare = true
@@ -27,17 +27,15 @@
         $videoSettings.myVideo = false
         $mediaSettings.screenId = "none"
         console.log("Stop called")
+        
         if ($swarm.call.length === 0) {
             $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
-            console.log("Mysream ended")
         }
-
-        console.log("Mysream ")
-
+        const thisSwarm = $swarm.active.find(a => a.voice_connected)
+        window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: false, audioMute: !$swarm.audio, video: false})
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         })
-        await sleep(200)
         $videoSettings.loading = false
     }
     

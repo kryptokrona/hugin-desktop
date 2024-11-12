@@ -192,6 +192,12 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof idPub !== 'string' || idPub.length > 64) return false;
     const idSig = data.idSig;
     if (typeof idSig !== 'string' || idSig.length > 128) return false;
+    const audioMute = data?.audioMute;
+    if (typeof audioMute !== 'boolean') return false;
+    const videoMute = data?.videoMute;
+    if (typeof videoMute !== 'boolean') return false;
+    const screenshare = data?.screenshare;
+    if (typeof screenshare !== 'boolean') return false;
   
     const channels = [];
   
@@ -208,6 +214,9 @@ const sanitize_join_swarm_data = (data) => {
       time: time,
       idSig,
       idPub,
+      audioMute,
+      videoMute,
+      screenshare
     };
   
     return clean_object;
@@ -249,29 +258,39 @@ const sanitize_join_swarm_data = (data) => {
   };
   
   const sanitize_voice_status_data = (data) => {
-    const address = sanitizeHtml(data.address);
-    if (address?.length > 99 || data.address === undefined) return false;
-    const message = sanitizeHtml(data.message);
-    if (message?.length > 64 || data.message === undefined) return false;
-    const signature = sanitizeHtml(data.signature);
-    if (signature?.length > 128 || data.signature === undefined) return false;
-    const topic = sanitizeHtml(data.topic);
-    if (topic?.length !== 64 || data.topic === undefined) return false;
-    const name = sanitizeHtml(data.name);
-    if (name?.length > 50 || data.name === undefined) return false;
-    const voice = data.voice;
+    const address = sanitizeHtml(data?.address);
+    if (address?.length > 99 || data?.address === undefined) return false;
+    const message = sanitizeHtml(data?.message);
+    if (message?.length > 64 || data?.message === undefined) return false;
+    const signature = sanitizeHtml(data?.signature);
+    if (signature?.length > 128 || data?.signature === undefined) return false;
+    const topic = sanitizeHtml(data?.topic);
+    if (topic?.length !== 64 || data?.topic === undefined) return false;
+    const name = sanitizeHtml(data?.name);
+    if (name?.length > 50 || data?.name === undefined) return false;
+    const voice = data?.voice;
     if (typeof voice !== 'boolean') return false;
-    const video = data.video;
+    const video = data?.video;
     if (typeof video !== 'boolean') return false;
+   
+    const audioMute = data?.audioMute;
+    if (typeof audioMute !== 'boolean') return false;
+    const videoMute = data?.videoMute;
+    if (typeof videoMute !== 'boolean') return false;
+    const screenshare = data?.screenshare;
+    if (typeof screenshare !== 'boolean') return false;
   
     const clean_object = {
-      address: address,
-      message: message,
-      signature: signature,
-      topic: topic,
-      name: name,
-      voice: voice,
-      video: video,
+      address,
+      message,
+      signature,
+      topic,
+      name,
+      voice,
+      video,
+      videoMute,
+      audioMute,
+      screenshare
     };
   
     return clean_object;

@@ -1,13 +1,13 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys} = require("./database.cjs")
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
 const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_message, signMessage, sign_joined_message } = require("./crypto.cjs")
    
-let LOCAL_VOICE_STATUS_OFFLINE = [JSON.stringify({voice: false, video: false, topic: "",})]
+const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", videoMute: false, audioMute: false, screenshare: false}
 
 const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
@@ -28,7 +28,7 @@ async function send_voice_channel_sdp(data) {
     con.connection.write(JSON.stringify(data))
 }
 
-const send_voice_channel_status = async (joined, status) => {
+const send_voice_channel_status = async (joined, status, update = false) => {
     const active = active_swarms.find(a => a.key === status.key)
     if (!active) return
     const msg = active.topic
@@ -40,14 +40,24 @@ const send_voice_channel_status = async (joined, status) => {
         voice: joined,
         topic: active.topic,
         name: Hugin.nickname,
+        video: status.video,
+        audioMute: status.audioMute,
+        videoMute: status.videoMute,
+        screenshare: status.screenshare
+    })
+    update_local_voice_channel_status({
+        topic: active.topic,
+        voice: joined,
+        audioMute: status.audioMute,
+        videoMute: status.videoMute,
+        screenshare: status.screenshare,
         video: status.video
     })
-    
-    update_local_voice_channel_status(data)
 
     //Send voice channel status to others in the group
     send_swarm_message(data, status.key)
-
+    
+    if (update) return
     //If we joined the voice channel, make a call to those already announced their joined_voice_status
     if (joined) { 
    
@@ -67,6 +77,25 @@ const join_voice_channel = (key, topic, address) => {
     Hugin.send("join-voice-channel", {key, topic, address})
 }
 
+const admin_ban_user = async (address, key) => {
+    const active = get_active(key)
+    if (!active) return
+    active.connections.forEach(chat => {
+        chat.connection.write(JSON.stringify({type: "ban", address}))
+    })
+    await sleep(200)
+    ban_user(address, active.topic)
+
+}
+
+const ban_user = (address, topic) => {
+    const active = get_active_topic(topic)
+    if (!active) return
+    const conn = active.connections.find(a => a.address === address)
+    conn.peer.ban(true)
+    connection_closed(conn.connection, topic)
+}
+
 
 const new_swarm = async (data, ipc) => {
     return await create_swarm(data)
@@ -74,7 +103,7 @@ const new_swarm = async (data, ipc) => {
 
 const update_local_voice_channel_status = (data) => {
     const updated = data
-    active_voice_channel = [updated]
+    active_voice_channel = updated
     return true
 }
 
@@ -106,6 +135,7 @@ const create_swarm = async (data) => {
     let swarm
     const key = naclHash(data.key)
     const invite = data.key
+    const [admin] = is_room_admin(data.key)
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
     const topicHash = base_keys.publicKey.toString('hex')
 
@@ -126,7 +156,7 @@ const create_swarm = async (data) => {
     
     const startTime = Date.now().toString()
 
-    Hugin.send('swarm-connected', {topic: topicHash, key: invite, channels: [], voice_channel: [], connections: [], time: startTime})
+    Hugin.send('swarm-connected', {topic: topicHash, key: invite, channels: [], voice_channel: [], connections: [], time: startTime, admin})
     
     //The topic is public so lets use the pubkey from the new base keypair
 
@@ -135,7 +165,7 @@ const create_swarm = async (data) => {
     Hugin.send('set-channels')
 
     swarm.on('connection', (connection, information) => {
-        new_connection(connection, topicHash, dht_keys)
+        new_connection(connection, topicHash, dht_keys, information)
 
     })
 
@@ -152,7 +182,7 @@ const create_swarm = async (data) => {
     check_if_online(topicHash)
 }
 
-const new_connection = (connection, topic, dht_keys) => {
+const new_connection = (connection, topic, dht_keys, peer) => {
     console.log("New connection incoming")
     let active = get_active_topic(topic)
     
@@ -163,12 +193,12 @@ const new_connection = (connection, topic, dht_keys) => {
     }
 
     console.log("*********Got new Connection! ************")
-    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false})
+    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer})
     send_joined_message(topic, dht_keys)
     //checkIfOnline(hash)
     connection.on('data', async data => {
 
-        incoming_message(data, topic, connection)
+        incoming_message(data, topic, connection, peer)
 
     })
 
@@ -182,11 +212,6 @@ const new_connection = (connection, topic, dht_keys) => {
         connection_closed(connection, topic)
     })
 
-}
-
-const ban_connection = (conn, topic) => {
-    conn.ban(true)
-    connection_closed(conn, topic)
 }
 
 const connection_closed = (conn, topic) => {
@@ -289,6 +314,7 @@ const check_data_message = async (data, connection, topic) => {
                 return
             }
             
+            if (active.key !== joined.message) return "Ban"
             //Check admin signature
             const admin = verify_signature(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
             
@@ -326,6 +352,22 @@ const check_data_message = async (data, connection, topic) => {
     }
 
     if (!con.joined) return "Error"
+    
+    if ('type' in data) {
+        if (data.type === "ban") {
+            if (data.address === Hugin.address) {
+                Hugin.send('banned', active.key)
+                end_swarm(active.key)
+                removeRoom(active.key)
+                return
+            }
+            if (con.admin) ban_user(data.address, topic)
+            else return "Error"
+            return true
+        }
+    }
+    //Dont display messages from blocked users
+    if (Hugin.block_list.some(a => a.address === con.address)) return true
 
     return false
 }
@@ -340,15 +382,10 @@ const check_peer_voice_status = (data, con) => {
 
 
 const update_voice_channel_status = (data, con) => {
-
-    ////Already know this status
-    if (data.voice === con.voice) return true
-    //Just doublechecking the address
     if (data.address !== con.address) return false
     //Set voice status
     con.voice = data.voice
     con.video = data.video
-    console.log("Updating voice channel status for this connection Voice, Video:", con.voice, con.video)
     //Send status to front-end
     Hugin.send("voice-channel-status", data)
     return true
@@ -363,22 +400,9 @@ const got_answer = (answer) => {
 }
 
 const get_local_voice_status = (topic) => {
-    let voice = false
-    let video = false
-    let channel
-    //We do this bc stringified data is set locally from the status messages.
-    //This can change 
-    try {
-        channel = JSON.parse(active_voice_channel[0])
-        if (channel.topic !== topic) return [false, false]
-    } catch (e) {
-        return [false]
-    }
-
-    voice = channel.voice
-    video = channel.video
-
-    return [voice, video, topic]
+    const c = active_voice_channel
+    if (c.topic !== topic) return [false, false, false, false, false]
+    return [c.voice, c.video, c.audioMute, c.videoMute, c.screenshare]
 }
 
 const get_my_channels = async (key) => {
@@ -395,16 +419,16 @@ const send_joined_message = async (topic, dht_keys) => {
     const active = get_active_topic(topic)
     if (!active) return
     const key = active.key
-    const adminkeys = loadRoomKeys()
+    const [isAdmin, adminkeys] = is_room_admin(active.key)
     const [idSig, idPub] = sign_joined_message(dht_keys)
-    if (is_room_admin(adminkeys, active.key)) {
+    if (isAdmin) {
         //We got an adminkey for this room
         //Sign our joined message with this
         sig = sign_admin_message(dht_keys, active.key, adminkeys)
     }
     // const sig = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
 
-    let [voice, video] = get_local_voice_status(topic)
+    let [voice, video, audioMute, videoMute, screenshare] = get_local_voice_status(topic)
     if (video) voice = true
     //const channels = await get_my_channels(key)
 
@@ -420,20 +444,22 @@ const send_joined_message = async (topic, dht_keys) => {
         video: video,
         time: active.time,
         idSig,
-        idPub
+        idPub,
+        audioMute,
+        videoMute,
+        screenshare
     })
 
     send_swarm_message(data, active.key)
 }
 
-const incoming_message = async (data, topic, connection) => {
+const incoming_message = async (data, topic, connection, peer) => {
     const str = new TextDecoder().decode(data);
-    console.log("Data incoming", str)
     if (str === "Ping") return
     const check = await check_data_message(data, connection, topic)
     if (check === "Ban") {
-        console.log("Check failed")
-        ban_connection(connection, topic)
+        peer.ban(true)
+        connection_closed(connection, topic)
         return
     }
     if (check === "Error") {
@@ -502,6 +528,14 @@ const upload_ready = async (file, topic, address) => {
     
 }
 
+ipcMain.on('ban-user', (e, data) => {
+    admin_ban_user(data.address, data.key)
+})
+
+ipcMain.on('update-voice-channel-status', (e, status) => {
+    send_voice_channel_status(true, status, true)
+})
+
 ipcMain.on('group-download', (e, download) => {
     request_download(download)
 })
@@ -522,8 +556,11 @@ const get_active = (key) => {
     return active_swarms.find(a => a.key === key)
 }
 
-const is_room_admin = (adminkeys, invite) => {
-    return adminkeys.some(a => a.invite === invite)
+const is_room_admin = (invite) => {
+    const adminkeys = loadRoomKeys()
+    const isAdmin = adminkeys.find(a => a.invite === invite)
+    if (!isAdmin) return [false, {}]
+    return [isAdmin, adminkeys]
 }
 
 const request_download = (download) => {
@@ -649,7 +686,7 @@ ipcMain.on('exit-voice', async (e, key) => {
     //We should only be active in one channel. Close all connections
     Hugin.send('leave-active-voice-channel')
     Hugin.send("leave-voice-channel")
-    send_voice_channel_status(false, {key: key, video: false})
+    send_voice_channel_status(false, {key: key, video: false, videoMute: false, audioMute: false, screenshare: false})
 })
 
 ipcMain.on('get-sdp-voice-channel', async (e, data) => {

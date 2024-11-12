@@ -1,11 +1,12 @@
 <script>
 let color = 'red'
+export let size = "24px"
 </script>
 
 <svg
     on:click
-    width="24px"
-    height="24px"
+    width={size}
+    height={size}
     viewBox="0 0 24 24"
     version="1.1"
     xmlns:xlink="http://www.w3.org/1999/xlink"

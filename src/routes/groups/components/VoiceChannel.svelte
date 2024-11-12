@@ -184,6 +184,8 @@
     if ($swarm.myStream) {
         if ($swarm.myStream.getVideoTracks().length === 0) add = true
     }
+    const thisSwarm = $swarm.active.find(a => a.voice_connected)
+    window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: true, audioMute: !$swarm.audio, video: true})
     changeVideoSource(screen_stream, 'screen', add)
     }
     
@@ -228,6 +230,8 @@
         }
 
         if ($videoSettings.screenshare) return
+        const thisSwarm = $swarm.active.find(a => a.voice_connected)
+        window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: false, screenshare: false, audioMute: !$swarm.audio, video: true})
         $mediaSettings.cameraId = id
     }
     

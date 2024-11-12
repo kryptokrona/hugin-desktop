@@ -45,7 +45,7 @@
   }
 
   .red {
-    background-color: var(--warn-color);
+    background-color: var(--warn-color) !important;
   }
 
   .enabled {

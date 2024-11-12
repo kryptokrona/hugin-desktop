@@ -10,6 +10,7 @@
     import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
     import MicIcon from '$lib/components/icons/MicIcon.svelte'
     import InCallAvatar from '$lib/components/chat/InCallAvatar.svelte'
+    import { videoSettings } from '$lib/stores/mediasettings'
     
     export let paused = false
     let toggle = false
@@ -47,7 +48,8 @@
         
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
-        console.log("mystream?", $swarm.myStream)
+        const thisSwarm = $swarm.active.find(a => a.voice_connected)
+        window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
             a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))

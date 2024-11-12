@@ -1,10 +1,12 @@
 <script>
 import { videoSettings } from '$lib/stores/mediasettings'
 let color = '#f5f5f5'
+export let voice
+export let size = "24px"
 
-$: if ($videoSettings.myVideo && $videoSettings.screenshare) {
+$: if ($videoSettings.myVideo && $videoSettings.screenshare && !voice) {
     color = '#4dbb45'
-} else if (!$videoSettings.screenshare) {
+} else if (!$videoSettings.screenshare && !voice) {
     color = '#f5f5f5'
 }
 </script>
@@ -12,8 +14,8 @@ $: if ($videoSettings.myVideo && $videoSettings.screenshare) {
 <svg
     on:click
     version="1.1"
-    width="22px"
-    height="22px"
+    width={size}
+    height={size}
     viewBox="0 0 22.0 22.0"
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"

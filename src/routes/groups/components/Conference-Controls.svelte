@@ -79,8 +79,7 @@
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
-        console.log("Voice channel", voice_channel)
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo})
+        window.api.send("join-voice", {key: thisSwarm.key, videoMute: !$videoSettings.myVideo, video: $videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm
@@ -99,6 +98,7 @@
     
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
+        window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
         a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
@@ -149,6 +149,7 @@
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         })
+        window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: true, screenshare: false, audioMute: !$swarm.audio, video: true})
         $videoSettings.loading = false
     }
     

@@ -129,22 +129,29 @@ import { roomMessages } from './roommsgs'
     }
 
     function voice_channel_status(data) {
-        console.log("Update voice channel data", data)
-        let status = $swarm.active.find(a => a.topic === data.topic)
-        if (!status) return
-        if (data.voice === true) {
-            let user = status.connections.find(a => a.address === data.address)
+        let active = $swarm.active.find(a => a.topic === data.topic)
+        if (!active) return
+        let joined = active.voice_channel.some(a => a.address === data.address)
+        let user = active.connections.find(a => a.address === data.address)
+        //First connection status
+        if (data.voice === true && !joined) {
             user.name = data.name
-            status.voice_channel.push(data)
-        } else {
-           let still_active = status.voice_channel.filter(a => a.address !== data.address)
-           status.voice_channel = still_active
-        }
+            active.voice_channel.push(data)
+        } else if (data.voice === true && joined) { 
+            //Update voice channel status
+            let update = active.voice_channel.filter(a => a.address !== data.address)
+            active.voice_channel = update
+            updateActiveSwarm()
+            active.voice_channel.push(data)
+        } else if (data.voice === false) {
+           let still_active = active.voice_channel.filter(a => a.address !== data.address)
+           active.voice_channel = still_active
+        } 
         
         //We are only active in one voice channel, if someone disconnects. Update status.
         if ($swarm?.voice_channel.length) {
-            if (status.key || data.topic === $swarm.voice_channel[0].key) {
-                $swarm.voice_channel = status.voice_channel
+            if (active.key === $swarm.voice_channel[0].key || data.topic === $swarm.voice_channel[0].topic) {
+                $swarm.voice_channel = active.voice_channel
             }
         }
         

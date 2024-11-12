@@ -212,6 +212,10 @@ const WINDOW_API = {
         ipcRenderer.send('exit-voice-channel')
     },
 
+    updateVoiceChannelStatus: async (status) => {
+        ipcRenderer.send('update-voice-channel-status', status)
+    },
+
      errorMessage: async (errorMessage) => {
         ipcRenderer.send('error-notify-message-main', errorMessage)
     },
