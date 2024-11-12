@@ -222,7 +222,7 @@ const sanitize_join_swarm_data = (data) => {
     return clean_object;
   };
   
-  const sanitize_group_message = (data) => {
+  const sanitize_group_message = (data, sent = false) => {
     let timestamp = sanitizeHtml(data.t);
     if (timestamp?.length > 20 || data.t === undefined) return false;
     let room = sanitizeHtml(data.g);
@@ -249,7 +249,7 @@ const sanitize_join_swarm_data = (data) => {
       name: nick,
       reply: reply,
       hash: txHash,
-      sent: data.sent,
+      sent: sent,
       channel: 'channel',
       hash: txHash,
     };
