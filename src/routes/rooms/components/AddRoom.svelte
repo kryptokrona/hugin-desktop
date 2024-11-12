@@ -52,11 +52,15 @@
     const checkError = () => {
         let error = false
         let errorMessage
+        if ($rooms.banned.some(a => a === invite)) {
+            errorMessage = 'You are banned',
+            error = true
+        }
         if ($rooms.roomArray.some((g) => g.name === name)) {
             errorMessage = 'Group name already exists',
             error = true
         }
-        if ($rooms.roomArray.some((g) => g.key === key)) {
+        if ($rooms.roomArray.some((g) => g.key === invite)) {
             errorMessage =  'This group key already exists',
             error = true
         }

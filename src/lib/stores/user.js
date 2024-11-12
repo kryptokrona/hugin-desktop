@@ -135,6 +135,8 @@ export const rooms = writable({
     blockList: [],
     activeHugins: [],
     settings: false,
+    showUserInfo: false,
+    banned: []
  })
 
 export const userAvatar = derived(user, ($user) => {

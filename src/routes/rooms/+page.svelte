@@ -20,6 +20,7 @@ import { fileViewer, localFiles, remoteFiles } from '$lib/stores/files'
 import AddRoom from "./components/AddRoom.svelte"
 import BigImage from "$lib/components/popups/BigImage.svelte"
 import TopBar from "./components/TopBar.svelte"
+import FillButton from "$lib/components/buttons/FillButton.svelte"
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -489,7 +490,6 @@ async function dropFile(e) {
     <BigImage />
 {/if}
 
-
 <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => dropFile(e)}>
 <main in:fade="{{ duration: 350 }}">
     <RoomList
@@ -502,6 +502,7 @@ async function dropFile(e) {
         <TopBar />
         
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
+            {#if !$rooms.banned.some(a => a === thisRoom)}
             {#if (fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat) || loader}
                 <div>
                     <Loader/>
@@ -528,7 +529,9 @@ async function dropFile(e) {
             {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
-            
+            {:else}
+            <FillButton disabled={true} red={true} text="Banned"/>
+            {/if}
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">

@@ -95,6 +95,12 @@
         if (state === "Not syncing") $misc.syncedStatus = false 
     })
 
+    window.api.receive('banned', (key) => {
+        $rooms.banned.push(key)
+        $rooms = $rooms
+        window.api.send('room-banned', key)
+    }) 
+
 
 
         //Handle incoming call

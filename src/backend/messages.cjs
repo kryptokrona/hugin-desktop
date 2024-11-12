@@ -116,12 +116,14 @@ ipcMain.on('remove-room', async (e, room) => {
 ipcMain.on('unblock', async (e, address) => {
     unBlockContact(address)
     block_list = await loadBlockList()
+    Hugin.block_list = block_list
     Hugin.send('update-blocklist', block_list)
 })
 
 ipcMain.on('block', async (e, block) => {
     blockContact(block.address, block.name)
     block_list = await loadBlockList()
+    Hugin.block_list = block_list
     Hugin.send('update-blocklist', block_list)
 })
 

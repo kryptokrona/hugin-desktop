@@ -57,6 +57,15 @@ ipcMain.on('change-idle-time', (e, time) => {
   })
 })
 
+//Set banned list for UI things.
+ipcMain.on('room-banned', (e, key) => {
+ let list = store.get('banned') ?? []
+ list.push(key)
+  store.set({
+    banned: list
+  })
+})
+
 ipcMain.on('group-notifications', (e, list) => { 
   store.set({
     off: {
@@ -113,7 +122,8 @@ class Account {
       const deleteAfter = store.get('delete.after')
       const idle = store.get('idle.time') ?? 300
       const notifications = store.get('off.notifications') ?? []
-      this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts.reverse(), deleteAfter, Hugin.downloadDir, myAvatar, idle, notifications])
+      const banned = store.get('banned') ?? []
+      this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts.reverse(), deleteAfter, Hugin.downloadDir, myAvatar, idle, notifications, banned])
 
       this.known_keys = keys
       this.block_list = block_list
