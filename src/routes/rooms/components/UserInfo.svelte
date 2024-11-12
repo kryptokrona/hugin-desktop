@@ -11,7 +11,7 @@
     const ban = () => {
         window.api.send('ban-user', {address: user.address, key: $rooms.thisRoom.key})
         window.api.successMessage('Banned user')
-        $rooms.showUserInfo = false
+        close()
     }
 
     const close = () => {
