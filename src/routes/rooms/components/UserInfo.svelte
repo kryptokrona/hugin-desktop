@@ -6,7 +6,6 @@
     import { rooms, swarm } from '$lib/stores/user'
     import Backdrop from '$lib/components/layouts/Backdrop.svelte'
     export let user
-
     const dispatch = createEventDispatcher()
     
     const ban = () => {
@@ -16,7 +15,7 @@
     }
 
     const close = () => {
-        $rooms.showUserInfo = false
+        dispatch('close')
     }
     
     </script>

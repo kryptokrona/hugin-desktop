@@ -36,6 +36,7 @@ let windowChat
 let channelMessages = []
 let pageNum = 0;
 let loadMore = true
+let admin = false
 const welcomeAddress = $misc.welcomeAddress
 
 $: thisRoom = $rooms.thisRoom.key
@@ -43,6 +44,10 @@ $: thisRoom = $rooms.thisRoom.key
 $: wantToAdd = $rooms.addRoom
 
 $: replyTrue = $rooms.replyTo.reply
+
+$: thisSwarm = $swarm.active.find(a => a.key === thisRoom)
+
+$: if (thisSwarm) admin = thisSwarm.admin
 
 const isFile = (data) => {
     const findit = (arr) => {
@@ -524,6 +529,7 @@ async function dropFile(e) {
                     hash="{message.hash}"
                     file="{message?.file}"
                     room="{true}"
+                    admin="{admin}"
                 />
             {/each}
             {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 

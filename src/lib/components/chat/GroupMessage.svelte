@@ -19,6 +19,7 @@ import Emoji from "$lib/components/icons/Emoji.svelte";
 import 'emoji-picker-element';
 import { roomMessages } from '$lib/stores/roommsgs'
 import { groupMessages } from '$lib/stores/groupmsgs'
+import UserInfo from '/src/routes/rooms/components/UserInfo.svelte'
 
 export let msg
 export let msgFrom
@@ -34,6 +35,7 @@ export let rtc = false
 export let joined = false
 export let file = false
 export let room = false
+export let admin = false
 
 $: positionEmojiContainer(openEmoji);
 
@@ -56,7 +58,8 @@ let messageText
 let messageLink = ""
 let youtube_shared_link_type = false
 let asian = false
-
+let showMenu = false
+let showUserInfo = false
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
@@ -206,6 +209,10 @@ const deleteMsg = (e) => {
     })
 }
 
+const toggleBan = () => {
+   showUserInfo = !showUserInfo
+}
+
 $: if ($groups.replyTo.reply == false) {
     reply_to_this = false
 } else if ($groups.replyTo.to == hash) {
@@ -274,9 +281,12 @@ const openLinkMessage = (url) => {
 
 </script>
 
+{#if showUserInfo}
+    <UserInfo user={{address: msgFrom, name: nickname}} on:close={toggleBan}/>
+{/if}
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}" on:mouseleave="{ () => { openEmoji = false}}">
+<div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}" on:mouseleave="{ () => { openEmoji = false;  showMenu = false}}">
     <div>
         {#if replyMessage}
             {#if thisReply}
@@ -328,7 +338,15 @@ const openLinkMessage = (url) => {
                     <ReplyArrow on:click="{replyTo}" />
                     {#if !rtc}
                     <DeleteButton on:click="{deleteMsg}"/>
-                    <Dots on:click="{toggleActions}"/>
+                    <Dots on:click="{() => showMenu = true}"/>
+                    {#if showMenu && !myMsg}
+                    <div style="display: grid; position: fixed; margin-top: 20px;">
+                        <p on:click={toggleActions} class="action">Block</p>
+                        {#if admin}
+                        <p on:click={toggleBan} class="action">Ban</p>
+                        {/if}
+                    </div>
+                    {/if}
                     {/if}
                 </div>
             </div>
@@ -391,6 +409,15 @@ const openLinkMessage = (url) => {
         .actions {
                 opacity: 100%;
             }
+    }
+}
+
+.action {
+    opacity: 80%;
+    color: var(--warn-color);
+    transition: 0.2s;
+    &:hover {
+            opacity: 100%;
     }
 }
 

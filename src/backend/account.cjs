@@ -123,6 +123,7 @@ class Account {
       const idle = store.get('idle.time') ?? 300
       const notifications = store.get('off.notifications') ?? []
       const banned = store.get('banned') ?? []
+      const usersBanned = store.get('bannedUsers') ?? []
       this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts.reverse(), deleteAfter, Hugin.downloadDir, myAvatar, idle, notifications, banned])
 
       this.known_keys = keys
@@ -132,6 +133,21 @@ class Account {
      send(channel, send) {
       
       this.sender(channel, send)
+     }
+
+     ban(address, topic) {
+      let list = store.get('bannedUsers') ?? []
+      const already = list.some(a => a.address === address && a.topic === topic)
+      if (already) return
+      list.push({address, topic})
+        store.set({
+          bannedUsers: list
+        })
+     }
+
+     isBanned(address, topic) {
+      const banned = store.get('bannedUsers') ?? []
+      return banned.some(a => a.address === address && a.topic === topic)
      }
 
 }

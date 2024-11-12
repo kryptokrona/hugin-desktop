@@ -88,11 +88,14 @@ const admin_ban_user = async (address, key) => {
 
 }
 
-const ban_user = (address, topic) => {
+const ban_user = async (address, topic) => {
     const active = get_active_topic(topic)
     if (!active) return
+    Hugin.ban(address, topic)
     const conn = active.connections.find(a => a.address === address)
+    if (conn) return
     conn.peer.ban(true)
+    await sleep(200)
     connection_closed(conn.connection, topic)
 }
 
@@ -160,7 +163,7 @@ const create_swarm = async (data) => {
     
     //The topic is public so lets use the pubkey from the new base keypair
 
-    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery})
+    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin})
     
     Hugin.send('set-channels')
 
@@ -315,6 +318,11 @@ const check_data_message = async (data, connection, topic) => {
             }
             
             if (active.key !== joined.message) return "Ban"
+
+            if (Hugin.isBanned(data.address, topic)) {
+                if (active.admin) admin_ban_user(data.address, active.key) 
+                else ban_user(data.address, topic)
+            }
             //Check admin signature
             const admin = verify_signature(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
             
@@ -357,8 +365,9 @@ const check_data_message = async (data, connection, topic) => {
         if (data.type === "ban") {
             if ((data.address === Hugin.address) && con.admin) {
                 Hugin.send('banned', active.key)
-                end_swarm(active.key)
                 removeRoom(active.key)
+                await sleep(777)
+                end_swarm(active.key)
                 return
             }
             if (con.admin) ban_user(data.address, topic)
@@ -467,9 +476,7 @@ const incoming_message = async (data, topic, connection, peer) => {
     }
     console.log("Check", check)
     if (check) return
-    data.sent = false
-    data.address = connection.address
-    const message = sanitize_group_message(JSON.parse(data))
+    const message = sanitize_group_message(JSON.parse(data), false)
     console.log("Got incoming message!", message)
     if (!message) return
     const msg = await saveGroupMsg(message, false, true)

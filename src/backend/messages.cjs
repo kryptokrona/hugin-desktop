@@ -88,7 +88,7 @@ ipcMain.handle('create-group', async () => {
 
 ipcMain.on('add-group', async (e, grp) => {
     addGroup(grp)
-    const message = sanitize_group_message(grp)
+    const message = sanitize_group_message(grp, true)
     save_group_message(message, grp.hash, parseInt(Date.now()), false, false, true)
 })
 
@@ -96,7 +96,7 @@ ipcMain.on('add-group', async (e, grp) => {
 ipcMain.on('add-room', async (e, room, admin) => {
     addRoom(room)
     //Make sure the format is correct to save.
-    const message = sanitize_group_message(room)
+    const message = sanitize_group_message(room, true)
     message.address = Hugin.address
     message.name = Hugin.nickname
     message.message = "Joined the lobby"
@@ -852,7 +852,7 @@ async function send_room_message(message) {
     const swarmMessage = JSON.stringify(message)
     //Swarm message is already encrypted over the connection
     send_swarm_message(swarmMessage, message.g)
-    const save = sanitize_group_message(message)
+    const save = sanitize_group_message(message, true)
     save_group_message(save, message.hash, message.t, false, true, false, true)
 }
 
@@ -923,7 +923,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
             message_json.sent = true
             message_json.t = timestamp
             message_json.hash = result.transactionHash
-            const send = sanitize_group_message(message_json)
+            const send = sanitize_group_message(message_json, true)
             send.hash = result.transactionHash
             await save_group_message(send, result.transactionHash, timestamp, false, false, false)
             Hugin.send('sent_group', {
@@ -1108,7 +1108,7 @@ async function decrypt_group_message(tx, hash, group_key = false) {
     payload_json.t = tx.t
     payload_json.sent = false
     
-    const message = sanitize_group_message(payload_json)
+    const message = sanitize_group_message(payload_json, false)
     if (!message) return false
     await save_group_message(message, hash, tx.t, offchain)
     if (!saved) return false

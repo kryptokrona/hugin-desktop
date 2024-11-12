@@ -50,6 +50,11 @@ window.api.receive('peer-connected', () => {
     filterActiveHugins($roomMessages)
 })
 
+window.api.receive('banned', (key) => {
+    printRooms()
+    filterActiveHugins($roomMessages)
+    checkRoom()
+})
 //Check active room status
 const checkRoom = () => {
     //If we have an active room
