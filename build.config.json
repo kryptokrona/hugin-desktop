@@ -29,8 +29,7 @@
     "linux": {
         "icon": "build/icon.png",
         "target": [
-            "deb",
-            "snap"
+            "deb"
         ]
     },
     "files": [
