@@ -327,7 +327,7 @@ const openLinkMessage = (url) => {
                     <DeleteButton on:click="{deleteMsg}"/>
                     <Dots on:click="{() => showMenu = true}"/>
                     {#if showMenu && !myMsg}
-                        <UserOptions admin={admin} info={user}/>
+                        <UserOptions admin={admin} info={{address: msgFrom, name: nickname}}/>
                     {/if}
                     {/if}
                 </div>

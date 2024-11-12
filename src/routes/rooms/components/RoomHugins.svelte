@@ -175,7 +175,7 @@ const join_voice_channel = async (video = false, screen) => {
                     </div>
             {/each}
 
-            {#if showMenu && user.address !== myAddress}
+            {#if showMenu && infoUser?.address !== myAddress}
                 <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
             {/if}
 
