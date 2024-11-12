@@ -31,7 +31,6 @@
                         red="{true}"
                         text="{"Ban"}"
                         disabled="{false}"
-                        enabled="{true}"
                         on:click|once="{ban}"
                         />
                         <br>

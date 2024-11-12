@@ -40,7 +40,6 @@
 
     &:hover {
       opacity: 1;
-      border-color: var(--success-color);;
     }
   }
 
@@ -59,6 +58,7 @@
     &:hover {
       opacity: 1;
       background-color: #63e79f;
+      border-color: var(--success-color);;
     }
   }
 
