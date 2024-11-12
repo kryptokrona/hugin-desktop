@@ -5,12 +5,12 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import { rooms, swarm } from '$lib/stores/user'
     import Backdrop from '$lib/components/layouts/Backdrop.svelte'
-    export let user
     const dispatch = createEventDispatcher()
     
     const ban = () => {
-        window.api.send('ban-user', {address: user.address, key: $rooms.thisRoom.key})
+        window.api.send('ban-user', {address: $rooms.ban.address, key: $rooms.thisRoom.key})
         window.api.successMessage('Banned user')
+        $rooms.ban = {}
         close()
     }
 

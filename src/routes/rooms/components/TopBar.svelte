@@ -14,7 +14,7 @@ let asian = false
 let room = ''
 let admin = false
 
-$: if ($rooms.thisRoom.key) {
+$: if ($rooms.thisRoom?.key) {
     room = $rooms.thisRoom.key
 }
 
@@ -29,7 +29,7 @@ const toggleNotification = () => {
     window.api.send('group-notifications', $notify.off)
 }
 
-$: roomName = $rooms.thisRoom.name
+$: roomName = $rooms.thisRoom?.name
 
 $: if (roomName) {
     if (!isLatin(roomName)) asian = true
@@ -50,7 +50,7 @@ function toggleActions() {
     console.log("Toggle admin bar")
 }
 
-$: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
+$: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom?.key)
 
 $: if (thisSwarm) admin = thisSwarm.admin
 
