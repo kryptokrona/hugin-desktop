@@ -7,10 +7,12 @@ import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
 import { notify, rooms, swarm } from "$lib/stores/user"
 import { isLatin } from "$lib/utils/utils"
+import Dots from '$lib/components/icons/Dots.svelte'
 
 let roomName
 let asian = false
 let room = ''
+let admin = false
 
 $: if ($rooms.thisRoom.key) {
     room = $rooms.thisRoom.key
@@ -44,7 +46,14 @@ function copyThis(copy) {
     navigator.clipboard.writeText(invite)
 }
 
+function toggleActions() {
+    console.log("Toggle admin bar")
+}
+
 $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
+
+$: if (thisSwarm) console.log("thisSwarm admin:", thisSwarm.admin)
+$: if (thisSwarm) admin = thisSwarm.admin
 
 </script>
 
@@ -65,6 +74,13 @@ $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom.key)
                 <Bell active={false}/>
             {/if}
         </div>
+
+        <!-- <div style="cursor: pointer; display: inline-block; width: 25px;" on:click={toggleActions}>
+            {#if admin}
+                    <p>Admin panel toggle here!</p>
+                <Dots/>
+            {/if}
+        </div> -->
     </div>
 </div>
 </div>
