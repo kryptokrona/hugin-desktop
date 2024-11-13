@@ -239,7 +239,7 @@ p {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: calc(100% - 103px);
+    height: 100%;
     overflow: scroll;
     padding-bottom: 20px;
 }
