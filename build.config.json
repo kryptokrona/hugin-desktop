@@ -7,10 +7,7 @@
     },
     "mac": {
         "target": {
-            "target": "default",
-            "arch": [
-                "universal"
-            ]
+            "target": "default"
         },
         "category": "",
         "hardenedRuntime": true,
