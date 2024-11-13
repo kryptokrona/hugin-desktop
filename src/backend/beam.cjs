@@ -241,7 +241,7 @@ const send_file = async (fileName, size, chat, key, group) => {
 
     progressStream.on('progress', async progress => {
 
-        Hugin.send('upload-file-progress', {fileName, progress: progress.percentage, chat, time: file.time})
+        Hugin.send('upload-file-progress', {fileName, progress: progress.percentage, chat, time: file.time, group})
 
         if(progress.percentage === 100) {
             console.log('File uploaded')
@@ -311,7 +311,7 @@ const add_local_file = async (fileName, path, chat, size, time, group = false) =
     localFiles.unshift(file)
     console.log("local files", localFiles)
     Hugin.send('local-files',  {localFiles, chat})
-    Hugin.send('uploading', {fileName, chat, size, time })
+    Hugin.send('uploading', {fileName, chat, size, time, group })
     await sleep(1000)
     if (group) return fileBeam.key
     if (!active) return

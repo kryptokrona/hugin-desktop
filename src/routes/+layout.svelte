@@ -42,7 +42,7 @@
     let board_message_sound
     let new_message_sound
 
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    //document.addEventListener('contextmenu', event => event.preventDefault());
 
     const closePopup = () => {
         incoming_call = false
@@ -552,6 +552,7 @@
         file.progress = 0
         $upload.unshift(file)
         $upload =  $upload
+        if (data.group) return
         console.log('Upload store', $upload)
         toast(UploadToast, {
                 position: 'top-right',
