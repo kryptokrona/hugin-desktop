@@ -15,7 +15,7 @@ import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
 import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
 import UserOptions from './UserOptions.svelte'
-import BlockInfo from './BlockInfo.svelte'
+import BanInfo from './BanInfo.svelte'
 const startTone = new Audio('/audio/startcall.mp3')
 let knownUsers = []
 let room = ''
@@ -125,8 +125,8 @@ const join_voice_channel = async (video = false, screen) => {
 
 </script>
 
-{#if $rooms.showBlockInfo}
-    <BlockInfo on:close={() => $rooms.showBlockInfo = false}/>
+{#if $rooms.showBanInfo}
+    <BanInfo on:close={() => $rooms.showBanInfo = false}/>
 {/if}
 
 <div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
@@ -173,13 +173,14 @@ const join_voice_channel = async (video = false, screen) => {
                         <br />
                       
                     </div>
+                {#if showMenu && infoUser?.address !== myAddress && infoUser.address === user.address}
+                    <div on:mouseleave="{() => { showMenu = false}}" >
+                        <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
+                    </div>
+                {/if}
             {/each}
 
-            {#if showMenu && infoUser?.address !== myAddress}
-                <div on:mouseleave="{() => { showMenu = false}}" >
-                    <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
-                </div>
-            {/if}
+          
 
         </div>
         </div>

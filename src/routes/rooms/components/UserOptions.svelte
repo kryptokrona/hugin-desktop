@@ -15,8 +15,8 @@
     }
 
     const toggleBan = () => {
-        $rooms.showBlockInfo = !$rooms.showBlockInfo
-        if (!$rooms.showBlockInfo) return
+        $rooms.showBanInfo = !$rooms.showBanInfo
+        if (!$rooms.showBanInfo) return
         $rooms.ban = {
             address: info.address,
             name: info.name
@@ -34,23 +34,28 @@
 
 <style lang="scss">
 
-    .menu {
-        display: grid; 
-        position: fixed; 
-        margin-top: 20px;
-        background-color: var(--card-background);
-        border-radius: 3px;
-        border: 1px solid var(--card-border);
-        padding: 5px;
-        z-index: 9999;
+.menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 120px;
+    padding: 5px;
+    background-color: var(--card-background);
+    border: 1px solid var(--card-border);
+    border-radius: 0.4rem;
 
-        span {
-            color: white;
-            cursor: pointer;
-            padding: 2px;
+    .action {
+        text-align: center;
+        border-radius: 5px;
+        padding: 10px;
+        cursor: pointer;
+        color: #f5f5f5;
+
+        &:hover {
+            background-color: var(--card-border);
         }
-
     }
-    
+}
 
 </style>
