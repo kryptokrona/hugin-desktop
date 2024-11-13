@@ -92,7 +92,6 @@
         height: 24px;
         opacity: 0.92;
         cursor: pointer;
-        margin-right: 5px;
         border-radius: 50%;
         border: 2px solid transparent;
     }
