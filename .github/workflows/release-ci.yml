@@ -1,136 +1,123 @@
 name: Hugin Desktop Release Pipeline
 
 on:
-  push:
-    branches:
-      - master
-    tags:
-      - '*'
+    push:
+        branches:
+            - master
+        tags:
+            - '*'
 
 jobs:
-  create-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{steps.create_release.outputs.upload_url}}
-      
-    
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+    create-release:
+        name: Create GitHub Release
+        runs-on: ubuntu-latest
+        outputs:
+            upload_url: ${{steps.create_release.outputs.upload_url}}
+
+        if: startsWith(github.ref, 'refs/tags/')
+        steps:
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: Release ${{ github.ref }}
+                  draft: true
+                  prerelease: false
+
+    build:
+        name: 'Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}'
+        runs-on: ${{ matrix.config.os }}
+        needs: [create-release]
+
+        strategy:
+            fail-fast: true
+            matrix:
+                config:
+                    - { name: 'Windows Latest', os: windows-latest, platform: x64 }
+                    - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
+                    - { name: 'macOS arm64', os: macos-latest, platform: arm64 }
+
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: true
-          prerelease: false
+            PLATFORM: ${{ matrix.config.platform }}
+            VERSION: ${{ github.ref_name }} # This extracts the tag name
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build:
-    name: "Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}"
-    runs-on: ${{ matrix.config.os }}
-    needs: [create-release]
+        steps:
+            - name: Check out Git repository
+              uses: actions/checkout@v1
 
-    strategy:
-      fail-fast: true
-      matrix:
-        config:
-          - {
-            name: "Windows Latest",
-            os: windows-latest,
-            platform: x64
-          }
-          - {
-            name: "Ubuntu Latest",
-            os: ubuntu-latest,
-            platform: x64
-          }
-          - {
-            name: "macOS arm64",
-            os: macos-latest,
-            platform: arm64
-          }
+            - name: Install Node.js, NPM and Yarn
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 18.13.0
 
-    env:
-      PLATFORM: ${{ matrix.config.platform }}
-      VERSION: ${{ github.ref_name }}  # This extracts the tag name
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Install python-setuptools on macOS
+              if: matrix.config.os == 'macos-11' || matrix.config.os == 'macos-latest'
+              run: brew install python-setuptools
 
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v1
+            - name: Install snap on Linux
+              if: matrix.config.os == 'ubuntu-latest'
+              run: sudo snap install snapcraft --classic
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 18.13.0
+            - name: Install libudev on Linux
+              if: matrix.config.os == 'ubuntu-latest'
+              run: sudo apt-get install -y libudev-dev
 
-      - name: Install python-setuptools on macOS
-        if: matrix.config.os == 'macos-11' || matrix.config.os == 'macos-latest'
-        run: brew install python-setuptools
+            - name: Install the Apple certificate and provisioning profile
+              if: matrix.config.os == 'macos-latest'
+              env:
+                  BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+                  P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+                  BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+                  KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+              run: |
+                  CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+                  PP_PATH=$RUNNER_TEMP/61be0696-8d71-4a17-8f96-53c50b8c6fdd.provisionprofile
+                  KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-      - name: Install snap on Linux
-        if: matrix.config.os == 'ubuntu-latest'
-        run: sudo snap install snapcraft --classic
+                  # Import certificate and provisioning profile from secrets
+                  echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+                  echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-      - name: Install libudev on Linux
-        if: matrix.config.os == 'ubuntu-latest'
-        run: sudo apt-get install -y libudev-dev
+                  # Create temporary keychain
+                  security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+                  security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+                  security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - name: Install the Apple certificate and provisioning profile
-        if: matrix.config.os == 'macos-latest'
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          PP_PATH=$RUNNER_TEMP/61be0696-8d71-4a17-8f96-53c50b8c6fdd.provisionprofile
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+                  # Import certificate to keychain
+                  security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+                  security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+                  security list-keychain -d user -s $KEYCHAIN_PATH
 
-          # Import certificate and provisioning profile from secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+                  # Apply provisioning profile
+                  mkdir -p ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+                  cp $PP_PATH ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+                  mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+                  cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+                  cp $PP_PATH .
+                  cp $PP_PATH bin/
+                  ls
+                  ls bin
+                  security find-identity -p codesigning -v
 
-          # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            - name: Install dependencies
+              run: npm i node-gyp && npm install --quiet
 
-          # Import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.os == 'windows-latest'
+              run: npm run build:win-x64-gh
 
-          # Apply provisioning profile
-          mkdir -p ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH .
-          cp $PP_PATH bin/
-          ls
-          ls bin
-          security find-identity -p codesigning -v
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.os == 'ubuntu-latest'
+              run: npm run build:linux-x64-gh
 
-      - name: Install dependencies
-        run: npm i node-gyp && npm install --quiet
-
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.os == 'windows-latest'
-        run: npm run build:win-x64-gh
-
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.os == 'ubuntu-latest'
-        run: npm run build:linux-x64-gh
-
-      - name: Build ${{ matrix.config.name }}
-        if: matrix.config.os == 'macos-latest'
-        env:
-          appleId: ${{ secrets.APPLE_ID }}
-          appleIdPassword: ${{ secrets.APP_SPECIFIC_PASSWORD }}
-          teamId: ${{ secrets.TEAM_ID }}
-        run: npm run build:mac-$PLATFORM-gh
+            - name: Build ${{ matrix.config.name }}
+              if: matrix.config.os == 'macos-latest'
+              env:
+                  appleId: ${{ secrets.APPLE_ID }}
+                  appleIdPassword: ${{ secrets.APP_SPECIFIC_PASSWORD }}
+                  teamId: ${{ secrets.TEAM_ID }}
+              run: npm run build:mac-$PLATFORM-gh
