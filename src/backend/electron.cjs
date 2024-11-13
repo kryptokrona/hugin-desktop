@@ -5,6 +5,7 @@ const {
     ipcMain,
     Tray,
     Menu,
+    MenuItem,
     nativeTheme,
     systemPreferences,
     globalShortcut
@@ -268,6 +269,16 @@ ipcMain.on('app', (data) => {
                 throw err
             })
     }
+})
+
+ipcMain.on('right-click', (e, data) => {
+    const customMenu = new Menu();
+    customMenu.append(new MenuItem({ label: 'Copy', role: 'copy' }));
+    customMenu.append(new MenuItem({ label: 'Paste', role: 'paste' }));
+    customMenu.popup({
+        x: data.x,
+        y: data.y
+      });
 })
 
 const startCheck = async () => {

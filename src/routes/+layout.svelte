@@ -41,8 +41,17 @@
     let new_messages = false
     let board_message_sound
     let new_message_sound
-
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    let x
+    let y
+    
+    const mouseMove = (e) => {
+        x = e.pageX
+        y = e.pageY
+    }
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        window.api.send('right-click', {x, y})
+    });
 
     const closePopup = () => {
         incoming_call = false
@@ -570,6 +579,7 @@
 
 </script>
 <main>
+<div on:mousemove={mouseMove}>
 <TrafficLights/>
 <Toaster/>
 
@@ -655,6 +665,7 @@
 
 <Webrtc/>
 <Group_Webrtc/>
+</div>
 </main>
 <style>
 
