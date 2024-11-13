@@ -16,9 +16,6 @@ $: roomList
 
 //This group name
 $: roomName = $rooms.thisRoom?.name
-$: {
-    $swarm.activeSwarm = $rooms.thisRoom
-}
 $: show_groups = true
 	
 const dispatch = createEventDispatcher()

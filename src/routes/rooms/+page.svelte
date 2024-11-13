@@ -284,7 +284,7 @@ async function printRoom(room, create = false) {
 
     //Return the latest messages
     const messages = await getMessages(room)
-    roomMessages.set(messages)
+    $roomMessages = messages
     
     checkReactions(messages, false)
     replyExit()
