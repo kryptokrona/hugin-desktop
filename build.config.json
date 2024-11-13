@@ -9,8 +9,7 @@
         "target": {
             "target": "default",
             "arch": [
-                "x64",
-                "arm64"
+                "universal"
             ]
         },
         "category": "",
@@ -21,6 +20,7 @@
         "identity": "Lukas Nyberg (YT27J42JQ8)",
         "provisioningProfile": "61be0696-8d71-4a17-8f96-53c50b8c6fdd.provisionprofile",
         "type": "development",
+        "mergeASARs": false,
         "extendInfo": {
             "NSMicrophoneUsageDescription": "Please give us access to your microphone",
             "NSCameraUsageDescription": "Please give us access to your camera"
