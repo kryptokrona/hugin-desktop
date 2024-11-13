@@ -553,7 +553,7 @@ async function play_video() {
                         if (speaker.chat == contact.chat) {
                             if (
                                 array.some((volume) => volume > $audioLevel.sensitivity) &&
-                                source.audioLevel > 0.002
+                                source?.audioLevel > 0.002
                             ) {
                                 speaker.activeVoice = true
                                 speaker.volume = source.audioLevel
