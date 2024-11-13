@@ -272,15 +272,10 @@ async function printRoom(room, create = false) {
     scrollGroups = []
     channelMessages = []
     filterRooms = []
-    rooms.update((data) => {
-        return {
-            ...data,
-            thisRoom: { key: room.key, name: room.name, chat: true, topic: "",},
-        }
-    })
+    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: ""}
     if (create) {
         loader = true
-        await sleep(1337)
+        await sleep(777)
     }
 
     
