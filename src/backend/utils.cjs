@@ -35,9 +35,10 @@ async function load_file(path, size) {
     let imgArray = []
     if (checkImageOrVideoType(path, size)) {
         //Read the file as an image
-        try {
         return new Promise((resolve, reject) => {
+            try {
             const stream = createReadStream(path)
+            
                 stream.on('data', (data) => { 
                     imgArray.push(data)
                 })
@@ -48,11 +49,10 @@ async function load_file(path, size) {
                 stream.on('end', () => {
                     resolve(Buffer.concat(imgArray))
                 })
+            } catch {
+                return "File not found"
+            }
         })
-
-        } catch (err) {
-            return "File not found"
-        }
     } else {
         return "File"
     }    
