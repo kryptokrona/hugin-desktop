@@ -8,7 +8,7 @@
     "description": "A messenger app built on top of the kryptokrona blockchain",
     "main": "src/backend/electron.cjs",
     "type": "module",
-    "repository": "https://github.com/kryptokrona/hugin-desktop",
+    "repository": "https://github.com/f-r00t/hugin-svelte",
     "scripts": {
         "postinstall": "patch-package && electron-rebuild -f -w better-sqlite3-multiple-ciphers",
         "patch": "patch-package",
@@ -36,8 +36,8 @@
         "publish": [
             {
                 "provider": "github",
-                "owner": "kryptokrona",
-                "repo": "hugin-desktop"
+                "owner": "f-r00t",
+                "repo": "hugin-svelte"
             }
         ],
         "mac": {
