@@ -1,8 +1,8 @@
 <script>
     import {user} from '$lib/stores/user.js'
     import {onMount} from 'svelte'
-    import Share from '$routes/dashboard/components/Share.svelte'
-    import Funds from '$routes/dashboard/components/Funds.svelte'
+    import Share from '/src/routes/dashboard/components/Share.svelte'
+    import Funds from '/src/routes/dashboard/components/Funds.svelte'
     import EditName from '$routes/dashboard/components/EditName.svelte'
     import {layoutState} from '$lib/stores/layout-state.js'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
