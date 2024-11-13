@@ -13,7 +13,7 @@
 
     <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click={() => $user.block = false}>
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
-            <h3 in:fade>Block contact?</h3>
+            <h3 in:fade>Block {$user.block.name}?</h3>
 
                 <FillButton
                     red={true}

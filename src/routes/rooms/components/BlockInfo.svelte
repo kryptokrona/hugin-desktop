@@ -22,21 +22,18 @@
     
     
     <Backdrop on:close={close}>
+
     
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
-                <div >
-                    <p>{$rooms.ban.name}</p>
-                    <br>
-                        <FillButton
-                        red="{true}"
-                        text="{"Ban"}"
-                        disabled="{false}"
-                        on:click|once="{ban}"
-                        />
-                        <br>
-                        <br>
-                </div>
+            <h3 in:fade>Ban {$rooms.ban.name}?</h3>
+
+                <FillButton
+                    red={true}
+                    text="Block"
+                    disabled={false}
+                    on:click|once="{ban}" />
         </div>
+
     
     </Backdrop>
     
@@ -46,21 +43,22 @@
         margin: 0;
         color: var(--title-color);
     }
-    
+
     .card {
         background-color: var(--backgound-color);
         border: 1px solid var(--card-border);
-        padding: 30px;
+        padding: 20px;
         border-radius: 8px;
-        width: 200px;
-        height: 200px;
+        width: 250px;
+        height: 125px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        align-items: center;
     }
-    
+
     p {
-        font-size: 17px;
+        font-size: 12px;
         color: white;
         font-family: 'Montserrat';
     }

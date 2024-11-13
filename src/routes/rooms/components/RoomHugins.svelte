@@ -160,7 +160,7 @@ const join_voice_channel = async (video = false, screen) => {
             
             {#each fullUserList as user}    
             
-                    <div in:fade class="card" on:click="{() => showUser(user)}" on:mouseleave="{() => { showMenu = false}}">
+                    <div in:fade class="card" on:click="{() => showUser(user)}">
                         {#if isOnline(user)}
                             <div class:online="{isOnline(user)}"></div>
                         {/if}
@@ -176,7 +176,9 @@ const join_voice_channel = async (video = false, screen) => {
             {/each}
 
             {#if showMenu && infoUser?.address !== myAddress}
-                <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
+                <div on:mouseleave="{() => { showMenu = false}}" >
+                    <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
+                </div>
             {/if}
 
         </div>

@@ -325,7 +325,9 @@ const openLinkMessage = (url) => {
                     <ReplyArrow on:click="{replyTo}" />
                     {#if !rtc}
                     <DeleteButton on:click="{deleteMsg}"/>
+                    {#if !myMsg}
                     <Dots on:click="{() => showMenu = true}"/>
+                    {/if}
                     {#if showMenu && !myMsg}
                         <UserOptions admin={admin} info={{address: msgFrom, name: nickname}}/>
                     {/if}

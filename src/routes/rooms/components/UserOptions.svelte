@@ -9,27 +9,48 @@
             return
         }
         $user.block = {
-            address: msgFrom,
-            name: nickname
+            address: info.address,
+            name: info.name
         }
     }
 
     const toggleBan = () => {
         $rooms.showBlockInfo = !$rooms.showBlockInfo
         if (!$rooms.showBlockInfo) return
-        $rooms.ban = {address: info.address}
+        $rooms.ban = {
+            address: info.address,
+            name: info.name
+        }
     }
 
 </script>
 
-<div style="display: grid; position: fixed; margin-top: 20px;">
-    <p on:click={toggleBlock} class="action">Block</p>
+<div class="menu">
+    <span on:click={toggleBlock} class="action">Block</span>
     {#if admin}
-    <p on:click={toggleBan} class="action">Ban</p>
+    <span on:click={toggleBan} class="action">Ban</span>
     {/if}
 </div>
 
 <style lang="scss">
+
+    .menu {
+        display: grid; 
+        position: fixed; 
+        margin-top: 20px;
+        background-color: var(--card-background);
+        border-radius: 3px;
+        border: 1px solid var(--card-border);
+        padding: 5px;
+        z-index: 9999;
+
+        span {
+            color: white;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+    }
     
 
 </style>
