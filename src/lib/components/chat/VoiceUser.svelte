@@ -92,12 +92,13 @@
         height: 24px;
         opacity: 0.92;
         cursor: pointer;
-        border-radius: 50%;
-        border: 2px solid transparent;
+        border-radius: 5px;
+        border: 1px solid transparent;
+        margin-right: 2px;
     }
 
     .talking .voice-avatar {
-        border: 2px solid var(--success-color);
+        border: 1px solid var(--success-color);
     }
 
     .connecting {
