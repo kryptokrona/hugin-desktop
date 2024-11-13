@@ -42,7 +42,7 @@
     let board_message_sound
     let new_message_sound
 
-    //document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('contextmenu', event => event.preventDefault());
 
     const closePopup = () => {
         incoming_call = false
