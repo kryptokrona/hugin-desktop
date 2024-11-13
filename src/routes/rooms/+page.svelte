@@ -282,6 +282,8 @@ async function printRoom(room, create = false) {
         loader = true
         await sleep(1337)
     }
+
+    
     const active = $swarm.active.find(a => a.key === room.key)
     $rooms.thisRoom.topic = active.topic
 
@@ -293,7 +295,6 @@ async function printRoom(room, create = false) {
     replyExit()
     scrollDown()
     loader = false
-    $rooms = $rooms
 }
 
 function addFileMessage(array) {
