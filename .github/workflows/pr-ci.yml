@@ -13,7 +13,7 @@ jobs:
                 config:
                     - { name: 'Windows Latest', os: windows-latest, platform: x64 }
                     - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
-                    - { name: 'macOS-11', os: macos-11, platform: x64 }
+                    - { name: 'macOS-11', os: macos-latest, platform: x64 }
                     - { name: 'macOS Latest', os: macos-latest, platform: arm64 }
 
         env:
