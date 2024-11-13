@@ -35,7 +35,12 @@
    
 
     $: if (downloadDone) {
-         if (!video) loadFile(file)
+         if (!video) awaitLoad(file)
+    }
+
+    async function awaitLoad(file) {
+        await sleep(200)
+        loadFile(file)
     }
 
     $: if (file?.saved) {
@@ -49,7 +54,6 @@
     }
 
     async function loadFile(file) {
-        await sleep(200)
         let arr = await window.api.loadFile(file.path, file.size)
         thisFile = arr
         if (arr === "File" || arr === "File not found") return arr
