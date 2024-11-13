@@ -13,31 +13,22 @@ const fs = require('fs')
 const Store = require('electron-store')
 const store = new Store()
 
-function createAvatarDir() {
-  if (!fs.existsSync(userDataDir + "/avatars")) {
-    fs.mkdirSync(userDataDir + "/avatars")
-  }
-}
+ipcMain.on('set-avatar', (e, data) => {
 
-ipcMain.on('set-avatar', (e, [filePath, fileName, size]) => {
-  
-  console.log("Set avatar!", filePath, fileName)
-  const newPath = userDataDir + "/" + fileName
-
-  fs.copyFile(filePath, newPath, (err) => {
-    if (err)
-    console.log("errror", err)
-  });
-
+  ///TODO set base64 avatar here
   store.set({
-    avatar: { path: newPath, name: fileName, size }
+    avatar: ""
   })
 
 })
 
 ipcMain.handle('get-profile', () => {
-  return store.get('avatar')
+  return get_avatar()
 })
+
+const get_avatar = () => {
+  return store.get('avatar')
+}
 
 ipcMain.on('change-download-dir', (e, dir) => {
     store.set({
@@ -113,9 +104,8 @@ class Account {
      }
     
   async load() {
-      createAvatarDir()
       await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys())
-      const myAvatar = store.get('avatar.path') ?? false
+      const myAvatar = get_avatar()
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
@@ -124,7 +114,23 @@ class Account {
       const notifications = store.get('off.notifications') ?? []
       const banned = store.get('banned') ?? []
       const usersBanned = store.get('bannedUsers') ?? []
-      this.sender('wallet-started', [this.node, my_groups.reverse(), block_list, my_contacts.reverse(), deleteAfter, Hugin.downloadDir, myAvatar, idle, notifications, banned])
+      const files = store.get('files') ?? []
+
+      console.log("files", files)
+
+      this.sender('wallet-started', [
+        this.node,
+        my_groups.reverse(),
+        block_list, 
+        my_contacts.reverse(),
+        deleteAfter,
+        Hugin.downloadDir,
+        myAvatar,
+        idle,
+        notifications,
+        banned,
+        files
+      ])
 
       this.known_keys = keys
       this.block_list = block_list
@@ -145,9 +151,17 @@ class Account {
         })
      }
 
-     isBanned(address, topic) {
+     banned(address, topic) {
       const banned = store.get('bannedUsers') ?? []
       return banned.some(a => a.address === address && a.topic === topic)
+     }
+
+     save_file(file) {
+      const list = store.get('files') ?? []
+      list.push(file)
+        store.set({
+          files: list
+        })
      }
 
 }

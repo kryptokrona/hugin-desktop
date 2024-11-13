@@ -37,6 +37,10 @@
     $: if (downloadDone) {
          if (!video) loadFile(file)
     }
+
+    $: if (file?.saved) {
+         if (!video) loadFile(file)
+    }
     
     const focusImage = (image) => {
         $fileViewer.focusImage = file.path
@@ -68,7 +72,7 @@
 </script>
 
 <div class="file" class:group in:fade="{{ duration: 150 }}">
-    {#if !downloadDone && !downloading}
+    {#if !downloadDone && !downloading && !file?.saved}
          {#if !clicked}
         <p class="message" in:fade>{file.fileName}</p>
         <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
@@ -86,9 +90,9 @@
         </div>
         <p class="message done">File downloaded!</p> -->
         
-    {:else if downloadDone}
+    {:else if downloadDone || file?.saved}
         {#if !video}
-                {#if thisFile === "File"}
+                {#if thisFile === "File" && !file?.saved}
                 <div in:fade>
                     <Progress file={file} send={false}/>
                 </div>

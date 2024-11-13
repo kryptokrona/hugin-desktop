@@ -140,6 +140,8 @@ export const rooms = writable({
     ban: {}
  })
 
+ export const files = writable([])
+
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
         return get_avatar($user.myAddress)

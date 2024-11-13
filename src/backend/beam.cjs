@@ -236,6 +236,7 @@ const send_file = async (fileName, size, chat, key, group) => {
     if (active.key !== key) return
     try {
     const filePath = file.path
+    const upload = {fileName, time: file.time, size, path: file.path}
     const stream = createReadStream(filePath)
     const progressStream = progress({length: size, time: 100})
 
@@ -248,6 +249,7 @@ const send_file = async (fileName, size, chat, key, group) => {
             console.log('Done!')
             let message = `Uploaded ${fileName}`
             if (!group) saveMsg(message, chat, true, file.time)
+            else Hugin.save_file(upload)
             return
         }
     })
@@ -270,9 +272,10 @@ const download_file = async (fileName, size, chat, key, group = false) => {
         errorMessage(`File is no longer shared`)
         return
     }
-    try {
-    Hugin.send('downloading', {fileName, chat, size, group})
+    try {   
     const downloadPath = downloadDirectory + "/" + fileName
+    const download = {fileName, chat, size, group, path: downloadPath, time: file.time, hash: file.hash}
+    Hugin.send('downloading', download)
     const stream = createWriteStream(downloadPath);
     const progressStream = progress({length: size, time: 100});
     progressStream.on("progress", (progress) => {
@@ -282,6 +285,7 @@ const download_file = async (fileName, size, chat, key, group = false) => {
         if (progress.percentage === 100) {
             let message = `Downloaded ${fileName}`
             if (!group) saveMsg(message, chat, false, file.time)
+            else Hugin.save_file(download)
         }
     });
 

@@ -26,7 +26,7 @@
 
     $: {
         uploading = $upload.some(a => file.fileName === a.fileName && file.time === a.time)
-        uploadDone = $upload.some(a => uploading && a.progress === 100)
+        uploadDone = $upload.some(a => (uploading && a.progress === 100) || file.saved === true)
     }
 
     $: downloaders = $upload.filter(a => a.progress === 100 && file.fileName == a.fileName).length
@@ -55,13 +55,13 @@
 <div class="file" class:group in:fade="{{ duration: 150 }}">
     {#if !uploadDone && !uploading}
         <p in:fade class="message">{file.fileName} </p>
-    {:else if uploading}
+    {:else if uploading || file?.saved}
         <div in:fade>
             {#if !group}
             <Progress file={file} send={true}/>
             {/if}
         </div>
-        {#if uploadDone}
+        {#if uploadDone || file?.saved}
             <p class="message done" in:fade>File uploaded!</p>
             <p in:fade class="message">{file.fileName} </p>
             <!-- {#if downloaders > 0} 

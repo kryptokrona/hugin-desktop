@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {groups, misc, notify, rooms, user} from '$lib/stores/user.js'
+    import {files, groups, misc, notify, rooms, user} from '$lib/stores/user.js'
     import {onMount, setContext} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
@@ -47,7 +47,7 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
@@ -59,6 +59,7 @@
         $notify.off = notifications
         $rooms.roomArray = await window.api.getRooms()
         $rooms.banned = banned
+        $files = fileList
         if (avatar) setCustomAvatar()
         loginSuccess()
     })

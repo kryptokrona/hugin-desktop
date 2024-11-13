@@ -6,7 +6,7 @@ import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
-import {notify, user, swarm, rooms, misc} from '$lib/stores/user.js'
+import {notify, user, swarm, rooms, misc, files} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
@@ -53,9 +53,15 @@ const isFile = (data) => {
     const findit = (arr) => {
         return arr.find(a => a.fileName === data.message && parseInt(data.time) === parseInt(a.time))
     }
-    const file = findit($remoteFiles)
-    if (!file) return findit($localFiles)
-    return file
+    let file = findit($files)
+    if (file) {
+        file.saved = true
+        return file
+    }
+    const remote = findit($remoteFiles)
+    if (remote) return remote
+    const local = findit($localFiles)
+    if (local) return local
 }
 
 onMount(async () => {
@@ -301,7 +307,7 @@ function addFileMessage(array) {
         }
         const file = isFile(msg)
         if (!file) continue
-        if (file.time === parseInt(msg.time) || file.hash === msg.hash) {
+        if (parseInt(file.time) === parseInt(msg.time) || file.hash === msg.hash) {
        
         array[i].file = file
         }
