@@ -36,7 +36,7 @@ onMount(() => {
     windowCheck = true
 })
 
-$: status = channel.find(a => a.address === call.chat)
+$: status = channel?.find(a => a.address === call.chat)
 
 async function setName() {
     if (!active) {
