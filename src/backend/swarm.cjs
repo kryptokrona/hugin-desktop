@@ -314,7 +314,7 @@ const check_data_message = async (data, connection, topic) => {
 
             if (con.joined) {
                 //Connection is already joined
-                return
+                return true
             }
             
             if (active.key !== joined.message) return "Ban"
@@ -376,8 +376,8 @@ const check_data_message = async (data, connection, topic) => {
         }
     }
     //Dont display messages from blocked users
-    if (Hugin.block_list.some(a => a.address === con.address)) return true
-
+    if (Hugin.blocked(address)) return true
+    
     return false
 }
 

@@ -142,8 +142,7 @@ class Account {
      }
 
      ban(address, topic) {
-      let list = store.get('bannedUsers') ?? []
-      const already = list.some(a => a.address === address && a.topic === topic)
+      if (this.banned(address, topic)) return
       if (already) return
       list.push({address, topic})
         store.set({
@@ -154,6 +153,10 @@ class Account {
      banned(address, topic) {
       const banned = store.get('bannedUsers') ?? []
       return banned.some(a => a.address === address && a.topic === topic)
+     }
+
+     blocked(address) {
+      return Hugin.block_list.some(a => a.address === address)
      }
 
      save_file(file) {
