@@ -316,8 +316,6 @@ const check_data_message = async (data, connection, topic) => {
                 //Connection is already joined
                 return true
             }
-            
-            if (active.key !== joined.message) return "Ban"
 
             if (Hugin.banned(data.address, topic)) {
                 if (active.admin) admin_ban_user(data.address, active.key) 
