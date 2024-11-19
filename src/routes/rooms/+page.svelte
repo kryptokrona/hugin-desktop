@@ -38,14 +38,14 @@ let pageNum = 0;
 let loadMore = true
 let admin = false
 const welcomeAddress = $misc.welcomeAddress
+let thisSwarm = false
 
-$: thisRoom = $rooms.thisRoom?.key
+$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
+$: if (isThis) thisSwarm = $swarm.activeSwarm
 
 $: wantToAdd = $rooms.addRoom
 
 $: replyTrue = $rooms.replyTo?.reply
-
-$: thisSwarm = $swarm.active.find(a => a.key === thisRoom)
 
 $: if (thisSwarm) admin = thisSwarm.admin
 
@@ -402,7 +402,7 @@ async function getMessages(group) {
 }
 
 async function getMoreMessages() {
-    return await window.api.printRoom(thisRoom, pageNum)
+    return await window.api.printRoom($rooms.thisRoom?.key, pageNum)
 }
 
 let dragover = false
@@ -433,7 +433,7 @@ async function dropFile(e) {
     const hash = await window.api.createGroup()
     const message = {
         message: 'File shared',
-        grp: thisRoom,
+        grp: $rooms.thisRoom?.key,
         name: $user.username,
         address: $user.myAddress,
         reply: "",
@@ -447,7 +447,7 @@ async function dropFile(e) {
     }
     $localFiles.push(acceptedFiles[0])
     printRoomMessage(message)
-    window.api.groupUpload(filename, path, thisRoom, size, time, hash)
+    window.api.groupUpload(filename, path, $rooms.thisRoom?.key, size, time, hash)
 }
 
 // function setChannels() {

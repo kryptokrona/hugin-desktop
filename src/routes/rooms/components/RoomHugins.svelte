@@ -40,8 +40,10 @@ $: if ($rooms.thisRoom?.key) {
 
 //Active users in p2p chat
 let onlineUsers = []
+let thisSwarm = false
 
-$: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom?.key)
+$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
+$: if (isThis) thisSwarm = $swarm.activeSwarm
 $: if (thisSwarm && $swarm.active.length) in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
 $: if (thisSwarm) admin = thisSwarm.admin
 //Active hugins

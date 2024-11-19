@@ -50,7 +50,10 @@ function toggleActions() {
     console.log("Toggle admin bar")
 }
 
-$: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom?.key)
+let thisSwarm = false
+
+$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
+$: if (isThis) thisSwarm = $swarm.activeSwarm
 
 $: if (thisSwarm) admin = thisSwarm.admin
 

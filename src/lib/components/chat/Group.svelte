@@ -15,20 +15,12 @@
 
     $: channels
     
-    $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
-    
     const dispatch = createEventDispatcher()
     
     const print_group = (group) => {
          //If p2p group, enter focus mode
-         if (thisSwarm) {
 
-            $swarmGroups.showGroups = false
-            $swarm.activeChannel = {name: "Chat room", key: thisSwarm.key}
-            // $swarm.showVideoGrid = true
-        }
-
-        if (group.key === $groups.thisGroup.key && !thisSwarm) return
+        if (group.key === $groups.thisGroup.key) return
      
         dispatch('print')
     }
@@ -38,14 +30,6 @@
     }
 
     const my_address = $user.myAddress
-
-    $: swarmGroup = $swarm.active.some(a => a.key === group.key)
-    
-    $: thisSwarm = $swarm.active.find(a => a.key === group.key)
-
-    $: in_voice = voice_channel.some(a => a.address === my_address)
-    
-    $: if (thisSwarm) channels = thisSwarm.channels
     
     $: counter = $notify.unread.filter(a => a.type === "group" && a.group === group.key).length
 
@@ -62,7 +46,6 @@
         in:fade
         out:fade
         class:active="{$groups.thisGroup.key === group.key}"
-        class:swarm="{swarmGroup}"
         on:click="{(e) => print_group(group)}"
     >
     

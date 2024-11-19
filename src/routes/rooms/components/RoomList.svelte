@@ -80,11 +80,13 @@ const setEmptyRoom = () => {
 }
 
 //Print chosen room key
-const printRoom = async (grp) => {
+const printRoom = async (room) => {
     $rooms.activeHugins = []
-    dispatch('printRoom', grp)
+    const active = $swarm.active.find(a => a.key === room.key)
+    $swarm.activeSwarm = active
+    dispatch('printRoom', room)
     await sleep(150)
-    readMessage(grp)
+    readMessage(room)
 }
 
 //Function to filer array of active users on board.

@@ -376,7 +376,7 @@ const check_data_message = async (data, connection, topic) => {
         }
     }
     //Dont display messages from blocked users
-    if (Hugin.blocked(address)) return true
+    if (Hugin.blocked(con.address)) return true
     
     return false
 }

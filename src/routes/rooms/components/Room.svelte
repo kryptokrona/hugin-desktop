@@ -9,17 +9,18 @@
     let channels = []
     let voice_channel = []
     let asian = false
-
+    let thisSwarm = false
     $: channels
-    $: thisSwarm = $swarm.active.find(a => a.key === $rooms.thisRoom?.key)
+    $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
+    $: if (isThis) thisSwarm = $swarm.activeSwarm
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
     
     const dispatch = createEventDispatcher()
     
     const printRoom = (rm) => {
-    
+        const active = $swarm.active.find(a => a.key === rm.key)
         if (rm.key === $rooms.thisRoom.key) return
-        $swarm.activeSwarm = thisSwarm
+        $swarm.activeSwarm = active
         dispatch('print')
     }
     

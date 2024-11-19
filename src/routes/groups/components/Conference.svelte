@@ -17,7 +17,7 @@
     let channels = []
     let voice_channel = []
     let topic = ""    
-    let thisSwarm = {}
+    let thisSwarm = false
     const dispatch = createEventDispatcher()
     const my_address = $user.myAddress
     
@@ -27,12 +27,11 @@
     $: if (thisSwarm) channels = thisSwarm.channels
     $: if (thisSwarm) topic = thisSwarm.topic
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
-    let active = thisSwarm
+    $: active = thisSwarm
 
     onMount(async () => {
         $videoGrid.showChat = false
         await sleep(200)
-        $swarm.activeSwarm = thisSwarm
     })
 
     const printThis = (channel) => {
