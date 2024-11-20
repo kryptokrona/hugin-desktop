@@ -104,8 +104,9 @@
         const inviteKey = link.slice(-128)
         const parse = link.split('hugin://')[1]
         const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
+        const originalName = roomName.replace(/-/g, ' ');
         invite = inviteKey
-        name = roomName
+        name = originalName
         link = link
         if (invite.length)
         enableAddGroupButton = true

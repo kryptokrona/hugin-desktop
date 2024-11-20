@@ -42,7 +42,8 @@ $: muteGroup = $notify.off.some(a => a === roomName)
 function copyThis(copy) {
     const msg = 'You copied a Room invite key'
     window.api.successMessage(msg)
-    const invite = 'hugin://' + roomName + '/' + copy
+    const linkName = roomName.replace(/ /g, '-');
+    const invite = 'hugin://' + linkName + '/' + copy
     navigator.clipboard.writeText(invite)
 }
 
