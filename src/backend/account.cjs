@@ -143,7 +143,6 @@ class Account {
 
      ban(address, topic) {
       if (this.banned(address, topic)) return
-      if (already) return
       list.push({address, topic})
         store.set({
           bannedUsers: list
@@ -156,7 +155,7 @@ class Account {
      }
 
      blocked(address) {
-      return Hugin.block_list.some(a => a.address === address)
+      return this.block_list.some(a => a.address === address)
      }
 
      save_file(file) {
