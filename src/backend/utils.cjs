@@ -231,8 +231,11 @@ const sanitize_join_swarm_data = (data) => {
     if (text?.length > 777 || data.m === undefined) return false;
     let addr = sanitizeHtml(data.k);
     if (addr?.length > 128 || data.k === undefined) return false;
+    if (data.r === undefined) {
+        data.r = ""
+    }
     let reply = sanitizeHtml(data.r);
-    if (reply?.length > 64 || data.r === undefined) return false;
+    if (reply?.length > 64) return false;
     let sig = sanitizeHtml(data.s);
     if (sig?.length > 200) return false;
     let nick = sanitizeHtml(data.n);
