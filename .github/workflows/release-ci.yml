@@ -39,7 +39,6 @@ jobs:
                     - { name: 'Windows Latest', os: windows-latest, platform: x64 }
                     - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
                     - { name: 'macOS arm64', os: macos-latest, platform: arm64 }
-                    - { name: 'macOS x64', os: macos-latest, platform: x64 }
 
         env:
             PLATFORM: ${{ matrix.config.platform }}
