@@ -91,9 +91,6 @@ let loading = false
             {#each activeList as user}     
             
                     <div in:fade class="card" on:click="{() => sendPM(user)}">
-                        {#if (user.address === myAddress) || activeUsers.some(a => a.address === user.address)}
-                            <div class:unread="{(user.address === myAddress) || activeUsers.some(a => a.address === user.address)}"></div>
-                        {/if}
                         <img
                             class="avatar"
                             src="data:image/png;base64,{get_avatar(user.address)}"
