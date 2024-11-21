@@ -257,7 +257,6 @@ const addNewRoom = async (e) => {
         g: room.key,
         h: parseInt(Date.now() * 1000),
     }
-    $roomMessages = []
     window.api.addRoom(add, admin)
     printRoom(room, true)
 }
@@ -278,20 +277,21 @@ async function printRoom(room, create = false) {
     scrollGroups = []
     channelMessages = []
     filterRooms = []
+    $roomMessages = []
+    //Return the latest messages
+    const messages = await getMessages(room)
+    $roomMessages = messages
+
     $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: ""}
     if (create) {
         loader = true
         await sleep(777)
     }
-
     
     const active = $swarm.active.find(a => a.key === room.key)
     $rooms.thisRoom.topic = active.topic
+    $swarm.activeSwarm = active
 
-    //Return the latest messages
-    const messages = await getMessages(room)
-    $roomMessages = messages
-    
     checkReactions(messages, false)
     replyExit()
     scrollDown()

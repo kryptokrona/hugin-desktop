@@ -30,7 +30,7 @@ const nogroup = {
 onMount( async () => {
     await printRooms()
     checkRoom()
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
     
 })
 
@@ -40,16 +40,16 @@ onDestroy(() => {
 
 //Listen for sent message to update conversation list
 window.api.receive('roomMsg', () => {
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
     printRooms()
 })
 window.api.receive('peer-connected', () => {
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
 })
 
 window.api.receive('banned', (key) => {
     printRooms()
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
     checkRoom()
 })
 //Check active room status
@@ -90,8 +90,9 @@ const printRoom = async (room) => {
 }
 
 //Function to filer array of active users on board.
-function filterActiveHugins(arr) {
+function filterActiveHugins() {
     let uniq = {}
+    const arr = $roomMessages
     $rooms.activeHugins = arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
     
 }
@@ -108,7 +109,7 @@ async function printRooms() {
     })
 
 
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
 }
 
 //Remove active group
@@ -128,7 +129,7 @@ const removeRoom = async () => {
     $rooms.removeRoom = false
     dispatch('removeRoom')
     await sleep(100)
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
 }
 
 //Read message
@@ -137,7 +138,7 @@ function readMessage(e) {
     $notify.unread = clear
 
     roomList = roomList
-    filterActiveHugins($roomMessages)
+    filterActiveHugins()
 }
 
 function sendPM() {

@@ -38,6 +38,8 @@ $: if ($rooms.thisRoom?.key) {
     room = $rooms.thisRoom.key
 }
 
+$: $rooms.activeHugins
+
 //Active users in p2p chat
 let onlineUsers = []
 let thisSwarm = false
@@ -64,7 +66,7 @@ $ : if (thisSwarm && $rooms.activeHugins) {
     updateOnline()
 }
 
-$: if (thisSwarm) {
+$: if (thisSwarm && $rooms.activeHugins) {
     //Adds connected and known users to one array
     knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)), ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
     updateOnline()
