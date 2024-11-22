@@ -1,14 +1,14 @@
 
-const Hyperbeam = require('hyperbeam')
+const Huginbeam = require('huginbeam')
 const { extraDataToMessage } = require('hugin-crypto')
 const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep, sanitize_pm_message, randomKey } = require('./utils.cjs');
+const { sleep, sanitize_pm_message, randomKey, hash } = require('./utils.cjs');
 const { ipcMain } = require('electron')
 const {Hugin} = require('./account.cjs');
-const { keychain } = require('./crypto.cjs');
+const { keychain, get_new_peer_keys } = require('./crypto.cjs');
 
 let active_beams = []
 let localFiles = []
@@ -35,27 +35,30 @@ ipcMain.on('remove-local-file', async (e, filename, address, time) => {
     remove_local_file(filename, address, time)
 })
 
-const new_beam = async (key, chat, send = false) => {
+const new_beam = async (key, chat, upload = false) => {
     //The beam is already encrypted. We add Hugin encryption inside.
-    return await start_beam(key, chat, false, send)
+    return await start_beam(key, chat, false, upload)
 }
 
-const start_beam = async (key, chat, file = false, send, group, filename, size) => {
+const start_beam = async (key, chat, file = false, upload, group, filename, size) => {
     //Create new or join existing beam and start beamEvent()
+    const beamKey = key === "new" ? randomKey() : key
+    const [base_keys, dht_keys, sig] = get_new_peer_keys(beamKey)
+    const options = { upload, dht_keys, base_keys, sig };
     try {
         if (key === "new") {
-            beam = new Hyperbeam()
+            beam = new Huginbeam(beamKey, options)
             beam.write('Start')
             if (file) {
                 file_beam(beam, chat, beam.key, false, group, filename, size)
                 return {chat, key: beam.key}
             }
             beam_event(beam, chat, beam.key)
-            if (send) return  {msg:"BEAMFILE://" + beam.key, chat: chat}
+            if (upload) return  {msg:"BEAMFILE://" + beam.key, chat: chat}
             return {msg:"BEAM://" + beam.key, chat: chat}
         } else {
-            if (key.length !== 52) return false
-            beam = new Hyperbeam(key)
+            if (key.length > 64) return false
+            beam = new Huginbeam(beamKey, options)
             if (file) {
                 file_beam(beam, chat, key, true, group, filename, size)
                 return true
