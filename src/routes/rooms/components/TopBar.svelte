@@ -54,7 +54,7 @@ function toggleActions() {
 let thisSwarm = false
 
 $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis) thisSwarm = $swarm.activeSwarm
+$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
 
 $: if (thisSwarm) admin = thisSwarm.admin
 

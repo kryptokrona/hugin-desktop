@@ -45,7 +45,7 @@ let onlineUsers = []
 let thisSwarm = false
 
 $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis) thisSwarm = $swarm.activeSwarm
+$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
 $: if (thisSwarm && $swarm.active.length) in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
 $: if (thisSwarm) admin = thisSwarm.admin
 //Active hugins

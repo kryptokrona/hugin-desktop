@@ -12,7 +12,7 @@
     let thisSwarm = false
     $: channels
     $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-    $: if (isThis) thisSwarm = $swarm.activeSwarm
+    $: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
     $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
     
     const dispatch = createEventDispatcher()

@@ -41,7 +41,7 @@ const welcomeAddress = $misc.welcomeAddress
 let thisSwarm = false
 
 $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis) thisSwarm = $swarm.activeSwarm
+$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
 
 $: wantToAdd = $rooms.addRoom
 
