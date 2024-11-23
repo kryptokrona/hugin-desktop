@@ -27,8 +27,6 @@
     const openRemove = () => {
         $rooms.removeRoom = !$rooms.removeRoom
     }
-    
-    $: thisSwarm = $swarm.active.find(a => a.key === r.key)
 
     $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
     
@@ -48,7 +46,7 @@
         class="card"
         in:fade
         out:fade
-        class:active="{$rooms.thisRoom?.key === r.key}"
+        class:active="{$swarm.activeSwarm?.key === r.key}"
         on:click="{(e) => printRoom(r)}"
     >
     

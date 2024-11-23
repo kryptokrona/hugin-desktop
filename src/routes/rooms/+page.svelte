@@ -126,7 +126,7 @@ const sendRoomMsg = async (e) => {
     let time = Date.now()
     const hash = await window.api.createGroup()
     let myName = $user.username
-    let group = $rooms.thisRoom.key
+    let room = $swarm.activeSwarm?.key
     let in_swarm = true
     let in_channel = $swarm.activeChannel.name
     //Reaction switch
@@ -137,7 +137,7 @@ const sendRoomMsg = async (e) => {
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
     let myRoomMessage = {
         message: msg,
-        grp: group,
+        grp: room,
         reply: replyto,
         address: myaddr,
         time: time,
@@ -147,7 +147,7 @@ const sendRoomMsg = async (e) => {
     }
     let sendMsg = {
         m: msg,
-        g: group,
+        g: room,
         r: replyto,
         k: myaddr,
         t: time,
