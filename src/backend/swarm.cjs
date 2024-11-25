@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom} = require("./database.cjs")
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -196,7 +196,7 @@ const new_connection = (connection, topic, dht_keys, peer) => {
     }
 
     console.log("*********Got new Connection! ************")
-    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer})
+    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer, request: false})
     send_joined_message(topic, dht_keys)
     //checkIfOnline(hash)
     connection.on('data', async data => {
@@ -337,12 +337,18 @@ const check_data_message = async (data, connection, topic) => {
             con.voice = joined.voice
             con.admin = admin
             con.video = joined.video
+            con.request = true
             const time = parseInt(joined.time)
 
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
             const [in_voice, video] = get_local_voice_status(topic)
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
                 join_voice_channel(active.key, topic, joined.address)
+            }
+            
+            //Request message history from peer connected before us.
+            if (parseInt(active.time) > time) {
+                request_history(joined.address, topic)
             }
             
             console.log("Connection updated: Joined:", con.joined)
@@ -371,12 +377,63 @@ const check_data_message = async (data, connection, topic) => {
             if (con.admin) ban_user(data.address, topic)
             else return "Error"
             return true
+        } else if (data.type === 'request-history' && con.request) {
+            send_history(con.address, topic, active.key)
+            con.request = false
+        } else if (data.type === 'send-history' && con.request) {
+            process_request(data.messages, active.key)
+            con.request = false
         }
     }
     //Dont display messages from blocked users
     if (Hugin.blocked(con.address)) return true
     
     return false
+}
+
+const request_history = (address, topic) => {
+    console.log("Reqeust history from another peer")
+    const message = {
+        type: 'request-history'
+    }
+    send_peer_message(address, topic, message)
+}
+
+const send_history = async (address, topic, key) => {
+    const messages = await printGroup(key, 0)
+    console.log("Sending:", messages.length, "messages")
+    const history = {
+        type: 'send-history',
+        messages
+    }
+    send_peer_message(address, topic, history)
+}
+
+const process_request = async (messages, key) => {
+//some code
+    try {
+        for (const m of messages) {
+            if (m?.address === Hugin.address) continue
+            if (m?.hash.length !== 64) continue
+            const inc = {
+                m: m?.message,
+                k: m?.address,
+                s: m?.signature,
+                t: m?.time ? m?.time : m?.timestamp,
+                g: m?.grp ? m?.grp : m?.room,
+                r: m?.reply,
+                n: m?.name ? m?.name : m?.nickname,
+                hash: m?.hash
+            }
+            if (await groupMessageExists(inc.t)) continue
+            const message = sanitize_group_message(inc, false)
+            if (!message) continue
+            await saveGroupMsg(message, false, true)
+        }
+        Hugin.send('history-update', {key})
+    } catch (e) {
+        console.log("error processing history", e)
+    }
 }
 
 const check_peer_voice_status = (data, con) => {
@@ -526,7 +583,7 @@ const upload_ready = async (file, topic, address) => {
         time: file.time,
         key: beam_key
     }
-    send_file_info(address, topic, info)
+    send_peer_message(address, topic, info)
     return beam_key
     
 }
@@ -580,12 +637,12 @@ const request_download = (download) => {
         time: download.time,
         key: download.key
     }
-    send_file_info(address, topic, info)
+    send_peer_message(address, topic, info)
 
 }
 
-const send_file_info = (address, topic, file) => {
-    const active = active_swarms.find(a => a.topic === topic)
+const send_peer_message = (address, topic, message) => {
+    const active = get_active_topic(topic)
     if (!active) {
         errorMessage('Swarm is not active')
         return
@@ -595,7 +652,7 @@ const send_file_info = (address, topic, file) => {
         errorMessage('Connection is closed')
         return
     }
-    con.connection.write(JSON.stringify(file))
+    con.connection.write(JSON.stringify(message))
 }
 
 

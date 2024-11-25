@@ -68,7 +68,14 @@ onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
     scrollDown()
+    window.api.receive('history-update', (data) => {
+        const inroom = $swarm.activeSwarm?.key === data.key
 
+        if (inroom) {
+            const room = {key: data.key, name: $rooms.thisRoom.name,}
+            printRoom(room)
+        }
+    })
     //Listens for new messages from backend
     window.api.receive('roomMsg', (data) => {
         const file = isFile(data)
@@ -92,6 +99,7 @@ onDestroy(() => {
     window.api.removeAllListeners('roomMsg')
     window.api.removeAllListeners('sent_room')
     window.api.removeAllListeners('set-channels')
+    window.api.removeAllListeners('history-update')
 })
 
 // window.api.receive('sent_group', (data) => {
