@@ -43,8 +43,6 @@ let thisSwarm = false
 $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
 $: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
 
-$: wantToAdd = $rooms.addRoom
-
 $: replyTrue = $rooms.replyTo?.reply
 
 $: if (thisSwarm) admin = thisSwarm.admin
@@ -236,12 +234,7 @@ const openAddRoom = () => {
     wantToAdd = !wantToAdd
 
     if (!wantToAdd) {
-        rooms.update((data) => {
-            return {
-                ...data,
-                addRoom: false,
-            }
-        })
+       $rooms.addRoom = false
     }
 }
 
@@ -494,7 +487,7 @@ async function dropFile(e) {
 
 <!-- ///FIXIXIXIXX -->
 
-{#if wantToAdd}
+{#if $rooms.addRoom}
     <AddRoom on:click="{openAddRoom}" on:addRoom="{(e) => addNewRoom(e)}" />
 {/if}
 
