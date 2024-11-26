@@ -99,7 +99,7 @@ ipcMain.on('add-room', async (e, room, admin) => {
     const message = sanitize_group_message(room, true)
     message.address = Hugin.address
     message.name = Hugin.nickname
-    message.message = "Joined the lobby"
+    message.message = "Joined room"
     message.sent = true
     save_group_message(message, room.hash, parseInt(message.timestamp), false, false, true, true)
     if (admin) addRoomKeys(room.k, admin)
