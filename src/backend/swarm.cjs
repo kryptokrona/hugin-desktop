@@ -410,7 +410,7 @@ const send_history = async (address, topic, key) => {
 }
 
 const process_request = async (messages, key) => {
-//some code
+let i = 0
     try {
         for (const m of messages) {
             if (m?.address === Hugin.address) continue
@@ -429,8 +429,10 @@ const process_request = async (messages, key) => {
             const message = sanitize_group_message(inc, false)
             if (!message) continue
             await saveGroupMsg(message, false, true)
+            i++
         }
-        Hugin.send('history-update', {key})
+        //Only send update trigger if new messages has been processed.
+        if (i !== 0) Hugin.send('history-update', {key})
     } catch (e) {
         console.log("error processing history", e)
     }
