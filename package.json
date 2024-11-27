@@ -33,6 +33,9 @@
         "start": "vite start"
     },
     "build": {
+        "linux": {
+            "icon": "build/icon.png"
+        },
         "publish": [
             {
                 "provider": "github",
