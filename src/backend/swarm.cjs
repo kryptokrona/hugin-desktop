@@ -13,6 +13,12 @@ const { add_local_file, start_download, add_remote_file, send_file, update_remot
 const { Hugin } = require("./account.cjs");
 const userDataDir = app.getPath('userData')
 
+const MISSING_MESSAGES = 'missing-messages';
+const REQUEST_MESSAGES = 'request-messages';
+const REQUEST_HISTORY = 'request-history';
+const SEND_HISTORY = 'send-history';
+const PING_SYNC = 'Ping';
+
 let localFiles = []
 let remoteFiles = []
 let active_swarms = []
@@ -379,7 +385,7 @@ const check_data_message = async (data, connection, topic) => {
         console.log("requesting data from connection:", con.request)
         console.log("                                ")
         console.log("-----------------------------")
-
+        
         if (data.type === "ban") {
             if ((data.address === Hugin.address) && con.admin) {
                 Hugin.send('banned', active.key)
@@ -397,11 +403,11 @@ const check_data_message = async (data, connection, topic) => {
             // History requests
 
             //Start-up history sync
-            if (data.type === 'request-history' && con.request) {
+            if (data.type === REQUEST_HISTORY && con.request) {
                 send_history(con.address, topic, active.key)
                 con.request = false
                 return true
-            } else if (data.type === 'send-history' && con.request) {
+            } else if (data.type === SEND_HISTORY && con.request) {
                 process_request(data.messages, active.key)
                 con.request = false
                 return true
@@ -416,9 +422,10 @@ const check_data_message = async (data, connection, topic) => {
                 if (data.hashes?.length > 25) return "Ban"
             }
 
-            if (data.type === 'Ping' && active.search && hashes) {
+            if (data.type === PING_SYNC && active.search && hashes) {
                 if (con.knownHashes.toString() === data.hashes.toString()) {
                     //Already know all the latest messages
+                    console.log("Already know these hashes")
                     con.request = false
                     return true
                 }
@@ -429,9 +436,9 @@ const check_data_message = async (data, connection, topic) => {
                 active.search = false
                 request_missed_messages(missing, con.address, topic)
                 //Updated knownHashes from this connection
-            } else if (data.type === 'request-messages' && hashes) {
+            } else if (data.type === REQUEST_MESSAGES && hashes) {
                 send_missing_messages(data.hashes, con.address, topic)
-            } else if (data.type === 'missing-messages' && messages && active.search && con.request) {
+            } else if (data.type === MISSING_MESSAGES && messages && active.search && con.request) {
                 active.search = false
                 con.request = false
                 process_request(data.messages, active.key)
@@ -464,7 +471,7 @@ const check_missed_messages = async (hashes) => {
 
 const request_missed_messages = (hashes, address, topic) => {
     const message = {
-        type: "request-messages",
+        type: REQUEST_MESSAGES,
         hashes
     }
     send_peer_message(address, topic, hashes)
@@ -479,7 +486,7 @@ const send_missing_messages = async (hashes, address, topic) => {
     }
     if (messages.length > 0) {
         const message = {
-            type: 'missing-messages',
+            type: MISSING_MESSAGES,
             messages
         }
     send_peer_message(address, topic, message)
@@ -489,7 +496,7 @@ const send_missing_messages = async (hashes, address, topic) => {
 const request_history = (address, topic) => {
     console.log("Reqeust history from another peer")
     const message = {
-        type: 'request-history'
+        type: REQUEST_HISTORY
     }
     send_peer_message(address, topic, message)
 }
@@ -498,7 +505,7 @@ const send_history = async (address, topic, key) => {
     const messages = await printGroup(key, 0)
     console.log("Sending:", messages.length, "messages")
     const history = {
-        type: 'send-history',
+        type: SEND_HISTORY,
         messages
     }
     send_peer_message(address, topic, history)
@@ -658,11 +665,11 @@ const check_online_state = async (topic) => {
     let interval = setInterval(ping, 10 * 1000)
     async function ping() {
         let active = get_active_topic(topic)
+        const hashes = await getLatestRoomHashes(active.key)
         if (!active) {
             clearInterval(interval)
             return
         } else {
-            const hashes = await getLatestRoomHashes(active.key)
             active.search = true
             let i = 0
             const data = {type: 'Ping'}
