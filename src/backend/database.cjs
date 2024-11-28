@@ -850,6 +850,47 @@ const groupMessageExists = async (time) => {
         }
         resolve(exists)
     })
+}
+
+const roomMessageExists = async (hash) => {
+    let exists = false
+    return new Promise((resolve, reject) => {
+        const hashExists = 
+        `SELECT *
+        FROM groupmessages
+        WHERE hash = '${hash}'
+        `
+        const row = database.prepare(hashExists).get()
+        if(row) {
+            exists = true
+        }
+        resolve(exists)
+    })
+}
+
+const getLatestRoomHashes = async (key) => {
+    const offset = 0
+    const limit = 25
+    const hashes = []
+    return new Promise((resolve, reject) => {
+        const latestRoomHashes = 
+        `SELECT *
+        FROM groupmessages
+        WHERE grp = ?
+        ORDER BY
+            time
+        DESC
+        LIMIT ${offset}, ${limit}`
+
+        const hashList = database.prepare(latestRoomHashes)
+        for(const row of hashList.iterate(key)) {
+            if(row) {
+                if (row.message === "Joined room") continue
+                hashes.push(row.hash)
+            }
+        }
+        resolve(hashes)
+    })
 
 }
 
@@ -881,4 +922,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {saveHash, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
+module.exports = {saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
