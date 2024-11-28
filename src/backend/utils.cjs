@@ -151,6 +151,11 @@ function parse_call(msg, sender, sent, group = false, timestamp) {
     }
 }
 
+function check_hash(hash) {
+    if (typeof hash !== 'string' || hash.length !== 64) return false
+    return true
+}
+
 const sanitize_pm_message = (msg) => {
     let sent = msg.sent
     let addr = sanitizeHtml(msg.from)
@@ -355,4 +360,4 @@ const sanitize_join_swarm_data = (data) => {
 
  
 
-module.exports = {sleep, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
+module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
