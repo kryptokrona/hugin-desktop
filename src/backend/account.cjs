@@ -116,8 +116,6 @@ class Account {
       const usersBanned = store.get('bannedUsers') ?? []
       const files = store.get('files') ?? []
 
-      console.log("files", files)
-
       this.sender('wallet-started', [
         this.node,
         my_groups.reverse(),

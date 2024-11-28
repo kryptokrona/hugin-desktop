@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists} = require("./database.cjs")
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash} = require('./utils.cjs');
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -159,11 +159,11 @@ const create_swarm = async (data) => {
     
     const startTime = Date.now().toString()
 
-    Hugin.send('swarm-connected', {topic: topicHash, key: invite, channels: [], voice_channel: [], connections: [], time: startTime, admin})
+    Hugin.send('swarm-connected', {topic: topicHash, key: invite, channels: [], voice_channel: [], connections: [], time: startTime, admin })
     
     //The topic is public so lets use the pubkey from the new base keypair
 
-    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin})
+    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false})
     
     Hugin.send('set-channels')
 
@@ -182,7 +182,7 @@ const create_swarm = async (data) => {
     const topic = Buffer.alloc(32).fill(topicHash)
     discovery = swarm.join(topic, {server: true, client: true})
     await discovery.flushed()
-    check_if_online(topicHash)
+    check_online_state(topicHash)
 }
 
 const new_connection = (connection, topic, dht_keys, peer) => {
@@ -196,7 +196,7 @@ const new_connection = (connection, topic, dht_keys, peer) => {
     }
 
     console.log("*********Got new Connection! ************")
-    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer, request: false})
+    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer, request: false, knownHashes: []})
     send_joined_message(topic, dht_keys)
     //checkIfOnline(hash)
     connection.on('data', async data => {
@@ -309,7 +309,6 @@ const check_data_message = async (data, connection, topic) => {
         if ('joined' in data) {
 
             const joined = sanitize_join_swarm_data(data)
-            console.log("Joined?", joined)
             if (!joined) return "Ban"
 
             if (con.joined) {
@@ -347,8 +346,10 @@ const check_data_message = async (data, connection, topic) => {
             }
             
             //Request message history from peer connected before us.
-            if (parseInt(active.time) > time) {
+            if (parseInt(active.time) > time && active.requests < 3) {
                 request_history(joined.address, topic)
+                active.requests++
+                console.log("active.requests", active.requests)
             }
             
             console.log("Connection updated: Joined:", con.joined)
@@ -364,8 +365,21 @@ const check_data_message = async (data, connection, topic) => {
     }
 
     if (!con.joined) return "Error"
+
+
     
     if ('type' in data) {
+
+        const type = typeof data.type === 'string'
+        if (!type) return "Ban"
+
+        console.log("-----------------------------")
+        console.log("                                ")
+        console.log("TYPE INCOMING: ", data.type.toString())
+        console.log("requesting data from connection:", con.request)
+        console.log("                                ")
+        console.log("-----------------------------")
+
         if (data.type === "ban") {
             if ((data.address === Hugin.address) && con.admin) {
                 Hugin.send('banned', active.key)
@@ -377,18 +391,99 @@ const check_data_message = async (data, connection, topic) => {
             if (con.admin) ban_user(data.address, topic)
             else return "Error"
             return true
-        } else if (data.type === 'request-history' && con.request) {
-            send_history(con.address, topic, active.key)
-            con.request = false
-        } else if (data.type === 'send-history' && con.request) {
-            process_request(data.messages, active.key)
-            con.request = false
+        } else {
+            //Dont handle requests from blocked users
+            if (Hugin.blocked(con.address)) return true
+            // History requests
+
+            //Start-up history sync
+            if (data.type === 'request-history' && con.request) {
+                send_history(con.address, topic, active.key)
+                con.request = false
+                return true
+            } else if (data.type === 'send-history' && con.request) {
+                process_request(data.messages, active.key)
+                con.request = false
+                return true
+            }
+
+            //Live syncing from other peers who might have connections to others not established yet by us.
+
+            const hashes = data.hashes?.length !== undefined
+            const messages = data.messages?.length !== undefined
+            //Check if payload is too big
+            if (hashes) {
+                if (data.hashes?.length > 25) return "Ban"
+            }
+
+            if (data.type === 'Ping' && active.search && hashes) {
+                if (con.knownHashes.toString() === data.hashes.toString()) {
+                    //Already know all the latest messages
+                    con.request = false
+                    return true
+                }
+                const missing = await check_missed_messages(data.hashes, con.address, topic)
+                con.knownHashes = data.hashes
+                if (!missing) return true
+                con.request = true
+                active.search = false
+                request_missed_messages(missing, con.address, topic)
+                //Updated knownHashes from this connection
+            } else if (data.type === 'request-messages' && hashes) {
+                send_missing_messages(data.hashes, con.address, topic)
+            } else if (data.type === 'missed-messages' && messages && active.search && con.request) {
+                active.search = false
+                con.request = false
+                process_request(data.messages, active.key)
+            }
+            return true
         }
     }
-    //Dont display messages from blocked users
-    if (Hugin.blocked(con.address)) return true
+     //Dont display messages from blocked users
+     if (Hugin.blocked(con.address)) return true
     
     return false
+}
+
+const check_missed_messages = async (hashes) => {
+    console.log("Checking for missing messages")
+    const missing = []
+    for (const hash of hashes) {
+        if (!check_hash(hash)) continue
+        if (await roomMessageExists(hash)) continue
+        missing.push(hash)
+    }
+
+    if (missing.length > 0) {
+        console.log("Requesting:", missing.length, " missed messages")
+        return missing
+    }
+    console.log("Current state synced.")
+    return false
+}
+
+const request_missed_messages = (hashes, address, topic) => {
+    const message = {
+        type: "request-messages",
+        hashes
+    }
+    send_peer_message(address, topic, hashes)
+}
+
+const send_missing_messages = async (hashes, address, topic) => {
+    const messages = []
+    for (const hash of hashes) {
+        if (!check_hash(hash)) continue
+        const found = await getGroupReply(hash)
+        if (found) messages.push(found)
+    }
+    if (messages.length > 0) {
+        const message = {
+            type: 'missing-messages',
+            messages
+        }
+    send_peer_message(address, topic, message)
+    }
 }
 
 const request_history = (address, topic) => {
@@ -414,7 +509,7 @@ let i = 0
     try {
         for (const m of messages) {
             if (m?.address === Hugin.address) continue
-            if (m?.hash.length !== 64) continue
+            if (!check_hash(m?.hash)) continue
             const inc = {
                 m: m?.message,
                 k: m?.address,
@@ -425,7 +520,7 @@ let i = 0
                 n: m?.name ? m?.name : m?.nickname,
                 hash: m?.hash
             }
-            if (await groupMessageExists(inc.t)) continue
+            if (await roomMessageExists(inc.hash)) continue
             const message = sanitize_group_message(inc, false)
             if (!message) continue
             await saveGroupMsg(message, false, true)
@@ -518,8 +613,6 @@ const send_joined_message = async (topic, dht_keys) => {
 }
 
 const incoming_message = async (data, topic, connection, peer) => {
-    const str = new TextDecoder().decode(data);
-    if (str === "Ping") return
     const check = await check_data_message(data, connection, topic)
     if (check === "Ban") {
         peer.ban(true)
@@ -560,15 +653,25 @@ const send_swarm_message = (message, key) => {
     console.log("Swarm msg sent!")
 }
 
-const check_if_online = (topic) => {
+const check_online_state = async (topic) => {
+    await sleep(10000)
     let interval = setInterval(ping, 10 * 1000)
-    function ping() {
-        let active = active_swarms.find(a => a.topic === topic)
+    async function ping() {
+        let active = get_active_topic(topic)
         if (!active) {
             clearInterval(interval)
             return
         } else {
-            active.connections.forEach((a) => a.connection.write('Ping'))
+            const hashes = await getLatestRoomHashes(active.key)
+            active.search = true
+            let i = 0
+            const data = {type: 'Ping'}
+            active.connections.forEach( async (a) => {
+                //Send hash state to half of online users to find missing messages.
+                if (i % 2 === 0) data.hashes = hashes
+                a.connection.write(JSON.stringify(data))
+                i++
+        })
         }
     }
 }
