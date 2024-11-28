@@ -419,12 +419,16 @@ const loadMiscData = async () => {
 async function checkNodeStatus (node) {
     try {
         const req = await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
-
         const res = await req.json()
-
         if (res.status === 'OK') return true
     } catch (e) {
-        console.log('Node error')
+        try {
+            const req = await fetch('https://' + node.node + ':' + node.port.toString() + '/getinfo')
+            const res = await req.json()
+        if (res.status === 'OK') return true
+        } catch(e) {
+            console.log("Node error", e)
+        }
     }
     
     sender('node-not-ok')
