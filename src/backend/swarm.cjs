@@ -431,7 +431,7 @@ const check_data_message = async (data, connection, topic) => {
                 //Updated knownHashes from this connection
             } else if (data.type === 'request-messages' && hashes) {
                 send_missing_messages(data.hashes, con.address, topic)
-            } else if (data.type === 'missed-messages' && messages && active.search && con.request) {
+            } else if (data.type === 'missing-messages' && messages && active.search && con.request) {
                 active.search = false
                 con.request = false
                 process_request(data.messages, active.key)
