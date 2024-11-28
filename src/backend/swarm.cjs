@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists} = require("./database.cjs")
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -415,7 +415,7 @@ const check_data_message = async (data, connection, topic) => {
 
             //Live syncing from other peers who might have connections to others not established yet by us.
 
-            const hashes = data.hashes?.length !== undefined
+            const hashes = data.hashes?.length !== undefined || 0
             const messages = data.messages?.length !== undefined
             //Check if payload is too big
             if (hashes) {
@@ -438,7 +438,7 @@ const check_data_message = async (data, connection, topic) => {
                 //Updated knownHashes from this connection
             } else if (data.type === REQUEST_MESSAGES && hashes) {
                 send_missing_messages(data.hashes, con.address, topic)
-            } else if (data.type === MISSING_MESSAGES && messages && active.search && con.request) {
+            } else if (data.type === MISSING_MESSAGES && messages && con.request) {
                 active.search = false
                 con.request = false
                 process_request(data.messages, active.key)
@@ -474,7 +474,7 @@ const request_missed_messages = (hashes, address, topic) => {
         type: REQUEST_MESSAGES,
         hashes
     }
-    send_peer_message(address, topic, hashes)
+    send_peer_message(address, topic, message)
 }
 
 const send_missing_messages = async (hashes, address, topic) => {
@@ -673,12 +673,14 @@ const check_online_state = async (topic) => {
             active.search = true
             let i = 0
             const data = {type: 'Ping'}
-            active.connections.forEach( async (a) => {
-                //Send hash state to half of online users to find missing messages.
-                if (i % 2 === 0) data.hashes = hashes
-                a.connection.write(JSON.stringify(data))
+            for (const conn of active.connections) {
+                data.hashes = hashes
+                if (i > 4) {
+                    if (i % 2 === 0) hata.hashes = []
+                }
+                conn.connection.write(JSON.stringify(data))
                 i++
-        })
+            }
         }
     }
 }
