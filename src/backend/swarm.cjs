@@ -355,7 +355,6 @@ const check_data_message = async (data, connection, topic) => {
             if (parseInt(active.time) > time && active.requests < 3) {
                 request_history(joined.address, topic)
                 active.requests++
-                console.log("active.requests", active.requests)
             }
             
             console.log("Connection updated: Joined:", con.joined)
@@ -415,14 +414,14 @@ const check_data_message = async (data, connection, topic) => {
 
             //Live syncing from other peers who might have connections to others not established yet by us.
 
-            const hashes = data.hashes?.length !== undefined || 0
-            const messages = data.messages?.length !== undefined
+            const INC_HASHES = data.hashes?.length !== undefined || 0
+            const INC_MESSAGES = data.messages?.length !== undefined || 0
             //Check if payload is too big
-            if (hashes) {
+            if (INC_HASHES) {
                 if (data.hashes?.length > 25) return "Ban"
             }
 
-            if (data.type === PING_SYNC && active.search && hashes) {
+            if (data.type === PING_SYNC && active.search && INC_HASHES) {
                 if (con.knownHashes.toString() === data.hashes.toString()) {
                     //Already know all the latest messages
                     console.log("Already know these hashes")
@@ -436,12 +435,12 @@ const check_data_message = async (data, connection, topic) => {
                 active.search = false
                 request_missed_messages(missing, con.address, topic)
                 //Updated knownHashes from this connection
-            } else if (data.type === REQUEST_MESSAGES && hashes) {
+            } else if (data.type === REQUEST_MESSAGES && INC_HASHES) {
                 send_missing_messages(data.hashes, con.address, topic)
-            } else if (data.type === MISSING_MESSAGES && messages && con.request) {
+            } else if (data.type === MISSING_MESSAGES && INC_MESSAGES && con.request) {
                 active.search = false
                 con.request = false
-                process_request(data.messages, active.key)
+                process_request(data.messages, active.key, true)
             }
             return true
         }
@@ -511,8 +510,9 @@ const send_history = async (address, topic, key) => {
     send_peer_message(address, topic, history)
 }
 
-const process_request = async (messages, key) => {
-let i = 0
+const process_request = async (messages, key, live = false) => {
+    let i = 0
+    const missing = []
     try {
         for (const m of messages) {
             if (m?.address === Hugin.address) continue
@@ -531,10 +531,11 @@ let i = 0
             const message = sanitize_group_message(inc, false)
             if (!message) continue
             await saveGroupMsg(message, false, true)
+            if (live) missing.push(message)
             i++
         }
         //Only send update trigger if new messages has been processed.
-        if (i !== 0) Hugin.send('history-update', {key})
+        if (i !== 0) Hugin.send('history-update', {key, missing})
     } catch (e) {
         console.log("error processing history", e)
     }
@@ -646,16 +647,16 @@ const incoming_message = async (data, topic, connection, peer) => {
 
 
 const send_swarm_message = (message, key) => {
-    let active = get_active(key)
+    const active = get_active(key)
     if (!active) return
-    active.connections.forEach(chat => {
+    for (const chat of active.connections) {
         try {
             console.log("Writing to channel")
             chat.connection.write(message) 
         } catch(e) {
-            errorMessage('Connection offline')
+            continue
         }
-    })
+    }
 
     console.log("Swarm msg sent!")
 }
@@ -676,7 +677,7 @@ const check_online_state = async (topic) => {
             for (const conn of active.connections) {
                 data.hashes = hashes
                 if (i > 4) {
-                    if (i % 2 === 0) hata.hashes = []
+                    if (i % 2 === 0) data.hashes = []
                 }
                 conn.connection.write(JSON.stringify(data))
                 i++
