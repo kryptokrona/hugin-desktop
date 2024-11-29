@@ -69,6 +69,15 @@ onMount(async () => {
     window.api.receive('history-update', (data) => {
         const inroom = $swarm.activeSwarm?.key === data.key
 
+        //Print individual missed messages in a conversation if active
+        if (data.missing?.length > 0 && inroom) {
+            for (const a of data.missing) {
+                printRoomMessage(a)
+            }
+            return
+        }
+        
+        //Update history synced messages and reprint the whole room.
         if (inroom) {
             const room = {key: data.key, name: $rooms.thisRoom.name,}
             printRoom(room)
