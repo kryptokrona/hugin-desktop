@@ -81,6 +81,7 @@ onMount(async () => {
         if (inroom) {
             const room = {key: data.key, name: $rooms.thisRoom.name,}
             printRoom(room)
+            window.api.successMessage('Synced history')
         }
     })
     //Listens for new messages from backend
