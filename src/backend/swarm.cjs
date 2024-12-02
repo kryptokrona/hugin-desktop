@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply} = require("./database.cjs")
 const { app,
     ipcMain
@@ -203,7 +203,7 @@ const new_connection = (connection, topic, dht_keys, peer) => {
 
     console.log("*********Got new Connection! ************")
     active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer, request: false, knownHashes: []})
-    send_joined_message(topic, dht_keys)
+    send_joined_message(topic, dht_keys, connection)
     //checkIfOnline(hash)
     connection.on('data', async data => {
 
@@ -250,7 +250,6 @@ const get_active_topic = (topic) => {
 }
 
 const check_data_message = async (data, connection, topic) => {
-
     try {
         data = JSON.parse(data)
     } catch (e) {
@@ -315,7 +314,9 @@ const check_data_message = async (data, connection, topic) => {
         if ('joined' in data) {
 
             const joined = sanitize_join_swarm_data(data)
-            if (!joined) return "Ban"
+            if (!joined) {
+                return "Ban"
+            }
 
             if (con.joined) {
                 //Connection is already joined
@@ -521,7 +522,7 @@ const process_request = async (messages, key, live = false) => {
                 m: m?.message,
                 k: m?.address,
                 s: m?.signature,
-                t: Date.now(),
+                t: live ? Date.now() : m?.time ? m.time : m?.timestamp,
                 g: m?.grp ? m?.grp : m?.room,
                 r: m?.reply,
                 n: m?.name ? m?.name : m?.nickname,
@@ -583,7 +584,7 @@ const get_my_channels = async (key) => {
 }
 
 
-const send_joined_message = async (topic, dht_keys) => {
+const send_joined_message = async (topic, dht_keys, connection) => {
     let sig = ""
     const active = get_active_topic(topic)
     if (!active) return
@@ -617,7 +618,7 @@ const send_joined_message = async (topic, dht_keys) => {
         screenshare
     })
 
-    send_swarm_message(data, active.key)
+    connection.write(data)
 }
 
 const incoming_message = async (data, topic, connection, peer) => {
@@ -661,12 +662,19 @@ const send_swarm_message = (message, key) => {
     console.log("Swarm msg sent!")
 }
 
+const get_room_state = async (key) => {
+    const hashes = await getLatestRoomHashes(key)
+    return Buffer.from(naclHash(toHex(hashes))).toString('hex')
+}
+
 const check_online_state = async (topic) => {
     await sleep(10000)
     let interval = setInterval(ping, 10 * 1000)
     async function ping() {
         let active = get_active_topic(topic)
         const hashes = await getLatestRoomHashes(active.key)
+        //TODO ** change from hash list to hash state.
+        // const state = await get_room_state(active.key)
         if (!active) {
             clearInterval(interval)
             return
@@ -675,9 +683,10 @@ const check_online_state = async (topic) => {
             let i = 0
             const data = {type: 'Ping'}
             for (const conn of active.connections) {
+                if (!conn.joined) continue
                 data.hashes = hashes
                 if (i > 4) {
-                    if (i % 2 === 0) data.hashes = []
+                   if (i % 2 === 0) data.hashes = []
                 }
                 conn.connection.write(JSON.stringify(data))
                 i++
