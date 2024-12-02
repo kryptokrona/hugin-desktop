@@ -521,7 +521,7 @@ const process_request = async (messages, key, live = false) => {
                 m: m?.message,
                 k: m?.address,
                 s: m?.signature,
-                t: m?.time ? m?.time : m?.timestamp,
+                t: Date.now(),
                 g: m?.grp ? m?.grp : m?.room,
                 r: m?.reply,
                 n: m?.name ? m?.name : m?.nickname,
