@@ -89,10 +89,11 @@ onMount(async () => {
         const file = isFile(data)
         if (file) data.file = file
         const thisroom = data.group === $rooms.thisRoom.key
+        const roomtopic = data.topic === $swarm.activeSwarm.topic
         const thistopic = data.file?.key === $rooms.thisRoom.topic
         const inrooms = $page.url.pathname === '/rooms'
         if (data.address === $user.myAddress) return
-            if ((thisroom || thistopic) && inrooms) {
+            if ((thisroom || thistopic || roomtopic) && inrooms) {
                 printRoomMessage(data)
             } else {
                 console.log("Another room")
