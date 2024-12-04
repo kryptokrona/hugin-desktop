@@ -157,7 +157,7 @@ class Account {
      }
 
      save_file(file) {
-      const list = get_files()
+      const list = this.get_files()
       list.push(file)
         store.set({
           files: list
