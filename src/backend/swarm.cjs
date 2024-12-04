@@ -478,9 +478,11 @@ const request_missed_messages = (hashes, address, topic) => {
 }
 
 const send_missing_messages = async (hashes, address, topic) => {
+    const files = Hugin.get_files()
     const messages = []
     for (const hash of hashes) {
         if (!check_hash(hash)) continue
+        if (files.some(a => a.hash === hash)) continue
         const found = await getGroupReply(hash)
         if (found) messages.push(found)
     }
@@ -522,7 +524,7 @@ const process_request = async (messages, key, live = false) => {
                 m: m?.message,
                 k: m?.address,
                 s: m?.signature,
-                t: live ? Date.now() : m?.time ? m.time : m?.timestamp,
+                t: m?.time ? m.time : m?.timestamp,
                 g: m?.grp ? m?.grp : m?.room,
                 r: m?.reply,
                 n: m?.name ? m?.name : m?.nickname,
