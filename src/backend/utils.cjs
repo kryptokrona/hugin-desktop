@@ -228,7 +228,8 @@ const sanitize_join_swarm_data = (data) => {
   };
   
   const sanitize_group_message = (data, sent = false) => {
-    let timestamp = sanitizeHtml(Date.now());
+    let timestamp = sanitizeHtml(data.t);
+    if (parseInt(timestamp) > Date.now()) timestamp = Date.now();
     if (timestamp?.length > 20 || data.t === undefined) return false;
     let room = sanitizeHtml(data.g);
     if (room?.length > 128 || data.g === undefined) return false;
