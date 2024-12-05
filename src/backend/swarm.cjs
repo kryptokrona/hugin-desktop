@@ -482,6 +482,7 @@ const send_missing_messages = async (hashes, address, topic) => {
     const messages = []
     for (const hash of hashes) {
         if (!check_hash(hash)) continue
+        if (Hugin.roomFiles.some(a => a === hash)) continue
         if (files.some(a => a.hash === hash)) continue
         const found = await getGroupReply(hash)
         if (found) messages.push(found)
@@ -823,6 +824,7 @@ const save_file_info = (data, topic, address, time, sent, name) => {
         reply: "",
         sent: sent,
     }
+    Hugin.roomFiles.push(message.hash)
     saveGroupMsg(message)
 }
 

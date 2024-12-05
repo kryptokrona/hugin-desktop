@@ -81,6 +81,7 @@ class Account {
     this.downloadDir = ""
     this.nickname = ""
     this.address = ""
+    this.roomFiles = []
     }
 
     async init(wallet, name, node, s) {
