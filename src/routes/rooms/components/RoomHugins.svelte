@@ -1,7 +1,7 @@
 <script>
 import {fade, fly} from 'svelte/transition'
 import {groups, swarm, user, webRTC, notify, rooms} from '$lib/stores/user.js'
-import {get_avatar} from '$lib/utils/hugin-utils.js'
+import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
 import { isLatin, sleep } from '$lib/utils/utils'
 import Bell from '$lib/components/icons/Bell.svelte'
@@ -173,7 +173,7 @@ const join_voice_channel = async (video = false, screen) => {
                             src="data:image/png;base64,{get_avatar(user.address)}"
                             alt=""
                         />
-                        <p class="nickname">{user.name}</p>
+                        <p class="nickname" style="color: {getColorFromHash(user.address)}">{user.name}</p>
                         <br />
                       
                     </div>

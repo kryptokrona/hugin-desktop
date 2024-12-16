@@ -1,7 +1,7 @@
 <script>
     import {fade, fly} from 'svelte/transition'
     import {groups, user, webRTC, notify} from '$lib/stores/user.js'
-    import {get_avatar} from '$lib/utils/hugin-utils.js'
+    import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
     import {layoutState} from '$lib/stores/layout-state.js'
     import { standardGroups } from '$lib/stores/standardgroups.js'
     import FillButton from '../buttons/FillButton.svelte'
@@ -96,7 +96,7 @@ let loading = false
                             src="data:image/png;base64,{get_avatar(user.address)}"
                             alt=""
                         />
-                        <p class="nickname">{user.name}</p>
+                        <p class="nickname" style="color: {getColorFromHash(user.address)}">{user.name}</p>
                         <br />
                       
                     </div>

@@ -1,6 +1,6 @@
 <script>
     import {fade} from 'svelte/transition'
-    import {get_avatar} from '$lib/utils/hugin-utils.js'
+    import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
     import {beam, user} from '$lib/stores/user.js'
     import Button from '$lib/components/buttons/Button.svelte'
     import {createEventDispatcher, onMount} from 'svelte'
@@ -216,7 +216,7 @@
             </div>
             <div class="content">
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
-                    <p class:asian class="nickname">
+                    <p class:asian class="nickname" style="color: {getColorFromHash($user.myAddress)}">
                         {$user.username}
                         <span class="time">
                             | <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}" /></span
@@ -262,7 +262,7 @@
             </div>
             <div class="content">
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
-                    <p class:asian class="nickname">
+                    <p class:asian class="nickname" style="color: {getColorFromHash(msgFrom)}">
                         {$user.activeChat.name}
                         <span class="time">
                             | <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}"/></span

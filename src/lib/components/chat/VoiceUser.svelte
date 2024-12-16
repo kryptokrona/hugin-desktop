@@ -1,5 +1,5 @@
 <script>
-    import { get_avatar } from "$lib/utils/hugin-utils"
+    import { get_avatar, getColorFromHash } from "$lib/utils/hugin-utils"
     import { fade } from "svelte/transition"
     import {swarm, user} from '$lib/stores/user.js'
     import {Moon} from "svelte-loading-spinners";
@@ -34,7 +34,7 @@
         src="data:image/png;base64,{get_avatar(voice_user.address)}"
         alt=""
     />
-        <p class="nickname">{voice_user.name}</p>
+        <p class="nickname" style="color: {getColorFromHash(voice_user.address)}">{voice_user.name}</p>
     <br />
     <div class="voicestatus">
     {#if voice_user.audioMute || (me && !$swarm.audio)}

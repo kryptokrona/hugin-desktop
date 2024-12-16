@@ -1,6 +1,6 @@
 <script>
 import { fade } from 'svelte/transition'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
+import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onMount, onDestroy } from 'svelte'
 import { groups, rtc_groups, webRTC, user, rooms } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
@@ -74,6 +74,8 @@ if ((Date.now() - 40000000) > timestamp) {
     //Show date also for older messages
     timeformat = "D MMM, HH:mm"
 }
+
+const nameColor = getColorFromHash(msgFrom)
 
 
 onMount( async () => {
@@ -307,7 +309,7 @@ const openLinkMessage = (url) => {
             <div class="header">
                 <div style="display: flex; align-items: center; margin-left: -10px">
                     <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
-                    <h5 class:asian class="nickname" class:share={file} class:blink_me={file}>
+                    <h5 class:asian class="nickname" style="color: {nameColor}" class:blink_me={file}>
                         {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
                             >| <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(message.time)}" /></span
                         >
@@ -544,10 +546,6 @@ p {
 .joined {
     font-style: italic;
     color: var(--info-color)
-}
-
-.share {
-    color: var(--alert-color)
 }
 
 .yt {

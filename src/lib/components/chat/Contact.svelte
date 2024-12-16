@@ -1,7 +1,7 @@
 <script>
 import {createEventDispatcher} from 'svelte'
 import {fade} from 'svelte/transition'
-import {get_avatar} from '$lib/utils/hugin-utils.js'
+import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {notify, user, webRTC} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
 
@@ -62,7 +62,7 @@ const rename = () => {
         alt=""
     />
     <div class="content">
-        <h4 class:asian class:big={asian}>{contact.name}</h4>
+        <h4 class:asian class:big={asian} style="color: {getColorFromHash(contact.chat)}">{contact.name}</h4>
         
         {#if !beamInvite}
         <p>{contact.msg}</p>
