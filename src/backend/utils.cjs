@@ -193,8 +193,6 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof data.video !== 'boolean') return false;
     const video = data.video;
   
-    const idPub = data.idPub;
-    if (typeof idPub !== 'string' || idPub.length > 64) return false;
     const idSig = data.idSig;
     if (typeof idSig !== 'string' || idSig.length > 128) return false;
     const audioMute = data?.audioMute;
@@ -218,7 +216,6 @@ const sanitize_join_swarm_data = (data) => {
       video: video,
       time: time,
       idSig,
-      idPub,
       audioMute,
       videoMute,
       screenshare

@@ -5,7 +5,7 @@ const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMes
 const { app,
     ipcMain
 } = require('electron')
-const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_message, signMessage, sign_joined_message } = require("./crypto.cjs")
+const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_message, signMessage, sign_joined_message, verifySignature } = require("./crypto.cjs")
    
 const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", videoMute: false, audioMute: false, screenshare: false}
 
@@ -330,8 +330,7 @@ const check_data_message = async (data, connection, topic) => {
             //Check admin signature
             const admin = verify_signature(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
             
-            //If we swtich to picture avatars, we need to sign our connection with our id. So fakenicking etc becomes harder.
-            const verified = verify_signature(connection.remotePublicKey, Buffer.from(data.idSig, 'hex'), Buffer.from(data.idPub, 'hex'))
+            const verified = verifySignature(connection.remotePublicKey.toString('hex', data.address, data.idSig))
 
             if (!verified) {
                 return "Ban"
@@ -592,12 +591,11 @@ const send_joined_message = async (topic, dht_keys, connection) => {
     if (!active) return
     const key = active.key
     const [isAdmin, adminkeys] = is_room_admin(active.key)
-    const [idSig, idPub] = sign_joined_message(dht_keys)
     if (isAdmin) {
         //Sign our joined message with this
         sig = sign_admin_message(dht_keys, active.key, adminkeys)
     }
-    // const sig = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
+    const signature = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
 
     let [voice, video, audioMute, videoMute, screenshare] = get_local_voice_status(topic)
     if (video) voice = true
@@ -613,8 +611,7 @@ const send_joined_message = async (topic, dht_keys, connection) => {
         channels: [],
         video: video,
         time: active.time,
-        idSig,
-        idPub,
+        idSig: signature,
         audioMute,
         videoMute,
         screenshare
