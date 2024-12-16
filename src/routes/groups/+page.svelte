@@ -585,17 +585,22 @@ p {
 }
 
 .reply_to {
+    background: var(--backgound-color);
     display: inline-flex;
-    font-size: 10px;
-    font-family: 'Roboto Mono';
+    font-size: 11px;
+    height: 25px;
+    font-family: 'Montserrat';
     font-weight: 100;
     position: absolute;
-    left: 10%;
+    bottom: 55px;
+    left: 17px;
     justify-content: center;
     color: white;
     padding: 4px;
     width: fit-content;
     z-index: 9;
+    border: 1px solid;
+    border-radius: 2px;
     cursor: pointer;
 }
 
