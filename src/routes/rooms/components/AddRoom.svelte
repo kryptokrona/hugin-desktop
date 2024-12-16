@@ -131,7 +131,7 @@
     <svelte:window on:keyup|preventDefault="{enter}" />
     
     
-    <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="backdrop" on:click|self>
+    <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
     
         <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
             {#if !newgroup}
@@ -212,7 +212,6 @@
         left: 0;
         width: 100%;
         background-color: var(--backdrop-color);
-        backdrop-filter: blur(8px);
         z-index: 103;
         border-radius: 15px;
     }
