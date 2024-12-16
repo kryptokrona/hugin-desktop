@@ -44,7 +44,7 @@ const download = () => {
                     and improvements
                 </h4>
                 <div class="buttons">
-                    <FillButton text="Download" on:click="{download}"/>
+                    <FillButton text="Download" on:click|once="{download}"/>
                     <FillButton text="Later" on:click="{() => ($appUpdateState.openPopup = false)}"/>
                 </div>
             </div>
