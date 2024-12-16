@@ -330,7 +330,7 @@ const check_data_message = async (data, connection, topic) => {
             //Check admin signature
             const admin = verify_signature(connection.remotePublicKey, Buffer.from(data.signature, 'hex'), Buffer.from(active.key.slice(-64), 'hex'))
             
-            const verified = verifySignature(connection.remotePublicKey.toString('hex', data.address, data.idSig))
+            const verified = verifySignature(connection.remotePublicKey.toString('hex'), data.address, data.idSig)
 
             if (!verified) {
                 return "Ban"
