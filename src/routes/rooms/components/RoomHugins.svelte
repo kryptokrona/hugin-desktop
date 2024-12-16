@@ -164,7 +164,7 @@ const join_voice_channel = async (video = false, screen) => {
             
             {#each fullUserList as user}    
             
-                    <div in:fade class="card" on:click="{() => showUser(user)}">
+                    <div in:fade class="card" class:offline={!onlineUsers.some(a => user.address === a.address)} on:click="{() => showUser(user)}">
                         {#if isOnline(user)}
                             <div class:online="{isOnline(user)}"></div>
                         {/if}
@@ -402,6 +402,10 @@ p {
     &:hover {
         background-color: #333333;
     }
+}
+
+.offline {
+    opacity: 0.7 !important;
 }
 
 </style>
