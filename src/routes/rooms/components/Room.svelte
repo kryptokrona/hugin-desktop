@@ -19,7 +19,7 @@
     
     const printRoom = (rm) => {
         const active = $swarm.active.find(a => a.key === rm.key)
-        if (rm.key === $rooms.thisRoom.key) return
+        if (rm.key === $swarm.activeSwarm.key) return
         $swarm.activeSwarm = active
         dispatch('print')
     }
