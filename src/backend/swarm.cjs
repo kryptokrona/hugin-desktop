@@ -405,7 +405,6 @@ const check_data_message = async (data, connection, topic) => {
             //Start-up history sync
             if (data.type === REQUEST_HISTORY && con.request) {
                 send_history(con.address, topic, active.key)
-                con.request = false
                 return true
             } else if (data.type === SEND_HISTORY && con.request) {
                 process_request(data.messages, active.key)
