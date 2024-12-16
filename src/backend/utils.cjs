@@ -158,12 +158,12 @@ function check_hash(hash) {
 
 const sanitize_pm_message = (msg) => {
     let sent = msg.sent
-    let addr = sanitizeHtml(msg.from)
+    let addr = msg.sent ? sanitizeHtml(msg.chat) : sanitizeHtml(msg.from)
     let timestamp = sanitizeHtml(msg.t)
     let key = sanitizeHtml(msg.k)
     let message = sanitizeHtml(msg.msg)
     if (message?.length > 777 || msg.msg === undefined) return [false]
-    if (addr?.length > 99 || msg.from === undefined) return [false]
+    if (addr?.length > 99 || addr === undefined) return [false]
     if (typeof sent !== 'boolean') return [false]
     if (timestamp?.length > 25) return [false]
     if (key?.length > 64) return [false]
