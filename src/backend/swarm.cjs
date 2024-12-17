@@ -169,7 +169,7 @@ const create_swarm = async (data) => {
     
     //The topic is public so lets use the pubkey from the new base keypair
 
-    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false})
+    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false, peers: []})
     
     Hugin.send('set-channels')
 
@@ -202,7 +202,16 @@ const new_connection = (connection, topic, dht_keys, peer) => {
     }
 
     console.log("*********Got new Connection! ************")
-    active.connections.push({connection, topic: topic, voice: false, name: "", address: "", video: false, peer, request: false, knownHashes: []})
+    active.connections.push({
+        connection,
+        topic: topic,
+        voice: false, 
+        name: "", 
+        address: "", 
+        video: false, 
+        peer, 
+        request: false, knownHashes: [],
+        publicKey: peer.publicKey.toString('hex')})
     send_joined_message(topic, dht_keys, connection)
     //checkIfOnline(hash)
     connection.on('data', async data => {
@@ -237,6 +246,9 @@ const connection_closed = (conn, topic) => {
     if (!user) return
     Hugin.send("close-voice-channel-with-peer", user.address)
     Hugin.send("peer-disconnected", {address: user.address, topic})
+    const connection = active.connections.find((a) => a.connection === conn);
+    const removedPeer = active.peers.filter((a) => a !== connection.publicKey)
+    active.peers = removedPeer
     const still_active = active.connections.filter(a => a.connection !== conn)
     console.log("Connection closed")
     console.log("Still active:", still_active.length)
@@ -249,7 +261,7 @@ const get_active_topic = (topic) => {
     return active
 }
 
-const check_data_message = async (data, connection, topic) => {
+const check_data_message = async (data, connection, topic, peer) => {
     try {
         data = JSON.parse(data)
     } catch (e) {
@@ -343,6 +355,8 @@ const check_data_message = async (data, connection, topic) => {
             con.admin = admin
             con.video = joined.video
             con.request = true
+            active.peers.push(peer.publicKey.toString('hex'))
+
             const time = parseInt(joined.time)
 
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
@@ -415,10 +429,13 @@ const check_data_message = async (data, connection, topic) => {
 
             const INC_HASHES = data.hashes?.length !== undefined || 0
             const INC_MESSAGES = data.messages?.length !== undefined || 0
+            const INC_PEERS =  data.peers?.length !== undefined || 0
             //Check if payload is too big
             if (INC_HASHES) {
                 if (data.hashes?.length > 25) return "Ban"
             }
+
+            console.log('Data peers?', data.peers);
 
             if (data.type === PING_SYNC && active.search && INC_HASHES) {
                 if (con.knownHashes.toString() === data.hashes.toString()) {
@@ -426,6 +443,9 @@ const check_data_message = async (data, connection, topic) => {
                     console.log("Already know these hashes")
                     con.request = false
                     return true
+                }
+                if (INC_PEERS && active.peers.toString() !== data?.peers.toString()) {
+                    find_missing_peers(active, data?.peers);
                 }
                 const missing = await check_missed_messages(data.hashes, con.address, topic)
                 con.knownHashes = data.hashes
@@ -449,6 +469,17 @@ const check_data_message = async (data, connection, topic) => {
     
     return false
 }
+
+const find_missing_peers = async (active, peers) => {
+    for (const peer of peers) {
+    if (typeof peer !== 'string' || peer?.length > 64) continue
+      if (!active.peers.some((a) => a === peer)) {
+        active.swarm.joinPeer(Buffer.from(peer, 'hex'));
+        await sleep(100);
+      }
+    }
+  };
+  
 
 const check_missed_messages = async (hashes) => {
     console.log("Checking for missing messages")
@@ -621,7 +652,7 @@ const send_joined_message = async (topic, dht_keys, connection) => {
 }
 
 const incoming_message = async (data, topic, connection, peer) => {
-    const check = await check_data_message(data, connection, topic)
+    const check = await check_data_message(data, connection, topic, peer)
     if (check === "Ban") {
         peer.ban(true)
         connection_closed(connection, topic)
@@ -670,7 +701,7 @@ const check_online_state = async (topic) => {
     await sleep(10000)
     let interval = setInterval(ping, 10 * 1000)
     async function ping() {
-        let active = get_active_topic(topic)
+        const active = get_active_topic(topic)
         const hashes = await getLatestRoomHashes(active.key)
         //TODO ** change from hash list to hash state.
         // const state = await get_room_state(active.key)
@@ -680,7 +711,8 @@ const check_online_state = async (topic) => {
         } else {
             active.search = true
             let i = 0
-            const data = {type: 'Ping'}
+            const data = {type: 'Ping', peers: active.peers}
+            console.log("send data", data)
             for (const conn of active.connections) {
                 if (!conn.joined) continue
                 data.hashes = hashes
