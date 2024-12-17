@@ -54,7 +54,7 @@ const decryptSwarmMessage = async (tx, hash, group_key) => {
 }
 
 const verifySignature = async (message, addr, signature) => {
-
+    try {
     const sekrAddr = await Address.fromAddress(addr)
     const verified = await xkrUtils.verifyMessageSignature(
         message,
@@ -65,6 +65,9 @@ const verifySignature = async (message, addr, signature) => {
     if (!verified) return false
 
     return true
+    } catch (e) {
+        return false
+    }
 }
 
 
