@@ -60,10 +60,22 @@
         $rooms.roomArray = await window.api.getRooms()
         $rooms.banned = banned
         $files = fileList
-        $rooms.avatars = avatars
+        setAvatars(avatars)
         if (avatar.length) setCustomAvatar(avatar)
         loginSuccess()
     })
+
+    const setAvatars = (avatars) => {
+      const update = []
+      for (const a of avatars) {
+        console.log("avarat", a)
+        const blob = new Blob( [ a.avatar ]);
+        const imageUrl = URL.createObjectURL( blob );
+        const set = {avatar: imageUrl, address: a.address}
+        update.push(set)
+      }
+      $rooms.avatars = update
+    }
 
     const setCustomAvatar = async (buf) => {
       console.log("Set avatar", buf)
