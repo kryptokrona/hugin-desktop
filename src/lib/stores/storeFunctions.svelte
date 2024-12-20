@@ -64,7 +64,18 @@ import { roomMessages } from './roommsgs'
         add_user(data, joined)
     }
 
+    const make_avatar = async (data, address) => {
+        if (!data) return false
+        const blob = new Blob( [ data ]);
+        const avatar = URL.createObjectURL( blob );
+        const user = {avatar, address}
+        $rooms.avatars.push(user)
+        $rooms.avatars = $rooms.avatars
+        window.api.send('save-avatar', user)
+    }
+
     async function add_user(data, joined) {
+        const avatar = await make_avatar(data.avatar, data.address)
         const user = {
             message: "Joined the lobby",
             grp: joined.key,
@@ -75,7 +86,7 @@ import { roomMessages } from './roommsgs'
             hash: data.time,
             joined: true,
             channel: "Chat room",
-            hash: await window.api.createGroup()
+            hash: await window.api.createGroup(),
         }
         //Do this to hacky trick to trigger reactivity in RoomHugins for updating the online list
         $rooms.activeHugins.push(user)

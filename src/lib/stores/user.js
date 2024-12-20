@@ -138,7 +138,8 @@ export const rooms = writable({
     showUserInfo: false,
     banned: [],
     ban: {},
-    activeSwarm: {}
+    activeSwarm: {},
+    avatars: []
  })
 
  export const files = writable([])

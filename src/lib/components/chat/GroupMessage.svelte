@@ -269,6 +269,13 @@ const openLinkMessage = (url) => {
     openURL(url)
 }
 
+ 
+const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
+
 
 </script>
 
@@ -308,7 +315,23 @@ const openLinkMessage = (url) => {
         <div>
             <div class="header">
                 <div style="display: flex; align-items: center; margin-left: -10px">
-                    <img src="data:image/png;base64,{get_avatar(msgFrom)}" alt="" />
+                    {#await check_avatar(msgFrom)}
+                    {:then avatar}
+                     {#if avatar}
+                        <img
+                            class="custom-avatar"
+                            src="{avatar}"
+                            alt=""
+                        />
+                    {:else}
+                        
+                        <img
+                        class="avatar"
+                        src="data:image/png;base64,{get_avatar(msgFrom)}"
+                        alt=""
+                    />
+                    {/if}
+                    {/await}
                     <h5 class:asian class="nickname" style="color: {nameColor}" class:blink_me={file}>
                         {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
                             >| <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(message.time)}" /></span
@@ -562,5 +585,12 @@ button {
     border: none;
     padding: 0;
     margin: 0;
+}
+
+.custom-avatar {
+    height: 40px;
+    width:  40px;
+    border-radius: 15px;
+    padding: 10px;
 }
 </style>

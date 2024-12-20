@@ -74,17 +74,20 @@ const roomRouteAndMenu = () => {
     }
 }
 const changeProfilePic = () => {
-    return
    fileList.click()
 }
 
 const selectAvatar = async () => {
-    return
     console.log('Selected', files[0]);
     const file = files[0];
-    window.api.send('set-avatar', [file.path, file.name, file.size])
+    if (file.size > 200000) {
+        window.api.errorMessage('Avatar file size is too big')
+        return
+    }
     const arr = await window.api.loadFile(file.path, file.size)
+    window.api.send('set-avatar', arr)
     const blob = new Blob( [ arr ]);
+ 
     const imageUrl = URL.createObjectURL( blob );
     $user.customAvatar = imageUrl
   };

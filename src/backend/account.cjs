@@ -11,23 +11,45 @@ const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
 const fs = require('fs')
 
 const Store = require('electron-store')
+const { hash } = require('crypto')
 const store = new Store()
 
 ipcMain.on('set-avatar', (e, data) => {
-
-  ///TODO set base64 avatar here
+  const avatar = Buffer.from(data).toString('base64')
   store.set({
-    avatar: ""
+    avatar: avatar
   })
-
+  Hugin.avatar = avatar
 })
 
-ipcMain.handle('get-profile', () => {
+ipcMain.on('save-avatar', (e, data) => {
+  let list = store.get('avatars') ?? []
+  if (list.some(a => a.address === data.address)) {
+    const update = list.filter(a => a.address !== data.address)
+    list = update
+  }
+  list.push({avatar: data.avatar.toString('base64'), address: data.address})
+  store.set({
+    avatars: list
+  })
+})
+
+function get_room_avatars() {
+  const list = store.get('avatars') ?? []
+  const avatars = []
+  // for (const a of list) {
+  //   const item = {avatar: Buffer.from(a.avatar, 'base64'), address: a.address}
+  //   avatars.push(item)
+  // }
+  return avatars
+};
+
+ipcMain.handle('get-avatar', () => {
   return get_avatar()
 })
 
 const get_avatar = () => {
-  return store.get('avatar')
+  return store.get('avatar') ?? ""
 }
 
 ipcMain.on('change-download-dir', (e, dir) => {
@@ -82,6 +104,7 @@ class Account {
     this.nickname = ""
     this.address = ""
     this.roomFiles = []
+    this.avatar = ""
     }
 
     async init(wallet, name, node, s) {
@@ -91,6 +114,7 @@ class Account {
       this.node = node
       this.downloadDir = store.get('download.dir') ?? downloadDir
       this.address = wallet.getPrimaryAddress()
+      this.avatar = get_avatar()
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({
@@ -106,7 +130,7 @@ class Account {
     
   async load() {
       await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys())
-      const myAvatar = get_avatar()
+      const myAvatar = this.avatar
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
@@ -116,6 +140,7 @@ class Account {
       const banned = store.get('banned') ?? []
       const usersBanned = store.get('bannedUsers') ?? []
       const files = store.get('files') ?? []
+      const avatars = get_room_avatars()
 
       this.sender('wallet-started', [
         this.node,
@@ -123,12 +148,13 @@ class Account {
         block_list, 
         my_contacts.reverse(),
         deleteAfter,
-        Hugin.downloadDir,
-        myAvatar,
+        this.downloadDir,
+        Buffer.from(myAvatar, 'base64'),
         idle,
         notifications,
         banned,
-        files
+        files,
+        avatars
       ])
 
       this.known_keys = keys

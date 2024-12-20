@@ -1,7 +1,7 @@
 <script>
     import { get_avatar, getColorFromHash } from "$lib/utils/hugin-utils"
     import { fade } from "svelte/transition"
-    import {swarm, user} from '$lib/stores/user.js'
+    import {rooms, swarm, user} from '$lib/stores/user.js'
     import {Moon} from "svelte-loading-spinners";
     //Inactive
     import { audioLevel } from '$lib/stores/user.js'
@@ -21,7 +21,11 @@
         isTalking = false
     }
   
-    
+    const check_avatar = (address) => {
+       const found = $rooms.avatars.find(a => a.address === address)
+       if (found) return found.avatar
+       else return false
+    }
     //Check if we are also online in this channel
     $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
@@ -29,11 +33,23 @@
 </script>
 
 <div class:talking={isTalking || (me && $audioLevel.meTalking)} in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
-    <img
-        class="voice-avatar"
-        src="data:image/png;base64,{get_avatar(voice_user.address)}"
-        alt=""
-    />
+    {#await check_avatar(voice_user.address)}
+        {:then avatar}
+        {#if avatar}
+            <img
+                class="custom-avatar"
+                src="{avatar}"
+                alt=""
+            />
+        {:else}
+        
+            <img
+            class="avatar"
+            src="data:image/png;base64,{get_avatar(voice_user.address)}"
+            alt=""
+            />
+        {/if}
+        {/await}
         <p class="nickname" style="color: {getColorFromHash(voice_user.address)}">{voice_user.name}</p>
     <br />
     <div class="voicestatus">
@@ -116,6 +132,13 @@
         display: flex;
         gap: 3px;
         margin-left: 5px;
+    }
+
+    .custom-avatar {
+        height: 25px;
+        width: 25px;
+        border-radius: 10px;
+        padding: 5px;
     }
     
     

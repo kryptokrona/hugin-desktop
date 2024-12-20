@@ -18,6 +18,7 @@ ipcMain.handle('select-directory', () => {
     return dir;
 });
 
+
 //Check if it is an image or video with allowed type
 function checkImageOrVideoType(path, size) {
     if (path === undefined) return false
@@ -201,11 +202,22 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof videoMute !== 'boolean') return false;
     const screenshare = data?.screenshare;
     if (typeof screenshare !== 'boolean') return false;
+    // if (typeof data?.avatar !== 'string') return false
+    
+    let avatar = ""
+    if (data.avatar !== undefined) {
+     avatar = Buffer.from(data.avatar, 'base64')
+    if (avatar.length > 200000) {
+      console.log("Avatar too big")
+      return false
+    } 
+    }
   
     const channels = [];
   
     const clean_object = {
       address: address,
+      avatar: avatar,
       message: message,
       signature: signature,
       topic: topic,

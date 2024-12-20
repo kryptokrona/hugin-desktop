@@ -47,7 +47,7 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
@@ -60,17 +60,18 @@
         $rooms.roomArray = await window.api.getRooms()
         $rooms.banned = banned
         $files = fileList
-        if (avatar) setCustomAvatar()
+        $rooms.avatars = avatars
+        if (avatar.length) setCustomAvatar(avatar)
         loginSuccess()
     })
 
-    const setCustomAvatar = async () => {
-      return
-      const profile = await window.api.getProfile()
-      const arr = await window.api.loadFile(profile.path, profile.size)
-      const blob = new Blob( [ arr ]);
+    const setCustomAvatar = async (buf) => {
+      console.log("Set avatar", buf)
+      const blob = new Blob( [ buf ]);
       const imageUrl = URL.createObjectURL( blob );
       $user.customAvatar = imageUrl
+      $rooms.avatars.push({address: $user.myAddress, avatar: imageUrl})
+      $rooms.avatars = $rooms.avatars
     }
 
     //Sets our own address in svelte store

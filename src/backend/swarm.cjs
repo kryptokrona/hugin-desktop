@@ -634,6 +634,7 @@ const send_joined_message = async (topic, dht_keys, connection) => {
     const data = JSON.stringify({
         address: Hugin.address,
         signature: sig.toString('hex'),
+        avatar: Hugin.avatar,
         message: key,
         joined: true,
         topic: topic,

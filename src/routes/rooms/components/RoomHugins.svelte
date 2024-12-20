@@ -126,7 +126,12 @@ const join_voice_channel = async (video = false, screen) => {
     const isOnline = (user) => {
        return (thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)
     }
-
+    
+    const check_avatar = (address) => {
+       const found = $rooms.avatars.find(a => a.address === address)
+       if (found) return found.avatar
+       else return false
+    }
 </script>
 
 {#if $rooms.showBanInfo}
@@ -164,15 +169,27 @@ const join_voice_channel = async (video = false, screen) => {
             
             {#each fullUserList as user}    
             
-                    <div in:fade class="card" class:offline={!onlineUsers.some(a => user.address === a.address)} on:click="{() => showUser(user)}">
+                    <div in:fade class="card" class:offline={!onlineUsers.some(a => user.address === a.address && a.address === myAddress)} on:click="{() => showUser(user)}">
                         {#if isOnline(user)}
-                            <div class:online="{isOnline(user)}"></div>
+                            <div class="online"></div>
                         {/if}
-                        <img
+                        {#await check_avatar(user.address)}
+                        {:then avatar}
+                        {#if avatar}
+                            <img
+                                class="custom-avatar"
+                                src="{avatar}"
+                                alt=""
+                            />
+                        {:else}
+                        
+                            <img
                             class="avatar"
                             src="data:image/png;base64,{get_avatar(user.address)}"
                             alt=""
-                        />
+                            />
+                        {/if}
+                        {/await}
                         <p class="nickname" style="color: {getColorFromHash(user.address)}">{user.name}</p>
                         <br />
                       
@@ -224,7 +241,7 @@ p {
     word-break: break-word;
     display: contents;
     font-family: 'Montserrat' !important;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .wrapper {
@@ -406,6 +423,13 @@ p {
 
 .offline {
     opacity: 0.7 !important;
+}
+
+.custom-avatar {
+    height: 30px;
+    width: 30px;
+    border-radius: 10px;
+    padding: 5px;
 }
 
 </style>
