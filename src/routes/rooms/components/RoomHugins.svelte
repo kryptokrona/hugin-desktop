@@ -242,6 +242,8 @@ p {
     display: contents;
     font-family: 'Montserrat' !important;
     font-size: 14px;
+    text-overflow: ellipsis;
+    display: block;
 }
 
 .wrapper {
