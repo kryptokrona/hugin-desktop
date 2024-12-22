@@ -23,15 +23,15 @@ ipcMain.on('set-avatar', (e, data) => {
 })
 
 ipcMain.on('save-avatar', (e, data) => {
-  let list = store.get('avatars') ?? []
-  if (list.some(a => a.address === data.address)) {
-    const update = list.filter(a => a.address !== data.address)
-    list = update
-  }
-  list.push({avatar: data.avatar.toString('base64'), address: data.address})
-  store.set({
-    avatars: list
-  })
+  // let list = store.get('avatars') ?? []
+  // if (list.some(a => a.address === data.address)) {
+  //   const update = list.filter(a => a.address !== data.address)
+  //   list = update
+  // }
+  // list.push({avatar: data.avatar.toString('base64'), address: data.address})
+  // store.set({
+  //   avatars: list
+  // })
 })
 
 function get_room_avatars() {
