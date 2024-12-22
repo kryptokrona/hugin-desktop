@@ -41,6 +41,7 @@ const send_voice_channel_status = async (joined, status, update = false) => {
     const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
     const data = JSON.stringify({
         address: Hugin.address,
+        avatar: Hugin.avatar,
         signature: sig,
         message: msg,
         voice: joined,
@@ -356,7 +357,10 @@ const check_data_message = async (data, connection, topic, peer) => {
             con.video = joined.video
             con.request = true
             active.peers.push(peer.publicKey.toString('hex'))
-
+            let uniq = {}
+            const peers = active.peers.filter((obj) => !uniq[obj] && (uniq[obj] = true))
+            active.peers = peers
+            console.log("peers", peers)
             const time = parseInt(joined.time)
 
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
@@ -701,9 +705,16 @@ const get_room_state = async (key) => {
 const check_online_state = async (topic) => {
     await sleep(10000)
     let interval = setInterval(ping, 10 * 1000)
+    let a = 0
     async function ping() {
         const active = get_active_topic(topic)
         const hashes = await getLatestRoomHashes(active.key)
+        let peers = []
+        //Send peer info on the first three pings. Then every 10 times.
+        if (a < 3 || a % 10 === 0) {
+          peers = active.peers
+          a++
+        }
         //TODO ** change from hash list to hash state.
         // const state = await get_room_state(active.key)
         if (!active) {
@@ -712,7 +723,7 @@ const check_online_state = async (topic) => {
         } else {
             active.search = true
             let i = 0
-            const data = {type: 'Ping', peers: active.peers}
+            const data = {type: 'Ping', peers}
             console.log("send data", data)
             for (const conn of active.connections) {
                 if (!conn.joined) continue
