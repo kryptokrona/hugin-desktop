@@ -71,7 +71,7 @@ import { roomMessages } from './roommsgs'
         const user = {avatar, address}
         $rooms.avatars.push(user)
         $rooms.avatars = $rooms.avatars
-        window.api.send('save-avatar', user)
+        window.api.send('save-avatar', {address, avatar: data})
     }
 
     async function add_user(data, joined) {
