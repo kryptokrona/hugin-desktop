@@ -169,7 +169,7 @@ const join_voice_channel = async (video = false, screen) => {
             
             {#each fullUserList as user}    
             
-                    <div in:fade class="card" class:offline={!onlineUsers.some(a => user.address === a.address && a.address === myAddress)} on:click="{() => showUser(user)}">
+                    <div in:fade class="card" class:offline={!isOnline(user)} on:click="{() => showUser(user)}">
                         {#if isOnline(user)}
                             <div class="online"></div>
                         {/if}
