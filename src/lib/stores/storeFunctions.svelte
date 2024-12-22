@@ -65,7 +65,7 @@ import { roomMessages } from './roommsgs'
     }
 
     const make_avatar = async (data, address) => {
-        if (!data) return false
+        if (!data || data.length === 0) return false
         const blob = new Blob( [ data ]);
         const avatar = URL.createObjectURL( blob );
         const user = {avatar, address}
