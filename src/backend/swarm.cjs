@@ -476,7 +476,7 @@ const check_data_message = async (data, connection, topic, peer) => {
 
 const find_missing_peers = async (active, peers) => {
     for (const peer of peers) {
-    if (typeof peer !== 'string' || peer?.length > 64) continue
+    if (typeof peer !== 'string' || peer?.length !== 64) continue
       if (!active.peers.some((a) => a === peer)) {
         active.swarm.joinPeer(Buffer.from(peer, 'hex'));
         await sleep(100);

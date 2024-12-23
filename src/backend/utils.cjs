@@ -203,14 +203,13 @@ const sanitize_join_swarm_data = (data) => {
     const screenshare = data?.screenshare;
     if (typeof screenshare !== 'boolean') return false;
     // if (typeof data?.avatar !== 'string') return false
-    
     let avatar = ""
     if (data.avatar !== undefined) {
-     avatar = Buffer.from(data.avatar, 'base64')
-    if (avatar.length > 200000) {
-      console.log("Avatar too big")
-      return false
-    } 
+        avatar = Buffer.from(data.avatar, 'base64')
+        if (avatar.length > 200000) {
+        console.log("Avatar too big")
+        return false
+        } 
     }
   
     const channels = [];
@@ -297,9 +296,19 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof videoMute !== 'boolean') return false;
     const screenshare = data?.screenshare;
     if (typeof screenshare !== 'boolean') return false;
+
+    let avatar = ""
+    if (data.avatar !== undefined) {
+        avatar = Buffer.from(data.avatar, 'base64')
+        if (avatar.length > 200000) {
+        console.log("Avatar too big")
+        return false
+        } 
+    }
   
     const clean_object = {
       address,
+      avatar,
       message,
       signature,
       topic,
