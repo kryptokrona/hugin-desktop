@@ -3,16 +3,24 @@
 import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher } from 'svelte'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { transactions } from '$lib/stores/user.js'
+import { rooms, transactions } from '$lib/stores/user.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
+import { page } from '$app/stores'
 
 const dispatch = createEventDispatcher()
+
+$: inRoom = $page.url.pathname === '/rooms'
+
+const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
 
 let enableButton = false
 let addr = $transactions.send.to
 let amount
 let paymentId = ''
-let avatar = get_avatar($transactions.send.to)
 let pass
 let verify = false
 
@@ -69,9 +77,24 @@ const confirmTx = async () => {
 >
     {#if !verify}
     <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
-        <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+        {#await check_avatar(addr)}
+        {:then avatar}
+        {#if avatar}
+            <img
+                class="custom-avatar"
+                src="{avatar}"
+                alt=""
+            />
+        {:else}
+            <img
+            class="avatar"
+            src="data:image/png;base64,{get_avatar(addr)}"
+            alt=""
+            />
+        {/if}
+        {/await}
         <input
-            placeholder="Enter amount"
+            placeholder="{inRoom ? "Tip amount" : "Enter amount"}"
             type="text"
             spellcheck="false"
             autocomplete="false"
@@ -82,7 +105,7 @@ const confirmTx = async () => {
             on:click="{() => verify = true}"
             enabled="{amount > 0}"
             disabled="{!enableButton}"
-            text="Send"
+            text="{inRoom ? 'Tip' : 'Send'}"
         />
     </div>
     {:else}
@@ -155,5 +178,11 @@ input {
     backdrop-filter: blur(8px);
     z-index: 103;
     border-radius: 15px;
+}
+
+.custom-avatar {
+    height: 30px;
+    width: 30px;
+    padding: 5px;
 }
 </style>

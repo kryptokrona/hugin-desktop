@@ -1,6 +1,6 @@
 <script>
 import {fade, fly} from 'svelte/transition'
-import {groups, swarm, user, webRTC, notify, rooms} from '$lib/stores/user.js'
+import {groups, swarm, user, webRTC, notify, rooms, transactions} from '$lib/stores/user.js'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
 import { isLatin, sleep } from '$lib/utils/utils'
@@ -132,6 +132,7 @@ const join_voice_channel = async (video = false, screen) => {
        if (found) return found.avatar
        else return false
     }
+
 </script>
 
 {#if $rooms.showBanInfo}
@@ -194,11 +195,11 @@ const join_voice_channel = async (video = false, screen) => {
                         <br />
                       
                     </div>
-                {#if showMenu && infoUser?.address !== myAddress && infoUser.address === user.address}
+                <!-- {#if showMenu && infoUser?.address !== myAddress && infoUser.address === user.address}
                     <div on:mouseleave="{() => { showMenu = false}}" >
                         <UserOptions on:close={() => showMenu = false} admin={admin} info={infoUser} />
                     </div>
-                {/if}
+                {/if} -->
             {/each}
 
           

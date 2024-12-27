@@ -2,7 +2,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import { createEventDispatcher, onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user, rooms } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms, transactions } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -20,6 +20,7 @@ import 'emoji-picker-element';
 import { roomMessages } from '$lib/stores/roommsgs'
 import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
+import PayIcon from '../icons/PayIcon.svelte'
 
 export let msg
 export let msgFrom
@@ -276,6 +277,13 @@ const check_avatar = (address) => {
     else return false
 }
 
+const sendMoney = () => {
+        $transactions.tip = true
+        $transactions.send = {
+            to: msgFrom,
+            name: nickname
+        }
+    }
 
 </script>
 
@@ -347,6 +355,9 @@ const check_avatar = (address) => {
                             <Emoji size="16px" stroke={"var(--text-color)"}/>
                         </button>
                     </div>
+                    {#if room && !myMsg}
+                    <PayIcon size={18} on:click={sendMoney}/>
+                    {/if}
                     <ReplyArrow on:click="{replyTo}" />
                     {#if !rtc}
                     <DeleteButton on:click="{deleteMsg}"/>

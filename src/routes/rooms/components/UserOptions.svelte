@@ -1,7 +1,10 @@
 <script >
-    import { rooms, user } from "$lib/stores/user"
+    import { page } from "$app/stores"
+    import { rooms, transactions, user } from "$lib/stores/user"
     export let info
     export let admin = false
+
+    $: inRoom = $page.url.pathname === '/rooms'
 
     const toggleBlock = () => {
         if ($user.block) {
@@ -23,9 +26,20 @@
         }
     }
 
+    const sendMoney = (user) => {
+        $transactions.tip = true
+        $transactions.send = {
+            to: info.address,
+            name: info.name
+        }
+    }
+
 </script>
 
 <div class="menu">
+    {#if inRoom}
+    <span on:click={sendMoney} class="action">Tip</span>
+    {/if}
     <span on:click={toggleBlock} class="action">Block</span>
     {#if admin}
     <span on:click={toggleBan} class="action">Ban</span>
@@ -52,9 +66,11 @@
         padding: 10px;
         cursor: pointer;
         color: #f5f5f5;
+        border: 1px solid transparent;
 
         &:hover {
             background-color: var(--card-border);
+            border-color: var(--success-color);
         }
     }
 }

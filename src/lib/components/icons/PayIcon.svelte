@@ -1,7 +1,11 @@
+<script>
+    export let size = 24
+</script>
 <svg
+    class:small={size < 24}
     on:click
-    width="24px"
-    height="24px"
+    width="{size}px"
+    height="{size}px"
     viewBox="0 0 24 24"
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
@@ -57,5 +61,12 @@ svg {
     &:hover {
         opacity: 80%;
     }
+    
+
+}
+
+.small {
+    opacity: 50%;
+    margin-top: -1px;
 }
 </style>

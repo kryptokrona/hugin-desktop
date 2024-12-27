@@ -6,7 +6,7 @@ import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
-import {notify, user, swarm, rooms, misc, files} from '$lib/stores/user.js'
+import {notify, user, swarm, rooms, misc, files, transactions} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
@@ -21,6 +21,7 @@ import AddRoom from "./components/AddRoom.svelte"
 import BigImage from "$lib/components/popups/BigImage.svelte"
 import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
+import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -483,7 +484,20 @@ async function dropFile(e) {
 //     let channel = channelMessages.filter(a => a.channel === name)
 //     $swarm.activeChannelMessages = channel
 //     //await checkReactions(channel)
+
 // }
+
+const sendTransaction = (e) => {
+    $transactions.tip = false
+    $transactions.send = false
+    let tx = e.detail
+    window.api.sendTransaction(tx)
+}
+
+const hideModal = () => {
+    $transactions.tip = false
+    $transactions.send = { name: '' }
+}
 </script>
 
 
@@ -496,7 +510,10 @@ async function dropFile(e) {
  <NewChannel/>
 {/if} -->
 
-<!-- ///FIXIXIXIXX -->
+{#if $transactions.tip}
+    <SendTransaction on:click="{hideModal}" on:send="{(e) => sendTransaction(e)}" />
+{/if}
+
 
 {#if $rooms.addRoom}
     <AddRoom on:click="{openAddRoom}" on:addRoom="{(e) => addNewRoom(e)}" />
