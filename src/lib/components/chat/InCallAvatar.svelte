@@ -1,6 +1,6 @@
 <script>
 import { get_avatar } from "$lib/utils/hugin-utils"
-import { audioLevel, user } from '$lib/stores/user.js'
+import { audioLevel, rooms, user } from '$lib/stores/user.js'
 export let call
 let isTalking = false
 let me = call.address === $user.myAddress
@@ -11,10 +11,27 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.add
     isTalking = false
 }
 
+const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
+
 </script>
 
 <div class="img" class:talking={isTalking || (me && $audioLevel.meTalking)}>
-<img class="avatar" src="data:image/png;base64,{get_avatar(call.address)}" alt="" />
+    {#await check_avatar(call.address)}
+    {:then avatar}
+     {#if avatar}
+        <img
+            class="custom-avatar"
+            src="{avatar}"
+            alt=""
+        />
+    {:else}
+        <img class="avatar" src="data:image/png;base64,{get_avatar(call.address)}" alt="" />
+    {/if}
+    {/await}
 </div>
 
 <style lang="scss">
@@ -31,5 +48,13 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.add
         margin-right: 2px;
 
     }
+
+.custom-avatar {
+    height: 40px;
+    width:  40px;
+    border-radius: 15px;
+    padding: 10px;
+}
+    
 </style>
 

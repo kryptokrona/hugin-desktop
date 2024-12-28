@@ -2,7 +2,7 @@
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { webRTC, user, swarm } from '$lib/stores/user.js'
+import { webRTC, user, swarm, rooms } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { get_avatar } from '$lib/utils/hugin-utils'
@@ -54,7 +54,11 @@ $: if ($swarm.call.length > 4) {
   many = true
 } else many = false
 
-
+const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
 
 $: window_medium
 </script>
@@ -81,7 +85,20 @@ $: window_medium
         </div>
         {/if}
         {#if !$videoSettings.screenshare && !$videoSettings.myVideo}
-            <img in:fly src="data:image/png;base64,{get_avatar($user.myAddress, 'png', true)}" alt="" />
+        {#await check_avatar($user.myAddress)}
+        {:then avatar}
+        {#if avatar}
+            <img
+            
+                class="custom-avatar"
+                src="{avatar}"
+                alt=""
+            />
+        {:else}
+            
+        <img in:fly src="data:image/png;base64,{get_avatar($user.myAddress, 'png', true)}" alt="" />
+        {/if}
+        {/await}
         {/if}
 </div>
 

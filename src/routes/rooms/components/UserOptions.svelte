@@ -26,20 +26,9 @@
         }
     }
 
-    const sendMoney = (user) => {
-        $transactions.tip = true
-        $transactions.send = {
-            to: info.address,
-            name: info.name
-        }
-    }
-
 </script>
 
 <div class="menu">
-    {#if inRoom}
-    <span on:click={sendMoney} class="action">Tip</span>
-    {/if}
     <span on:click={toggleBlock} class="action">Block</span>
     {#if admin}
     <span on:click={toggleBan} class="action">Ban</span>

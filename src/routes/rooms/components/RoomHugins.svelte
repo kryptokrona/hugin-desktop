@@ -433,6 +433,7 @@ p {
     width: 30px;
     border-radius: 10px;
     padding: 5px;
+    margin: 1px;
 }
 
 </style>

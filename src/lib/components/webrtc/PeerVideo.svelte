@@ -2,7 +2,7 @@
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 import { createEventDispatcher, onDestroy, onMount } from 'svelte'
-import { audioLevel, user, swarm } from '$lib/stores/user.js'
+import { audioLevel, user, swarm, rooms } from '$lib/stores/user.js'
 import Minus from '../icons/Minus.svelte'
 import Plus from '../icons/Plus.svelte'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
@@ -81,6 +81,8 @@ $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.cha
     isTalking = false
 }
 
+$: address = active ? call.chat : call.address
+
 $:  if (thisWindow && windowCheck) {
         console.log('This window reactive')
         if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
@@ -152,6 +154,11 @@ const resize = (size) => {
     many = true
   } else many = false
 
+  const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+    }
 </script>
 
 <div class="card" in:fly={{ x: -150}} class:many={many} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1 && !many} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
@@ -169,11 +176,24 @@ const resize = (size) => {
         </div>
     </div>
     {/await}
-    {#if !active}
-    <img src="data:image/png;base64,{get_avatar(call.address, 'png', true)}" alt="" />
-    {:else}
-    <img src="data:image/png;base64,{get_avatar(call.chat, 'png', true)}" alt="" />
-    {/if}
+    {#await check_avatar(address)}
+        {:then avatar}
+        {#if avatar}
+            <img
+            
+                class="custom-avatar"
+                src="{avatar}"
+                alt=""
+            />
+        {:else}
+            {#if !active}
+            <img src="data:image/png;base64,{get_avatar(call.address, 'png', true)}" alt="" />
+            {:else}
+            <img src="data:image/png;base64,{get_avatar(call.chat, 'png', true)}" alt="" />
+            {/if}
+        {/if}
+        {/await}
+  
     <div in:fade class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
@@ -357,6 +377,5 @@ p {
     position: relative;
     left: 5px;
 }
-    
 
 </style>

@@ -32,11 +32,12 @@
 
 </script>
 
-<div class:talking={isTalking || (me && $audioLevel.meTalking)} in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
+<div in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
     {#await check_avatar(voice_user.address)}
         {:then avatar}
         {#if avatar}
             <img
+            
                 class="custom-avatar"
                 src="{avatar}"
                 alt=""
@@ -113,8 +114,8 @@
         margin-right: 2px;
     }
 
-    .talking .voice-avatar {
-        border: 1px solid var(--success-color);
+    .talking {
+        border: 1px solid var(--success-color) !important;
     }
 
     .connecting {
@@ -134,12 +135,20 @@
         margin-left: 5px;
     }
 
-    .custom-avatar {
-        height: 25px;
-        width: 25px;
-        border-radius: 10px;
-        padding: 5px;
-    }
+.custom-avatar {
+    height: 35px;
+    width: 35px;
+    border-radius: 15px;
+    padding: 8px;
+    margin-left: -2px;
+    border: 1px solid transparent;
+}
+
+.img {
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 1px;
+}
     
     
 </style>
