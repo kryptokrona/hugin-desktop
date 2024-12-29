@@ -35,6 +35,7 @@
     import ConferenceFloater from '/src/routes/groups/components/ConferenceFloater.svelte'
     import Rooms from '/src/routes/groups/components/Rooms.svelte'
     import { goto } from '$app/navigation'
+    import RoomNotification from '$lib/components/popups/RoomNotification.svelte'
     let ready = false
     let incoming_call
     let showCallerMenu = false
@@ -199,8 +200,7 @@
             if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
             if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
             new_messages = true
-            data.key = data.address
-            
+            data.room = true
             //Future notifications page
             $notify.notifications.push(data)
             if ($notify.new.length < 2 && !$notify.que && !add) {
@@ -641,7 +641,11 @@
         <div class="notifs">
             {#if $notify.new.length < 2 && !$notify.que}
                 {#each $notify.new as notif}
+                {#if notif?.room === true}
+                    <RoomNotification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
+                    {:else}
                     <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
+                {/if}
                 {/each}
             {/if}
 

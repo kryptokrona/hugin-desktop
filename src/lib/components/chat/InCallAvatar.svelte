@@ -49,12 +49,12 @@ const check_avatar = (address) => {
 
     }
 
-.custom-avatar {
-    height: 40px;
-    width:  40px;
-    border-radius: 15px;
-    padding: 10px;
-}
+    .custom-avatar {
+        height: 40px;
+        width:  40px;
+        border-radius: 15px;
+        padding: 10px;
+    }
     
 </style>
 

@@ -278,12 +278,12 @@ const check_avatar = (address) => {
 }
 
 const sendMoney = () => {
-        $transactions.tip = true
-        $transactions.send = {
-            to: msgFrom,
-            name: nickname
-        }
+    $transactions.tip = true
+    $transactions.send = {
+        to: msgFrom,
+        name: nickname
     }
+}
 
 </script>
 

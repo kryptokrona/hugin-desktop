@@ -1,5 +1,5 @@
 <script>
-import { misc, user, userAvatar, swarm, webRTC } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm, webRTC, rooms } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -90,6 +90,7 @@ const selectAvatar = async () => {
  
     const imageUrl = URL.createObjectURL( blob );
     $user.customAvatar = imageUrl
+    $rooms.avatars.push({address: $user.myAddress, avatar: imageUrl})
   };
 
 $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {

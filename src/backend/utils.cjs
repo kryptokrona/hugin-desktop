@@ -299,7 +299,11 @@ const sanitize_join_swarm_data = (data) => {
 
     let avatar = ""
     if (data.avatar !== undefined) {
-        avatar = Buffer.from(data.avatar, 'base64')
+        const base64 = /^[A-Za-z0-9+/]+={0,2}$/;
+        if (!base64.test(data.avatar)) {
+            return false
+        }
+        avatar = Buffer.from(sanitizeHtml(data.avatar), 'base64')
         if (avatar.length > 200000) {
         console.log("Avatar too big")
         return false
