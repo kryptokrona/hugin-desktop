@@ -449,6 +449,7 @@ const check_data_message = async (data, connection, topic, peer) => {
                     return true
                 }
                 if (INC_PEERS && active.peers.toString() !== data?.peers.toString()) {
+                    if (data.peers?.length > 100) return "Ban"
                     find_missing_peers(active, data?.peers);
                 }
                 const missing = await check_missed_messages(data.hashes, con.address, topic)
@@ -562,7 +563,8 @@ const process_request = async (messages, key, live = false) => {
                 g: m?.grp ? m?.grp : m?.room,
                 r: m?.reply,
                 n: m?.name ? m?.name : m?.nickname,
-                hash: m?.hash
+                hash: m?.hash,
+                tip: m?.tip
             }
             if (await roomMessageExists(inc.hash)) continue
             const message = sanitize_group_message(inc, false)

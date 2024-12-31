@@ -35,8 +35,8 @@ ipcMain.on('switch-node', (e, node) => {
     pickNode(node) 
 })
 
-ipcMain.on('send-tx', (e, tx) => {
-    sendTx(tx)
+ipcMain.handle('send-tx', async (e, tx) => {
+    return await sendTx(tx)
 })
 
 ipcMain.handle('verify-pass', async (e, pass) => {
@@ -459,6 +459,7 @@ async function sendTx(tx) {
             key: tx.to,
         }
         sender('sent_tx', sent)
+        return true
     } else {
         console.log(`Failed to send transaction: ${result.error.toString()}`)
         let error = {
@@ -467,6 +468,7 @@ async function sendTx(tx) {
             hash: Date.now(),
         }
       sender('error_msg', error)
+      return false
     }
 }
    

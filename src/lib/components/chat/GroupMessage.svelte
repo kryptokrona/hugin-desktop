@@ -21,6 +21,7 @@ import { roomMessages } from '$lib/stores/roommsgs'
 import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
+import Tip from './Tip.svelte'
 
 export let msg
 export let msgFrom
@@ -37,6 +38,16 @@ export let joined = false
 export let file = false
 export let room = false
 export let admin = false
+export let tip = false
+
+$: tipMessage = ""
+$: if (tip !== "") {
+    try {
+        tipMessage = JSON.parse(tip)
+    } catch(e) {
+        tipMessage = tip
+    }
+}
 
 $: positionEmojiContainer(openEmoji);
 
@@ -278,6 +289,7 @@ const check_avatar = (address) => {
 }
 
 const sendMoney = () => {
+    $rooms.replyTo.reply = false
     $transactions.tip = true
     $transactions.send = {
         to: msgFrom,
@@ -325,7 +337,7 @@ const sendMoney = () => {
                 <div style="display: flex; align-items: center; margin-left: -10px">
                     {#await check_avatar(msgFrom)}
                     {:then avatar}
-                     {#if avatar}
+                     {#if avatar && room}
                         <img
                             class="custom-avatar"
                             src="{avatar}"
@@ -384,6 +396,8 @@ const sendMoney = () => {
                 <DownloadFile file={file} group={true} rtc={rtc}/>
             {:else if file && myMsg}
                 <UploadFile file={file} group={true} rtc={rtc}/>
+            {:else if tip && tipMessage}
+                <Tip tip={tipMessage}/>
             {:else}
                 <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}

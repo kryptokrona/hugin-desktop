@@ -169,7 +169,7 @@ const WINDOW_API = {
     },
 
     sendTransaction: async (tx) => {
-        ipcRenderer.send('send-tx', tx)
+        return await ipcRenderer.invoke('send-tx', tx)
     },
 
     addGroup: async (grp) => {

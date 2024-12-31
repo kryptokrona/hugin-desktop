@@ -124,9 +124,9 @@ window.api.receive('set-channels', async () => {
 })
 
 //Check for possible errors
-const checkErr = (e) => {
+const checkErr = (e, tip = false) => {
     let error = false
-    if (e.detail.text.length === 0) return true 
+    if (e.detail.text.length === 0 && !tip) return true 
     if (e.detail.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
@@ -136,8 +136,8 @@ const checkErr = (e) => {
 }
 
 //Send message to store and DB
-const sendRoomMsg = async (e) => {
-    const error = checkErr(e)
+const sendRoomMsg = async (e, tipping = false) => {
+    const error = checkErr(e, tipping)
     if (error) return
     let msg = e.detail.text
     let myaddr = $user.myAddress
@@ -147,9 +147,14 @@ const sendRoomMsg = async (e) => {
     let room = $swarm.activeSwarm?.key
     let in_swarm = true
     let in_channel = $swarm.activeChannel.name
+    let tip = false
     //Reaction switch
     if (e.detail.reply) {
         replyto = e.detail.reply
+    }
+
+    if (e.detail.tip) {
+        tip = e.detail.tip
     }
     
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
@@ -161,7 +166,8 @@ const sendRoomMsg = async (e) => {
         time: time,
         name: myName,
         hash: hash,
-        sent: true
+        sent: true,
+        tip: tip
     }
     let sendMsg = {
         m: msg,
@@ -172,13 +178,15 @@ const sendRoomMsg = async (e) => {
         n: myName,
         hash: hash,
         swarm: in_swarm,
-        sent: true
+        sent: true,
+        tip: tip
     }
 
     if (in_channel) {
         sendMsg.c = in_channel
     }
-    
+
+    $transactions.pending = false
     window.api.sendRoomMessage(sendMsg)
     printRoomMessage(myRoomMessage)
     replyExit()
@@ -314,7 +322,7 @@ async function printRoom(room, create = false) {
 function addFileMessage(array) {
     for (const msg of array) {
         const i = array.indexOf(msg)
-        if (!msg.message) {
+        if (!msg.message && msg.tip === "") {
             array[i].message = ""
             continue
         }
@@ -340,7 +348,7 @@ function checkReactions(array, scroll) {
     
        //All group messages all messages except reactions
        filterRooms = array.filter(
-        (m) => m.message.length > 0 && !(m.reply.length === 64 && filterEmojis.includes(m))
+        (m) => !(m.reply.length === 64 && filterEmojis.includes(m))
     )
     
     if (filterEmojis.length) {
@@ -415,7 +423,7 @@ async function getMessages(group) {
 }
 
 async function getMoreMessages() {
-    return await window.api.printRoom($rooms.thisRoom?.key, pageNum)
+    return await window.api.printRoom($swarm.activeSwarm?.key, pageNum)
 }
 
 let dragover = false
@@ -446,7 +454,7 @@ async function dropFile(e) {
     const hash = await window.api.createGroup()
     const message = {
         message: 'File shared',
-        grp: $rooms.thisRoom?.key,
+        grp: $swarm.activeSwarm?.key,
         name: $user.username,
         address: $user.myAddress,
         reply: "",
@@ -460,7 +468,7 @@ async function dropFile(e) {
     }
     $localFiles.push(acceptedFiles[0])
     printRoomMessage(message)
-    window.api.groupUpload(filename, path, $rooms.thisRoom?.key, size, time, hash)
+    window.api.groupUpload(filename, path, $swarm.activeSwarm?.key, size, time, hash)
 }
 
 // function setChannels() {
@@ -487,11 +495,26 @@ async function dropFile(e) {
 
 // }
 
-const sendTransaction = (e) => {
+const sendTransaction = async (e) => {
     $transactions.tip = false
     $transactions.send = false
     let tx = e.detail
-    window.api.sendTransaction(tx)
+    $transactions.pending = tx
+    const sent = await window.api.sendTransaction(tx)
+    if (sent) {
+        const e = {
+        detail: {
+        text: "",
+         tip: {
+            amount: $transactions.pending.amount,
+            receiver: fixedRooms.find(a => a.address === $transactions.pending.to).name
+        }
+        }
+    }
+        sendRoomMsg(e, true)
+    } else {
+        $transactions.pending = false
+    }
 }
 
 const hideModal = () => {
@@ -562,6 +585,7 @@ const hideModal = () => {
                     file="{message?.file}"
                     room="{true}"
                     admin="{admin}"
+                    tip="{message.tip}"
                 />
             {/each}
             {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 

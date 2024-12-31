@@ -204,7 +204,7 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof screenshare !== 'boolean') return false;
     // if (typeof data?.avatar !== 'string') return false
     let avatar = ""
-    if (data.avatar !== undefined) {
+    if (data.avatar !== undefined || data.avatar?.length > 0) {
         avatar = Buffer.from(data.avatar, 'base64')
         if (avatar.length > 200000) {
         console.log("Avatar too big")
@@ -256,6 +256,13 @@ const sanitize_join_swarm_data = (data) => {
     if (nick?.length > 50 || data.n === undefined) return false;
     let txHash = sanitizeHtml(data.hash);
     if (txHash?.length > 128 || data.hash === undefined) return false;
+
+    let tip = false;
+    if (data.tip) {
+        if (typeof data.tip.amount !== 'number' || data.tip.amount?.length > 100) return false;
+        if (typeof data.tip.receiver !== 'string' || data.tip.receiver?.length > 100) return false;
+        tip = {amount: data.tip.amount, receiver: sanitizeHtml(data.tip.receiver)}
+    }
   
     const clean_object = {
       message: text,
@@ -269,6 +276,7 @@ const sanitize_join_swarm_data = (data) => {
       sent: sent,
       channel: 'channel',
       hash: txHash,
+      tip
     };
   
     return clean_object;
@@ -298,7 +306,7 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof screenshare !== 'boolean') return false;
 
     let avatar = ""
-    if (data.avatar !== undefined) {
+    if (data.avatar !== undefined || data.avatar?.length > 0) {
         const base64 = /^[A-Za-z0-9+/]+={0,2}$/;
         if (!base64.test(data.avatar)) {
             return false

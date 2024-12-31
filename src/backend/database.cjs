@@ -181,6 +181,12 @@ const groupMessageTable = () => {
               hash TEXT UNIQUE,
               sent BOOLEAN
             )`
+
+            try {
+               const update = `ALTER TABLE groupmessages ADD tip TEXT`
+                database.prepare(update).run()
+            } catch(e) {
+            }
     return new Promise(
         (resolve, reject) => {
             database.prepare(groupTable).run()
@@ -423,6 +429,12 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
         msg.name = 'Anonymous'
     }
 
+    let tip = ""
+    
+    if (msg.tip) {
+        tip = JSON.stringify(msg.tip)
+    }
+
     msg.sent = changeBool(msg.sent)
     
     try {
@@ -436,17 +448,18 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     name,
     reply,
     hash,
-    sent
+    sent,
+    tip
           )
        VALUES
-           (? ,?, ?, ?, ?, ?, ?, ?, ?)`
+           (? ,?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(msg.message, msg.address, '', msg.group, msg.time, msg.name, msg.reply, msg.hash, msg.sent)
+    ).run(msg.message, msg.address, '', msg.group, msg.time, msg.name, msg.reply, msg.hash, msg.sent, tip)
 
         } catch(a) {
             console.log("Sql lite", a)
         }
-
+    
     return msg
 }
 
@@ -724,7 +737,8 @@ const printGroup = async (group, page) => {
           name,
           reply,
           hash,
-          sent
+          sent,
+          tip
         FROM
             groupmessages
         WHERE grp = ?
