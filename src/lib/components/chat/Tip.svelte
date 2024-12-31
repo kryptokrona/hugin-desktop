@@ -29,14 +29,17 @@
         border-radius: 12px;
         width: fit-content;
         opacity: 0;
+        padding: 5px;
         margin: 0px;
+        margin-left: 25px;
     }
   
     .insetBorder {
         flex: 1;
         border-radius: 8px;
         border-width: 1px;
-        padding: 4px;
+        border: 1px solid black;
+        padding: 0px;
         border-color: var(--backgound-color);
     }
 
