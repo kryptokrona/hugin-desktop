@@ -786,7 +786,8 @@ const getGroupReply = async (reply) => {
              name,
              reply,
              hash,
-             sent
+             sent,
+             tip
       FROM groupmessages
       WHERE hash = ?
       ORDER BY
