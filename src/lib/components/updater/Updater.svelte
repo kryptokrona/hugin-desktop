@@ -1,30 +1,22 @@
 <script>
 import { fade, fly } from 'svelte/transition'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
-import { formatBytes } from '$lib/utils/utils.js'
+import { formatBytes, sleep } from '$lib/utils/utils.js'
 import {misc} from "$lib/stores/user.js";
 import {appUpdateState} from "$lib/components/updater/update-store.js";
+import Moon from 'svelte-loading-spinners/dist/ts/Moon.svelte'
 
-const download = () => {
-
-    if ($misc.os === "darwin" && $misc.version === "0.2.3") {
-        let link
-        if ($misc.arch === "arm64" ) {
-            link = "https://github.com/kryptokrona/hugin-desktop/releases/download/v0.3.0/Hugin-Messenger-0.3.0-arm64.dmg"
-        }
-        if ($misc.arch === "x64") {
-            link = "https://github.com/kryptokrona/hugin-desktop/releases/download/v0.3.0/Hugin-Messenger-0.3.0.dmg"
-        }
-        if (!link) {
-            link = "https://github.com/kryptokrona/hugin-desktop/releases/"
-        }
-        window.api.openLink(link)
-        return
-    }
-
+let loading = false
+let downloaded = false
+const download = async () => {
+    loading = true
+    downloaded = true
     window.api.send('download-update')
 }
 
+$: if ($appUpdateState.step !== 1 && !downloaded) {
+    loading = false
+}
 </script>
 
 <div class="backdrop" in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}">
@@ -44,8 +36,12 @@ const download = () => {
                     and improvements
                 </h4>
                 <div class="buttons">
+                {#if loading && downloaded}
+                    <Moon color="#f5f5f5" size="20" unit="px"/>
+                {:else}
                     <FillButton text="Download" on:click|once="{download}"/>
-                    <FillButton text="Later" on:click="{() => ($appUpdateState.openPopup = false)}"/>
+                    <FillButton text="Later" on:click="{() => ($appUpdateState.openPopup = false)}"/>    
+                {/if}
                 </div>
             </div>
 
