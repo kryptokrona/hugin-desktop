@@ -202,9 +202,9 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof videoMute !== 'boolean') return false;
     const screenshare = data?.screenshare;
     if (typeof screenshare !== 'boolean') return false;
-    // if (typeof data?.avatar !== 'string') return false
+    
     let avatar = ""
-    if (data.avatar !== undefined || data.avatar?.length > 0) {
+    if (data.avatar !== undefined && data.avatar?.length > 0) {
         avatar = Buffer.from(data.avatar, 'base64')
         if (avatar.length > 200000) {
         console.log("Avatar too big")
@@ -306,7 +306,7 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof screenshare !== 'boolean') return false;
 
     let avatar = ""
-    if (data.avatar !== undefined || data.avatar?.length > 0) {
+    if (data.avatar !== undefined && data.avatar?.length > 0) {
         const base64 = /^[A-Za-z0-9+/]+={0,2}$/;
         if (!base64.test(data.avatar)) {
             return false
