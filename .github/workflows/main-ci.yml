@@ -70,7 +70,7 @@ jobs:
               run: npm run build:mac-${{ matrix.config.platform }}
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               if: matrix.config.os == 'windows-latest'
               with:
                   name: windows-latest
@@ -78,7 +78,7 @@ jobs:
                       dist/*.exe
 
             - name: 'Upload ${{ matrix.config.name }} Deb Artifact'
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               if: matrix.config.os == 'ubuntu-latest'
               with:
                   name: ubuntu-latest-deb
@@ -86,7 +86,7 @@ jobs:
                       dist/*.deb
 
             - name: 'Upload ${{ matrix.config.name }} Snap Artifact'
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               if: matrix.config.os == 'ubuntu-latest'
               with:
                   name: ubuntu-latest-snap
@@ -94,7 +94,7 @@ jobs:
                       dist/*.snap
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               if: matrix.config.name == 'macOS-11'
               with:
                   name: macos-11
@@ -102,7 +102,7 @@ jobs:
                       dist/*.dmg
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               if: matrix.config.name == 'macOS Latest'
               with:
                   name: macos-latest
