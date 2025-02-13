@@ -14,10 +14,15 @@ onMount(() => {
 const close = () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
+    $fileViewer.hash = ""
+    $fileViewer.topic = ""
 }
 
 async function getImage(path) {
-    let arr = await window.api.loadFile(path, $fileViewer.size)
+    let arr
+    if ($fileViewer.hash.length === 64) {
+       arr = await window.api.loadStoredFile($fileViewer.hash, $fileViewer.topic)
+    } else arr = await window.api.loadFile(path, $fileViewer.size)
     let blob = new Blob( [ arr ] );
     image = URL.createObjectURL( blob );
 }

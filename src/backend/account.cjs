@@ -22,6 +22,12 @@ ipcMain.on('set-avatar', (e, data) => {
   Hugin.avatar = avatar
 })
 
+ipcMain.on('sync-images', (e, setting) => {
+  store.set({
+    syncImages: setting
+  })
+})
+
 ipcMain.on('save-avatar', (e, data) => {
   // let list = store.get('avatars') ?? []
   // if (list.some(a => a.address === data.address)) {
@@ -105,6 +111,8 @@ class Account {
     this.address = ""
     this.roomFiles = []
     this.avatar = ""
+    this.syncImages = null
+
     }
 
     async init(wallet, name, node, s) {
@@ -115,6 +123,7 @@ class Account {
       this.downloadDir = store.get('download.dir') ?? downloadDir
       this.address = wallet.getPrimaryAddress()
       this.avatar = get_avatar()
+      this.syncImages = store.get('syncImages') ?? true
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({
@@ -130,7 +139,6 @@ class Account {
     
   async load() {
       await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys())
-      const myAvatar = this.avatar
       const [my_contacts, keys] = await loadKeys((true))
       const my_groups = await getGroups()
       const block_list = await loadBlockList()
@@ -141,7 +149,7 @@ class Account {
       const usersBanned = store.get('bannedUsers') ?? []
       const files = store.get('files') ?? []
       const avatars = get_room_avatars()
-
+      
       this.sender('wallet-started', [
         this.node,
         my_groups.reverse(),
@@ -149,12 +157,13 @@ class Account {
         my_contacts.reverse(),
         deleteAfter,
         this.downloadDir,
-        Buffer.from(myAvatar, 'base64'),
+        Buffer.from(this.avatar, 'base64'),
         idle,
         notifications,
         banned,
         files,
-        avatars
+        avatars,
+        this.syncImages
       ])
 
       this.known_keys = keys
@@ -183,12 +192,13 @@ class Account {
       return this.block_list.some(a => a.address === address)
      }
 
-     save_file(file) {
+     file_info(file) {
       const list = this.get_files()
       list.push(file)
         store.set({
           files: list
         })
+      this.sender('files', list)
      }
 
      get_files() {

@@ -7,7 +7,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files} from '$lib/stores/user.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -342,6 +342,28 @@
         $appUpdateState.dataDownloaded = progress.transferred
         $appUpdateState.downloadSize = progress.total
         $appUpdateState.downloadSpeed = progress.bytesPerSecond
+    })
+
+    window.api.receive('files', data => {
+        $files = data
+    })
+
+    window.api.receive('file-downloaded', (file) => {
+        console.log("File downloaded:", file)
+        console.log("From:", name)
+        const add = {
+            fileName: file.fileName,
+            chat: file.address,
+            path: 'storage',
+            hash: file.hash,
+            time: file.time,
+            size: file.size,
+            group: true,
+            topic: file.topic
+        }
+
+        $files.push(add)
+        $files = $files
     })
 
     window.api.receive('optimized', (data) => {

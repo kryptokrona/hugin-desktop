@@ -51,11 +51,15 @@
         $fileViewer.focusImage = file.path
         $fileViewer.enhanceImage = true
         $fileViewer.size = file.size
+        $fileViewer.hash = file.hash
+        $fileViewer.topic = file.topic
     }
 
     async function loadFile(file) {
-        let arr = await window.api.loadFile(file.path, file.size)
-        thisFile = arr
+        let arr
+        if (file.path === "storage") {
+            arr = await window.api.loadStoredFile(file.hash, file.topic)
+        } else arr = await window.api.loadFile(file.path, file.size)
         if (arr === "File" || arr === "File not found") return arr
         let blob = new Blob( [ arr ]);
         let imageUrl = URL.createObjectURL( blob );

@@ -4,13 +4,13 @@ const { Crypto, Keys } = require('kryptokrona-utils')
 const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
 const {createReadStream} = require("fs");
-
+const MEDIA_TYPES = ['.png','.jpg','.gif', '.jpeg', '.jfif', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg']
 
 ipcMain.handle('load-file', async (e, path, size) => {
     return await load_file(path, size)
 })
 
-ipcMain.handle('select-directory', () => {
+ipcMain.handle('select-directory', () => { 
     let dir = dialog.showOpenDialog({
         properties: ['openDirectory']
 
@@ -20,10 +20,10 @@ ipcMain.handle('select-directory', () => {
 
 
 //Check if it is an image or video with allowed type
-function checkImageOrVideoType(path, size) {
-    if (path === undefined) return false
+function check_if_image_or_video(path, size, check = false) {
+    if (path === undefined && !check) return false
     if (size >= 50000000) return false
-    const types = ['.png','.jpg','.gif', '.jpeg', '.jfif', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg'];
+    const types = MEDIA_TYPES
     for (a in types) {
         if (path.toLowerCase().endsWith(types[a])) {
             return true
@@ -34,7 +34,7 @@ function checkImageOrVideoType(path, size) {
 
 async function load_file(path, size) {
     let imgArray = []
-    if (checkImageOrVideoType(path, size)) {
+    if (check_if_image_or_video(path, size)) {
         //Read the file as an image
         return new Promise((resolve, reject) => {
             try {
@@ -258,7 +258,7 @@ const sanitize_join_swarm_data = (data) => {
     if (txHash?.length > 128 || data.hash === undefined) return false;
 
     let tip = false;
-    if (data.tip) {
+    if (data.tip && data.tip !== 'false') {
         if (typeof data.tip.amount !== 'number' || data.tip.amount?.length > 100) return false;
         if (typeof data.tip.receiver !== 'string' || data.tip.receiver?.length > 100) return false;
         tip = {amount: data.tip.amount, receiver: sanitizeHtml(data.tip.receiver)}
@@ -358,8 +358,8 @@ const sanitize_join_swarm_data = (data) => {
     const time = sanitizeHtml(data?.time);
     if (time?.length > 25) return false;
   
-    const sig = sanitizeHtml(data?.sig);
-    if (size?.length > 128) return false;
+    const sig = sanitizeHtml(data?.signature);
+    if (sig?.length > 128) return false;
   
     //Check optional
     const key = sanitizeHtml(data?.key);
@@ -379,7 +379,7 @@ const sanitize_join_swarm_data = (data) => {
       topic,
       info,
       type,
-      size,
+      size: parseInt(size),
       time: parseInt(time),
       hash,
       key: key,
@@ -391,4 +391,4 @@ const sanitize_join_swarm_data = (data) => {
 
  
 
-module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message}
+module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_image_or_video, MEDIA_TYPES}

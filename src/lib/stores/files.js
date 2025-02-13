@@ -15,4 +15,7 @@ export const fileSettings = writable({
 export const fileViewer = writable({
     focusImage: "",
     enhanceImage: false,
+    size: 0,
+    hash: "",
+    topic: ""
 })

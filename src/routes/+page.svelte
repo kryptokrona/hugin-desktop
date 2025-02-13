@@ -47,7 +47,7 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
@@ -60,6 +60,7 @@
         $rooms.roomArray = await window.api.getRooms()
         $rooms.banned = banned
         $files = fileList
+        $misc.syncImages
         setAvatars(avatars)
         if (avatar.length) setCustomAvatar(avatar)
         loginSuccess()
