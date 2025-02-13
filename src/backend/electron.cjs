@@ -26,6 +26,7 @@ const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 const { loadHugin, loadWallet } = require('./wallet.cjs')
 const { Hugin } = require('./account.cjs')
+const { Storage } = require('./storage.cjs')
 
 let mainWindow
 
@@ -300,6 +301,10 @@ const startCheck = async () => {
         sender('wallet-exist', false)
     }
 }
+
+ipcMain.handle('load-stored-file', async (e, hash, topic) => {
+    return await Storage.load(hash, topic)
+})
 
 async function shareScreen(start, conference) {
 const windows = []

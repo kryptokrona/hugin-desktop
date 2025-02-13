@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_image_or_video} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply} = require("./database.cjs")
 const { app,
     ipcMain
@@ -11,12 +11,14 @@ const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", video
 
 const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
-const userDataDir = app.getPath('userData')
+const { Storage } = require("./storage.cjs");
+
 
 const MISSING_MESSAGES = 'missing-messages';
 const REQUEST_MESSAGES = 'request-messages';
 const REQUEST_HISTORY = 'request-history';
 const SEND_HISTORY = 'send-history';
+const REQUEST_FILE = 'request-file'
 const PING_SYNC = 'Ping';
 
 let localFiles = []
@@ -148,6 +150,8 @@ const create_swarm = async (data) => {
     const [admin] = is_room_admin(data.key)
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
     const topicHash = base_keys.publicKey.toString('hex')
+    await Storage.load_drive(topicHash)
+    const files = await Storage.load_meta(topicHash)
 
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
@@ -170,7 +174,7 @@ const create_swarm = async (data) => {
     
     //The topic is public so lets use the pubkey from the new base keypair
 
-    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false, peers: []})
+    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false, peers: [], files})
     
     Hugin.send('set-channels')
 
@@ -201,8 +205,9 @@ const new_connection = (connection, topic, dht_keys, peer) => {
         connection_closed(connection, topic)
         return
     }
-
-    console.log("*********Got new Connection! ************")
+    console.log("*****************************************")
+    console.log("***********NEW CONNECTION!***************")
+    console.log("*****************************************")
     active.connections.push({
         connection,
         topic: topic,
@@ -216,7 +221,6 @@ const new_connection = (connection, topic, dht_keys, peer) => {
     send_joined_message(topic, dht_keys, connection)
     //checkIfOnline(hash)
     connection.on('data', async data => {
-
         incoming_message(data, topic, connection, peer)
 
     })
@@ -268,6 +272,7 @@ const check_data_message = async (data, connection, topic, peer) => {
     } catch (e) {
         return "Ban"
     }
+   
     //Check if active in this topic
     const active = get_active_topic(topic)
     if (!active) return "Error"
@@ -360,7 +365,6 @@ const check_data_message = async (data, connection, topic, peer) => {
             let uniq = {}
             const peers = active.peers.filter((obj) => !uniq[obj] && (uniq[obj] = true))
             active.peers = peers
-            console.log("peers", peers)
             const time = parseInt(joined.time)
 
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
@@ -371,11 +375,12 @@ const check_data_message = async (data, connection, topic, peer) => {
             
             //Request message history from peer connected before us.
             if (parseInt(active.time) > time && active.requests < 3) {
-                request_history(joined.address, topic)
+                request_history(joined.address, topic, active.files)
                 active.requests++
             }
-            
-            console.log("Connection updated: Joined:", con.joined)
+            console.log("=======================================")
+            console.log("--USER:", con.name, "JOINED THE ROOM--")
+            console.log("=======================================")
             Hugin.send("peer-connected", joined)
             return true
         }
@@ -389,19 +394,10 @@ const check_data_message = async (data, connection, topic, peer) => {
 
     if (!con.joined) return "Error"
 
-
-    
     if ('type' in data) {
 
         const type = typeof data.type === 'string'
         if (!type) return "Ban"
-
-        console.log("-----------------------------")
-        console.log("                                ")
-        console.log("TYPE INCOMING: ", data.type.toString())
-        console.log("requesting data from connection:", con.request)
-        console.log("                                ")
-        console.log("-----------------------------")
         
         if (data.type === "ban") {
             if ((data.address === Hugin.address) && con.admin) {
@@ -421,13 +417,19 @@ const check_data_message = async (data, connection, topic, peer) => {
 
             //Start-up history sync
             if (data.type === REQUEST_HISTORY && con.request) {
-                send_history(con.address, topic, active.key)
+                console.log("Want to send history file info:")
+                send_history(con.address, topic, active.key, active.files)
                 return true
             } else if (data.type === SEND_HISTORY && con.request) {
-                process_request(data.messages, active.key)
+                process_request(data.messages, active.key, false, con.address, topic)
                 con.request = false
+                if ('files' in data) {
+                    console.log("Got some files", data.files)
+                    process_files(data, active, con, topic)
+                }
                 return true
             }
+
 
             //Live syncing from other peers who might have connections to others not established yet by us.
 
@@ -439,8 +441,6 @@ const check_data_message = async (data, connection, topic, peer) => {
                 if (data.hashes?.length > 25) return "Ban"
             }
 
-            console.log('Data peers?', data.peers);
-
             if (data.type === PING_SYNC && active.search && INC_HASHES) {
                 if (con.knownHashes.toString() === data.hashes.toString()) {
                     //Already know all the latest messages
@@ -451,6 +451,9 @@ const check_data_message = async (data, connection, topic, peer) => {
                 if (INC_PEERS && active.peers.toString() !== data?.peers.toString()) {
                     if (data.peers?.length > 100) return "Ban"
                     find_missing_peers(active, data?.peers);
+                }
+                if ('files' in data) {
+                    process_files(data, active, con, topic)
                 }
                 const missing = await check_missed_messages(data.hashes, con.address, topic)
                 con.knownHashes = data.hashes
@@ -464,7 +467,12 @@ const check_data_message = async (data, connection, topic, peer) => {
             } else if (data.type === MISSING_MESSAGES && INC_MESSAGES && con.request) {
                 active.search = false
                 con.request = false
-                process_request(data.messages, active.key, true)
+                process_request(data.messages, active.key, true, con.address, topic)
+                
+            } else if(data.type === REQUEST_FILE) {
+                const file = sanitize_file_message(data.file)
+                if (!file) return "Error"
+                Storage.start_beam(true, file.key, file, topic, con.name, active.key)
             }
             return true
         }
@@ -530,25 +538,62 @@ const send_missing_messages = async (hashes, address, topic) => {
     }
 }
 
-const request_history = (address, topic) => {
+const request_history = (address, topic, files) => {
     console.log("Reqeust history from another peer")
+    console.log("Files:", files)
     const message = {
-        type: REQUEST_HISTORY
+        type: REQUEST_HISTORY,
+        files
     }
     send_peer_message(address, topic, message)
 }
 
-const send_history = async (address, topic, key) => {
+const send_history = async (address, topic, key, files) => {
     const messages = await printGroup(key, 0)
     console.log("Sending:", messages.length, "messages")
     const history = {
         type: SEND_HISTORY,
-        messages
+        messages,
+        files
     }
     send_peer_message(address, topic, history)
 }
 
-const process_request = async (messages, key, live = false) => {
+const request_file = async (address, topic, name, file, room) => {
+    //request a missing file, open a hugin beam
+    console.log("-----------------------------")
+    console.log("*** WANT TO REQUEST FILE  ***")
+    console.log("-----------------------------")
+    const verify = await verifySignature(file.hash + file.size.toString() + file.time.toString() + file.fileName, file.address, file.signature)
+    if (!verify) return
+    const key = randomKey()
+    Storage.start_beam(false, key, file, topic, name, room)
+    file.key = key
+    const message = {
+        file,
+        type: REQUEST_FILE
+    }
+    await sleep(500)
+    send_peer_message(address, topic, message)
+}
+
+const process_files = async (data, active, con, topic) => {
+    //Check if the latest 10 files are in sync
+    console.log("PROCESS FILES")
+    if (Hugin.syncImages) {
+        if (!Array.isArray(data.files)) return 'Ban'
+        if (data.files.length > 10) return 'Ban'
+        for (const file of data.files) {
+            if (!check_hash(file.hash)) continue
+            if (Hugin.get_files().some(a => a.time === file.time)) continue
+                await sleep(50)
+                request_file(con.address, topic, con.name, file, active.key)
+        }
+    }
+}
+
+
+const process_request = async (messages, key, live = false, address, topic) => {
     let i = 0
     const missing = []
     try {
@@ -710,6 +755,7 @@ const check_online_state = async (topic) => {
     let a = 0
     async function ping() {
         const active = get_active_topic(topic)
+        active.files = await Storage.load_meta(topic)
         const hashes = await getLatestRoomHashes(active.key)
         let peers = []
         //Send peer info on the first three pings. Then every 10 times.
@@ -725,8 +771,7 @@ const check_online_state = async (topic) => {
         } else {
             active.search = true
             let i = 0
-            const data = {type: 'Ping', peers}
-            console.log("send data", data)
+            const data = {type: 'Ping', peers, files: active.files.slice(-10)}
             for (const conn of active.connections) {
                 if (!conn.joined) continue
                 data.hashes = hashes
@@ -772,10 +817,12 @@ ipcMain.on('group-download', (e, download) => {
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
     const active = get_active(key)
     const topic = active.topic
+    const signature = await signMessage(hash + size.toString() + time.toString() + fileName, keychain.getXKRKeypair().privateSpendKey)
     const upload = {
-        fileName, path, topic, size, time, hash, room
+        fileName, path, topic, size, time, hash, room, signature
     }
     console.log("Upload this file to group", upload)
+    await Storage.save(topic, Hugin.address, hash, size, time, fileName, path, signature, 'file-shared', 'file')
     share_file(upload)
     save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname)
 
@@ -821,6 +868,7 @@ const send_peer_message = (address, topic, message) => {
         errorMessage('Connection is closed')
         return
     }
+    console.log("Sending peer message")
     con.connection.write(JSON.stringify(message))
 }
 
@@ -835,7 +883,8 @@ const share_file = (file) => {
         type: 'file',
         size: file.size,
         time: file.time,
-        hash: file.hash
+        hash: file.hash,
+        signature: file.signature
     }
     const info = JSON.stringify(fileInfo)
     localFiles.push(file)
@@ -874,8 +923,26 @@ const check_file_message = async (data, topic, address, con) => {
     const active = get_active_topic(topic)
     if (!active) return
     if (data.info === 'file-shared') {
+
+    if (check_if_image_or_video(data.fileName, data.size, true) && Hugin.syncImages) {
+        //A file is shared and we have auto sync images on.
+        //Request to download the file
+        const file = {
+            address,
+            topic,
+            time: data.time,
+            hash: data.hash,
+            size: data.size,
+            fileName: data.fileName,
+            signature: data.sig,
+            type: data.type,
+            info: data.info
+        }
+        request_file(address, topic, con.name, file, active.key)
+    } else {
         const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, active.key, con.name, data.time)
         save_file_info(data, topic, address, added, false, con.name)
+    }
     }
 
     if (data.type === 'download-request') {
@@ -894,7 +961,6 @@ const check_file_message = async (data, topic, address, con) => {
     if (data.type === 'file-removed') console.log("'file removed", data) //TODO REMOVE FROM remoteFiles
 
 }
-
 
 const errorMessage = (message) => {
     Hugin.send('error-notify-message', message)

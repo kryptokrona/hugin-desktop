@@ -115,7 +115,10 @@ const WINDOW_API = {
     loadFile: async (path, size) => {
         return await ipcRenderer.invoke('load-file', path, size)
     },
-
+    
+    loadStoredFile: async (hash, topic) => {
+        return await ipcRenderer.invoke('load-stored-file', hash, topic)
+    },
     //HANDLE NODES
     getNodes: async () => {
         ipcRenderer.send('get-nodes')
