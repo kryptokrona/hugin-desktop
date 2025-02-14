@@ -16,6 +16,8 @@ const {hash, sleep} = require('./utils.cjs')
 const { Hugin } = require('./account.cjs')
 const { keychain } = require('./crypto.cjs')
 const { start_message_syncer } = require('./messages.cjs')
+const { getRooms } = require('./database.cjs')
+const { new_swarm } = require('./swarm.cjs')
 
 let js_wallet
 let daemon
@@ -85,9 +87,11 @@ async function startHugin(walletName, password, node) {
 
     if (!await login(walletName, password)) return false
     //Sleep 300ms
-    await sleep(200)
+    await sleep(500)
 
     await Hugin.init(js_wallet, walletName, node, sender)
+
+    join_rooms()
     
     Hugin.send('success-notify-message', 'Login success!')
     
@@ -132,6 +136,14 @@ async function startHugin(walletName, password, node) {
 
     return true
    
+}
+
+const join_rooms = async () => {
+    const rooms = await getRooms()
+    for (const room of rooms) {
+        new_swarm({key: room.key}, Hugin.send)
+        await sleep(200)
+    }
 }
 
 //Create account

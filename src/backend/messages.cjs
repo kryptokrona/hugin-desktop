@@ -261,19 +261,10 @@ ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
 
 })
 
-const join_rooms = async () => {
-    const rooms = await getRooms()
-    for (const room of rooms) {
-        new_swarm({key: room.key}, Hugin.send)
-        await sleep(200)
-    }
-}
-
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
-    join_rooms()
     await background_sync_messages(await load_checked_txs())
      while (true) {
          try {

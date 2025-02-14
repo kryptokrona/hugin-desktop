@@ -5,14 +5,21 @@ import Lightning from "$lib/components/icons/Lightning.svelte"
 import Lock from "$lib/components/icons/Lock.svelte"
 import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
-import { notify, rooms, swarm } from "$lib/stores/user"
+import { misc, notify, rooms, swarm } from "$lib/stores/user"
 import { isLatin } from "$lib/utils/utils"
 import Dots from '$lib/components/icons/Dots.svelte'
+import FileSync from "$lib/components/icons/FileSync.svelte"
 
 let roomName
 let asian = false
 let room = ''
 let admin = false
+let thisSwarm = false
+
+$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
+$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+
+$: if (thisSwarm) admin = thisSwarm.admin
 
 $: if ($rooms.thisRoom?.key) {
     room = $rooms.thisRoom.key
@@ -22,11 +29,26 @@ const toggleNotification = () => {
     if (muteGroup) {
         const filter = $notify.off.filter(a => a !== roomName)
         $notify.off = filter
+        window.api.successMessage('Activated notifications.')
     } else {
+        window.api.errorMessage('Notifications turned off.')
         $notify.off.push(roomName)
     }
     $notify = $notify
     window.api.send('group-notifications', $notify.off)
+}
+
+const toggleSyncImages = () => {
+    if (syncImages) {
+        const filter = $misc.syncImages.filter(a => a !== thisSwarm.topic)
+        $misc.syncImages = filter
+        window.api.errorMessage('Image syncing deactivated.')
+    } else {
+        window.api.successMessage('Activated image syncing for this room.')
+        $misc.syncImages.push(thisSwarm.topic)
+    }
+    $misc = $misc
+    window.api.send('sync-images', $misc.syncImages)
 }
 
 $: roomName = $rooms.thisRoom?.name
@@ -37,7 +59,7 @@ $: if (roomName) {
 }
 
 $: muteGroup = $notify.off.some(a => a === roomName)
-
+$: syncImages = $misc.syncImages.some(a => a === thisSwarm.topic)
 
 function copyThis(copy) {
     const msg = 'You copied a Room invite key'
@@ -50,13 +72,6 @@ function copyThis(copy) {
 function toggleActions() {
     console.log("Toggle admin bar")
 }
-
-let thisSwarm = false
-
-$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-
-$: if (thisSwarm) admin = thisSwarm.admin
 
 </script>
 
@@ -76,6 +91,10 @@ $: if (thisSwarm) admin = thisSwarm.admin
             {:else}
                 <Bell active={false}/>
             {/if}
+        </div>
+
+        <div style="cursor: pointer; display: inline-block; width: 25px;" on:click={toggleSyncImages}>
+            <FileSync sync={syncImages} />
         </div>
 
         <!-- <div style="cursor: pointer; display: inline-block; width: 25px;" on:click={toggleActions}>

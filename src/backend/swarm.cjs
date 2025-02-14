@@ -421,7 +421,7 @@ const check_data_message = async (data, connection, topic, peer) => {
                 send_history(con.address, topic, active.key, active.files)
                 return true
             } else if (data.type === SEND_HISTORY && con.request) {
-                process_request(data.messages, active.key, false, con.address, topic)
+                process_request(data.messages, active.key, false)
                 con.request = false
                 if ('files' in data) {
                     console.log("Got some files", data.files)
@@ -442,18 +442,18 @@ const check_data_message = async (data, connection, topic, peer) => {
             }
 
             if (data.type === PING_SYNC && active.search && INC_HASHES) {
+
+                if ('files' in data) {
+                    process_files(data, active, con, topic)
+                }
+
                 if (con.knownHashes.toString() === data.hashes.toString()) {
-                    //Already know all the latest messages
-                    console.log("Already know these hashes")
                     con.request = false
                     return true
                 }
                 if (INC_PEERS && active.peers.toString() !== data?.peers.toString()) {
                     if (data.peers?.length > 100) return "Ban"
                     find_missing_peers(active, data?.peers);
-                }
-                if ('files' in data) {
-                    process_files(data, active, con, topic)
                 }
                 const missing = await check_missed_messages(data.hashes, con.address, topic)
                 con.knownHashes = data.hashes
@@ -467,7 +467,7 @@ const check_data_message = async (data, connection, topic, peer) => {
             } else if (data.type === MISSING_MESSAGES && INC_MESSAGES && con.request) {
                 active.search = false
                 con.request = false
-                process_request(data.messages, active.key, true, con.address, topic)
+                process_request(data.messages, active.key, true)
                 
             } else if(data.type === REQUEST_FILE) {
                 const file = sanitize_file_message(data.file)
@@ -580,7 +580,7 @@ const request_file = async (address, topic, name, file, room) => {
 const process_files = async (data, active, con, topic) => {
     //Check if the latest 10 files are in sync
     console.log("PROCESS FILES")
-    if (Hugin.syncImages) {
+    if (Hugin.syncImages.some(a => a === topic)) {
         if (!Array.isArray(data.files)) return 'Ban'
         if (data.files.length > 10) return 'Ban'
         for (const file of data.files) {
@@ -593,7 +593,7 @@ const process_files = async (data, active, con, topic) => {
 }
 
 
-const process_request = async (messages, key, live = false, address, topic) => {
+const process_request = async (messages, key, live = false) => {
     let i = 0
     const missing = []
     try {
@@ -924,7 +924,7 @@ const check_file_message = async (data, topic, address, con) => {
     if (!active) return
     if (data.info === 'file-shared') {
 
-    if (check_if_image_or_video(data.fileName, data.size, true) && Hugin.syncImages) {
+    if (check_if_image_or_video(data.fileName, data.size, true) && Hugin.syncImages.some(a => a === topic)) {
         //A file is shared and we have auto sync images on.
         //Request to download the file
         const file = {

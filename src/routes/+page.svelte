@@ -60,7 +60,7 @@
         $rooms.roomArray = await window.api.getRooms()
         $rooms.banned = banned
         $files = fileList
-        $misc.syncImages
+        $misc.syncImages = syncImages
         setAvatars(avatars)
         if (avatar.length) setCustomAvatar(avatar)
         loginSuccess()

@@ -54,7 +54,6 @@ async load_files(topic) {
 }
 
 get_drive(topic) {
-  console.log("topic", topic)
   const found = this.drives.find(a => a.topic === topic)
   if (!found) return false
   return found.drive

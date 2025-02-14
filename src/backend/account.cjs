@@ -22,11 +22,6 @@ ipcMain.on('set-avatar', (e, data) => {
   Hugin.avatar = avatar
 })
 
-ipcMain.on('sync-images', (e, setting) => {
-  store.set({
-    syncImages: setting
-  })
-})
 
 ipcMain.on('save-avatar', (e, data) => {
   // let list = store.get('avatars') ?? []
@@ -123,7 +118,7 @@ class Account {
       this.downloadDir = store.get('download.dir') ?? downloadDir
       this.address = wallet.getPrimaryAddress()
       this.avatar = get_avatar()
-      this.syncImages = store.get('syncImages') ?? true
+      this.syncImages = store.get('syncImages') ?? []
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({
@@ -134,7 +129,7 @@ class Account {
       }
 
       await this.load()
-
+      this.ipc()
      }
     
   async load() {
@@ -205,6 +200,19 @@ class Account {
       return store.get('files') ?? []
      }
 
+     ipc() {
+
+      ipcMain.on('sync-images', (e, list) => {
+        store.set({
+          syncImages: list
+        })
+        this.syncImages = list
+
+        console.log("Set sync image setting", list)
+      })
+    
+     }
+  
 }
 
   let Hugin = new Account()
