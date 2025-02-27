@@ -821,10 +821,10 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
     const topic = active.topic
     const signature = await signMessage(hash + size.toString() + time.toString() + fileName, keychain.getXKRKeypair().privateSpendKey)
     const upload = {
-        fileName, path, topic, size, time, hash, room, signature
+        fileName, path, topic, size, time, hash, room, signature, name: Hugin.nickname
     }
     console.log("Upload this file to group", upload)
-    await Storage.save(topic, Hugin.address, Hugin.name, hash, size, time, fileName, path, signature, 'file-shared', 'file')
+    await Storage.save(topic, Hugin.address, Hugin.nickname, hash, size, time, fileName, path, signature, 'file-shared', 'file')
     share_file(upload)
     save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname)
 
@@ -880,6 +880,7 @@ const share_file = (file) => {
     const fileInfo = {
         fileName: file.fileName,
         address: Hugin.address,
+        name: Hugin.nickname,
         topic: file.topic,
         info: 'file-shared',
         type: 'file',
