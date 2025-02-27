@@ -75,7 +75,7 @@
         "hypercore": "^10.37.25",
         "hyperdht": "^6.19.0",
         "hyperdht-hugin": "^1.0.1",
-        "hyperdrive": "^11.13.0",
+        "hyperdrive": "^11.13.4",
         "hyperswarm": "^4.8.4",
         "hyperswarm-hugin": "^1.0.1",
         "identicon.js": "^2.3.3",
