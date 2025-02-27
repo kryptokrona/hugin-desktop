@@ -41,6 +41,7 @@
         "src/backend/messages.cjs",
         "src/backend/wallet.cjs",
         "src/backend/account.cjs",
+        "src/backend/storage.cjs",
         {
             "from": "build",
             "to": ""
