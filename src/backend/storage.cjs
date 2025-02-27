@@ -77,7 +77,7 @@ async load(hash, topic) {
   return file
 }
 
-async save(topic, address, hash, size, time, fileName, path, signature, info, type, downloaded = false) {
+async save(topic, address, name ,hash, size, time, fileName, path, signature, info, type, downloaded = false) {
   const drive = this.get_drive(topic)
   if (!drive) return
   console.log("****Save file to drive****")
@@ -95,7 +95,7 @@ async save(topic, address, hash, size, time, fileName, path, signature, info, ty
     } else buf = downloaded
     
     if (!buf) return
-    await drive.put(hash, buf, {metadata: {topic, time, size, hash, fileName, address, signature, info, type}})
+    await drive.put(hash, buf, {metadata: {name ,topic, time, size, hash, fileName, address, signature, info, type}})
     Hugin.file_info({fileName, time, size, path, hash, topic})
   } catch(e) {
     return
@@ -124,7 +124,7 @@ check(size, buf, name) {
   return false
 }
 
-async start_beam(upload, key, file, topic, name, room) {
+async start_beam(upload, key, file, topic, room) {
     console.log("----::::::::::----")
     console.log("::::START BEAM::::")
     console.log("----::::::::::----")
@@ -133,7 +133,7 @@ async start_beam(upload, key, file, topic, name, room) {
     const options = { upload, dht_keys, base_keys, sig };
     try {
         const beam = new Huginbeam(key, options)
-        this.beam_started(beam, upload, key, topic, file, name, room)
+        this.beam_started(beam, upload, key, topic, file, room)
         beam.write('Start')
         return true
 
@@ -143,7 +143,7 @@ async start_beam(upload, key, file, topic, name, room) {
     }
 }
 
-async beam_started(beam, upload, key, topic, file, name, room) {
+async beam_started(beam, upload, key, topic, file, room) {
   console.log("----::::::::::----")
   console.log(":::BEAM STARTED:::")
   console.log("----::::::::::----")
@@ -155,7 +155,7 @@ async beam_started(beam, upload, key, topic, file, name, room) {
       //upload
       this.upload(beam, file, topic)
     } else {
-      this.download(beam, file, topic, name, room)
+      this.download(beam, file, topic, room)
     }
   })
 
@@ -188,7 +188,7 @@ async upload(beam, file, topic) {
     })
 }
 
-async download(beam, file, topic, name, room) {
+async download(beam, file, topic, room) {
   console.log("Download file", file)
   beam.on('data', async (data) => {
     console.log("*********************")
@@ -217,6 +217,7 @@ async download(beam, file, topic, name, room) {
       await this.save(
         topic,
         file.address,
+        file.name,
         file.hash,
         file.size,
         file.time,
@@ -234,7 +235,7 @@ async download(beam, file, topic, name, room) {
       group: room,
       topic,
       time: file.time.toString(),
-      name:  name,
+      name:  file.name,
       reply: '',
       hash: file.hash,
       sent: false,

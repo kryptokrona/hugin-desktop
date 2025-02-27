@@ -288,7 +288,7 @@ const download_file = async (fileName, size, chat, key, group = false) => {
         if (progress.percentage === 100) {
             let message = `Downloaded ${fileName}`
             if (!group) saveMsg(message, chat, false, file.time)
-            else Hugin.save_file(download)
+            else Hugin.file_info(download)
         }
     });
 

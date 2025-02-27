@@ -472,7 +472,7 @@ const check_data_message = async (data, connection, topic, peer) => {
             } else if(data.type === REQUEST_FILE) {
                 const file = sanitize_file_message(data.file)
                 if (!file) return "Error"
-                Storage.start_beam(true, file.key, file, topic, con.name, active.key)
+                Storage.start_beam(true, file.key, file, topic, active.key)
             }
             return true
         }
@@ -559,7 +559,7 @@ const send_history = async (address, topic, key, files) => {
     send_peer_message(address, topic, history)
 }
 
-const request_file = async (address, topic, name, file, room) => {
+const request_file = async (address, topic, file, room) => {
     //request a missing file, open a hugin beam
     console.log("-----------------------------")
     console.log("*** WANT TO REQUEST FILE  ***")
@@ -567,7 +567,7 @@ const request_file = async (address, topic, name, file, room) => {
     const verify = await verifySignature(file.hash + file.size.toString() + file.time.toString() + file.fileName, file.address, file.signature)
     if (!verify) return
     const key = randomKey()
-    Storage.start_beam(false, key, file, topic, name, room)
+    Storage.start_beam(false, key, file, topic, room)
     file.key = key
     const message = {
         file,
@@ -584,10 +584,11 @@ const process_files = async (data, active, con, topic) => {
         if (!Array.isArray(data.files)) return 'Ban'
         if (data.files.length > 10) return 'Ban'
         for (const file of data.files) {
+            console.log("File", file.fileName)
             if (!check_hash(file.hash)) continue
             if (Hugin.get_files().some(a => a.time === file.time)) continue
                 await sleep(50)
-                request_file(con.address, topic, con.name, file, active.key)
+                request_file(con.address, topic, file, active.key)
         }
     }
 }
@@ -755,8 +756,9 @@ const check_online_state = async (topic) => {
     let a = 0
     async function ping() {
         const active = get_active_topic(topic)
-        active.files = await Storage.load_meta(topic)
+        const allFiles = await Storage.load_meta(topic)
         const hashes = await getLatestRoomHashes(active.key)
+        const files = allFiles.sort((a, b) => a.time - b.time).slice(-10)
         let peers = []
         //Send peer info on the first three pings. Then every 10 times.
         if (a < 3 || a % 10 === 0) {
@@ -771,7 +773,7 @@ const check_online_state = async (topic) => {
         } else {
             active.search = true
             let i = 0
-            const data = {type: 'Ping', peers, files: active.files.slice(-10)}
+            const data = {type: 'Ping', peers, files: files}
             for (const conn of active.connections) {
                 if (!conn.joined) continue
                 data.hashes = hashes
@@ -822,7 +824,7 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
         fileName, path, topic, size, time, hash, room, signature
     }
     console.log("Upload this file to group", upload)
-    await Storage.save(topic, Hugin.address, hash, size, time, fileName, path, signature, 'file-shared', 'file')
+    await Storage.save(topic, Hugin.address, Hugin.name, hash, size, time, fileName, path, signature, 'file-shared', 'file')
     share_file(upload)
     save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname)
 
@@ -930,6 +932,7 @@ const check_file_message = async (data, topic, address, con) => {
         const file = {
             address,
             topic,
+            name: data.name,
             time: data.time,
             hash: data.hash,
             size: data.size,
@@ -938,7 +941,7 @@ const check_file_message = async (data, topic, address, con) => {
             type: data.type,
             info: data.info
         }
-        request_file(address, topic, con.name, file, active.key)
+        request_file(address, topic, file, active.key)
     } else {
         const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, active.key, con.name, data.time)
         save_file_info(data, topic, address, added, false, con.name)

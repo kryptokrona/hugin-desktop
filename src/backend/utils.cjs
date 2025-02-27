@@ -342,6 +342,7 @@ const sanitize_join_swarm_data = (data) => {
   
     const address = sanitizeHtml(data?.address);
     if (typeof data?.address !== 'string' || address.length > 99) return false;
+    
   
     const topic = sanitizeHtml(data?.topic);
     if (typeof data?.topic !== 'string' || topic.length > 64) return false;
@@ -370,12 +371,18 @@ const sanitize_join_swarm_data = (data) => {
     if (data?.hash !== undefined) {
       if (typeof hash !== 'string' || hash.length > 64) return false;
     }
+
+    const name = sanitizeHtml(data?.name);
+    if (data?.name !== undefined) {
+      if (typeof name !== 'string' || name.length > 100) return false;
+    }
   
     if (typeof data?.file === 'boolean') return false;
   
     const object = {
       fileName,
       address,
+      name,
       topic,
       info,
       type,
