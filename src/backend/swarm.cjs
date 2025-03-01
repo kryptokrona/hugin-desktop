@@ -24,6 +24,7 @@ const PING_SYNC = 'Ping';
 let localFiles = []
 let remoteFiles = []
 let active_swarms = []
+let downloading = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 
 async function send_voice_channel_sdp(data) {
@@ -564,6 +565,7 @@ const request_file = async (address, topic, file, room) => {
     console.log("-----------------------------")
     console.log("*** WANT TO REQUEST FILE  ***")
     console.log("-----------------------------")
+    downloading.push(file.hash)
     const verify = await verifySignature(file.hash + file.size.toString() + file.time.toString() + file.fileName, file.address, file.signature)
     if (!verify) return
     const key = randomKey()
@@ -586,6 +588,7 @@ const process_files = async (data, active, con, topic) => {
         for (const file of data.files) {
             console.log("File", file.fileName)
             if (!check_hash(file.hash)) continue
+            if (downloading.some(a => a === file.hash)) continue
             if (Hugin.get_files().some(a => a.time === file.time)) continue
                 await sleep(50)
                 request_file(con.address, topic, file, active.key)
