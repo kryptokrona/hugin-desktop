@@ -581,12 +581,10 @@ const request_file = async (address, topic, file, room) => {
 
 const process_files = async (data, active, con, topic) => {
     //Check if the latest 10 files are in sync
-    console.log("PROCESS FILES")
     if (Hugin.syncImages.some(a => a === topic)) {
         if (!Array.isArray(data.files)) return 'Ban'
         if (data.files.length > 10) return 'Ban'
         for (const file of data.files) {
-            console.log("File", file.fileName)
             if (!check_hash(file.hash)) continue
             if (downloading.some(a => a === file.hash)) continue
             if (Hugin.get_files().some(a => a.time === file.time)) continue

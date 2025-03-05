@@ -380,8 +380,16 @@
         $groups.blockList = block_list
     })
 
-    window.api.receive('new-beam', async (beamData) => {
-        toast.success(`New beam activated`, {
+    window.api.receive('new-beam', async (data) => {
+        $beam.active.push({
+            chat: data.chat,
+            connected: false,
+            key: data.key,
+            hugin: data.hugin
+        })
+        $beam.active = $beam.active
+        if ($beam.active.length > 1) return
+        toast.success(`Beams activated`, {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
@@ -408,10 +416,15 @@
         $user.loggedIn = true
     })
 
-    window.api.receive('stop-beam', (addr)  => {
+    window.api.receive('stop-beam', (addr, close = false)  => {
+        if (!close) {
+            const restart = $beam.active.find(a => a.chat === addr) 
+            window.api.createBeam(restart.hugin)
+        }
         let filter = $beam.active.filter(a => a.chat !== addr)
         $beam.active = filter
         console.log('active beams', $beam.active)
+        if (!close) return
         toast.error('Beam disconnected', {
                 position: 'top-right',
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',

@@ -129,10 +129,8 @@
     }
 
     const joinBeam = () => {
-        let key = beam_key
-        if (key === "new") return
         clicked = true
-        window.api.createBeam(key, $user.activeChat.chat + $user.activeChat.key)
+        window.api.createBeam($user.activeChat.chat + $user.activeChat.key)
         $beam.active.push({
             chat: $user.activeChat.chat,
             connected: false,

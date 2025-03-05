@@ -151,11 +151,14 @@ async beam_started(beam, upload, key, topic, file, room) {
     console.log("----:::::::::::::::::::----")
     console.log("------BEAM CONNECTED------")
     console.log("----:::::::::::::::::::----")
-    if (upload) {
-      //upload
-      this.upload(beam, file, topic)
-    } else {
-      this.download(beam, file, topic, room)
+    try {
+      if (upload) {
+        this.upload(beam, file, topic)
+      } else {
+        this.download(beam, file, topic, room)
+      }
+    } catch(e) {
+      
     }
   })
 
@@ -184,7 +187,11 @@ async upload(beam, file, topic) {
     const stream = Readable.from(send)
     stream.on('data', data => {
         console.log("Sending data ------>", data)
-        beam.write(data)
+        try {
+          beam.write(data)
+        } catch(e) {
+          console.log("Error writing data.")
+        }
     })
 }
 

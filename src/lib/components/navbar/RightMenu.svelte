@@ -170,7 +170,7 @@ function copyThis(copy) {
 
 
 function newBeam() {
-    window.api.createBeam("new", $user.activeChat.chat + $user.activeChat.key)
+    window.api.createBeam($user.activeChat.chat + $user.activeChat.key)
     $beam.active.push({
       chat: $user.activeChat.chat,
       connected: false,
@@ -252,7 +252,7 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
                     <Lightning connected={connectedBeam} connecting={activeBeam} />
                 </div>
             </Tooltip>
-            {#if !connectedBeam }
+            {#if connectedBeam}
             
                 <button class="button">
                     {#if thisCall && !video}

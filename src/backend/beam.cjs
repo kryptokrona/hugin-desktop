@@ -5,7 +5,7 @@ const { saveMsg } = require('./database.cjs')
 const sanitizeHtml = require('sanitize-html')
 const progress = require("progress-stream");
 const {createWriteStream, createReadStream} = require("fs");
-const { sleep, sanitize_pm_message, randomKey, hash } = require('./utils.cjs');
+const { sleep, sanitize_pm_message, randomKey, hash, parse_call } = require('./utils.cjs');
 const { ipcMain } = require('electron')
 const {Hugin} = require('./account.cjs');
 const { keychain, get_new_peer_keys } = require('./crypto.cjs');
@@ -18,7 +18,7 @@ let downloadDirectory
 
 ipcMain.on("end-beam", async (e, chat) => {
     console.log("end beam");
-    end_beam(chat);
+    end_beam(chat, true);
 })
 
 //FILES
@@ -113,7 +113,7 @@ const beam_event = (beam, chat, key) => {
     const addr = chat.substring(0,99)
     const msgKey = chat.substring(99,163)
     active_beams.push({key, chat: addr, beam})
-    Hugin.send('new-beam', {key, chat: addr})
+    Hugin.send('new-beam', {key, chat: addr, hugin: addr + msgKey})
     beam.on('remote-address', function ({ host, port }) {
         if (!host) console.log('Could not find the host')
         else console.log('Connected to DHT with' + host + ':' + port)
@@ -138,6 +138,7 @@ const beam_event = (beam, chat, key) => {
 
     beam.on('end', () => {
         console.log('Chat beam ended on event')
+        end_beam(addr, true)
     })
 
     beam.on('error', function (e) {
@@ -167,11 +168,13 @@ const decrpyt_beam_message = async (str, msgKey) => {
     decrypted_message.k = msgKey
     decrypted_message.sent = false
     const [message, address, key, timestamp] = sanitize_pm_message(decrypted_message)
-
+    
     if (!message) return
-
+    
+    const [text, data, call] = is_call(decrypted_message.msg, address, false, timestamp)
+    
     const newMsg = {
-        msg: message,
+        msg: call ? text : message,
         chat: address,
         sent: false,
         timestamp: timestamp,
@@ -182,6 +185,22 @@ const decrpyt_beam_message = async (str, msgKey) => {
     Hugin.send('newMsg', newMsg)
     Hugin.send('privateMsg', newMsg)
     saveMsg(message, address, false, timestamp)
+}
+
+const is_call = (message, address, sent, timestamp) => {
+    //Checking if private msg is a call
+    const [text, data, is_call, if_sent] = parse_call(message, address, sent, true, timestamp)
+
+    if (text === "Audio call started" || text === "Video call started" && is_call && !if_sent) {
+        //Incoming calll
+        Hugin.send('call-incoming', data)
+        return [text, true]
+    } else if (text === "Call answered" && is_call && !if_sent) {
+        //Callback
+        Hugin.send('got-callback', data)
+        return [text, true]
+    }
+    return ['',false]
 }
 
 const send_beam_message = (message, to) => {
@@ -201,10 +220,10 @@ const end_file_beam = async (chat, key) => {
 }
 
 
-const end_beam = async (chat, file = false) => {
+const end_beam = async (chat, close) => {
     const active = active_beams.find(a => a.chat === chat)
     if (!active) return
-    Hugin.send('stop-beam', chat)
+    Hugin.send('stop-beam', chat, close)
     active.beam.end()
     await sleep(2000)
     active.beam.destroy()

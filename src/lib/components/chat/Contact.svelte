@@ -2,13 +2,14 @@
 import {createEventDispatcher} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
-import {notify, user, webRTC} from '$lib/stores/user.js'
+import {notify, user, webRTC, beam} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
 
 export let contact
 let thisCall = false
 let beamInvite = false
 let asian = false
+let online = false
 
 $: counter = $notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length
 $: if (contact.msg.substring(0,7) === "BEAM://") {
@@ -43,6 +44,14 @@ const rename = () => {
     })
     dispatch('openRename')
 }
+
+$: {
+    if ($beam.active.length) {
+      online = $beam.active.some(a => a.chat == contact.chat && a.connected);
+    } else {
+      online = false
+    }
+  }
 </script>
 
 <div
@@ -51,6 +60,7 @@ const rename = () => {
     out:fade
     class:rgb="{thisCall}"
     class:active="{contact.chat === $user.activeChat.chat}"
+    class:online={online}
     on:click="{() => printThis(contact)}"
 >
 
@@ -161,5 +171,9 @@ p {
 
 .big {
     font-size: 17px;
+}
+
+.online {
+    box-shadow: inset 10px 0 7px -7px var(--success-color);
 }
 </style>

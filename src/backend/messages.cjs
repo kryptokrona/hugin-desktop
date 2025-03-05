@@ -12,24 +12,18 @@ const {
     removeMessages, 
     removeContact, 
     addGroup, 
-    removeGroup,
     unBlockContact,
     loadBlockList,
     blockContact,
     getGroupReply,
-    printGroup,
-    getGroups,
     loadGroups,
     deleteMessage,
     addRoom,
-    loadRooms,
     addRoomKeys,
-    getRooms,
     removeRoom} = require("./database.cjs")
 const {
     trimExtra, 
-    sanitize_pm_message, 
-    parse_call,
+    sanitize_pm_message,
     sleep, 
     hexToUint,
     randomKey,
@@ -159,6 +153,8 @@ ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam) => {
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
     save_contact(hugin_address, nickname, first)
+    const key = await key_derivation_hash(hugin_address.substring(0,99))
+    await new_beam(key, hugin_address, false);
 })
 
 
@@ -190,11 +186,12 @@ ipcMain.on('expand-sdp', (e, data, address) => {
 
 //BEAM
 
-ipcMain.on("beam", async (e, link, chat, send = false, offchain = false) => {
-    let beamMessage = await new_beam(link, chat, send);
+ipcMain.on("beam", async (e, chat, send = false, beam = false) => {
+    const key = await key_derivation_hash(chat.substring(0,99))
+    let beamMessage = await new_beam(key, chat, send);
     if (beamMessage === "Error") return
     if (!beamMessage) return
-    send_message(beamMessage.msg, beamMessage.chat, offchain)
+    if (beam) send_message(beamMessage.msg, beamMessage.chat, offchain)
 });
 
 //SWARM
@@ -207,62 +204,28 @@ ipcMain.on('end-swarm', async (e, key) => {
     end_swarm(key)
 })
 
-
-//TORRENT
-
-ipcMain.on('download-torrent', (e, file) => {
-    download_torrent(file)
-})
-
-const download_torrent = (file) => {
-    return
-    // const client = new WebTorrent({utp: true,  dht: false})
-    // const path = Hugin.downloadDir
-    // Hugin.send('downloading', file)
-    // client.add(file.message, { path: path, utp: true }, torrent => {
-    //     console.log("torrent added!")
-    //     torrent.on('download', function (bytes) { 
-    //         console.log("Downloading!!!! --------->")
-    //         Hugin.send('download-file-progress', {
-    //             fileName: file.fileName,
-    //             progress: torrent.progress,
-    //             group: file.group,
-    //             chat: file.group,
-    //             path
-    //         })
-    //     } )
-    //     torrent.on('done', () => {
-    //     console.log("Downloaded torrent!")
-    //     Hugin.send('downloading-torrent')
-    //     console.log('torrent download finished')
-    //     })
-    // })
+const peer_dms = async () => {
+    const contacts = await getConversations()
+    for (const c of contacts) {
+        const hashDerivation = await key_derivation_hash(c.chat)
+        const beam = await new_beam(hashDerivation, c.chat + c.key, false)
+        if (beam === "Error") continue
+        if (!beam) continue
+    }
+    
 }
 
-ipcMain.on('upload-torrent', (e, [fileName, path, size, time, group, hash]) => {
-    return
-    // console.log("Upload this!", path, fileName, size, time)
-    // const client = new WebTorrent()
-    // Hugin.send('uploading', {fileName, progress: 0, size, chat: group, time, hash})
-    // client.seed(path, {}, (torrent) => {
-    //     console.log('Client is seeding ' + torrent.magnetURI)
-    //     torrent.on('wire', (wire, addr) => {
-    //         Hugin.send('torrent-connection')
-    //         Hugin.send('uploading-torrent')
-    //       })
-    //     torrent.on('upload', function (uploaded) {
-    //         console.log("Uploaded", uploaded)
-    //         Hugin.send('upload-file-progress', {fileName, progress: (uploaded / size) * 100, chat: group, time})
-    //      })
-    //      const message = {m: 'TORRENT://' + torrent.magnetURI, g: group, t: time}
-
-    //      send_group_message(message, false, false)
-    // })
-
-})
+async function key_derivation_hash(chat) {
+    const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
+    const recvAddr = await Address.fromAddress(chat)
+    const recvPubKey = recvAddr.m_keys.m_viewKeys.m_publicKey
+    const derivation = await crypto.generateKeyDerivation(recvPubKey, privateViewKey);
+    return await crypto.cn_fast_hash(derivation)
+}
 
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
+    peer_dms()
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
     await background_sync_messages(await load_checked_txs())
@@ -598,6 +561,9 @@ async function fetch_hugin_messages() {
 
 async function send_message(message, receiver, off_chain = false, group = false, beam_this = false) {
     //Assert address length
+    console.log("Send message!", message)
+    console.log("offchain", off_chain)
+    console.log("beam_this", beam_this)
     if (receiver.length !== 163) {
         return
     }
@@ -1170,17 +1136,6 @@ async function save_message(msg, offchain = false) {
     if (!message) return
 
     if (await messageExists(timestamp)) return
-    
-    //Checking if private msg is a call
-    let [text, data, is_call, if_sent] = parse_call(msg.msg, addr, sent, offchain, timestamp)
-
-    if (text === "Audio call started" || text === "Video call started" && is_call && !if_sent) {
-        //Incoming calll
-        Hugin.send('call-incoming', data)
-    } else if (text === "Call answered" && is_call && !if_sent) {
-        //Callback
-        Hugin.send('got-callback', data)
-    }
 
     //If sent set addr to chat instead of from
     if (msg.chat && sent) {
@@ -1193,7 +1148,6 @@ async function save_message(msg, offchain = false) {
         await save_contact(hugin)
     }
 
-    message = sanitizeHtml(text)
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
     if (sent) {
         //If sent, update conversation list
@@ -1234,6 +1188,9 @@ async function save_contact(hugin_address, nickname = false, first = false) {
             t: Date.now(),
         })
         known_keys.pop(key)
+    } else {
+        const key = await key_derivation_hash(addr)
+        await new_beam(key, hugin_address, false);
     }
 }
 
@@ -1256,12 +1213,12 @@ function get_sdp(data)
     if (data.type == 'offer') 
     {
         let parsed_data = `${data.video ? 'Δ' : 'Λ'}` + parse_sdp(data.data, false)
-        send_message(parsed_data, data.contact, data.offchain, data.group)
+        send_message(parsed_data, data.contact, true, data.group, true)
     } 
     else if (data.type == 'answer') 
     {
         let parsed_data = `${data.video ? 'δ' : 'λ'}` + parse_sdp(data.data, true)
-        send_message(parsed_data, data.contact, data.offchain, data.group)
+        send_message(parsed_data, data.contact, true, data.group, true)
     }
 }
 

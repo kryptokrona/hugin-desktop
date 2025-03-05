@@ -217,7 +217,7 @@ async function dropFile(e) {
     if ($webRTC.call.some(a => a.chat === $user.activeChat.chat)) offchain = true
 
     if (!$beam.active.some(a => a.chat === message.chat)) {
-        window.api.createBeam("new", toHuginAddress, true, offchain)
+        window.api.createBeam(toHuginAddress, true, offchain)
         $beam.active.push({
             chat: $user.activeChat.chat,
             connected: false,
