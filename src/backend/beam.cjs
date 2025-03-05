@@ -171,7 +171,7 @@ const decrpyt_beam_message = async (str, msgKey) => {
     
     if (!message) return
     
-    const [text, data, call] = is_call(decrypted_message.msg, address, false, timestamp)
+    const [text, call] = is_call(decrypted_message.msg, address, false, timestamp)
     
     const newMsg = {
         msg: call ? text : message,
@@ -203,9 +203,14 @@ const is_call = (message, address, sent, timestamp) => {
     return ['',false]
 }
 
-const send_beam_message = (message, to) => {
+const send_beam_message = (message, to, time) => {
     const active = active_beams.find(a => a.chat === to)
-    active.beam.write(message)
+    try {
+        active.beam.write(message)
+    } catch(e) {
+        return
+    }
+    saveMsg(message, to, true, time, true)
 }
 
 const end_file_beam = async (chat, key) => {

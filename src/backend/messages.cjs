@@ -636,7 +636,8 @@ async function send_message(message, receiver, off_chain = false, group = false,
             messageArray.push('group')
         }
         if (beam_this) {
-            send_beam_message(sendMsg, address)
+            send_beam_message(sendMsg, address, timestamp)
+            return
         } else {
             Hugin.send('rtc_message', [messageArray])
         }
