@@ -7,25 +7,29 @@
     import { groups, user } from '$lib/stores/user.js'
     import Progress from "$lib/components/chat/Progress.svelte"
     import { sleep } from "$lib/utils/utils"
+import AudioPlayer from "./AudioPlayer.svelte"
 
     export let file
     export let group = false
     export let rtc = false
+
     
-    let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.mov','.wmv', '.mkv', '.mpeg']
     let downloadDone = false
     let downloading = false
-    let thisFile
     let clicked = false
     let downloaders = []
-    onMount(() => {
-        if (group) return
-        if (videoTypes.some(a => file.fileName.endsWith(a) && file.size < 50000000))
-        {
-            video = true
-            return
-        }
+    
+    let video = false
+    let audio = false
+    let image = false
+    let data
+
+    const NOT_FOUND = "File not found"
+    const OTHER = "File"
+
+
+    onMount(async () => {
+        await loadFile(file)
     })
 
    $: {
@@ -35,16 +39,26 @@
    
 
     $: if (downloadDone) {
-         if (!video) awaitLoad(file)
+        awaitLoad(file)
     }
 
     async function awaitLoad(file) {
-        await sleep(200)
-        loadFile(file)
+        await sleep(100)
+        await loadFile(file)
     }
 
     $: if (file?.saved) {
-         if (!video) loadFile(file)
+        awaitLoad(file)   
+    }
+
+    const checkType = (type) => {
+        switch (type){
+            case 'audio': audio = true
+            break;
+            case 'video': video = true
+            break;
+            case 'image': image = true
+        }
     }
     
     const focusImage = (image) => {
@@ -56,14 +70,18 @@
     }
 
     async function loadFile(file) {
-        let arr
+        let load = []
         if (file.path === "storage") {
-            arr = await window.api.loadStoredFile(file.hash, file.topic)
-        } else arr = await window.api.loadFile(file.path, file.size)
-        if (arr === "File" || arr === "File not found") return arr
+            load = await window.api.loadStoredFile(file.hash, file.topic)
+        } else {
+            load = await window.api.loadFile(file.path, file.size)
+        }
+        if (load[0] === OTHER || load[0] === NOT_FOUND) return false
+        const [arr, type] = load
         let blob = new Blob( [ arr ]);
-        let imageUrl = URL.createObjectURL( blob );
-        thisFile = imageUrl
+        data = URL.createObjectURL( blob );
+        console.log("Load ", data)
+        checkType(type)
     }
     
     const downloadFile = (file) => {
@@ -92,29 +110,27 @@
         <div in:fade>
             <Progress file={file} send={false}/>
         </div>
-    <!-- {:else if downloadDone && group}
-        <div style="cursor: pointer" in:fade on:click={() => window.api.openFolder()}>
-            <Progress file={file} send={false}/>
-        </div>
-        <p class="message done">File downloaded!</p> -->
         
     {:else if downloadDone || file?.saved}
         {#if !video}
-                {#if thisFile === "File" && !file?.saved}
+                {#if data === OTHER && !file?.saved}
                 <div in:fade>
                     <Progress file={file} send={false}/>
                 </div>
                 <p class="message done">File downloaded!</p>
-                {:else if thisFile === "File not found"}
-                <p class="message error">File not found</p>
-                {:else}
+                <p>{file.fileName}</p>
+                {:else if data === NOT_FOUND}
+                <p class="message error">{NOT_FOUND}</p>
+                {:else if image}
                 <div style="-webkit-user-drag: none;" on:click={focusImage}>
                     <img
                         in:fade="{{ duration: 150 }}"
-                        src="{thisFile}"
+                        src="{data}"
                         alt=""
                     />
                 </div>
+                {:else if audio}
+                 <AudioPlayer src={data} />
                 {/if}
         {:else if video}
             <VideoPlayer src={file} />

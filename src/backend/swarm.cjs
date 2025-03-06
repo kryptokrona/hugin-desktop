@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_image_or_video} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply} = require("./database.cjs")
 const { app,
     ipcMain
@@ -927,8 +927,8 @@ const check_file_message = async (data, topic, address, con) => {
     const active = get_active_topic(topic)
     if (!active) return
     if (data.info === 'file-shared') {
-
-    if (check_if_image_or_video(data.fileName, data.size, true) && Hugin.syncImages.some(a => a === topic)) {
+    const [media, type] = check_if_media(data.fileName, data.size, true)
+    if (media && Hugin.syncImages.some(a => a === topic)) {
         //A file is shared and we have auto sync images on.
         //Request to download the file
         const file = {

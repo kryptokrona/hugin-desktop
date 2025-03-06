@@ -19,10 +19,13 @@ const close = () => {
 }
 
 async function getImage(path) {
-    let arr
+    let load = []
     if ($fileViewer.hash.length === 64) {
-       arr = await window.api.loadStoredFile($fileViewer.hash, $fileViewer.topic)
-    } else arr = await window.api.loadFile(path, $fileViewer.size)
+      load = await window.api.loadStoredFile($fileViewer.hash, $fileViewer.topic)
+    } else {
+      load = await window.api.loadFile(path, $fileViewer.size)
+    }
+    const [arr] = load
     let blob = new Blob( [ arr ] );
     image = URL.createObjectURL( blob );
 }

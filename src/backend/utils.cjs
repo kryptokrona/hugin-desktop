@@ -4,7 +4,24 @@ const { Crypto, Keys } = require('kryptokrona-utils')
 const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
 const {createReadStream} = require("fs");
-const MEDIA_TYPES = ['.png','.jpg','.gif', '.jpeg', '.jfif', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg']
+const MEDIA_TYPES = [
+    { file: '.png', type: 'image' },
+    { file: '.jpg', type: 'image' },
+    { file: '.gif', type: 'image' },
+    { file: '.jfif', type: 'image' },
+    { file: '.jpeg', type: 'image' },
+    { file: '.mp4', type: 'video' },
+    { file: '.webm', type: 'video' },
+    { file: '.avi', type: 'video' },
+    { file: '.webp', type: 'video' },
+    { file: '.mov', type: 'video' },
+    { file: '.wmv', type: 'video' },
+    { file: '.mkv', type: 'video' },
+    { file: '.mpeg', type: 'video' },
+    { file: '.m4a', type: 'audio' },
+    { file: '.mp3', type: 'audio' },
+    { file: '.wav', type: 'audio' },
+  ];
 
 ipcMain.handle('load-file', async (e, path, size) => {
     return await load_file(path, size)
@@ -20,21 +37,21 @@ ipcMain.handle('select-directory', () => {
 
 
 //Check if it is an image or video with allowed type
-function check_if_image_or_video(path, size, check = false) {
+function check_if_media(path, size, check = false) {
     if (path === undefined && !check) return false
-    if (size >= 50000000) return false
-    const types = MEDIA_TYPES
-    for (a in types) {
-        if (path.toLowerCase().endsWith(types[a])) {
-            return true
+    if (size >= 10000000) return false
+        for (const a of MEDIA_TYPES) {
+          if (path.toLowerCase().endsWith(a.file)) {
+            return [true, a.type];
+          }
         }
-    }
-    return false
+        return [false];
 }
 
 async function load_file(path, size) {
     let imgArray = []
-    if (check_if_image_or_video(path, size)) {
+    const [media, type] = check_if_media(path, size)
+    if (media) {
         //Read the file as an image
         return new Promise((resolve, reject) => {
             try {
@@ -44,18 +61,18 @@ async function load_file(path, size) {
                     imgArray.push(data)
                 })
                 stream.on('error', (data) => {
-                    return "File not found"
+                    return ["File not found"]
                 })
 
                 stream.on('end', () => {
-                    resolve(Buffer.concat(imgArray))
+                    resolve([Buffer.concat(imgArray), type])
                 })
             } catch {
-                return "File not found"
+                return ["File not found"]
             }
         })
     } else {
-        return "File"
+        return ["File"]
     }    
 }
 
@@ -398,4 +415,4 @@ const sanitize_join_swarm_data = (data) => {
 
  
 
-module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_image_or_video, MEDIA_TYPES}
+module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}

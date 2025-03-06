@@ -3,8 +3,24 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const fs = require('fs');
 const { app } = require('electron');
-const MEDIA_TYPES = ['.png','.jpg','.gif', '.jpeg', '.jfif', '.mp4', '.webm', '.avi', '.webp', '.mov','.wmv', '.mkv', '.mpeg']
-const { hash } = require('hyperdht');
+const MEDIA_TYPES = [
+  { file: '.png', type: 'image' },
+  { file: '.jpg', type: 'image' },
+  { file: '.gif', type: 'image' },
+  { file: '.jfif', type: 'image' },
+  { file: '.jpeg', type: 'image' },
+  { file: '.mp4', type: 'video' },
+  { file: '.webm', type: 'video' },
+  { file: '.avi', type: 'video' },
+  { file: '.webp', type: 'video' },
+  { file: '.mov', type: 'video' },
+  { file: '.wmv', type: 'video' },
+  { file: '.mkv', type: 'video' },
+  { file: '.mpeg', type: 'video' },
+  { file: '.m4a', type: 'audio' },
+  { file: '.mp3', type: 'audio' },
+  { file: '.wav', type: 'audio' },
+];
 const { get_new_peer_keys } = require('./crypto.cjs');
 const userDataDir = app.getPath('userData')
 const Huginbeam = require("huginbeam");
@@ -83,7 +99,8 @@ async save(topic, address, name ,hash, size, time, fileName, path, signature, in
   console.log("****Save file to drive****")
   if (this.saved > this.limit) return
   if (downloaded) {
-    if (!this.check(size, downloaded, fileName)) return
+    const [media, type] = this.check(size, downloaded, fileName)
+    if (!media) return
   }
   this.saved = this.saved + size
   console.log("Saved thus far:", this.saved)
@@ -93,7 +110,6 @@ async save(topic, address, name ,hash, size, time, fileName, path, signature, in
     if (!downloaded) {
      buf = await this.read(path) 
     } else buf = downloaded
-    
     if (!buf) return
     await drive.put(hash, buf, {metadata: {name ,topic, time, size, hash, fileName, address, signature, info, type}})
     Hugin.file_info({fileName, time, size, path, hash, topic})
@@ -113,15 +129,16 @@ async read(path) {
   });
 }
 
+
 check(size, buf, name) {
-  if (buf.length > size) return false
-  if (size > this.limit) return false
+  if (buf.length > size) return false;
+  if (size > this.limit) return false;
   for (const a of MEDIA_TYPES) {
-      if (name.toLowerCase().endsWith(a)) {
-          return true
-      }
+    if (name.toLowerCase().endsWith(a.file)) {
+      return [true, a.type];
+    }
   }
-  return false
+  return [false];
 }
 
 async start_beam(upload, key, file, topic, room) {

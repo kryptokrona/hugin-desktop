@@ -27,6 +27,7 @@ const dev = !app.isPackaged
 const { loadHugin, loadWallet } = require('./wallet.cjs')
 const { Hugin } = require('./account.cjs')
 const { Storage } = require('./storage.cjs')
+const { check_if_media } = require('./utils.cjs')
 
 let mainWindow
 
@@ -61,9 +62,9 @@ function createWindow() {
         minWidth: 1100,
         transparent: true,
         webPreferences: {
-            enableRemoteModule: true,
+            enableRemoteModule: false,
             contextIsolation: true,
-            nodeIntegration: true,
+            nodeIntegration: false,
             spellcheck: false,
             devTools: dev,
             preload: path.join(__dirname, 'preload.cjs'),
@@ -303,7 +304,12 @@ const startCheck = async () => {
 }
 
 ipcMain.handle('load-stored-file', async (e, hash, topic) => {
-    return await Storage.load(hash, topic)
+   const file = await Storage.load(hash, topic)
+   const info = Hugin.get_files().find(a => a.hash === hash)
+   if (!info) return
+   const [media ,type] = check_if_media(info.fileName, info.size, true)
+   return [file, type]
+
 })
 
 async function shareScreen(start, conference) {

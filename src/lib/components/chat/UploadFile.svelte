@@ -4,24 +4,24 @@
     import { fade } from "svelte/transition"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import Progress from "$lib/components/chat/Progress.svelte"
+import AudioPlayer from "./AudioPlayer.svelte"
     export let file
     export let group = false
     export let rtc = false
     let uploadDone = false
     let uploading = false
-    let image = ""
+
+    let data
     let video = false
-    let videoTypes = ['.mp4', '.webm', '.avi', '.mkv', '.mov','.wmv', '.mkv', '.mpeg']
+    let audio = false
+    let image = false
+
+    const NOT_FOUND = "File not found"
+    const OTHER = "File"
+
     onMount( async () =>
     {   
-        if (videoTypes.some(a => file.path.endsWith(a) && file.size < 50000000))
-        {
-            console.log('Found video format')
-            video = true
-            return
-        }
-
-        image = await loadFile(file)
+       await loadFile(file)
     })
 
     $: {
@@ -32,6 +32,16 @@
     $: downloaders = $upload.filter(a => a.progress === 100 && file.fileName == a.fileName).length
 
     $: console.log("downloaders", downloaders)
+    
+    const checkType = (type) => {
+        switch (type){
+            case 'audio': audio = true
+            break;
+            case 'video': video = true
+            break;
+            case 'image': image = true
+        }
+    }
 
     const focusImage = (image) => {
         $fileViewer.focusImage = file.path
@@ -40,13 +50,14 @@
     }
 
     async function loadFile(file) {
-        let arr = await window.api.loadFile(file.path, file.size)
-        if (arr === "File" || arr === "File not found") {
-            image = arr
-            return
-        }
+        let [arr, type] = await window.api.loadFile(file.path, file.size)
+        if (arr === OTHER || arr === NOT_FOUND) return false
         let blob = new Blob( [ arr ]);
-        return URL.createObjectURL( blob );
+        console.log("type", type)
+        checkType(type)
+        data = URL.createObjectURL( blob );
+        if (audio) data = new Audio(data);
+        return type
     }
 
 
@@ -61,34 +72,30 @@
             <Progress file={file} send={true}/>
             {/if}
         </div>
-        {#if uploadDone || file?.saved}
+        {#if uploadDone || file?.saved || (data === OTHER)}
             <p class="message done" in:fade>File uploaded!</p>
             <p in:fade class="message">{file.fileName} </p>
-            <!-- {#if downloaders > 0} 
-                <p class="count">{downloaders}</p>
-            {/if} -->
-
-            <!-- this counter can be cooler TODO  -->
-            
         {:else}
         <p in:fade class="message sending blink_me">Uploading...</p>
         {/if}
     {/if}
-    {#if image === "File"}
+    {#if data === OTHER}
         <p>{file.fileName}</p>
-    {:else if image === "File not found"}
-        <p class="message error">File not found</p>
+    {:else if data === NOT_FOUND}
+        <p class="message error">{NOT_FOUND}</p>
     {:else}
         {#if video}
             <VideoPlayer src={file}/>
-        {:else}
+        {:else if image}
         <div style="-webkit-user-drag: none;" on:click={focusImage}>
             <img
                 in:fade="{{ duration: 150 }}"
-                src="{image}"
+                src="{data}"
                 alt=""
             />
         </div>
+        {:else if audio}
+            <AudioPlayer src={data} />
         {/if}
     {/if}
 </div>

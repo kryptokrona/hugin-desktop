@@ -193,6 +193,7 @@
 
         window.api.receive('room-notification', ([data, add = false]) => {
             console.log("room notification", data)
+            if ($notify.notifications.some(a => a.hash === data.hash)) return
             const thisgroup = data.group === $rooms.thisRoom.key
             const ingroups = $page.url.pathname === '/rooms'
             const group = $rooms.roomArray.find(a => a.key === data.group)
