@@ -51,13 +51,25 @@ import AudioPlayer from "./AudioPlayer.svelte"
 
     async function loadFile(file) {
         let [arr, type] = await window.api.loadFile(file.path, file.size)
-        if (arr === OTHER || arr === NOT_FOUND) return false
+        if (!found(arr)) return
         let blob = new Blob( [ arr ]);
-        console.log("type", type)
         checkType(type)
         data = URL.createObjectURL( blob );
         if (audio) data = new Audio(data);
         return type
+    }
+
+    
+    const found = (file) => {
+        switch (file) {
+            case OTHER: 
+            data = OTHER
+            return false
+            case NOT_FOUND: 
+            data = NOT_FOUND
+            return false
+        }
+        return true
     }
 
 

@@ -29,7 +29,7 @@ import AudioPlayer from "./AudioPlayer.svelte"
 
 
     onMount(async () => {
-        await loadFile(file)
+        if (!await loadFile(file)) 
     })
 
    $: {
@@ -76,12 +76,23 @@ import AudioPlayer from "./AudioPlayer.svelte"
         } else {
             load = await window.api.loadFile(file.path, file.size)
         }
-        if (load[0] === OTHER || load[0] === NOT_FOUND) return false
         const [arr, type] = load
+        if (!found(arr)) return
         let blob = new Blob( [ arr ]);
         data = URL.createObjectURL( blob );
-        console.log("Load ", data)
         checkType(type)
+    }
+
+    const found = (file) => {
+        switch (file) {
+            case OTHER: 
+            data = OTHER
+            return false
+            case NOT_FOUND: 
+            data = NOT_FOUND
+            return false
+        }
+        return true
     }
     
     const downloadFile = (file) => {
