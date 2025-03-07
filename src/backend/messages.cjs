@@ -205,6 +205,8 @@ ipcMain.on('end-swarm', async (e, key) => {
 })
 
 const peer_dms = async () => {
+    //TODO ***
+    return
     const contacts = await getConversations()
     for (const c of contacts) {
         const hashDerivation = await key_derivation_hash(c.chat)
@@ -628,7 +630,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
         //Offchain messages
         let random_key = randomKey()
         let sentMsg = Buffer.from(payload_hex, 'hex')
-        let sendMsg = random_key + sentMsg
+        let sendMsg = random_key + '99' + sentMsg
         if (beam_this) {
             send_beam_message(sendMsg, address, timestamp)
             return

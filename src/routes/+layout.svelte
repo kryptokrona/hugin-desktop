@@ -418,14 +418,9 @@
     })
 
     window.api.receive('stop-beam', (addr, close = false)  => {
-        if (!close) {
-            const restart = $beam.active.find(a => a.chat === addr) 
-            window.api.createBeam(restart.hugin)
-        }
         let filter = $beam.active.filter(a => a.chat !== addr)
         $beam.active = filter
         console.log('active beams', $beam.active)
-        if (!close) return
         toast.error('Beam disconnected', {
                 position: 'top-right',
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
