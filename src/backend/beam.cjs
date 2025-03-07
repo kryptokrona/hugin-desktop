@@ -133,7 +133,7 @@ const beam_event = (beam, chat, key) => {
         if (str === "Ping") return
         if (check_data_message(str, addr)) return
         let hash = str.substring(0,64)
-        decrpyt_beam_message(str.substring(64), msgKey)
+        decrpyt_beam_message(str.substring(65), msgKey)
     })
 
     beam.on('end', () => {
