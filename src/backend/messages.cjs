@@ -208,6 +208,7 @@ const peer_dms = async () => {
     const contacts = await getConversations()
     for (const c of contacts) {
         const hashDerivation = await key_derivation_hash(c.chat)
+        console.log("hashDerivation", hashDerivation)
         const beam = await new_beam(hashDerivation, c.chat + c.key, false)
         if (beam === "Error") continue
         if (!beam) continue
@@ -627,18 +628,10 @@ async function send_message(message, receiver, off_chain = false, group = false,
         //Offchain messages
         let random_key = randomKey()
         let sentMsg = Buffer.from(payload_hex, 'hex')
-        let sendMsg = random_key + '99' + sentMsg
-        let messageArray = []
-        messageArray.push(sendMsg)
-        messageArray.push(address)
-        if (group) {
-            messageArray.push('group')
-        }
+        let sendMsg = random_key + sentMsg
         if (beam_this) {
             send_beam_message(sendMsg, address, timestamp)
             return
-        } else {
-            Hugin.send('rtc_message', [messageArray])
         }
         //Do not save invite message.
         if (message.msg && 'invite' in message.msg) {

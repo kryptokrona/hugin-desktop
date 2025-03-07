@@ -233,20 +233,20 @@ const new_connection = (connection, topic, dht_keys, peer) => {
 
     connection.on('error', () => {
         console.log("Got error connection signal")
-        connection_closed(connection, topic)
+        connection_closed(connection, topic, true)
     })
 
 }
 
-const connection_closed = (conn, topic) => {
+const connection_closed = (conn, topic, error = false) => {
     console.log("Closing connection...")
     const active = get_active_topic(topic)
     if (!active) return
     try {
-        conn.end()
-        conn.destroy()
+        conn.end();
+        conn.destroy();
     } catch (e) {
-        console.log("failed close connection")
+        console.log('failed close connection');
     }
     const user = active.connections.find(a => a.connection === conn)
     if (!user) return
@@ -335,11 +335,6 @@ const check_data_message = async (data, connection, topic, peer) => {
             const joined = sanitize_join_swarm_data(data)
             if (!joined) {
                 return "Ban"
-            }
-
-            if (con.joined) {
-                //Connection is already joined
-                return true
             }
 
             if (Hugin.banned(data.address, topic)) {
