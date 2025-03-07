@@ -29,7 +29,7 @@ import AudioPlayer from "./AudioPlayer.svelte"
 
 
     onMount(async () => {
-        if (!await loadFile(file)) 
+       await loadFile(file)
     })
 
    $: {
