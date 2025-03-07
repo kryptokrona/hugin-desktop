@@ -210,7 +210,6 @@ const send_beam_message = (message, to, time) => {
     } catch(e) {
         return
     }
-    saveMsg(message, to, true, time, true)
 }
 
 const end_file_beam = async (chat, key) => {
