@@ -211,8 +211,7 @@ const peer_dms = async () => {
         const beam = await new_beam(hashDerivation, c.chat + c.key, false)
         if (beam === "Error") continue
         if (!beam) continue
-    }
-    
+    } 
 }
 
 async function key_derivation_hash(chat) {
@@ -1189,9 +1188,6 @@ async function save_contact(hugin_address, nickname = false, first = false) {
             t: Date.now(),
         })
         known_keys.pop(key)
-    } else {
-        const key = await key_derivation_hash(addr)
-        await new_beam(key, hugin_address, false);
     }
 }
 
