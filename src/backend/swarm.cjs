@@ -34,7 +34,9 @@ async function send_voice_channel_sdp(data) {
     if (!con) return
     //We switch data address because in this case, it is from, we can change this
     data.address = Hugin.address
-    con.connection.write(JSON.stringify(data))
+    try {
+        con.connection.write(JSON.stringify(data))
+    } catch(e) {}
 }
 
 const send_voice_channel_status = async (joined, status, update = false) => {
@@ -131,7 +133,9 @@ const end_swarm = async (key) => {
     }
 
     active.connections.forEach(chat => {
+        try {
         chat.connection.write(JSON.stringify({type: "disconnected"}))
+        } catch(e) {}
         connection_closed(chat.connection, topic)
     })
     
@@ -696,8 +700,9 @@ const send_joined_message = async (topic, dht_keys, connection) => {
         videoMute,
         screenshare
     })
-
-    connection.write(data)
+    try {
+        connection.write(data)
+    } catch(e) {}
 }
 
 const incoming_message = async (data, topic, connection, peer) => {
@@ -776,7 +781,9 @@ const check_online_state = async (topic) => {
                 if (i > 4) {
                    if (i % 2 === 0) data.hashes = []
                 }
+                try {
                 conn.connection.write(JSON.stringify(data))
+                } catch(e) {}
                 i++
             }
         }
@@ -867,7 +874,11 @@ const send_peer_message = (address, topic, message) => {
         return
     }
     console.log("Sending peer message")
-    con.connection.write(JSON.stringify(message))
+    try {
+        con.connection.write(JSON.stringify(message))
+    } catch(e) {
+        return
+    }
 }
 
 
