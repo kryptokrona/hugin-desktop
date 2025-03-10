@@ -105,7 +105,7 @@ async function filterActiveHugins() {
 
 const make_avatar = (data, address) => {
     if (!data || data.length === 0) return
-    if ($rooms.avatar.some(a => a.address === address)) return
+    if ($rooms.avatars.some(a => a.address === address)) return
     const blob = new Blob( [ data ]);
     const avatar = URL.createObjectURL( blob );
     const usr = {avatar, address}
