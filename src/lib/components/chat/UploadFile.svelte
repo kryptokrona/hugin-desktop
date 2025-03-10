@@ -4,10 +4,12 @@
     import { fade } from "svelte/transition"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import Progress from "$lib/components/chat/Progress.svelte"
-import AudioPlayer from "./AudioPlayer.svelte"
+    import AudioPlayer from "./AudioPlayer.svelte"
+
     export let file
     export let group = false
     export let rtc = false
+    
     let uploadDone = false
     let uploading = false
 

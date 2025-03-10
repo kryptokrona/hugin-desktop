@@ -7,7 +7,7 @@
     import { groups, user } from '$lib/stores/user.js'
     import Progress from "$lib/components/chat/Progress.svelte"
     import { sleep } from "$lib/utils/utils"
-import AudioPlayer from "./AudioPlayer.svelte"
+    import AudioPlayer from "./AudioPlayer.svelte"
 
     export let file
     export let group = false
@@ -121,6 +121,8 @@ import AudioPlayer from "./AudioPlayer.svelte"
         <div in:fade>
             <Progress file={file} send={false}/>
         </div>
+    {:else if !downloading && !downloadDone && data === (OTHER || NOT_FOUND)} 
+        <p class="message" in:fade>{file.fileName}</p>
         
     {:else if downloadDone || file?.saved}
         {#if !video}
