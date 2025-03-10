@@ -74,6 +74,7 @@ const createTables = () => {
     blockListTable()
     groupChannelsMessagesTable()
     roomKeysTable()
+    roomUserTable()
 }
 
 const welcomeAddress =
@@ -285,30 +286,75 @@ const roomKeysTable = () => {
     })
 }
 
+const roomUserTable = () => {
+
+    const roomUsers =  `CREATE TABLE IF NOT EXISTS roomusers (
+        name TEXT NOT NULL,
+        address TEXT NOT NULL,
+        room TEXT NOT NULL,
+        avatar TEXT,
+        lastseen INT DEFAULT 0,
+        PRIMARY KEY (address, room)
+    )`;
+
+   return new Promise(
+    (resolve, reject) => {
+        database.prepare(roomUsers).run()
+    },
+    () => {
+        resolve()
+    })
+
+}
+
 
 
 //DATABASE REQUESTS
 
 const loadGroups = () => {
     const rows = []
-        const getAllGroups = `SELECT * FROM pgroups`
-        const groups = database.prepare(getAllGroups).all()
+    const getAllGroups = `SELECT * FROM pgroups`
+    const groups = database.prepare(getAllGroups).all()
 
-        for(const group of groups) {
-            rows.push(group)
-        }
-        return rows
+    for(const group of groups) {
+        rows.push(group)
+    }
+    return rows
 }
 
 const loadRooms = () => {
     const rows = []
-        const getAllRooms = `SELECT * FROM rooms`
-        const rooms = database.prepare(getAllRooms).all()
+    const getAllRooms = `SELECT * FROM rooms`
+    const rooms = database.prepare(getAllRooms).all()
 
-        for(const room of rooms) {
-            rows.push(room)
-        }
-        return rows
+    for(const room of rooms) {
+        rows.push(room)
+    }
+    return rows
+}
+
+const loadRoomUsers = async (key) => {
+    const rows = []
+    const getAllUsers = `
+        SELECT *
+        FROM roomusers
+        WHERE room = ?
+`
+    const users = database.prepare(getAllUsers)
+    for(const user of users.iterate(key)) {
+        rows.push(user)
+    }
+    return rows
+}
+
+const saveRoomUser = (user) => {
+    console.log("Save this user", user.name)
+    try {
+        database.prepare('REPLACE INTO roomusers (name, address, room, avatar, lastseen) VALUES (?, ?, ?, ?, ?)')
+        .run(user.name, user.address, user.room,user.avatar.toString('base64'), Date.now())
+    }catch (e) {
+        console.log("Error saving user:", e)
+    }
 }
 
 const loadRoomKeys = () => {
@@ -937,4 +983,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
+module.exports = {loadRoomUsers, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}

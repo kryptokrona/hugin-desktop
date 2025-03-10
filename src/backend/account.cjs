@@ -7,7 +7,7 @@ const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const dbPath = userDataDir + '/SQLmessages.db'
-const { getGroups, loadBlockList, loadKeys, loadDB } = require('./database.cjs')
+const { getGroups, loadBlockList, loadKeys, loadDB, saveRoomUser, loadRoomUsers } = require('./database.cjs')
 const fs = require('fs')
 
 const Store = require('electron-store')
@@ -23,26 +23,16 @@ ipcMain.on('set-avatar', (e, data) => {
 })
 
 
-ipcMain.on('save-avatar', (e, data) => {
-  // let list = store.get('avatars') ?? []
-  // if (list.some(a => a.address === data.address)) {
-  //   const update = list.filter(a => a.address !== data.address)
-  //   list = update
-  // }
-  // list.push({avatar: data.avatar.toString('base64'), address: data.address})
-  // store.set({
-  //   avatars: list
-  // })
+ipcMain.on('save-room-user', (e, data) => {
+  saveRoomUser(data)
 })
 
-function get_room_avatars() {
-  const list = store.get('avatars') ?? []
-  const avatars = []
-  // for (const a of list) {
-  //   const item = {avatar: Buffer.from(a.avatar, 'base64'), address: a.address}
-  //   avatars.push(item)
-  // }
-  return avatars
+ipcMain.handle('get-room-users', async (e, key) => {
+  return await get_room_users(key)
+})
+
+async function get_room_users(key) {
+  return await loadRoomUsers(key)
 };
 
 ipcMain.handle('get-avatar', () => {
@@ -143,7 +133,7 @@ class Account {
       const banned = store.get('banned') ?? []
       const usersBanned = store.get('bannedUsers') ?? []
       const files = store.get('files') ?? []
-      const avatars = get_room_avatars()
+      const avatars = []
       
       this.sender('wallet-started', [
         this.node,

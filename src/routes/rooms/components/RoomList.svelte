@@ -89,14 +89,30 @@ const printRoom = async (room) => {
     readMessage(room)
 }
 
-//Function to filer array of active users on board.
-function filterActiveHugins() {
-    let uniq = {}
-    const arr = $roomMessages
-    $rooms.activeHugins = arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
+//Function to get all users in a room.
+async function filterActiveHugins() {
+   const users = await window.api.getRoomUsers($swarm.activeSwarm.key)
+   console.log("getRoomUsers", users)
+   const all = []
+    for (const u of users) {
+        const user = {address: u.address, room: u.room, name: u.name}
+        make_avatar(u.avatar, u.address)
+        all.push(user)
+    }
+    $rooms.activeHugins = all
     
+
 }
 
+const make_avatar = (data, address) => {
+    if (!data || data.length === 0) return
+    if ($rooms.avatar.some(a => a.address === address)) return
+    const blob = new Blob( [ data ]);
+    const avatar = URL.createObjectURL( blob );
+    const usr = {avatar, address}
+    $rooms.avatars.push(usr)
+    $rooms.avatars = $rooms.avatars
+}
 //Print our conversations from DBs
 async function printRooms() {
     roomList = await window.api.getRooms()

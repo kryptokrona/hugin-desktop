@@ -1,6 +1,6 @@
 <script>
      import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms} from '$lib/stores/user.js'
-import { roomMessages } from './roommsgs'
+    import { roomMessages } from './roommsgs'
 
      window.api.receive('peer-disconnected', async (data)  => { 
         peer_disconnected(data)
@@ -64,18 +64,24 @@ import { roomMessages } from './roommsgs'
         add_user(data, joined)
     }
 
-    const make_avatar = async (data, address) => {
+    const make_avatar = async (data, address, key, name) => {
         if (!data || data.length === 0) return false
         const blob = new Blob( [ data ]);
         const avatar = URL.createObjectURL( blob );
         const user = {avatar, address}
+
+        //Replace with updated avatar.
+        if ($rooms.avatars.some(a => a.address === address)) {
+            $rooms.avatars = $rooms.avatars.filter(a => a.address !== address)
+        }
+
         $rooms.avatars.push(user)
         $rooms.avatars = $rooms.avatars
-        window.api.send('save-avatar', {address, avatar: data})
+        window.api.send('save-room-user', {address, avatar: data, room: key, name})
     }
 
     async function add_user(data, joined) {
-        const avatar = await make_avatar(data.avatar, data.address)
+        const avatar = await make_avatar(data.avatar, data.address, joined.key, data.name)
         const user = {
             message: "Joined the lobby",
             grp: joined.key,

@@ -53,6 +53,9 @@ const WINDOW_API = {
     getRooms: async () => {
         return await ipcRenderer.invoke('get-rooms')
     },
+    getRoomUsers: async (key) => {
+        return await ipcRenderer.invoke('get-room-users', key)
+    },
     printRoom: async (room, page) => {
         return await ipcRenderer.invoke('print-group', room, page)
     },
