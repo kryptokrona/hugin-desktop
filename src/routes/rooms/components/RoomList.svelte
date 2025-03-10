@@ -91,8 +91,7 @@ const printRoom = async (room) => {
 
 //Function to get all users in a room.
 async function filterActiveHugins() {
-   const users = await window.api.getRoomUsers($swarm.activeSwarm.key)
-   console.log("getRoomUsers", users)
+   const users = await window.api.getRoomUsers($swarm.activeSwarm?.key)
    const all = []
     for (const u of users) {
         const user = {address: u.address, room: u.room, name: u.name}

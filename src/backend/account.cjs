@@ -28,6 +28,7 @@ ipcMain.on('save-room-user', (e, data) => {
 })
 
 ipcMain.handle('get-room-users', async (e, key) => {
+  if (!key) return []
   return await get_room_users(key)
 })
 

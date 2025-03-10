@@ -65,18 +65,19 @@
     }
 
     const make_avatar = async (data, address, key, name) => {
-        if (!data || data.length === 0) return false
-        const blob = new Blob( [ data ]);
-        const avatar = URL.createObjectURL( blob );
-        const user = {avatar, address}
+        if (data || data.length > 0) {
+            const blob = new Blob( [ data ]);
+            const avatar = URL.createObjectURL( blob );
+            const user = {avatar, address}
 
-        //Replace with updated avatar.
-        if ($rooms.avatars.some(a => a.address === address)) {
-            $rooms.avatars = $rooms.avatars.filter(a => a.address !== address)
+            //Replace with updated avatar.
+            if ($rooms.avatars.some(a => a.address === address)) {
+                $rooms.avatars = $rooms.avatars.filter(a => a.address !== address)
+            }
+
+            $rooms.avatars.push(user)
+            $rooms.avatars = $rooms.avatars
         }
-
-        $rooms.avatars.push(user)
-        $rooms.avatars = $rooms.avatars
         window.api.send('save-room-user', {address, avatar: data, room: key, name})
     }
 
