@@ -310,7 +310,7 @@ async function printRoom(room, create = false) {
     }
     
     const active = $swarm.active.find(a => a.key === room.key)
-    $rooms.thisRoom.topic = active.topic
+    $rooms.thisRoom.topic = active?.topic
     $swarm.activeSwarm = active
 
     checkReactions(messages, false)
