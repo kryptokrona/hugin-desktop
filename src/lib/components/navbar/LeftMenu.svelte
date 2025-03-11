@@ -84,7 +84,7 @@ const selectAvatar = async () => {
         window.api.errorMessage('Avatar file size is too big')
         return
     }
-    const arr = await window.api.loadFile(file.path, file.size)
+    const [arr, type] = await window.api.loadFile(file.path, file.size)
     window.api.send('set-avatar', arr)
     const blob = new Blob( [ arr ]);
  
