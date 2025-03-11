@@ -342,7 +342,8 @@ const loadRoomUsers = async (key) => {
 `
     const users = database.prepare(getAllUsers)
     for(const user of users.iterate(key)) {
-        user.avatar = Buffer.from(user.avatar)
+        const avatar = Buffer.from(user.avatar, 'base64')
+        user.avatar = avatar
         rows.push(user)
     }
     return rows
@@ -352,7 +353,7 @@ const saveRoomUser = (user) => {
     console.log("Save this user", user.name)
     try {
         database.prepare('REPLACE INTO roomusers (name, address, room, avatar, lastseen) VALUES (?, ?, ?, ?, ?)')
-        .run(user.name, user.address, user.room,user.avatar.toString('base64'), Date.now())
+        .run(user.name, user.address, user.room, Buffer.from(user.avatar).toString('base64'), Date.now())
     }catch (e) {
         console.log("Error saving user:", e)
     }
