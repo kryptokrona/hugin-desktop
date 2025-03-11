@@ -342,6 +342,7 @@ const loadRoomUsers = async (key) => {
 `
     const users = database.prepare(getAllUsers)
     for(const user of users.iterate(key)) {
+        user.avatar = Buffer.from(user.avatar)
         rows.push(user)
     }
     return rows
