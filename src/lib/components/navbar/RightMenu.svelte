@@ -52,8 +52,8 @@ $: {
 $: thisChat = $user.activeChat
 
 //Beam reactive button states
-$: activeBeam = $beam.active.some(a => a.chat === thisChat.chat)
-$: connectedBeam = $beam.active.some(a => a.chat === thisChat.chat && a.connected === true)
+$: activeBeam =  $swarm.active.some(a => a.chat === thisChat.chat)
+$: connectedBeam = $swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat))
 
 //Starts any call
 const startCall = async (contact, calltype) => {
@@ -171,12 +171,6 @@ function copyThis(copy) {
 
 function newBeam() {
     window.api.createBeam($user.activeChat.chat + $user.activeChat.key)
-    $beam.active.push({
-      chat: $user.activeChat.chat,
-      connected: false,
-      key: undefined,
-    })
-    $beam.active = $beam.active
 }
 
 let incoming_file = false
@@ -245,7 +239,7 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
             <Tooltip title="P2P Chat" leftAlign={true}>
                 <div class="button" on:click={() => {
                     if (connectedBeam || activeBeam) {
-                        window.api.send('end-beam', $user.activeChat.chat)
+                        window.api.send('end-beam', $user.activeChat.chat +  $user.activeChat.key)
                     }   else newBeam()}
                     }>
                 

@@ -11,7 +11,7 @@
     })
 
     window.api.receive('swarm-connected', async (data)  => { 
-        swarm_connected(data)
+        swarm_connected(JSON.parse(data))
     })
 
     window.api.receive('peer-connected', async (data)  => { 

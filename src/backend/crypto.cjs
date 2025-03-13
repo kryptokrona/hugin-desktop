@@ -1,4 +1,4 @@
-const { sleep, hexToUint, nonceFromTimestamp, trimExtra, randomKey } = require('./utils.cjs');
+const { sleep, hexToUint, nonceFromTimestamp, trimExtra, randomKey, parse_call, sanitize_pm_message } = require('./utils.cjs');
 const naclUtil = require('tweetnacl-util')
 const nacl = require('tweetnacl')
 const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
@@ -8,6 +8,8 @@ const crypto = new Crypto()
 const DHT = require('hyperdht')
 const Keychains = require('keypear');
 const { ipcMain } = require('electron');
+const { saveMsg } = require('./database.cjs');
+const { extraDataToMessage } = require('hugin-crypto');
 
 ipcMain.handle('get-room-invite', async () => {
     return create_room_invite()
@@ -159,4 +161,44 @@ const sign_joined_message = (dht_keys) => {
     return [keys.get().sign(dht_keys.get().publicKey).toString('hex'), keys.publicKey.toString('hex')]
 }
 
-module.exports = {sign_admin_message, sign_joined_message, verify_signature, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}
+const decrpyt_beam_message = async (str, msgKey) => {
+    let decrypted_message = await extraDataToMessage(str, [msgKey], keychain.getXKRKeypair())
+    decrypted_message.k = msgKey
+    decrypted_message.sent = false
+    
+    const [message, address, key, timestamp] = sanitize_pm_message(decrypted_message)
+    if (!message) return
+    
+    const [text, call] = is_call(decrypted_message.msg, address, false, timestamp)
+    
+    const newMsg = {
+        msg: call ? text : message,
+        chat: address,
+        sent: false,
+        timestamp: timestamp,
+        offchain: true,
+        beam: true,
+    }
+
+    Hugin.send('newMsg', newMsg)
+    Hugin.send('privateMsg', newMsg)
+    saveMsg(message, address, false, timestamp)
+}
+
+const is_call = (message, address, sent, timestamp) => {
+    //Checking if private msg is a call
+    const [text, data, is_call, if_sent] = parse_call(message, address, sent, true, timestamp)
+
+    if (text === "Audio call started" || text === "Video call started" && is_call && !if_sent) {
+        //Incoming calll
+        Hugin.send('call-incoming', data)
+        return [text, true]
+    } else if (text === "Call answered" && is_call && !if_sent) {
+        //Callback
+        Hugin.send('got-callback', data)
+        return [text, true]
+    }
+    return ['',false]
+}
+
+module.exports = {decrpyt_beam_message, sign_admin_message, sign_joined_message, verify_signature, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}

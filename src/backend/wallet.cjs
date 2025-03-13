@@ -141,7 +141,7 @@ async function startHugin(walletName, password, node) {
 const join_rooms = async () => {
     const rooms = await getRooms()
     for (const room of rooms) {
-        new_swarm({key: room.key}, Hugin.send)
+        new_swarm({key: room.key})
         await sleep(200)
     }
 }

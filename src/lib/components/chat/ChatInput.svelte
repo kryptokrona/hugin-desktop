@@ -117,8 +117,8 @@
   }
 
   $: {
-    if ($beam.active.length) {
-      activeBeam = $beam.active.some(a => a.chat == $user.activeChat.chat && a.connected);
+    if ($swarm.active.length) {
+      activeBeam = $swarm.active.some(a => a.chat === $user.activeChat.chat && a.connections.some(a => a.address === $user.activeChat.chat))
     } else {
       activeBeam = false
     }

@@ -5,7 +5,7 @@ const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMes
 const { app,
     ipcMain
 } = require('electron')
-const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_message, signMessage, sign_joined_message, verifySignature } = require("./crypto.cjs")
+const {keychain, get_new_peer_keys, naclHash, verify_signature, sign_admin_message, signMessage, sign_joined_message, verifySignature, decrpyt_beam_message } = require("./crypto.cjs")
    
 const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", videoMute: false, audioMute: false, screenshare: false}
 
@@ -112,8 +112,8 @@ const ban_user = async (address, topic) => {
 }
 
 
-const new_swarm = async (data, ipc) => {
-    return await create_swarm(data)
+const new_swarm = async (data, beam = false, chat = false) => {
+    return await create_swarm(data, beam, chat)
 }
 
 const update_local_voice_channel_status = (data) => {
@@ -122,8 +122,9 @@ const update_local_voice_channel_status = (data) => {
     return true
 }
 
-const end_swarm = async (key) => {
-    const active = active_swarms.find(a => a.key === key)
+const end_swarm = async (key, beam = false) => {
+    let active = get_active(key)
+    if (beam) active = get_beam(key)
     if (!active) return
     const topic = active.topic
     Hugin.send('swarm-disconnected', topic)
@@ -147,7 +148,7 @@ const end_swarm = async (key) => {
     console.log("***** Ended swarm *****")
 }
 
-const create_swarm = async (data) => {
+const create_swarm = async (data, beam, chat) => {
     let discovery
     let swarm
     const key = naclHash(data.key)
@@ -157,34 +158,37 @@ const create_swarm = async (data) => {
     const topicHash = base_keys.publicKey.toString('hex')
     await Storage.load_drive(topicHash)
     const files = await Storage.load_meta(topicHash)
-
+    const peers = beam ? 1 : 100
     //We add sig, keys and keyPair is for custom firewall settings.
     try {
-        swarm = new HyperSwarm({firewall (remotePublicKey, payload) {
-            //We are already checking payloads in hyperswarm
-            if (payload !== null) {
-                //Moved checkKey to hyperswarm
-            }
-            //Allow connection
-            return false
-        }}, sig, dht_keys, base_keys)
+        swarm = new HyperSwarm({ maxPeers: peers }, sig, dht_keys, base_keys)
     } catch (e) {
         console.log('Error starting swarm', e)
-        return
+        return false
     }
     
     const startTime = Date.now().toString()
 
-    Hugin.send('swarm-connected', {topic: topicHash, key: invite, channels: [], voice_channel: [], connections: [], time: startTime, admin })
+    Hugin.send('swarm-connected', JSON.stringify({
+        topic: topicHash,
+        key: invite,
+        channels: [],
+        voice_channel: [],
+        connections: [],
+        time: startTime,
+        admin,
+        beam,
+        chat: beam ? chat.substring(0,99) : ''
+        }))
     
     //The topic is public so lets use the pubkey from the new base keypair
 
-    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false, peers: [], files})
+    active_swarms.push({key: invite, topic: topicHash, connections: [], call: [], time: startTime, invite: data.key, swarm, discovery, admin,  requests: 0, search: true, request: false, peers: [], files, beam, chat})
     
     Hugin.send('set-channels')
 
     swarm.on('connection', (connection, information) => {
-        new_connection(connection, topicHash, dht_keys, information)
+        new_connection(connection, topicHash, dht_keys, information, beam)
 
     })
 
@@ -201,7 +205,7 @@ const create_swarm = async (data) => {
     check_online_state(topicHash)
 }
 
-const new_connection = (connection, topic, dht_keys, peer) => {
+const new_connection = (connection, topic, dht_keys, peer, beam) => {
     console.log("New connection incoming")
     let active = get_active_topic(topic)
     
@@ -226,7 +230,7 @@ const new_connection = (connection, topic, dht_keys, peer) => {
     send_joined_message(topic, dht_keys, connection)
     //checkIfOnline(hash)
     connection.on('data', async data => {
-        incoming_message(data, topic, connection, peer)
+        incoming_message(data, topic, connection, peer, beam)
 
     })
 
@@ -271,11 +275,12 @@ const get_active_topic = (topic) => {
     return active
 }
 
-const check_data_message = async (data, connection, topic, peer) => {
+const check_data_message = async (data, connection, topic, peer, beam) => {
     try {
         data = JSON.parse(data)
     } catch (e) {
-        return "Ban"
+        if (beam) return false
+        else return "Ban"
     }
    
     //Check if active in this topic
@@ -424,7 +429,6 @@ const check_data_message = async (data, connection, topic, peer) => {
                 process_request(data.messages, active.key, false)
                 con.request = false
                 if ('files' in data) {
-                    console.log("Got some files", data.files)
                     process_files(data, active, con, topic)
                 }
                 return true
@@ -705,8 +709,8 @@ const send_joined_message = async (topic, dht_keys, connection) => {
     } catch(e) {}
 }
 
-const incoming_message = async (data, topic, connection, peer) => {
-    const check = await check_data_message(data, connection, topic, peer)
+const incoming_message = async (data, topic, connection, peer, beam) => {
+    const check = await check_data_message(data, connection, topic, peer, beam)
     if (check === "Ban") {
         peer.ban(true)
         connection_closed(connection, topic)
@@ -719,6 +723,12 @@ const incoming_message = async (data, topic, connection, peer) => {
     }
     console.log("Check", check)
     if (check) return
+
+    const active = get_active_topic(topic)
+    if (active.beam) {
+        decrpyt_beam_message(data.toString(), active.chat.substring(99,163))
+        return
+    }
     const message = sanitize_group_message(JSON.parse(data), false)
     console.log("Got incoming message!", message)
     if (!message) return
@@ -731,12 +741,14 @@ const incoming_message = async (data, topic, connection, peer) => {
 }
 
 
-const send_swarm_message = (message, key) => {
-    const active = get_active(key)
+const send_swarm_message = (message, key, beam = false) => {
+    let active = get_active(key)
+    if (beam) active = get_beam(key)
     if (!active) return
     for (const chat of active.connections) {
         try {
             console.log("Writing to channel")
+            if (!chat.joined) continue
             chat.connection.write(message) 
         } catch(e) {
             continue
@@ -835,6 +847,14 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 
 const get_active = (key) => {
     return active_swarms.find(a => a.key === key)
+}
+
+const get_beam = (address) => {
+    for (const a of active_swarms) {
+        if (!a.beam) continue
+        const addr = a.chat.substring(0,99)
+        if (addr === address) return a
+    }
 }
 
 const is_room_admin = (invite) => {

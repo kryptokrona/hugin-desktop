@@ -153,8 +153,10 @@ ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam) => {
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
     save_contact(hugin_address, nickname, first)
-    const key = await key_derivation_hash(hugin_address.substring(0,99))
-    await new_beam(key, hugin_address, false);
+    const chat = hugin_address.substring(0,99)
+    const key = await key_derivation_hash(chat)
+    console.log("hugin_address", hugin_address)
+    new_swarm({key}, true, hugin_address);
 })
 
 
@@ -186,32 +188,36 @@ ipcMain.on('expand-sdp', (e, data, address) => {
 
 //BEAM
 
-ipcMain.on("beam", async (e, chat, send = false, beam = false) => {
+ipcMain.on("end-beam", async (e, chat) => {
+    console.log("end beam");
+    end_swarm(chat, true);
+})
+
+
+ipcMain.on("beam", async (e, chat) => {
     const key = await key_derivation_hash(chat.substring(0,99))
-    let beamMessage = await new_beam(key, chat, send);
+    let beamMessage = new_swarm({key}, true, chat);
     if (beamMessage === "Error") return
     if (!beamMessage) return
-    if (beam) send_message(beamMessage.msg, beamMessage.chat, offchain)
+    // if (beam) send_message(beamMessage.msg, beamMessage.chat, offchain)
 });
 
 //SWARM
 
 
 ipcMain.on('new-swarm', async (e, data) => {
-    new_swarm(data, sender, keychain.getXKRKeypair())
+    new_swarm(data)
 })
 ipcMain.on('end-swarm', async (e, key) => {
     end_swarm(key)
 })
 
 const peer_dms = async () => {
-    //TODO ***
-    return
     const contacts = await getConversations()
     for (const c of contacts) {
+        if (c.chat?.length !== 99) continue
         const hashDerivation = await key_derivation_hash(c.chat)
-        console.log("hashDerivation", hashDerivation)
-        const beam = await new_beam(hashDerivation, c.chat + c.key, false)
+        const beam = new_swarm({key: hashDerivation}, true, c.chat + c.key)
         if (beam === "Error") continue
         if (!beam) continue
     } 
@@ -563,9 +569,6 @@ async function fetch_hugin_messages() {
 
 async function send_message(message, receiver, off_chain = false, group = false, beam_this = false) {
     //Assert address length
-    console.log("Send message!", message)
-    console.log("offchain", off_chain)
-    console.log("beam_this", beam_this)
     if (receiver.length !== 163) {
         return
     }
@@ -632,22 +635,17 @@ async function send_message(message, receiver, off_chain = false, group = false,
         let sentMsg = Buffer.from(payload_hex, 'hex')
         let sendMsg = random_key + '99' + sentMsg
         if (beam_this) {
-            send_beam_message(sendMsg, address, timestamp)
-            return
+            send_swarm_message(sendMsg, address, true)
         }
-        //Do not save invite message.
-        if (message.msg && 'invite' in message.msg) {
-            return
-        } 
-        else {
-            let saveThisMessage = {
-                msg: message,
-                k: messageKey,
-                sent: true,
-                t: timestamp,
-                chat: address,
-            }
-            save_message(saveThisMessage, true)
+    else {
+        let saveThisMessage = {
+            msg: message,
+            k: messageKey,
+            sent: true,
+            t: timestamp,
+            chat: address,
+        }
+        save_message(saveThisMessage, true)
         }
     }
 }

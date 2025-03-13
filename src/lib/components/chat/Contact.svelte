@@ -2,7 +2,7 @@
 import {createEventDispatcher} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
-import {notify, user, webRTC, beam} from '$lib/stores/user.js'
+import {notify, user, webRTC, beam, swarm} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
 
 export let contact
@@ -46,8 +46,8 @@ const rename = () => {
 }
 
 $: {
-    if ($beam.active.length) {
-      online = $beam.active.some(a => a.chat == contact.chat && a.connected);
+    if ($swarm.active.length) {
+      online = $swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat));
     } else {
       online = false
     }
