@@ -1,8 +1,8 @@
 <script>
-import {createEventDispatcher} from 'svelte'
+import {createEventDispatcher, onMount} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
-import {notify, user, webRTC, beam, swarm} from '$lib/stores/user.js'
+import {notify, user, webRTC, beam, swarm, rooms} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
 
 export let contact
@@ -10,6 +10,25 @@ let thisCall = false
 let beamInvite = false
 let asian = false
 let online = false
+
+onMount(async () => {
+    const inswarm = $swarm.active.find(a => a.chat == contact.chat )
+    if (!inswarm) return
+    const users = await window.api.getRoomUsers(inswarm.key)
+    for (const u of users) {
+        make_avatar(u.avatar, u.address)
+    }
+})
+
+const make_avatar = (data, address) => {
+    if (!data || data.length === 0) return
+    if ($rooms.avatars.some(a => a.address === address)) return
+    const blob = new Blob( [ data ]);
+    const avatar = URL.createObjectURL( blob );
+    const usr = {avatar, address}
+    $rooms.avatars.push(usr)
+    $rooms.avatars = $rooms.avatars
+}
 
 $: counter = $notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length
 $: if (contact.msg.substring(0,7) === "BEAM://") {
@@ -52,6 +71,12 @@ $: {
       online = false
     }
   }
+
+  const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
 </script>
 
 <div
@@ -61,16 +86,27 @@ $: {
     class:rgb="{thisCall}"
     class:active="{contact.chat === $user.activeChat.chat}"
     class:online={online}
-    on:click="{() => printThis(contact)}"
->
-
-
-    <img
+    on:click="{() => printThis(contact)}" >
+    
+    {#await check_avatar(contact.chat)}
+    {:then avatar}
+    {#if avatar}
+        <img
+            class="avatar custom"
+            src="{avatar}"
+            alt=""
+            on:click="{() => rename(contact)}"
+        />
+    {:else}
+        <img
         class="avatar"
         on:click="{() => rename(contact)}"
         src="data:image/png;base64,{get_avatar(contact.chat)}"
         alt=""
-    />
+        />
+    {/if}
+    {/await}
+   
     <div class="content">
         <h4 class:asian class:big={asian} style="color: {getColorFromHash(contact.chat)}">{contact.name}</h4>
         
@@ -112,8 +148,15 @@ $: {
 
 .avatar {
     margin-bottom: 10px;
+    max-width: 35px;
     opacity: 0.92;
     cursor: pointer;
+}
+
+.custom {
+    margin-top: 6px;
+    border-radius: 5px;
+    object-fit: cover;
 }
 
 .content {

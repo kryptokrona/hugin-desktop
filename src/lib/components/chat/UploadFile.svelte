@@ -17,23 +17,22 @@
     let video = false
     let audio = false
     let image = false
+    let saved = false
 
     const NOT_FOUND = "File not found"
     const OTHER = "File"
 
-    onMount( async () =>
-    {   
-       await loadFile(file)
+    onMount( async () => {
+        if (file.saved) saved = true
+        await loadFile(file)
     })
 
     $: {
-        uploading = $upload.some(a => file.fileName === a.fileName && file.time === a.time)
-        uploadDone = $upload.some(a => (uploading && a.progress === 100) || file.saved === true)
+        uploading = $upload.some(a => file.time === a.time)
+        uploadDone = $upload.some(a => (uploading && a.progress === 100))
     }
 
     $: downloaders = $upload.filter(a => a.progress === 100 && file.fileName == a.fileName).length
-
-    $: console.log("downloaders", downloaders)
     
     const checkType = (type) => {
         switch (type){
@@ -78,38 +77,33 @@
 </script>
 
 <div class="file" class:group in:fade="{{ duration: 150 }}">
-    {#if !uploadDone && !uploading}
+    {#if !uploadDone && !uploading && !saved}
         <p in:fade class="message">{file.fileName} </p>
-    {:else if uploading || file?.saved}
+    {:else if uploading && !uploadDone}
         <div in:fade>
             {#if !group}
             <Progress file={file} send={true}/>
             {/if}
         </div>
-        {#if uploadDone || file?.saved || (data === OTHER)}
-            <p class="message done" in:fade>File uploaded!</p>
-            <p in:fade class="message">{file.fileName} </p>
-        {:else}
-        <p in:fade class="message sending blink_me">Uploading...</p>
-        {/if}
+    <p in:fade class="message sending blink_me">Uploading...</p>
     {/if}
-    {#if data === OTHER}
-        <p>{file.fileName}</p>
-    {:else if data === NOT_FOUND}
-        <p class="message error">{NOT_FOUND}</p>
-    {:else}
+    
+    {#if uploadDone || saved}
         {#if video}
             <VideoPlayer src={file}/>
         {:else if image}
-        <div style="-webkit-user-drag: none;" on:click={focusImage}>
-            <img
-                in:fade="{{ duration: 150 }}"
-                src="{data}"
-                alt=""
-            />
-        </div>
+            <div style="-webkit-user-drag: none;" on:click={focusImage}>
+                <img
+                    in:fade="{{ duration: 150 }}"
+                    src="{data}"
+                    alt=""
+                />
+            </div>
         {:else if audio}
             <AudioPlayer src={data} />
+        {:else if  data == (OTHER || NOT_FOUND || undefined)}
+        <p class="message done" in:fade>Uploaded!</p>
+        <p in:fade class="message">{file.fileName} </p>
         {/if}
     {/if}
 </div>

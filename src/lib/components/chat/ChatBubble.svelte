@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
-    import {beam, user} from '$lib/stores/user.js'
+    import {beam, rooms, user} from '$lib/stores/user.js'
     import Button from '$lib/components/buttons/Button.svelte'
     import {createEventDispatcher, onMount} from 'svelte'
     import Time from 'svelte-time'
@@ -182,29 +182,29 @@
         }
     }
 
+    const check_avatar = (address) => {
+        const found = $rooms.avatars.find(a => a.address === address)
+        if (found) return found.avatar
+        else return false
+    }
 
 
 </script>
 
-{#if torrent}
-    <div class="peer">
-        <div class="header peer">
-            <img
-                class="avatar "
-                in:fade="{{ duration: 150 }}"
-                src="data:image/png;base64,{get_avatar(msgFrom)}"
-                alt=""
-            />
-            <h5>{$user.activeChat.name}</h5>
-        </div>
-        <div class="bubble from" in:fade="{{ duration: 150 }}">
-            <Button text="Download" disabled="{false}" on:click="{downloadFile}" />
-        </div>
-    </div>
-{:else}
     <!-- Takes incoming data and turns it into a bubble that we then use in {#each} methods. -->
     {#if ownMsg}
         <div class="wrapper" class:error={error}>
+               
+            {#await check_avatar(address)}
+            {:then avatar}
+            {#if avatar}
+                <img
+                    in:fade="{{ duration: 150 }}"
+                    class="avatar-box"
+                    src="{avatar}"
+                    alt=""
+                />
+            {:else}
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -212,6 +212,9 @@
                     alt=""
                 />
             </div>
+            {/if}
+            {/await}
+
             <div class="content">
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class:asian class="nickname" style="color: {getColorFromHash($user.myAddress)}">
@@ -251,6 +254,17 @@
         </div>
     {:else}
         <div class="wrapper">
+
+            {#await check_avatar(msgFrom)}
+            {:then avatar}
+            {#if avatar}
+                <img
+                    in:fade="{{ duration: 150 }}"
+                    class="avatar-box"
+                    src="{avatar}"
+                    alt=""
+                />
+            {:else}
             <div class="avatar-box">
                 <img
                     in:fade="{{ duration: 150 }}"
@@ -258,6 +272,9 @@
                     alt=""
                 />
             </div>
+            {/if}
+            {/await}
+        
             <div class="content">
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class:asian class="nickname" style="color: {getColorFromHash(msgFrom)}">
@@ -274,7 +291,7 @@
                 </div>
                 {#if files}
                 <div style="cursor: pointer">
-                   <DownloadFile file={files[0]}/>
+                   <DownloadFile file={files}/>
                 </div>
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <div style="margin-top: 1rem">
@@ -312,7 +329,6 @@
             </div>
         </div>
     {/if}
-{/if}
 
 <style lang="scss">
 
@@ -335,6 +351,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    object-fit: cover;
 
     img {
         height: 48px;

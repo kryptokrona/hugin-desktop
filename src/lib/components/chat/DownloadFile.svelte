@@ -22,19 +22,20 @@
     let video = false
     let audio = false
     let image = false
+    let saved = false
     let data
 
     const NOT_FOUND = "File not found"
     const OTHER = "File"
 
-
     onMount(async () => {
-       await loadFile(file)
+        if (file.saved) saved = true
+        await loadFile(file)
     })
 
    $: {
-        downloading = $download.some(a => file.fileName === a.fileName && file.time === a.time)
-        downloadDone = $download.some(a => downloading && a.progress === 100)
+        downloading = $download.some(a => file.time === a.time)
+        downloadDone = $download.some(a => (downloading && a.progress === 100))
     }
    
 
@@ -45,10 +46,6 @@
     async function awaitLoad(file) {
         await sleep(100)
         await loadFile(file)
-    }
-
-    $: if (file?.saved) {
-        awaitLoad(file)   
     }
 
     const checkType = (type) => {
@@ -97,19 +94,15 @@
     
     const downloadFile = (file) => {
         clicked = true
-        if (group) {
-            const thisFile = $remoteFiles.find(a => a.fileName === file.fileName && file.time === a.time)
-            window.api.send('group-download', thisFile)
-            return
-        }
-        window.api.download(file.fileName, $user.activeChat.chat)
+        const thisFile = $remoteFiles.find(a => a.fileName === file.fileName && file.time === a.time)
+        window.api.send('group-download', thisFile)
     };
 
 
 </script>
 
 <div class="file" class:group in:fade="{{ duration: 150 }}">
-    {#if !downloadDone && !downloading && !file?.saved}
+    {#if !downloadDone && !downloading && !saved}
          {#if !clicked}
         <p class="message" in:fade>{file.fileName}</p>
         <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
@@ -121,30 +114,34 @@
         <div in:fade>
             <Progress file={file} send={false}/>
         </div>
-    {:else if !downloading && !downloadDone && data === (OTHER || NOT_FOUND)} 
+    {:else if !downloading && !downloadDone && !saved && data === (OTHER || NOT_FOUND)} 
         <p class="message" in:fade>{file.fileName}</p>
+
+    {/if}
         
-    {:else if downloadDone || file?.saved}
+    {#if downloadDone || saved}
         {#if !video}
-                {#if data === OTHER && !file?.saved}
+            {#if data === (OTHER || NOT_FOUND)}
+                {#if !saved}
                 <div in:fade>
                     <Progress file={file} send={false}/>
                 </div>
-                <p class="message done">File downloaded!</p>
-                <p>{file.fileName}</p>
-                {:else if data === NOT_FOUND}
-                <p class="message error">{NOT_FOUND}</p>
-                {:else if image}
-                <div style="-webkit-user-drag: none;" on:click={focusImage}>
-                    <img
-                        in:fade="{{ duration: 150 }}"
-                        src="{data}"
-                        alt=""
-                    />
-                </div>
-                {:else if audio}
-                 <AudioPlayer src={data} />
                 {/if}
+            <p class="message done">File downloaded!</p>
+            <p class="message">{file.fileName}</p>
+            {:else if data === NOT_FOUND}
+            <p class="message error">{NOT_FOUND}</p>
+            {:else if image}
+            <div style="-webkit-user-drag: none;" on:click={focusImage}>
+                <img
+                    in:fade="{{ duration: 150 }}"
+                    src="{data}"
+                    alt=""
+                />
+            </div>
+            {:else if audio}
+                <AudioPlayer src={data} />
+            {/if}
         {:else if video}
             <VideoPlayer src={file} />
         {/if}
@@ -164,15 +161,15 @@
 }
 
 .message {
-        margin: 0;
-        word-break: break-word;
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 400;
-        color: var(--text-color);
-        font-size: 15px;
-        user-select: all;
-        margin-bottom: 5px;
-    }
+    margin: 0;
+    word-break: break-word;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    color: var(--text-color);
+    font-size: 15px;
+    user-select: all;
+    margin-bottom: 5px;
+}
 
     
 .done {
