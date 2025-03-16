@@ -4,7 +4,6 @@
     import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
     import { fade, fly } from 'svelte/transition'
-    import RtcGroupMessages from '$lib/components/webrtc/RtcGroupMessages.svelte'
     import ConferenceControls from '/src/routes/groups/components/Conference-Controls.svelte'
    // import Controls from '$lib/components/webrtc/Controls.svelte'
     import {createEventDispatcher, onMount} from 'svelte'
@@ -125,8 +124,6 @@
                 <ConferenceControls />
             </div>
         </div>
-
-        <!-- <RtcGroupMessages /> -->
     </div>
     
     <style lang="scss">

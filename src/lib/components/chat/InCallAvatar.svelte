@@ -54,6 +54,7 @@ const check_avatar = (address) => {
         width:  40px;
         border-radius: 15px;
         padding: 10px;
+        object-fit: cover;
     }
     
 </style>

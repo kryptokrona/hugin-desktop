@@ -50,7 +50,7 @@ $: if (thisSwarm) admin = thisSwarm.admin
 
 const isFile = (data) => {
     const findit = (arr) => {
-        return arr.find(a => a.fileName === data.message && parseInt(data.time) === parseInt(a.time))
+        return arr.find(a => a.hash === data.hash && parseInt(data.time) === parseInt(a.time))
     }
     let file = findit($files)
     if (file) {
@@ -446,6 +446,7 @@ async function dropFile(e) {
     
     acceptedFiles[0].time = time
     acceptedFiles[0].fileName = filename
+    acceptedFiles[0].saved = true
 
     if (fileRejections.length) {
         console.log('rejected file')
@@ -466,7 +467,9 @@ async function dropFile(e) {
         hash: hash,
         time: time
     }
+    $files.push(acceptedFiles[0])
     $localFiles.push(acceptedFiles[0])
+    $files = $files
     printRoomMessage(message)
     window.api.groupUpload(filename, path, $swarm.activeSwarm?.key, size, time, hash)
 }

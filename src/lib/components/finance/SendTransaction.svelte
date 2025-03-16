@@ -184,5 +184,6 @@ input {
     height: 30px;
     width: 30px;
     padding: 5px;
+    object-fit: cover;
 }
 </style>

@@ -6,7 +6,7 @@ import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import ChatList from '$lib/components/chat/ChatList.svelte'
 import AddChat from '$lib/components/chat/AddChat.svelte'
-import {boards, notify, transactions, user, beam, webRTC} from '$lib/stores/user.js'
+import {boards, notify, transactions, user, beam, webRTC, swarm, files} from '$lib/stores/user.js'
 import Rename from '$lib/components/chat/Rename.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
@@ -15,6 +15,7 @@ import FileViewer from '$lib/components/popups/FileViewer.svelte'
 import { fileSettings, fileViewer } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
 import DropFile from '$lib/components/popups/DropFile.svelte'
+import ActiveCall from './components/ActiveCall.svelte'
 
 let active_contact
 let savedMsg = []
@@ -24,6 +25,12 @@ let toggleRename = false
 let wantToAdd = false
 let windowHeight
 let windowChat
+let in_voice = false
+
+$: thisSwarm = $swarm.active.find(a => a.chat === $user.activeChat.chat)
+$: if (thisSwarm && thisSwarm.voice_channel.some(a => a.address === $user.activeChat.chat)) {
+    in_voice = true
+} else in_voice = false
 
 //Get messages on mount.
 onMount(async () => {
@@ -71,6 +78,19 @@ onDestroy(() => {
     window.api.removeAllListeners('newMsg')
 })
 
+const isFile = (data) => {
+    const findit = (arr) => {
+        return arr.find(a => parseInt(data.timestamp) === parseInt(a.time))
+    }
+    let file = findit($files)
+    console.log("Find file!", file)
+    if (file) {
+        file.saved = true
+        return file
+    }
+    return false
+}
+
 //Prints conversation from active contact
 const printConversation = (active) => {
     const active_chat = { chat: active.chat, key: active.key, name: active.name }
@@ -78,7 +98,14 @@ const printConversation = (active) => {
     const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
     $notify.unread = clear
     active_contact = active.chat + active.key
-    savedMsg = $messages.filter((x) => x.chat === active.chat)
+    let msgs = $messages.filter((x) => x.chat === active.chat)
+    let updated = []
+    for (const a of msgs) {
+        const file = isFile(a) 
+        if (file) a.file = file
+        updated.push(a)
+    }
+    savedMsg = updated
     scrollDown()
 }
 //Chat to add
@@ -187,6 +214,10 @@ const download = (link) => {
 
 async function dropFile(e) {
     dragover = false
+    if (!thisSwarm) {
+        window.api.errorMessage('No connection...')
+        return
+    }
     const { acceptedFiles, fileRejections } = e.detail
     let filename = acceptedFiles[0].name
     let path = acceptedFiles[0].path
@@ -194,7 +225,9 @@ async function dropFile(e) {
     let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
     let time = Date.now()
     let offchain = false
-    
+    const hash = await window.api.createGroup()
+    const beam = true
+
     acceptedFiles[0].fileName = filename
     acceptedFiles[0].time = time
     acceptedFiles[0].chat = $user.activeChat.chat
@@ -214,19 +247,7 @@ async function dropFile(e) {
     printMessage(message)
     saveToStore(message)
 
-    if ($webRTC.call.some(a => a.chat === $user.activeChat.chat)) offchain = true
-
-    if (!$beam.active.some(a => a.chat === message.chat)) {
-        window.api.createBeam(toHuginAddress, true, offchain)
-        $beam.active.push({
-            chat: $user.activeChat.chat,
-            connected: false,
-            key: undefined,
-        })
-        $beam.active = $beam.active
-        await sleep(300)
-    }
-    window.api.upload(filename, path, $user.activeChat.chat, size, time)
+    window.api.groupUpload(filename, path, $user.activeChat.chat, size, time, hash, !beam)
 }
 
 function drag() {
@@ -277,6 +298,7 @@ const hideModal = () => {
     <SendTransaction on:click="{hideModal}" on:send="{(e) => sendTransaction(e)}" />
 {/if}
 
+
 <main in:fade="{{ duration: 350 }}">
     <ChatList
         on:openRename="{(a) => openRename(a)}"
@@ -287,6 +309,9 @@ const hideModal = () => {
     <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="chat_window" in:fly="{{ y: 50 }}">
+            {#if in_voice} 
+                <ActiveCall/>
+            {/if}
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
                 {#each savedMsg as message (message.timestamp)}

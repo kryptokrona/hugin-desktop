@@ -91,6 +91,7 @@ $: window_medium
             <img
             
                 class="custom-avatar"
+                style=" object-fit: cover;"
                 src="{avatar}"
                 alt=""
             />

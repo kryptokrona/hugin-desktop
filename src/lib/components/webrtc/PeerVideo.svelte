@@ -180,7 +180,7 @@ const resize = (size) => {
         {:then avatar}
         {#if avatar}
             <img
-            
+              style=" object-fit: cover;"
                 class="custom-avatar"
                 src="{avatar}"
                 alt=""

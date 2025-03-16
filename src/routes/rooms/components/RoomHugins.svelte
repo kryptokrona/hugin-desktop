@@ -44,8 +44,7 @@ $: $rooms.activeHugins
 let onlineUsers = []
 let thisSwarm = false
 
-$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+$: if ($swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
 $: if (thisSwarm && $swarm.active.length) in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
 $: if (thisSwarm) admin = thisSwarm.admin
 //Active hugins
@@ -98,7 +97,6 @@ const join_voice_channel = async (video = false, screen) => {
             return
         }
         console.log("Joining!")
-        await sleep(50)
         //Leave any active first
         if ($swarm.voice_channel.length) {
             console.log("Still in voice")
@@ -108,10 +106,11 @@ const join_voice_channel = async (video = false, screen) => {
             //We already have an active call.
         }
         startTone.play()
+        await sleep(50)
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
-        window.api.send("join-voice", {key: thisSwarm.key, video: !$videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
         thisSwarm.voice_connected = true
         $swarm = $swarm
@@ -434,6 +433,7 @@ p {
     border-radius: 10px;
     padding: 5px;
     margin: 1px;
+    object-fit: cover;
 }
 
 </style>

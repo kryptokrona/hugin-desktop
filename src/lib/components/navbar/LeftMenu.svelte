@@ -222,11 +222,14 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
 
 .avatar {
     height: 55px;
+    object-fit: cover;
 }
 
 .custom {
     height: 40px !important;
     border-radius: 5px;
-    max-width: 60px;
+    max-width: 40px;
+    object-fit: cover;
+
 }
 </style>

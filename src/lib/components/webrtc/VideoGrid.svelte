@@ -4,7 +4,6 @@ import { webRTC } from '$lib/stores/user.js'
 import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
 import { fade } from 'svelte/transition'
-import RtcGroupMessages from '$lib/components/webrtc/RtcGroupMessages.svelte'
 import Controls from '$lib/components/webrtc/Controls.svelte'
 import { Moon } from 'svelte-loading-spinners'
 import {onMount} from 'svelte'
@@ -74,8 +73,6 @@ $: videoCalls = $webRTC.call.filter((a) => a.connected === true)
         </div>
         <Controls />
     </div>
-
-    <RtcGroupMessages />
 </div>
 
 <style lang="scss">

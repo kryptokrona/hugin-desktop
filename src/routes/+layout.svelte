@@ -16,7 +16,6 @@
     import LeftMenu from '$lib/components/navbar/LeftMenu.svelte'
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
     import IncomingCall from '$lib/components/webrtc/IncomingCall.svelte'
-    import Webrtc from '$lib/components/webrtc/Calls.svelte'
     import Group_Webrtc from '/src/routes/groups/components/VoiceChannel.svelte'
     import TrafficLights from '$lib/components/TrafficLights.svelte'
     import CallerMenu from '$lib/components/webrtc/CallerMenu.svelte'
@@ -349,18 +348,21 @@
         $files = data
     })
 
-    window.api.receive('file-downloaded', (file) => {
+    window.api.receive('file-downloaded', (data, saved = false) => {
+        const file = JSON.parse(data)
         console.log("File downloaded:", file)
         console.log("From:", name)
+        if ($files.some(a => a.time === file.time)) return
         const add = {
             fileName: file.fileName,
             chat: file.address,
-            path: 'storage',
+            path: saved ? file.path : 'storage',
             hash: file.hash,
             time: file.time,
             size: file.size,
             group: true,
-            topic: file.topic
+            topic: file.topic,
+            saved: true
         }
 
         $files.push(add)
@@ -433,20 +435,28 @@
         )
     })
 
-    window.api.receive('remote-file-added', (data)  => {
+    window.api.receive('remote-file-saved', (data)  => {
+        const file = JSON.parse(data)
+        console.log("Save temp file", file)
+        $files.push(file)
+        $files = $files
+    })
+
+    window.api.receive('remote-file-added', (data, update)  => {
         console.log('Remote file added', data)
         let from = $user.contacts.find(a => a.chat === data.chat)
         let newFile = data.remoteFiles[0]
         let incomingFile = {
             chat: data.chat,
-            file: [newFile],
+            file: newFile,
             timestamp: newFile.time,
             msg: `Incoming file: ${newFile.fileName}`,
             sent: false,
             beam: true
         }
         saveToStore(incomingFile)
-        $remoteFiles = data.remoteFiles
+        $remoteFiles.push(data.remoteFiles[0])
+        $remoteFiles = $remoteFiles
         toast.success(`New file shared by ${from.name}`, {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
@@ -640,33 +650,6 @@
 
     {/if}
 
-    {#if ($user.loggedIn && $webRTC.call.length != 0) || $webRTC.incoming.length != 0}
-        <VideoGrid/>
-    {#if $webRTC.call.length}
-        <CallerMenu
-                on:click="{endThisCall}"
-                on:endCall="{endThisCall}"
-                paused="{!showCallerMenu}"
-        />
-    {/if}
-
-        {#each $webRTC.call as thiscall}
-            {#if $webRTC.call.some((a) => a.peerAudio === true)}
-                <PeerAudio audioCall="{thiscall}"/>
-            {/if}
-        {/each}
-
-        {#each $webRTC.incoming as call}
-            {#if incoming_call}
-                <IncomingCall
-                        thisCall="{call}"
-                        on:click="{closePopup}"
-                        on:answerCall="{() => answerIncomingCall(call)}"
-                        paused="{!incoming_call}"
-                />
-            {/if}
-        {/each}
-    {/if}
 
     {#if $user.loggedIn && $notify.new.length > 0 && new_messages}
         <div class="notifs">
@@ -698,7 +681,6 @@
     <slot/>
 {/if}
 
-<Webrtc/>
 <Group_Webrtc/>
 </div>
 </main>
