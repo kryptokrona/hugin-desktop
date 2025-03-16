@@ -10,6 +10,7 @@ const MEDIA_TYPES = [
     { file: '.gif', type: 'image' },
     { file: '.jfif', type: 'image' },
     { file: '.jpeg', type: 'image' },
+    { file: '.webp', type: 'image' },
     { file: '.mp4', type: 'video' },
     { file: '.webm', type: 'video' },
     { file: '.avi', type: 'video' },
@@ -38,8 +39,8 @@ ipcMain.handle('select-directory', () => {
 
 //Check if it is an image or video with allowed type
 function check_if_media(path, size, check = false) {
-    if (path === undefined && !check) return false
-    if (size >= 10000000) return false
+    if (path === undefined && !check) return [false]
+    if (size >= 10000000) return [false]
         for (const a of MEDIA_TYPES) {
           if (path.toLowerCase().endsWith(a.file)) {
             return [true, a.type];
@@ -139,34 +140,6 @@ function trimExtra(extra) {
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function parse_call(msg, sender, sent, group = false, timestamp) {
-    const {expand_sdp_answer} = require("./sdp.cjs")
-
-    switch (msg.substring(0, 1)) {
-        case 'Δ':
-        // Fall through
-        case 'Λ':
-            // Call offer
-            return [`${msg.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`, {msg, sender, group, timestamp}, true, sent]
-            break
-        case 'δ':
-        // Fall through
-        case 'λ':
-            // Answer
-            if (sent) return ['Call answered', {}, false, false ]
-                let callback = JSON.stringify(expand_sdp_answer(msg))
-                let callerdata = {
-                    data: callback,
-                    chat: sender,
-                }
-            return ['Call answered', callerdata, true, sent]
-
-            break
-        default:
-            return [msg, false, false, false]
-    }
 }
 
 function check_hash(hash) {
@@ -415,4 +388,4 @@ const sanitize_join_swarm_data = (data) => {
 
  
 
-module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, parse_call, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
+module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}

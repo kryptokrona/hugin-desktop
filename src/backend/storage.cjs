@@ -9,6 +9,7 @@ const MEDIA_TYPES = [
   { file: '.gif', type: 'image' },
   { file: '.jfif', type: 'image' },
   { file: '.jpeg', type: 'image' },
+  { file: '.webp', type: 'image' },
   { file: '.mp4', type: 'video' },
   { file: '.webm', type: 'video' },
   { file: '.avi', type: 'video' },
@@ -23,11 +24,11 @@ const MEDIA_TYPES = [
 ];
 const { get_new_peer_keys } = require('./crypto.cjs');
 const userDataDir = app.getPath('userData')
-const Huginbeam = require("huginbeam");
 const { Readable } = require('streamx');
 const { Hugin } = require('./account.cjs');
-const { saveGroupMsg } = require('./database.cjs');
+const { saveGroupMsg, saveMsg } = require('./database.cjs');
 const { sleep } = require('./utils.cjs');
+const Hyperswarm = require('hyperswarm-hugin');
 
 
 class HyperStorage {
@@ -42,6 +43,7 @@ class HyperStorage {
 async load_drive(topic) {
   const [filesPath, chatPath] = make_directory(userDataDir, topic)
   //Uss RAM instead for temp storage?
+  if (this.loaded(topic)) return;
   const fileStore = new Corestore(filesPath)
   console.log("Loaded store path")
   console.log("Loading drive")
@@ -54,6 +56,13 @@ add(drive, topic) {
   if (this.drives.some(a => a.topic === topic)) return
   console.log("Drive added")
   this.drives.push({drive, topic})
+}
+
+loaded(topic) {
+  if (this.drives.length) {
+    if (this.drives.some((a) => a.topic === topic)) return true;
+  }
+  return false;
 }
 
 async purge() {
@@ -141,87 +150,81 @@ check(size, buf, name) {
   return [false];
 }
 
-async start_beam(upload, key, file, topic, room) {
+async start_beam(upload, key, file, topic, room, dm) {
     console.log("----::::::::::----")
     console.log("::::START BEAM::::")
     console.log("----::::::::::----")
-    console.log("")
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
-    const options = { upload, dht_keys, base_keys, sig };
+    const topicHash = base_keys.publicKey.toString('hex')
+    let beam
     try {
-        const beam = new Huginbeam(key, options)
-        this.beam_started(beam, upload, key, topic, file, room)
-        beam.write('Start')
-        return true
-
-    } catch(e) {
-        console.log("Beam err", e)
-        return false
-    }
-}
-
-async beam_started(beam, upload, key, topic, file, room) {
-  console.log("----::::::::::----")
-  console.log(":::BEAM STARTED:::")
-  console.log("----::::::::::----")
-  beam.on('connected', async () => {
-    console.log("----:::::::::::::::::::----")
-    console.log("------BEAM CONNECTED------")
-    console.log("----:::::::::::::::::::----")
-    try {
-      if (upload) {
-        this.upload(beam, file, topic)
-      } else {
-        this.download(beam, file, topic, room)
-      }
-    } catch(e) {
+        beam = new Hyperswarm({ maxPeers: 1}, sig, dht_keys, base_keys)
+        const announce = Buffer.alloc(32).fill(topicHash)
+        const disc = beam.join(announce, {server: true, client: true})
+        console.log("----::::::::::----")
+        console.log(":::BEAM STARTED:::")
+        console.log("----::::::::::----")
+        beam.on('connection', async (conn, info) => {
+          console.log("----:::::::::::::::::::----")
+          console.log("------BEAM CONNECTED------")
+          console.log("----:::::::::::::::::::----")
+            if (upload) {
+              this.upload(conn, file, topic)
+            } else {
+                const done = this.download(conn, file, topic, room, dm)
+                if (done) close()
+            }
+        })
       
+        const close = async () => {
+            console.log("XXXXXXXXXXXXXXX")
+            console.log("--BEAM CLOSED--")
+            console.log("XXXXXXXXXXXXXXX")
+            await beam.leave(Buffer.from(topic))
+            await beam.destroy()
+        }
+      
+        beam.on('close', () => {
+            console.log("** Beam closed **")
+        })
+        beam.on('error', (e) => {
+            console.log("Beam error", e)
+            close()
+        })
+
+        process.once('SIGINT', () => {
+          close()
+      })
+  
+        await disc.flushed()
+    } catch(e) {
+        console.log("Beam err", e) 
     }
-  })
-
-  const close = async () => {
-      console.log("XXXXXXXXXXXXXXX")
-      console.log("--BEAM CLOSED--")
-      console.log("XXXXXXXXXXXXXXX")
-      beam.end()
-      await sleep(2000)
-      beam.destroy()
-  }
-
-  beam.on('close', () => {
-      console.log("** Beam closed **")
-  })
-  beam.on('error', (e) => {
-      console.log("Beam error", e)
-      close()
-  })
-
 }
 
-async upload(beam, file, topic) {
+
+async upload(conn, file, topic) {
     console.log("***********SEND DATA*****************")
     const send = await this.load(file.hash, topic)
+    console.log("Send this file", send)
     const stream = Readable.from(send)
     stream.on('data', data => {
         console.log("Sending data ------>", data)
         try {
-          beam.write(data)
+          conn.write(data)
         } catch(e) {
           console.log("Error writing data.")
         }
     })
 }
 
-async download(beam, file, topic, room) {
+async download(conn, file, topic, room, dm) {
   console.log("Download file", file)
-  beam.on('data', async (data) => {
+  conn.on('data', async (data) => {
     console.log("*********************")
     console.log("****BEAM DATA INC****")
     console.log("*********************")
     
-    if (data.length < 20) {
-      if (data.toString() === "Start") return
-    }
     const buf = []
     let downloaded = 0
     console.log("-_-__---___--__--")
@@ -252,7 +255,18 @@ async download(beam, file, topic, room) {
         'file-shared',
         buffer
     )
-    Hugin.send('file-downloaded', file)
+    Hugin.send('file-downloaded', JSON.stringify(file), false)
+
+    this.done(file, topic, room, dm, true)
+    }
+  })
+
+  return true
+}
+
+done(file, topic, room, dm) {
+  
+  if (!dm) {
     const message = {
       message: file.fileName,
       address: file.address,
@@ -266,12 +280,19 @@ async download(beam, file, topic, room) {
       channel: 'Room',
       file: true,
       tip: false,
-  }
+    }
     Hugin.send('roomMsg', message)
     saveGroupMsg(message, false, false)
-    }
-  })
+
+  } else {
+    file.path = 'storage'
+    file.saved = true
+    let data = {chat: file.address, remoteFiles: [file]}
+    Hugin.send('remote-file-added', data)
+    const msg = saveMsg(`Downloaded ${file.fileName}`, file.address, false, file.time)
+  }
 }
+
 
 }
 

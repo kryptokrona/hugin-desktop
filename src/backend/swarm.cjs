@@ -20,11 +20,13 @@ const REQUEST_HISTORY = 'request-history';
 const SEND_HISTORY = 'send-history';
 const REQUEST_FILE = 'request-file'
 const PING_SYNC = 'Ping';
+const DOWNLOAD_REQUEST = 'download-request'
 
 let localFiles = []
 let remoteFiles = []
 let active_swarms = []
 let downloading = []
+let uploading = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 
 async function send_voice_channel_sdp(data) {
@@ -302,7 +304,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
     if ('info' in data) {
         const fileData = sanitize_file_message(data)
         if (!fileData) return "Ban"
-        check_file_message(fileData, topic, con.address, con)
+        check_file_message(fileData, topic, con.address, con, beam)
         return true
     }
 
@@ -475,8 +477,10 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
                 
             } else if(data.type === REQUEST_FILE) {
                 const file = sanitize_file_message(data.file)
+                console.log("Got request file message", file)
                 if (!file) return "Error"
-                Storage.start_beam(true, file.key, file, topic, active.key)
+                console.log("Starting beam, requesting fle")
+                await Storage.start_beam(true, file.key, file, topic, active.key, beam)
             }
             return true
         }
@@ -563,7 +567,7 @@ const send_history = async (address, topic, key, files) => {
     send_peer_message(address, topic, history)
 }
 
-const request_file = async (address, topic, file, room) => {
+const request_file = async (address, topic, file, room, beam = false) => {
     //request a missing file, open a hugin beam
     console.log("-----------------------------")
     console.log("*** WANT TO REQUEST FILE  ***")
@@ -572,13 +576,13 @@ const request_file = async (address, topic, file, room) => {
     const verify = await verifySignature(file.hash + file.size.toString() + file.time.toString() + file.fileName, file.address, file.signature)
     if (!verify) return
     const key = randomKey()
-    Storage.start_beam(false, key, file, topic, room)
+    await Storage.start_beam(false, key, file, topic, room, beam)
     file.key = key
     const message = {
         file,
         type: REQUEST_FILE
     }
-    await sleep(500)
+    await sleep(200)
     send_peer_message(address, topic, message)
 }
 
@@ -832,16 +836,33 @@ ipcMain.on('group-download', (e, download) => {
 })
 
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
-    const active = get_active(key)
+    let active = get_active(key)
+    if (!room) active = get_beam(key)
+    if (!active) {
+        console.log("Upload failed, room or beam is not active")
+        return
+    }
     const topic = active.topic
     const signature = await signMessage(hash + size.toString() + time.toString() + fileName, keychain.getXKRKeypair().privateSpendKey)
     const upload = {
         fileName, path, topic, size, time, hash, room, signature, name: Hugin.nickname
     }
     console.log("Upload this file to group", upload)
-    await Storage.save(topic, Hugin.address, Hugin.nickname, hash, size, time, fileName, path, signature, 'file-shared', 'file')
+    const [media, type] = check_if_media(path, size)
+    if (media) {
+        await Storage.save(topic, 
+            Hugin.address, 
+            Hugin.nickname, 
+            hash, 
+            size, 
+            time, 
+            fileName, 
+            path, 
+            signature, 
+            'file-shared', 'file')
+    }
     share_file(upload)
-    save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname)
+    if (room) save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname)
 
 })
 
@@ -949,42 +970,48 @@ const save_file_info = (data, topic, address, time, sent, name) => {
     saveGroupMsg(message)
 }
 
-const check_file_message = async (data, topic, address, con) => {
+const check_file_message = async (data, topic, address, con, beam) => {
     const active = get_active_topic(topic)
     if (!active) return
     if (data.info === 'file-shared') {
     const [media, type] = check_if_media(data.fileName, data.size, true)
-    if (media && Hugin.syncImages.some(a => a === topic)) {
-        //A file is shared and we have auto sync images on.
-        //Request to download the file
-        const file = {
-            address,
-            topic,
-            name: data.name,
-            time: data.time,
-            hash: data.hash,
-            size: data.size,
-            fileName: data.fileName,
-            signature: data.sig,
-            type: data.type,
-            info: data.info
-        }
-        request_file(address, topic, file, active.key)
+    if (media && (Hugin.syncImages.some(a => a === topic) || beam)) {
+
+    console.log("Want to request file shared")
+    //A file is shared and we have auto sync images on.
+    //Request to download the file
+    const file = {
+        address,
+        topic,
+        name: data.name,
+        time: data.time,
+        hash: data.hash,
+        size: data.size,
+        fileName: data.fileName,
+        signature: data.sig,
+        type: data.type,
+        info: data.info
+    }
+    request_file(address, topic, file, active.key, beam)
+    return
     } else {
-        const added = await add_remote_file(data.fileName, address, data.size, topic, true, data.hash, active.key, con.name, data.time)
-        save_file_info(data, topic, address, added, false, con.name)
+        console.log("Got file incoming!", data)
+        const added = await add_remote_file(data.fileName, address, data.size, topic, !beam, data.hash, active.key, con.name, data.time)
+        if (!beam )save_file_info(data, topic, address, added, false, con.name)
     }
     }
 
     if (data.type === 'download-request') {
         const key = await start_upload(data, topic)
-        send_file(data.fileName, data.size, address, key, true)
+        console.log("Got download request, starting upload:", data)
+        send_file(data.fileName, data.size, address, key, true, beam)
     }
 
     if (data.type === 'upload-ready') {
         if (data.info === "file")  { 
+            console.log("Upload ready!")
             update_remote_file(data.fileName, address, data.size, data.key, data.time)
-            start_download(Hugin.downloadDir, data.fileName, address, data.key)
+            start_download(Hugin.downloadDir, data.fileName, address, data.key, beam)
             return
         }
     }

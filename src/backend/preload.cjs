@@ -111,8 +111,8 @@ const WINDOW_API = {
         ipcRenderer.send('remove-local-file', fileName, chat, time)
     },
 
-    createBeam: async (key, chat, send, offchain) => {
-        ipcRenderer.send('beam', key, chat, send, offchain)
+    createBeam: async (chat) => {
+        ipcRenderer.send('beam', chat)
     },
 
     loadFile: async (path, size) => {
@@ -230,8 +230,8 @@ const WINDOW_API = {
         ipcRenderer.send('success-notify-message-main', channel, successMessage)
     },
 
-    groupUpload: async (filename, path, topic, fileSize, time, hash, profile) => {
-        ipcRenderer.send('group-upload', filename, path, topic, fileSize, time, hash, profile)
+    groupUpload: async (filename, path, topic, fileSize, time, hash, room) => {
+        ipcRenderer.send('group-upload', filename, path, topic, fileSize, time, hash, room)
     },
 
     changeDowndloadDir: async (path) => {

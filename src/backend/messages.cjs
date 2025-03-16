@@ -32,7 +32,6 @@ const {
     sanitize_group_message
 } = require('./utils.cjs')
 
-const { send_beam_message, new_beam} = require("./beam.cjs")
 const { send_swarm_message, new_swarm, end_swarm } = require("./swarm.cjs")
 
 const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
