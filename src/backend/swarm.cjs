@@ -449,7 +449,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
 
             if (data.type === PING_SYNC && active.search && INC_HASHES) {
 
-                if ('files' in data) {
+                if ('files' in data && !beam) {
                     process_files(data, active, con, topic)
                 }
 
