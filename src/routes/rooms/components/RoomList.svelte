@@ -99,7 +99,6 @@ async function filterActiveHugins() {
         all.push(user)
     }
     $rooms.activeHugins = all
-    
 
 }
 

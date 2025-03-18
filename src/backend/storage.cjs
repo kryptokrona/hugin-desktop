@@ -171,7 +171,7 @@ async start_beam(upload, key, file, topic, room, dm) {
             if (upload) {
               this.upload(conn, file, topic)
             } else {
-                const done = this.download(conn, file, topic, room, dm)
+                const done = await this.download(conn, file, topic, room, dm)
                 if (done) close()
             }
         })
