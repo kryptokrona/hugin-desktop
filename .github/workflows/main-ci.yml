@@ -40,7 +40,7 @@ jobs:
               with:
                   python-version: 3.11
 
-              name: Update package list
+            - name: Update package list
               if: matrix.config.os == 'ubuntu-latest'
               run: sudo apt-get update
 
