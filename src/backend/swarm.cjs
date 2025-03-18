@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply} = require("./database.cjs")
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -837,7 +837,10 @@ ipcMain.on('group-download', (e, download) => {
 
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
     let active = get_active(key)
-    if (!room) active = get_beam(key)
+    if (!room)  {
+        active = get_beam(key)
+        saveMsg(fileName, active.chat.substring(0,99), true, time)
+    }
     if (!active) {
         console.log("Upload failed, room or beam is not active")
         return

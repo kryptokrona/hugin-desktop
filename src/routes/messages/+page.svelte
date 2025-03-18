@@ -231,6 +231,7 @@ async function dropFile(e) {
     acceptedFiles[0].fileName = filename
     acceptedFiles[0].time = time
     acceptedFiles[0].chat = $user.activeChat.chat
+    acceptedFiles[0].saved = true
     
     if (fileRejections.length) {
         console.log('rejected file')
