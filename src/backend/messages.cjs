@@ -636,7 +636,6 @@ async function send_message(message, receiver, off_chain = false, group = false,
         if (beam_this) {
             send_swarm_message(sendMsg, address, true)
         }
-    else {
         let saveThisMessage = {
             msg: message,
             k: messageKey,
@@ -645,7 +644,6 @@ async function send_message(message, receiver, off_chain = false, group = false,
             chat: address,
         }
         save_message(saveThisMessage, true)
-        }
     }
 }
 
