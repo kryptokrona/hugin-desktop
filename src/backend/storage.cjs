@@ -180,11 +180,11 @@ async start_beam(upload, key, file, topic, room, dm) {
         })
         beam.on('error', (e) => {
             console.log("Beam error", e)
-            close(key)
+            this.close(key)
         })
 
         process.once('SIGINT', () => {
-          close(key)
+          this.close(key)
       })
   
         await disc.flushed()
