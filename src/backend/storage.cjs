@@ -151,9 +151,6 @@ check(size, buf, name) {
 }
 
 async start_beam(upload, key, file, topic, room, dm) {
-    console.log("----::::::::::----")
-    console.log("::::START BEAM::::")
-    console.log("----::::::::::----")
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
     const topicHash = base_keys.publicKey.toString('hex')
     let beam
@@ -165,35 +162,29 @@ async start_beam(upload, key, file, topic, room, dm) {
         console.log(":::BEAM STARTED:::")
         console.log("----::::::::::----")
         beam.on('connection', async (conn, info) => {
+          this.beams.push({key, beam, conn, topic})
           console.log("----:::::::::::::::::::----")
           console.log("------BEAM CONNECTED------")
           console.log("----:::::::::::::::::::----")
             if (upload) {
               this.upload(conn, file, topic)
             } else {
-                const done = await this.download(conn, file, topic, room, dm)
-                if (done) close()
+                await this.download(conn, file, topic, room, dm)
             }
         })
       
-        const close = async () => {
-            console.log("XXXXXXXXXXXXXXX")
-            console.log("--BEAM CLOSED--")
-            console.log("XXXXXXXXXXXXXXX")
-            await beam.leave(Buffer.from(topic))
-            await beam.destroy()
-        }
+
       
         beam.on('close', () => {
             console.log("** Beam closed **")
         })
         beam.on('error', (e) => {
             console.log("Beam error", e)
-            close()
+            close(key)
         })
 
         process.once('SIGINT', () => {
-          close()
+          close(key)
       })
   
         await disc.flushed()
@@ -201,6 +192,21 @@ async start_beam(upload, key, file, topic, room, dm) {
         console.log("Beam err", e) 
     }
 }
+
+async close (key) {
+  const active = this.beams.find(a => a.key === key)
+  await sleep(500)
+  active.conn.end()
+  await sleep(500)
+  await active.beam.leave(Buffer.from(active.topic))
+  await active.beam.destroy()
+  const filter = this.beams.filter(a => a.key !== key)
+  this.beams = filter
+  console.log("XXXXXXXXXXXXXXX")
+  console.log("--BEAM CLOSED--")
+  console.log("XXXXXXXXXXXXXXX")
+}
+
 
 
 async upload(conn, file, topic) {
@@ -215,6 +221,12 @@ async upload(conn, file, topic) {
         } catch(e) {
           console.log("Error writing data.")
         }
+    })
+
+    conn.on('data', data => { 
+      if (data.toString() === "Done") {
+        this.close(file.key)
+      }
     })
 }
 
@@ -258,10 +270,10 @@ async download(conn, file, topic, room, dm) {
     Hugin.send('file-downloaded', JSON.stringify(file), false)
 
     this.done(file, topic, room, dm, true)
+    this.close(file.key)
+    conn.write('Done')
     }
   })
-
-  return true
 }
 
 done(file, topic, room, dm) {
