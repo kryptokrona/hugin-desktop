@@ -222,7 +222,6 @@ async upload(conn, file, topic) {
     const start = () => {
       if (send.length > CHUNK_SIZE) {
         const chunks = split(send)
-        let i = 0
         for (const c of chunks) {
          write(c)
         }
