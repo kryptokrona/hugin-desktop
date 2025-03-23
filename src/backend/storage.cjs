@@ -194,12 +194,18 @@ async start_beam(upload, key, file, topic, room, dm) {
 }
 
 async close (key) {
+  await sleep(1000)
   const active = this.beams.find(a => a.key === key)
-  await sleep(500)
-  active.conn.end()
-  await sleep(500)
-  await active.beam.leave(Buffer.from(active.topic))
-  await active.beam.destroy()
+  if (!active) return
+
+  try {
+    active.conn.end()
+    await active.beam.leave(Buffer.from(active.topic))
+    await active.beam.destroy()
+  } catch(e) {
+    return
+  }
+  
   const filter = this.beams.filter(a => a.key !== key)
   this.beams = filter
   console.log("XXXXXXXXXXXXXXX")
@@ -213,7 +219,7 @@ async upload(conn, file, topic) {
     console.log("***********SEND DATA*****************")
     const send = await this.load(file.hash, topic)
     console.log("Send this file", send)
-    const stream = Readable.from(send)
+    const stream = Readable.from(send, { highWaterMark: 9000 })
     stream.on('data', data => {
         console.log("Sending data ------>", data)
         try {
@@ -221,6 +227,10 @@ async upload(conn, file, topic) {
         } catch(e) {
           console.log("Error writing data.")
         }
+      stream.on('end', async (data) => {
+        await sleep(3000)
+        this.close(file.key)
+      })
     })
 
     conn.on('data', data => { 
