@@ -26,6 +26,7 @@ const start_beam = async (key, chat, file = true, upload, group, filename, size,
     const [base_keys, dht_keys, sig] = get_new_peer_keys(beamKey)
     const options = { upload, dht_keys, base_keys, sig };
     console.log("Download file in dm?", dm)
+    let beam
     try {
         if (key === "new") {
             beam = new Huginbeam(beamKey, options)
