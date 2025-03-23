@@ -14,6 +14,8 @@ import { onMount } from "svelte"
 	let lastMouseDown;
 	let video
 
+	const NOT_FOUND = "File not found"
+    const OTHER = "File"
 
     onMount(async () => {
         loadVideo(src)
@@ -65,6 +67,7 @@ import { onMount } from "svelte"
 		} else {
 			load = await window.api.loadFile(file.path, file.size)
 		}
+		let [arr, type] = load
 		if (arr === OTHER || arr === NOT_FOUND) return false
 		let blob = new Blob( [ arr ]);
 		video.src = URL.createObjectURL( blob );
