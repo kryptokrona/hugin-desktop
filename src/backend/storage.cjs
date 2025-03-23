@@ -24,7 +24,6 @@ const MEDIA_TYPES = [
 ];
 const { get_new_peer_keys } = require('./crypto.cjs');
 const userDataDir = app.getPath('userData')
-const { Readable } = require('streamx');
 const { Hugin } = require('./account.cjs');
 const { saveGroupMsg, saveMsg } = require('./database.cjs');
 const { sleep } = require('./utils.cjs');
@@ -219,36 +218,55 @@ async upload(conn, file, topic) {
     console.log("***********SEND DATA*****************")
     const send = await this.load(file.hash, topic)
     console.log("Send this file", send)
-    const stream = Readable.from(send, { highWaterMark: 9000 })
-    stream.on('data', data => {
-        console.log("Sending data ------>", data)
-        try {
-          conn.write(data)
-        } catch(e) {
-          console.log("Error writing data.")
+    const CHUNK_SIZE = 1000000
+    const start = () => {
+      if (send.length > CHUNK_SIZE) {
+        const chunks = split(send)
+        let i = 0
+        for (const c of chunks) {
+         write(c)
         }
-      stream.on('end', async (data) => {
-        await sleep(3000)
-        this.close(file.key)
-      })
-    })
+       } else write(send)
+        
+    }
 
-    conn.on('data', data => { 
-      if (data.toString() === "Done") {
-        this.close(file.key)
+    function write(chunk) {
+      try {
+        conn.write(chunk)
+      } catch(e) {
+        console.log("Error writing data.")
       }
-    })
+    }
+
+  function split(buf, size = CHUNK_SIZE) {
+      let chunks = [];
+      for (let i = 0; i < buf.length; i += size) {
+          chunks.push(buf.slice(i, i + size));
+      }
+      return chunks;
+  }
+
+  
+  conn.on('data', (data) => {
+    if (data.toString() === 'Done') {
+      this.close(file.key);
+    }
+  });
+  
+  start()
 }
 
 async download(conn, file, topic, room, dm) {
   console.log("Download file", file)
+  
+  let downloaded = 0
+  const buf = []
+
   conn.on('data', async (data) => {
     console.log("*********************")
     console.log("****BEAM DATA INC****")
     console.log("*********************")
-    
-    const buf = []
-    let downloaded = 0
+  
     console.log("-_-__---___--__--")
     console.log("---DOWNLOADING----")
     console.log("_-_----_---__-_--")
