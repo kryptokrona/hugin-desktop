@@ -480,7 +480,11 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
                 console.log("Got request file message", file)
                 if (!file) return "Error"
                 console.log("Starting beam, requesting fle")
-                await Storage.start_beam(true, file.key, file, topic, active.key, beam)
+                try {
+                    await Storage.start_beam(true, file.key, file, topic, active.key, beam)
+                } catch(e) {
+                    console.log("Error starting file transfer.")
+                }
             }
             return true
         }
@@ -576,7 +580,11 @@ const request_file = async (address, topic, file, room, beam = false) => {
     const verify = await verifySignature(file.hash + file.size.toString() + file.time.toString() + file.fileName, file.address, file.signature)
     if (!verify) return
     const key = randomKey()
-    await Storage.start_beam(false, key, file, topic, room, beam)
+    try {
+        await Storage.start_beam(false, key, file, topic, room, beam)
+    } catch(e) {
+        console.log("Error starting file transfer.")
+    }
     file.key = key
     const message = {
         file,
