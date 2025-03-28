@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import {fade, fly} from 'svelte/transition'
     import {groups, user, webRTC, notify} from '$lib/stores/user.js'
     import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
@@ -9,10 +11,10 @@
     import Dots from '../icons/Dots.svelte'
     import Bell from '../icons/Bell.svelte'
 
-    let activeHugins = []
-    let group = ''
-    let groupName
-    let asian = false
+    let activeHugins = $state([])
+    let group = $state('')
+    let groupName = $state()
+    let asian = $state(false)
 
     const standardGroup = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
     
@@ -34,27 +36,35 @@ function copyThis(copy) {
 const myAddress = $user.myAddress
 
 //Set group key
-$: if ($groups.thisGroup.key) {
-    group = $groups.thisGroup.key
-}
+run(() => {
+        if ($groups.thisGroup.key) {
+        group = $groups.thisGroup.key
+    }
+    });
 
 //Active users in p2p chat
 let activeUsers = []
 
 //This group name
-$: groupName = $groups.thisGroup.name
+run(() => {
+        groupName = $groups.thisGroup.name
+    });
 
-$: if (groupName) {
-    if (!isLatin(groupName)) asian = true
-    else asian = false
-}
+run(() => {
+        if (groupName) {
+        if (!isLatin(groupName)) asian = true
+        else asian = false
+    }
+    });
 
 //Active hugins
-$: activeHugins = $groups.activeHugins
+run(() => {
+        activeHugins = $groups.activeHugins
+    });
 
-$: activeList = activeHugins.filter(a => a.grp !== a.address)
+let activeList = $derived(activeHugins.filter(a => a.grp !== a.address))
 
-$: muteGroup = $notify.off.some(a => a === groupName)
+let muteGroup = $derived($notify.off.some(a => a === groupName))
 
 let timeout = false
 
@@ -74,12 +84,12 @@ let loading = false
 
 </script>
 
-<div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
+<div class="wrapper" out:fly|global="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
     <div class="top">
-        <h2 class:asian style="cursor: pointer;" on:click={() => copyThis(group)}>{groupName}</h2>    
+        <h2 class:asian style="cursor: pointer;" onclick={() => copyThis(group)}>{groupName}</h2>    
         <br />
         
-        <div style="cursor: pointer; display: flex; width: 25px;" on:click={toggleNotification}>
+        <div style="cursor: pointer; display: flex; width: 25px;" onclick={toggleNotification}>
             {#if !muteGroup}
                 <Bell active={true}/>
             {:else}
@@ -90,7 +100,7 @@ let loading = false
         <div class="list-wrapper">
             {#each activeList as user}     
             
-                    <div in:fade class="card" on:click="{() => sendPM(user)}">
+                    <div in:fade|global class="card" onclick={() => sendPM(user)}>
                         <img
                             class="avatar"
                             src="data:image/png;base64,{get_avatar(user.address)}"
@@ -204,7 +214,7 @@ h4 {
 
 h2 {
     margin: 0;
-    color: #fff;
+    color: var(--title-color);
     font-family: 'Montserrat';
     font-weight: bold;
     font-size: 22px;

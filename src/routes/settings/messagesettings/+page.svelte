@@ -8,7 +8,7 @@
         window.api.send('optimize')
     }
 
-    let timeframeDays;
+    let timeframeDays = $state();
 
     const fetchHistory = async () => {
         let settings = {}
@@ -36,7 +36,7 @@
         on:click="{optimizeMessages}"
     />
     </div>
-    <div class="settings" in:fade>
+    <div class="settings" in:fade|global>
         <p>Here you can manually create more xkr inputs to send messages with. 
             <br>
             This will lock some of your wallet balance during the process.</p>
@@ -55,7 +55,7 @@
         on:click="{fetchHistory}"
     />
     </div>
-       <div class="settings" in:fade>
+       <div class="settings" in:fade|global>
         <p>Here you can set the timeframe of message history you want to fetch. 
             <br>
             This will fetch the data from a Hugin API.</p>

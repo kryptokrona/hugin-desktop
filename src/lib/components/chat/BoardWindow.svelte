@@ -1,10 +1,12 @@
 <script>
+    /** @type {{children?: import('svelte').Snippet}} */
+    let { children } = $props();
 //Don't know if we can handle date here, to print today, yesterday etc in chat.
 </script>
 
 <!--This is just a wrapper that takes nested components-->
 <div class="window">
-    <slot />
+    {@render children?.()}
 </div>
 
 <style lang="scss">

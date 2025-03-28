@@ -3,6 +3,8 @@
     import {boards, misc} from "$lib/stores/user.js";
     import {onMount} from "svelte";
     import { fade, fly } from "svelte/transition"
+    /** @type {{children?: import('svelte').Snippet}} */
+    let { children } = $props();
 
     onMount( async () => {
         $layoutState.showFaucetButton = window.localStorage.getItem('faucet')
@@ -12,8 +14,8 @@
 
 </script>
 
-<div class="main" in:fly="{{ y: 100 }}">
-    <slot/>
+<div class="main" in:fly|global="{{ y: 100 }}">
+    {@render children?.()}
 </div>
 
 <style lang="scss">

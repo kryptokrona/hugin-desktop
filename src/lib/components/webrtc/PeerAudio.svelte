@@ -2,9 +2,10 @@
 //To handle true and false, or in this case show and hide.
 import { onDestroy, onMount } from 'svelte'
 
-let peerAudio = document.getElementById('peerAudio')
+let peerAudio = $state(document.getElementById('peerAudio'))
 
-export let audioCall
+    /** @type {{audioCall: any}} */
+    let { audioCall } = $props();
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
@@ -33,6 +34,6 @@ onDestroy(() => {
 
 <audio autoplay bind:this="{peerAudio}"></audio>
 
-<!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
+<!-- <video class:show={calling} in:fade|global id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 <style lang="scss">
 </style>

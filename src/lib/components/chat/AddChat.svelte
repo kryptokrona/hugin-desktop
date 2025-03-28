@@ -1,22 +1,27 @@
 <script>
+    import { run, createBubbler, self } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 
-const dispatch = createEventDispatcher()
 
-let enableButton = false
-let nickname = ''
-let addr
-let pubkey
-let text = ''
+let enableButton = $state(false)
+let nickname = $state('')
+let addr = $state()
+let pubkey = $state()
+let text = $state('')
 let myAddress
-let avatar
-let step = 1
+let avatar = $state()
+let step = $state(1)
 
-$: {
+let {
+    AddChat
+} = $props()
+
+run(() => {
     if (text.length > 98) {
         // spilt input to addr and pubkey
         addr = text.substring(0, 99)
@@ -25,11 +30,11 @@ $: {
 
         avatar = get_avatar(addr)
     }
-}
+});
 
 // Dispatch the inputted data
 const handleAdd = () => {
-    dispatch('addChat', {
+    AddChat({
         name: nickname,
         chat: addr,
         key: pubkey,
@@ -47,7 +52,7 @@ const close = () => {
     step = 1
 }
 
-$: {
+run(() => {
     //Handle state of the button, disabled by default, when enabled RGB class will be added.
     enableButton = !!(addr && pubkey)
 
@@ -56,21 +61,23 @@ $: {
         addr = ''
         pubkey = ''
     }
-}
+});
 
 const next = () => {
     step = 2
 }
 
-$: step
+run(() => {
+        step
+    });
 </script>
 
-<div on:click|self in:fade="{{ duration: 70 }}" out:fade="{{ duration: 100 }}" class="backdrop">
-    <div in:fly="{{ y: 20 }}" out:fade class="field">
+<div onclick={self(bubble('click'))} in:fade|global="{{ duration: 70 }}" out:fade|global="{{ duration: 100 }}" class="backdrop">
+    <div in:fly|global="{{ y: 20 }}" out:fade|global class="field">
         {#if step === 1}
             {#if pubkey}
                 <img
-                    in:fade
+                    in:fade|global
                     style="margin-left: -5px"
                     class="avatar"
                     src="data:image/png;base64,{avatar}"
@@ -78,7 +85,7 @@ $: step
                 />
             {/if}
             <input
-                out:fade
+                out:fade|global
                 placeholder="Enter Hugin address"
                 type="text"
                 spellcheck="false"
@@ -97,7 +104,7 @@ $: step
     </div>
 
     {#if pubkey && step === 2}
-        <div in:fade class="field">
+        <div in:fade|global class="field">
             {#if pubkey}
                 <img
                     style="margin-left: -5px"
@@ -107,7 +114,7 @@ $: step
                 />
             {/if}
             <input
-                in:fade
+                in:fade|global
                 placeholder="Enter a nickname"
                 type="text"
                 spellcheck="false"

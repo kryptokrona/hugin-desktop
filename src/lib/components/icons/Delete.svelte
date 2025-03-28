@@ -1,4 +1,10 @@
-<svg on:click width="16px" height="16px" viewBox="0 0 448 512" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+<script>
+  import { createBubbler } from 'svelte/legacy';
+
+  const bubble = createBubbler();
+</script>
+
+<svg onclick={bubble('click')} width="16px" height="16px" viewBox="0 0 448 512" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
     <g id="deletebutton">
       <g id="deletebutton">
         <g id="more">
@@ -14,7 +20,7 @@ svg {
     opacity: 50%;
     cursor: pointer;
     transition: 200ms ease-in-out;
-    fill: white;
+    fill: var(--text-color);
 
     &:hover {
         opacity: 80%;

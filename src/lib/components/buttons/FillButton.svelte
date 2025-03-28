@@ -1,16 +1,22 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
     import {Moon} from "svelte-loading-spinners";
 
-    export let text = 'Text'
-    export let enabled = false
-    export let rgb = false
-    export let info = false
-    export let disabled
-    export let loading
-    export let red = false
+    /** @type {{text?: string, enabled?: boolean, rgb?: boolean, info?: boolean, disabled: any, loading: any, red?: boolean}} */
+    let {
+        text = 'Text',
+        enabled = false,
+        rgb = false,
+        info = false,
+        disabled,
+        loading,
+        red = false
+    } = $props();
 </script>
 
-<button disabled="{disabled}" class:red={red} on:click class:enabled class:info class:border_rgb="{rgb}">
+<button disabled="{disabled}" class:red={red} onclick={bubble('click')} class:enabled class:info class:border_rgb="{rgb}">
     {#if loading}
         <Moon color="#000000" size="20" unit="px"/>
         {:else}
@@ -49,8 +55,8 @@
 
   .enabled {
     background-color: var(--success-color);
-    border-color: #63e79f;
-    color: #ffffff;
+    border-color: var(--border-color);
+    color: var(--text-color);
     font-size: 1rem;
     text-shadow:  0 0 1px black;
     font-weight: 600;
@@ -58,7 +64,7 @@
     &:hover {
       opacity: 1;
       background-color: #63e79f;
-      border-color: var(--success-color);;
+      border-color: var(--success-color);
     }
   }
 

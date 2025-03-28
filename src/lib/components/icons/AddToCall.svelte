@@ -1,16 +1,16 @@
 <script>
-let color = '#f5f5f5'
+let color = $state('var(--text-color)')
 
 const iconGlow = () => {
     color = '#4dbb45'
     let timer = setTimeout(function () {
-        color = '#f5f5f5'
+        color = 'var(--text-color)'
     }, 200)
 }
 </script>
 
 <svg
-    on:click="{iconGlow}"
+    onclick={iconGlow}
     width="22px"
     height="22px"
     viewBox="0 0 24 24"

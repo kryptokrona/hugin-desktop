@@ -8,8 +8,8 @@
     import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
     import { sleep } from '$lib/utils/utils'
 
-    let wallet
-    let nodeFailed
+    let wallet = $state()
+    let nodeFailed = $state()
 
     onMount( async () => {
         window.api.send('app', true)
@@ -108,8 +108,8 @@
     }
 
     const setNode = (e) => {
-        if(e.detail.node) {
-            $misc.node = { node: e.detail.node.split(':')[0], port: parseInt(e.detail.node.split(':')[1]) }
+        if(e.node) {
+            $misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) }
             nodeFailed = false
         }
     }
@@ -119,13 +119,13 @@
 <main>
 {#if nodeFailed}
     <div class="backdrop">
-        <NodeSelector on:connect={(e) => setNode(e)} on:back={() => nodeFailed = false}/>
+        <NodeSelector onConnect={(e) => setNode(e)} goBack={() => nodeFailed = false}/>
     </div>
 {/if}
 
 {#if wallet == false}
 
-    <div in:fade class="wrapper">
+    <div in:fade|global class="wrapper">
         <div class="init">
             <h1>Hugin</h1>
             <div>
@@ -159,7 +159,7 @@
     align-items: center;
     height: 100vh;
     width: 100%;
-    color: #fff;
+    color: var(--text-color);
   }
 
   .login-wrapper {

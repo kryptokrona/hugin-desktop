@@ -1,25 +1,31 @@
 <script>
+   import { run, createBubbler, self } from 'svelte/legacy';
+
+   const bubble = createBubbler();
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 import { groups, rooms } from '$lib/stores/user.js'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
-export let r = false
-const dispatch = createEventDispatcher()
-let avatar
-$ : if (r) {
-   avatar = get_avatar($rooms.thisRoom.key)
-} else avatar = get_avatar($groups.thisGroup.key)
+
+/** @type {{r?: boolean, onRemove: any}} */
+
+let { r = false, onRemove } = $props();
+let avatar = $state()
+run(() => {
+      if (r) {
+      avatar = get_avatar($rooms.thisRoom.key)
+   } else avatar = get_avatar($groups.thisGroup.key)
+   });
 
 const remove = async () => {
-    dispatch('remove')
+    onRemove()
 }
 </script>
 
-<div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
-    <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
-        <h3 in:fade>Remove group?</h3>
+<div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 80 }}" class="backdrop" onclick={self(bubble('click'))}>
+    <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
+        <h3 in:fade|global>Remove group?</h3>
         <FillButton disabled="{false}" red={true} text="Remove" on:click|once="{remove}" />
     </div>
 </div>

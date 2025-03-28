@@ -1,12 +1,16 @@
 <script>
-import { createEventDispatcher, onMount } from 'svelte'
+    import { run } from 'svelte/legacy';
+
+import { onMount } from 'svelte'
 import { fade } from 'svelte/transition'
 import { boards } from '$lib/stores/user.js'
 import ActiveBoard from '$lib/components/chat/ActiveBoard.svelte'
 
-const dispatch = createEventDispatcher()
-let active_boards = []
-let removeBoard = false
+let active_boards = $state([])
+let removeBoard = $state(false)
+let {
+    PrintBoard
+} = $props()
 onMount(() => {
     filterActiveBoards($boards.newBoards)
 })
@@ -35,16 +39,18 @@ const removeThisBoard = () => {
     $boards.boardsArray = filter
 }
 
-$: active_boards
+run(() => {
+        active_boards
+    });
 </script>
 
 <div class="wrapper">
-    <div class="top" on:click="{toggleBoardSettings}">
+    <div class="top" onclick={toggleBoardSettings}>
         <h2>{$boards.thisBoard}</h2>
         <br />
         {#if removeBoard}
-            <div in:fade class="remove">
-                <p style="color: var(--warn-color)" on:click="{removeThisBoard}">Remove</p>
+            <div in:fade|global class="remove">
+                <p style="color: var(--warn-color)" onclick={removeThisBoard}>Remove</p>
             </div>
         {/if}
     </div>
@@ -53,7 +59,7 @@ $: active_boards
     </div>
     <div class="list-wrapper">
         {#each active_boards as board}
-            <ActiveBoard board="{board}" on:click="{() => dispatch('printBoard', board.board)}" />
+            <ActiveBoard board="{board}" on:click="{() => PrintBoard(board.board)}" />
         {/each}
     </div>
 </div>
@@ -123,7 +129,7 @@ h4 {
 
 h2 {
     margin: 0;
-    color: #fff;
+    color: var(--title-color);
     font-family: 'Roboto Mono';
     font-weight: bold;
     font-size: 22px;

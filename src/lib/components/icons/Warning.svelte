@@ -1,11 +1,17 @@
 <script>
-export let grey = false
-export let red = false
-export let yellow = false
-export let blink = false
-let color = 'var(--text-color)'
+    import { run, createBubbler } from 'svelte/legacy';
 
-$: {
+    const bubble = createBubbler();
+    /** @type {{grey?: boolean, red?: boolean, yellow?: boolean, blink?: boolean}} */
+    let {
+        grey = false,
+        red = false,
+        yellow = false,
+        blink = false
+    } = $props();
+let color = $state('var(--text-color)')
+
+run(() => {
     if (red) {
         color = 'var(--warn-color)'
     } else if (yellow) {
@@ -13,11 +19,11 @@ $: {
     } else if (grey) {
         color = 'var(--text-color)'
     }
-}
+});
 </script>
 
 <svg
-    on:click
+    onclick={bubble('click')}
     class:blink_me="{blink}"
     width="22px"
     height="22px"

@@ -18,7 +18,7 @@ const getUpdates = () => {
     on:click="{getUpdates}"
 />
 </div>
-<div class="settings" in:fade>
+<div class="settings" in:fade|global>
     <p>Current version is  {$misc.version}</p>
     <br>
 </div>

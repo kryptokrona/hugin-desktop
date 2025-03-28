@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
     import { get_avatar, getColorFromHash } from "$lib/utils/hugin-utils"
     import { fade } from "svelte/transition"
     import {rooms, swarm, user} from '$lib/stores/user.js'
@@ -9,17 +11,19 @@
     import MuteIcon from "../icons/MuteIcon.svelte"
     import Screenshare from "../icons/Screenshare.svelte"
     //
-    export let voice_user
-    export let voice_channel
-    let isTalking = false
+  /** @type {{voice_user: any, voice_channel: any}} */
+  let { voice_user, voice_channel } = $props();
+    let isTalking = $state(false)
     let isConnecting = false
     let me = voice_user.address === $user.myAddress
 
-    $: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
-        isTalking = true
-    } else {
-        isTalking = false
-    }
+    run(() => {
+    if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === voice_user.address)) {
+          isTalking = true
+      } else {
+          isTalking = false
+      }
+  });
   
     const check_avatar = (address) => {
        const found = $rooms.avatars.find(a => a.address === address)
@@ -27,12 +31,12 @@
        else return false
     }
     //Check if we are also online in this channel
-    $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
+    let in_voice = $derived(voice_channel.some(a => a.address === $user.myAddress))
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
 
 </script>
 
-<div in:fade class="card hugin-voice-user" on:click="{() => console.log("Click")}">
+<div in:fade|global class="card hugin-voice-user" onclick={() => console.log("Click")}>
     {#await check_avatar(voice_user.address)}
         {:then avatar}
         {#if avatar}
@@ -69,14 +73,14 @@
     align-items: center;
     padding: 0 0 0 1.5rem;
     width: 100%;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
     transition: 177ms ease-in-out;
     cursor: pointer;
     border: 1px solid transparent;
 
     &:hover {
-        opacity: 0.8;
+        background-color: var(--border-color);
     }
 }
 

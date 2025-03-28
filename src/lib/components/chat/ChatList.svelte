@@ -1,5 +1,7 @@
 <script>
-    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+    import { run } from 'svelte/legacy';
+
+    import { onDestroy, onMount} from 'svelte'
     import {user} from '$lib/stores/user.js'
     import AddCircle from '$lib/components/icons/AddCircle.svelte'
     import Contact from '$lib/components/chat/Contact.svelte'
@@ -8,9 +10,13 @@
     import {flip} from 'svelte/animate'
     import { notify } from '$lib/stores/user.js'
 
-    const dispatch = createEventDispatcher()
-
-    let chatList = []
+    let chatList = $state([])
+    let {
+        onConversation,
+        OpenRename,
+        Rename,
+        onOpen
+    } = $props()
 
 onMount(async () => {
     chatList = await getConversations()
@@ -65,7 +71,7 @@ const sendConversation = (message) => {
             activeChat: active_chat,
         }
     })
-    dispatch('conversation', active_chat)
+     onConversation(active_chat)
     printConversations()
 }
 
@@ -77,22 +83,24 @@ const readMessage = (e) => {
 }
 
 
-$: chatList
+run(() => {
+        chatList
+    });
 </script>
 
-<div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}">
-    <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
+<div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}">
+    <div class="top" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
         <h2>Messages</h2>
-        <AddCircle on:click="{() => dispatch('open')}" />
+        <AddCircle on:click="{() => onOpen()}" />
     </div>
-    <div class="list-wrapper" in:fly="{{ y: 50 }}">
+    <div class="list-wrapper" in:fly|global="{{ y: 50 }}">
         {#each chatList as message (message.chat)}
             <div animate:flip="{{duration: 250}}">
             <Contact
-                on:openRename="{() => dispatch('openRename')}"
-                on:rename="{(a) => dispatch('rename', a)}"
+                OpenRename="{() => OpenRename()}"
+                Rename="{(a) => Rename(a)}"
                 contact="{message}"
-                on:thisContact="{(e) => sendConversation(e.detail.contact)}"
+                ThisContact="{(e) => sendConversation(e.contact)}"
             />
             </div>
         {/each}

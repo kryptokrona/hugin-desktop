@@ -1,28 +1,33 @@
 <script>
+    import { run, createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 import { page } from '$app/stores'
 import { fade } from 'svelte/transition'
 import { notify } from '$lib/stores/user.js'
 
-let thispage
-let unread = false
-$: thispage = $page.url.pathname === '/boards'
-$: if ($notify.unread.some((a) => a.type === 'board')) {
-    unread = true
-} else {
-    unread = false
-}
+let thispage = $derived($page.url.pathname === '/boards')
+let unread = $state(false)
+
+run(() => {
+        if ($notify.unread.some((a) => a.type === 'board')) {
+        unread = true
+    } else {
+        unread = false
+    }
+    });
 </script>
 
 {#if thispage}
-    <div class="dot" in:fade></div>
+    <div class="dot" in:fade|global></div>
 {/if}
 
 {#if unread}
-    <div class="unread" in:fade></div>
+    <div class="unread" in:fade|global></div>
 {/if}
 
 <svg
-    on:click
+    onclick={bubble('click')}
     width="24px"
     height="24px"
     viewBox="0 0 24 24"
@@ -38,7 +43,7 @@ $: if ($notify.unread.some((a) => a.type === 'board')) {
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -47,7 +52,7 @@ $: if ($notify.unread.some((a) => a.type === 'board')) {
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -56,7 +61,7 @@ $: if ($notify.unread.some((a) => a.type === 'board')) {
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>

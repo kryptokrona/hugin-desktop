@@ -1,4 +1,7 @@
 <script>
+
+      import { run } from 'svelte/legacy';
+
     //Global CSS
     import '$lib/theme/global.scss'
 
@@ -7,7 +10,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme} from '$lib/stores/user.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -15,30 +18,31 @@
     import {onMount} from 'svelte'
     import LeftMenu from '$lib/components/navbar/LeftMenu.svelte'
     import RightMenu from '$lib/components/navbar/RightMenu.svelte'
-    import IncomingCall from '$lib/components/webrtc/IncomingCall.svelte'
-    import Group_Webrtc from '/src/routes/groups/components/VoiceChannel.svelte'
+    import VoiceChannel from '../routes/rooms/components/VoiceChannel.svelte'
     import TrafficLights from '$lib/components/TrafficLights.svelte'
     import CallerMenu from '$lib/components/webrtc/CallerMenu.svelte'
     import PeerAudio from '$lib/components/webrtc/PeerAudio.svelte'
     import VideoGrid from '$lib/components/webrtc/VideoGrid.svelte'
     import {page} from '$app/stores'
     import Notification from '$lib/components/popups/Notification.svelte'
-    import toast, {Toaster} from "svelte-french-toast";
+    import toast, {Toaster} from "svelte-5-french-toast";
     import {appUpdateState} from "$lib/components/updater/update-store.js";
     import Updater from "$lib/components/updater/Updater.svelte";
     import OptimizeToast from '$lib/components/custom-toasts/OptimizeToast.svelte'
     import UploadToast from '$lib/components/custom-toasts/UploadToast.svelte'
     import DownloadToast from '$lib/components/custom-toasts/DownloadToast.svelte'
     import { sleep } from '$lib/utils/utils'
-    import Conference from '/src/routes/groups/components/Conference.svelte'
-    import ConferenceFloater from '/src/routes/groups/components/ConferenceFloater.svelte'
-    import Rooms from '/src/routes/groups/components/Rooms.svelte'
+    import Conference from '../routes/rooms/components/Conference.svelte'
+    import ConferenceFloater from '../routes/rooms/components/ConferenceFloater.svelte'
+    import Rooms from '../routes/rooms/components/Rooms.svelte'
     import { goto } from '$app/navigation'
     import RoomNotification from '$lib/components/popups/RoomNotification.svelte'
-    let ready = false
+  /** @type {{children?: import('svelte').Snippet}} */
+    let { children } = $props();
+    let ready = $state(false)
     let incoming_call
     let showCallerMenu = false
-    let new_messages = false
+    let new_messages = $state(false)
     let board_message_sound
     let new_message_sound
     let x
@@ -48,34 +52,24 @@
         x = e.pageX
         y = e.pageY
     }
-    document.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        window.api.send('right-click', {x, y})
-    });
+    // document.addEventListener('contextmenu', (e) => {
+    //     e.preventDefault();
+    //     window.api.send('right-click', {x, y})
+    // });
 
-    const closePopup = () => {
-        incoming_call = false
-    }
 
-    const endThisCall = () => {
-        showCallerMenu = false
-    }
+    let startAnimation = $state()
 
-    const answerIncomingCall = (call) => {
-        $webRTC.call.unshift(call)
-        let filter = $webRTC.incoming.filter((a) => a.chat !== call.chat)
-        $webRTC.incoming = filter
-        showCallerMenu = true
-        incoming_call = false
-        console.log('incoming clean', $webRTC.incoming)
-        console.log('webRTC call ', $webRTC.call)
-        window.api.send("exit-voice",$groups.thisGroup.key)
-        window.api.send("end-swarm", $groups.thisGroup.key)
-        $swarm.showVideoGrid = false
-    }
-
-    let startAnimation
     onMount(async () => {
+        
+        if (typeof $theme !== 'string')
+        {
+            $theme = 'dark'
+            localStorage.setItem('themes', $theme)
+        }
+
+        document.documentElement.className = $theme;
+
         ready = true
         startAnimation = true
         setTimeout(() => {
@@ -109,49 +103,6 @@
         $rooms = $rooms
         window.api.send('room-banned', key)
     }) 
-
-
-
-        //Handle incoming call
-        window.api.receive('call-incoming', async (data) => {
-            let msg = data.msg
-            let chat = data.sender
-            let group = data.group
-            let timestamp = data.timestamp
-            console.log('Incoming call', data)
-            await sleep(500)
-            let incoming = $user.contacts.find((a) => a.chat === chat)
-            //Missed call
-            if (Date.now() - timestamp >= 1000 * 360) {
-                    toast.success(`Missed call from ${incoming.name}`, {
-                    position: 'top-right',
-                    style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-                })
-             return
-            }
-            incoming_call = true
-
-            let type = 'incoming'
-            if ($webRTC.groupCall) {
-                type = 'groupinvite'
-            }
-
-            $webRTC.incoming.push({
-                msg,
-                chat,
-                type: type,
-                name: incoming.name,
-            })
-            $webRTC.incoming = $webRTC.incoming
-        })
-
-        window.api.receive('group-call', (data) => {
-            $webRTC.groupCall = data.invite_key
-            if ($webRTC.groupCall && data.group.invite.length) {
-                //This is the first peer invited to a call
-                $webRTC.invited = true
-            }
-        })
 
 
         window.api.receive('rec-off', (data) => {
@@ -303,7 +254,7 @@
 
 
     function removeNotification(e) {
-        let filter = $notify.new.filter(a => a.hash !== e.detail.hash)
+        let filter = $notify.new.filter(a => a.hash !== e.hash)
         $notify.new = filter
     }
 
@@ -524,12 +475,14 @@
         $misc.focus = false
     })
 
-    $: if ($user.idleTime >= $user.idleLimit) {
-        if ($webRTC.call.length === 0 && !$swarm.active.some(a => a.voice_connected) && !$beam.active.length) {
-        $user.loggedIn = false
-        goto('/login');
-        }
-    }
+    run(() => {
+    if ($user.idleTime >= $user.idleLimit) {
+          if ($webRTC.call.length === 0 && !$swarm.active.some(a => a.voice_connected) && !$beam.active.length) {
+          $user.loggedIn = false
+          goto('/login');
+          }
+      }
+  });
 
     window.api.receive('checked', (data)  => { 
         console.log("Got p2p data", data)
@@ -587,14 +540,14 @@
         $download.unshift(file)
         $download =  $download
         console.log('Download store', $download)
-        toast(DownloadToast, {
-                position: 'top-right',
-                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-                duration: 1000 * 18000,
-                file: data.fileName,
-                chat: data.chat,
-                time: file.time
-        })
+        // toast(DownloadToast, {
+        //         position: 'top-right',
+        //         style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        //         duration: 1000 * 18000,
+        //         file: data.fileName,
+        //         chat: data.chat,
+        //         time: file.time
+        // })
     }
 
     const setUploadStatus = (data) => {
@@ -604,14 +557,14 @@
         $upload =  $upload
         if (data.group) return
         console.log('Upload store', $upload)
-        toast(UploadToast, {
-                position: 'top-right',
-                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-                duration: 1000 * 18000,
-                file: data.fileName,
-                chat: data.chat,
-                time: file.time
-        })
+        // toast(UploadToast, {
+        //         position: 'top-right',
+        //         style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+        //         duration: 1000 * 18000,
+        //         file: data.fileName,
+        //         chat: data.chat,
+        //         time: file.time
+        // })
     }
     
     
@@ -620,7 +573,7 @@
 
 </script>
 <main>
-<div on:mousemove={mouseMove}>
+<div onmousemove={mouseMove}>
 <TrafficLights/>
 <Toaster/>
 
@@ -656,9 +609,9 @@
             {#if $notify.new.length < 2 && !$notify.que}
                 {#each $notify.new as notif}
                 {#if notif?.room === true}
-                    <RoomNotification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
+                    <RoomNotification Hide="{removeNotification}" message="{notif}" error="{false}"/>
                     {:else}
-                    <Notification on:hide="{removeNotification}" message="{notif}" error="{false}"/>
+                    <Notification Hide="{removeNotification}" message="{notif}" error="{false}"/>
                 {/if}
                 {/each}
             {/if}
@@ -678,10 +631,13 @@
         <Updater/>
     {/if}
 
-    <slot/>
+    {@render children?.()}
+    
 {/if}
 
-<Group_Webrtc/>
+
+<VoiceChannel/>
+
 </div>
 </main>
 <style>

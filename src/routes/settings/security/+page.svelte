@@ -4,8 +4,8 @@
     import Button from "$lib/components/buttons/Button.svelte"
     import { groups, misc } from '$lib/stores/user.js'
 
-    let deleteAfter = $misc.deleteAfter
-    let autoLogout = $user.idleLimit
+    let deleteAfter = $state($misc.deleteAfter)
+    let autoLogout = $state($user.idleLimit)
 
     const setAutoDeleteAfter = (days) => {
         window.api.deleteMessageAfter(days)
@@ -21,7 +21,7 @@
     </script>
     
     <h2>Security</h2>
-    <div class="settings" in:fade>
+    <div class="settings" in:fade|global>
         <p>Set the amount of days to preserve messages,
         <br>
         0 means preserve forever</p>
@@ -36,7 +36,7 @@
     />
     </div>
 
-    <div class="settings" in:fade>
+    <div class="settings" in:fade|global>
         <p>Choose how long time in seconds before auto logout.
         <br></p>
         <br>

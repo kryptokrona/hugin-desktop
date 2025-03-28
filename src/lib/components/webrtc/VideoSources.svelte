@@ -2,9 +2,10 @@
 import { fade } from 'svelte/transition'
 import { webRTC, swarm } from '$lib/stores/user.js'
 import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
-export let conference = false
-let open
-let changed
+    /** @type {{conference?: boolean}} */
+    let { conference = false } = $props();
+let open = $state()
+let changed = $state()
 let add = false
 let videoDevices = $mediaSettings.devices.filter((a) => a.kind == 'videoinput')
 
@@ -30,21 +31,21 @@ const buttonGlow = () => {
     }, 1000)
 }
 
-$: activeDevice = $mediaSettings.cameraId
+let activeDevice = $derived($mediaSettings.cameraId)
 
 </script>
 
 <div style="display: flex; flex-direction: column">
     {#if open}
-        <div in:fade class="list layered-shadow">
+        <div in:fade|global class="list layered-shadow">
             {#each videoDevices as src}
-                <div on:click="{() => pickSource(src)}">
+                <div onclick={() => pickSource(src)}>
                     <h5 class:picked={activeDevice === src.deviceId}>{src.label}</h5>
                 </div>
             {/each}
         </div>
     {/if}
-    <div class="share" class:border_rgb="{changed}" class:open on:click="{() => (open = !open)}">
+    <div class="share" class:border_rgb="{changed}" class:open onclick={() => (open = !open)}>
         <h5>Camera</h5>
     </div>
 </div>

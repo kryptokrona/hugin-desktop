@@ -1,9 +1,12 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 //To handle true and false, or in this case show and hide.
 import { fly } from 'svelte/transition'
 import { cubicIn, cubicOut } from 'svelte/easing'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+import { onDestroy, onMount } from 'svelte'
 import { webRTC } from '$lib/stores/user.js'
 import ShowVideoMenu from '../icons/ShowVideoMenu.svelte'
 import { videoGrid } from '$lib/stores/layout-state.js'
@@ -12,10 +15,11 @@ import CallSlash from '$lib/components/icons/CallSlash.svelte'
 import MicIcon from '../icons/MicIcon.svelte'
 import MuteIcon from '../icons/MuteIcon.svelte'
 
-export let paused = false
+    /** @type {{paused?: boolean}} */
+    let { paused = $bindable(false) } = $props();
 
 let startTime = Date.now()
-let time = '0:00:00'
+let time = $state('0:00:00')
 let timer
 
 onMount(() => {
@@ -53,11 +57,11 @@ const showGrid = () => {
 }
 </script>
 
-<!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
+<!-- <video class:show={calling} in:fade|global id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
 <div
-    in:fly="{{ y: 100, duration: 200, easing: cubicOut }}"
-    out:fly="{{ y: 100, duration: 200, easing: cubicIn }}"
+    in:fly|global="{{ y: 100, duration: 200, easing: cubicOut }}"
+    out:fly|global="{{ y: 100, duration: 200, easing: cubicIn }}"
     class="card"
 >
     <audio bind:paused></audio>
@@ -71,20 +75,20 @@ const showGrid = () => {
 
         <audio bind:paused></audio>
         <div class="controls">
-            <div on:click>
+            <div onclick={bubble('click')}>
                 <p>{time}</p>
             </div>
-            <div on:click="{endCall}">
+            <div onclick={endCall}>
                 <CallSlash />
             </div>
-            <div on:click="{toggleAudio}">
+            <div onclick={toggleAudio}>
                 {#if $webRTC.audio}
                     <MicIcon />
                 {:else}
                     <MuteIcon />
                 {/if}
             </div>
-            <div on:click="{() => showGrid()}">
+            <div onclick={() => showGrid()}>
                 <ShowVideoMenu />
             </div>
         </div>

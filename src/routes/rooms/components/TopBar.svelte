@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import Bell from "$lib/components/icons/Bell.svelte"
 import Groupcall from "$lib/components/icons/Groupcall.svelte"
 import Lightning from "$lib/components/icons/Lightning.svelte"
@@ -10,20 +12,26 @@ import { isLatin } from "$lib/utils/utils"
 import Dots from '$lib/components/icons/Dots.svelte'
 import FileSync from "$lib/components/icons/FileSync.svelte"
 
-let roomName
-let asian = false
-let room = ''
-let admin = false
-let thisSwarm = false
+let roomName = $state()
+let asian = $state(false)
+let room = $state('')
+let admin = $state(false)
+let thisSwarm = $state(false)
 
-$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
+run(() => {
+        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+    });
 
-$: if (thisSwarm) admin = thisSwarm.admin
+run(() => {
+        if (thisSwarm) admin = thisSwarm.admin
+    });
 
-$: if ($rooms.thisRoom?.key) {
-    room = $rooms.thisRoom.key
-}
+run(() => {
+        if ($rooms.thisRoom?.key) {
+        room = $rooms.thisRoom.key
+    }
+    });
 
 const toggleNotification = () => {
     if (muteGroup) {
@@ -51,15 +59,19 @@ const toggleSyncImages = () => {
     window.api.send('sync-images', $misc.syncImages)
 }
 
-$: roomName = $rooms.thisRoom?.name
+run(() => {
+        roomName = $rooms.thisRoom?.name
+    });
 
-$: if (roomName) {
-    if (!isLatin(roomName)) asian = true
-    else asian = false
-}
+run(() => {
+        if (roomName) {
+        if (!isLatin(roomName)) asian = true
+        else asian = false
+    }
+    });
 
-$: muteGroup = $notify.off.some(a => a === roomName)
-$: syncImages = $misc.syncImages.some(a => a === thisSwarm.topic)
+let muteGroup = $derived($notify.off.some(a => a === roomName))
+let syncImages = $derived($misc.syncImages.some(a => a === thisSwarm.topic))
 
 function copyThis(copy) {
     const msg = 'You copied a Room invite key'
@@ -77,15 +89,15 @@ function toggleActions() {
 
 <div class="top" style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px; border-bottom: 1px solid var(--border-color); height: 57px">
     <div style="display: flex; padding-bottom: 10px">
-        <h3 title={roomName} class:asian style="font-size: 17px; padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" on:click={() => copyThis(room)}>{roomName}</h3>
+        <h3 title={roomName} class:asian style="font-size: 17px; padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" onclick={() => copyThis(room)}>{roomName}</h3>
     <div style="display: inline-block; margin-left: auto">
         <Tooltip title="Invite key">
-            <div on:click={() => copyThis(room)}>
+            <div onclick={() => copyThis(room)}>
         <AddToCall />
             </div>
         </Tooltip>
           
-        <div style="cursor: pointer; display: inline-block; width: 25px;" on:click={toggleNotification}>
+        <div style="cursor: pointer; display: inline-block; width: 25px;" onclick={toggleNotification}>
             {#if !muteGroup}
                 <Bell active={true}/>
             {:else}
@@ -93,7 +105,7 @@ function toggleActions() {
             {/if}
         </div>
 
-        <div style="cursor: pointer; display: inline-block; width: 25px;" on:click={toggleSyncImages}>
+        <div style="cursor: pointer; display: inline-block; width: 25px;" onclick={toggleSyncImages}>
             <FileSync sync={syncImages} />
         </div>
 

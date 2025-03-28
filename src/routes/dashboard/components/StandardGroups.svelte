@@ -10,7 +10,7 @@
 
     let standard = $standardGroups
 
-    $: groupSuggestions = standard.filter(a => !$groups.groupArray.map(b=>b.key).includes(a.key))
+    let groupSuggestions = $derived(standard.filter(a => !$groups.groupArray.map(b=>b.key).includes(a.key)))
 
     const addNewGroup = (group) => {
         if (group.length < 32) return

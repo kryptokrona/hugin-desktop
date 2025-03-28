@@ -1,33 +1,45 @@
 <script>
+    import { run, createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 import { boards } from '$lib/stores/user.js'
 import { get_board_icon } from '$lib/utils/hugin-utils.js'
 import { fade } from 'svelte/transition'
 
-export let board
+    /** @type {{board: any}} */
+    let { board } = $props();
 
-let board_post_count
-let poster_count
-let this_board = []
+let board_post_count = $state()
+let poster_count = $state()
+let this_board = $state([])
 
-$: board_post_count
-$: poster_count
+run(() => {
+        board_post_count
+    });
+run(() => {
+        poster_count
+    });
 
-$: if ($boards.newBoards.length) {
-    this_board = $boards.newBoards.filter((a) => a.board === board.board)
-    board_post_count = this_board.length
-}
+run(() => {
+        if ($boards.newBoards.length) {
+        this_board = $boards.newBoards.filter((a) => a.board === board.board)
+        board_post_count = this_board.length
+    }
+    });
 
-$: if (this_board.length) {
-    let posters = {}
-    let active_posters = this_board.filter(
-        (r) => !posters[r.address] && (posters[r.address] = true)
-    )
-    poster_count = active_posters.length
-}
+run(() => {
+        if (this_board.length) {
+        let posters = {}
+        let active_posters = this_board.filter(
+            (r) => !posters[r.address] && (posters[r.address] = true)
+        )
+        poster_count = active_posters.length
+    }
+    });
 
 </script>
 
-<div class="card" in:fade="{{ duration: 150 }}">
+<div class="card" in:fade|global="{{ duration: 150 }}">
     {#await get_board_icon(board.board) then board_color}
         <div
             class="brd"
@@ -36,14 +48,14 @@ $: if (this_board.length) {
             <button class="board-icon">{board.board.substring(0, 1).toUpperCase()}</button>
         </div>
     {/await}
-    <p class="board" on:click>{board.board}</p>
+    <p class="board" onclick={bubble('click')}>{board.board}</p>
     <br />
     {#if poster_count > 1}
-        <p in:fade="{{ duration: 250 }}">
+        <p in:fade|global="{{ duration: 250 }}">
             {poster_count} people are talking here
         </p>
     {:else}
-        <p in:fade="{{ duration: 250 }}">{poster_count} new message</p>
+        <p in:fade|global="{{ duration: 250 }}">{poster_count} new message</p>
     {/if}
 </div>
 

@@ -1,5 +1,11 @@
+<script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
+</script>
+
 <svg
-    on:click
+    onclick={bubble('click')}
     width="24px"
     height="24px"
     viewBox="0 0 24 24"

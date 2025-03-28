@@ -1,10 +1,10 @@
 <script>
-    export let title = '';
-    export let leftAlign = false;
+  /** @type {{title?: string, leftAlign?: boolean, children?: import('svelte').Snippet}} */
+  let { title = '', leftAlign = false, children } = $props();
 
-    let isHovered = false;
-    let x;
-    let y;
+    let isHovered = $state(false);
+    let x = $state();
+    let y = $state();
   
     function mouseOver(event) {
       isHovered = true;
@@ -20,8 +20,8 @@
     }
   </script>
   
-  <div style="display: inline-block" on:mouseover={mouseOver} on:mouseleave={mouseLeave} on:mousemove={mouseMove}>
-    <slot />
+  <div style="display: inline-block" onmouseover={mouseOver} onmouseleave={mouseLeave} onmousemove={mouseMove}>
+    {@render children?.()}
   </div>
   
   {#if isHovered}

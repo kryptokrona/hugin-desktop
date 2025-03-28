@@ -1,9 +1,13 @@
 <script>
-    export let size = 24
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
+    /** @type {{size?: number}} */
+    let { size = 24 } = $props();
 </script>
 <svg
     class:small={size < 24}
-    on:click
+    onclick={bubble('click')}
     width="{size}px"
     height="{size}px"
     viewBox="0 0 24 24"
@@ -19,7 +23,7 @@
                         id="Vector"
                         fill="none"
                         fill-rule="evenodd"
-                        stroke="#f5f5f5"
+                        stroke="var(--text-color)"
                         stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"></path>
@@ -28,7 +32,7 @@
                         id="Vector"
                         fill="none"
                         fill-rule="evenodd"
-                        stroke="#f5f5f5"
+                        stroke="var(--text-color)"
                         stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"></path>
@@ -37,7 +41,7 @@
                         id="Vector"
                         fill="none"
                         fill-rule="evenodd"
-                        stroke="#f5f5f5"
+                        stroke="var(--text-color)"
                         stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"></path>

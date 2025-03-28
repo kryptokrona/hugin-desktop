@@ -2,8 +2,8 @@
 import { fade } from 'svelte/transition'
 import { user } from '$lib/stores/user.js'
 
-let open
-let copied
+let open = $state()
+let copied = $state()
 
 function copyThis(copy) {
     navigator.clipboard.writeText(copy)
@@ -20,15 +20,15 @@ const buttonGlow = () => {
 </script>
 
 <div style="display: flex; flex-direction: column">
-    <div class="share" class:border_rgb="{copied}" class:open on:click="{() => (open = !open)}">
+    <div class="share" class:border_rgb="{copied}" class:open onclick={() => (open = !open)}>
         <h5>{copied ? 'Copied' : 'Address'}</h5>
     </div>
     {#if open}
-        <div in:fade class="list layered-shadow">
-            <div on:click="{() => copyThis($user.myAddress)}">
+        <div in:fade|global class="list layered-shadow">
+            <div onclick={() => copyThis($user.myAddress)}>
                 <h5>Payment</h5>
             </div>
-            <div on:click="{() => copyThis($user.huginAddress)}">
+            <div onclick={() => copyThis($user.huginAddress)}>
                 <h5>Hugin</h5>
             </div>
         </div>

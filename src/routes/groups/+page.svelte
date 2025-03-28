@@ -1,4 +1,6 @@
 <script>
+   import { run } from 'svelte/legacy';
+
 import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {groupMessages} from '$lib/stores/groupmsgs.js'
@@ -21,17 +23,17 @@ import { localFiles } from '$lib/stores/files'
 
 let replyto = ''
 let reply_exit_icon = 'x'
-let noMsgs = false
+let noMsgs = $state(false)
 let filterGroups = []
-let filterEmojis = []
-let fixedGroups = []
-let replyTrue = false
+let filterEmojis = $state([])
+let fixedGroups = $state([])
+let replyTrue = $state(false)
 let scrollGroups = []
-let windowHeight
-let windowChat
+let windowHeight = $state()
+let windowChat = $state()
 let channelMessages = []
 let pageNum = 0;
-let loadMore = true
+let loadMore = $state(true)
 const welcomeAddress = "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1"
 
 
@@ -73,8 +75,8 @@ window.api.receive('set-channels', async () => {
 //Check for possible errors
 const checkErr = (e) => {
     let error = false
-    if (e.detail.text.length === 0) return true 
-    if (e.detail.text.length > 777) error = "Message is too long"
+    if (e.text.length === 0) return true 
+    if (e.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
@@ -86,7 +88,7 @@ const checkErr = (e) => {
 const sendGroupMsg = async (e) => {
     const error = checkErr(e)
     if (error) return
-    let msg = e.detail.text
+    let msg = e.text
     let myaddr = $user.myAddress
     let time = Date.now()
     let myName = $user.username
@@ -95,8 +97,8 @@ const sendGroupMsg = async (e) => {
     let in_channel = $swarm.activeChannel.name
     let offchain = in_swarm
     //Reaction switch
-    if (e.detail.reply) {
-        replyto = e.detail.reply
+    if (e.reply) {
+        replyto = e.reply
     }
     
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
@@ -140,6 +142,11 @@ const scrollDown = () => {
     windowChat.scrollTop = windowChat.scrollTopMax
 }
 
+const removeDuplicates = (arr) => {
+    let uniq = {}
+    return arr.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
+}
+
 //Prints any single group message. 
 const printGroupMessage = (groupMsg) => {
 
@@ -155,11 +162,11 @@ const printGroupMessage = (groupMsg) => {
     groupMessages.update((current) => {
         return [groupMsg, ...current]
     })
-    fixedGroups = fixedGroups
+    fixedGroups = removeDuplicates(fixedGroups)
 }
 
 //Reactive, updates thisGroup.
-$: thisGroup = $groups.thisGroup.key
+let thisGroup = $derived($groups.thisGroup.key)
 
 //Exit reply mode
 const replyExit = () => {
@@ -193,7 +200,7 @@ async function replyToMessage(hash, nickname, emoji = false) {
 }
 
 //Default value should be false to hide the AddGroup form.
-let wantToAdd = false
+let wantToAdd = $state(false)
 
 //Open AddGroup component and update state in store.
 const openAddGroup = () => {
@@ -210,7 +217,7 @@ const openAddGroup = () => {
 }
 //Adds new Group to groArray and prints that Group, its probably empty.
 const addNewGroup = async (e) => {
-    let group = e.detail
+    let group = e
     if (group.length < 32) return
     openAddGroup()
     //Avoid svelte collision
@@ -240,11 +247,13 @@ const addNewGroup = async (e) => {
 }
 
 //Svelte reactive. Sets noMsgs boolean for welcome message.
-$: if ($groupMessages.length == 0) {
-    noMsgs = true
-} else {
-    noMsgs = false
-}
+run(() => {
+      if ($groupMessages.length == 0) {
+       noMsgs = true
+   } else {
+       noMsgs = false
+   }
+   });
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisGroup.
 async function printGroup(group) {
@@ -310,7 +319,7 @@ function checkReactions(array, scroll) {
     
        //All group messages all messages except reactions
        filterGroups = array.filter(
-        (m) => m.message.length > 0 && !(m.reply.length === 64 && filterEmojis.includes(m))
+        (m) => m.message.length > 0 && m.reply.length !== 64 && !filterEmojis.includes(m)
     )
     
     if (filterEmojis.length) {
@@ -326,10 +335,8 @@ function checkReactions(array, scroll) {
 function addEmoji(scroll) {
     let emojis = filterEmojis
     let array = scroll ? [...fixedGroups, ...filterGroups] : filterGroups
-    const already = (a) => {
-        return fixedGroups.some(e => e === a)
-    }
     //Check for replies and message hash that match and then adds reactions to the messages.
+    let newArr = []
     for (const a of array) {
         for (const b of emojis) {
             if (!a.react && b.reply == a.hash) {
@@ -342,11 +349,10 @@ function addEmoji(scroll) {
                 a.react.unshift(b)
             }
         
-        if (already(a)) continue
-        fixedGroups.push(a)
+        newArr.push(a)
         }
     }
-    fixedGroups = fixedGroups
+    fixedGroups = removeDuplicates(fixedGroups)
     }
 
    
@@ -381,9 +387,13 @@ async function updateReactions(msg) {
 }
 
 //Reactive depending on user.addGroup boolean, displays AddGroup component.
-$: wantToAdd = $groups.addGroup
+run(() => {
+      wantToAdd = $groups.addGroup
+   });
 
-$: replyTrue = $groups.replyTo.reply
+run(() => {
+      replyTrue = $groups.replyTo.reply
+   });
 
 function addHash(data) {
     fixedGroups.some(function (a) {
@@ -431,7 +441,7 @@ async function getMoreMessages() {
 async function sendTorrent(e) {
     return
 
-    const { acceptedFiles, fileRejections } = e.detail
+    const { acceptedFiles, fileRejections } = e
     if (fileRejections.length) {
         return
     }
@@ -468,7 +478,7 @@ async function sendTorrent(e) {
     window.api.send('upload-torrent', [fileName, path, size, time, chat, hash])
 }
 
-let dragover = false
+let dragover = $state(false)
 
 function drag() {
     dragover = true
@@ -491,24 +501,23 @@ function nodrag() {
 {/if}
 
 {#if wantToAdd}
-    <AddGroup on:click="{openAddGroup}" on:addGroup="{(e) => addNewGroup(e)}" />
+    <AddGroup on:click="{openAddGroup}" AddGroup="{(e) => addNewGroup(e)}" />
 {/if}
 
 {#if $user.block}
     <BlockContact />
 {/if}
 <!-- <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => sendTorrent(e)}> -->
-<main in:fade="{{ duration: 350 }}">
+<main in:fade|global="{{ duration: 350 }}">
     <GroupList
-        on:printGroup="{(e) => printGroup(e.detail)}"
-        on:removeGroup="{() => printGroup($groups.groupArray[0])}"
-        on:printChannel="{(e) => printChannel(e.detail)}"
+        PrintGroup="{(e) => printGroup(e)}"
+        onRemoveGroup="{() => printGroup($groups.groupArray[0])}"
+        onPrintChannel="{(e) => printChannel(e)}"
     />
     
-    <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
+    <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
        
-        <div class="fade"></div>
-        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
+        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly|global="{{ y: 50 }}">
             {#if fixedGroups.length === 0 && !$groups.groupArray.some(a => a.key === welcomeAddress) && !$groups.thisGroup.chat}
                 <div>
                     <Loader/>
@@ -516,9 +525,9 @@ function nodrag() {
             {/if}
             {#each fixedGroups as message (message.hash)}
                 <GroupMessage
-                    on:reactTo="{(e) => sendGroupMsg(e)}"
-                    on:replyTo="{(e) => replyToMessage(message.hash, message.name)}"
-                    on:deleteMsg="{(e) => deleteMessage(message.hash)}"
+                    ReactTo="{(e) => sendGroupMsg(e)}"
+                    ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                    DeleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
                     reply="{message.reply}"
                     msg="{message.message}"
@@ -537,11 +546,11 @@ function nodrag() {
             
         </div>
         {#if replyTrue}
-            <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">
+            <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
                 {reply_exit_icon} Reply to {$groups.replyTo.nick}
             </div>
         {/if}
-        <ChatInput on:message="{(e) => sendGroupMsg(e)}" />
+        <ChatInput onMessage="{(e) => sendGroupMsg(e)}" />
     </div>
     <GroupHugins />
 </main>
@@ -575,13 +584,14 @@ main {
 
 p {
     font-size: 17px;
-    color: white;
+    color: var(--text-color);
 }
 
 .reply_to_exit {
     width: 50px;
     padding-right: 5px;
     display: none;
+    color: var(--text-color);
 }
 
 .reply_to {
@@ -595,7 +605,7 @@ p {
     bottom: 55px;
     left: 17px;
     justify-content: center;
-    color: white;
+    color: var(--text-color);
     padding: 4px;
     width: fit-content;
     z-index: 9;
@@ -632,9 +642,6 @@ p {
     padding-bottom: 5px;
     padding-top: 22px;
     position: initial !important;
-    // &::-webkit-scrollbar {
-    //     display: none;
-    // }
 }
 
 .fade {
@@ -642,7 +649,7 @@ p {
     top: 0;
     width: 100%;
     height: 40px;
-    background: linear-gradient(180deg, #121212, #12121200);
+    background: linear-gradient(180deg, var(--fade-color), var(--fade-to-color));
     z-index: 100;
 }
 

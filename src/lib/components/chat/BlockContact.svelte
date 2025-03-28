@@ -1,7 +1,6 @@
 <script>
     //To handle true and false, or in this case show and hide.
     import { fade, fly } from 'svelte/transition'
-    import { createEventDispatcher } from 'svelte'
     import { user } from '$lib/stores/user.js'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
 
@@ -11,9 +10,9 @@
     }
     </script>
 
-    <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click={() => $user.block = false}>
-        <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
-            <h3 in:fade>Block {$user.block.name}?</h3>
+    <div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 80 }}" class="backdrop" onclick={() => $user.block = false}>
+        <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
+            <h3 in:fade|global>Block {$user.block.name}?</h3>
 
                 <FillButton
                     red={true}

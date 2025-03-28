@@ -1,15 +1,20 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import { get_avatar } from "$lib/utils/hugin-utils"
 import { audioLevel, rooms, user } from '$lib/stores/user.js'
-export let call
-let isTalking = false
+    /** @type {{call: any}} */
+    let { call } = $props();
+let isTalking = $state(false)
 let me = call.address === $user.myAddress
     
-$: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.address)) {
-    isTalking = true
-} else {
-    isTalking = false
-}
+run(() => {
+        if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.address)) {
+        isTalking = true
+    } else {
+        isTalking = false
+    }
+    });
 
 const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)

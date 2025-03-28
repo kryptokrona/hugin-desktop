@@ -1,15 +1,19 @@
 <script>
-import {createEventDispatcher, onMount} from 'svelte'
+  import { run } from 'svelte/legacy';
+
+import { onMount} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {notify, user, webRTC, beam, swarm, rooms} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
 
-export let contact
-let thisCall = false
-let beamInvite = false
-let asian = false
-let online = false
+  /** @type {{contact: any, ThisContact: any, OpenRename: any, Rename: any}} */
+let { contact = $bindable(), ThisContact, OpenRename } = $props();
+let thisCall = $state(false)
+let beamInvite = $state(false)
+let asian = $state(false)
+let online = $state(false)
+
 
 onMount(async () => {
     const inswarm = $swarm.active.find(a => a.chat == contact.chat )
@@ -30,26 +34,33 @@ const make_avatar = (data, address) => {
     $rooms.avatars = $rooms.avatars
 }
 
-$: counter = $notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length
-$: if (contact.msg.substring(0,7) === "BEAM://") {
-    beamInvite = true
-}
+let counter = $derived($notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length)
+run(() => {
+    if (contact.msg.substring(0,7) === "BEAM://") {
+      beamInvite = true
+  }
+  });
 
-$: if (!isLatin(contact.name)) asian = true
+run(() => {
+    if (!isLatin(contact.name)) asian = true
+  });
 
-$: if (contact.msg.substring(0,11) === "BEAMFILE://") { 
-    contact.msg = "File shared ⚡️"
-}
+run(() => {
+    if (contact.msg.substring(0,11) === "BEAMFILE://") { 
+      contact.msg = "File shared ⚡️"
+  }
+  });
 
-$: if ($webRTC.active) {
-    thisCall = $webRTC.call.some((a) => a.chat === contact.chat)
-} else {
-    thisCall = false
-}
-const dispatch = createEventDispatcher()
+run(() => {
+    if ($webRTC.active) {
+      thisCall = $webRTC.call.some((a) => a.chat === contact.chat)
+  } else {
+      thisCall = false
+  }
+  });
 
 const printThis = (contact) => {
-    dispatch('thisContact', {
+    ThisContact({
         contact: contact,
     })
 }
@@ -61,16 +72,16 @@ const rename = () => {
             rename: contact,
         }
     })
-    dispatch('openRename')
+    OpenRename()
 }
 
-$: {
+run(() => {
     if ($swarm.active.length) {
       online = $swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat));
     } else {
       online = false
     }
-  }
+  });
 
   const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)
@@ -81,12 +92,12 @@ $: {
 
 <div
     class="card"
-    in:fade
-    out:fade
+    in:fade|global
+    out:fade|global
     class:rgb="{thisCall}"
     class:active="{contact.chat === $user.activeChat.chat}"
     class:online={online}
-    on:click="{() => printThis(contact)}" >
+    onclick={() => printThis(contact)} >
     
     {#await check_avatar(contact.chat)}
     {:then avatar}
@@ -95,12 +106,12 @@ $: {
             class="avatar custom"
             src="{avatar}"
             alt=""
-            on:click="{() => rename(contact)}"
+            onclick={() => rename(contact)}
         />
     {:else}
         <img
         class="avatar"
-        on:click="{() => rename(contact)}"
+        onclick={() => rename(contact)}
         src="data:image/png;base64,{get_avatar(contact.chat)}"
         alt=""
         />
@@ -117,7 +128,7 @@ $: {
         {/if}
     </div>
     {#if counter > 0}
-        <div in:fade class="unread">
+        <div in:fade|global class="unread">
             <div class="count">
                 {counter}
             </div>

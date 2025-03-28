@@ -1,11 +1,17 @@
 <script>
-export let text = 'Button'
-export let disabled = true
-export let red = false
-export let hover = false
+	import { createBubbler } from 'svelte/legacy';
+
+	const bubble = createBubbler();
+	/** @type {{text?: string, disabled?: boolean, red?: boolean, hover?: boolean}} */
+	let {
+		text = 'Button',
+		disabled = true,
+		red = false,
+		hover = false
+	} = $props();
 </script>
 
-<button class:hover={hover} on:click disabled="{disabled}" class:red>{text}</button>
+<button class:hover={hover} onclick={bubble('click')} disabled="{disabled}" class:red>{text}</button>
 
 <style lang="scss">
 button {

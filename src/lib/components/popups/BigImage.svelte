@@ -1,10 +1,12 @@
 <script>
+    import { self } from 'svelte/legacy';
+
 import { fileViewer } from '$lib/stores/files'
 import {onMount} from 'svelte'
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 
-let image
+let image = $state()
 let path = $fileViewer.focusImage
 
 onMount(() => {
@@ -33,14 +35,14 @@ async function getImage(path) {
 </script>
 
 <div
-    on:click|self="{close}"
-    in:fade="{{ duration: 100 }}"
-    out:fade="{{ duration: 100 }}"
+    onclick={self(close)}
+    in:fade|global="{{ duration: 100 }}"
+    out:fade|global="{{ duration: 100 }}"
     class="backdrop"
 >
-    <div on:click="{close}" in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
+    <div onclick={close} in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
         <img
-            in:fade="{{ duration: 150 }}"
+            in:fade|global="{{ duration: 150 }}"
             src="{image}"
             alt=""
         />

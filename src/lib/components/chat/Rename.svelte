@@ -1,18 +1,18 @@
 <script>
+    import { run, preventDefault, createBubbler, self } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { user } from '$lib/stores/user.js'
-import Button from '$lib/components/buttons/Button.svelte'
 
-const dispatch = createEventDispatcher()
-
-let enableAddButton = false
-let text = ''
+let enableAddButton = $state(false)
+let text = $state('')
 let name = 'Change'
-let rename = false
-export let this_contact
+let rename = $state(false)
+    /** @type {{this_contact: any, onRename:any, OpenRename: any}} */
+    let { this_contact, onRename, OpenRename,  } = $props();
 
 const enter = (e) => {
     if (enableAddButton && $user.rename && e.keyCode === 13) {
@@ -21,19 +21,19 @@ const enter = (e) => {
     }
 }
 
-$: {
+run(() => {
     if (text.length > 0) {
         //Enable add button
         enableAddButton = true
     } else {
         enableAddButton = false
     }
-}
+});
 
 // Dispatch the inputted data
 const renameContact = (board) => {
     // Dispatch the inputted data
-    dispatch('rename', {
+     onRename({
         text: text,
     })
     closeRename()
@@ -50,16 +50,16 @@ const closeRename = () => {
 
 const remove = () => {
     window.api.removeContact($user.rename.chat)
-    dispatch('openRename')
+    OpenRename()
     closeRename()
 }
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}" />
+<svelte:window onkeyup={preventDefault(enter)} />
 
-<div on:click|self in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="backdrop">
+<div onclick={self(bubble('click'))} in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 100 }}" class="backdrop">
     {#if rename}
-    <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="field">
+    <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="field">
         <input
             placeholder="Rename {$user.rename.name}"
             type="text"
@@ -75,8 +75,8 @@ const remove = () => {
         />
     </div>
     {:else}
-    <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
-        <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
+    <div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 80 }}" class="backdrop" onclick={self(bubble('click'))}>
+        <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
             <FillButton
                 disabled="{false}"
                 text="Rename"

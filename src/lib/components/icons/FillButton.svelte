@@ -1,11 +1,14 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 //Export variables with default values
-export let url
-export let text = 'Button'
+    /** @type {{url: any, text?: string}} */
+    let { url, text = 'Button' } = $props();
 </script>
 
 <!-- The button in HTML with variables-->
-<a href="{url}" on:click>{text}</a>
+<a href="{url}" onclick={bubble('click')}>{text}</a>
 
 <style>
 /* Button style */

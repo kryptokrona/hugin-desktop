@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { onMount } from "svelte"
     import { upload, fileViewer } from '$lib/stores/files'
     import { fade } from "svelte/transition"
@@ -6,18 +8,17 @@
     import Progress from "$lib/components/chat/Progress.svelte"
     import AudioPlayer from "./AudioPlayer.svelte"
 
-    export let file
-    export let group = false
-    export let rtc = false
+    /** @type {{file: any, group?: boolean, rtc?: boolean}} */
+    let { file, group = false, rtc = false } = $props();
     
-    let uploadDone = false
-    let uploading = false
+    let uploadDone = $state(false)
+    let uploading = $state(false)
 
-    let data
-    let video = false
-    let audio = false
-    let image = false
-    let saved = false
+    let data = $state()
+    let video = $state(false)
+    let audio = $state(false)
+    let image = $state(false)
+    let saved = $state(false)
 
     const NOT_FOUND = "File not found"
     const OTHER = "File"
@@ -27,12 +28,12 @@
         await loadFile(file)
     })
 
-    $: {
+    run(() => {
         uploading = $upload.some(a => file.time === a.time)
         uploadDone = $upload.some(a => (uploading && a.progress === 100))
-    }
+    });
 
-    $: downloaders = $upload.filter(a => a.progress === 100 && file.fileName == a.fileName).length
+    let downloaders = $derived($upload.filter(a => a.progress === 100 && file.fileName == a.fileName).length)
     
     const checkType = (type) => {
         switch (type){
@@ -76,25 +77,25 @@
 
 </script>
 
-<div class="file" class:group in:fade="{{ duration: 150 }}">
+<div class="file" class:group in:fade|global="{{ duration: 150 }}">
     {#if !uploadDone && !uploading && !saved}
-        <p in:fade class="message">{file.fileName} </p>
+        <p in:fade|global class="message">{file.fileName} </p>
     {:else if uploading && !uploadDone}
-        <div in:fade>
+        <div in:fade|global>
             {#if !group}
             <Progress file={file} send={true}/>
             {/if}
         </div>
-    <p in:fade class="message sending blink_me">Uploading...</p>
+    <p in:fade|global class="message sending blink_me">Uploading...</p>
     {/if}
     
     {#if uploadDone || saved}
         {#if video}
             <VideoPlayer src={file}/>
         {:else if image}
-            <div style="-webkit-user-drag: none;" on:click={focusImage}>
+            <div style="-webkit-user-drag: none;" onclick={focusImage}>
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     src="{data}"
                     alt=""
                 />
@@ -102,8 +103,8 @@
         {:else if audio}
             <AudioPlayer src={data} />
         {:else if  data == (OTHER || NOT_FOUND || undefined)}
-        <p class="message done" in:fade>Uploaded!</p>
-        <p in:fade class="message">{file.fileName} </p>
+        <p class="message done" in:fade|global>Uploaded!</p>
+        <p in:fade|global class="message">{file.fileName} </p>
         {/if}
     {/if}
 </div>

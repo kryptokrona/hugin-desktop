@@ -1,25 +1,29 @@
 <script>
+  import { run, preventDefault } from 'svelte/legacy';
+
 import {fade, fly} from 'svelte/transition'
 import { misc, notify, user} from '$lib/stores/user.js'
 import {Moon} from "svelte-loading-spinners";
 import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
 import {goto} from '$app/navigation'
 import { getContext, onDestroy, onMount, setContext } from 'svelte'
-import toast from 'svelte-french-toast'
+import toast from 'svelte-5-french-toast'
 import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { sleep } from '$lib/utils/utils'
 
-let myPassword = ""
-let enableLogin = false
-let loadSpin = false
-let errNode = false
-let passwordField
-$: started = $user.started
+let myPassword = $state("")
+let enableLogin = $state(false)
+let loadSpin = $state(false)
+let errNode = $state(false)
+let passwordField = $state()
+let started = $derived($user.started)
 
-$: if (errNode) {
-  $layoutState.showNodeSelector = true
-}
+run(() => {
+    if (errNode) {
+    $layoutState.showNodeSelector = true
+  }
+  });
 
 onMount(async () => {
   $misc.loading = false
@@ -31,9 +35,9 @@ onDestroy(() => {
   window.api.removeAllListeners('login-failed')
 })
 
-$: {
+run(() => {
     enableLogin = myPassword.length > 1
-}
+});
 
 const enter = async (e) => {
   if (enableLogin && e.keyCode === 13) {
@@ -70,9 +74,9 @@ const handleLogin = async (e) => {
   let node = $misc.node.node
   let port = $misc.node.port
   loadSpin = true
-  if(e.detail.node) {
-      node = e.detail.node.split(':')[0]
-      port = parseInt(e.detail.node.split(':')[1])
+  if(e.node) {
+      node = e.node.split(':')[0]
+      port = parseInt(e.node.split(':')[1])
   }
   
    $user.idleTime = 0
@@ -101,17 +105,17 @@ window.api.receive('login-failed', async () => {
 
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}"/>
+<svelte:window onkeyup={preventDefault(enter)}/>
 
-<div class="wrapper" in:fly={{ delay: 300, duration: 300, y : 50 }} out:fly={{ delay: 100, duration: 100, y : -50 }}>
+<div class="wrapper" in:fly|global={{ delay: 300, duration: 300, y : 50 }} out:fly|global={{ delay: 100, duration: 100, y : -50 }}>
     {#if $layoutState.showNodeSelector}
-        <NodeSelector on:back="{() => (errNode = false)}" on:connect="{(e) => handleLogin(e)}"/>
+        <NodeSelector goBack="{() => (errNode = false)}" onConnect="{(e) => handleLogin(e)}"/>
     {/if}
         <div class="login-wrapper" class:hide={$layoutState.showNodeSelector}>
             <h1>Hugin</h1>
             <div class="field">
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
-                <button on:click={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
+                <button onclick={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
                         <Moon color="#000000" size="20" unit="px"/>
                     {:else}
@@ -119,7 +123,7 @@ window.api.receive('login-failed', async () => {
                     {/if}
                 </button>
             </div>
-            <p style="color: white; opacity: 30%">v{$misc.version}</p>
+            <p style="color: var(--text-color); opacity: 30%">v{$misc.version}</p>
         </div>
 </div>
 
@@ -131,7 +135,7 @@ window.api.receive('login-failed', async () => {
     align-items: center;
     height: 100vh;
     width: 100%;
-    color: #fff;
+    color: var(--text-color);
   }
 
   .login-wrapper {

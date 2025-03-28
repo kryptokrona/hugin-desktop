@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import Button from '$lib/components/buttons/Button.svelte'
     import { misc } from '$lib/stores/user.js'
     import {layoutState} from '$lib/stores/layout-state.js'
@@ -6,35 +8,37 @@
     import { fade } from 'svelte/transition'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
 
-    let synced = false
-    let networkHeight
-    let walletHeight
-    let connecting = false
+    let synced = $state(false)
+    let networkHeight = $state()
+    let walletHeight = $state()
+    let connecting = $state(false)
     
     onMount(() => {
         getHeight();
     })
 
-    $: status = synced ? "Connected" : "Syncing blocks"
+    let status = $derived(synced ? "Connected" : "Syncing blocks")
 
-    $: {
+    run(() => {
         synced = $misc.syncedStatus
-    }
+    });
 
-    $: {
+    run(() => {
         networkHeight
         walletHeight
-    }
+    });
 
-    $: activeNode = $misc.node.node ?? "Connecting"
+    let activeNode = $derived($misc.node.node ?? "Connecting")
 
-    $: if (activeNode === "Connecting") {
-        connecting = true
-        synced = false
-    } else {
-        connecting = false
-        synced = true
-    }
+    run(() => {
+        if (activeNode === "Connecting") {
+            connecting = true
+            synced = false
+        } else {
+            connecting = false
+            synced = true
+        }
+    });
 
     async function getHeight() {
         let heightStatus = await window.api.getHeight()
@@ -44,7 +48,7 @@
 
     const connectToNode = (e) => {
         $layoutState.showNodeSelector = false
-        $misc.node = e.detail.node
+        $misc.node = e.node
         changeNode()
         window.api.switchNode($misc.node)
     }
@@ -65,8 +69,8 @@
 {#if $layoutState.showNodeSelector}
     <div class="backdrop">
         <NodeSelector
-            on:back="{() => ($layoutState.showNodeSelector = false)}"
-            on:connect="{(e) => connectToNode(e)}"
+            goBack="{() => ($layoutState.showNodeSelector = false)}"
+            onConnect="{(e) => connectToNode(e)}"
         />
     </div>
 {/if}
@@ -80,7 +84,7 @@
         on:click="{() => ($layoutState.showNodeSelector = true)}"
     />
 </div>
-<div class="settings" in:fade>
+<div class="settings" in:fade|global>
 <div class="nodestatus">
 
     <div class="node">

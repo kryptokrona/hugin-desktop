@@ -1,28 +1,25 @@
 <script>
-    import {createEventDispatcher} from 'svelte'
+    import { run } from 'svelte/legacy';
+
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import {groups, notify, swarm, user} from '$lib/stores/user.js'
-    import { swarmGroups } from '$lib/stores/layout-state'
-    import Lightning from '../icons/Lightning.svelte'
-    import {standardGroups} from "$lib/stores/standardgroups.js";
     import { isLatin } from '$lib/utils/utils'
     
-    export let group
+    /** @type {{group: any, PrintGroup: any}} */
+    let { group, PrintGroup } = $props();
     let channels = []
     let voice_channel = []
-    let asian = false
+    let asian = $state(false)
 
-    $: channels
-    
-    const dispatch = createEventDispatcher()
+
     
     const print_group = (group) => {
          //If p2p group, enter focus mode
 
         if (group.key === $groups.thisGroup.key) return
      
-        dispatch('print')
+        PrintGroup()
     }
     
     const openRemove = () => {
@@ -31,9 +28,11 @@
 
     const my_address = $user.myAddress
     
-    $: counter = $notify.unread.filter(a => a.type === "group" && a.group === group.key).length
+    let counter = $derived($notify.unread.filter(a => a.type === "group" && a.group === group.key).length)
 
-    $: if (!isLatin(group.name)) asian = true
+    run(() => {
+        if (!isLatin(group.name)) asian = true
+    });
 
     const createNewChannel = () => {
         //Add to channels and notify others in the swarm
@@ -43,13 +42,13 @@
     
     <div
         class="card"
-        in:fade
-        out:fade
+        in:fade|global
+        out:fade|global
         class:active="{$groups.thisGroup.key === group.key}"
-        on:click="{(e) => print_group(group)}"
+        onclick={(e) => print_group(group)}
     >
     
-        <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
+        <img class="avatar" onclick={openRemove} src="data:image/png;base64,{get_avatar(group.key)}" alt="" />
         <div class="content">
             <h4 class:asian class:big={asian}>{group.name}</h4>
             <div class="text">
@@ -58,7 +57,7 @@
             </div>
         </div>
         {#if counter > 0}
-        <div in:fade class="unread">
+        <div in:fade|global class="unread">
             <div class="count">
                 {counter}
             </div>

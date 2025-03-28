@@ -1,12 +1,12 @@
 <script>
     import { download, upload } from '$lib/stores/files'
-    export let file
-    export let send
+    /** @type {{file: any, send: any}} */
+    let { file, send } = $props();
     console.log("This file!", file)
     console.log("$upload", $upload)
     let name = file.fileName
-    $: loader = send ? $upload : $download
-    $: progress = loader.find(a => a.fileName === name && file.time === a.time)
+    let loader = $derived(send ? $upload : $download)
+    let progress = $derived(loader.find(a => a.fileName === name && file.time === a.time))
     
 </script>
 <div>

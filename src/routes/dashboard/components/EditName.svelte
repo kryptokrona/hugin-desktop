@@ -1,11 +1,13 @@
 <script>
+    import { preventDefault, self } from 'svelte/legacy';
+
 import Pen from '$lib/components/icons/Pen.svelte'
 import { user } from '$lib/stores/user.js'
 import { fade, fly } from 'svelte/transition'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 
-let open
-let username
+let open = $state()
+let username = $state()
 
 const keyDown = (e) => {
     if (e.key === 'Enter' && username.length > 0) {
@@ -31,18 +33,18 @@ const close = () => {
 $user.username = window.localStorage.getItem('userName')
 </script>
 
-<svelte:window on:keyup|preventDefault="{keyDown}" />
+<svelte:window onkeyup={preventDefault(keyDown)} />
 <div style="display: flex; align-items: center">
     <Pen on:click="{() => (open = true)}" />
 </div>
 {#if open}
     <div
-        on:click|self="{close}"
-        in:fade="{{ duration: 100 }}"
-        out:fade="{{ duration: 100 }}"
+        onclick={self(close)}
+        in:fade|global="{{ duration: 100 }}"
+        out:fade|global="{{ duration: 100 }}"
         class="backdrop"
     >
-        <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
+        <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
             <input
                 placeholder="Enter nickname"
                 type="text"

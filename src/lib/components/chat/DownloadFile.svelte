@@ -1,4 +1,6 @@
 <script>
+   import { run } from 'svelte/legacy';
+
     import { onMount } from "svelte"
     import { download, fileViewer, remoteFiles } from '$lib/stores/files'
     import Button from "../buttons/Button.svelte"
@@ -9,21 +11,20 @@
     import { sleep } from "$lib/utils/utils"
     import AudioPlayer from "./AudioPlayer.svelte"
 
-    export let file
-    export let group = false
-    export let rtc = false
+   /** @type {{file: any, group?: boolean, rtc?: boolean}} */
+   let { file, group = false, rtc = false } = $props();
 
     
-    let downloadDone = false
-    let downloading = false
+    let downloadDone = $state(false)
+    let downloading = $state(false)
     let clicked = false
     let downloaders = []
     
-    let video = false
-    let audio = false
-    let image = false
-    let saved = false
-    let data
+    let video = $state(false)
+    let audio = $state(false)
+    let image = $state(false)
+    let saved = $state(false)
+    let data = $state()
 
     const NOT_FOUND = "File not found"
     const OTHER = "File"
@@ -33,15 +34,8 @@
         await loadFile(file)
     })
 
-   $: {
-        downloading = $download.some(a => file.time === a.time)
-        downloadDone = $download.some(a => (downloading && a.progress === 100))
-    }
    
 
-    $: if (downloadDone) {
-        awaitLoad(file)
-    }
 
     async function awaitLoad(file) {
         await sleep(100)
@@ -99,23 +93,32 @@
     };
 
 
+   run(() => {
+        downloading = $download.some(a => file.time === a.time)
+        downloadDone = $download.some(a => (downloading && a.progress === 100))
+    });
+    run(() => {
+      if (downloadDone) {
+           awaitLoad(file)
+       }
+   });
 </script>
 
-<div class="file" class:group in:fade="{{ duration: 150 }}">
+<div class="file" class:group in:fade|global="{{ duration: 150 }}">
     {#if !downloadDone && !downloading && !saved}
          {#if !clicked}
-        <p class="message" in:fade>{file.fileName}</p>
+        <p class="message" in:fade|global>{file.fileName}</p>
         <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
         {:else}
-        <p class="message loading blink_me" in:fade>Connecting</p>
+        <p class="message loading blink_me" in:fade|global>Connecting</p>
         {/if}
     {:else if downloading && !downloadDone}
-        <p class="message done blink_me" in:fade>Downloading</p>
-        <div in:fade>
+        <p class="message done blink_me" in:fade|global>Downloading</p>
+        <div in:fade|global>
             <Progress file={file} send={false}/>
         </div>
     {:else if !downloading && !downloadDone && !saved && data === (OTHER || NOT_FOUND)} 
-        <p class="message" in:fade>{file.fileName}</p>
+        <p class="message" in:fade|global>{file.fileName}</p>
 
     {/if}
         
@@ -123,7 +126,7 @@
         {#if !video}
             {#if data === (OTHER || NOT_FOUND)}
                 {#if !saved}
-                <div in:fade>
+                <div in:fade|global>
                     <Progress file={file} send={false}/>
                 </div>
                 {/if}
@@ -132,9 +135,9 @@
             {:else if data === NOT_FOUND}
             <p class="message error">{NOT_FOUND}</p>
             {:else if image}
-            <div style="-webkit-user-drag: none;" on:click={focusImage}>
+            <div style="-webkit-user-drag: none;" onclick={focusImage}>
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     src="{data}"
                     alt=""
                 />

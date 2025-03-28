@@ -1,5 +1,7 @@
 <script>
-    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+    import { run } from 'svelte/legacy';
+
+    import { onDestroy, onMount} from 'svelte'
     import {fade, fly} from 'svelte/transition'
     import {groupMessages} from '$lib/stores/groupmsgs.js'
     import {groups, notify, swarm} from '$lib/stores/user.js'
@@ -11,10 +13,15 @@
     import {flip} from 'svelte/animate'
 
     let activeHugins = []
-    let groupList = []
-    let group = ''
-    let groupName
-    const dispatch = createEventDispatcher()
+    let groupList = $state([])
+    let group = $state('')
+    let groupName = $derived($groups.thisGroup.name)
+
+    let {
+        PrintGroup,
+        onRemoveGroup
+    } = $props()
+    
     const nogroup = {
             nick: 'No contacts',
             chat: 'Hugin Groups',
@@ -70,7 +77,7 @@ const setEmptyGroup = () => {
 
 //Print chosen group key
 const printGroup = async (grp) => {
-    dispatch('printGroup', grp)
+    PrintGroup(grp)
     await sleep(150)
     readMessage(grp)
 }
@@ -112,7 +119,7 @@ const removeGroup = async () => {
         $groups.thisGroup = nogroup
     }
     $groups.removeGroup = false
-    dispatch('removeGroup')
+    RemoveGroup()
     await sleep(100)
     filterActiveHugins($groupMessages)
 }
@@ -126,7 +133,9 @@ function readMessage(e) {
     filterActiveHugins($groupMessages)
 }
 
-$: groupList
+run(() => {
+        groupList
+    });
 
 function sendPM() {
     // Add friend request here?
@@ -143,20 +152,24 @@ const addChannel = () => {
 }
 
 //Set group key
-$: if ($groups.thisGroup.key) {
-    group = $groups.thisGroup.key
-}
+run(() => {
+        if ($groups.thisGroup.key) {
+        group = $groups.thisGroup.key
+    }
+    });
 
 //This group name
-$: groupName = $groups.thisGroup.name
 
-$: active_swarm = $swarm.active.some(a => groupList.map(b=>b.key).includes(a.key))
+
+let active_swarm = $derived($swarm.active.some(a => groupList.map(b=>b.key).includes(a.key)))
 
 
 //Active hugins
-$: activeHugins
+run(() => {
+        activeHugins
+    });
 
-$: show_groups = true
+let show_groups = $derived(true)
 	
 	function flipper(node, {
 		delay = 0,
@@ -178,8 +191,8 @@ $: show_groups = true
 
 </script>
 
-<div class="wrapper" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
-    <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
+<div class="wrapper" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
+    <div class="top" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
         {#if show_groups}
             <h2>Groups</h2>
             <br />
@@ -187,7 +200,7 @@ $: show_groups = true
                 <Plus on:click="{addGroup}" />
             </div>
         {:else}
-            <p class="back" on:click={back}>Back</p>
+            <p class="back" onclick={back}>Back</p>
             <h2>Rooms</h2>
             <br />
             <!-- <div class="buttons">
@@ -196,10 +209,10 @@ $: show_groups = true
         {/if}
        
     </div>
-            <div class="list-wrapper"  in:fly="{{ y: 50 }}">
+            <div class="list-wrapper"  in:fly|global="{{ y: 50 }}">
                 {#each groupList as group (group.key)}
                     <div animate:flip="{{duration: 250}}">
-                        <Group group="{group}" on:print="{() => printGroup(group)}" />
+                        <Group group="{group}" PrintGroup="{() => printGroup(group)}" />
                     </div>
                 {/each}
             </div>
@@ -209,7 +222,7 @@ $: show_groups = true
 {#if $groups.removeGroup}
     <RemoveGroup
         on:click="{() => ($groups.removeGroup = false)}"
-        on:remove="{() => removeGroup($groups.thisGroup)}"
+        onRemove="{() => removeGroup($groups.thisGroup)}"
     />
 {/if}
 
@@ -267,13 +280,13 @@ $: show_groups = true
     align-items: center;
     padding: 0.5rem;
     width: 100%;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
     transition: 177ms ease-in-out;
     cursor: pointer;
 
     &:hover {
-        background-color: #333333;
+        opacity: 0.9;
     }
 }
 
@@ -292,7 +305,7 @@ h4 {
 
 h2 {
     margin: 0;
-    color: #fff;
+    color: var(--title-color);
     font-family: 'Montserrat';
     font-weight: bold;
     font-size: 22px;
@@ -310,13 +323,13 @@ p {
 
 .active_hugins {
     padding: 1rem;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
 }
 
 .add {
     font-size: 15px;
-    color: white;
+    color: var(--text-color);
 }
 
 .content {

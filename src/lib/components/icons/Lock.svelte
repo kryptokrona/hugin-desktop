@@ -1,8 +1,8 @@
 <script>
-import { createEventDispatcher } from 'svelte/internal'
-
-const dispatch = createEventDispatcher()
-let color = '#f5f5f5'
+let color = $state('#f5f5f5')
+let {
+    onCopy
+} = $props()
 
 const iconGlow = () => {
     color = '#4dbb45'
@@ -10,12 +10,12 @@ const iconGlow = () => {
         color = '#f5f5f5'
     }, 300)
 
-    dispatch('copy')
+    onCopy()
 }
 </script>
 
 <svg
-    on:click="{iconGlow}"
+    onclick={iconGlow}
     width="22px"
     height="22px"
     viewBox="0 0 24 24"

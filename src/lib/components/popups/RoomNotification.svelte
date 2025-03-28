@@ -1,15 +1,13 @@
 <script>
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+import {  onDestroy, onMount } from 'svelte'
 import { groups, notify, rooms } from '$lib/stores/user.js'
 import { fly } from 'svelte/transition'
 import { cubicIn, cubicOut } from 'svelte/easing'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 
-const dispatch = createEventDispatcher()
 let timer
-export let error
-export let message
-export let success
+    /** @type {{error: any, message: any, success: any, Hide: any}} */
+    let { error, message, success, Hide } = $props();
 
 const find_room = () => {
     const findit = (arr) => {
@@ -33,7 +31,7 @@ onDestroy(() => {
 })
 
 function hideNotification(id) {
-    dispatch('hide', {
+    Hide({
         hash: message.hash,
     })
 }
@@ -48,9 +46,9 @@ const check_avatar = (address) => {
 
 {#if room}
     <div
-        on:click="{hideNotification}"
-        in:fly="{{ x: 200, duration: 200, easing: cubicOut }}"
-        out:fly="{{ y: -200, duration: 200, easing: cubicIn }}"
+        onclick={hideNotification}
+        in:fly|global="{{ x: 200, duration: 200, easing: cubicOut }}"
+        out:fly|global="{{ y: -200, duration: 200, easing: cubicIn }}"
         class="card"
     >
         <div class="inner-card">

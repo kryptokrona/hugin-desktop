@@ -1,38 +1,45 @@
 <script>
+    import { run, createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 import { page } from '$app/stores'
 import { fade } from 'svelte/transition'
 import { notify, rtc_groups } from '$lib/stores/user.js'
 import { videoGrid } from '$lib/stores/layout-state.js'
 
-let thispage
-let unread = false
+let thispage = $derived($page.url.pathname === '/messages')
+let unread = $state(false)
 let rtc_unread = false
-$: thispage = $page.url.pathname === '/messages'
 
-$: if ($notify.unread.some((a) => a.type === 'message')) {
-    unread = true
-} else {
-    unread = false
-}
 
-$: if (!$videoGrid.showChat && $rtc_groups.unread.length && $videoGrid.showVideoGrid) {
-    unread = true
-} else {
-    unread = false
-}
+run(() => {
+        if ($notify.unread.some((a) => a.type === 'message')) {
+        unread = true
+    } else {
+        unread = false
+    }
+    });
+
+run(() => {
+        if (!$videoGrid.showChat && $rtc_groups.unread.length && $videoGrid.showVideoGrid) {
+        unread = true
+    } else {
+        unread = false
+    }
+    });
 
 </script>
 
 {#if thispage}
-    <div class="dot" in:fade></div>
+    <div class="dot" in:fade|global></div>
 {/if}
 
 {#if unread}
-    <div class="unread" class:grid={$videoGrid.showVideoGrid && !$videoGrid.showChat} in:fade></div>
+    <div class="unread" class:grid={$videoGrid.showVideoGrid && !$videoGrid.showChat} in:fade|global></div>
 {/if}
 
 <svg
-    on:click
+    onclick={bubble('click')}
     width="24px"
     height="24px"
     viewBox="0 0 24 24"
@@ -48,7 +55,7 @@ $: if (!$videoGrid.showChat && $rtc_groups.unread.length && $videoGrid.showVideo
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -57,7 +64,7 @@ $: if (!$videoGrid.showChat && $rtc_groups.unread.length && $videoGrid.showVideo
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -86,7 +93,7 @@ svg {
 
 .dot {
     position: absolute;
-    background-color: white;
+    background-color: var(--primary-color);
     border-radius: 2px;
     height: 16px;
     width: 10px;

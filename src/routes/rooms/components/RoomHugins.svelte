@@ -1,24 +1,18 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import {fade, fly} from 'svelte/transition'
-import {groups, swarm, user, webRTC, notify, rooms, transactions} from '$lib/stores/user.js'
+import {groups, swarm, user, notify, rooms} from '$lib/stores/user.js'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
 import { isLatin, sleep } from '$lib/utils/utils'
-import Bell from '$lib/components/icons/Bell.svelte'
-import FillButton from '$lib/components/buttons/FillButton.svelte'
-import SwarmInfo from '$lib/components/popups/SwarmInfo.svelte'
-import Lightning from '$lib/components/icons/Lightning.svelte'
-import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
 import Groupcall from '$lib/components/icons/Groupcall.svelte'
-import Tooltip from '$lib/components/popups/Tooltip.svelte'
 import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
-import AddToCall from '$lib/components/icons/AddToCall.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
 import UserOptions from './UserOptions.svelte'
 import BanInfo from './BanInfo.svelte'
 const startTone = new Audio('/audio/startcall.mp3')
-let knownUsers = []
-let room = ''
+
 let roomName
 let asian = false
 let firstConnect = false
@@ -30,27 +24,40 @@ let userInfo = {}
 let showMenu = false
 let infoUser = {}
 const me = {address: $user.myAddress, name: $user.username }
-
 const myAddress = $user.myAddress
-
-//Set group key
-$: if ($rooms.thisRoom?.key) {
-    room = $rooms.thisRoom.key
-}
-
-$: $rooms.activeHugins
-
-//Active users in p2p chat
 let onlineUsers = []
 let thisSwarm = false
+let knownUsers = $state($rooms.activeHugins)
+let room = $state('')
+let voice_channel = $derived(thisSwarm)
 
-$: if ($swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-$: if (thisSwarm && $swarm.active.length) in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
-$: if (thisSwarm) admin = thisSwarm.admin
 //Active hugins
-$: fullUserList = knownUsers
 
-let timeout = false
+
+$effect(() => {
+    if ($swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+    if (!thisSwarm) return
+    admin = thisSwarm.admin
+    updateCall()
+})
+
+//Set group key
+run(() => {
+        if ($rooms.thisRoom?.key) {
+        room = $rooms.thisRoom.key
+    }
+    if (thisSwarm && $rooms.activeHugins) {
+        updateList()
+    }
+
+});
+
+const updateCall = () => {
+    if (!thisSwarm) return
+    in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
+    voice_channel = thisSwarm.voice_channel
+}
+
 
 const removeDuplicates = (arr) => {
     let uniq = {}
@@ -61,23 +68,19 @@ const notIncludes = (a) => {
     return !knownUsers.includes(a.address)
 }
 
-$ : if (thisSwarm && $rooms.activeHugins) {
-    updateOnline()
-}
-
-$: if (thisSwarm && $rooms.activeHugins) {
+const updateList = () => {
+    console.log("Update online effect")
     //Adds connected and known users to one array
-    knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)), ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
+    knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)),
+    ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
     updateOnline()
-} else {
-    onlineUsers = []
 }
 
 const updateOnline = () => {
      //Updates the online status and checks known users
     onlineUsers = knownUsers.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
-    knownUsers = removeDuplicates([...onlineUsers.filter(a => notIncludes(a)), ...knownUsers])
     knownUsers.unshift(me)
+    knownUsers = removeDuplicates([...onlineUsers.filter(a => notIncludes(a)), ...knownUsers])
 }
 
 function showUser(user) {
@@ -91,7 +94,7 @@ function showUser(user) {
 const join_voice_channel = async (video = false, screen) => {
         loading = true
         if (in_voice) return
-        if (thisSwarm.voice_channel.length > 9) {
+        if (thisSwarm.voice_channel?.length > 9) {
             window.api.errorMessage('There are too many in the call')
             loading = false
             return
@@ -135,25 +138,23 @@ const join_voice_channel = async (video = false, screen) => {
 </script>
 
 {#if $rooms.showBanInfo}
-    <BanInfo on:close={() => $rooms.showBanInfo = false}/>
+    <BanInfo onClose={() => $rooms.showBanInfo = false}/>
 {/if}
 
-<div class="wrapper" out:fly="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
+<div class="wrapper" out:fly|global="{{ x: 100 }}" class:hide="{$layoutState.hideGroupList}">
 
         <div class="list-wrapper">
 
             <div class="voice" style="cursor: pointer;border-bottom: 1px solid var(--border-color);">
-                <div class="voice-list" on:click={join_voice_channel}>
+                <div class="voice-list" onclick={join_voice_channel}>
                 
                     <p style="margin-top: 0px;margin-right: 5px;font-family: Montserrat;font-weight: 700;margin-bottom: -4px;">Voice channel</p>
                     <span style="margin-top: 4px"><Groupcall size="{14}" /></span>
 
                 </div>
-                {#if thisSwarm}
-                    {#each thisSwarm?.voice_channel as voice (voice.address)}
+                    {#each voice_channel as voice (voice.address)}
                         <VoiceUser voice_user={voice} voice_channel={thisSwarm.voice_channel} />
-                    {/each} 
-                {/if}
+                    {/each}
 
             </div>
 
@@ -162,14 +163,14 @@ const join_voice_channel = async (video = false, screen) => {
             padding-top: 4px;
             display: flex;
             border-bottom: 1px solid var(--border-color);">
-                <p style="font-family: Montserrat; font-weight: 700">Users ({fullUserList.length})</p>
+                <p style="font-family: Montserrat; font-weight: 700">Users ({knownUsers.length})</p>
             </div>
 
             
             
-            {#each fullUserList as user}    
+            {#each knownUsers as user}    
             
-                    <div in:fade class="card" class:offline={!isOnline(user)} on:click="{() => showUser(user)}">
+                    <div in:fade|global class="card" class:offline={!isOnline(user)} onclick={() => showUser(user)}>
                         {#if isOnline(user)}
                             <div class="online"></div>
                         {/if}
@@ -288,13 +289,13 @@ p {
     align-items: center;
     padding: 0.5rem;
     width: 100%;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
     transition: 177ms ease-in-out;
     cursor: pointer;
 
     &:hover {
-        background-color: #333333;
+        background-color: var(--border-border);
     }
 }
 
@@ -318,7 +319,7 @@ h4 {
 
 h2 {
     margin: 0;
-    color: #fff;
+    color: var(--title-color);
     font-family: 'Montserrat';
     font-weight: bold;
     font-size: 22px;
@@ -336,13 +337,13 @@ p {
 
 .active_hugins {
     padding: 1rem;
-    color: white;
+    color: var(--title-color);
     border-bottom: 1px solid var(--border-color);
 }
 
 .add {
     font-size: 15px;
-    color: white;
+    color: var(--title-color);
 }
 
 .content {
@@ -410,7 +411,7 @@ p {
         cursor: pointer;
 
         &:hover {
-            background-color: var(--card-border);
+            background-color: var(--border-border);
         }
     }
 }
@@ -419,7 +420,7 @@ p {
     text-align: center; padding-bottom: 0; padding: 15.5px 10px 18px 10px; display: flex;
     
     &:hover {
-        background-color: #333333;
+        background-color: var(--border-border);
     }
 }
 

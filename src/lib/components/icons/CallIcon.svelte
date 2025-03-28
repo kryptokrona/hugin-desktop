@@ -1,9 +1,13 @@
 <script>
-    export let active = false
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
+    /** @type {{active?: boolean}} */
+    let { active = false } = $props();
 
 </script>
 <svg
-    on:click
+    onclick={bubble('click')}
     width="24px"
     height="24px"
     viewBox="0 0 24 24"
@@ -19,7 +23,7 @@
                         id="Vector"
                         fill="none"
                         fill-rule="evenodd"
-                        stroke="#f5f5f5"
+                        stroke="var(--text-color)"
                         stroke-width="1.5"></path>
                 </g>
                 <path

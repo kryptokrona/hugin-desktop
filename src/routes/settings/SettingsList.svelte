@@ -1,11 +1,13 @@
 <script>
-    import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+
     import {fade} from 'svelte/transition'
     import Category from '/src/routes/settings/Category.svelte'
 
     let nodeIcon = ""
 
-    const dispatch = createEventDispatcher()
+    let {
+        ChangeCategory
+    } = $props()
 
     const settings = [
         {
@@ -61,14 +63,14 @@
 
 </script>
 
-<div class="wrapper" in:fade>
+<div class="wrapper" in:fade|global>
     <div class="top">
         <h2>Settings</h2>
         <br>
     </div>
     <div class="list-wrapper">
             {#each settings as tab}
-                <Category tab={tab} on:click={() => dispatch('changeCategory', tab.route)}/>
+                <Category tab={tab} on:click={() =>  ChangeCategory(tab.route)}/>
             {/each}
     </div>
 
@@ -148,7 +150,7 @@ h4 {
 
 h2 {
     margin: 0;
-    color: #fff;
+    color: var(--title-color);
     font-family: 'Montserrat';
     font-weight: bold;
     font-size: 22px;
@@ -166,13 +168,13 @@ p {
 
 .active_hugins {
     padding: 1rem;
-    color: white;
+    color: var(--title-color);
     border-bottom: 1px solid var(--border-color);
 }
 
 .add {
     font-size: 15px;
-    color: white;
+    color: var(--title-color);
 }
 
 .content {

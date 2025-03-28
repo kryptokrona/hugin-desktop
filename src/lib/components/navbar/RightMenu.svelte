@@ -1,11 +1,11 @@
 <script>
+   import { run } from 'svelte/legacy';
+
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
 import { boards, groups, transactions, user, webRTC, beam, swarm, rooms } from '$lib/stores/user.js'
 import { remoteFiles, localFiles } from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
-import { createEventDispatcher } from 'svelte'
-import SimpleAdd from '$lib/components/icons/SimpleAdd.svelte'
 import PayIcon from '$lib/components/icons/PayIcon.svelte'
 import MicIcon from '$lib/components/icons/MicIcon.svelte'
 import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
@@ -22,25 +22,26 @@ import Lightning from '$lib/components/icons/Lightning.svelte'
 import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
 
-const dispatch = createEventDispatcher()
-let contact
-let active_contact
-let basicAvatar
+let contact = $state()
+let active_contact = $state()
+let basicAvatar = $state()
 let calltype
 let startTone = new Audio('/audio/startcall.mp3')
 let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
 let video = false
-let videoInput
-let thisSwarm = {voice_channel: []}
-let in_voice = false
-let activeBeam
+let videoInput = $state()
+let thisSwarm = $state({voice_channel: []})
+let in_voice = $state(false)
+let activeBeam = $state()
 
-$: if ($mediaSettings.devices.length) {
-    videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
-}
+run(() => {
+      if ($mediaSettings.devices.length) {
+       videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
+   }
+   });
 
-$: {
+run(() => {
     if ($user.activeChat) {
         active_contact = $user.activeChat
         contact = $user.activeChat.chat + $user.activeChat.key
@@ -49,34 +50,32 @@ $: {
         $user.activeChat = $user.contacts[0]
         active_contact = $user.activeChat
     }
-}
+});
 
 //This chat
-$: thisChat = $user.activeChat
+let thisChat = $derived($user.activeChat)
 
 //Beam reactive button states
-$: if ($swarm) activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
-$: connectedBeam = $swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat))
-$: if (activeBeam) {
-   thisSwarm = $swarm.active.find(a => a.chat === thisChat.chat)
-}
+run(() => {
+      if ($swarm) activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
+   });
+let connectedBeam = $derived($swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat)))
+run(() => {
+      if (activeBeam) {
+      thisSwarm = $swarm.active.find(a => a.chat === thisChat.chat)
+   }
+   });
 
-$: if (thisSwarm && $swarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
-    console.log("thisSwarm", thisSwarm)
-    in_voice = true
-} else in_voice = false
+run(() => {
+      if (thisSwarm && $swarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
+       console.log("thisSwarm", thisSwarm)
+       in_voice = true
+   } else in_voice = false
+   });
 
 //Starts any call
 const startCall = async () => {
     join_voice_channel()
-}
-
-//Print chosen board. SQL query to backend and then set result in Svelte store, then updates thisBoard.
-const printBoard = async (board) => {
-    console.log('Printing Board', board)
-    dispatch('printBoard', {
-        board: board,
-    })
 }
 
 const openAdd = () => {
@@ -155,20 +154,24 @@ const join_voice_channel = async (video = false, screen) => {
     }
 
 
-let incoming_file = false
-let shared_files = false
+let incoming_file = $state(false)
+let shared_files = $state(false)
 
-$: if ($remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
-    incoming_file = true
-} else {
-    incoming_file = false
-}
+run(() => {
+      if ($remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
+       incoming_file = true
+   } else {
+       incoming_file = false
+   }
+   });
 
-$: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
-    shared_files = true
-} else {
-    shared_files = false
-}
+run(() => {
+      if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
+       shared_files = true
+   } else {
+       shared_files = false
+   }
+   });
 
  const check_avatar = (address) => {
         const found = $rooms.avatars.find(a => a.address === address)
@@ -187,28 +190,27 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
             {:then avatar}
             {#if avatar}
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     class="avatar custom"
                     src="{avatar}"
                     alt=""
-                     on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}"
+                     onclick={() => copyThis($user.activeChat.chat + $user.activeChat.key)}
                 />
             {:else}
             <img
                 class="avatar"
                 src="data:image/png;base64,{basicAvatar}"
                 alt=""
-                on:click="{() => copyThis($user.activeChat.chat + $user.activeChat.key)}"
+                onclick={() => copyThis($user.activeChat.chat + $user.activeChat.key)}
                 />
             {/if}
             {/await}
          
             <Tooltip title="P2P Chat" leftAlign={true}>
-                <div class="button" on:click={() => {
+                <div class="button" onclick={() => {
                     if (connectedBeam || activeBeam) {
                         window.api.send('end-beam', $user.activeChat.chat)
-                    }   else newBeam()}
-                    }>
+                    }   else newBeam()}}>
                 
                     <Lightning connected={connectedBeam} connecting={activeBeam} />
                 </div>
@@ -239,14 +241,14 @@ $: if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
 
             {#if $page.url.pathname === '/messages'}
             <Tooltip title="Send XKR" leftAlign={true}>
-                <div on:click="{() => sendMoney(contact)}" class="button">
+                <div onclick={() => sendMoney(contact)} class="button">
                     <PayIcon />
                 </div>
             </Tooltip>
             {/if}
 
             {#if thisCall}
-                <div class="button" on:click="{toggleAudio}">
+                <div class="button" onclick={toggleAudio}>
                     {#if !muted}
                         <MicIcon />
                     {:else}

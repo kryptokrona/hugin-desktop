@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import MyVideo from './MyVideo.svelte'
 import { webRTC } from '$lib/stores/user.js'
 import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
@@ -9,9 +11,9 @@ import { Moon } from 'svelte-loading-spinners'
 import {onMount} from 'svelte'
 
 let drag = false
-let videoCalls = []
+let videoCalls = $state([])
 let join = false
-let groupKey = ''
+let groupKey = $state('')
 
 onMount(async () => {
     $videoGrid.showChat = true
@@ -36,23 +38,29 @@ const joinGroupChat = () => {
     join = false
 }
 
-let isConnecting = false
+let isConnecting = $state(false)
 
 //If the user is connecting to our call
-$: if ($webRTC.call.some(a => !a.connected)) {
-    isConnecting = true
-} else {
-    isConnecting = false
-}
+run(() => {
+        if ($webRTC.call.some(a => !a.connected)) {
+        isConnecting = true
+    } else {
+        isConnecting = false
+    }
+    });
 
 
-$: groupKey
+run(() => {
+        groupKey
+    });
 
-$: videoCalls = $webRTC.call.filter((a) => a.connected === true)
+run(() => {
+        videoCalls = $webRTC.call.filter((a) => a.connected === true)
+    });
 
 </script>
 
-<div in:fade out:fade class:show="{$videoGrid.showVideoGrid}" class="layout">
+<div in:fade|global out:fade|global class:show="{$videoGrid.showVideoGrid}" class="layout">
 
     <div class="video-wrapper">
         <div class="video-grid">

@@ -1,27 +1,30 @@
 <script>
+  import { run } from 'svelte/legacy';
+
     import { onMount } from 'svelte';
     import { tweened } from 'svelte/motion';
     import { cubicOut, linear } from 'svelte/easing';
     import { prettyNumbers } from '$lib/utils/utils'
 
-    export let tip;
+  /** @type {{tip: any}} */
+  let { tip } = $props();
   
     let rotation = tweened(0, {
       duration: 600,
       easing: linear,
     });
   
-    let rotateX = '80deg';
-    let opacity = 0;
+    let rotateX = $state('80deg');
+    let opacity = $state(0);
   
     onMount(() => {
       rotation.set(1); // Start animation
     });
   
-    $: {
+    run(() => {
       rotateX = `${80 - 80 * $rotation}deg`; // Interpolate rotation
       opacity = $rotation; // Interpolate opacity
-    }
+    });
   </script>
   
   <style>

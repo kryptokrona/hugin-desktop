@@ -1,5 +1,5 @@
 import {browser} from "$app/environment";
-import toast from "svelte-french-toast";
+import toast from "svelte-5-french-toast";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { checkWait, sleep } from "$lib/utils/utils";
 

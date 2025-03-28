@@ -1,16 +1,19 @@
 
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
     import { page } from "$app/stores"
     import { fade } from "svelte/transition"
-    $: thispage = $page.url.pathname.includes('/settings');
+    let thispage = $derived($page.url.pathname.includes('/settings'));
 </script>
 
 {#if thispage}
-    <div class="dot" in:fade></div>
+    <div class="dot" in:fade|global></div>
 {/if}
 
 <svg
-    on:click
+    onclick={bubble('click')}
     width="22px"
     height="22px"
     viewBox="0 0 24 24"
@@ -25,7 +28,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -34,7 +37,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -43,7 +46,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -52,7 +55,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -61,7 +64,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -70,7 +73,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>

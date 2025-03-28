@@ -6,7 +6,7 @@ import { fade } from "svelte/transition"
 </script>
 
 <h2>Contacts</h2>
-<div class="settings" in:fade>
+<div class="settings" in:fade|global>
     <div class="inner blocklist">
         <div class="list-wrapper">
             <h4>Block list</h4>
@@ -15,7 +15,7 @@ import { fade } from "svelte/transition"
                 <div class="card">
                     <p class="name">{blocked.name}</p>
                     <br>
-                    <p class="unblock" on:click={() => window.api.send('unblock', blocked.address)}>Unblock</p>
+                    <p class="unblock" onclick={() => window.api.send('unblock', blocked.address)}>Unblock</p>
                 </div>
             {/if}
             {/each}
@@ -42,7 +42,7 @@ h2 {
     opacity: 0.9;
 
     &:hover {
-        color: white;
+        color: var(--text-color);
         opacity: 1;
     }
 }

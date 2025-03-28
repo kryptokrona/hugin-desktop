@@ -1,23 +1,25 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 // Copyright (c) 2022, The Kryptokrona Developers
 import { misc } from '$lib/stores/user.js'
 import { fade, fly } from 'svelte/transition'
 import Close from '$lib/components/buttons/Close.svelte'
 import { prettyNumbers } from '$lib/utils/utils.js'
 
-let locked
-let unlocked
-let total
+let locked = $state()
+let unlocked = $state()
+let total = $state()
 
-$: {
+run(() => {
     locked = prettyNumbers($misc.balance[1])
     unlocked = prettyNumbers($misc.balance[0])
     total = prettyNumbers($misc.balance[0] + $misc.balance[1])
-}
+});
 </script>
 
-<div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="popup">
-    <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="popup-card">
+<div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 100 }}" class="popup">
+    <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="popup-card">
         <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
             <h3 style="color: var(--title-color)">Funds Status</h3>
             <Close on:click />

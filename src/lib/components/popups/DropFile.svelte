@@ -3,7 +3,7 @@
 import { fade } from 'svelte/transition'
 </script>
 
-<div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 170 }}" class="backdrop">
+<div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 170 }}" class="backdrop">
     <h2>Drop file here</h2>
 </div>
 
@@ -28,7 +28,7 @@ import { fade } from 'svelte/transition'
 }
 
 h2 {
-    color: white;
+    color: var(--title-color);
     font-family: 'Montserrat';
     font-size: 22px;
 }

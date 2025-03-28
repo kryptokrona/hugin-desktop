@@ -1,10 +1,14 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 let color = 'red'
-export let size = "24px"
+    /** @type {{size?: string}} */
+    let { size = "24px" } = $props();
 </script>
 
 <svg
-    on:click
+    onclick={bubble('click')}
     width={size}
     height={size}
     viewBox="0 0 24 24"

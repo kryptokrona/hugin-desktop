@@ -1,9 +1,12 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import { fade } from 'svelte/transition'
     import { audioSettings, mediaSettings } from '$lib/stores/mediasettings.js'
-    export let conference = false
-    let open
-    let changed
+    /** @type {{conference?: boolean}} */
+    let { conference = false } = $props();
+    let open = $state()
+    let changed = $state()
     let audioInput = $mediaSettings.devices.filter((a) => a.kind == 'audioinput')
     let audioOutput = $mediaSettings.devices.filter((a) => a.kind == 'audiooutput')
 
@@ -22,13 +25,13 @@
         }, 1000)
     }
 
-    let pickedInput
-    let pickedOutput
+    let pickedInput = $state()
+    let pickedOutput = $state()
 
-    $: {
+    run(() => {
         pickedInput = $audioSettings.audioInput
         pickedOutput = $audioSettings.audioOutput
-    }
+    });
 
     let input = true
     
@@ -38,14 +41,14 @@
 
 
     {#if open}
-        <div in:fade class="list layered-shadow">
+        <div in:fade|global class="list layered-shadow">
 
             <div>
                 <h4>Microphone</h4>
             </div>
 
                 {#each audioInput as src}
-                    <div on:click="{() => pickSource(src, true)}">
+                    <div onclick={() => pickSource(src, true)}>
                         <h5 class:picked={pickedInput === src.deviceId}>{src.label}</h5>
                     </div>
                 {/each}
@@ -55,14 +58,14 @@
             </div>
             
                 {#each audioOutput as src}
-                    <div on:click="{() => pickSource(src, false)}">
+                    <div onclick={() => pickSource(src, false)}>
                         <h5 class:picked={pickedOutput === src.deviceId}>{src.label}</h5>
                     </div>
                 {/each}
         </div>
     {/if}
                 
-            <div class="share" class:border_rgb="{changed}" class:open on:click="{() => (open = !open)}">
+            <div class="share" class:border_rgb="{changed}" class:open onclick={() => (open = !open)}>
                 <h5>Audio</h5>
             </div>
 

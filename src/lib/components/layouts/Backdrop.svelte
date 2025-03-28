@@ -1,24 +1,25 @@
 <script>
+    import { self } from 'svelte/legacy';
+
     //To handle true and false, or in this case show and hide.
     import { fade } from 'svelte/transition'
-    import { createEventDispatcher } from 'svelte';
-    
-    const dispatch = createEventDispatcher()
+    /** @type {{children?: import('svelte').Snippet, onClose: any}} */
+    let { children, onClose } = $props();
 
     const close = () => {
-        dispatch('close')
+        onClose()
     }
     
     </script>
 
 
 <div
-    on:click|self="{close}"
-    in:fade="{{ duration: 100 }}"
-    out:fade="{{ duration: 100 }}"
+    onclick={self(close)}
+    in:fade|global="{{ duration: 100 }}"
+    out:fade|global="{{ duration: 100 }}"
     class="backdrop">
-        <slot>
-        </slot>
+        {#if children}{@render children()}{:else}
+        {/if}
     </div>
 
 

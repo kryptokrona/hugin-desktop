@@ -1,40 +1,51 @@
 <script>
-    import {createEventDispatcher} from 'svelte'
+    import { run } from 'svelte/legacy';
+
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
     import { notify, swarm, user, rooms} from '$lib/stores/user.js'
     import { isLatin } from '$lib/utils/utils'
     
-    export let r
-    let channels = []
-    let voice_channel = []
-    let asian = false
-    let thisSwarm = false
-    $: channels
-    $: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-    $: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-    $: if (thisSwarm) voice_channel = thisSwarm.voice_channel
+    /** @type {{r: any, onPrintRoom: any}} */
+    let { r, onPrintRoom } = $props();
+    let channels = $state([])
+    let voice_channel = $state([])
+    let asian = $state(false)
+    let thisSwarm = $state(false)
+    run(() => {
+        channels
+    });
+    let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
+    run(() => {
+        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+    });
+    run(() => {
+        if (thisSwarm) voice_channel = thisSwarm.voice_channel
+    });
     
-    const dispatch = createEventDispatcher()
     
     const printRoom = (rm) => {
         const active = $swarm.active.find(a => a.key === rm.key)
         if (rm.key === $swarm.activeSwarm.key) return
         $swarm.activeSwarm = active
-        dispatch('print')
+        onPrintRoom()
     }
     
     const openRemove = () => {
         $rooms.removeRoom = !$rooms.removeRoom
     }
 
-    $: in_voice = voice_channel.some(a => a.address === $user.myAddress)
+    let in_voice = $derived(voice_channel.some(a => a.address === $user.myAddress))
     
-    $: if (thisSwarm) channels = thisSwarm.channels
+    run(() => {
+        if (thisSwarm) channels = thisSwarm.channels
+    });
     
-    $: counter = $notify.unread.filter(a => a.type === "room" && a.group === r.key).length
+    let counter = $derived($notify.unread.filter(a => a.type === "room" && a.group === r.key).length)
 
-    $: if (!isLatin(r.name)) asian = true
+    run(() => {
+        if (!isLatin(r.name)) asian = true
+    });
 
     const createNewChannel = () => {
         //Add to channels and notify others in the swarm
@@ -44,13 +55,13 @@
     
     <div
         class="card"
-        in:fade
-        out:fade
+        in:fade|global
+        out:fade|global
         class:active="{$swarm.activeSwarm?.key === r.key}"
-        on:click="{(e) => printRoom(r)}"
+        onclick={(e) => printRoom(r)}
     >
     
-        <img class="avatar" on:click={openRemove} src="data:image/png;base64,{get_avatar(r.key)}" alt="" />
+        <img class="avatar" onclick={openRemove} src="data:image/png;base64,{get_avatar(r.key)}" alt="" />
         <div class="content">
             <h4 class:asian class:big={asian}>{r.name}</h4>
             <div class="text">
@@ -59,7 +70,7 @@
             </div>
         </div>
         {#if counter > 0}
-        <div in:fade class="unread">
+        <div in:fade|global class="unread">
             <div class="count">
                 {counter}
             </div>

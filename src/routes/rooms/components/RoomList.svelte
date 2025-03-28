@@ -1,5 +1,7 @@
 <script>
-import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+   import { run } from 'svelte/legacy';
+
+import {onDestroy, onMount} from 'svelte'
 import {fade, fly} from 'svelte/transition'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import { misc, notify, swarm, rooms} from '$lib/stores/user.js'
@@ -9,16 +11,24 @@ import {sleep} from '$lib/utils/utils.js'
 import {flip} from 'svelte/animate'
 import Room from './Room.svelte'
 
-let roomList = []
-let room = ''
-let roomName
-$: roomList
+let roomList = $state([])
+let room = $state('')
+let roomName = $derived($rooms.thisRoom?.name)
+
+let {
+    onPrintRoom,
+    onRemoveRoom
+} = $props()
+
+
+run(() => {
+      roomList
+   });
 
 //This group name
-$: roomName = $rooms.thisRoom?.name
-$: show_groups = true
+
+let show_groups = $derived(true)
 	
-const dispatch = createEventDispatcher()
 const nogroup = {
         nick: 'No contacts',
         chat: 'Hugin Rooms',
@@ -84,7 +94,7 @@ const printRoom = async (room) => {
     $rooms.activeHugins = []
     const active = $swarm.active.find(a => a.key === room.key)
     $swarm.activeSwarm = active
-    dispatch('printRoom', room)
+    onPrintRoom(room)
     await sleep(150)
     readMessage(room)
 }
@@ -141,7 +151,7 @@ const removeRoom = async () => {
         $rooms.thisRoom = nogroup
     }
     $rooms.removeRoom = false
-    dispatch('removeRoom')
+    onRemoveRoom
     await sleep(100)
     filterActiveHugins()
 }
@@ -170,9 +180,11 @@ const addChannel = () => {
 }
 
 //Set group key
-$: if ($rooms.thisRoom?.key) {
-    room = $rooms.thisRoom.key
-}
+run(() => {
+      if ($rooms.thisRoom?.key) {
+       room = $rooms.thisRoom.key
+   }
+   });
 
 function flipper(node, {
 		delay = 0,
@@ -193,8 +205,8 @@ function flipper(node, {
     // }
 </script>
 
-<div class="wrapper" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
-    <div class="top" in:fly="{{ y: 50 }}"  out:fly="{{ y: -50 }}">
+<div class="wrapper" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
+    <div class="top" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
         {#if show_groups}
             <h2>Rooms</h2>
             <br />
@@ -211,10 +223,10 @@ function flipper(node, {
         {/if}
        
     </div>
-            <div class="list-wrapper"  in:fly="{{ y: 50 }}">
+            <div class="list-wrapper"  in:fly|global="{{ y: 50 }}">
                 {#each roomList as room (room.key)}
                     <div animate:flip="{{duration: 250}}">
-                        <Room r="{room}" on:print="{() => printRoom(room)}" />
+                        <Room r="{room}" onPrintRoom="{() => printRoom(room)}" />
                     </div>
                 {/each}
             </div>
@@ -224,7 +236,7 @@ function flipper(node, {
 {#if $rooms.removeRoom}
     <RemoveGroup r={true}
         on:click="{() => ($rooms.removeRoom = false)}"
-        on:remove="{() => removeRoom($rooms.thisRoom)}"
+        onRemove="{() => removeRoom($rooms.thisRoom)}"
     />
 {/if}
 
@@ -307,7 +319,7 @@ h4 {
 
 h2 {
     margin: 0;
-    color: #fff;
+    color: var(--title-color);
     font-family: 'Montserrat';
     font-weight: bold;
     font-size: 22px;
@@ -325,13 +337,13 @@ p {
 
 .active_hugins {
     padding: 1rem;
-    color: white;
+    color: var(--title-color);
     border-bottom: 1px solid var(--border-color);
 }
 
 .add {
     font-size: 15px;
-    color: white;
+    color: var(--title-color);
 }
 
 .content {

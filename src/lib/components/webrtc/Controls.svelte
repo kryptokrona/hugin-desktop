@@ -1,4 +1,7 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 import VideoIcon from '$lib/components/icons/VideoIcon.svelte'
 import VideoSlash from '$lib/components/icons/VideoSlash.svelte'
 import MicIcon from '$lib/components/icons/MicIcon.svelte'
@@ -17,9 +20,9 @@ import AudioSources from '$lib/components/webrtc/AudioSources.svelte'
 import ScreenSources from '$lib/components/webrtc/ScreenSources.svelte'
 
 let muted = false
-let video = true
+let video = $state(true)
 let startTime = Date.now()
-let time = '0:00:00'
+let time = $state('0:00:00')
 let timer
 
 onMount(() => {
@@ -95,29 +98,29 @@ const hideGrid = () => {
 
 <div class="wrapper layered-shadow">
     <div>
-        <div on:click>
+        <div onclick={bubble('click')}>
             <p>{time}</p>
         </div>
     </div>
     <div class="controls">
-        <div class="icon" on:click="{toggleVideo}">
+        <div class="icon" onclick={toggleVideo}>
             {#if !video}
                 <VideoSlash />
             {:else}
                 <VideoIcon grid="{true}" />
             {/if}
         </div>
-        <div class="icon" on:click="{toggleAudio}">
+        <div class="icon" onclick={toggleAudio}>
             {#if $webRTC.audio}
                 <MicIcon />
             {:else}
                 <MuteIcon />
             {/if}
         </div>
-        <div class="icon" on:click="{switchStream}">
+        <div class="icon" onclick={switchStream}>
             <ScreenSources />
         </div>
-        <div class="icon" on:click="{endCall}">
+        <div class="icon" onclick={endCall}>
             <CallSlash />
         </div>
         <div class="icon">
@@ -132,11 +135,11 @@ const hideGrid = () => {
             <AudioSources conference={false}/>
         </div>
     </div>
-    <div class="icon" on:click="{() => hideGrid()}">
+    <div class="icon" onclick={() => hideGrid()}>
         <HideVideoGrid />
     </div>
     <div>
-        <div class="icon" on:click="{() => showMessages()}">
+        <div class="icon" onclick={() => showMessages()}>
             <MessageIcon />
         </div>
     </div>

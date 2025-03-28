@@ -1,22 +1,26 @@
 <script>
+    import { run, preventDefault } from 'svelte/legacy';
+
     import {fade} from 'svelte/transition'
     import {misc, user} from '$lib/stores/user.js'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
     import { getBestNode } from '$lib/stores/nodes'
-    let mnemonic = ''
-    let blockHeight
-    let password = ''
-    let confirmPassword = ''
+    let mnemonic = $state('')
+    let blockHeight = $state()
+    let password = $state('')
+    let confirmPassword = $state('')
     let completed = false
-    let username = ''
-    let walletName = ''
+    let username = $state('')
+    let walletName = $state('')
     let nodeInput = ''
-    let step = 1
-    let showNodes = false
-    let loading = false
-    $: walletName = username
+    let step = $state(1)
+    let showNodes = $state(false)
+    let loading = $state(false)
+    run(() => {
+        walletName = username
+    });
 
     const enter = (e) => {
         if (e.key === 'Enter' && password.length && step === 3) {
@@ -28,7 +32,7 @@
 
     const handleLogin = (e) => {
         blockHeight ? blockHeight : 0
-        nodeInput = e.detail.node
+        nodeInput = e.node
         $misc.loading = true
         let accountData = {
             walletName,
@@ -62,11 +66,11 @@
         return handleLogin(event)
     }
 
-    $: {
+    run(() => {
         step
         username
         blockHeight
-    }
+    });
 
     function createAcc() {
         $user.restore = false
@@ -88,10 +92,10 @@
 
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}"/>
-<div class="main" in:fade>
+<svelte:window onkeyup={preventDefault(enter)}/>
+<div class="main" in:fade|global>
     {#if step === 1 && $user.restore}
-        <div in:fade class="wrapper">
+        <div in:fade|global class="wrapper">
             <h2>Please enter your mnemonic seed</h2>
 
             <input
@@ -126,7 +130,7 @@
     {/if}
 
     {#if step === 1 && !$user.restore}
-        <div in:fade class="wrapper">
+        <div in:fade|global class="wrapper">
             <h2>Enter your username</h2>
             <input type="text" spellcheck="false" placeholder="Username" bind:value="{username}"/>
 
@@ -141,7 +145,7 @@
             </div>
         </div>
     {:else if step === 2}
-        <div in:fade class="wrapper">
+        <div in:fade|global class="wrapper">
             <h1>Create wallet</h1>
             <input type="password" placeholder="Password" bind:value="{password}"/>
             <input type="password" placeholder="Confirm Password" bind:value="{confirmPassword}"/>
@@ -163,11 +167,11 @@
             </div>
         </div>
     {:else if step === 3}
-    <div in:fade class="wrapper">
+    <div in:fade|global class="wrapper">
         <h1>Node</h1>
         <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
         <div class="nodes" class:show={showNodes}>
-            <NodeSelector on:back="{() => (showNodes = false)}" on:connect="{(e) => handleLogin(e)}"/>
+            <NodeSelector goBack="{() => (showNodes = false)}" onConnect="{(e) => handleLogin(e)}"/>
         </div>
             <FillButton disabled="{false}" text="Custom" on:click="{() => (showNodes = true)}"/>
             

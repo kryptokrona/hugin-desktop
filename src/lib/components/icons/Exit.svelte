@@ -1,7 +1,7 @@
 <script>
-import { createEventDispatcher } from 'svelte/internal'
-
-const dispatch = createEventDispatcher()
+    let {
+    onRemove
+    } = props()
 let color = '#f5f5f5'
 
 const iconGlow = () => {
@@ -10,12 +10,12 @@ const iconGlow = () => {
         color = '#f5f5f5'
     }, 900)
 
-    dispatch('remove')
+    onRemove()
 }
 </script>
 
 <svg
-    on:click="{iconGlow}"
+    onclick={iconGlow}
     width="24px"
     height="24px"
     viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ const iconGlow = () => {
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -40,7 +40,7 @@ const iconGlow = () => {
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -49,7 +49,7 @@ const iconGlow = () => {
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>

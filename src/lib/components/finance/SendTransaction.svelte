@@ -1,15 +1,19 @@
+<!-- @migration-task Error while migrating Svelte code: Event attribute must be a JavaScript expression, not a string -->
 <script>
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import { rooms, transactions } from '$lib/stores/user.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { page } from '$app/stores'
+	import { run } from 'svelte/legacy';
 
-const dispatch = createEventDispatcher()
+let inRoom = $derived($page.url.pathname === '/rooms')
 
-$: inRoom = $page.url.pathname === '/rooms'
+let {
+    onSendTx
+} = $props()
+
 
 const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)
@@ -24,13 +28,12 @@ let paymentId = ''
 let pass
 let verify = false
 
-$: {
+run(() => {
     if (amount > 0) {
         enableButton = true
     }
-}
+})
 
-$: pass
 
 const keyDown = async (e) => {
     if (e.key === 'Enter' && amount.length > 0 && !verify) {
@@ -49,7 +52,7 @@ const close = () => {
 
 // Dispatch the inputted data
 const sendTransaction = () => {
-    dispatch('send', {
+    onSendTx( {
         to: addr,
         amount: parseInt(amount) * 100000,
         paymentId: undefined,
@@ -70,13 +73,13 @@ const confirmTx = async () => {
 <svelte:window on:keyup|preventDefault="{keyDown}" />
 
 <div
-    on:click|self="{close}"
-    in:fade="{{ duration: 100 }}"
-    out:fade="{{ duration: 100 }}"
+    onclick="{close}"
+    in:fade|global="{{ duration: 100 }}"
+    out:fade|global="{{ duration: 100 }}"
     class="backdrop"
 >
     {#if !verify}
-    <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
+    <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
         {#await check_avatar(addr)}
         {:then avatar}
         {#if avatar}
@@ -99,7 +102,7 @@ const confirmTx = async () => {
             spellcheck="false"
             autocomplete="false"
             bind:value="{amount}"
-            oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+            oninput="{amount.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')}"
         />
         <FillButton
             on:click="{() => verify = true}"
@@ -109,7 +112,7 @@ const confirmTx = async () => {
         />
     </div>
     {:else}
-    <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
+    <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
         <input
             placeholder="Enter password"
             spellcheck="false"
@@ -128,7 +131,7 @@ const confirmTx = async () => {
 </div>
 
 <style lang="scss">
-.field {
+    .field {
     display: flex;
     justify-content: space-between;
     align-items: center;

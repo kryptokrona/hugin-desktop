@@ -1,7 +1,9 @@
 <script>
+  import { run } from 'svelte/legacy';
+
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+import { onDestroy, onMount } from 'svelte'
 import { audioLevel, user, swarm, rooms } from '$lib/stores/user.js'
 import Minus from '../icons/Minus.svelte'
 import Plus from '../icons/Plus.svelte'
@@ -11,18 +13,15 @@ import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
 import { audioSettings } from '$lib/stores/mediasettings'
 import MuteIcon from '../icons/MuteIcon.svelte'
 import Screenshare from '../icons/Screenshare.svelte'
-let peerVideo = document.getElementById('peerVideo')
-let peerAudio
+let peerVideo = $state(document.getElementById('peerVideo'))
+let peerAudio = $state()
 let peerStream
-let thisWindow = false
-let windowCheck = false
+let thisWindow = $state(false)
+let windowCheck = $state(false)
 let audio = false
-let status = {}
-export let active = true
-export let call
-export let channel = []
-
-const dispatch = createEventDispatcher()
+let status = $state({})
+  /** @type {{active?: boolean, call: any, channel?: any}} */
+  let { active = true, call, channel = [] } = $props();
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
@@ -36,7 +35,9 @@ onMount(() => {
     windowCheck = true
 })
 
-$: status = channel?.find(a => a.address === call.chat)
+run(() => {
+    status = channel?.find(a => a.address === call.chat)
+  });
 
 async function setName() {
     if (!active) {
@@ -73,31 +74,35 @@ const changeAudioSource = async (src, input) => {
 onDestroy(() => {
    // peerVideo.pause()
 })
-let isTalking = false
+let isTalking = $state(false)
 
-$: if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.chat)) {
-    isTalking = true
-} else {
-    isTalking = false
-}
+run(() => {
+    if ($audioLevel.call.some((a) => a.activeVoice == true && a.chat === call.chat)) {
+      isTalking = true
+  } else {
+      isTalking = false
+  }
+  });
 
-$: address = active ? call.chat : call.address
+let address = $derived(active ? call.chat : call.address)
 
-$:  if (thisWindow && windowCheck) {
-        console.log('This window reactive')
-        if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
-            thisWindow.size = 0
-            $videoGrid.showChat = false
-            $videoGrid.hideMyVideo = true
-            
-        }
-        //Multiview reset test 
-        if ($videoGrid.multiView && thisWindow.size !== 1) {
-            thisWindow.size = 1
-            $videoGrid.showChat = false
-            $videoGrid.hideMyVideo = false
-        }
-    }
+run(() => {
+    if (thisWindow && windowCheck) {
+          console.log('This window reactive')
+          if ($videoGrid.peerVideos.some(a => a.size === 2 && a.chat !== call.chat) && thisWindow.size > 0) {
+              thisWindow.size = 0
+              $videoGrid.showChat = false
+              $videoGrid.hideMyVideo = true
+              
+          }
+          //Multiview reset test 
+          if ($videoGrid.multiView && thisWindow.size !== 1) {
+              thisWindow.size = 1
+              $videoGrid.showChat = false
+              $videoGrid.hideMyVideo = false
+          }
+      }
+  });
 
 const resize = (size) => {
     if (!active) return
@@ -137,22 +142,26 @@ const resize = (size) => {
     console.log('Updating resize thiswindow', thisWindow.size)
   }
 
-  let showWindow = false
+  let showWindow = $state(false)
 
-  $: thisWindow
+  run(() => {
+    thisWindow
+  });
     
-  $: {
+  run(() => {
     if ($swarm.showVideoGrid) {
         showWindow = true
     } else if ($videoGrid.showVideoGrid) showWindow = true
     else showWindow = false
-  }
+  });
 
-  let many = false
+  let many = $state(false)
 
-  $: if ($swarm.call.length > 4) {
-    many = true
-  } else many = false
+  run(() => {
+    if ($swarm.call.length > 4) {
+      many = true
+    } else many = false
+  });
 
   const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)
@@ -161,9 +170,9 @@ const resize = (size) => {
     }
 </script>
 
-<div class="card" in:fly={{ x: -150}} class:many={many} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1 && !many} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
+<div class="card" in:fly|global={{ x: -150}} out:fly|global={{ x: 150}} class:many={many} class:show={showWindow} class:talking="{isTalking}" class:min={thisWindow.size === 1 && !many} class:hide={thisWindow.size === 0} class:max={thisWindow.size === 2} class:medium={thisWindow.size === 3}>
 
-    <video in:fade id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
+    <video in:fade|global id="peerVideo" playsinline autoplay bind:this="{peerVideo}"></video>
     <audio autoplay  bind:this="{peerAudio}"></audio>
     {#await setName() then contact}
     <div class="status">
@@ -194,7 +203,7 @@ const resize = (size) => {
         {/if}
         {/await}
   
-    <div in:fade class="fade">
+    <div in:fade|global class="fade">
         <div class="toggles">
           <Minus on:click={()=> resize('min')}/>
           <Plus on:click={()=> resize('medium')}/>
@@ -340,7 +349,7 @@ p {
     
     &:hover {
         opacity: 0.9;
-        background-image: linear-gradient(180deg, #00000000, #000000);
+        background-image: linear-gradient(180deg, var(--fade-color), var(--fade-to-color));
         pointer-events: visible;
     }
     .toggles {

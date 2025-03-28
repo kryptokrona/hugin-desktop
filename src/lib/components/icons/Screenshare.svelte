@@ -1,18 +1,23 @@
 <script>
-import { videoSettings } from '$lib/stores/mediasettings'
-let color = '#f5f5f5'
-export let voice
-export let size = "24px"
+    import { run, createBubbler } from 'svelte/legacy';
 
-$: if ($videoSettings.myVideo && $videoSettings.screenshare && !voice) {
-    color = '#4dbb45'
-} else if (!$videoSettings.screenshare && !voice) {
-    color = '#f5f5f5'
-}
+    const bubble = createBubbler();
+import { videoSettings } from '$lib/stores/mediasettings'
+let color = $state('#f5f5f5')
+    /** @type {{voice: any, size?: string}} */
+    let { voice, size = "24px" } = $props();
+
+run(() => {
+        if ($videoSettings.myVideo && $videoSettings.screenshare && !voice) {
+        color = '#4dbb45'
+    } else if (!$videoSettings.screenshare && !voice) {
+        color = 'var(--text-color)'
+    }
+    });
 </script>
 
 <svg
-    on:click
+    onclick={bubble('click')}
     version="1.1"
     width={size}
     height={size}

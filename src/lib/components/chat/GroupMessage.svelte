@@ -1,7 +1,9 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
-import { createEventDispatcher, onMount, onDestroy } from 'svelte'
+import {  onMount, onDestroy } from 'svelte'
 import { groups, rtc_groups, webRTC, user, rooms, transactions } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
@@ -23,65 +25,61 @@ import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
 
-export let msg
-export let msgFrom
-export let group
-export let reply = ''
-export let myMsg
-export let timestamp
-export let nickname = 'Anonymous'
-export let hash
-export let message
-export let reply_to_this = false
-export let rtc = false
-export let joined = false
-export let file = false
-export let room = false
-export let admin = false
-export let tip = false
+    /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
+    let {
+        msg,
+        msgFrom,
+        group,
+        reply = '',
+        myMsg,
+        timestamp,
+        nickname = 'Anonymous',
+        hash,
+        message,
+        reply_to_this = $bindable(false),
+        rtc = false,
+        joined = false,
+        file = false,
+        room = false,
+        admin = false,
+        tip = false,
+        ReplyTo,
+        ReactTo,
+        DeleteMessage,
+    } = $props();
+let tipMessage = $state("");
+    
 
-$: tipMessage = ""
-$: if (tip !== "") {
-    try {
-        tipMessage = JSON.parse(tip)
-    } catch(e) {
-        tipMessage = tip
-    }
-}
-
-$: positionEmojiContainer(openEmoji);
 
 let thisreply = ''
-let openEmoji  = false
-let messageContainer
-let emojiPicker
-let has_reaction = false
-let reactions = []
+let openEmoji  = $state(false)
+let messageContainer = $state()
+let emojiPicker = $state()
+let has_reaction = $state(false)
+let reactions = $state([])
 let react = false
-let replyMessage = false
+let replyMessage = $state(false)
 let showUserActions = false
 let emojiMessage = false
-let youtube = false
-let embed_code
-let youtubeLink = false
-let openLink = false
-let link = false
-let messageText
-let messageLink = ""
+let youtube = $state(false)
+let embed_code = $state()
+let youtubeLink = $state(false)
+let openLink = $state(false)
+let link = $state(false)
+let messageText = $state()
+let messageLink = $state("")
 let youtube_shared_link_type = false
-let asian = false
-let showMenu = false
+let asian = $state(false)
+let showMenu = $state(false)
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
         );
 
-const dispatch = createEventDispatcher()
-
-let offchain = false
-let thisReply = false
-let replyError = false
-let timeformat = "HH:mm"
+let offchain = $state(false)
+let thisReply = $state(false)
+let replyError = $state(false)
+let timeformat = $state("HH:mm")
 if ((Date.now() - 40000000) > timestamp) {
     //Show date also for older messages
     timeformat = "D MMM, HH:mm"
@@ -160,22 +158,22 @@ async function checkreply(reply) {
 const replyTo = () => {
     // reply_to_this = true
     // Dispatch the inputted data
-    dispatch('replyTo', {
+    ReplyTo({
         reply: 'reply',
     })
 }
 
 const sendReactMsg = (e) => {
-    console.log('wanna send', e.detail)
-    dispatch('reactTo', {
-        text: e.detail.msg,
+    console.log('wanna send', e)
+    ReactTo({
+        text: e.msg,
         reply: hash,
     })
 }
 
 const reactTo = (e) => {
     console.log('reactto', e)
-    dispatch('reactTo', {
+    ReactTo({
         text: e.detail.unicode,
         reply: hash,
     })
@@ -210,52 +208,19 @@ const positionEmojiContainer = (open) => {
 
 const deleteMsg = (e) => {
     console.log('delete', e)
-    dispatch('deleteMsg', {
+    DeleteMessage({
         hash: hash
     })
 }
 
 
-$: if ($groups.replyTo.reply == false) {
-    reply_to_this = false
-} else if ($groups.replyTo.to == hash) {
-    reply_to_this = true
-}
-
-$: if ($rooms.replyTo.to !== hash) {
-    reply_to_this = false
-} else if ($rooms.replyTo.to == hash) {
-    reply_to_this = true
-}
-
-$: if ($rtc_groups.replyTo.reply == false) {
-    reply_to_this = false
-} else if ($rtc_groups.replyTo.to == hash) {
-    reply_to_this = true
-}
-
-$: reactions
-
-$: if (message.react) {
-    let thisemoji = {}
-    reactions = message.react.filter((a) => !thisemoji[a.message] && (thisemoji[a.message] = true))
-    has_reaction = true
-}
 
 
-$: if ($webRTC.groupCall || rtc) {
-    offchain = true
-} else {
-    offchain = false
-}
 
-//Open youtube links and check embed code
-$: if (openLink) {
-    if (messageLink.includes('&amp;list')) {
-        messageLink = messageLink.split('&amp;list')[0]
-    }
-    setEmbedCode()
-}
+
+
+
+
 
 const checkLink = () => {
         if (messageLink.includes('&list')) {
@@ -297,12 +262,72 @@ const sendMoney = () => {
     }
 }
 
+
+run(() => {
+        if (tip !== "") {
+        try {
+            tipMessage = JSON.parse(tip)
+        } catch(e) {
+            tipMessage = tip
+        }
+    }
+    });
+run(() => {
+        positionEmojiContainer(openEmoji);
+    });
+run(() => {
+        if ($groups.replyTo.reply == false) {
+        reply_to_this = false
+    } else if ($groups.replyTo.to == hash) {
+        reply_to_this = true
+    }
+    });
+run(() => {
+        if ($rooms.replyTo.to !== hash) {
+        reply_to_this = false
+    } else if ($rooms.replyTo.to == hash) {
+        reply_to_this = true
+    }
+    });
+run(() => {
+        if ($rtc_groups.replyTo.reply == false) {
+        reply_to_this = false
+    } else if ($rtc_groups.replyTo.to == hash) {
+        reply_to_this = true
+    }
+    });
+run(() => {
+        if (message.react) {
+        let thisemoji = {}
+        reactions = message.react.filter((a) => !thisemoji[a.message] && (thisemoji[a.message] = true))
+        has_reaction = true
+    }
+    });
+run(() => {
+        reactions
+    });
+run(() => {
+        if ($webRTC.groupCall || rtc) {
+        offchain = true
+    } else {
+        offchain = false
+    }
+    });
+//Open youtube links and check embed code
+run(() => {
+        if (openLink) {
+        if (messageLink.includes('&amp;list')) {
+            messageLink = messageLink.split('&amp;list')[0]
+        }
+        setEmbedCode()
+    }
+    });
 </script>
 
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade="{{ duration: 150 }}" on:mouseleave="{ () => { openEmoji = false;  showMenu = false}}">
+<div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}}>
     <div>
         {#if replyMessage}
             {#if thisReply}
@@ -316,7 +341,7 @@ const sendMoney = () => {
                     </div>
                 </div>
             {:else if replyError}
-                <div in:fade="{{ duration: 150 }}" class="reply">
+                <div in:fade|global="{{ duration: 150 }}" class="reply">
                     <img
                         class="reply_avatar"
                         src="data:image/png;base64,{get_avatar(
@@ -363,7 +388,7 @@ const sendMoney = () => {
                         <div class="emojiContainer">
                             <emoji-picker bind:this={emojiPicker}></emoji-picker>
                         </div>
-                        <button alt="React with emoji" class="emoji-button" on:click={() => { openEmoji = !openEmoji }}>
+                        <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
                             <Emoji size="16px" stroke={"var(--text-color)"}/>
                         </button>
                     </div>
@@ -388,7 +413,7 @@ const sendMoney = () => {
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
             {:else if link}
-                <p class:rtc style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                <p class:rtc style="user-select: text; font-weight: bold; cursor: pointer;" onclick={openLinkMessage(messageLink)}>{messageLink}</p>
                 <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if emojiMessage}
                 <p class:rtc class="emoji">{msg}</p>
@@ -407,7 +432,7 @@ const sendMoney = () => {
             {#if has_reaction}
                 {#each reactions as reaction}
                     <Reaction
-                        on:sendReaction="{(e) => sendReactMsg(e)}"
+                        onSendReaction="{(e) => sendReactMsg(e)}"
                         thisReaction="{reaction}"
                         reacts="{message.react}"
                         emoji="{reaction.message}"
@@ -425,7 +450,7 @@ const sendMoney = () => {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
     padding: 10px 10px 10px 20px;
     border: 1px solid transparent;
     white-space: pre-line;

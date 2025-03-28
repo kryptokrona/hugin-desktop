@@ -9,7 +9,7 @@ export const user = writable({
     huginAddress: '',
     myAddress: '',
     callerMenu: false,
-    contacts: null,
+    contacts: [],
     addChat: false,
     rename: false,
     transactions: [],
@@ -18,13 +18,13 @@ export const user = writable({
     downloadPath: "",
     customAvatar: false,
     idleTime: 0,
-    idleLimit: 300
+    idleLimit: 300,
 })
 
 export const boards = writable({
     addBoard: false,
     replyTo: {reply: false},
-    thisBoard: null,
+    thisBoard: "",
     boardsArray: ['Home'],
     newBoards: [],
 })
@@ -59,7 +59,7 @@ export const misc = writable({
     os: '',
     loading: false,
     syncStatus: false,
-    deleteAfter: null,
+    deleteAfter: undefined,
     focus: false,
     welcomeAddress: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
     syncImages: []
@@ -144,6 +144,8 @@ export const rooms = writable({
  })
 
  export const files = writable([])
+
+ export const theme = writable(localStorage.getItem("themes") ?? 'dark');
 
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {

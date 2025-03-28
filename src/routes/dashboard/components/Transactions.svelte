@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
     import {user} from '$lib/stores/user.js'
     import {fade} from 'svelte/transition'
     import {onMount} from 'svelte'
@@ -6,9 +8,9 @@
     import Backward from '$lib/components/icons/Backward.svelte'
     import Time from 'svelte-time'
 
-    let pageNum = 0
-    let pages
-    let txList = []
+    let pageNum = $state(0)
+    let pages = $state()
+    let txList = $state([])
     onMount(() => {
         getTransactions(pageNum)
     })
@@ -25,12 +27,16 @@
         console.log(transactions)
     }
 
-    $: pageNum
-    $: txList
-    $: page = pageNum + 1
+    run(() => {
+        pageNum
+    });
+    run(() => {
+        txList
+    });
+    let page = $derived(pageNum + 1)
 </script>
 
-<div in:fade class="wrapper">
+<div in:fade|global class="wrapper">
     <div class="header">
         <h3 style="font-weight: 800">Transactions</h3>
 

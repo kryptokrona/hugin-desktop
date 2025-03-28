@@ -1,18 +1,21 @@
 <script>
+	import { preventDefault } from 'svelte/legacy';
+
 import { sleep } from "$lib/utils/utils"
 import { onMount } from "svelte"
 
-	export let src
+	/** @type {{src: any}} */
+	let { src } = $props();
 
 	// These values are bound to properties of the video
-	let time = 0;
-	let duration;
-	let paused = true;
-	let showControls = true;
+	let time = $state(0);
+	let duration = $state();
+	let paused = $state(true);
+	let showControls = $state(true);
 	let showControlsTimeout;
 	// Used to track time of last mouse down event
 	let lastMouseDown;
-	let video
+	let video = $state()
 
 	const NOT_FOUND = "File not found"
     const OTHER = "File"
@@ -80,10 +83,10 @@ import { onMount } from "svelte"
 	<video
         id="videoPlayer"
 		bind:this={video}
-		on:mousemove={handleMove}
-		on:touchmove|preventDefault={handleMove}
-		on:mousedown={handleMousedown}
-		on:mouseup={handleMouseup}
+		onmousemove={handleMove}
+		ontouchmove={preventDefault(handleMove)}
+		onmousedown={handleMousedown}
+		onmouseup={handleMouseup}
 		bind:currentTime={time}
 		bind:duration
 		bind:paused>
@@ -91,7 +94,7 @@ import { onMount } from "svelte"
 	</video>
 
 	<div class="controls" style="opacity: {duration && showControls ? 1 : 0}">
-		<progress value="{(time / duration) || 0}"/>
+		<progress value="{(time / duration) || 0}"></progress>
 
 		<div class="info">
 			<span class="time">{format(time)}</span>

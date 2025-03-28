@@ -1,16 +1,20 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
     import { page } from '$app/stores'
     import {fade} from 'svelte/transition'
     
-    export let tab
+    /** @type {{tab: any}} */
+    let { tab } = $props();
 
     </script>
     
     <div
         class="card"
-        in:fade
-        out:fade
-        on:click
+        in:fade|global
+        out:fade|global
+        onclick={bubble('click')}
         class:active="{tab.route === $page.url.pathname}"
 
     >

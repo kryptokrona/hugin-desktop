@@ -1,9 +1,9 @@
 <svg width="60" viewBox="0 0 349 125" version="1.1" xmlns="http://www.w3.org/2000/svg">
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Group-5" fill="#FFFFFF60">
+        <g id="Group-5" fill="var(--text-color)">
             <rect
                 id="Rectangle"
-                stroke="#FFFFFF60"
+                stroke="var(--text-color)"
                 stroke-width="7"
                 fill-opacity="0.172421329"
                 x="3.5"

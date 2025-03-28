@@ -1,5 +1,7 @@
 <script>
-  import {createEventDispatcher, onDestroy, onMount} from 'svelte'
+  import { run } from 'svelte/legacy';
+
+  import { onDestroy, onMount} from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
   import {boards, webRTC, groups, beam, swarm} from '$lib/stores/user.js'
   import {page} from '$app/stores'
@@ -9,16 +11,16 @@
   import 'emoji-picker-element';
   import {sleep} from "$lib/utils/utils.js";
 
-  const dispatch = createEventDispatcher()
-  export let rtc = false
+  /** @type {{rtc?: boolean}} */
+  let { rtc = false, onMessage } = $props();
 
-  let openEmoji;
-  let emojiPicker
-  let messageField
-  let off_chain
-  let mount = false
-  let activeBeam = false
-  let to = ""
+  let openEmoji = $state();
+  let emojiPicker = $state()
+  let messageField = $state()
+  let off_chain = $state()
+  let mount = $state(false)
+  let activeBeam = $state(false)
+  let to = $state("")
   let shiftKey
 
   onMount(async () => {
@@ -56,6 +58,7 @@
 
   //This handles the emojis, lets fork the repo and make a darker theme.
   function onEmoji(emoji) {
+    console.log("Emoji!", emoji)
     if (messageInput) {
       messageInput += emoji
     } else messageInput = emoji
@@ -63,16 +66,16 @@
   }
 
   //Input data to dispatch
-  let messageInput = ""
+  let messageInput = $state("")
 
   //To handle button disabled enabled
-  let enableSend = false
+  let enableSend = $state(false)
 
   //Dispatches the input data to parent and resets input.
   const sendMsg = () => {
     //Trim spaces
     let msg = messageInput.trim()
-    dispatch('message', {
+    onMessage({
       text: msg,
       offChain: off_chain,
       beam: activeBeam,
@@ -82,12 +85,7 @@
     messageInput = ''
   }
 
-  //Checks if input is empty
-  $: {
-    enableSend = !!messageInput
-  }
 
-  $: if (messageInput.length < 2) resetInputHeight()
   
 
   const resetInputHeight = () => {
@@ -97,42 +95,17 @@
     messageField.style.cssText = 'height: 40px';
   }
 
-  $: {
-    if ($user.activeChat) {
-      off_chain = $webRTC.call.some((a) => a.chat == $user.activeChat.chat && a.connected)
-    }
-  }
 
-  $: if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
-    fieldFocus()
-  }
 
-  $: if ($videoGrid.showChat && $videoGrid.showVideoGrid) {
-    fieldFocus()
-  }
 
   async function fieldFocus() {
     await sleep(200)
     messageField.focus()
   }
 
-  $: {
-    if ($swarm.active.length) {
-      activeBeam = $swarm.active.some(a => a.chat === $user.activeChat.chat && a.connections.some(a => a.address === $user.activeChat.chat))
-    } else {
-      activeBeam = false
-    }
-  }
 
-  let activeSwarm = false
+  let activeSwarm = $state(false)
 
-  $: {
-    if ($swarm.active.length) {
-      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key && $swarm.showVideoGrid);
-    } else {
-      activeSwarm = false
-    }
-  }
 
   function autosize() {
     console.log(messageField.scrollHeight)
@@ -142,40 +115,77 @@
     }
   }
 
-  $:
+
+  //Checks if input is empty
+  run(() => {
+    enableSend = !!messageInput
+  });
+  run(() => {
+    if (messageInput.length < 2) resetInputHeight()
+  });
+  run(() => {
+    if ($user.activeChat) {
+      off_chain = $webRTC.call.some((a) => a.chat == $user.activeChat.chat && a.connected)
+    }
+  });
+  run(() => {
+    if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
+      fieldFocus()
+    }
+  });
+  run(() => {
+    if ($videoGrid.showChat && $videoGrid.showVideoGrid) {
+      fieldFocus()
+    }
+  });
+  run(() => {
+    if ($swarm.active.length) {
+      activeBeam = $swarm.active.some(a => a.chat === $user.activeChat.chat && a.connections.some(a => a.address === $user.activeChat.chat))
+    } else {
+      activeBeam = false
+    }
+  });
+  run(() => {
+    if ($swarm.active.length) {
+      activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key && $swarm.showVideoGrid);
+    } else {
+      activeSwarm = false
+    }
+  });
+  run(() => {
     if (mount) {
-    if ($page.url.pathname === '/groups') {
-      to = $groups.thisGroup.name
-      if (activeSwarm) {
-        //Show channel name
-        if ($swarm.activeChannel.name.length) to = "#" + $swarm.activeChannel.name
+      if ($page.url.pathname === '/groups') {
+        to = $groups.thisGroup.name
+        if (activeSwarm) {
+          //Show channel name
+          if ($swarm.activeChannel.name.length) to = "#" + $swarm.activeChannel.name
+        }
       }
+
+      if ($page.url.pathname === '/messages') {
+        to = $user.activeChat.name
+      }
+
     }
-
-    if ($page.url.pathname === '/messages') {
-      to = $user.activeChat.name
-    }
-
-  }
-
+  });
 </script>
 
-<svelte:window on:keyup="{keyup}" on:keydown="{keydown}"/>
+<svelte:window onkeyup={keyup} onkeydown={keydown}/>
 
 <div class="wrapper" class:rtc
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" on:click={() => openEmoji = false}></textarea>
+    <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" onclick={() => openEmoji = false}></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="display: flex">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
             <emoji-picker bind:this={emojiPicker}></emoji-picker>
         </div>
-        <div class="emoji-button" on:click={() => openEmoji = !openEmoji}>
+        <div class="emoji-button" onclick={() => openEmoji = !openEmoji}>
             <Emoji/>
         </div>
     </div>
-    <div class="button" disabled="{!enableSend}" class:enableSend on:click="{sendMsg}">
+    <div class="button" disabled="{!enableSend}" class:enableSend onclick={sendMsg}>
         <SendIcon/>
     </div>
 </div>
@@ -203,10 +213,10 @@
   textarea {
     overflow: auto;
     box-sizing: padding-box;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--background-color);
     border: none;
     border-radius: 8px 0 0 8px;
-    color: #ffffff;
+    color: var(--text-color);
     display: block;
     width: inherit;
     padding: 10px 15px;
@@ -230,15 +240,15 @@
     justify-content: center;
     align-items: center;
     width: 40px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--background-color);
     border-radius: 0 9px 9px 0;
     height: 100%;
-    color: white;
+    color: var(--text-color);
     margin: 0;
     cursor: pointer;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.2);
+      opacity: 0.9;
     }
   }
 
@@ -247,18 +257,18 @@
     justify-content: center;
     align-items: center;
     width: 40px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--background-color);
     height: 100%;
     cursor: pointer;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.2);
+      opacity: 0.9;
     }
   }
 
   .enableSend {
     background-color: var(--success-color);
-    color: #fff;
+    color: var(--text-color);
     font-weight: 600;
   }
 

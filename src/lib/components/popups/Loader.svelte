@@ -1,17 +1,20 @@
 <script>
+    import { createBubbler, self } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 import { Moon } from 'svelte-loading-spinners'
 </script>
 
 <div
-    in:fade|local="{{ duration: 150 }}"
-    out:fade|local="{{ delay: 300, duration: 170 }}"
+    in:fade="{{ duration: 150 }}"
+    out:fade="{{ delay: 300, duration: 170 }}"
     class="backdrop"
-    on:click|self
+    onclick={self(bubble('click'))}
 >
-    <div class="card" in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}">
-        <p in:fade="{{ duration: 170 }}">Loading</p>
+    <div class="card" in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}">
+        <p in:fade|global="{{ duration: 170 }}">Loading</p>
         <Moon color="var(--title-color)" size="30" unit="px" />
     </div>
 </div>
@@ -27,10 +30,6 @@ import { Moon } from 'svelte-loading-spinners'
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    // @media only screen and (max-width: 1000px) {
-    //     max-width: 100%;
-    // }
 }
 
 p {

@@ -1,24 +1,29 @@
 <script>
+    import { run, preventDefault, createBubbler, self } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import { groups, notify } from '$lib/stores/user.js'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 
-const dispatch = createEventDispatcher()
 
-let enableAddGroupButton = false
+let enableAddGroupButton = $state(false)
 
-let create = false
-let newgroup = false
-let name = ''
-let key = ''
+let create = $state(false)
+let newgroup = $state(false)
+let name = $state('')
+let key = $state('')
 let test
-let avatar
+let avatar = $state()
 
-$: create_group = create ? 'Create' : 'Join'
+let {
+    AddGroup
+} = $props()
+
+let create_group = $derived(create ? 'Create' : 'Join')
 
 const enter = (e) => {
     if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
@@ -26,7 +31,7 @@ const enter = (e) => {
     }
 }
 
-$: {
+run(() => {
     if (key.length === 64) {
         avatar = get_avatar(key)
 
@@ -37,7 +42,7 @@ $: {
     } else {
         enableAddGroupButton = false
     }
-}
+});
 
 const checkError = () => {
     let error = false
@@ -62,7 +67,7 @@ const addGroup = async () => {
     let error = checkError()
     if (error) return
     // Dispatch the inputted data
-    dispatch('addGroup', {
+    AddGroup({
         key: key,
         name: name,
     })
@@ -78,8 +83,12 @@ const createGroup = async () => {
     key = await window.api.createGroup()
 }
 
-$: key
-$: avatar
+run(() => {
+        key
+    });
+run(() => {
+        avatar
+    });
 
 const createNewGroup = () => {
     create = true
@@ -94,12 +103,12 @@ const joinGroup = () => {
 
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}" />
+<svelte:window onkeyup={preventDefault(enter)} />
 
 
-<div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="backdrop" on:click|self>
+<div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 100 }}" class="backdrop" onclick={self(bubble('click'))}>
 
-    <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
+    <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
         {#if !newgroup}
             <div >
             <p>Create a new group?</p>
@@ -123,15 +132,15 @@ const joinGroup = () => {
 
         {#if newgroup}
 
-            <h3 in:fade>Name your group</h3>
+            <h3 in:fade|global>Name your group</h3>
             <input placeholder="Name your group" type="text" bind:value="{name}" />
             {#if create}
             <Button disabled="{false}" text="Generate key" on:click="{() => createGroup()}" />
             {/if}
-            <div class="key-wrapper" in:fade>
+            <div class="key-wrapper" in:fade|global>
                 <input placeholder="Input group key" type="text" bind:value="{key}" />
                 {#if key.length}
-                    <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+                    <img in:fade|global class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                 {/if}
             </div>
             <FillButton
@@ -186,7 +195,7 @@ input {
     padding: 0 1rem;
     height: 35px;
     width: 100%;
-    color: white;
+    color: var(--text-color);
     transition: 200ms ease-in-out;
 
     &:focus {

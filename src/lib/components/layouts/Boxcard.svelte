@@ -1,11 +1,14 @@
 <script>
+    import { createBubbler } from 'svelte/legacy';
 
-    export let bigtext = ""
-    export let text = ""
+    const bubble = createBubbler();
+
+    /** @type {{bigtext?: string, text?: string}} */
+    let { bigtext = "", text = "" } = $props();
 
 </script>
 
-    <div class="card" on:click>
+    <div class="card" onclick={bubble('click')}>
         <h4>{bigtext}</h4>
         <p>{text}</p>
     </div>

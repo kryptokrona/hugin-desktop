@@ -11,7 +11,7 @@
 
 <div class="cards">
         <Boxcard bigtext={'Create video room'} on:click="{createRoom}" />
-    <div class="card" on:click="{() => goto('/groups')}">
+    <div class="card" onclick={() => goto('/groups')}>
         <h4>Create group chat</h4>
     </div>
 </div>

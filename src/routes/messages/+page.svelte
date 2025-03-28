@@ -1,4 +1,6 @@
 <script>
+import { run } from 'svelte/legacy';
+
 import {fade, fly} from 'svelte/transition'
 import {onDestroy, onMount} from 'svelte'
 import {messages} from '$lib/stores/messages.js'
@@ -17,20 +19,22 @@ import BigImage from '$lib/components/popups/BigImage.svelte'
 import DropFile from '$lib/components/popups/DropFile.svelte'
 import ActiveCall from './components/ActiveCall.svelte'
 
-let active_contact
-let savedMsg = []
+let active_contact = $state()
+let savedMsg = $state([])
 let contact
-let dragover = false
-let toggleRename = false
-let wantToAdd = false
-let windowHeight
-let windowChat
-let in_voice = false
+let dragover = $state(false)
+let toggleRename = $state(false)
+let wantToAdd = $state(false)
+let windowHeight = $state()
+let windowChat = $state()
+let in_voice = $state(false)
 
-$: thisSwarm = $swarm.active.find(a => a.chat === $user.activeChat.chat)
-$: if (thisSwarm && thisSwarm.voice_channel.some(a => a.address === $user.activeChat.chat)) {
-    in_voice = true
-} else in_voice = false
+let thisSwarm = $derived($swarm.active.find(a => a.chat === $user.activeChat.chat))
+run(() => {
+        if (thisSwarm && thisSwarm.voice_channel.some(a => a.address === $user.activeChat.chat)) {
+        in_voice = true
+    } else in_voice = false
+    });
 
 //Get messages on mount.
 onMount(async () => {
@@ -110,11 +114,11 @@ const printConversation = (active) => {
 }
 //Chat to add
 const handleAddChat = (e) => {
-    let addContact = e.detail.chat + e.detail.key
+    let addContact = e.chat + e.key
     //Send contact to backend and to saveContact()
-    window.api.addChat(addContact, e.detail.name, true)
+    window.api.addChat(addContact, e.name, true)
     //Add input to message arr
-    let newMessage = e.detail
+    let newMessage = e
 
     saveToStore(newMessage)
     //Prepare send function and filter
@@ -140,24 +144,26 @@ const saveToStore = (data) => {
     })
 }
 
-$: active_contact
+run(() => {
+        active_contact
+    });
 
 //Send message to store and DB
 const sendMsg = (e) => {
 
     let offChain = false
     let beam = false
-    let msg = e.detail.text
+    let msg = e.text
     let error = checkErr(e)
     if (error) return
 
     console.log('Sending message')
 
-    if (e.detail.offChain) {
+    if (e.offChain) {
         offChain = true
     }
 
-    if (e.detail.beam) {
+    if (e.beam) {
       beam = true
       offChain = true;
     }
@@ -179,8 +185,8 @@ const sendMsg = (e) => {
 //Check for possible errors
 const checkErr = (e) => {
     let error = false
-    if (e.detail.text.length === 0) return true
-    if (e.detail.text.length > 777) error = "Message is too long"
+    if (e.text.length === 0) return true
+    if (e.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
@@ -193,12 +199,14 @@ const openAdd = () => {
     wantToAdd = !wantToAdd
 }
 
-$: savedMsg = $messages.filter((x) => x.chat === $user.activeChat.chat)
+run(() => {
+        savedMsg = $messages.filter((x) => x.chat === $user.activeChat.chat)
+    });
 
 function renameContact(e) {
     let thisContact = $user.rename.chat + $user.rename.key
     //Send contact to backend and overwrite our old contact
-    window.api.addChat(thisContact, e.detail.text, false)
+    window.api.addChat(thisContact, e.text, false)
     toggleRename = false
 }
 
@@ -262,7 +270,7 @@ function nodrag() {
 const sendTransaction = (e) => {
     $transactions.tip = false
     $transactions.send = false
-    let tx = e.detail
+    let tx = e
     window.api.sendTransaction(tx)
 }
 
@@ -280,15 +288,15 @@ const hideModal = () => {
 
 {#if toggleRename}
     <Rename
-        on:rename="{(a) => renameContact(a)}"
-        on:openRename="{openRename}"
+        onRename="{(a) => renameContact(a)}"
+        OpenRename="{openRename}"
         this_contact="{contact}"
         on:click="{openRename}"
     />
 {/if}
 
 {#if wantToAdd}
-    <AddChat on:click="{openAdd}" on:addChat="{(e) => handleAddChat(e)}" />
+    <AddChat on:click="{openAdd}" AddChat="{(e) => handleAddChat(e)}" />
 {/if}
 
 {#if dragover}
@@ -296,20 +304,20 @@ const hideModal = () => {
 {/if}
 
 {#if $transactions.tip}
-    <SendTransaction on:click="{hideModal}" on:send="{(e) => sendTransaction(e)}" />
+    <SendTransaction on:click="{hideModal}" onSendTx="{(e) => sendTransaction(e)}" />
 {/if}
 
 
-<main in:fade="{{ duration: 350 }}">
+<main in:fade|global="{{ duration: 350 }}">
     <ChatList
-        on:openRename="{(a) => openRename(a)}"
-        on:conversation="{(e) => printConversation(e.detail)}"
-        on:open="{openAdd}"
+        OpenRename="{(a) => openRename(a)}"
+        onConversation="{(e) => printConversation(e)}"
+        onOpen="{openAdd}"
     />
 
-    <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
+    <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
         <div class="fade"></div>
-        <div class="outer" id="chat_window" in:fly="{{ y: 50 }}">
+        <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}">
             {#if in_voice} 
                 <ActiveCall/>
             {/if}
@@ -330,7 +338,7 @@ const hideModal = () => {
             </div>
             </Dropzone>
         </div>
-        <ChatInput on:message="{sendMsg}" />
+        <ChatInput onMessage="{sendMsg}" />
     </div>
 </main>
 
@@ -372,7 +380,7 @@ main {
     top: 0;
     width: 100%;
     height: 40px;
-    background: linear-gradient(180deg, #121212, #12121200);
+    background: linear-gradient(180deg, var(--fade-color), var(--fade-to-color));
     z-index: 100;
 }
 

@@ -3,8 +3,8 @@
     import Button from "$lib/components/buttons/Button.svelte"
     import { sleep } from "$lib/utils/utils"
     import { user } from '$lib/stores/user.js'
-    let loading = false
-    let path = ""
+    let loading = $state(false)
+    let path = $state("")
 
     const openDirectoryDialog = async () => {
         let dir = await window.api.getDirectoryPath();
@@ -24,7 +24,7 @@
     </script>
     
     <h2>Files</h2>
-    <div class="settings" in:fade>
+    <div class="settings" in:fade|global>
         <p>Change download directory
         <br>
         <p>{$user.downloadPath}</p>

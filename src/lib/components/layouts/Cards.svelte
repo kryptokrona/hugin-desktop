@@ -1,9 +1,11 @@
 <script>
+    /** @type {{children?: import('svelte').Snippet}} */
+    let { children } = $props();
 </script>
 
 <div class="cards">
-    <slot>
-    </slot>
+    {#if children}{@render children()}{:else}
+    {/if}
 </div>
 
 <style lang="scss">

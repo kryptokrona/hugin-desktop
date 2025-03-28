@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import { fade, fly } from 'svelte/transition'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { formatBytes, sleep } from '$lib/utils/utils.js'
@@ -6,21 +8,23 @@ import {misc} from "$lib/stores/user.js";
 import {appUpdateState} from "$lib/components/updater/update-store.js";
 import Moon from 'svelte-loading-spinners/dist/ts/Moon.svelte'
 
-let loading = false
-let downloaded = false
+let loading = $state(false)
+let downloaded = $state(false)
 const download = async () => {
     loading = true
     downloaded = true
     window.api.send('download-update')
 }
 
-$: if ($appUpdateState.step !== 1 && !downloaded) {
-    loading = false
-}
+run(() => {
+        if ($appUpdateState.step !== 1 && !downloaded) {
+        loading = false
+    }
+    });
 </script>
 
-<div class="backdrop" in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}">
-    <div class="card layered-shadow" in:fly="{{ x: 100 }}" out:fly="{{ x: 100 }}">
+<div class="backdrop" in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 100 }}">
+    <div class="card layered-shadow" in:fly|global="{{ x: 100 }}" out:fly|global="{{ x: 100 }}">
 
         <div class="header">
             <img src="/icon.png" height="48px" width="48px" alt="" />

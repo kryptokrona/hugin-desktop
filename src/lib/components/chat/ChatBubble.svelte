@@ -1,48 +1,51 @@
 <script>
+  import { run } from 'svelte/legacy';
+
     import {fade} from 'svelte/transition'
     import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
     import {beam, rooms, user} from '$lib/stores/user.js'
     import Button from '$lib/components/buttons/Button.svelte'
-    import {createEventDispatcher, onMount} from 'svelte'
+    import { onMount} from 'svelte'
     import Time from 'svelte-time'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import Lightning from "$lib/components/icons/Lightning.svelte";
     import { containsOnlyEmojis, isLatin, openURL } from '$lib/utils/utils'
-    import CodeBlock from './CodeBlock.svelte'
     import Youtube from "svelte-youtube-embed";
     import DownloadFile from '$lib/components/chat/DownloadFile.svelte'
     import UploadFile from '$lib/components/chat/UploadFile.svelte'
 
-    export let message
-    export let msgFrom
-    export let ownMsg
-    export let files = false
-    export let timestamp
-    export let beamMsg = false
-    export let error = false
+  /** @type {{message: any, msgFrom: any, ownMsg: any, files?: boolean, timestamp: any, beamMsg?: boolean, error?: boolean}} */
+  let {
+    message = $bindable(),
+    msgFrom,
+    ownMsg,
+    files = false,
+    timestamp,
+    beamMsg = false,
+    error = false
+  } = $props();
     
     let torrent = false
-    let oldInvite = false
-    let beamInvite = false
+    let oldInvite = $state(false)
+    let beamInvite = $state(false)
     let address = $user.myAddress
-    let beamConnected = false
-    let codeBlock = false
+    let beamConnected = $state(false)
     let emojiMessage = false
-    let lang = "js"
-    let codeMessage
-    let youtube = false
-    let embed_code
-    let youtubeLink = false
+    let lang = $state("js")
+    let codeMessage = $state()
+    let youtube = $state(false)
+    let embed_code = $state()
+    let youtubeLink = $state(false)
     let openLink = false
-    let link = false
-    let messageText
-    let messageLink
-    let beamFile = false
-    let clicked = false
-    let beam_key = ""
+    let link = $state(false)
+    let messageText = $state()
+    let messageLink = $state()
+    let beamFile = $state(false)
+    let clicked = $state(false)
+    let beam_key = $state("")
     let youtube_shared_link_type = false
-    let asian = false
-    let timeformat = "HH:mm"
+    let asian = $state(false)
+    let timeformat = $state("HH:mm")
     if ((Date.now() - 40000000) > timestamp) {
         //Show date also for older messages
         timeformat = "D MMM, HH:mm"
@@ -92,10 +95,6 @@
             return
         }
         
-        if (message.startsWith("```") && message.endsWith("```")) {
-            checkCodeLang(message)
-            return
-        }
         
         if (ownMsg) {
             if (!isLatin($user.username)) {
@@ -109,24 +108,12 @@
         }
     }
 
-    $: {
+    run(() => {
         if (beamInvite) {
          beam_key = beamFile ? message.substring(11,63) : message.substring(7,59)
         }
-    }
+    });
 
-    const checkCodeLang = (msg) => {
-        let codeMsg = msg.slice(3,-3)
-        //The first two letters after ``` indicates code lang
-        if (codeMsg.startsWith("ts") || codeMsg.startsWith("js") ) {
-            codeMessage = codeMsg.slice(2).trim()
-            lang = codeMsg.slice(0,2)
-        } else {
-            lang = "js"
-            codeMessage = codeMsg
-        }
-        codeBlock = true
-    }
 
     const joinBeam = () => {
         clicked = true
@@ -168,10 +155,12 @@
     }
 
     
-    $: beamConnected = $beam.active.some(a => a.key == beam_key && a.connected)
+    run(() => {
+    beamConnected = $beam.active.some(a => a.key == beam_key && a.connected)
+  });
 
     //Replace call info with message
-    $: {
+    run(() => {
         switch (message.substring(0, 1)) {
             case 'Δ':
             // Fall through
@@ -180,7 +169,7 @@
                 message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
                 break
         }
-    }
+    });
 
     const check_avatar = (address) => {
         const found = $rooms.avatars.find(a => a.address === address)
@@ -199,7 +188,7 @@
             {:then avatar}
             {#if avatar}
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     class="avatar-box"
                     src="{avatar}"
                     alt=""
@@ -207,7 +196,7 @@
             {:else}
             <div class="avatar-box">
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     src="data:image/png;base64,{get_avatar(address)}"
                     alt=""
                 />
@@ -234,16 +223,14 @@
                 <UploadFile file={files} />
                 </div>
                     {:else if beamInvite || oldInvite}
-                        <p in:fade class="message">Started a beam ⚡️</p>
+                        <p in:fade|global class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p in:fade class="message blink_me finish">Beam connected ⚡️</p>
-                    {:else if codeBlock}
-                        <CodeBlock lang={lang} code={codeMessage} />
+                        <p in:fade|global class="message blink_me finish">Beam connected ⚡️</p>
                     {:else if youtube}
                         <p class="message">{messageText}</p>
                         <Youtube id={embed_code} />
                     {:else if link}
-                        <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                        <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" onclick={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>
                     {:else if emojiMessage}
                     <p class="message emoji">{message}</p>
@@ -259,7 +246,7 @@
             {:then avatar}
             {#if avatar}
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     class="avatar-box"
                     src="{avatar}"
                     alt=""
@@ -267,7 +254,7 @@
             {:else}
             <div class="avatar-box">
                 <img
-                    in:fade="{{ duration: 150 }}"
+                    in:fade|global="{{ duration: 150 }}"
                     src="data:image/png;base64,{get_avatar(msgFrom)}"
                     alt=""
                 />
@@ -304,22 +291,20 @@
                             <br>
                             <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
                             {:else if clicked}
-                            <p class="message finish" in:fade>Connecting</p>
+                            <p class="message finish" in:fade|global>Connecting</p>
                             {/if}
                         </div>
                     {:else if oldInvite}
-                        <p in:fade class="message">Started a beam ⚡️</p>
+                        <p in:fade|global class="message">Started a beam ⚡️</p>
                     {:else if beamConnected}
-                        <p class="message blink_me finish" in:fade>Beam connected ⚡️</p>
-                    {:else if codeBlock}
-                        <CodeBlock lang={lang} code={codeMessage} />
+                        <p class="message blink_me finish" in:fade|global>Beam connected ⚡️</p>
                     {:else if youtube}
                         <p class="message">{messageText}</p>
                         <Youtube id={embed_code} />
                     {:else if youtubeLink}
                         <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
                     {:else if link}
-                        <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" on:click={openLinkMessage(messageLink)}>{messageLink}</p>
+                        <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" onclick={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>
                     {:else if emojiMessage}
                         <p class="message emoji">{message}</p>

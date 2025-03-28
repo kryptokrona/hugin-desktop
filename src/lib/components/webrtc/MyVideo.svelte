@@ -1,7 +1,9 @@
 <script>
+  import { run } from 'svelte/legacy';
+
 //To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+import { onDestroy, onMount } from 'svelte'
 import { webRTC, user, swarm, rooms } from '$lib/stores/user.js'
 import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
 import VoiceUserIcon from '../icons/VoiceUserIcon.svelte'
@@ -10,7 +12,7 @@ import { videoSettings, video } from '$lib/stores/mediasettings'
 import { Moon } from 'svelte-loading-spinners'
 import { audioLevel } from '$lib/stores/user.js'
 
-let myVideo = document.getElementById('myVideo')
+let myVideo = $state(document.getElementById('myVideo'))
 let window_medium = false
 
 // When incoming call and this get mounted we play the ringtone
@@ -43,16 +45,20 @@ const playVideo = () => {
 //As a precaution we pause the ringtone again when destroyed
 onDestroy(() => {})
 
-$: if ($video.play) {
-    playVideo()
-}
+run(() => {
+    if ($video.play) {
+      playVideo()
+  }
+  });
 
 
-let many = false
+let many = $state(false)
 
-$: if ($swarm.call.length > 4) {
-  many = true
-} else many = false
+run(() => {
+    if ($swarm.call.length > 4) {
+    many = true
+  } else many = false
+  });
 
 const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)
@@ -60,17 +66,19 @@ const check_avatar = (address) => {
     else return false
 }
 
-$: window_medium
+run(() => {
+    window_medium
+  });
 </script>
 
-<!-- <video class:show={calling} in:fade id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
+<!-- <video class:show={calling} in:fade|global id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
 
-<div class="card" class:many={many} in:fly={{ x: -150}} class:hide={$videoGrid.hideMyVideo} class:talking="{$audioLevel.meTalking}">
+<div class="card" class:many={many} in:fly|global={{ x: -150}} class:hide={$videoGrid.hideMyVideo} class:talking="{$audioLevel.meTalking}">
     <video
         class:reverse={$videoSettings.screenshare && !$videoSettings.loading}
-        on:click="{playVideo}"
+        onclick={playVideo}
         muted
-        in:fade
+        in:fade|global
         id="myVideo"
         playsinline
         autoplay
@@ -97,7 +105,7 @@ $: window_medium
             />
         {:else}
             
-        <img in:fly src="data:image/png;base64,{get_avatar($user.myAddress, 'png', true)}" alt="" />
+        <img in:fly|global src="data:image/png;base64,{get_avatar($user.myAddress, 'png', true)}" alt="" />
         {/if}
         {/await}
         {/if}

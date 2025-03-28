@@ -1,5 +1,6 @@
 <script>
-    export let size = 24
+    /** @type {{size?: number}} */
+    let { size = 24 } = $props();
 </script>
 
 <svg
@@ -17,7 +18,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -26,7 +27,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>
@@ -35,7 +36,7 @@
                     id="Vector"
                     fill="none"
                     fill-rule="evenodd"
-                    stroke="#f5f5f5"
+                    stroke="var(--text-color)"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"></path>

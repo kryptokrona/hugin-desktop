@@ -1,24 +1,27 @@
 <script>
-//To handle true and false, or in this case show and hide.
-import { fade, fly } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
+    import { run, preventDefault, createBubbler, self } from 'svelte/legacy';
+
+const bubble = createBubbler();
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 
-const dispatch = createEventDispatcher()
+let {
+    AddBoard
+} = $props()
 
-let enableAddBoardButton = false
-let text = ''
+
+let enableAddBoardButton = $state(false)
+let text = $state('')
 let board
 let add_board = 'Add'
 
-$: {
+run(() => {
     if (text.length > 0) {
         //Enable add button
         enableAddBoardButton = true
     } else {
         enableAddBoardButton = false
     }
-}
+});
 
 const enter = (e) => {
     if (enableAddBoardButton && text.length > 0 && e.keyCode === 13) {
@@ -29,17 +32,17 @@ const enter = (e) => {
 // Dispatch the inputted data
 const addBoard = (board) => {
     // Dispatch the inputted data
-    dispatch('addBoard', {
+    AddBoard( {
         board: board,
     })
     enableAddBoardButton = false
 }
 </script>
 
-<svelte:window on:keyup|preventDefault="{enter}" />
+<svelte:window onkeyup={preventDefault(enter)} />
 
-<div on:click|self in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="backdrop">
-    <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="field">
+<div onclick={self(bubble('click'))} in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 100 }}" class="backdrop">
+    <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="field">
         <input
             placeholder="Join or create a new public board"
             type="text"

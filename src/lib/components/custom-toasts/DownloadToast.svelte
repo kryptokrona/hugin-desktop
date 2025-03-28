@@ -1,24 +1,31 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import { download } from '$lib/stores/files'
 import { sleep } from '$lib/utils/utils'
-import toast_ from 'svelte-french-toast';
+import toast_ from 'svelte-5-french-toast';
 
-export let toast;
-$: thisFile = $download.find(a => a.fileName === toast.file && a.chat === toast.chat && a.time === toast.time)
+    /** @type {{toast: any}} */
+    let { toast } = $props();
 
-//File sent, add more effects?
-$: if (thisFile.progress === 100) {
-    removeToast()
-}
-//TODO Make text red if error?
-$: if (thisFile.error === true) {
-    removeToast()
-}
 
 async function removeToast() {
     await sleep(15000)
     toast_.dismiss(toast.id)
 }
+let thisFile = $derived($download.find(a => a.fileName === toast.file && a.chat === toast.chat && a.time === toast.time))
+//File sent, add more effects?
+run(() => {
+        if (thisFile.progress === 100) {
+        removeToast()
+    }
+    });
+//TODO Make text red if error?
+run(() => {
+        if (thisFile.error === true) {
+        removeToast()
+    }
+    });
 </script>
 
 <span class="toast">
@@ -27,7 +34,7 @@ async function removeToast() {
     {:else}
     DOWNLOADING
     {/if}
-    <div on:click={() => toast_.dismiss(toast.id)}>
+    <div onclick={() => toast_.dismiss(toast.id)}>
         <div
             style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px"
         >

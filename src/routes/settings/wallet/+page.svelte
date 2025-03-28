@@ -1,17 +1,19 @@
 
 <script>
+    import { run } from 'svelte/legacy';
+
 import Button from "$lib/components/buttons/Button.svelte"
 import RescanHeight from "$lib/components/popups/RescanHeight.svelte"
 import Verify from "$lib/components/popups/Verify.svelte"
 import { js_wallet } from "$lib/stores/wallet"
 import { fade } from "svelte/transition"
 
-let showKeys = false
-let showMnemonic = false
-let seedPhrase = ''
-let privateSpendKey = ''
-let privateViewKey = ''
-let verify = false
+let showKeys = $state(false)
+let showMnemonic = $state(false)
+let seedPhrase = $state('')
+let privateSpendKey = $state('')
+let privateViewKey = $state('')
+let verify = $state(false)
 let keys = false
 
 const getMnemonic = async () => {
@@ -42,12 +44,12 @@ const prompt = (a) => {
 }
 
 
-$: {
+run(() => {
     privateSpendKey
     privateViewKey
     showMnemonic
     showKeys
-}
+});
 
 
 </script>
@@ -57,7 +59,7 @@ $: {
  {/if}
 
  {#if verify}
-    <Verify on:ok={() => showInfo()} on:close={() => verify = false}/>
+    <Verify onOk={() => showInfo()} onClose={() => verify = false}/>
  {/if}
  
 <h2>Wallet</h2>
@@ -65,7 +67,7 @@ $: {
     <Button text="Rescan wallet" enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
 </div>
 
-<div class="settings" in:fade>
+<div class="settings" in:fade|global>
     <div class="inner keys">
         <h3>Private keys</h3>
         <div class="button">
@@ -78,12 +80,12 @@ $: {
         <br />
         {#if showKeys}
             <h6>Spend Key</h6>
-            <p style="user-select: text;" in:fade type="text">
+            <p style="user-select: text;" in:fade|global type="text">
                 {privateSpendKey}
             </p>
 
             <h6>View key</h6>
-            <p style="user-select: text;" in:fade type="text">
+            <p style="user-select: text;" in:fade|global type="text">
                 {privateViewKey}
             </p>
         {/if}
@@ -97,7 +99,7 @@ $: {
         <br />
         {#if showMnemonic}
             <h6>Mnemonic seed</h6>
-            <p style="user-select: text;" in:fade type="text">
+            <p style="user-select: text;" in:fade|global type="text">
                 {seedPhrase}
             </p>
         {/if}
@@ -130,7 +132,7 @@ $: {
         overflow-wrap: break-word;
         padding-right: 10px;
         height: 90px;
-        background: rgba(0, 0, 0, 0.25);
+        background: var(--backgound-color);
         border-radius: 7px;
         overflow: hidden;
         padding: 10px;
@@ -141,7 +143,7 @@ $: {
     
     .mnemonic p {
         height: 190px;
-        background: rgba(0, 0, 0, 0.25);
+        background:var(--backgound-color);
         border-radius: 7px;
         overflow: hidden;
         padding: 10px;

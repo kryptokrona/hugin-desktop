@@ -1,7 +1,8 @@
 <script>
-    export let active = true
+  /** @type {{active?: boolean}} */
+  let { active = true } = $props();
 
-    $: color = active ? "var(--success-color)" : "var(--warn-color)"
+    let color = $derived(active ? "var(--success-color)" : "var(--warn-color)")
     
 </script>
 <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">

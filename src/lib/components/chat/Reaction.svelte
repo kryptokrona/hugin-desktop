@@ -1,45 +1,54 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import { fade } from 'svelte/transition'
-import { createEventDispatcher } from 'svelte'
 
-const dispatch = createEventDispatcher()
-
-export let reacts = []
-export let reactCount = 0
-export let thisReaction
-export let emoji
-export let react = false
-export let counter = false
-let filterReactions = []
+    /** @type {{reacts?: any, reactCount?: number, thisReaction: any, emoji: any, react?: boolean, counter?: boolean}} */
+    let {
+        reacts = [],
+        reactCount = $bindable(0),
+        thisReaction,
+        emoji,
+        react = false,
+        counter = false,
+        onSendReaction
+    } = $props();
+let filterReactions = $state([])
 let hoverReaction = false
-let filterReactors = []
+let filterReactors = $state([])
 
-$: if (reacts.length) filterReactions = reacts.filter((a) => a.message == thisReaction.message)
+run(() => {
+        if (reacts.length) filterReactions = reacts.filter((a) => a.message == thisReaction.message)
+    });
 
-$: if (filterReactions.length > 0) {
-    let reactor = {}
-    filterReactors = filterReactions.filter((r) => !reactor[r.address] && (reactor[r.address] = true))
-    reactCount = filterReactions.length
-}
+run(() => {
+        if (filterReactions.length > 0) {
+        let reactor = {}
+        filterReactors = filterReactions.filter((r) => !reactor[r.address] && (reactor[r.address] = true))
+        reactCount = filterReactions.length
+    }
+    });
 
 const sendReaction = () => {
-    dispatch('sendReaction', {
+onSendReaction({
         msg: thisReaction.message,
         grp: thisReaction.group,
         reply: thisReaction.reply,
     })
 }
 
-$: reactCount
+run(() => {
+        reactCount
+    });
 </script>
 
-<div class="reaction" on:click="{sendReaction}">
+<div class="reaction" onclick={sendReaction}>
     {thisReaction.message}
     {#if filterReactions.length >= 1}
         <p class="count">{reactCount}</p>
     {/if}
 
-    <div in:fade class="reactors">
+    <div in:fade|global class="reactors">
         {#each filterReactors as reactors}
             <p class="reactor">{reactors.name}</p>
         {/each}
@@ -81,7 +90,7 @@ $: reactCount
     font-size: 11px;
     display: inline-block;
     z-index: 1;
-    background-color: #222222;
+    background-color: var(--background-color);
 }
 
 .count {

@@ -1,5 +1,7 @@
 <script>
-import { misc, user, userAvatar, swarm, webRTC, rooms } from '$lib/stores/user.js'
+import { run } from 'svelte/legacy';
+
+import { misc, user, userAvatar, swarm, webRTC, rooms, theme } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -14,27 +16,32 @@ import Logout from '$lib/components/icons/Logout.svelte'
 import Home from '../icons/Home.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
 import { onMount } from 'svelte'
+import Theme from '$lib/components/icons/Theme.svelte';
 
-let sync
-let avatar
-let in_voice = false
-let fileList
-let files
+let sync = $derived($misc.syncState)
+let avatar = $state()
+let in_voice = $state(false)
+let fileList = $state()
+let files = $state()
 
 onMount(async () => {
 //    const profile = await window.api.getProfile()
 //    console.log("Got profile info!", profile)
 })
-$: sync = $misc.syncState
 
-$: if (!$user.customAvatar) {
-    userAvatar.subscribe((output) => {
-        avatar = output
-    })
-} else {
-    avatar = $user.customAvatar
-}
-$: avatar
+
+run(() => {
+    if (!$user.customAvatar) {
+      userAvatar.subscribe((output) => {
+          avatar = output
+      })
+  } else {
+      avatar = $user.customAvatar
+  }
+  });
+run(() => {
+    avatar
+  });
 
 const handleLogout = () => { 
     $user.loggedIn = false
@@ -93,9 +100,24 @@ const selectAvatar = async () => {
     $rooms.avatars.push({address: $user.myAddress, avatar: imageUrl})
   };
 
-$: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {
-    in_voice = true
-} else in_voice = false
+run(() => {
+    if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {
+      in_voice = true
+  } else in_voice = false
+  });
+
+  const LIGHT = 'light'
+  const DARK = 'dark'
+
+  const toggleTheme = () => {
+
+    if ($theme === DARK) {
+        $theme = LIGHT
+    } else $theme = DARK
+
+    localStorage.setItem('themes', $theme);
+    document.documentElement.className = $theme;
+  };
 
 </script>
 
@@ -106,11 +128,11 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
         bind:files
         class="open"
         type="file"
-        on:change={() => selectAvatar()}
+        onchange={() => selectAvatar()}
         style="width: 0; height: 0;"
       />
         <!-- <Tooltip title="Avatar"> -->
-            <div style="cursor: pointer;" class="button myavatar" on:click="{() => changeProfilePic()}">
+            <div style="cursor: pointer;" class="button myavatar" onclick={() => changeProfilePic()}>
                 {#if !$user.customAvatar}
                 <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                 {:else}
@@ -119,22 +141,22 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
             </div>
         <!-- </Tooltip> -->
         <Tooltip title="Dashboard">
-            <div on:click="{() => goto('/dashboard')}" class="button">
+            <div onclick={() => goto('/dashboard')} class="button">
                 <Home />
             </div>
         </Tooltip>
         <Tooltip title="Messages">
-            <div on:click="{messagesRouteAndMenu}" class="button">
+            <div onclick={messagesRouteAndMenu} class="button">
                 <MessageIcon />
             </div>
         </Tooltip>
-        <Tooltip title="Groups">
-            <div on:click="{groupRouteAndMenu}" class="button">
+        <!-- <Tooltip title="Groups">
+            <div onclick={groupRouteAndMenu} class="button">
                 <GroupIcon />
             </div>
-        </Tooltip> 
+        </Tooltip>  -->
         <Tooltip title="Rooms">
-            <div on:click="{roomRouteAndMenu}" class="button">
+            <div onclick={roomRouteAndMenu} class="button">
                 <RoomIcon />
             </div>
         </Tooltip> 
@@ -145,21 +167,31 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
     </div>
     <div class="draggable"></div>
     <div class="nav">
+        <Tooltip title="Theme">
+            <div onclick={toggleTheme} class="button">
+                {#if $theme === 'dark'}
+                <Theme active={true}/>
+                {:else}
+                <Theme active={false}/>
+                {/if}
+            </div>
+        </Tooltip>
+        
         <Tooltip title="Settings">
-            <div on:click="{() => goto('/settings/node')}" class="button">
+            <div onclick={() => goto('/settings/node')} class="button">
                 <SettingsIcon />
             </div>
         </Tooltip>
         <Tooltip title="Logout">
-            <div class='button' on:click={handleLogout}>
+            <div class='button' onclick={handleLogout}>
                 <Logout/>
             </div>
         </Tooltip>      
         <XkrLogo grey="{true}" />
         <Tooltip title="Github">
             <div
-            on:click="{() =>
-                openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}"
+            onclick={() =>
+                openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}
         >
             <AlphaIcon />
         </div>
@@ -211,7 +243,7 @@ $: if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user
 
 .button:hover,
 .button:hover > .icon {
-    background-color: #313131;
+    background-color: var(--border-color);
     opacity: 100%;
 }
 

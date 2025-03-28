@@ -15,8 +15,8 @@
     
     let date = new Date()
     let hrs = date.getHours()
-    let greet
-    let welcome = false
+    let greet = $state()
+    let welcome = $state(false)
     onMount(async () => {
         $user.started = true
         if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
@@ -31,10 +31,10 @@
 </script>
 
 {#if welcome} 
-    <Welcome on:close={() => (welcome = false)}/>
+    <Welcome onClose={() => (welcome = false)}/>
 {/if}
 
-<div class="header" in:fly="{{ y: 100 }}">
+<div class="header" in:fly|global="{{ y: 100 }}">
     <div style="display: flex; align-items: center; gap: 0.5rem">
         <h1>{greet}, {$user.username}!</h1>
         <EditName/>
@@ -55,9 +55,9 @@
 </div>
 
 <Funds/>
-<div class="grid"  in:fly="{{ y: 100 }}">
-    <StandardGroups/>
-    <Transactions/>
+<div class="grid"  in:fly|global="{{ y: 100 }}">
+    <!-- <StandardGroups/> -->
+    <!-- <Transactions/> -->
     <!-- <CreateRoom/> -->
 </div>
 

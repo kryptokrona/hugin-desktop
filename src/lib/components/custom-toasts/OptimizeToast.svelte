@@ -1,7 +1,8 @@
 <script>
-    import toast_ from 'svelte-french-toast';
+    import toast_ from 'svelte-5-french-toast';
 
-    export let toast;
+    /** @type {{toast: any}} */
+    let { toast } = $props();
 </script>
 
 <span>

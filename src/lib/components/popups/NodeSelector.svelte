@@ -2,16 +2,19 @@
   import FillButton from '$lib/components/buttons/FillButton.svelte'
   import {getBestNode, nodelist} from '$lib/stores/nodes.js'
   import {fade} from 'svelte/transition'
-  import {createEventDispatcher} from 'svelte'
   import {misc} from "$lib/stores/user.js";
 
-  let nodeInput = ''
-  let selectedNode
-  let loading = false
-  const dispatch = new createEventDispatcher()
+  let nodeInput = $state('')
+  let selectedNode = $state()
+  let loading = $state(false)
+
+  let {
+    goBack,
+    onConnect
+  } = $props()
 
   const back = () => {
-    dispatch('back')
+    goBack()
   }
 
   const auto = async () => {
@@ -29,7 +32,7 @@
   }
 
   const connectTo = () => {
-    dispatch('connect', {
+     onConnect({
       node: nodeInput,
     })
   }
@@ -40,7 +43,7 @@
   }
 </script>
 
-<div in:fade class="wrapper">
+<div in:fade|global class="wrapper">
     <h1>Pick a node</h1>
     <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}"/>
     <div class="node-list">
@@ -48,9 +51,9 @@
             <div
                     class="node-card"
                     class:selected="{selectedNode === i}"
-                    on:click="{() => {
+                    onclick={() => {
                     chooseNode(node, i)
-                }}"
+                }}
             >
                 <p id="node">{node.name}</p>
             </div>

@@ -1,20 +1,25 @@
 <script>
+    import { run, createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 import { videoSettings } from '$lib/stores/mediasettings'
 
-export let grid = false
-export let menu = false
+    /** @type {{grid?: boolean, menu?: boolean}} */
+    let { grid = false, menu = false } = $props();
 
-let color = '#f5f5f5'
+let color = $state('#f5f5f5')
 
-$: if ($videoSettings.myVideo && !$videoSettings.screenshare && grid) {
-    color = '#4dbb45'
-} else if ($videoSettings.screenshare || !$videoSettings.myVideo) {
-    color = '#f5f5f5'
-}
+run(() => {
+        if ($videoSettings.myVideo && !$videoSettings.screenshare && grid) {
+        color = '#4dbb45'
+    } else if ($videoSettings.screenshare || !$videoSettings.myVideo) {
+        color = 'var(--text-color)'
+    }
+    });
 </script>
 
 <svg
-    on:click
+    onclick={bubble('click')}
     width="24px"
     height="24px"
     viewBox="0 0 24 24"

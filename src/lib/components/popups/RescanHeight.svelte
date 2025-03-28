@@ -1,16 +1,18 @@
 <script>
+    import { run, preventDefault, self } from 'svelte/legacy';
+
 import { fade, fly } from 'svelte/transition'
 import { js_wallet } from '$lib/stores/wallet.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 
-let enableButton = false
-let height
+let enableButton = $state(false)
+let height = $state()
 
-$: {
+run(() => {
     if (height > 0) {
         enableButton = true
     }
-}
+});
 
 const keyDown = (e) => {
     if (e.key === 'Enter' && height.length > 0) {
@@ -33,15 +35,15 @@ const reScan = () => {
 
 </script>
 
-<svelte:window on:keyup|preventDefault="{keyDown}" />
+<svelte:window onkeyup={preventDefault(keyDown)} />
 
 <div
-    on:click|self="{close}"
-    in:fade="{{ duration: 100 }}"
-    out:fade="{{ duration: 100 }}"
+    onclick={self(close)}
+    in:fade|global="{{ duration: 100 }}"
+    out:fade|global="{{ duration: 100 }}"
     class="backdrop"
 >
-    <div in:fly="{{ y: 20 }}" out:fly="{{ y: -50 }}" class="field">
+    <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
         <input
             placeholder="Enter block height"
             type="text"

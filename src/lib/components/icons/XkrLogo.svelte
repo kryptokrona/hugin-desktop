@@ -2,13 +2,13 @@
     import { misc } from '$lib/stores/user.js';
     import { goto } from '$app/navigation'
 
-    $: syncstatus = $misc.syncedStatus
+    let syncstatus = $derived($misc.syncedStatus)
 
 </script>
 
 
 <svg
-    on:click="{() => goto('/settings/node')}"
+    onclick={() => goto('/settings/node')}
     width="45px"
     height="13px"
     viewBox="0 0 176 54"

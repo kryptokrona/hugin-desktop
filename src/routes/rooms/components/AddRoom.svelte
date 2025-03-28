@@ -1,27 +1,29 @@
 <script>
-    //To handle true and false, or in this case show and hide.
+    import { run, preventDefault, createBubbler, self } from 'svelte/legacy';
+
+    const bubble = createBubbler();
     import { fade, fly } from 'svelte/transition'
-    import { createEventDispatcher } from 'svelte'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import Button from '$lib/components/buttons/Button.svelte'
     import { rooms, notify } from '$lib/stores/user.js'
     import { get_avatar } from '$lib/utils/hugin-utils.js'
     
-    const dispatch = createEventDispatcher()
+    let {
+        onAddRoom
+    } = $props()
+
+    let enableAddGroupButton = $state(false)
     
-    let enableAddGroupButton = false
-    
-    let create = false
-    let newgroup = false
-    let name = ''
+    let create = $state(false)
+    let newgroup = $state(false)
+    let name = $state('')
     let key = ''
-    let invite = ''
+    let invite = $state('')
     let test
-    let avatar
-    let lockName = false
-    let link = ''
+    let avatar = $state()
+    let lockName = $state(false)
+    let link = $state('')
     let adm = false
-    $: create_group = create ? 'Create' : 'Join'
     
     const enter = (e) => {
         if (enableAddGroupButton && invite.length === 128 && e.keyCode === 13) {
@@ -29,25 +31,7 @@
         }
     }
     
-    $: {
-        if (invite.length) {
-            console.log("Invite link avatar", invite)
-            avatar = get_avatar(invite)
-    
-            if (invite.length === 128) {
-                //Enable add button
-                enableAddGroupButton = true
-            }
-        } else {
-            enableAddGroupButton = false
-        }
-    }
 
-    $: {
-        if (link.startsWith('hugin://') && link.length > 128 && !create) {
-            parseInvite(link)
-        }
-    }
     
     const checkError = () => {
         let error = false
@@ -78,7 +62,7 @@
         if (error) return
         // Dispatch the inputted data
         console.log("Dispatch!")
-        dispatch('addRoom', {
+        onAddRoom({
             key: invite,
             name: name,
             admin: adm
@@ -112,8 +96,6 @@
         enableAddGroupButton = true
     }
     
-    $: invite
-    $: avatar
     
     const createNewRoom = () => {
         create = true
@@ -126,14 +108,39 @@
         console.log("Wanna join")
     }
     
-    </script>
+        let create_group = $derived(create ? 'Create' : 'Join')
+    run(() => {
+        if (invite.length) {
+            console.log("Invite link avatar", invite)
+            avatar = get_avatar(invite)
     
-    <svelte:window on:keyup|preventDefault="{enter}" />
+            if (invite.length === 128) {
+                //Enable add button
+                enableAddGroupButton = true
+            }
+        } else {
+            enableAddGroupButton = false
+        }
+    });
+    run(() => {
+        if (link.startsWith('hugin://') && link.length > 128 && !create) {
+            parseInvite(link)
+        }
+    });
+    run(() => {
+        invite
+    });
+    run(() => {
+        avatar
+    });
+</script>
+    
+    <svelte:window onkeyup={preventDefault(enter)} />
     
     
-    <div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 80 }}" class="backdrop" on:click|self>
+    <div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 80 }}" class="backdrop" onclick={self(bubble('click'))}>
     
-        <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="card">
+        <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
             {#if !newgroup}
                 <div >
                 <p>Create a new Room</p>
@@ -157,18 +164,18 @@
     
             {#if create}
     
-                <h3 in:fade>Name your Room</h3>
+                <h3 in:fade|global>Name your Room</h3>
                 <input placeholder="Name your Room" type="text" disabled={lockName} bind:value="{name}" />
                 {#if name.length}
                 <Button disabled="{false}" text="Generate invite" on:click="{() => createInvite()}" />
                 {/if}
-                <div class="key-wrapper" in:fade>
+                <div class="key-wrapper" in:fade|global>
                     {#if invite.length}
-                    <div in:fade><h3 style="color: var(--success-color)">Invite created</h3></div>
+                    <div in:fade|global><h3 style="color: var(--success-color)">Invite created</h3></div>
                     <!-- <input placeholder="Input room key" type="text" bind:value="{link}" /> -->
                     {/if}
                     {#if link.length}
-                        <img in:fade class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+                        <img in:fade|global class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                     {/if}
                 </div>
                 <FillButton
@@ -183,10 +190,10 @@
                     <h3>{name}</h3>
                 {/if}
             </div>
-            <div class="key-wrapper" in:fade>
+            <div class="key-wrapper" in:fade|global>
                 <input placeholder="Invite link" type="text" bind:value="{link}" />
                 {#if invite.length}
-                    <img in:fade class="avatar" src="data:image/png;base64,{get_avatar(invite)}" alt="" />
+                    <img in:fade|global class="avatar" src="data:image/png;base64,{get_avatar(invite)}" alt="" />
                 {/if}
             </div>
                 <FillButton
@@ -241,7 +248,7 @@
         padding: 0 1rem;
         height: 35px;
         width: 100%;
-        color: white;
+        color: var(--text-color);
         transition: 200ms ease-in-out;
     
         &:focus {
@@ -268,7 +275,7 @@
     
     p {
         font-size: 12px;
-        color: white;
+        color: var(--text-color);
         font-family: 'Montserrat';
     }
     </style>

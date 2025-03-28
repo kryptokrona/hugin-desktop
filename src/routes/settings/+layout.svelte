@@ -2,6 +2,8 @@
     import { goto } from '$app/navigation'
     import { fade } from 'svelte/transition'
     import SettingsList from '/src/routes/settings/SettingsList.svelte'
+    /** @type {{children?: import('svelte').Snippet}} */
+    let { children } = $props();
     
         const gotoPage = async (route) => {
             await goto(route)
@@ -10,13 +12,13 @@
     </script>
     <div class="wrap">
         
-    <SettingsList on:changeCategory={(e) => gotoPage(e.detail)}/>
+    <SettingsList ChangeCategory={(e) => gotoPage(e)}/>
     
-    <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
+    <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
         <div class="fade"></div>
         <div class="outer" id="settings_window">
             <div class="inner">
-                <slot/>
+                {@render children?.()}
             </div>
         </div>
     </div>

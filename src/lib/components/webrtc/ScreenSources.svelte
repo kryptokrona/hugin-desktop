@@ -1,16 +1,20 @@
 <script>
+   import { run } from 'svelte/legacy';
+
     import { fade } from 'svelte/transition'
     import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
     import Screenshare from '$lib/components/icons/Screenshare.svelte'
     import Button from '../buttons/Button.svelte'
     import { sleep } from '$lib/utils/utils'
     import { swarm } from '$lib/stores/user.js'
-    let open
+    let open = $state()
     let changed
     let add = false
-    let screenSources = []
+    let screenSources = $state([])
 
-    $: screenSources = $mediaSettings.screenSources
+    run(() => {
+      screenSources = $mediaSettings.screenSources
+   });
 
     function pickSource(src) {
         $videoSettings.loading = true
@@ -47,17 +51,17 @@
         }, 1000)
     }
     
-    $: activeDevice = $mediaSettings.screenId
+    let activeDevice = $derived($mediaSettings.screenId)
     
     </script>
     
-    <div style="display: flex; flex-direction: column" on:click={() => open = !open}>
+    <div style="display: flex; flex-direction: column" onclick={() => open = !open}>
         
         <Screenshare/>
         {#if open}
-            <div in:fade class="list layered-shadow">
+            <div in:fade|global class="list layered-shadow">
                 {#each screenSources as src}
-                    <div on:click="{() => pickSource(src.id)}">
+                    <div onclick={() => pickSource(src.id)}>
                         <h5 class:picked={activeDevice === src.id}>{src.name}</h5>
                         <img src={src.img} />
                     </div>

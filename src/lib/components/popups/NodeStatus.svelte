@@ -4,15 +4,13 @@ import { fade, fly } from 'svelte/transition'
 import Close from '$lib/components/icons/Close.svelte'
 import { misc } from '$lib/stores/user.js'
 
-let progress
+let progress = $derived(($misc.walletBlockCount / $misc.networkBlockCount) * 100)
 
-$: {
-    progress = ($misc.walletBlockCount / $misc.networkBlockCount) * 100
-}
+
 </script>
 
-<div in:fade="{{ duration: 100 }}" out:fade="{{ duration: 100 }}" class="popup">
-    <div in:fly="{{ y: 50 }}" out:fly="{{ y: -50 }}" class="popup-card layered-shadow">
+<div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 100 }}" class="popup">
+    <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="popup-card layered-shadow">
         <div style="margin-bottom: 10px; display: flex; justify-content: space-between">
             <h3 style="color: var(--title-color)">Node status</h3>
             <Close on:click />

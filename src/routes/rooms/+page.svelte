@@ -1,4 +1,6 @@
 <script>
+    import { run } from 'svelte/legacy';
+
 import RoomHugins from "./components/RoomHugins.svelte"
 import RoomList from "./components/RoomList.svelte"
 
@@ -25,28 +27,34 @@ import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
 
 let replyto = ''
 let reply_exit_icon = 'x'
-let noMsgs = false
-let loader = false
+let noMsgs = $state(false)
+let loader = $state(false)
 let filterRooms = []
-let filterEmojis = []
-let fixedRooms = []
-let replyTrue = false
+let filterEmojis = $state([])
+let fixedRooms = $state([])
+let replyTrue = $state(false)
 let scrollGroups = []
-let windowHeight
-let windowChat
+let windowHeight = $state()
+let windowChat = $state()
 let channelMessages = []
 let pageNum = 0;
-let loadMore = true
-let admin = false
+let loadMore = $state(true)
+let admin = $state(false)
 const welcomeAddress = $misc.welcomeAddress
-let thisSwarm = false
+let thisSwarm = $state(false)
 
-$: isThis = $rooms.thisRoom?.key === $swarm.activeSwarm?.key
-$: if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
+run(() => {
+        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
+    });
 
-$: replyTrue = $rooms.replyTo?.reply
+run(() => {
+        replyTrue = $rooms.replyTo?.reply
+    });
 
-$: if (thisSwarm) admin = thisSwarm.admin
+run(() => {
+        if (thisSwarm) admin = thisSwarm.admin
+    });
 
 const isFile = (data) => {
     const findit = (arr) => {
@@ -126,8 +134,8 @@ window.api.receive('set-channels', async () => {
 //Check for possible errors
 const checkErr = (e, tip = false) => {
     let error = false
-    if (e.detail.text.length === 0 && !tip) return true 
-    if (e.detail.text.length > 777) error = "Message is too long"
+    if (e.text.length === 0 && !tip) return true 
+    if (e.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
@@ -139,7 +147,7 @@ const checkErr = (e, tip = false) => {
 const sendRoomMsg = async (e, tipping = false) => {
     const error = checkErr(e, tipping)
     if (error) return
-    let msg = e.detail.text
+    let msg = e.text
     let myaddr = $user.myAddress
     let time = Date.now()
     const hash = await window.api.createGroup()
@@ -149,12 +157,12 @@ const sendRoomMsg = async (e, tipping = false) => {
     let in_channel = $swarm.activeChannel.name
     let tip = false
     //Reaction switch
-    if (e.detail.reply) {
-        replyto = e.detail.reply
+    if (e.reply) {
+        replyto = e.reply
     }
 
-    if (e.detail.tip) {
-        tip = e.detail.tip
+    if (e.tip) {
+        tip = e.tip
     }
     
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
@@ -212,7 +220,13 @@ const printRoomMessage = (roomMsg) => {
     roomMessages.update((current) => {
         return [roomMsg, ...current]
     })
-    fixedRooms = fixedRooms
+    fixedRooms = removeDuplicates(fixedRooms)
+}
+
+
+const removeDuplicates = (arr) => {
+    let uniq = {}
+    return arr.filter((obj) => !uniq[obj.hash] && (uniq[obj.hash] = true))
 }
 
 //Exit reply mode
@@ -260,8 +274,8 @@ const openAddRoom = () => {
 
 //Adds new Group to groArray and prints that Group, its probably empty.
 const addNewRoom = async (e) => {
-    let room = e.detail
-    const admin = e.detail.admin
+    let room = e
+    const admin = e.admin
     if (room.length < 32) return
     openAddRoom()
     //Avoid svelte collision
@@ -283,11 +297,13 @@ const addNewRoom = async (e) => {
 }
 
 //Svelte reactive. Sets noMsgs boolean for welcome message.
-$: if ($roomMessages.length == 0) {
-    noMsgs = true
-} else {
-    noMsgs = false
-}
+run(() => {
+        if ($roomMessages.length == 0) {
+        noMsgs = true
+    } else {
+        noMsgs = false
+    }
+    });
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.
 async function printRoom(room, create = false) {
@@ -343,12 +359,12 @@ function checkReactions(array, scroll) {
     array = addFileMessage(array)
     //Only reactions
     filterEmojis = [...array.filter(
-        (e) => e.reply.length === 64 && e.message.length < 9 && containsOnlyEmojis(e.message)
+        (e) => e.reply.length === 64 && e.message.length < 15 && containsOnlyEmojis(e.message)
     ), ...filterEmojis]
     
        //All group messages all messages except reactions
        filterRooms = array.filter(
-        (m) => !(m.reply.length === 64 && filterEmojis.includes(m))
+        (m) => m.reply.length !== 64 && !filterEmojis.includes(m)
     )
     
     if (filterEmojis.length) {
@@ -364,9 +380,7 @@ function checkReactions(array, scroll) {
 function addEmoji(scroll) {
     let emojis = filterEmojis
     let array = scroll ? [...fixedRooms, ...filterRooms] : filterRooms
-    const already = (a) => {
-        return fixedRooms.some(e => e === a)
-    }
+    let newArr = []
     //Check for replies and message hash that match and then adds reactions to the messages.
     for (const a of array) {
         for (const b of emojis) {
@@ -380,11 +394,10 @@ function addEmoji(scroll) {
                 a.react.unshift(b)
             }
         
-        if (already(a)) continue
-        fixedRooms.push(a)
+        newArr.push(a)
         }
     }
-    fixedRooms = fixedRooms
+    fixedRooms = removeDuplicates(newArr)
 }
 
 async function updateReactions(msg) {
@@ -426,7 +439,7 @@ async function getMoreMessages() {
     return await window.api.printRoom($swarm.activeSwarm?.key, pageNum)
 }
 
-let dragover = false
+let dragover = $state(false)
 
 function drag() {
     dragover = true
@@ -438,7 +451,7 @@ function nodrag() {
 
 async function dropFile(e) {
     dragover = false
-    const { acceptedFiles, fileRejections } = e.detail
+    const { acceptedFiles, fileRejections } = e
     const filename = acceptedFiles[0].name
     const path = acceptedFiles[0].path
     const size = acceptedFiles[0].size
@@ -501,7 +514,7 @@ async function dropFile(e) {
 const sendTransaction = async (e) => {
     $transactions.tip = false
     $transactions.send = false
-    let tx = e.detail
+    let tx = e
     $transactions.pending = tx
     const sent = await window.api.sendTransaction(tx)
     if (sent) {
@@ -537,12 +550,12 @@ const hideModal = () => {
 {/if} -->
 
 {#if $transactions.tip}
-    <SendTransaction on:click="{hideModal}" on:send="{(e) => sendTransaction(e)}" />
+    <SendTransaction on:click="{hideModal}" onSendTx="{(e) => sendTransaction(e)}" />
 {/if}
 
 
 {#if $rooms.addRoom}
-    <AddRoom on:click="{openAddRoom}" on:addRoom="{(e) => addNewRoom(e)}" />
+    <AddRoom on:click="{openAddRoom}" onAddRoom="{(e) => addNewRoom(e)}" />
 {/if}
 
 {#if $user.block}
@@ -554,17 +567,17 @@ const hideModal = () => {
 {/if}
 
 <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => dropFile(e)}>
-<main in:fade="{{ duration: 350 }}">
+<main in:fade|global="{{ duration: 350 }}">
     <RoomList
-        on:printRoom="{(e) => printRoom(e.detail)}"
-        on:removeRoom="{() => printRoom($rooms.roomArray[0])}"
+        onPrintRoom="{(e) => printRoom(e)}"
+        onRemoveRoom="{() => printRoom($rooms.roomArray[0])}"
     />
     
-    <div class="right_side" in:fade="{{ duration: 350 }}" out:fade="{{ duration: 100 }}">
+    <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
       
         <TopBar />
         
-        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly="{{ y: 50 }}">
+        <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly|global="{{ y: 50 }}">
             {#if !$rooms.banned.some(a => a === $rooms.thisRoom?.key)}
             {#if (fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat) || loader}
                 <div>
@@ -573,9 +586,9 @@ const hideModal = () => {
             {/if}
             {#each fixedRooms as message (message.hash)}
                 <GroupMessage
-                    on:reactTo="{(e) => sendRoomMsg(e)}"
-                    on:replyTo="{(e) => replyToMessage(message.hash, message.name)}"
-                    on:deleteMsg="{(e) => deleteMessage(message.hash)}"
+                    ReactTo="{(e) => sendRoomMsg(e)}"
+                    ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                    DeleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
                     reply="{message.reply}"
                     msg="{message.message}"
@@ -599,11 +612,11 @@ const hideModal = () => {
             {/if}
         </div>
         {#if replyTrue}
-            <div class="reply_to_exit" class:reply_to="{replyTrue}" on:click="{() => replyExit()}">
+            <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
                 {reply_exit_icon} Reply to {$rooms.replyTo.nick}
             </div>
         {/if}
-        <ChatInput on:message="{(e) => sendRoomMsg(e)}" />
+        <ChatInput onMessage="{(e) => sendRoomMsg(e)}" />
     </div>
     <RoomHugins />
 </main>
@@ -612,11 +625,11 @@ const hideModal = () => {
 <style lang="scss">
 h3 {
     font-size: 16px;
-    color: white;
+    color: var(--title-color);
 }
 
 h1 {
-    color: white;
+    color: var(--title-color);
     margin: 0;
 }
 
@@ -637,13 +650,14 @@ main {
 
 p {
     font-size: 17px;
-    color: white;
+    color: var(--text-color);
 }
 
 .reply_to_exit {
     width: 50px;
     padding-right: 5px;
     display: none;
+    color: var(--text-color);
 }
 
 .reply_to {
@@ -657,7 +671,7 @@ p {
     bottom: 55px;
     left: 17px;
     justify-content: center;
-    color: white;
+    color: var(--text-color);
     padding: 4px;
     width: fit-content;
     z-index: 9;
@@ -694,9 +708,6 @@ p {
     padding-bottom: 5px;
     position: initial !important;
     height: calc(100% - 131px);
-    // &::-webkit-scrollbar {
-    //     display: none;
-    // }
 }
 
 .fade {

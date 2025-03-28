@@ -1,10 +1,10 @@
 <script >
     import { page } from "$app/stores"
     import { rooms, transactions, user } from "$lib/stores/user"
-    export let info
-    export let admin = false
+    /** @type {{info: any, admin?: boolean}} */
+    let { info, admin = false } = $props();
 
-    $: inRoom = $page.url.pathname === '/rooms'
+    let inRoom = $derived($page.url.pathname === '/rooms')
 
     const toggleBlock = () => {
         if ($user.block) {
@@ -29,9 +29,9 @@
 </script>
 
 <div class="menu">
-    <span on:click={toggleBlock} class="action">Block</span>
+    <span onclick={toggleBlock} class="action">Block</span>
     {#if admin}
-    <span on:click={toggleBan} class="action">Ban</span>
+    <span onclick={toggleBan} class="action">Ban</span>
     {/if}
 </div>
 
