@@ -15,7 +15,6 @@
     <SettingsList ChangeCategory={(e) => gotoPage(e)}/>
     
     <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
-        <div class="fade"></div>
         <div class="outer" id="settings_window">
             <div class="inner">
                 {@render children?.()}
