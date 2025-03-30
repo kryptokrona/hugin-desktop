@@ -24,12 +24,12 @@
             route: "/settings/wallet"
         },
 
-        {
-            name: 'Contacts',
-            text: 'Block contacts or change nicknames',
-            icon: nodeIcon,
-            route: "./contacts"
-        },
+        // {
+        //     name: 'Contacts',
+        //     text: 'Block contacts or change nicknames',
+        //     icon: nodeIcon,
+        //     route: "/settings/contacts"
+        // },
 
         {
             name: 'Updates',
