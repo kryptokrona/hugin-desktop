@@ -52,7 +52,7 @@ jobs:
             - name: Install Node.js, NPM and Yarn
               uses: actions/setup-node@v1
               with:
-                  node-version: 18.13.0
+                  node-version: 18.20.7
 
             - name: Install dependencies
               run: npm i node-gyp && npm install --quiet
