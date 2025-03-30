@@ -40,7 +40,13 @@ jobs:
             - name: Install Node.js, NPM and Yarn
               uses: actions/setup-node@v1
               with:
-                  node-version: 18.13.0
+                  node-version: 18.20.7
+
+            - name: Clean node_modules and package-lock.json
+              run: |
+                if [ "${{ matrix.config.os }}" = "macos-latest" ] || [ "${{ matrix.config.os }}" = "ubuntu-latest" ]; then rm -rf node_modules package-lock.json; fi
+                if [ "${{ matrix.config.os }}" = "windows-latest" ]; then rm -rf node_modules package-lock.json 2>/dev/null || true; fi
+              shell: bash
 
             - name: Install dependencies
               run: npm i node-gyp && npm install --quiet
