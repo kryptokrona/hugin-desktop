@@ -49,16 +49,21 @@ jobs:
               run: |
                   sudo apt-get install libudev-dev
 
+
+
             - name: Install Node.js, NPM and Yarn
               uses: actions/setup-node@v1
               with:
-                  node-version: 18.20.7
+                  node-version: 18.20.0
+                  
+            - name: Clean node_modules and package-lock.json
+              run: |
+                if [ "${{ runner.os }}" = "macOS" ] || [ "${{ runner.os }}" = "Linux" ]; then rm -rf node_modules package-lock.json; fi
+                if [ "${{ runner.os }}" = "Windows" ]; then rmdir /s /q node_modules 2>nul & del /q package-lock.json 2>nul; fi
+              shell: bash
 
             - name: Install dependencies
-              run: |
-                if [ "${{ matrix.os }}" = "macos-11" ]; then rm -rf node_modules package-lock.json; fi
-                npm install node-gyp
-                npm install --quiet
+              run: npm i node-gyp && npm install --quiet
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'windows-latest'
