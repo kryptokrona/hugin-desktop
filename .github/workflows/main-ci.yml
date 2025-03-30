@@ -55,7 +55,10 @@ jobs:
                   node-version: 18.20.7
 
             - name: Install dependencies
-              run: npm i node-gyp && npm i rollup && npm install --quiet
+              run: 
+              if: matrix.config.name == 'macOS-11'
+              run: rm -rf node_modules package-lock.json
+               npm i node-gyp && npm install --quiet
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'windows-latest'
