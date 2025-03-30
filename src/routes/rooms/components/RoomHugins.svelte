@@ -11,6 +11,7 @@ import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
 import UserOptions from './UserOptions.svelte'
 import BanInfo from './BanInfo.svelte'
+	import { roomMessages } from '$lib/stores/roommsgs';
 const startTone = new Audio('/audio/startcall.mp3')
 
 let roomName
@@ -43,7 +44,7 @@ $effect(() => {
 
 //Set group key
 run(() => {
-        if ($rooms.thisRoom?.key) {
+    if ($rooms.thisRoom?.key) {
         room = $rooms.thisRoom.key
     }
     if (thisSwarm && $rooms.activeHugins) {
@@ -69,7 +70,6 @@ const notIncludes = (a) => {
 }
 
 const updateList = () => {
-    console.log("Update online effect")
     //Adds connected and known users to one array
     knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)),
     ...$rooms.activeHugins]).filter( a => a.address !== myAddress)

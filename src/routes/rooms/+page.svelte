@@ -315,20 +315,21 @@ async function printRoom(room, create = false) {
     channelMessages = []
     filterRooms = []
     $roomMessages = []
+    $rooms.activeHugins = []
+    $swarm.activeSwarm = false
     //Return the latest messages
+    console.log("Get messages")
     const messages = await getMessages(room)
     $roomMessages = messages
 
-    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: ""}
     if (create) {
         loader = true
         await sleep(777)
-    }
-    
-    const active = $swarm.active.find(a => a.key === room.key)
-    $rooms.thisRoom.topic = active?.topic
-    $swarm.activeSwarm = active
 
+    }
+    const active = $swarm.active.find(a => a.key === room.key)
+    $swarm.activeSwarm = active
+    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: active.topic}
     checkReactions(messages, false)
     replyExit()
     scrollDown()

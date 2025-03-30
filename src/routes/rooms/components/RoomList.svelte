@@ -96,11 +96,13 @@ const printRoom = async (room) => {
     $swarm.activeSwarm = active
     onPrintRoom(room)
     await sleep(150)
+    console.log("Print room!")
     readMessage(room)
 }
 
 //Function to get all users in a room.
 async function filterActiveHugins() {
+    console.log("Filter")
    const users = await window.api.getRoomUsers($swarm.activeSwarm?.key)
    const all = []
     for (const u of users) {
@@ -108,6 +110,7 @@ async function filterActiveHugins() {
         make_avatar(u.avatar, u.address)
         all.push(user)
     }
+    console.log("Updated hugins")
     $rooms.activeHugins = all
 
 }
@@ -131,7 +134,6 @@ async function printRooms() {
             roomArray: roomList,
         }
     })
-
 
     filterActiveHugins()
 }
