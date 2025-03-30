@@ -59,7 +59,7 @@ jobs:
             - name: Clean node_modules and package-lock.json
               run: |
                 if [ "${{ matrix.config.os }}" = "macos-latest" ] || [ "${{ matrix.config.os }}" = "ubuntu-latest" ]; then rm -rf node_modules package-lock.json; fi
-                if [ "${{ matrix.config.os }}" = "windows-latest" ]; then rmdir /s /q node_modules 2>nul & del /q package-lock.json 2>nul; fi
+                if [ "${{ matrix.config.os }}" = "windows-latest" ]; then rm -rf node_modules package-lock.json 2>/dev/null || true; fi
               shell: bash
 
             - name: Install dependencies
