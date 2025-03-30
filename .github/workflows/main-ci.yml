@@ -55,11 +55,11 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: 18.20.0
-                  
+
             - name: Clean node_modules and package-lock.json
               run: |
-                if [ "${{ runner.os }}" = "macOS" ] || [ "${{ runner.os }}" = "Linux" ]; then rm -rf node_modules package-lock.json; fi
-                if [ "${{ runner.os }}" = "Windows" ]; then rmdir /s /q node_modules 2>nul & del /q package-lock.json 2>nul; fi
+                if [ "${{ matrix.config.os }}" = "macos-latest" ] || [ "${{ matrix.config.os }}" = "'ubuntu-latest" ]; then rm -rf node_modules package-lock.json; fi
+                if [ "${{ matrix.config.os }}" = " windows-latest" ]; then rmdir /s /q node_modules 2>nul & del /q package-lock.json 2>nul; fi
               shell: bash
 
             - name: Install dependencies
