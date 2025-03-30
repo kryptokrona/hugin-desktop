@@ -150,11 +150,11 @@ run(() => {
                 <MessageIcon />
             </div>
         </Tooltip>
-        <!-- <Tooltip title="Groups">
+        <Tooltip title="Groups">
             <div onclick={groupRouteAndMenu} class="button">
                 <GroupIcon />
             </div>
-        </Tooltip>  -->
+        </Tooltip> 
         <Tooltip title="Rooms">
             <div onclick={roomRouteAndMenu} class="button">
                 <RoomIcon />

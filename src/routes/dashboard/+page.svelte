@@ -56,8 +56,8 @@
 
 <Funds/>
 <div class="grid"  in:fly|global="{{ y: 100 }}">
-    <!-- <StandardGroups/> -->
-    <!-- <Transactions/> -->
+    <StandardGroups/> 
+    <Transactions/>
     <!-- <CreateRoom/> -->
 </div>
 
