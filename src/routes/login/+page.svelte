@@ -58,7 +58,7 @@ const checkPass = async () => {
       loadSpin = false
       $layoutState.showNodeSelector = false
       $misc.loading = false
-      goto('/dashboard')
+      await goto('/dashboard')
       await sleep(300)
       $user.loggedIn = true
   }
