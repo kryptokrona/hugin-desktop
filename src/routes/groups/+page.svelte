@@ -559,11 +559,11 @@ function nodrag() {
 <style lang="scss">
 h3 {
     font-size: 16px;
-    color: white;
+    color: var(--text-color);
 }
 
 h1 {
-    color: white;
+    color: var(--text-color);
     margin: 0;
 }
 

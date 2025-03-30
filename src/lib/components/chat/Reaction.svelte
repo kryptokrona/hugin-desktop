@@ -85,7 +85,7 @@ run(() => {
 .reactor {
     font-family: 'Montserrat';
     font-weight: bold;
-    color: white;
+    color: var(--text-color);
     border-radius: 2px;
     font-size: 11px;
     display: inline-block;
@@ -97,6 +97,6 @@ run(() => {
     font-family: 'Montserrat';
     font-size: 10px;
     display: inline;
-    color: white;
+    color: var(--text-color);
 }
 </style>

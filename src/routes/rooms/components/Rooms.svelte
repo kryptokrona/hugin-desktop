@@ -96,7 +96,7 @@
         opacity: 0.9;
 
         &:hover {
-            color: white;
+            color: var(--text-color);
             opacity: 1;
             background-color: var(--card-border);
             border-bottom: 1px solid transparent;
@@ -157,7 +157,7 @@
     }
     
     .swarm_info {
-        color: white;
+        color: var(--text-color);
     }
 
     .voice {
@@ -204,7 +204,7 @@
 
     .this-channel {
         position: absolute;
-        background-color: white;
+        background-color: var(--background-color);
         border-radius: 2px;
         height: 16px;
         width: 3px;

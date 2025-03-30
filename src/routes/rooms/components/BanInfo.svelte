@@ -61,7 +61,7 @@
 
     p {
         font-size: 12px;
-        color: white;
+        color: var(--text-color);
         font-family: 'Montserrat';
     }
     </style>

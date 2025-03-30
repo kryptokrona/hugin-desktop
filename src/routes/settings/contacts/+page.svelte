@@ -23,7 +23,7 @@ import { fade } from "svelte/transition"
     </div>
 </div>
 
-<style lang="scss">
+<style >
 
 h2 {
     margin-bottom: 10px;

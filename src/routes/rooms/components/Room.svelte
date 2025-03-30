@@ -120,7 +120,7 @@
         opacity: 0.9;
     
         &:hover {
-            color: white;
+            color: var(--text-color);
             opacity: 1;
             background-color: var(--card-border);
             border-bottom: 1px solid transparent;
@@ -189,14 +189,14 @@
     }
     
     .swarm_info {
-        color: white;
+        color: var(--text-color);
         height: 100px;
         border-bottom: 1px solid var(--border-color);
     }
 
     .count {
         font-size: 12px;
-        color: white;
+        color: var(--text-color);
     }
 
     .asian {

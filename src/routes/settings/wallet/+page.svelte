@@ -111,7 +111,7 @@ run(() => {
     
     p {
         font-family: 'Montserrat';
-        color: white;
+        color: var(--text-color);
         width: 100%;
         overflow-wrap: break-word;
         padding-right: 10px;
@@ -127,7 +127,7 @@ run(() => {
     
     .keys p {
         font-family: 'Montserrat';
-        color: white;
+        color: var(--text-color);
         width: 100%;
         overflow-wrap: break-word;
         padding-right: 10px;

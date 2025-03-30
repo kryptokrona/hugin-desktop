@@ -232,13 +232,13 @@ p {
 
 .active_hugins {
     padding: 1rem;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
 }
 
 .add {
     font-size: 15px;
-    color: white;
+    color: var(--text-color);
 }
 
 .content {

@@ -164,7 +164,7 @@ input {
     padding: 0 1rem;
     height: 35px;
     width: 100%;
-    color: white;
+    color: var(--text-color);
 
     &:focus {
         outline: none;

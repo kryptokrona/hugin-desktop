@@ -296,13 +296,13 @@ function flipper(node, {
     align-items: center;
     padding: 0.5rem;
     width: 100%;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
     transition: 177ms ease-in-out;
     cursor: pointer;
 
     &:hover {
-        background-color: #333333;
+        background-color: var(--background-color)
     }
 }
 

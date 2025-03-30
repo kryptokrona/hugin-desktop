@@ -28,7 +28,7 @@
             name: 'Contacts',
             text: 'Block contacts or change nicknames',
             icon: nodeIcon,
-            route: "/settings/contacts"
+            route: "./contacts"
         },
 
         {
@@ -125,7 +125,7 @@
     align-items: center;
     padding: 0.5rem;
     width: 100%;
-    color: white;
+    color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
     transition: 177ms ease-in-out;
     cursor: pointer;

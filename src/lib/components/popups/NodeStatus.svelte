@@ -83,7 +83,7 @@ let progress = $derived(($misc.walletBlockCount / $misc.networkBlockCount) * 100
     margin: 5px 0;
 
     h4 {
-        color: white;
+        color: var(--text-color);
         position: absolute;
         align-self: center;
         z-index: 9999;

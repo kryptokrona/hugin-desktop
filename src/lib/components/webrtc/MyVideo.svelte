@@ -243,7 +243,7 @@ p {
 }
 
 .toggle_window {
-    color: white;
+    color: var(--text-color);
     width: 60px;
     height: 50px;
     font-size: 12px;
