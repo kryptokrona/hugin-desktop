@@ -452,7 +452,7 @@ function nodrag() {
 
 async function dropFile(e) {
     dragover = false
-    const { acceptedFiles, fileRejections } = e
+    const { acceptedFiles, fileRejections } = e.detail
     const filename = acceptedFiles[0].name
     const path = acceptedFiles[0].path
     const size = acceptedFiles[0].size
