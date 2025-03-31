@@ -183,17 +183,25 @@ const groupMessageTable = () => {
               sent BOOLEAN
             )`
 
+        
+    return new Promise(
+        (resolve, reject) => {
+            database.prepare(groupTable).run()
+            console.log("R:D::DSA:DA:DA:DA:AD:A:_------")
+            try {
+                const update = `ALTER TABLE groupmessages ADD tip TEXT`
+                 database.prepare(update).run()
+             } catch(e) {
+             }
+        },
+        () => {
+            console.log("WOOOOOO OR:D::DSA:DA:DA:DA:AD:A:_------")
             try {
                 const update = `ALTER TABLE groupmessages ADD tip TEXT`
                  database.prepare(update).run()
              } catch(e) {
              }
 
-    return new Promise(
-        (resolve, reject) => {
-            database.prepare(groupTable).run()   
-        },
-        () => {
             resolve()
         }
     )
