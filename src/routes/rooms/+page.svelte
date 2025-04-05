@@ -29,7 +29,7 @@ let replyto = ''
 let reply_exit_icon = 'x'
 let noMsgs = $state(false)
 let loader = $state(false)
-let filterRooms = []
+let filterRooms = $state([])
 let filterEmojis = $state([])
 let fixedRooms = $state([])
 let replyTrue = $state(false)
@@ -365,7 +365,7 @@ function checkReactions(array, scroll) {
     
        //All group messages all messages except reactions
        filterRooms = array.filter(
-        (m) => m.reply.length !== 64 && !filterEmojis.includes(m)
+        (m) => !(m.reply.length === 64 && filterEmojis.includes(m)) && !containsOnlyEmojis(m.message)
     )
     
     if (filterEmojis.length) {
