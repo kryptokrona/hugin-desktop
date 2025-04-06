@@ -178,6 +178,10 @@ const WINDOW_API = {
         return await ipcRenderer.invoke('send-tx', tx)
     },
 
+    messageKeyPair: async () => {
+        return await ipcRenderer.invoke('message-keypair')
+    }, 
+
     addGroup: async (grp) => {
         ipcRenderer.send('add-group', grp)
     },
