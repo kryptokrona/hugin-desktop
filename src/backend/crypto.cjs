@@ -15,6 +15,10 @@ ipcMain.handle('get-room-invite', async () => {
     return create_room_invite()
 })
 
+ipcMain.handle('message-keypair', async () => {
+    return await keychain.messageKeyPair()
+})
+
 const decryptSwarmMessage = async (tx, hash, group_key) => {
 
     try {
@@ -104,8 +108,17 @@ const keychain =  {
         return Buffer.from(naclPubKey).toString('hex')
     },
 
-   async generateDeterministicSubwalletKeys(spendKey) {
-        return await crypto.generateDeterministicSubwalletKeys(spendKey, 1)
+   async generateDeterministicSubwalletKeys(spendKey, index) {
+        return await crypto.generateDeterministicSubwalletKeys(spendKey, index)
+    },
+
+    async messageKeyPair() {
+        const [priv, view] = keychain.getPrivKeys()
+        const keys = await crypto.generateViewKeysFromPrivateSpendKey(view)
+        const address = await Address.fromSeed(keys.private_key)
+        const pub = address.m_keys.m_spendKeys.m_publicKey
+        const signKey = address.m_keys.m_spendKeys.m_privateKey
+        return [signKey, pub]
     }
     
 }
