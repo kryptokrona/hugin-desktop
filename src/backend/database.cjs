@@ -75,6 +75,7 @@ const createTables = () => {
     groupChannelsMessagesTable()
     roomKeysTable()
     roomUserTable()
+    feedMessageTable()
 }
 
 const welcomeAddress =
@@ -316,6 +317,35 @@ const roomUserTable = () => {
 
 }
 
+const feedMessageTable = () => {
+   const feedMessage = `CREATE TABLE IF NOT EXISTS feedmessages ( 
+        address TEXT,
+        message TEXT,
+        reply TEXT,
+        timestamp INT,
+        nickname TEXT,
+        hash TEXT,
+        UNIQUE (hash)
+    )`
+   return new Promise(
+    (resolve, reject) => {
+        database.prepare(feedMessage).run()
+        try {
+            const update = `ALTER TABLE feedmessages ADD signature TEXT`
+             database.prepare(update).run()
+         } catch(e) {
+        }
+    },
+    () => {
+        try {
+            const update = `ALTER TABLE feedmessages ADD signature TEXT`
+             database.prepare(update).run()
+         } catch(e) {
+        }
+        resolve()
+    })
+}
+
 
 
 //DATABASE REQUESTS
@@ -470,6 +500,18 @@ const getLatestList = async (list) => {
     }  
     return myGroups.sort((a, b) => a.timestamp - b.timestamp)
 }
+
+async function saveFeedMessage(msg) {
+    try {
+    database.prepare(
+        'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    ).run(msg.message, msg.address, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash)
+
+    } catch(a) {
+        console.log("Sql lite", a)
+    }
+
+  }
 
 const saveGroupMsg = async (msg, offchain, channels = false) => {
     
@@ -776,6 +818,34 @@ ipcMain.handle('print-group', async (e, grp, page) => {
     return await printGroup(grp, page)
 })
 
+const printFeed = async () => {
+    let limit = 50
+    let offset = 0
+    const thisFeed = []
+    return new Promise((resolve, reject) => {
+        const getGroup = `SELECT
+          message,
+          address,
+          signature,
+          timestamp,
+          nickname,
+          reply,
+          hash,
+        FROM
+            feedmessages
+        ORDER BY
+            time
+        DESC
+        LIMIT ${offset}, ${limit}`
+        const stmt = database.prepare(getGroup)
+
+        for(const row of stmt.iterate(group)) {
+                    
+            thisFeed.push(row)
+        }
+        resolve(thisFeed)
+    })
+}
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
 
@@ -994,4 +1064,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {loadRoomUsers, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
+module.exports = {loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}

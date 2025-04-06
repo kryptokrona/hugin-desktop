@@ -386,6 +386,43 @@ const sanitize_join_swarm_data = (data) => {
     return object;
   };
 
+
+  const sanitize_feed_message = (data) => {
+    const address = sanitizeHtml(data?.address);
+    if (address?.length > 99 || data?.address === undefined) return false;
+    const message = sanitizeHtml(data?.message);
+    if (message?.length > 777 || data?.message === undefined) return false;
+    const signature = sanitizeHtml(data?.signature);
+    if (signature?.length > 128 || data?.signature === undefined) return false;
+    const nickname = sanitizeHtml(data?.nickname);
+    if (nickname?.length > 50 || data?.nickname === undefined) return false;
+    const hash = sanitizeHtml(data.hash)
+    if (typeof data.hash !== 'string' || hash.length > 64) return false;
+    const timestamp = sanitizeHtml(data?.timestamp);
+    if (timestamp?.length > 25) return false;
+    const reply = sanitizeHtml(data.reply);
+    if (reply?.length > 64) return false;
+
+    let tip = false;
+    if (data.tip && data.tip !== 'false') {
+        if (typeof data.tip.amount !== 'number' || data.tip.amount?.length > 100) return false;
+        if (typeof data.tip.receiver !== 'string' || data.tip.receiver?.length > 100) return false;
+        tip = {amount: data.tip.amount, receiver: sanitizeHtml(data.tip.receiver)}
+    }
+
+    const clean = {
+        message,
+        address,
+        nickname,
+        signature,
+        reply,
+        hash,
+        timestamp: parseInt(timestamp),
+        tip,
+
+    }
+    return clean
+  }
  
 
-module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
+module.exports = {sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
