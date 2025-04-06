@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg} = require("./database.cjs")
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash} = require('./utils.cjs');
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -12,7 +12,8 @@ const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", video
 const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
 const { Storage } = require("./storage.cjs");
-
+const { Crypto, Address } = require('kryptokrona-utils');
+const crypto = new Crypto()
 
 const MISSING_MESSAGES = 'missing-messages';
 const REQUEST_MESSAGES = 'request-messages';
@@ -21,6 +22,10 @@ const SEND_HISTORY = 'send-history';
 const REQUEST_FILE = 'request-file'
 const PING_SYNC = 'Ping';
 const DOWNLOAD_REQUEST = 'download-request'
+const REQUEST_FEED = 'request-feed';
+const SEND_FEED_HISTORY = 'send-feed-history';
+
+const EventEmitter = require('bare-events')
 
 let localFiles = []
 let remoteFiles = []
@@ -29,126 +34,133 @@ let downloading = []
 let uploading = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 
-async function send_voice_channel_sdp(data) {
-    const active = active_swarms.find(a => a.topic === data.topic)
-    if (!active) return
-    const con = active.connections.find(a => a.address === data.address)
-    if (!con) return
-    //We switch data address because in this case, it is from, we can change this
-    data.address = Hugin.address
-    try {
-        con.connection.write(JSON.stringify(data))
-    } catch(e) {}
-}
 
-const send_voice_channel_status = async (joined, status, update = false) => {
-    const active = active_swarms.find(a => a.key === status.key)
-    if (!active) return
-    const msg = active.topic
-    const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
-    const data = JSON.stringify({
-        address: Hugin.address,
-        avatar: Hugin.avatar,
-        signature: sig,
-        message: msg,
-        voice: joined,
-        topic: active.topic,
-        name: Hugin.nickname,
-        video: status.video,
-        audioMute: status.audioMute,
-        videoMute: status.videoMute,
-        screenshare: status.screenshare
-    })
-    update_local_voice_channel_status({
-        topic: active.topic,
-        voice: joined,
-        audioMute: status.audioMute,
-        videoMute: status.videoMute,
-        screenshare: status.screenshare,
-        video: status.video
-    })
+class NodeConnection extends EventEmitter {
+  constructor() {
+    super()
+    this.node = null
+    this.connection = null
+    this.requests = new Map()
+    this.discovery = null
+    this.pending = []
+  }
 
-    //Send voice channel status to others in the group
-    send_swarm_message(data, status.key)
-    
-    if (update) return
-    //If we joined the voice channel, make a call to those already announced their joined_voice_status
-    if (joined) { 
-   
-        //If no others active in the voice channel, return
-        if (!active.connections.some(a => a.voice === true)) return
-        //Check whos active and call them individually
-        let active_voice = active.connections.filter(a => a.voice === true && a.address)
-        active_voice.forEach(async function(user) {
-            await sleep(100)
-            //Call to VoiceChannel.svelte
-            join_voice_channel(status.key, active.topic, user.address)
-        })
+async connect(address) {
+  const [base_keys, dht_keys, sig] = get_new_peer_keys(address)
+  const topicHash = base_keys.publicKey.toString('hex')
+    this.node = new HyperSwarm({
+    firewall (remotePublicKey) {
+    //We verify if the node has the correct public key.
+    if (remotePublicKey.toString('hex') !== address.slice(-64)) {
+      return true
     }
+    return false
+    }}, sig, dht_keys, base_keys)
+
+  this.listen()
+  const topic = Buffer.alloc(32).fill(topicHash)
+  this.discovery = this.node.join(topic, {server: false, client: true})
 }
 
-const join_voice_channel = (key, topic, address) => {
-    Hugin.send("join-voice-channel", {key, topic, address})
-}
+async listen() {
+  this.node.on('connection', (conn, info) => {
+    this.node_connection(conn)
+  })
 
-const admin_ban_user = async (address, key) => {
-    const active = get_active(key)
-    if (!active) return
-    active.connections.forEach(chat => {
-        chat.connection.write(JSON.stringify({type: "ban", address}))
+  process.once('SIGINT', function () {
+    this.node.on('close', function () {
+        process.exit();
+    });
+    this.node.destroy();
+    setTimeout(() => process.exit(), 2000);
+  });
+
+  }
+  async node_connection(conn) {
+    this.connection = conn
+    conn.on('error', () => {
+    console.log("Got error connection signal")
+        conn.end();
+        conn.destroy();
+        this.reconnect()
+   })
+
+   conn.on('data', d => {
+    const string = d.toString()
+    const data = this.parse(string)
+    console.log("Got response messages from node:", data.response.length)
+    if (!data) return
+      if (this.requests.has(data.id)) {
+        if ('chunk' in data) {
+          this.pending.push(data.repsonse)
+          return
+        }
+        if ('done' in data) {
+          const { resolve, reject } = this.requests.get(data.id);
+          resolve(this.pending);
+          this.requests.delete(data.id);
+          return
+        }
+        const { resolve, reject } = this.requests.get(data.id);
+        resolve(data.response);
+        this.requests.delete(data.id);
+     }
     })
-    await sleep(200)
-    ban_user(address, active.topic)
-
 }
 
-const ban_user = async (address, topic) => {
-    const active = get_active_topic(topic)
-    if (!active) return
-    Hugin.ban(address, topic)
-    const conn = active.connections.find(a => a.address === address)
-    if (conn) return
-    conn.peer.ban(true)
-    await sleep(200)
-    connection_closed(conn.connection, topic)
+async reconnect() {
+  while(this.connection === null) {
+    await sleep(5000)
+    this.discovery.refresh({client: true, server: false})
+  }
+  return
+}
+
+sync(data) {
+  return new Promise((resolve, reject) => {
+    data.id = data.timestamp
+    this.requests.set(data.id, { resolve, reject });
+    this.connection.write(JSON.stringify(data));
+  });
 }
 
 
-const new_swarm = async (data, beam = false, chat = false) => {
-    return await create_swarm(data, beam, chat)
+parse(d) {
+  try{
+    return JSON.parse(d)
+  } catch(e) {
+    return false
+  }
 }
 
-const update_local_voice_channel_status = (data) => {
-    const updated = data
-    active_voice_channel = updated
-    return true
-}
-
-const end_swarm = async (key, beam = false) => {
-    let active = get_active(key)
-    if (beam) active = get_beam(key)
-    if (!active) return
-    const topic = active.topic
-    Hugin.send('swarm-disconnected', topic)
-    const [in_voice] = get_local_voice_status(topic);
-    if (in_voice) {
-      update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE);
+async message(payload) {
+  //Create a new derived view key pair for sending messages to nodes.
+  const [signKey, pub] = await keychain.messageKeyPair()
+  //We sign the payload and hash to avoid denial of service attacks.
+  const id = randomKey()
+  const signature = await signMessage(payload + id, signKey)
+  const data = {
+    type: 'post',
+    message: {
+    cipher: payload,
+    pub,
+    timestamp: Date.now(),
+    hash: id,
+    signature
     }
 
-    active.connections.forEach(chat => {
-        try {
-        chat.connection.write(JSON.stringify({type: "disconnected"}))
-        } catch(e) {}
-        connection_closed(chat.connection, topic)
-    })
-    
-    await active.swarm.leave(Buffer.from(topic))
-    await active.swarm.destroy()
+  }
 
-    const still_active = active_swarms.filter(a => a.topic !== topic)
-    active_swarms = still_active
-    console.log("***** Ended swarm *****")
+  if (this.connection === null) {
+  return false
+  }
+
+  this.connection.write(JSON.stringify(data))
+  return true
+  
+  }
 }
+const Nodes = new NodeConnection()
 
 const create_swarm = async (data, beam, chat) => {
     let discovery
@@ -205,6 +217,33 @@ const create_swarm = async (data, beam, chat) => {
     discovery = swarm.join(topic, {server: true, client: true})
     await discovery.flushed()
     check_online_state(topicHash)
+}
+
+
+const end_swarm = async (key, beam = false) => {
+  let active = get_active(key)
+  if (beam) active = get_beam(key)
+  if (!active) return
+  const topic = active.topic
+  Hugin.send('swarm-disconnected', topic)
+  const [in_voice] = get_local_voice_status(topic);
+  if (in_voice) {
+    update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE);
+  }
+
+  active.connections.forEach(chat => {
+      try {
+      chat.connection.write(JSON.stringify({type: "disconnected"}))
+      } catch(e) {}
+      connection_closed(chat.connection, topic)
+  })
+  
+  await active.swarm.leave(Buffer.from(topic))
+  await active.swarm.destroy()
+
+  const still_active = active_swarms.filter(a => a.topic !== topic)
+  active_swarms = still_active
+  console.log("***** Ended swarm *****")
 }
 
 const new_connection = (connection, topic, dht_keys, peer, beam) => {
@@ -271,6 +310,103 @@ const connection_closed = (conn, topic, error = false) => {
     active.connections = still_active
 }
 
+
+async function send_voice_channel_sdp(data) {
+  const active = active_swarms.find(a => a.topic === data.topic)
+  if (!active) return
+  const con = active.connections.find(a => a.address === data.address)
+  if (!con) return
+  //We switch data address because in this case, it is from, we can change this
+  data.address = Hugin.address
+  try {
+      con.connection.write(JSON.stringify(data))
+  } catch(e) {}
+}
+
+const send_voice_channel_status = async (joined, status, update = false) => {
+  const active = active_swarms.find(a => a.key === status.key)
+  if (!active) return
+  const msg = active.topic
+  const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
+  const data = JSON.stringify({
+      address: Hugin.address,
+      avatar: Hugin.avatar,
+      signature: sig,
+      message: msg,
+      voice: joined,
+      topic: active.topic,
+      name: Hugin.nickname,
+      video: status.video,
+      audioMute: status.audioMute,
+      videoMute: status.videoMute,
+      screenshare: status.screenshare
+  })
+  update_local_voice_channel_status({
+      topic: active.topic,
+      voice: joined,
+      audioMute: status.audioMute,
+      videoMute: status.videoMute,
+      screenshare: status.screenshare,
+      video: status.video
+  })
+
+  //Send voice channel status to others in the group
+  send_swarm_message(data, status.key)
+  
+  if (update) return
+  //If we joined the voice channel, make a call to those already announced their joined_voice_status
+  if (joined) { 
+ 
+      //If no others active in the voice channel, return
+      if (!active.connections.some(a => a.voice === true)) return
+      //Check whos active and call them individually
+      let active_voice = active.connections.filter(a => a.voice === true && a.address)
+      active_voice.forEach(async function(user) {
+          await sleep(100)
+          //Call to VoiceChannel.svelte
+          join_voice_channel(status.key, active.topic, user.address)
+      })
+  }
+}
+
+const join_voice_channel = (key, topic, address) => {
+  Hugin.send("join-voice-channel", {key, topic, address})
+}
+
+const admin_ban_user = async (address, key) => {
+  const active = get_active(key)
+  if (!active) return
+  active.connections.forEach(chat => {
+      chat.connection.write(JSON.stringify({type: "ban", address}))
+  })
+  await sleep(200)
+  ban_user(address, active.topic)
+
+}
+
+const ban_user = async (address, topic) => {
+  const active = get_active_topic(topic)
+  if (!active) return
+  Hugin.ban(address, topic)
+  const conn = active.connections.find(a => a.address === address)
+  if (conn) return
+  conn.peer.ban(true)
+  await sleep(200)
+  connection_closed(conn.connection, topic)
+}
+
+
+const new_swarm = async (data, beam = false, chat = false) => {
+  return await create_swarm(data, beam, chat)
+}
+
+const update_local_voice_channel_status = (data) => {
+  const updated = data
+  active_voice_channel = updated
+  return true
+}
+
+
 const get_active_topic = (topic) => {
     const active = active_swarms.find(a => a.topic === topic)
     if (!active) return false
@@ -298,6 +434,18 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         if (data.type === "disconnected") {
             connection_closed(connection, active.topic)
             return true
+        }
+    }
+
+    // If feed message
+    if ('type' in data) {
+        if (data.type === 'feed') {
+        const message = sanitize_feed_message(data)
+        console.log('feed data log: ', message);
+        if (!message) return 'Ban'
+        await saveFeedMessage(message)
+        Hugin.send('feed-message', message);
+        return
         }
     }
 
@@ -385,6 +533,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
                 request_history(joined.address, topic, active.files)
                 active.requests++
             }
+            request_feed(joined.address, topic);
             console.log("=======================================")
             console.log("--USER:", con.name, "JOINED THE ROOM--")
             console.log("=======================================")
@@ -421,6 +570,18 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             //Dont handle requests from blocked users
             if (Hugin.blocked(con.address)) return true
             // History requests
+
+            
+            if (data.type === REQUEST_FEED) {
+              console.log('Got feed request');
+              send_feed_history(con.address, topic);
+              return true;
+            }
+  
+            if (data.type === SEND_FEED_HISTORY) {
+              save_feed_history(data.messages, con.address, topic);
+              return true;
+            }
 
             //Start-up history sync
             if (data.type === REQUEST_HISTORY && con.request) {
@@ -493,6 +654,45 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
      if (Hugin.blocked(con.address)) return true
     
     return false
+}
+
+
+const request_feed = (address, topic) => {
+  console.log('Requsting feed..');
+  const message = {
+    type: REQUEST_FEED
+  };
+  send_peer_message(address, topic, message);
+}
+
+const send_feed_history = async (address, topic) => {
+  const messages = await printFeed()
+  const history = {
+    type: SEND_FEED_HISTORY,
+    messages
+  };
+  send_peer_message(address, topic, history);
+}
+
+const save_feed_history = async (messages) => {
+  for (const data of messages) {
+    const message = sanitize_feed_message(data)
+    if (!message) continue
+    await saveFeedMessage(message)
+  }
+}
+
+
+const send_feed_message = async (message, reply, tip) => {
+  const hash = randomKey()
+  const signature = await signMessage(message+hash, keychain.getPrivKeys[0]);
+  const payload = {type: 'feed', message, nickname: Hugin.name, address: Hugin.address, reply: "", tip, hash, timestamp: Date.now(), signature};
+  for (const swarm of active_swarms) {
+    for (const peer of swarm.connections) {
+      peer.connection.write(JSON.stringify(payload))
+    }
+  }
+  return payload;
 }
 
 const find_missing_peers = async (active, peers) => {
@@ -1101,4 +1301,4 @@ function get_sdp(data) {
 }
 
 
-module.exports = {new_swarm, send_swarm_message, end_swarm}
+module.exports = {new_swarm, send_swarm_message, end_swarm, Nodes}
