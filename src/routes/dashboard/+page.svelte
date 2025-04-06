@@ -12,11 +12,13 @@
     import {messages} from '$lib/stores/messages.js'
     import { fly } from 'svelte/transition'
     import Welcome from './components/Welcome.svelte'
+	import Upgrade from './components/Upgrade.svelte';
     
     let date = new Date()
     let hrs = date.getHours()
     let greet = $state()
     let welcome = $state(false)
+    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrage Hugin +'}`
     onMount(async () => {
         $user.started = true
         if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
@@ -28,10 +30,18 @@
         else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'
         else if (hrs >= 17 && hrs <= 24) greet = 'Good Evening'
     })
+
+    let upgrade = $state(false)
+
 </script>
 
 {#if welcome} 
     <Welcome onClose={() => (welcome = false)}/>
+{/if}
+
+
+{#if upgrade} 
+    <Upgrade onClose={() => (upgrade = false)}/>
 {/if}
 
 <div class="header" in:fly|global="{{ y: 100 }}">
@@ -40,16 +50,12 @@
         <EditName/>
     </div>
     <div class="button_wrapper">
-        {#if $layoutState.showFaucetButton === null}
             <FillButton
-                    text="Faucet"
+                text="{upgraded}"
                     enabled="{true}"
                     disabled="{false}"
-                    on:click="{() =>
-                    openURL(
-                        `https://xkr.network/faucet`
-                    )}"/>
-        {/if}
+                    on:click="{() => upgrade = true}"/>
+                
         <Share/>
     </div>
 </div>
