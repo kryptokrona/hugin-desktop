@@ -170,6 +170,10 @@ async start_beam(upload, key, file, topic, room, dm) {
             } else {
                 await this.download(conn, file, topic, room, dm)
             }
+            conn.on('error', (e) => {
+              console.log("Beam error", e)
+              this.close(key)
+           })
         })
       
 
@@ -251,6 +255,11 @@ async upload(conn, file, topic) {
       this.close(file.key);
     }
   });
+
+  conn.on('error', (e) => {
+    console.log("Beam error", e)
+    this.close(file.key)
+ })
   
   start()
 }

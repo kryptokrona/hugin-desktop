@@ -357,7 +357,7 @@ async function createMessageSubWallet() {
         }
         }
         const [spendKey, viewKey] = keychain.getPrivKeys()
-        const subWalletKeys = await keychain.generateDeterministicSubwalletKeys(spendKey)
+        const subWalletKeys = await keychain.generateDeterministicSubwalletKeys(spendKey, 1)
         await js_wallet.importSubWallet(subWalletKeys.private_key)
     }
 }
@@ -455,7 +455,7 @@ async function sendTx(tx) {
         [[tx.to, tx.amount]], // destinations,
         3, // mixin
         { fixedFee: 1000, isFixedFee: true }, // fee
-        undefined, //paymentID
+        tx.paymentID, //paymentID
         undefined, // subWalletsToTakeFrom
         undefined, // changeAddress
         true, // relayToNetwork
