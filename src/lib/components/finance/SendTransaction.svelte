@@ -7,6 +7,7 @@ import { rooms, transactions } from '$lib/stores/user.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { page } from '$app/stores'
 	import { run } from 'svelte/legacy';
+	import Backdrop from '../layouts/Backdrop.svelte';
 
 let inRoom = $derived($page.url.pathname === '/rooms')
 
@@ -21,12 +22,12 @@ const check_avatar = (address) => {
     else return false
 }
 
-let enableButton = false
+let enableButton = $state(false)
 let addr = $transactions.send.to
-let amount
-let paymentId = ''
-let pass
-let verify = false
+let amount = $state()
+let paymentId = $state('')
+let pass = $state()
+let verify = $state(false)
 
 run(() => {
     if (amount > 0) {
@@ -72,11 +73,7 @@ const confirmTx = async () => {
 
 <svelte:window on:keyup|preventDefault="{keyDown}" />
 
-<div
-    onclick="{close}"
-    in:fade|global="{{ duration: 100 }}"
-    out:fade|global="{{ duration: 100 }}"
-    class="backdrop"
+<Backdrop onClose={close}
 >
     {#if !verify}
     <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
@@ -128,7 +125,7 @@ const confirmTx = async () => {
         />
     </div>
     {/if}
-</div>
+</Backdrop>
 
 <style lang="scss">
     .field {
