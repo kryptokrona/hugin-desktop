@@ -7,6 +7,7 @@ import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte'
 import RoomIcon from '$lib/components/icons/RoomIcon.svelte'
+import FeedIcon from '$lib/components/icons/FeedIcon.svelte'
 import XkrLogo from '$lib/components/icons/XkrLogo.svelte'
 import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores'
@@ -176,7 +177,7 @@ run(() => {
 
         <Tooltip title="Feed">
             <div onclick={feedRouteAndMenu} class="button">
-                <RoomIcon />
+                <FeedIcon />
             </div>
         </Tooltip>
         

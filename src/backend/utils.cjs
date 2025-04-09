@@ -393,7 +393,7 @@ const sanitize_join_swarm_data = (data) => {
     const message = sanitizeHtml(data?.message);
     if (message?.length > 777 || data?.message === undefined) return false;
     const signature = sanitizeHtml(data?.signature);
-    if (signature?.length > 128 || data?.signature === undefined) return false;
+    if (signature?.length > 128 ) return false;
     const nickname = sanitizeHtml(data?.nickname);
     if (nickname?.length > 50 || data?.nickname === undefined) return false;
     const hash = sanitizeHtml(data.hash)
@@ -419,7 +419,6 @@ const sanitize_join_swarm_data = (data) => {
         hash,
         timestamp: parseInt(timestamp),
         tip,
-
     }
     return clean
   }

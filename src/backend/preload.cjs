@@ -41,6 +41,9 @@ const WINDOW_API = {
     getMessages: async () => {
         return await ipcRenderer.invoke('get-messages')
     },
+    getFeedMessages: async () => {
+        return await ipcRenderer.invoke('get-feed-messages')
+    },
     getGroupReply: async (hash) => {
         return await ipcRenderer.invoke('get-group-reply', hash)
     },

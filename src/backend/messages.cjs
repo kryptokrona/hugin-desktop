@@ -20,7 +20,9 @@ const {
     deleteMessage,
     addRoom,
     addRoomKeys,
-    removeRoom} = require("./database.cjs")
+    printFeed,
+    removeRoom
+} = require("./database.cjs")
 const {
     trimExtra, 
     sanitize_pm_message,

@@ -181,7 +181,7 @@ run(() => {
 
 </script>
 
-<div class="rightMenu" class:hide="{$videoGrid.showVideoGrid && $webRTC.call.length || $page.url.pathname === '/groups' || $page.url.pathname === '/rooms'}">
+<div class="rightMenu" class:hide="{$videoGrid.showVideoGrid || $page.url.pathname === '/groups' || $page.url.pathname === '/rooms'}">
    
     {#if $page.url.pathname === '/messages'}
         <div class="nav">

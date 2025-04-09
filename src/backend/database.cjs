@@ -318,6 +318,7 @@ const roomUserTable = () => {
 }
 
 const feedMessageTable = () => {
+    
    const feedMessage = `CREATE TABLE IF NOT EXISTS feedmessages ( 
         address TEXT,
         message TEXT,
@@ -325,24 +326,13 @@ const feedMessageTable = () => {
         timestamp INT,
         nickname TEXT,
         hash TEXT,
+        signature TEXT,
         UNIQUE (hash)
     )`
    return new Promise(
     (resolve, reject) => {
         database.prepare(feedMessage).run()
-        try {
-            const update = `ALTER TABLE feedmessages ADD signature TEXT`
-             database.prepare(update).run()
-         } catch(e) {
-        }
-    },
-    () => {
-        try {
-            const update = `ALTER TABLE feedmessages ADD signature TEXT`
-             database.prepare(update).run()
-         } catch(e) {
-        }
-        resolve()
+        
     })
 }
 
@@ -504,8 +494,8 @@ const getLatestList = async (list) => {
 async function saveFeedMessage(msg) {
     try {
     database.prepare(
-        'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    ).run(msg.message, msg.address, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash)
+        'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    ).run(msg.address, msg.message, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash)
 
     } catch(a) {
         console.log("Sql lite", a)
@@ -818,31 +808,26 @@ ipcMain.handle('print-group', async (e, grp, page) => {
     return await printGroup(grp, page)
 })
 
-const printFeed = async () => {
+const printFeed = async (page=0) => {
     let limit = 50
     let offset = 0
+    if (page !== 0) offset = page * limit
     const thisFeed = []
     return new Promise((resolve, reject) => {
-        const getGroup = `SELECT
-          message,
-          address,
-          signature,
-          timestamp,
-          nickname,
-          reply,
-          hash,
+        const feed = `SELECT
+          *
         FROM
             feedmessages
         ORDER BY
-            time
+            timestamp
         DESC
         LIMIT ${offset}, ${limit}`
-        const stmt = database.prepare(getGroup)
+        const stmt = database.prepare(feed)
 
-        for(const row of stmt.iterate(group)) {
-                    
+        for(const row of stmt.iterate()) {
             thisFeed.push(row)
         }
+        console.log(thisFeed);
         resolve(thisFeed)
     })
 }

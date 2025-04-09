@@ -1,0 +1,8 @@
+Bugs:
+    ✔ Fix "Auto" node on create account being slow @done(25-04-09 23:03)
+    ☐ Node picker has duplicated buttons
+    ☐ Wrong color on in app notification
+    ☐ No default avatar shown when none chosen
+
+Features:
+    ☐ Add check node statuses
