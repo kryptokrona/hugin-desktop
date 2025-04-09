@@ -60,7 +60,7 @@
             window.api.errorMessage('Auto node did not load')
             return
         }
-        const event = {detail: {node: node}}
+        const event = {node: node}
         
         console.log("Event node!", event)
         return handleLogin(event)
