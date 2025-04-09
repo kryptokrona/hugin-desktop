@@ -1,9 +1,6 @@
 <script>
     import { run } from 'svelte/legacy';
 
-import RoomHugins from "./components/RoomHugins.svelte"
-import RoomList from "./components/RoomList.svelte"
-
 import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
