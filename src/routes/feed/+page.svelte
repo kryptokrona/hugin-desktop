@@ -16,9 +16,7 @@ import Button from '$lib/components/buttons/Button.svelte'
 import Dropzone from "svelte-file-dropzone";
 import DropFile from '$lib/components/popups/DropFile.svelte'
 import { fileViewer, localFiles, remoteFiles } from '$lib/stores/files'
-import AddRoom from "./components/AddRoom.svelte"
 import BigImage from "$lib/components/popups/BigImage.svelte"
-import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
 
