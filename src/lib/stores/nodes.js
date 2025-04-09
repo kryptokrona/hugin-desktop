@@ -6,6 +6,56 @@ const uri = 'https://raw.githubusercontent.com/kryptokrona/kryptokrona-public-no
 export const nodelist = writable([])
 const standard = {
     "nodes": [
+    {	
+            "name": "KTH Node SSL",
+            "url": "kth.kryptokrona.se",
+            "port": 20176,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.0",
+            "proxy_url": "kthssl"
+        },
+    {
+            "name": "TechyNode SSL",
+            "url": "techypool.ddns.net/node",
+            "port": 443,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.1",
+            "proxy_url": "TechyNode"
+        },
+    {
+            "name": "KaffeNod SSL",
+            "url": "kaffenod.xyz",
+            "port": 443,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.1",
+            "proxy_url": "KaffeNodSSL"
+        },
+    {	
+            "name": "KTH Node 2 SSL",
+            "url": "kthnode2.vm-app.cloud.cbh.kth.se",
+            "port": 443,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.0",
+            "proxy_url": "kthssl"
+        },
+    {
+            "name": "KaffeNod",
+            "url": "kaffenod.xyz",
+            "port": 11898,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.1",
+            "proxy_url": "KaffeNod"
+        },
         {
             "name": "Blocksum",
             "url": "blocksum.org",
@@ -15,6 +65,26 @@ const standard = {
             "version": "1.1.1",
             "fee": "0.00",
             "proxy_url": "blocksum"
+        },
+        {
+            "name": "XKR.la SSL",
+            "url": "node.xkr.la",
+            "port": 443,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.00",
+            "proxy_url": "XKRla"
+        },
+        {
+            "name": "WoWoXu.Com SSL",
+            "url": "node.wowoxu.com",
+            "port": 443,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.00",
+            "proxy_url": "WoWoXu"
         },
         {
             "name": "Privacy Mine",
@@ -38,13 +108,23 @@ const standard = {
         },
         {
             "name": "TechyNode",
-            "url": "techy.ddns.net",
+            "url": "techypool.ddns.net",
             "port": 11898,
             "ssl": false,
             "cache": false,
-            "version": "1.1.1",
+            "version": "1.1.3",
             "fee": "0.1",
             "proxy_url": "TechyNode"
+        },
+        {
+            "name": "XKR Dutch Pool",
+            "url": "kryptokrona.kalf.org",
+            "port": 11898,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.1",
+            "proxy_url": "DutchPool"
         },
         {
             "name": "Wasa",
@@ -57,58 +137,99 @@ const standard = {
             "proxy_url": "wasa"
         },
         {
-            "name": "Tifo",
-            "url": "Tifo.info",
+            "name": "Tohelo's Node",
+            "url": "xkr-tohelo101.duckdns.org",
             "port": 11898,
             "ssl": false,
             "cache": false,
             "version": "1.1.1",
-            "fee": "0.00",
-            "proxy_url": "tifo"
+            "fee": "0.0",
+            "proxy_url": "tohelo"
         },
         {
-            "name": "DutchPool",
-            "url": "kryptokrona.kalf.org",
+            "name": "XKR.network",
+            "url": "node.xkr.network",
+            "port": 80,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.1",
+            "fee": "0.0",
+            "proxy_url": "xkrnetwork"
+        },
+        {
+            "name": "XKR.network SSL",
+            "url": "node.xkr.network",
+            "port": 443,
+            "ssl": true,
+            "cache": false,
+            "version": "1.1.1",
+            "fee": "0.0",
+            "proxy_url": "xkrnetwork"
+        },
+    {
+            "name": "Kryptokrona.no",
+            "url": "node.kryptokrona.no",
             "port": 11898,
             "ssl": false,
             "cache": false,
             "version": "1.1.1",
-            "fee": "0.1",
-            "proxy_url": "DutchPool"
+            "fee": "0.0",
+            "proxy_url": "kryptokronano"
+        },
+    {
+            "name": "KTH Node",
+            "url": "130.237.83.246",
+            "port": 20046,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.0",
+            "proxy_url": "kth"
+        },
+    {	
+            "name": "KTH Node 2",
+            "url": "kth.kryptokrona.se",
+            "port": 20166,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.0",
+            "proxy_url": "kth2"
+        },
+        {
+            "name": "Spider Pig",
+            "url": "spider-pig.hopto.org",
+            "port": 11898,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.0",
+            "proxy_url": "spider-pig"
+        },  
+        {
+            "name": "Northern Lights",
+            "url": "209.38.232.36",
+            "port": 11898,
+            "ssl": false,
+            "cache": false,
+            "version": "1.1.3",
+            "fee": "0.0",
+            "proxy_url": "northern-lights"
         }
     ],
     "apis": [
         {
-            "url": "https://n1.vxo.nu",
-            "name": "Växjö #1 Hugin API",
-            "description": "Växjö #1 Hugin API hosted by Marcus Cvjeticanin"
+            "url": "https://techypool.ddns.net",
+            "name": "TechyPool API",
+            "description": "The official TechyPool Hugin API"
         },
         {
-            "url": "https://n2.vxo.nu",
-            "name": "Växjö #2 Hugin API",
-            "description": "Växjö #2 Hugin API hosted by Marcus Cvjeticanin"
-        },
-        {
-            "url": "https://hugin-api.novastack.org",
-            "name": "Novastack Hugin API",
-            "description": "High Performance Hugin API Powered by Novastack Hosting"
+            "url": "http://130.237.83.249:2592",
+            "name": "KTH Hugin API",
+            "description": "Hugin API hosted at KTH"
         }
       ],
     "hugin": [
-      {
-          "name": "Växjö #1",
-          "url": "n1.vxo.nu",
-          "port": 443,
-          "ssl": true,
-          "tor": true
-      },
-      {
-          "name": "Växjö #2",
-          "url": "n2.vxo.nu",
-          "port": 443,
-          "ssl": true,
-          "tor": true
-      }
     ]
 }
 
