@@ -74,5 +74,9 @@ const sendTransaction = async () => {
       border: 1px solid var(--card-border);
       border-radius: 0.4rem;
   }
+
+  p {
+    font-family: "Montserrat";
+  }
   
   </style>

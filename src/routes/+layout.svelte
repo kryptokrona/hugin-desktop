@@ -10,7 +10,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode} from '$lib/stores/user.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -379,6 +379,11 @@
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
             })
     })
+
+    window.api.receive('hugin-node-connection', (status)  => {
+        HuginNode.connected = status
+    })
+
 
     window.api.receive('download-request', (data)  => { 
         console.log(

@@ -1,7 +1,6 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-import { fade } from 'svelte/transition'
+    import { run } from 'svelte/legacy'
+    import { fade } from 'svelte/transition'
 
     /** @type {{reacts?: any, reactCount?: number, thisReaction: any, emoji: any, react?: boolean, counter?: boolean}} */
     let {

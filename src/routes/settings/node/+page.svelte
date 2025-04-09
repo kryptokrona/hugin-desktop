@@ -2,7 +2,7 @@
     import { run } from 'svelte/legacy';
 
     import Button from '$lib/components/buttons/Button.svelte'
-    import { misc } from '$lib/stores/user.js'
+    import { misc, HuginNode } from '$lib/stores/user.js'
     import {layoutState} from '$lib/stores/layout-state.js'
     import { onMount } from 'svelte'
     import { fade } from 'svelte/transition'
@@ -12,6 +12,7 @@
     let networkHeight = $state()
     let walletHeight = $state()
     let connecting = $state(false)
+    let huginNode = $state('')
     
     onMount(() => {
         getHeight();
@@ -63,6 +64,15 @@
         getHeight()
     }
 
+    const connect = (address, pub) => {
+        if (!pub && address.length < 99) {
+            window.api.errorMessage('Address format is not correct.')
+            return
+        }
+        window.api.send('hugin-node', address, pub)
+        HuginNode.address = address
+    }
+
 
 </script>
 
@@ -74,6 +84,31 @@
         />
     </div>
 {/if}
+
+    <h2>Message node</h2>
+    <div class="node">
+        <input spellcheck="false" placeholder="Enter node address" bind:value="{huginNode}"/>
+        <br>
+        <Button
+        text="Connect"
+        disabled="{false}"
+        on:click="{connect(huginNode, false)}"
+    />
+    <Button
+    text="Random"
+    disabled="{false}"
+    on:click="{connect('', true)}"
+    />
+    </div>
+    <p class="nodeinfo">
+        {#if HuginNode.connected}
+            <p class="nodeinfo syncstatus" class:sync="{true}">
+                Connected
+            </p>
+        {:else}
+            <p class="nodeinfo syncstatus" class:sync="{false}">No connection</p>
+        {/if}
+    </p>
 
 <h2>Node</h2>
 <div class="change_node">
@@ -112,7 +147,6 @@
             {/if}
         </div>
     </div>
-    <br>
 
 </div>
 
@@ -168,6 +202,23 @@ h2 {
 
 .change_node {
     margin-left: -5px;
+}
+
+input {
+    margin: 0 auto;
+    width: 500px;
+    height: 50px;
+    transition: 200ms ease-in-out;
+    color: var(--text-color);
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    font-size: 1.1rem;
+    outline: none;
+    border-radius: 5px;
+    padding: 10px;
+    &:focus {
+        outline: none;
+    }
 }
 
 </style>

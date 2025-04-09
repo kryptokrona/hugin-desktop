@@ -7,54 +7,23 @@
     import Button from "$lib/components/buttons/Button.svelte"
     import {get_avatar} from "$lib/utils/hugin-utils.js";
     import {standardGroups} from "$lib/stores/standardgroups.js";
+	  import FillButton from "$lib/components/buttons/FillButton.svelte";
 
-    let standard = $standardGroups
-
-    let groupSuggestions = $derived(standard.filter(a => !$groups.groupArray.map(b=>b.key).includes(a.key)))
-
-    const addNewGroup = (group) => {
-        if (group.length < 32) return
-        let data = {
-            m: 'Joined group',
-            n: group.name,
-            hash: Date.now() * 2,
-            t: Date.now().toString(),
-            s: '',
-            k: group.key,
-            sent: false,
-            r: '',
-            g: group.key,
-            h: parseInt(Date.now()),
-        }
-        window.api.addGroup(data)
-        groups.update((data) => {
-        return {
-            ...data,
-            thisGroup: { key: group.key, name: group.name, chat: true},
-        }
-      })
-        goto('/groups')
-    }
+    let {
+        onClick
+    } = $props()
+    
 
 </script>
 
 <div class="card">
     <div class="header">
-        <h3>Recommended groups</h3>
+        <h3>Upgrade to Hugin +</h3>
     </div>
-    <div class="list">
-        {#each groupSuggestions as group}
-            <div class="row">
-                <img
-                  class="avatar"
-                  src="data:image/png;base64,{get_avatar(group.key)}"
-                  alt=""
-                />
-                <p style="font-size: 1rem">{group.name}</p>
-                <Button text="Join" disabled={false} on:click={() => addNewGroup(group)}/>
-            </div>
-        {/each}
-    </div>
+    <p>-✅Send messages to your contacts if they are offline.</p>
+    <p>-✅Unlock future perks and special features.</p>
+    <p>-✅Support the project and help grow Hugin!</p>
+    <FillButton disabled={false} enabled={true} text="Upgrade" on:click={() => onClick()} /> 
 </div>
 
 <style lang="scss">

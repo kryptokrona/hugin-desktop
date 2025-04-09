@@ -65,6 +65,12 @@ export const misc = writable({
     syncImages: []
 })
 
+export const HuginNode = writable({
+    connected: false,
+    public: false,
+    address: ''
+})
+
 export const webRTC = writable({
     stream: false,
     peer: false,

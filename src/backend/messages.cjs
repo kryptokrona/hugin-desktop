@@ -32,7 +32,7 @@ const {
     sanitize_group_message
 } = require('./utils.cjs')
 
-const { send_swarm_message, new_swarm, end_swarm } = require("./swarm.cjs")
+const { send_swarm_message, new_swarm, end_swarm, Nodes } = require("./swarm.cjs")
 
 const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
 const { extraDataToMessage } = require('hugin-crypto')
@@ -48,7 +48,7 @@ const Store = require('electron-store');
 const { Hugin } = require('./account.cjs')
 const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs')
 const store = new Store()
-// const WebTorrent = require('webtorrent')
+
 let known_pool_txs = []
 let known_keys = []
 let block_list = []
@@ -58,9 +58,9 @@ let incoming_group_que = []
 //IPC MAIN LISTENERS
 //MISC
 
-ipcMain.on('optimize', async (e) => {
-    optimize_message_inputs(force = true)
-})
+// ipcMain.on('optimize', async (e) => {
+//     optimize_message_inputs(force = true)
+// })
 //GROUPS MESSAGES
 
 ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
@@ -135,6 +135,10 @@ ipcMain.on('delete-messages-after', async (e, days) => {
 
 
 //PRIVATE MESSAGES
+
+ipcMain.on('hugin-node', (e, address, pub) => {
+    Nodes.change(address, pub)
+})
 
 ipcMain.handle('get-conversations', async (e) => {
     let contacts = await getConversations()
@@ -233,46 +237,48 @@ async function key_derivation_hash(chat) {
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
     peer_dms()
+    Nodes.connect('', true)
+    await sleep(5000)
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
     await background_sync_messages(await load_checked_txs())
-     while (true) {
-         try {
-            //Start syncing
-            await sleep(1000 * 3)
-            await background_sync_messages()
+    while (true) {
+    try {
+      //Start syncing
+      await sleep(1000 * 7)
+      await background_sync_messages()
 
-            const idle = powerMonitor.getSystemIdleTime();
-            Hugin.send('idle', idle)
+      const idle = powerMonitor.getSystemIdleTime();
+      Hugin.send('idle', idle)
 
-            const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
+      const [walletBlockCount, localDaemonBlockCount, networkBlockCount] = await Hugin.wallet.getSyncStatus()
 
-            Hugin.send('node-sync-data', {
-                walletBlockCount,
-                localDaemonBlockCount,
-                networkBlockCount,
-            })
+      Hugin.send('node-sync-data', {
+          walletBlockCount,
+          localDaemonBlockCount,
+          networkBlockCount,
+      })
 
-            if (localDaemonBlockCount - walletBlockCount < 2) {
-                // Diff between wallet height and node height is 1 or 0, we are synced
-                console.log('**********SYNCED**********')
-                console.log('My Wallet ', walletBlockCount)
-                console.log('The Network', networkBlockCount)
-                Hugin.send('sync', 'Synced')
-            } else {
-                //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
-                if (walletBlockCount === 0) {
-                    await Hugin.wallet.reset(networkBlockCount - 100)
-                }
-                console.log('*.[~~~].SYNCING BLOCKS.[~~~].*')
-                console.log('My Wallet ', walletBlockCount)
-                console.log('The Network', networkBlockCount)
-                Hugin.send('sync', 'Syncing')
-            }
-        } catch (err) {
-            console.log(err)
-        }
+      if (localDaemonBlockCount - walletBlockCount < 2) {
+          // Diff between wallet height and node height is 1 or 0, we are synced
+          console.log('**********SYNCED**********')
+          console.log('My Wallet ', walletBlockCount)
+          console.log('The Network', networkBlockCount)
+          Hugin.send('sync', 'Synced')
+      } else {
+          //If wallet is somehow stuck at block 0 for new users due to bad node connection, reset to the last 100 blocks.
+          if (walletBlockCount === 0) {
+              await Hugin.wallet.reset(networkBlockCount - 100)
+          }
+          console.log('*.[~~~].SYNCING BLOCKS.[~~~].*')
+          console.log('My Wallet ', walletBlockCount)
+          console.log('The Network', networkBlockCount)
+          Hugin.send('sync', 'Syncing')
+      }
+    } catch (err) {
+        console.log(err)
     }
+}
 }
 
 async function background_sync_messages(checkedTxs = false) {
@@ -289,9 +295,7 @@ async function background_sync_messages(checkedTxs = false) {
     if (large_batch || (large_batch && incoming)) {
         //Add to que
         console.log("Adding que:", transactions.length)
-        const known_hashes = transactions.map(a => {return a.transactionPrefixInfotxHash})
         incoming_messages = transactions
-        known_pool_txs = [...known_pool_txs, ...known_hashes]
         Hugin.send('incoming-que', true)
     }
 
@@ -320,12 +324,13 @@ function update_que() {
     return decrypt
 }
 
-async function decrypt_hugin_messages(transactions, que = false) {
-    console.log("Checking nr of txs:", transactions.length)
-    for (const transaction of transactions) {
+async function decrypt_hugin_messages(list, que = false) {
+    console.log("Checking nr of txs:", list.length)
+    for (const message of list) {
         try {
-            const thisExtra = transaction.transactionPrefixInfo.extra
-            const thisHash = transaction.transactionPrefixInfotxHash
+            const thisHash = message.hash
+            const thisExtra = '99' + thisHash + message.cipher
+
             if (!validate_extra(thisExtra, thisHash, que)) continue
             if (thisExtra !== undefined && thisExtra.length > 200) {
                 if (!saveHash(thisHash)) continue
@@ -505,64 +510,38 @@ async function get_pool_changes_lite(node) {
 }
 
 
-async function get_pool(node) {
-    try {
+async function sync_from_node(node) {
+    if (Nodes.connection === null) return []
     const lastChecked = store.get('pool.checked')
     store.set({
         pool: {
-            checked: Math.floor(Date.now() / 1000)
+            checked: Date.now()
         }
     })
-    const resp = await fetch(
-        'http://' + node.node + ':' + node.port.toString() + '/get_pool',
-        {
-            method: 'POST',
-            body: JSON.stringify({ timestampBegin: lastChecked }),
-        }
-    )
-    return await resp.json()
-
-    } catch (e) {
-        //Node error
-        return false
-    }
+    const resp = await Nodes.sync({
+        request: true, 
+        type: 'some', 
+        timestamp: lastChecked
+    })
+    
+    return resp
 }
 
 async function fetch_hugin_messages() {
     const node = Hugin.node
     const incoming = incoming_messages.length > 0 ? true : false
-    let json
-    try {
-        const latest = await check_node_version(node)
-        if (latest) {
-            //If we already have pending incoming unchecked messages, return
-            //So we do not update the latest checked timestmap and miss any messages.
-            if (incoming) return false
-            //Latest version, fetch more messages with last checked timestamp
-            json = await get_pool(node)
-        } else {
-            //Old node version, use get pool changes endpoint
-            json = await get_pool_changes_lite(node)
-        }
-        if (!json) {
-            Hugin.send('sync', 'Error')
-            return false
-        }
-        const transactions = trimTxs(json)
-        //Try clearing known pool txs from checked
-        if (!latest) known_pool_txs = known_pool_txs.filter((n) => !json.deletedTxsIds.includes(n))
-        if (transactions.length === 0) {
-            console.log('No incoming messages...')
-            return false
-        }
-        
-        return transactions
+    //If we already have pending incoming unchecked messages, return
+    //So we do not update the latest checked timestmap and miss any messages.
+    if (incoming) return false
+    //Latest version, fetch more messages with last checked timestamp
+    const list = await sync_from_node(node)
 
-    } catch (e) {
-        Hugin.send('sync', 'Error')
-        console.log("Sync error", e)
+    if (list.length === 0) {
+        console.log('No incoming messages...')
         return false
     }
+    
+    return list
 }
 
 
@@ -579,55 +558,26 @@ async function send_message(message, receiver, off_chain = false, group = false,
     let address = receiver.substring(0, 99)
     let messageKey = receiver.substring(99, 163)
     let has_history = await check_history(messageKey, address)
-    if (!beam_this) {
-        let balance = await check_balance()
-        if (!balance) return
-    }
-
+    
     let timestamp = Date.now()
     let payload_hex
     const seal = has_history ? false : true
     
     payload_hex = await encrypt_hugin_message(message, messageKey, seal, address)
     //Choose subwallet with message inputs
-    let messageWallet = Hugin.wallet.getAddresses()[1]
-    let messageSubWallet = Hugin.wallet.getAddresses()[2]
 
     if (!off_chain) {
-        let result = await Hugin.wallet.sendTransactionAdvanced(
-            [[messageWallet, 1000]], // destinations,
-            3, // mixin
-            { fixedFee: 1000, isFixedFee: true }, // fee
-            undefined, //paymentID
-            [messageWallet, messageSubWallet], // subWalletsToTakeFrom
-            undefined, // changeAddresss
-            true, // relayToNetwork
-            false, // sneedAll
-            Buffer.from(payload_hex, 'hex')
-        )
-        let sentMsg = {
-            msg: message,
-            k: messageKey,
-            sent: true,
-            t: timestamp,
-            chat: address,
+        const sent = await Nodes.message(payload_hex)
+        if (typeof sent.success !== 'boolean') {
+            return
         }
-        if (result.success) {
-            known_pool_txs.push(result.transactionHash)
-            saveHash(result.transactionHash)
-            save_message(sentMsg)
-            optimize_message_inputs()
-        } else {
-            let error = {
-                message: `Failed to send, please wait a couple of minutes.`,
-                name: 'Error',
-                hash: Date.now(),
-            }
-            optimize_message_inputs(true)
-            console.log(`Failed to send transaction: ${result.error.toString()}`)
-            Hugin.send('error_msg', error)
-            Hugin.send('pm-send-error', {message, address})
+        if (!sent.success) {
+            if (typeof sent.reason !== 'string') return
+            console.log("Reason:", sent.reason)
+            Hugin.send('error-notify-message', 'Error sending message...')
+            return
         }
+
     } else if (off_chain) {
         //Offchain messages
         let random_key = randomKey()
@@ -636,114 +586,17 @@ async function send_message(message, receiver, off_chain = false, group = false,
         if (beam_this) {
             send_swarm_message(sendMsg, address, true)
         }
-        let saveThisMessage = {
-            msg: message,
-            k: messageKey,
-            sent: true,
-            t: timestamp,
-            chat: address,
-        }
-        save_message(saveThisMessage, true)
     }
+
+    let saveThisMessage = {
+        msg: message,
+        k: messageKey,
+        sent: true,
+        t: timestamp,
+        chat: address,
+    }
+    save_message(saveThisMessage, true)
 }
-
-async function optimize_message_inputs(force = false) {
-
-    let [mainWallet, subWallet, messageSubWallet] = Hugin.wallet.getAddresses()
-    const [walletHeight, localHeight, networkHeight] = await Hugin.wallet.getSyncStatus()
-
-    let inputs = await Hugin.wallet.subWallets.getSpendableTransactionInputs(
-        [subWallet, messageSubWallet],
-        networkHeight
-    )
-
-    if (inputs.length > 25 && !force) {
-        Hugin.send('optimized', true)
-        return
-    }
-
-    if (store.get('wallet.optimized')) {
-        return
-    }
-
-    let subWallets = Hugin.wallet.subWallets.subWallets
-    let txs
-    subWallets.forEach((value, name) => {
-        txs = value.unconfirmedIncomingAmounts.length
-    })
-
-    let payments = []
-    let i = 0
-    /* User payment */
-    while (i <= 49) {
-        payments.push([messageSubWallet, 1000])
-        i += 1
-    }
-
-    let result = await Hugin.wallet.sendTransactionAdvanced(
-        payments, // destinations,
-        3, // mixin
-        { fixedFee: 1000, isFixedFee: true }, // fee
-        undefined, //paymentID
-        [mainWallet], // subWalletsToTakeFrom
-        undefined, // changeAddress
-        true, // relayToNetwork
-        false, // sneedAll
-        undefined
-    )
-
-    if (result.success) {
-        Hugin.send('optimized', true)
-
-        store.set({
-            wallet: {
-                optimized: true
-            }
-        });
-
-        reset_optimize()
-
-        let sent = {
-            message: 'Your wallet is creating message inputs, please wait',
-            name: 'Optimizing',
-            hash: parseInt(Date.now()),
-            key: mainWallet,
-            optimized: true
-        }
-
-        Hugin.send('sent_tx', sent)
-        console.log('optimize completed')
-        return true
-    } else {
-
-        store.set({
-            wallet: {
-                optimized: false
-            }
-        });
-
-        Hugin.send('optimized', false)
-        let error = {
-            message: 'Optimize failed',
-            name: 'Optimizing wallet failed',
-            hash: parseInt(Date.now()),
-            key: mainWallet,
-        }
-        Hugin.send('error_msg', error)
-        return false
-    }
-
-}
-
-async function reset_optimize() {
-    await sleep(600 * 1000)
-    store.set({
-        wallet: {
-            optimized: false
-        }
-    });
-}
-
 
 async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr) {
     let timestamp = Date.now()

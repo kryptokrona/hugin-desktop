@@ -18,6 +18,7 @@
     let hrs = date.getHours()
     let greet = $state()
     let welcome = $state(false)
+
     const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrage Hugin +'}`
     onMount(async () => {
         $user.started = true
@@ -62,7 +63,7 @@
 
 <Funds/>
 <div class="grid"  in:fly|global="{{ y: 100 }}">
-    <StandardGroups/> 
+    <StandardGroups onClick={() => upgrade = true}/> 
     <Transactions/>
     <!-- <CreateRoom/> -->
 </div>

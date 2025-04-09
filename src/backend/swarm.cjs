@@ -43,14 +43,23 @@ class NodeConnection extends EventEmitter {
     this.requests = new Map()
     this.discovery = null
     this.pending = []
+    this.public = 'a8b2ddb6f70e02b8ab3a1b144f5ddf0616ed6029b9129d6c12bc7660f5b430c5'
+    this.topic = ''
   }
 
-async connect(address) {
-  const [base_keys, dht_keys, sig] = get_new_peer_keys(address)
+async connect(address, pub) {
+  //If we choose the public option. We connect to the first responding node.
+  //in the public network.
+  const key = pub ? this.public : address
+  const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
   const topicHash = base_keys.publicKey.toString('hex')
-    this.node = new HyperSwarm({
+    this.node = new HyperSwarm({ maxPeers: 1,
     firewall (remotePublicKey) {
-    //We verify if the node has the correct public key.
+
+    //If we are connecting to a public node. Allow connection.
+    if (pub) return false
+    
+    //We verify if the private node has the correct public key.
     if (remotePublicKey.toString('hex') !== address.slice(-64)) {
       return true
     }
@@ -59,11 +68,13 @@ async connect(address) {
 
   this.listen()
   const topic = Buffer.alloc(32).fill(topicHash)
+  this.topic = topic
   this.discovery = this.node.join(topic, {server: false, client: true})
 }
 
 async listen() {
   this.node.on('connection', (conn, info) => {
+    if (this.connection) return
     this.node_connection(conn)
   })
 
@@ -78,10 +89,12 @@ async listen() {
   }
   async node_connection(conn) {
     this.connection = conn
+    Hugin.send('hugin-node-connection', true)
     conn.on('error', () => {
     console.log("Got error connection signal")
         conn.end();
         conn.destroy();
+        this.connection = null
         this.reconnect()
    })
 
@@ -91,26 +104,46 @@ async listen() {
     console.log("Got response messages from node:", data.response.length)
     if (!data) return
       if (this.requests.has(data.id)) {
+        const { resolve, reject } = this.requests.get(data.id);
         if ('chunk' in data) {
           this.pending.push(data.repsonse)
           return
         }
         if ('done' in data) {
-          const { resolve, reject } = this.requests.get(data.id);
           resolve(this.pending);
           this.requests.delete(data.id);
           return
         }
-        const { resolve, reject } = this.requests.get(data.id);
+
+        if ('success' in data) {
+          resolve(data)
+          this.requests.delete(data.id);
+          return
+        }
+
         resolve(data.response);
         this.requests.delete(data.id);
      }
     })
 }
 
+async change(address, pub) {
+  await this.node.leave(Buffer.from(this.topic))
+  await this.node.destroy()
+  this.connection.end()
+  this.connection = null
+  this.node = null
+  this.discovery = null
+  Hugin.send('hugin-node-connection', false)
+
+  this.connect(address, pub)
+}
+
 async reconnect() {
   while(this.connection === null) {
+    Hugin.send('hugin-node-connection', false)
     await sleep(5000)
+    console.log("Reconnecting to node...")
     this.discovery.refresh({client: true, server: false})
   }
   return
@@ -134,6 +167,10 @@ parse(d) {
 }
 
 async message(payload) {
+  return new Promise( async (resolve, reject) => {
+  this.requests.set(data.timestamp, { resolve, reject })
+  this.connection.write(JSON.stringify(data))
+  
   //Create a new derived view key pair for sending messages to nodes.
   const [signKey, pub] = await keychain.messageKeyPair()
   //We sign the payload and hash to avoid denial of service attacks.
@@ -152,13 +189,13 @@ async message(payload) {
   }
 
   if (this.connection === null) {
-  return false
+    reject("No connection")
   }
 
   this.connection.write(JSON.stringify(data))
-  return true
   
-  }
+  })
+}
 }
 const Nodes = new NodeConnection()
 
