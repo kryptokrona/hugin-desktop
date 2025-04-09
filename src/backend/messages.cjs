@@ -133,6 +133,10 @@ ipcMain.on('delete-messages-after', async (e, days) => {
     })
 })
 
+ipcMain.handle('get-feed-messages', async (data) => {
+    return await printFeed()
+})
+
 
 //PRIVATE MESSAGES
 
@@ -732,7 +736,6 @@ async function send_group_message(message, offchain = false, swarm = false) {
             })
             known_pool_txs.push(result.transactionHash)
             saveHash(result.transactionHash)
-            optimize_message_inputs()
         } else {
             let error = {
                 message: 'Failed to send, please wait a couple of minutes.',
@@ -743,7 +746,6 @@ async function send_group_message(message, offchain = false, swarm = false) {
             Hugin.send('error_msg', error)
             
             console.log(`Failed to send transaction: ${result.error.toString()}`)
-            optimize_message_inputs(true)
         }
     } else if (offchain) {
         //Generate a random hash
@@ -1073,4 +1075,4 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
     await sync_group_history(timeframe, settings.recommended_api, settings.key)
 })
 
-module.exports = {check_history, save_message, start_message_syncer, send_message, optimize_message_inputs}
+module.exports = {check_history, save_message, start_message_syncer, send_message}

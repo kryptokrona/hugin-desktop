@@ -366,7 +366,6 @@ function incomingTx(transaction) {
     const [wallet_count, daemon_count, network_height] = js_wallet.getSyncStatus()
         let synced = network_height - wallet_count <= 2
         if (!synced) return
-        optimize_message_inputs()
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
         console.log('transaction', transaction)
         sender('new-message', transaction.toJSON())

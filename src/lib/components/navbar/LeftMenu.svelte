@@ -80,6 +80,19 @@ const roomRouteAndMenu = () => {
         goto('/rooms')
     }
 }
+
+const feedRouteAndMenu = () => {
+    if ($page.url.pathname === '/feed') {
+        // $layoutState.hideGroupList = !$layoutState.hideGroupList
+    } else {
+        setTimeout(() => {
+            $layoutState.hideGroupList = false
+        }, 300)
+        goto('/feed')
+    }
+}
+
+
 const changeProfilePic = () => {
    fileList.click()
 }
@@ -159,7 +172,14 @@ run(() => {
             <div onclick={roomRouteAndMenu} class="button">
                 <RoomIcon />
             </div>
-        </Tooltip> 
+        </Tooltip>
+
+        <Tooltip title="Feed">
+            <div onclick={feedRouteAndMenu} class="button">
+                <RoomIcon />
+            </div>
+        </Tooltip>
+        
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
