@@ -4,7 +4,7 @@ const sqlite3 = require('better-sqlite3-multiple-ciphers')
 const sanitizeHtml = require('sanitize-html')
 const Store = require('electron-store')
 const store = new Store()
-const {sleep} = require('./utils.cjs')
+const {sleep, containsOnlyEmojis} = require('./utils.cjs')
 
 const closeDB = async () => {
     database.close();    
@@ -808,29 +808,72 @@ ipcMain.handle('print-group', async (e, grp, page) => {
     return await printGroup(grp, page)
 })
 
-const printFeed = async (page=0) => {
-    let limit = 50
-    let offset = 0
-    if (page !== 0) offset = page * limit
-    const thisFeed = []
+const getFeedMessageReplies = async (hash) => {
+
+    const replies = [];
+    const reactions = [];
+
     return new Promise((resolve, reject) => {
         const feed = `SELECT
           *
         FROM
             feedmessages
+        WHERE
+            reply = ?
+        ORDER BY
+            timestamp
+        DESC
+        `
+        const stmt = database.prepare(feed)
+
+        for(const row of stmt.iterate(hash)) {
+
+            console.log('Found reply!', row.message);
+
+            if (containsOnlyEmojis(row.message) && row.message.length < 9) {
+                console.log('Found emoji!', row.message);
+                reactions.push(row);
+            }
+            replies.push(row);
+
+        }
+        resolve({replies, reactions});
+    })
+
+}
+
+const printFeed = async (page=0, sync=false) => {
+    let limit = 50
+    let offset = 0
+    if (page !== 0) offset = page * limit
+    const thisFeed = []
+    return new Promise(async (resolve, reject) => {
+        const feed = `SELECT
+          *
+        FROM
+            feedmessages 
+        ${sync ? '' : "WHERE reply = '' "}
         ORDER BY
             timestamp
         DESC
         LIMIT ${offset}, ${limit}`
+
+        console.log('feed sql:', feed);
         const stmt = database.prepare(feed)
 
-        for(const row of stmt.iterate()) {
+        for (const row of stmt.iterate()) {
+            if (!sync) {
+                const {replies, reactions} = await getFeedMessageReplies(row.hash);
+                row.replies = replies;
+                row.react = reactions;
+            }
             thisFeed.push(row)
         }
-        console.log(thisFeed);
+
         resolve(thisFeed)
     })
 }
+
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
 

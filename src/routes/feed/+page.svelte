@@ -2,7 +2,7 @@
     import { run } from 'svelte/legacy';
 
 import {fade, fly} from 'svelte/transition'
-import ChatInput from '$lib/components/chat/ChatInput.svelte'
+import FeedChatInput from '$lib/components/chat/FeedChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import FeedMessage from '$lib/components/chat/FeedMessage.svelte'
 import {notify, user, swarm, rooms, misc, files, transactions} from '$lib/stores/user.js'
@@ -274,7 +274,6 @@ async function printFeed() {
     emojiMessages = []
     textMessages = []
     console.log("Get messages", feedMessages)
-    checkReactions(feedMessages, false)
     replyExit()
     scrollDown()
     loader = false
@@ -515,8 +514,6 @@ const hideModal = () => {
 <main in:fade|global="{{ duration: 350 }}">
     
     <div class="feed_container" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
-
-        <span class="new_post">+</span>
         
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly|global="{{ y: 50 }}">
             
@@ -537,6 +534,9 @@ const hideModal = () => {
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
 
+        </div>
+        <div class="message_details right_side" in:fly|global="{{ y: 50 }}">
+            <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
@@ -574,6 +574,8 @@ const hideModal = () => {
 
 .feed_container {
     width: calc(100% - 85px);
+    display: flex;
+    flex-direction: row;
 }
 
 h3 {
@@ -661,8 +663,13 @@ p {
     overflow: auto;
     padding-bottom: 5px;
     position: initial !important;
-    height: calc(100% - 131px);
+    display: flex;
     width: 100%;
+}
+
+.message_details {
+    display: flex;
+    border-left: 1px solid var(--border-color);
 }
 
 .fade {

@@ -327,34 +327,6 @@ run(() => {
 
 <div bind:this={messageContainer} class="message feedmessage" class:yt={youtube} id="{message.hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}}>
     <div>
-        {#if replyMessage}
-            {#if thisReply}
-                <div class="reply">
-                    <div style="display: flex; gap: 10px; align-items: center">
-                        <RepliedArrow />
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <p class:asian class="reply_nickname">{thisReply.name}</p>
-                            <p>{thisReply.message}</p>
-                        </div>
-                    </div>
-                </div>
-            {:else if replyError}
-                <div in:fade|global="{{ duration: 150 }}" class="reply">
-                    <img
-                        class="reply_avatar"
-                        src="data:image/png;base64,{get_avatar(
-                            'SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4'
-                        )}"
-                        alt=""
-                    />
-                    <p class="reply_nickname">Can't find reply</p>
-                    <br />
-                    <p style="color: red">This reply is not in the mempool</p>
-                </div>
-            {/if}
-        {/if}
-    </div>
-    <div>
         <div>
             <div class="header">
                 <div style="display: flex; align-items: center; margin-left: -10px">
