@@ -34,8 +34,27 @@ export const getColorFromHash = (hash) => {
       color += ('00' + value.toString(16)).slice(-2);
     }
   
-    return color;
+    return lightenHexColor(color);
   };
+
+  export function lightenHexColor(hex, percent = 10) {
+    // Ensure hex is a valid 6-character format
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+    }
+    
+    // Convert hex to RGB
+    let num = parseInt(hex, 16);
+    let r = (num >> 16) + (255 - (num >> 16)) * (percent / 100);
+    let g = ((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * (percent / 100);
+    let b = (num & 0x0000FF) + (255 - (num & 0x0000FF)) * (percent / 100);
+    
+    // Clamp values to 255 and convert back to hex
+    const toHex = c => Math.min(255, Math.max(0, Math.round(c))).toString(16).padStart(2, '0');
+    
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
 
 
 export async function get_board_icon(board) {

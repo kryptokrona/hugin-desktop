@@ -45,7 +45,7 @@ const sendTransaction = async () => {
       <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="field">
       
       <Cards> 
-        {#if !sent && localStorage.getItem('hugin+') === undefined}
+        {#if !sent && !localStorage.getItem('hugin+')}
           <p>-✅Send messages to your contacts if they are offline.</p>
           <p>-✅Unlock future perks and special features.</p>
           <p>-✅Support the project and help grow Hugin</p>

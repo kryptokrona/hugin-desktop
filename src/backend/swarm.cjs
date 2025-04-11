@@ -101,7 +101,6 @@ async listen() {
    conn.on('data', d => {
     const string = d.toString()
     const data = this.parse(string)
-    console.log("Got response messages from node:", data.response.length)
     if (!data) return
       if (this.requests.has(data.id)) {
         const { resolve, reject } = this.requests.get(data.id);
@@ -130,8 +129,10 @@ async listen() {
 async change(address, pub) {
   await this.node.leave(Buffer.from(this.topic))
   await this.node.destroy()
-  this.connection.end()
-  this.connection = null
+  if (this.connection !== null) {
+    this.connection.end()
+    this.connection = null
+  }
   this.node = null
   this.discovery = null
   Hugin.send('hugin-node-connection', false)
@@ -142,7 +143,7 @@ async change(address, pub) {
 async reconnect() {
   while(this.connection === null) {
     Hugin.send('hugin-node-connection', false)
-    await sleep(5000)
+    await sleep(10000)
     console.log("Reconnecting to node...")
     this.discovery.refresh({client: true, server: false})
   }
@@ -168,8 +169,8 @@ parse(d) {
 
 async message(payload) {
   return new Promise( async (resolve, reject) => {
-  this.requests.set(data.timestamp, { resolve, reject })
-  this.connection.write(JSON.stringify(data))
+  const timestamp = Date.now()
+  this.requests.set(timestamp, { resolve, reject })
   
   //Create a new derived view key pair for sending messages to nodes.
   const [signKey, pub] = await keychain.messageKeyPair()
@@ -181,7 +182,7 @@ async message(payload) {
     message: {
     cipher: payload,
     pub,
-    timestamp: Date.now(),
+    timestamp,
     hash: id,
     signature
     }

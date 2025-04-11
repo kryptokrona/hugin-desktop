@@ -19,7 +19,7 @@
     let greet = $state()
     let welcome = $state(false)
 
-    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrage Hugin +'}`
+    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrade to Hugin +'}`
     onMount(async () => {
         $user.started = true
         if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
@@ -63,7 +63,7 @@
 
 <Funds/>
 <div class="grid"  in:fly|global="{{ y: 100 }}">
-    <StandardGroups onClick={() => upgrade = true}/> 
+    <!-- <StandardGroups onClick={() => upgrade = true}/>  -->
     <Transactions/>
     <!-- <CreateRoom/> -->
 </div>
