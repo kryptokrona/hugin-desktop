@@ -10,7 +10,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed} from '$lib/stores/user.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -103,6 +103,11 @@
         $rooms = $rooms
         window.api.send('room-banned', key)
     }) 
+
+    window.api.receive('feed-message', (m) => {
+        $feed.new.push(m)
+        $feed = $feed
+    })
 
 
         window.api.receive('rec-off', (data) => {

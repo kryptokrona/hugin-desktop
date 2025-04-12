@@ -5,7 +5,7 @@ import {fade, fly} from 'svelte/transition'
 import FeedChatInput from '$lib/components/chat/FeedChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import FeedMessage from '$lib/components/chat/FeedMessage.svelte'
-import {notify, user, swarm, rooms, misc, files, transactions} from '$lib/stores/user.js'
+import {notify, user, swarm, rooms, misc, files, transactions, feed} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
@@ -249,6 +249,7 @@ run(() => {
 async function printFeed() {
     loadMore = true
     pageNum = 0
+    $feed.new = []
     feedMessages = await window.api.getFeedMessages()
     emojiMessages = []
     textMessages = []
@@ -557,6 +558,11 @@ const focusMessage = async (message) => {
                     <Loader/>
                 </div>
             {/if} -->
+            {#if $feed.new.length} 
+                <div class="unread" onclick={() => printFeed()}>
+                        <p style="cursor: pointer">{$feed.new.length} new messages</p>
+                </div>
+            {/if}
             {#each feedMessages as message (message.hash)}
                 <FeedMessage
                     onPress={() => focusMessage(message)}
@@ -798,5 +804,17 @@ p {
     background-color: var(--thumbBG);
     border-radius: 3px;
     border: 3px solid var(--scrollbarBG);
+} 
+
+.unread {
+    background-color: var(--primary-color);
+    height: 45px;
+    display: flex;
+    position: relative;
+    align-items: center;
+    border-bottom: 5px;
+    cursor: pointer;
+    transition: 200ms ease-in-out;
+    justify-content: space-evenly;
 }
 </style>

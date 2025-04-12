@@ -48,6 +48,10 @@ export const rtc_groups = writable({
     unread: []
 })
 
+export const feed = writable({
+    new: []
+})
+
 export const misc = writable({
     syncState: 'Syncing',
     walletBlockCount: null,
