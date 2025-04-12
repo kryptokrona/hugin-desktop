@@ -4,5 +4,9 @@ Bugs:
     ☐ Wrong color on in app notification
     ☐ No default avatar shown when none chosen
 
+Feed:
+    ☐ Add "x new message - click to load" button
+    ☐ Add file sharing
+
 Features:
     ☐ Add check node statuses
