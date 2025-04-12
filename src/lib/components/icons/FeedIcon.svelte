@@ -3,13 +3,13 @@
 
     import { page } from '$app/stores'
     import { fade } from 'svelte/transition'
-    import { notify } from '$lib/stores/user.js'
+    import { feed } from '$lib/stores/user.js'
     
-    let thispage = $derived($page.url.pathname === '/rooms')
+    let thispage = $derived($page.url.pathname === '/feed')
     let unread = $state(false)
     
     run(() => {
-    if ($notify.unread.some((a) => a.type === 'room')) {
+    if ($feed.new.length) {
           unread = true
       } else {
           unread = false
