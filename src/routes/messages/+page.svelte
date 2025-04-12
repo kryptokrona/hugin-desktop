@@ -316,7 +316,6 @@ const hideModal = () => {
     />
 
     <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
-        <div class="fade"></div>
         <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}">
             {#if in_voice} 
                 <ActiveCall/>

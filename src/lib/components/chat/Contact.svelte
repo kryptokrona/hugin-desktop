@@ -152,7 +152,7 @@ run(() => {
     &:hover {
         color: white;
         opacity: 1;
-        background-color: var(--card-border);
+        background-color: var(--card-background);
         border-bottom: 1px solid transparent;
     }
 }
@@ -210,7 +210,7 @@ p {
 }
 
 .active {
-    background-color: var(--border-color);
+    background-color: var(--card-background);
     border-bottom: 1px solid transparent;
 }
 

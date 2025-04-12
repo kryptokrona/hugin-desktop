@@ -114,7 +114,7 @@
         width: 100%;
         color: var(--title-color);
         border-bottom: 1px solid var(--border-color);
-      background-color: var(--backgound-color);
+        background-color: var(--backgound-color);
         transition: 200ms ease-in-out;
         cursor: pointer;
         opacity: 0.9;
@@ -122,7 +122,7 @@
         &:hover {
             color: var(--text-color);
             opacity: 1;
-            background-color: var(--card-border);
+            background-color: var(--card-background);
             border-bottom: 1px solid transparent;
         }
     }
@@ -174,7 +174,7 @@
     }
     
     .active {
-        background-color: var(--border-color);
+        background-color: var(--card-background);
         border-bottom: 1px solid transparent;
     }
     
