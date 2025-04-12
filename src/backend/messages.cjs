@@ -592,8 +592,9 @@ async function send_message(message, receiver, off_chain = false, group = false,
         }
         if (!sent.success) {
             if (typeof sent.reason !== 'string') return
+            if (sent.reason.length > 40) return
             console.log("Reason:", sent.reason)
-            Hugin.send('error-notify-message', 'Error sending message...')
+            Hugin.send('error-notify-message', sent.reason)
             return
         }
 
