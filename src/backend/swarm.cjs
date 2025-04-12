@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
 const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed} = require("./database.cjs")
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed, feedMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -481,7 +481,10 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         const message = sanitize_feed_message(data)
         console.log('feed data log: ', message);
         if (!message) return 'Ban'
+        const exists = await feedMessageExists(message.hash)
+        if (exists) return
         await saveFeedMessage(message)
+        forward_feed_message(message)
         Hugin.send('feed-message', message);
         return
         }
@@ -725,12 +728,16 @@ const send_feed_message = async (message, reply='', tip) => {
   const hash = randomKey()
   const signature = await signMessage(message+hash, keychain.getXKRKeypair().privateSpendKey);
   const payload = {type: 'feed', message, nickname: Hugin.nickname, address: Hugin.address, reply, tip, hash, timestamp: Date.now(), signature};
+  forward_feed_message(payload)
+  return payload;
+}
+
+const forward_feed_message = (payload) => {
   for (const swarm of active_swarms) {
     for (const peer of swarm.connections) {
       peer.connection.write(JSON.stringify(payload))
     }
   }
-  return payload;
 }
 
 const find_missing_peers = async (active, peers) => {

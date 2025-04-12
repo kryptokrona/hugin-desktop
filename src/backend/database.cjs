@@ -1024,6 +1024,22 @@ const groupMessageExists = async (time) => {
     })
 }
 
+const feedMessageExists = async (hash) => {
+    let exists = false
+    return new Promise((resolve, reject) => {
+        const hashExists = 
+        `SELECT *
+        FROM feedmessages
+        WHERE hash = '${hash}'
+        `
+        const row = database.prepare(hashExists).get()
+        if(row) {
+            exists = true
+        }
+        resolve(exists)
+    })
+}
+
 const roomMessageExists = async (hash) => {
     let exists = false
     return new Promise((resolve, reject) => {
@@ -1094,4 +1110,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {getFeedMessageReplies, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
+module.exports = {getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
