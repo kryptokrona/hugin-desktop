@@ -54,7 +54,7 @@ const sendTransaction = async () => {
               {:else if sent || localStorage.getItem('hugin+') === 'true'}
               <p in:fly>✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅</p>
               <p in:fly> You have upgraded to Hugin +</p>
-              <p in:fly> Wait a couple of minutes for the transaction to settle..</p>
+              {#if sent}<p in:fly> Wait a couple of minutes for the transaction to settle..</p>{/if}
               <p in:fly> Thanks for your support.</p>
               <p in:fly>✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅</p>
         {/if}
@@ -76,7 +76,7 @@ const sendTransaction = async () => {
   }
 
   p {
-    font-family: "Montserrat";
+    font-family: "Montserrat" !important;
   }
   
   </style>
