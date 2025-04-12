@@ -18,12 +18,15 @@ import DropFile from '$lib/components/popups/DropFile.svelte'
 import { fileViewer, localFiles, remoteFiles } from '$lib/stores/files'
 import BigImage from "$lib/components/popups/BigImage.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
+import Backward from "$lib/components/icons/Backward.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
+	import AddCircle from '$lib/components/icons/AddCircle.svelte';
 
 let replyto = ''
 let reply_exit_icon = 'x'
 let noMsgs = $state(false)
 let loader = $state(false)
+let expanded = $state(false)
 let textMessages = $state([])
 let emojiMessages = $state([])
 let feedMessages = $state([])
@@ -97,6 +100,7 @@ window.api.receive('set-channels', async () => {
 const checkErr = (e, tip = false) => {
     let error = false
     if (e.text.length === 0 && !tip) return true 
+    if (e.text === '💬') return true;
     if (e.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
@@ -114,13 +118,9 @@ const sendFeedMsg = async (e, tipping = false) => {
     const new_message = await window.api.sendFeedMessage({message, reply});
     new_message.replies = [];
     new_message.react = [];
-    if (reply?.length) {
-        printFeedReply(new_message)
-    } else {
-        printRoomMessage(new_message)
-    }
-    // replyExit()
-    // scrollDown()
+    printFeedReply(new_message)
+    printRoomMessage(new_message)
+    updateReactionsFocused(new_message)
 }
 
 
@@ -138,15 +138,14 @@ const printRoomMessage = (roomMsg) => {
     ) {
         updateReactions(roomMsg)
     } else {
+        if (roomMsg?.reply?.length) return;
         feedMessages.unshift(roomMsg)
     }
-    roomMessages.update((current) => {
-        return [roomMsg, ...current]
-    })
     feedMessages = removeDuplicates(feedMessages)
 }
 
 const printFeedReply = (reply) => {
+    if (reply.reply == '') return;
     if (
         reply.reply.length === 64 &&
         reply.message.length < 9 &&
@@ -156,6 +155,7 @@ const printFeedReply = (reply) => {
     } else {
         focusedMessage.replies.push(reply);
     }
+    focusedMessage = focusedMessage;
 }
 
 
@@ -348,6 +348,22 @@ async function updateReactionsReply(msg) {
 
 }
 
+async function updateReactionsFocused(msg) {
+
+if (focusedMessage.hash == msg.reply) {
+
+    if (containsOnlyEmojis(msg.message)) {
+        focusedMessage.react.push(msg);
+    } else {
+        focusedMessage.react.push({message:'💬'})
+    }
+    
+}
+
+focusedMessage = focusedMessage
+
+}
+
 const deleteMessage = async (hash) => {
     window.api.deleteMessage(hash)
     feedMessages = feedMessages.filter(a => a.hash !== hash)
@@ -380,6 +396,15 @@ function drag() {
 
 function nodrag() {
     dragover = false
+}
+
+const setExpanded = () => {
+    if (expanded) {
+        expanded = false; 
+        focusedMessage = {}
+    } else {
+        expanded = true;
+    }
 }
 
 async function dropFile(e) {
@@ -480,6 +505,7 @@ const focusMessage = async (message) => {
         reply.react = reactions;
     }
     focusedMessage = message;
+    expanded = true;
 
 }
 
@@ -539,7 +565,14 @@ const focusMessage = async (message) => {
             {/if}
 
         </div>
-        <div class="message_details right_side" in:fly|global="{{ y: 50 }}">
+        <div class:expanded={expanded} class="message_details right_side" in:fly|global="{{ y: 50 }}">
+            <span class:expanded={expanded} class="go_back" onclick={setExpanded}>
+                {#if (expanded)}
+                <Backward />
+                {:else}
+                <AddCircle />
+                {/if}
+            </span>
             {#if (focusedMessage?.hash?.length)}
             <div class="focused_message">
                 <FeedMessage
@@ -560,7 +593,9 @@ const focusMessage = async (message) => {
             {/each}
             </div>
             {/if}
-            <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
+            <div class:expanded={expanded} class="messageinput">
+                <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
+            </div>
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
@@ -573,15 +608,11 @@ const focusMessage = async (message) => {
 
 <style lang="scss">
 
-.focused_message {
-    height: 100%;
-}
-
-.new_post {
+.go_back {
     border-radius: 50%;
     position: absolute;
-    top: 50px;
-    right: 150px;
+    top: calc(50% - 21px);
+    left: -21px;
     color: var(--text-color);
     text-align: center;
     vertical-align: middle;
@@ -594,6 +625,33 @@ const focusMessage = async (message) => {
     cursor: pointer;
     z-index: 999;
     box-shadow: 2px 2px rgba(0,0,0,0.1);
+    rotate: 0deg;
+}
+
+.messageinput.expanded {
+    display: flex;
+}
+
+.messageinput {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.go_back.expanded {
+    rotate: 180deg;
+    line-height: 40px;
+}
+
+.message_details.expanded {
+    width: 100% !important;
+    transition: 200ms ease-in-out;
+}
+
+.expanded {
+    transition: 0.2s all;
 }
 
 .new_post:hover {
@@ -697,8 +755,12 @@ p {
 }
 
 .message_details {
+    width: 10%;
     display: flex;
     border-left: 1px solid var(--border-color);
+    position: relative;
+    justify-content: flex-start !important;
+    transition: 200ms ease-in-out;
 }
 
 .fade {
