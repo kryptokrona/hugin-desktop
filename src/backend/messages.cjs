@@ -21,7 +21,9 @@ const {
     addRoom,
     addRoomKeys,
     printFeed,
-    removeRoom
+    removeRoom,
+    saveFeedMessage,
+    getFeedMessageReplies
 } = require("./database.cjs")
 const {
     trimExtra, 
@@ -34,7 +36,7 @@ const {
     sanitize_group_message
 } = require('./utils.cjs')
 
-const { send_swarm_message, new_swarm, end_swarm, Nodes } = require("./swarm.cjs")
+const { send_swarm_message, new_swarm, end_swarm, Nodes, send_feed_message } = require("./swarm.cjs")
 
 const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
 const { extraDataToMessage } = require('hugin-crypto')
@@ -71,6 +73,17 @@ ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
 
 ipcMain.on('send-room-message', (e, m) => {
     send_room_message(m)
+})
+
+ipcMain.handle('send-feed-message', async (e, m) => {
+    const sent = await send_feed_message(m.message, m.reply, false);
+    saveFeedMessage(sent);
+    return sent;
+})
+
+ipcMain.handle('get-feed-replies', async (e, hash) => {
+    const replies = await getFeedMessageReplies(hash);
+    return replies;
 })
 
 ipcMain.handle('get-group-reply', async (e, data) => {

@@ -721,10 +721,10 @@ const save_feed_history = async (messages) => {
 }
 
 
-const send_feed_message = async (message, reply, tip) => {
+const send_feed_message = async (message, reply='', tip) => {
   const hash = randomKey()
-  const signature = await signMessage(message+hash, keychain.getPrivKeys[0]);
-  const payload = {type: 'feed', message, nickname: Hugin.name, address: Hugin.address, reply: "", tip, hash, timestamp: Date.now(), signature};
+  const signature = await signMessage(message+hash, keychain.getXKRKeypair().privateSpendKey);
+  const payload = {type: 'feed', message, nickname: Hugin.nickname, address: Hugin.address, reply, tip, hash, timestamp: Date.now(), signature};
   for (const swarm of active_swarms) {
     for (const peer of swarm.connections) {
       peer.connection.write(JSON.stringify(payload))
@@ -1339,4 +1339,4 @@ function get_sdp(data) {
 }
 
 
-module.exports = {new_swarm, send_swarm_message, end_swarm, Nodes}
+module.exports = {send_feed_message, new_swarm, send_swarm_message, end_swarm, Nodes}

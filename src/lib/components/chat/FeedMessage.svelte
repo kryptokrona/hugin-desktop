@@ -49,6 +49,8 @@ import Tip from './Tip.svelte'
         ReactTo,
         DeleteMsg,
         reply_to_this = $bindable(false),
+        onPress,
+        isReply = false
     } = $props();
 let tipMessage = $state("");
 
@@ -95,6 +97,8 @@ const nameColor = getColorFromHash(message.address)
 
 onMount( async () => {
     emojiPicker.addEventListener('emoji-click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
             openEmoji = false
             reactTo(e)
         })
@@ -267,6 +271,11 @@ const sendMoney = () => {
     }
 }
 
+const messagePressed = () => {
+    if (openEmoji) return;
+    onPress();
+}
+
 
 run(() => {
         if (tip !== "") {
@@ -325,7 +334,7 @@ run(() => {
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div bind:this={messageContainer} class="message feedmessage" class:yt={youtube} id="{message.hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}}>
+<div bind:this={messageContainer} class="message feedmessage" class:yt={youtube} id="{message.hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}} onclick={messagePressed}>
     <div>
         <div>
             <div class="header">
@@ -354,19 +363,14 @@ run(() => {
                 </div>
                 <div class="actions">
                     <div style="display: flex;">
-                        <div class="emojiContainer">
+                        <div class="emojiContainer" onclick={(e) => {e.stopPropagation}}>
                             <emoji-picker bind:this={emojiPicker}></emoji-picker>
                         </div>
-                        <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
+                        <button alt="React with emoji" class="emoji-button" onclick={(e) => { e.stopPropagation(); openEmoji = !openEmoji }}>
                             <Emoji size="16px" stroke={"var(--text-color)"}/>
                         </button>
                     </div>
                     <PayIcon size={18} on:click={sendMoney}/>
-                    <ReplyArrow on:click="{replyTo}" />
-                    <Dots on:click="{() => showMenu = true}"/>
-                    {#if showMenu}
-                        <UserOptions admin={admin} info={{address: message.address, name: message.nickname}}/>
-                    {/if}
                 </div>
             </div>
             {#if youtube}
@@ -418,6 +422,7 @@ run(() => {
     white-space: pre-line;
     width: 100%;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
 
     
     .header {
@@ -572,9 +577,10 @@ p {
 
 .emojiContainer {
    position: absolute;
-   right: 7rem;
+   left: 0px;
    display: none;
    z-index: 3;
+   pointer-events: all !important;
 }
 
 .joined {

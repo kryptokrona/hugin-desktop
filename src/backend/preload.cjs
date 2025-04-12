@@ -25,6 +25,9 @@ const WINDOW_API = {
     sendRoomMessage: (msg) => {
         ipcRenderer.send('send-room-message', msg)
     },
+    sendFeedMessage: async (msg) => {
+        return await ipcRenderer.invoke('send-feed-message', msg)
+    },
     decryptMessage: (msg) => {
         ipcRenderer.send('decrypt_message', msg)
     },
@@ -40,6 +43,9 @@ const WINDOW_API = {
     },
     getMessages: async () => {
         return await ipcRenderer.invoke('get-messages')
+    },
+    getFeedReplies: async (hash) => {
+        return await ipcRenderer.invoke('get-feed-replies', hash)
     },
     getFeedMessages: async () => {
         return await ipcRenderer.invoke('get-feed-messages')

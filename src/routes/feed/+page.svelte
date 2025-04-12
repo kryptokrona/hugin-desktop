@@ -37,6 +37,7 @@ let loadMore = $state(true)
 let admin = $state(false)
 const welcomeAddress = $misc.welcomeAddress
 let thisSwarm = $state(false)
+let focusedMessage = $state({});
 
 let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
 run(() => {
@@ -70,7 +71,7 @@ onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
     printFeed()
-    scrollDown()
+    // scrollDown()
     
 })
 
@@ -105,65 +106,26 @@ const checkErr = (e, tip = false) => {
 }
 
 //Send message to store and DB
-const sendRoomMsg = async (e, tipping = false) => {
+const sendFeedMsg = async (e, tipping = false) => {
     const error = checkErr(e, tipping)
     if (error) return
-    let msg = e.text
-    let myaddr = $user.myAddress
-    let time = Date.now()
-    const hash = await window.api.createGroup()
-    let myName = $user.username
-    let room = $swarm.activeSwarm?.key
-    let in_swarm = true
-    let in_channel = $swarm.activeChannel.name
-    let tip = false
-    //Reaction switch
-    if (e.reply) {
-        replyto = e.reply
+    let message = e.text
+    const reply = e.reply || focusedMessage?.hash || '';
+    const new_message = await window.api.sendFeedMessage({message, reply});
+    new_message.replies = [];
+    new_message.react = [];
+    if (reply?.length) {
+        printFeedReply(new_message)
+    } else {
+        printRoomMessage(new_message)
     }
-
-    if (e.tip) {
-        tip = e.tip
-    }
-    
-    //Construct a new json object (myGroupMessage) to be able to print our message instant.
-    let myRoomMessage = {
-        message: msg,
-        grp: room,
-        reply: replyto,
-        address: myaddr,
-        time: time,
-        name: myName,
-        hash: hash,
-        sent: true,
-        tip: tip
-    }
-    let sendMsg = {
-        m: msg,
-        g: room,
-        r: replyto,
-        k: myaddr,
-        t: time,
-        n: myName,
-        hash: hash,
-        swarm: in_swarm,
-        sent: true,
-        tip: tip
-    }
-
-    if (in_channel) {
-        sendMsg.c = in_channel
-    }
-
-    $transactions.pending = false
-    window.api.sendRoomMessage(sendMsg)
-    printRoomMessage(myRoomMessage)
-    replyExit()
-    scrollDown()
+    // replyExit()
+    // scrollDown()
 }
 
 
 const scrollDown = () => {
+    return;
     windowChat.scrollTop = windowChat.scrollTopMax
 }
 
@@ -182,6 +144,18 @@ const printRoomMessage = (roomMsg) => {
         return [roomMsg, ...current]
     })
     feedMessages = removeDuplicates(feedMessages)
+}
+
+const printFeedReply = (reply) => {
+    if (
+        reply.reply.length === 64 &&
+        reply.message.length < 9 &&
+        containsOnlyEmojis(reply.message)
+    ) {
+        updateReactionsReply(reply)
+    } else {
+        focusedMessage.replies.push(reply);
+    }
 }
 
 
@@ -275,7 +249,6 @@ async function printFeed() {
     textMessages = []
     console.log("Get messages", feedMessages)
     replyExit()
-    scrollDown()
     loader = false
 }
 
@@ -357,6 +330,22 @@ async function updateReactions(msg) {
         }
     })
     feedMessages = feedMessages
+}
+
+async function updateReactionsReply(msg) {
+
+    focusedMessage.replies.some(function (r) {
+        if (r.hash == msg.reply && !r.react) {
+            r.react = []
+            msg.hash = msg.hash + hashPadding
+            r.react.push(msg)
+        } else if (r.hash == msg.reply && r.react) {
+            msg.hash = msg.hash + hashPadding
+            r.react.push(msg)
+        }
+    })
+    focusedMessage = focusedMessage
+
 }
 
 const deleteMessage = async (hash) => {
@@ -461,6 +450,7 @@ const sendTransaction = async (e) => {
     let tx = e
     $transactions.pending = tx
     const sent = await window.api.sendTransaction(tx)
+    return;
     if (sent) {
         const e = {
         detail: {
@@ -481,6 +471,19 @@ const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
+
+const focusMessage = async (message) => {
+    console.log('Focus message:', message);
+    for (const reply of message?.replies) {
+        const {replies, reactions} = await window.api.getFeedReplies(reply.hash);
+        reply.replies = replies;
+        reply.react = reactions;
+    }
+    focusedMessage = message;
+
+}
+
+
 </script>
 
 
@@ -524,7 +527,8 @@ const hideModal = () => {
             {/if} -->
             {#each feedMessages as message (message.hash)}
                 <FeedMessage
-                    ReactTo="{(e) => sendRoomMsg(e)}"
+                    onPress={() => focusMessage(message)}
+                    ReactTo="{(e) => sendFeedMsg(e)}"
                     ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
                     DeleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
@@ -536,6 +540,26 @@ const hideModal = () => {
 
         </div>
         <div class="message_details right_side" in:fly|global="{{ y: 50 }}">
+            {#if (focusedMessage?.hash?.length)}
+            <div class="focused_message">
+                <FeedMessage
+                onPress={() => {}}
+                ReactTo="{(e) => sendFeedMsg(e)}"
+                ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                DeleteMsg="{(e) => deleteMessage(message.hash)}"
+                message="{focusedMessage}"
+            />
+            {#each focusedMessage.replies as message (message.hash)}
+            <FeedMessage
+                onPress={() => focusMessage(message)}
+                ReactTo="{(e) => sendFeedMsg(e)}"
+                ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                DeleteMsg="{(e) => deleteMessage(message.hash)}"
+                message="{message}"
+            />
+            {/each}
+            </div>
+            {/if}
             <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
         </div>
         {#if replyTrue}
@@ -548,6 +572,11 @@ const hideModal = () => {
 </Dropzone>
 
 <style lang="scss">
+
+.focused_message {
+    height: 100%;
+}
+
 .new_post {
     border-radius: 50%;
     position: absolute;
@@ -659,7 +688,7 @@ p {
 
 .outer {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     overflow: auto;
     padding-bottom: 5px;
     position: initial !important;
