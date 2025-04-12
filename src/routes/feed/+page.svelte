@@ -119,8 +119,13 @@ const sendFeedMsg = async (e, tipping = false) => {
     new_message.replies = [];
     new_message.react = [];
     printFeedReply(new_message)
-    printRoomMessage(new_message)
-    updateReactionsFocused(new_message)
+    if (new_message.reply == focusedMessage.hash) {
+        updateReactionsFocused(new_message)
+        feedMessages = [...feedMessages];
+    } else {
+        printRoomMessage(new_message)
+    }
+    if(new_message?.reply?.length == 0) focusMessage(new_message);
 }
 
 
@@ -320,6 +325,7 @@ function addEmoji(scroll) {
 async function updateReactions(msg) {
 
     feedMessages.some(function (r) {
+        if (focusedMessage.hash == msg.hash) return;
         if (r.hash == msg.reply && !r.react) {
             r.react = []
             msg.hash = msg.hash + hashPadding
