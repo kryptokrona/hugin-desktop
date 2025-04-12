@@ -484,6 +484,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         const exists = await feedMessageExists(message.hash)
         if (exists) return
         await saveFeedMessage(message)
+        message.type = "feed"
         forward_feed_message(message)
         Hugin.send('feed-message', message);
         return
