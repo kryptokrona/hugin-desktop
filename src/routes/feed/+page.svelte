@@ -804,10 +804,12 @@ p {
     background-color: var(--thumbBG);
     border-radius: 3px;
     border: 3px solid var(--scrollbarBG);
+}
+.unread p {
+    font-size: 12px;
 } 
 
 .unread {
-    background-color: var(--primary-color);
     height: 45px;
     display: flex;
     position: relative;
@@ -816,5 +818,14 @@ p {
     cursor: pointer;
     transition: 200ms ease-in-out;
     justify-content: space-evenly;
+    border-radius: 22.5px;
+    border: 1px solid var(--border-color);
+    position: absolute;
+    background: var(--background-color);
+    padding: 15px;
+    left: 25%;
+    top: 15px;
 }
+
+
 </style>
