@@ -592,6 +592,9 @@ const focusMessage = async (message) => {
                 </div>
             {/if}
             {#each feedMessages as message (message.hash)}
+            {#if feedMessages.length === 0}
+            <div><p>Placeholder for no messages</p></div>
+            {/if}
                 <FeedMessage
                     onPress={() => focusMessage(message)}
                     ReactTo="{(e) => sendFeedMsg(e)}"
@@ -632,6 +635,8 @@ const focusMessage = async (message) => {
             />
             {/each}
             </div>
+            {:else if expanded}
+            <div><p>Hello, please write a new post</p></div>
             {/if}
             <div class:expanded={expanded} class="messageinput">
                 <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
@@ -676,10 +681,9 @@ const focusMessage = async (message) => {
     width: 42px;
     font-size: 24pt;
     background-color: var(--background-color);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--border-color);
     cursor: pointer;
     z-index: 999;
-    box-shadow: 2px 2px rgba(0,0,0,0.1);
     rotate: 0deg;
 }
 
