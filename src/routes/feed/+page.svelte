@@ -20,7 +20,9 @@ import BigImage from "$lib/components/popups/BigImage.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import Backward from "$lib/components/icons/Backward.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
-	import AddCircle from '$lib/components/icons/AddCircle.svelte';
+import AddCircle from '$lib/components/icons/AddCircle.svelte';
+import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
+
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -128,6 +130,11 @@ const sendFeedMsg = async (e, tipping = false) => {
     if(new_message?.reply?.length == 0) focusMessage(new_message);
 }
 
+const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
 
 const scrollDown = () => {
     return;
@@ -560,6 +567,27 @@ const focusMessage = async (message) => {
             {/if} -->
             {#if $feed.new.length} 
                 <div class="unread" onclick={() => printFeed()}>
+                        <div class="unread_avatars">
+                            {#each $feed.new.slice(-3) as message}
+                                {#await check_avatar(message.address)}
+                                {:then avatar}
+                                {#if avatar}
+                                    <img
+                                        class="custom-avatar"
+                                        src="{avatar}"
+                                        alt=""
+                                    />
+                                {:else}
+                                    <img
+                                    style="background: {getColorFromHash(message.hash)}"
+                                    class="avatar"
+                                    src="data:image/png;base64,{get_avatar(message.address)}"
+                                    alt=""
+                                />
+                                {/if}
+                                {/await}
+                            {/each}
+                        </div>
                         <p style="cursor: pointer">{$feed.new.length} new messages</p>
                 </div>
             {/if}
@@ -619,6 +647,21 @@ const focusMessage = async (message) => {
 </Dropzone>
 
 <style lang="scss">
+
+.unread_avatars {
+  display: flex;
+}
+
+.unread img {
+    margin-left: -10px;
+    border-radius: 50%;
+    width: 26px;
+    border: 1px solid var(--background-color);
+}
+
+.unread_avatars img:first-child {
+  margin-left: 0;
+}
 
 .go_back {
     border-radius: 50%;
@@ -807,6 +850,8 @@ p {
 }
 .unread p {
     font-size: 12px;
+    font-family: "Montserrat";
+    margin-left: 7px;
 } 
 
 .unread {
