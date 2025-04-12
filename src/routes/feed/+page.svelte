@@ -636,7 +636,7 @@ const focusMessage = async (message) => {
             {/each}
             </div>
             {:else if expanded}
-            <div class="feed-start"><p>Type a message below to start a new discussion!</p></div>
+            <div in:fade="{{ duration: 1300 }}" class="feed-start"><p>Type a message below to start a new discussion!</p></div>
             {/if}
             <div class:expanded={expanded} class="messageinput">
                 <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
