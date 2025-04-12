@@ -636,7 +636,7 @@ const focusMessage = async (message) => {
             {/each}
             </div>
             {:else if expanded}
-            <div><p>Hello, please write a new post</p></div>
+            <div class="feed-start"><p>Type a message below to start a new discussion!</p></div>
             {/if}
             <div class:expanded={expanded} class="messageinput">
                 <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
@@ -652,6 +652,19 @@ const focusMessage = async (message) => {
 </Dropzone>
 
 <style lang="scss">
+
+.feed-start {
+    width: 50%;
+    text-align: center;
+    margin: auto;
+}
+
+.feed-start p {
+    padding: 20px;
+    font-family: "Montserrat";
+    font-size: 14px;
+    opacity: 0.8;
+}
 
 .unread_avatars {
   display: flex;
