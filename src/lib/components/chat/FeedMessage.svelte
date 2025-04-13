@@ -4,7 +4,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import {  onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user, rooms, transactions } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms, transactions, feed } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -211,6 +211,12 @@ const positionEmojiContainer = (open) => {
     } else {
         // Otherwise, position it below the button
         emojiContainer.style.top = initialTop + 'px';
+    }
+
+    if (!$feed.expanded) {
+        emojiContainer.style.left = '550px'
+    } else {
+        emojiContainer.style.left = '150px'
     }
 }
 

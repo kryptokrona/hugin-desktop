@@ -416,8 +416,10 @@ const setExpanded = () => {
     if (expanded) {
         expanded = false; 
         focusedMessage = {}
+        $feed.expanded = false
     } else {
         expanded = true;
+        $feed.expanded = true  
     }
 }
 
