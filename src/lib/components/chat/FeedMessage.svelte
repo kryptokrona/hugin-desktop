@@ -367,10 +367,10 @@ run(() => {
                             <emoji-picker bind:this={emojiPicker}></emoji-picker>
                         </div>
                         <button alt="React with emoji" class="emoji-button" onclick={(e) => { e.stopPropagation(); openEmoji = !openEmoji }}>
-                            <Emoji size="16px" stroke={"var(--text-color)"}/>
+                            <Emoji size="20px" stroke={"var(--text-color)"}/>
                         </button>
                     </div>
-                    <PayIcon size={18} on:click={sendMoney}/>
+                    <PayIcon size={22} on:click={sendMoney}/>
                 </div>
             </div>
             {#if youtube}
@@ -577,7 +577,7 @@ p {
 
 .emojiContainer {
    position: absolute;
-   left: 0px;
+   left: 150px;
    display: none;
    z-index: 3;
    pointer-events: all !important;
