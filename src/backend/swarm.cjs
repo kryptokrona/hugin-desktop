@@ -101,8 +101,6 @@ async listen() {
    conn.on('data', d => {
     const string = d.toString()
     const data = this.parse(string)
-    
-    console.log("Got answer,", data)
     if (!data) return
       if (this.requests.has(data.id)) {
         const { resolve, reject } = this.requests.get(data.id);
@@ -482,10 +480,11 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
     if ('type' in data) {
         if (data.type === 'feed') {
         const message = sanitize_feed_message(data)
-        console.log('feed data log: ', message);
         if (!message) return 'Ban'
         const exists = await feedMessageExists(message.hash)
         if (exists) return
+        const verify = await verifySignature(message.message, message.address, message.signature)
+        if (!verify) return 'Ban'
         await saveFeedMessage(message)
         message.type = "feed"
         forward_feed_message(message)
