@@ -164,6 +164,7 @@ ipcMain.on('hugin-node', (e, address, pub) => {
         }
     })
     Hugin.huginNode = {address, pub}
+    Nodes.connect(address, pub)
 })
 
 ipcMain.handle('get-conversations', async (e) => {
