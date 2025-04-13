@@ -101,6 +101,8 @@ async listen() {
    conn.on('data', d => {
     const string = d.toString()
     const data = this.parse(string)
+    
+    console.log("Got answer,", data)
     if (!data) return
       if (this.requests.has(data.id)) {
         const { resolve, reject } = this.requests.get(data.id);
@@ -135,7 +137,6 @@ async change(address, pub) {
   }
   this.node = null
   this.discovery = null
-  Hugin.send('hugin-node-connection', false)
 
   this.connect(address, pub)
 }
@@ -151,6 +152,7 @@ async reconnect() {
 }
 
 sync(data) {
+    if (!this.connection) return []
   return new Promise((resolve, reject) => {
     data.id = data.timestamp
     this.requests.set(data.id, { resolve, reject });
@@ -184,7 +186,8 @@ async message(payload) {
     pub,
     timestamp,
     hash: id,
-    signature
+    signature,
+    id: timestamp
     }
 
   }

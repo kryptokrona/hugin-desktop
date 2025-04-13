@@ -98,6 +98,7 @@ class Account {
     this.roomFiles = []
     this.avatar = ""
     this.syncImages = null
+    this.huginNode = {}
 
     }
 
@@ -110,6 +111,7 @@ class Account {
       this.address = wallet.getPrimaryAddress()
       this.avatar = get_avatar()
       this.syncImages = store.get('syncImages') ?? []
+      this.huginNode = store.get('huginNode') ?? {address: '', pub: true}
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({
