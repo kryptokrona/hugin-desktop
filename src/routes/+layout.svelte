@@ -386,7 +386,7 @@
     })
 
     window.api.receive('hugin-node-connection', (status)  => {
-        HuginNode.connected = status
+        $HuginNode.connected = status
         if (!status) {
             window.api.errorMessage('Disconnected from node.')
         } else {

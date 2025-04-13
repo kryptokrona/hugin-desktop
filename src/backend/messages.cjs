@@ -155,7 +155,7 @@ ipcMain.handle('get-feed-messages', async (data) => {
 
 //PRIVATE MESSAGES
 
-ipcMain.on('hugin-node', (e, address, pub) => {
+ipcMain.on('hugin-node', (e, {address, pub}) => {
     Nodes.change(address, pub)
     store.set({
         huginNode: {
@@ -164,7 +164,6 @@ ipcMain.on('hugin-node', (e, address, pub) => {
         }
     })
     Hugin.huginNode = {address, pub}
-    Nodes.connect(address, pub)
 })
 
 ipcMain.handle('get-conversations', async (e) => {

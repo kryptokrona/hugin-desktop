@@ -136,6 +136,8 @@ async change(address, pub) {
   this.node = null
   this.discovery = null
 
+  console.log("Connecting to node...")
+
   this.connect(address, pub)
 }
 
@@ -191,7 +193,7 @@ async message(payload) {
   }
 
   if (this.connection === null) {
-    reject("No connection")
+    resolve({success: false, reason: 'No connection'})
   }
 
   this.connection.write(JSON.stringify(data))
