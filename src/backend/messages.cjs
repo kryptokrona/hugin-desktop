@@ -602,6 +602,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
             if (sent.reason.length > 40) return
             console.log("Reason:", sent.reason)
             Hugin.send('error-notify-message', sent.reason)
+            Hugin.send('success-notify-message', 'Please upgrade to Hugin +')
             return
         }
 
