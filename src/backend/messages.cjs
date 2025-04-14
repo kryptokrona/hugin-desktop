@@ -148,8 +148,8 @@ ipcMain.on('delete-messages-after', async (e, days) => {
     })
 })
 
-ipcMain.handle('get-feed-messages', async (data) => {
-    return await printFeed()
+ipcMain.handle('get-feed-messages', async (e, page) => {
+    return await printFeed(page)
 })
 
 
