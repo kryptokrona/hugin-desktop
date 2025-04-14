@@ -134,8 +134,8 @@ window.api.receive('set-channels', async () => {
 //Check for possible errors
 const checkErr = (e, tip = false) => {
     let error = false
-    if (e.text.length === 0 && !tip) return true 
-    if (e.text.length > 777) error = "Message is too long"
+    if (e.text?.length === 0 && !tip) return true 
+    if (e.text?.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
@@ -520,12 +520,10 @@ const sendTransaction = async (e) => {
     const sent = await window.api.sendTransaction(tx)
     if (sent) {
         const e = {
-        detail: {
         text: "",
          tip: {
             amount: $transactions.pending.amount,
             receiver: fixedRooms.find(a => a.address === $transactions.pending.to).name
-        }
         }
     }
         sendRoomMsg(e, true)
