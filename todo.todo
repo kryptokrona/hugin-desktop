@@ -3,10 +3,14 @@ Bugs:
     ☐ Node picker has duplicated buttons
     ☐ Wrong color on in app notification
     ☐ No default avatar shown when none chosen
+    ☐ Login doesn't work after auto lock
 
 Feed:
-    ☐ Add "x new message - click to load" button
+    ✔ Add "x new message - click to load" button @done(25-04-15 13:25)
     ☐ Add file sharing
+    ☐ Cannot change focused post after replying to post
+    ☐ Emoji picker not showing up for focused post or replies
 
 Features:
     ☐ Add check node statuses
+    ☐ Add node picker for hugin node
