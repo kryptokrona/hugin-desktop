@@ -45,6 +45,7 @@ class NodeConnection extends EventEmitter {
     this.pending = []
     this.public = 'a8b2ddb6f70e02b8ab3a1b144f5ddf0616ed6029b9129d6c12bc7660f5b430c5'
     this.topic = ''
+    this.address = null
   }
 
 async connect(address, pub) {
@@ -102,9 +103,17 @@ async listen() {
     const string = d.toString()
     const data = this.parse(string)
     if (!data) return
+    
+    if ('address' in data) {
+        if (typeof data.address !== 'string') return
+        if (data.address !== 99) return
+        this.address = data.address
+        return
+    }
+
       if (this.requests.has(data.id)) {
         const { resolve, reject } = this.requests.get(data.id);
-        if ('chunk' in data) {
+        if ('chunks' in data) {
           this.pending.push(data.repsonse)
           return
         }
@@ -127,14 +136,17 @@ async listen() {
 }
 
 async change(address, pub) {
-  await this.node.leave(Buffer.from(this.topic))
-  await this.node.destroy()
-  if (this.connection !== null) {
-    this.connection.end()
-    this.connection = null
-  }
-  this.node = null
-  this.discovery = null
+    if (this.node) {
+        await this.node.leave(Buffer.from(this.topic))
+        await this.node.destroy()
+        if (this.connection !== null) {
+            this.connection.end()
+            this.connection = null
+        }
+        this.node = null
+        this.discovery = null
+        this.address = null
+    }
 
   console.log("Connecting to node...")
 
