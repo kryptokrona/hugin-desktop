@@ -10,6 +10,7 @@ Feed:
     ☐ Add file sharing
     ☐ Cannot change focused post after replying to post
     ☐ Emoji picker not showing up for focused post or replies
+    ☐ Emoji picker misaligned when feed sidebar is visible
 
 Features:
     ☐ Add check node statuses
