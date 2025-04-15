@@ -17,7 +17,7 @@ const { Hugin } = require('./account.cjs')
 const { keychain } = require('./crypto.cjs')
 const { start_message_syncer } = require('./messages.cjs')
 const { getRooms } = require('./database.cjs')
-const { new_swarm } = require('./swarm.cjs')
+const { new_swarm, Nodes } = require('./swarm.cjs')
 
 let js_wallet
 let daemon
@@ -448,10 +448,10 @@ async function checkNodeStatus (node) {
 
 
 async function sendTx(tx) {
-    console.log('transactions', tx)
-    console.log(`✅ SENDING ${tx.amount} TO ${tx.to}`)
+    const sendTo = tx.upgrade ? [[tx.to, 4900000 ], [Nodes.address, 5000000]] : [[tx.to, tx.amount]]
+    console.log(`✅ SENDING`, sendTo)
     let result = await js_wallet.sendTransactionAdvanced(
-        [[tx.to, tx.amount]], // destinations,
+        sendTo, // destinations,
         3, // mixin
         { fixedFee: 1000, isFixedFee: true }, // fee
         tx.paymentID, //paymentID

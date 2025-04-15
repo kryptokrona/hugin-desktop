@@ -106,7 +106,7 @@ async listen() {
     
     if ('address' in data) {
         if (typeof data.address !== 'string') return
-        if (data.address !== 99) return
+        if (data.address.length !== 99) return
         this.address = data.address
         return
     }

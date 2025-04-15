@@ -32,6 +32,7 @@ const sendTransaction = async () => {
         to: 'SEKReVsk6By22AuCcRnQGkSjY6r4AxuXxSV9ygAXwnWxGAhSPinP7AsYUdqPNKmsPg2M73FiA19JT3oy31WDZq1jBkfy3kxEMNM',
         amount: parseInt(99) * 100000,
         paymentID: publicKey,
+        upgrade: true
     })
 
     if (sent) {
