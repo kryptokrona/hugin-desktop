@@ -522,6 +522,7 @@ const focusMessage = async (message) => {
         reply.replies = replies;
         reply.react = reactions;
     }
+    $feed.expanded = true
     focusedMessage = message;
     expanded = true;
 
