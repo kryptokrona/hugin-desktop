@@ -18,7 +18,12 @@
         getHeight();
     })
 
-    let status = $derived(synced ? "Connected" : "Syncing blocks")
+    let status = $state('Syncing...')
+
+
+    $effect(()=> {
+        status = synced ? "Connected" : "Syncing blocks"
+    })
 
     run(() => {
         synced = $misc.syncedStatus
@@ -69,8 +74,8 @@
             window.api.errorMessage('Address format is not correct.')
             return
         }
-        window.api.send('hugin-node', address, pub)
-        HuginNode.address = address
+        window.api.send('hugin-node', {address, pub})
+        $HuginNode.address = address
     }
 
 
@@ -101,7 +106,7 @@
     />
     </div>
     <p class="nodeinfo">
-        {#if HuginNode.connected}
+        {#if $HuginNode.connected}
             <p class="nodeinfo syncstatus" class:sync="{true}">
                 Connected
             </p>

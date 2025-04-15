@@ -4,7 +4,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import {  onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user, rooms, transactions } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms, transactions, feed } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -212,6 +212,12 @@ const positionEmojiContainer = (open) => {
         // Otherwise, position it below the button
         emojiContainer.style.top = initialTop + 'px';
     }
+
+    if (!$feed.expanded) {
+        emojiContainer.style.left = '550px'
+    } else {
+        emojiContainer.style.left = '150px'
+    }
 }
 
 
@@ -367,10 +373,10 @@ run(() => {
                             <emoji-picker bind:this={emojiPicker}></emoji-picker>
                         </div>
                         <button alt="React with emoji" class="emoji-button" onclick={(e) => { e.stopPropagation(); openEmoji = !openEmoji }}>
-                            <Emoji size="16px" stroke={"var(--text-color)"}/>
+                            <Emoji size="20px" stroke={"var(--text-color)"}/>
                         </button>
                     </div>
-                    <PayIcon size={18} on:click={sendMoney}/>
+                    <PayIcon size={22} on:click={sendMoney}/>
                 </div>
             </div>
             {#if youtube}
@@ -577,7 +583,7 @@ p {
 
 .emojiContainer {
    position: absolute;
-   left: 0px;
+   left: 150px;
    display: none;
    z-index: 3;
    pointer-events: all !important;

@@ -47,8 +47,8 @@ const WINDOW_API = {
     getFeedReplies: async (hash) => {
         return await ipcRenderer.invoke('get-feed-replies', hash)
     },
-    getFeedMessages: async () => {
-        return await ipcRenderer.invoke('get-feed-messages')
+    getFeedMessages: async (index) => {
+        return await ipcRenderer.invoke('get-feed-messages', index)
     },
     getGroupReply: async (hash) => {
         return await ipcRenderer.invoke('get-group-reply', hash)

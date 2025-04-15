@@ -148,15 +148,22 @@ ipcMain.on('delete-messages-after', async (e, days) => {
     })
 })
 
-ipcMain.handle('get-feed-messages', async (data) => {
-    return await printFeed()
+ipcMain.handle('get-feed-messages', async (e, page) => {
+    return await printFeed(page)
 })
 
 
 //PRIVATE MESSAGES
 
-ipcMain.on('hugin-node', (e, address, pub) => {
+ipcMain.on('hugin-node', (e, {address, pub}) => {
     Nodes.change(address, pub)
+    store.set({
+        huginNode: {
+            address,
+            pub
+        }
+    })
+    Hugin.huginNode = {address, pub}
 })
 
 ipcMain.handle('get-conversations', async (e) => {
@@ -256,7 +263,7 @@ async function key_derivation_hash(chat) {
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
     peer_dms()
-    Nodes.connect('', true)
+    Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub)
     await sleep(5000)
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
@@ -592,8 +599,10 @@ async function send_message(message, receiver, off_chain = false, group = false,
         }
         if (!sent.success) {
             if (typeof sent.reason !== 'string') return
+            if (sent.reason.length > 40) return
             console.log("Reason:", sent.reason)
-            Hugin.send('error-notify-message', 'Error sending message...')
+            Hugin.send('error-notify-message', sent.reason)
+            Hugin.send('success-notify-message', 'Please upgrade to Hugin +')
             return
         }
 

@@ -135,7 +135,8 @@ async change(address, pub) {
   }
   this.node = null
   this.discovery = null
-  Hugin.send('hugin-node-connection', false)
+
+  console.log("Connecting to node...")
 
   this.connect(address, pub)
 }
@@ -151,6 +152,7 @@ async reconnect() {
 }
 
 sync(data) {
+    if (!this.connection) return []
   return new Promise((resolve, reject) => {
     data.id = data.timestamp
     this.requests.set(data.id, { resolve, reject });
@@ -184,13 +186,14 @@ async message(payload) {
     pub,
     timestamp,
     hash: id,
-    signature
+    signature,
+    id: timestamp
     }
 
   }
 
   if (this.connection === null) {
-    reject("No connection")
+    resolve({success: false, reason: 'No connection'})
   }
 
   this.connection.write(JSON.stringify(data))
@@ -479,10 +482,11 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
     if ('type' in data) {
         if (data.type === 'feed') {
         const message = sanitize_feed_message(data)
-        console.log('feed data log: ', message);
         if (!message) return 'Ban'
         const exists = await feedMessageExists(message.hash)
         if (exists) return
+        const verify = await verifySignature(message.message, message.address, message.signature)
+        if (!verify) return 'Ban'
         await saveFeedMessage(message)
         message.type = "feed"
         forward_feed_message(message)

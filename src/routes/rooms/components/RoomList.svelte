@@ -127,14 +127,7 @@ const make_avatar = (data, address) => {
 //Print our conversations from DBs
 async function printRooms() {
     roomList = await window.api.getRooms()
-
-    rooms.update((current) => {
-        return {
-            ...current,
-            roomArray: roomList,
-        }
-    })
-
+    $rooms.roomArray = roomList
     filterActiveHugins()
 }
 

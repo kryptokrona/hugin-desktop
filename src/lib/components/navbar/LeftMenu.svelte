@@ -1,7 +1,7 @@
 <script>
 import { run } from 'svelte/legacy';
 
-import { misc, user, userAvatar, swarm, webRTC, rooms, theme } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm, webRTC, rooms, theme, feed } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -84,10 +84,8 @@ const roomRouteAndMenu = () => {
 
 const feedRouteAndMenu = () => {
     if ($page.url.pathname === '/feed') {
-        // $layoutState.hideGroupList = !$layoutState.hideGroupList
     } else {
         setTimeout(() => {
-            $layoutState.hideGroupList = false
         }, 300)
         goto('/feed')
     }

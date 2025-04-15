@@ -28,7 +28,7 @@ let replyto = ''
 let reply_exit_icon = 'x'
 let noMsgs = $state(false)
 let loader = $state(false)
-let expanded = $state(false)
+let expanded = $state($feed.expanded)
 let textMessages = $state([])
 let emojiMessages = $state([])
 let feedMessages = $state([])
@@ -37,7 +37,7 @@ let scrollGroups = []
 let windowHeight = $state()
 let windowChat = $state()
 let channelMessages = []
-let pageNum = 0;
+let pageNum = $state(0);
 let loadMore = $state(true)
 let admin = $state(false)
 const welcomeAddress = $misc.welcomeAddress
@@ -257,7 +257,7 @@ async function printFeed() {
     loadMore = true
     pageNum = 0
     $feed.new = []
-    feedMessages = await window.api.getFeedMessages()
+    feedMessages = await window.api.getFeedMessages(0)
     emojiMessages = []
     textMessages = []
     console.log("Get messages", feedMessages)
@@ -399,7 +399,7 @@ async function getMessages(group) {
 }
 
 async function getMoreMessages() {
-    return await window.api.printRoom($swarm.activeSwarm?.key, pageNum)
+    return await await window.api.getFeedMessages(pageNum)
 }
 
 let dragover = $state(false)
@@ -416,8 +416,10 @@ const setExpanded = () => {
     if (expanded) {
         expanded = false; 
         focusedMessage = {}
+        $feed.expanded = false
     } else {
         expanded = true;
+        $feed.expanded = true  
     }
 }
 

@@ -110,6 +110,8 @@ onDestroy(() => {
 })
 
 function checkMessage() {
+
+    if (tip) return
     
     if (msg.match(geturl)) {
         link = true
