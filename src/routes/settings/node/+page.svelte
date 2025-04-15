@@ -75,7 +75,6 @@
             return
         }
         window.api.send('hugin-node', {address, pub})
-        $HuginNode.address = address
     }
 
 
