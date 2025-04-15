@@ -45,6 +45,7 @@ let thisSwarm = $state(false)
 let focusedMessage = $state({});
 
 let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
+
 run(() => {
         if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
     });
@@ -420,6 +421,7 @@ const setExpanded = () => {
     } else {
         expanded = true;
         $feed.expanded = true  
+        focusedMessage = focusedMessage
     }
 }
 
@@ -618,7 +620,7 @@ const focusMessage = async (message) => {
                 <AddCircle />
                 {/if}
             </span>
-            {#if (focusedMessage?.hash?.length)}
+            {#if focusedMessage.message?.length > 0 && expanded}
             <div class="focused_message">
                 <FeedMessage
                 onPress={() => {}}
