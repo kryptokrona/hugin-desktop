@@ -41,7 +41,7 @@ run(() => {
 
 const enter = async (e) => {
   if (enableLogin && e.keyCode === 13) {
-    if (started) {
+    if ($user.started) {
       await checkPass()
       return
     }
