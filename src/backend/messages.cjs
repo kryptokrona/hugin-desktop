@@ -623,6 +623,9 @@ async function send_message(message, receiver, off_chain = false, group = false,
         t: timestamp,
         chat: address,
     }
+    if (!has_history) {  
+        known_keys.push(messageKey)
+    }
     save_message(saveThisMessage, true)
 }
 
@@ -1069,7 +1072,6 @@ async function check_history(messageKey, addr) {
         if (parseInt(conv.timestamp) < parseInt(store.get("db.versionDate"))) return false
         return true
     } else {
-        known_keys.push(messageKey)
         return false
     }
 
