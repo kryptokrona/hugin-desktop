@@ -5,14 +5,11 @@
   /** @type {{connected: any, connecting: any, size?: number, fill?: boolean}} */
   let {
     connected,
-    connecting = $bindable(),
+    connecting ,
     size = 24,
     fill = false
   } = $props();
 
-  run(() => {
-    if(connected) connecting = false
-  });
 
 </script>
 

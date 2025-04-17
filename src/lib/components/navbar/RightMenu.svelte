@@ -33,7 +33,11 @@ let video = false
 let videoInput = $state()
 let thisSwarm = $state({voice_channel: []})
 let in_voice = $state(false)
-let activeBeam = $state()
+let activeBeam = $derived( $swarm.active.some(a => a.chat === thisChat.chat))
+
+$effect(() => {
+   activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
+})
 
 run(() => {
       if ($mediaSettings.devices.length) {
@@ -56,9 +60,7 @@ run(() => {
 let thisChat = $derived($user.activeChat)
 
 //Beam reactive button states
-run(() => {
-      if ($swarm) activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
-   });
+
 let connectedBeam = $derived($swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat)))
 run(() => {
       if (activeBeam) {
