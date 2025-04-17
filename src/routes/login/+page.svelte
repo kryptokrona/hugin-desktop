@@ -11,6 +11,7 @@ import toast from 'svelte-5-french-toast'
 import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { sleep } from '$lib/utils/utils'
+	import { page } from '$app/state';
 
 let myPassword = $state("")
 let enableLogin = $state(false)
@@ -42,7 +43,7 @@ run(() => {
 const enter = async (e) => {
   if (enableLogin && e.keyCode === 13) {
     if ($user.started) {
-      await checkPass()
+      checkPass()
       return
     }
     handleLogin(e)
@@ -58,16 +59,15 @@ const checkPass = async () => {
       loadSpin = false
       $layoutState.showNodeSelector = false
       $misc.loading = false
-      await goto('/dashboard')
-      await sleep(300)
+      goto('./dashboard')
       $user.loggedIn = true
   }
 }
 
 //Handle login, sets logeged in to true and gets user address
 const handleLogin = async (e) => {
-  if (started) {
-    await checkPass()
+  if ($user.started) {
+    checkPass()
     return
   }
     

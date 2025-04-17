@@ -38,7 +38,7 @@
                 joined.voice_channel = removed
                 }
             })
-            
+
             //Check my current active swarm voice channel and remove aswell
             let active = $swarm.voice_channel.find(a => a.address === my_address)
             if (!active) return true
@@ -52,11 +52,7 @@
             $swarm.voice_channel = []
             
             if ($swarm.myStream) $swarm.myStream.getTracks().forEach((track) => track.stop())
-            
-            //Stop any active stream
-            if (!old) return true
-
-            
+        
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
                 $videoSettings.myVideo = false
@@ -65,10 +61,9 @@
                 $swarm.myStream = false
                 $videoSettings.active = false
             }
-            
-            console.log("Left voice channel!")
+        
             //Send status to backend
-            window.api.send("exit-voice", old.key)
+            window.api.send("exit-voice", active.key)
             $videoSettings.myVideo = false
             return true
     }
