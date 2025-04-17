@@ -12,7 +12,7 @@ let { contact = $bindable(), ThisContact, OpenRename } = $props();
 let thisCall = $state(false)
 let beamInvite = $state(false)
 let asian = $state(false)
-let online = $state(false)
+let online = $derived($swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat)))
 
 
 onMount(async () => {
@@ -74,14 +74,6 @@ const rename = () => {
     })
     OpenRename()
 }
-
-run(() => {
-    if ($swarm.active.length) {
-      online = $swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat));
-    } else {
-      online = false
-    }
-  });
 
   const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)
