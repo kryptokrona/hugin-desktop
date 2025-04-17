@@ -41,9 +41,10 @@ run(() => {
 });
 
 const enter = async (e) => {
-  if (enableLogin && e.keyCode === 13) {
+  if (enableLogin && e.key === 'Enter') {
+
     if ($user.started) {
-      checkPass()
+      await checkPass()
       return
     }
     handleLogin(e)
@@ -105,7 +106,7 @@ window.api.receive('login-failed', async () => {
 
 </script>
 
-<svelte:window onkeyup={preventDefault(enter)}/>
+<svelte:window onkeyup={enter} />
 
 <div class="wrapper" in:fly|global={{ delay: 300, duration: 300, y : 50 }} out:fly|global={{ delay: 100, duration: 100, y : -50 }}>
     {#if $layoutState.showNodeSelector}
