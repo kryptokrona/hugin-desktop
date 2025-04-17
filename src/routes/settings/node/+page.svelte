@@ -104,7 +104,9 @@
     on:click="{connect('', true)}"
     />
     </div>
-    <p class="nodeinfo">
+    <div class="nodeinfo">
+        
+    <h4>Status</h4>
         {#if $HuginNode.connected}
             <p class="nodeinfo syncstatus" class:sync="{true}">
                 Connected
@@ -112,7 +114,7 @@
         {:else}
             <p class="nodeinfo syncstatus" class:sync="{false}">No connection</p>
         {/if}
-    </p>
+        </div>
 
 <h2>Node</h2>
 <div class="change_node">
@@ -179,6 +181,11 @@ h2 {
 
 .nodeinfo {
     font-size: 17px !important;
+}
+
+.node {
+    margin-bottom: 7px;
+    margin-left: -5px;
 }
 
 .button {
