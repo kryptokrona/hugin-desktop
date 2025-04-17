@@ -1015,6 +1015,8 @@ async function save_message(msg, offchain = false) {
     if (msg.type === 'sealedbox' && !sent) {
         let hugin = addr + key
         await save_contact(hugin)
+        const hash = await key_derivation_hash(addr)
+        new_swarm({key: hash}, true, addr + key);
     }
 
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
