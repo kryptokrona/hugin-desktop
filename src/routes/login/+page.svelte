@@ -60,7 +60,7 @@ const checkPass = async () => {
       loadSpin = false
       $layoutState.showNodeSelector = false
       $misc.loading = false
-      goto('./dashboard')
+      goto('/dashboard')
       $user.loggedIn = true
   }
 }
