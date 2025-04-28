@@ -163,6 +163,8 @@
                 if (!$notify.off.some(a => a === group.name)) {
                     board_message_sound.play()
                     $notify.new.push(data)
+                    data.roomName = group.name
+                    window.api.send('notify-room', data)
                 }
             }
             if (!$misc.focus && thisgroup && ingroups) return
