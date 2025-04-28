@@ -36,7 +36,7 @@ onDestroy(() => {
   window.api.removeAllListeners('login-failed')
 })
 
-run(() => {
+$effect(() => {
     enableLogin = myPassword.length > 1
 });
 
@@ -53,6 +53,7 @@ const enter = async (e) => {
 }
 
 const checkPass = async () => {
+  $user.idleTime = 0
   loadSpin = true
   const verify = await window.api.verifyPass(myPassword)
   if (!verify) window.api.errorMessage('Wrong password')
@@ -60,7 +61,7 @@ const checkPass = async () => {
       loadSpin = false
       $layoutState.showNodeSelector = false
       $misc.loading = false
-      goto('/dashboard')
+      goto("/dashboard")
       $user.loggedIn = true
   }
 }
