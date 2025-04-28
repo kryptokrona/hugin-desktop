@@ -52,6 +52,7 @@ const Store = require('electron-store');
 const { Hugin } = require('./account.cjs')
 const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs')
 const store = new Store()
+const { Notification } = require('electron');
 
 let known_pool_txs = []
 let known_keys = []
@@ -66,6 +67,16 @@ let incoming_group_que = []
 //     optimize_message_inputs(force = true)
 // })
 //GROUPS MESSAGES
+
+ipcMain.on('notify-room', (e, data) => {
+    console.log("Send notification", data)
+    const notification = new Notification({
+        title: data.name + ' in ' + data.roomName,
+        body: data.message,
+        icon: 'src/static/icon.png',
+      });
+      notification.show()
+})
 
 ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
     send_group_message(msg, offchain, swarm)
