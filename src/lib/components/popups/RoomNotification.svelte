@@ -99,7 +99,7 @@ const check_avatar = (address) => {
     width: 100%;
     max-height: 69px;
     border-radius: 3px;
-    background-color: #111111;
+    background-color: var(--backgound-color);
 }
 
 .avatar {
@@ -123,7 +123,7 @@ p {
 
 h4 {
     margin: 0;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
     font-weight: normal;
     max-width: 120px;
     overflow: hidden;
