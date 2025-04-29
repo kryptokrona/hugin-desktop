@@ -399,7 +399,6 @@ run(() => {
                     {/if}
                     <ReplyArrow on:click="{replyTo}" />
                     {#if !rtc}
-                    <DeleteButton on:click="{deleteMsg}"/>
                     {#if !myMsg}
                     <Dots on:click="{() => showMenu = true}"/>
                     {/if}
