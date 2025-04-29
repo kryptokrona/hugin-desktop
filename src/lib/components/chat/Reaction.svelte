@@ -1,6 +1,6 @@
 <script>
     import { run } from 'svelte/legacy'
-    import { fade } from 'svelte/transition'
+    import { fade, fly, scale } from 'svelte/transition'
 
     /** @type {{reacts?: any, reactCount?: number, thisReaction: any, emoji: any, react?: boolean, counter?: boolean}} */
     let {
@@ -41,7 +41,8 @@ run(() => {
     });
 </script>
 
-<div class="reaction" onclick={sendReaction}>
+
+<div in:fly={{y : 150}} class="reaction" onclick={sendReaction}>
     {thisReaction.message}
     {#if filterReactions.length >= 1}
         <p class="count">{reactCount}</p>

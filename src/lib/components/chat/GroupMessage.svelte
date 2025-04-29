@@ -343,7 +343,7 @@ run(() => {
                     </div>
                 </div>
             {:else if replyError}
-                <div in:fade|global="{{ duration: 150 }}" class="reply">
+                <div in:fade|global="{{ duration: 100 }}" class="reply">
                     <img
                         class="reply_avatar"
                         src="data:image/png;base64,{get_avatar(

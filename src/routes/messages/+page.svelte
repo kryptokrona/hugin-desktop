@@ -18,6 +18,7 @@ import { fileSettings, fileViewer } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
 import DropFile from '$lib/components/popups/DropFile.svelte'
 import ActiveCall from './components/ActiveCall.svelte'
+	import { flip } from 'svelte/animate';
 
 let active_contact = $state()
 let savedMsg = $state([])
@@ -323,6 +324,7 @@ const hideModal = () => {
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
                 {#each savedMsg as message (message.timestamp)}
+                <div animate:flip="{{duration: 100}}">
                     <ChatBubble
                         on:download="{() => download(message.msg)}"
                         files="{message.file}"
@@ -333,6 +335,7 @@ const hideModal = () => {
                         beamMsg="{message.beam}"
                         error="{message?.error}"
                     />
+                </div>
                 {/each}
             </div>
             </Dropzone>

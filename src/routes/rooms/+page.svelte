@@ -24,6 +24,7 @@ import BigImage from "$lib/components/popups/BigImage.svelte"
 import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
+	import { flip } from 'svelte/animate';
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -584,6 +585,7 @@ const hideModal = () => {
                 </div>
             {/if}
             {#each fixedRooms as message (message.hash)}
+            <div animate:flip="{{duration: 150}}">
                 <GroupMessage
                     ReactTo="{(e) => sendRoomMsg(e)}"
                     ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
@@ -602,6 +604,7 @@ const hideModal = () => {
                     admin="{admin}"
                     tip="{message.tip}"
                 />
+            </div>
             {/each}
             {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
