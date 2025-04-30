@@ -44,17 +44,24 @@ onMount( async () => {
     
 })
 
-onDestroy(() => {
-    window.api.removeAllListeners('roomMsg')
-})
-
+run(() => {
 //Listen for sent message to update conversation list
 window.api.receive('roomMsg', () => {
     filterActiveHugins()
     printRooms()
 })
-window.api.receive('peer-connected', () => {
+})
+
+run(() => {
+    window.api.receive('peer-connected', () => {
     filterActiveHugins()
+})
+})
+
+run(() => { 
+    window.api.receive('peer-disconnected', () => {
+    filterActiveHugins()
+})
 })
 
 window.api.receive('banned', (key) => {

@@ -94,28 +94,35 @@ onMount(async () => {
             window.api.successMessage('Synced history')
         }
     })
-    //Listens for new messages from backend
-    window.api.receive('roomMsg', (data) => {
-        const file = isFile(data)
-        if (file) data.file = file
-        const thisroom = data.group === $swarm.activeSwarm.key
-        const roomtopic = data.topic === $swarm.activeSwarm.topic
-        const thistopic = data.file?.key === $swarm.activeSwarm.topic
-        const inrooms = $page.url.pathname === '/rooms'
-        if (data.address === $user.myAddress) return
-            if ((thisroom || thistopic || roomtopic) && inrooms) {
-                printRoomMessage(data)
-            } else {
-                console.log("Another room")
-            }
-            
-            return
-    })
     
 })
 
+run(() => {
+
+//Listens for new messages from backend
+window.api.receive('roomMsg', (data) => {
+    newMessage(data)
+       
+})})
+
+function newMessage(data) {
+    const file = isFile(data)
+    if (file) data.file = file
+    const thisroom = data.group === $swarm.activeSwarm.key
+    const roomtopic = data.topic === $swarm.activeSwarm.topic
+    const thistopic = data.file?.key === $swarm.activeSwarm.topic
+    const inrooms = $page.url.pathname === '/rooms'
+    if (data.address === $user.myAddress) return
+        if ((thisroom || thistopic || roomtopic) && inrooms) {
+            printRoomMessage(data)
+        } else {
+            console.log("Another room")
+        }
+        
+        return
+}
+
 onDestroy(() => {
-    window.api.removeAllListeners('roomMsg')
     window.api.removeAllListeners('sent_room')
     window.api.removeAllListeners('set-channels')
     window.api.removeAllListeners('history-update')
