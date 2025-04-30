@@ -35,6 +35,8 @@ const sender = (channel, data) => {
     mainWindow.webContents.send(channel, data)
 }
 
+app.setAppUserModelId('Hugin');
+
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
