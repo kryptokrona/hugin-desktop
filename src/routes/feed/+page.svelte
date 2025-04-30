@@ -44,19 +44,6 @@ const welcomeAddress = $misc.welcomeAddress
 let thisSwarm = $state(false)
 let focusedMessage = $state({});
 
-let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
-
-run(() => {
-        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-    });
-
-run(() => {
-        replyTrue = $rooms.replyTo?.reply
-    });
-
-run(() => {
-        if (thisSwarm) admin = thisSwarm.admin
-    });
 
 const isFile = (data) => {
     const findit = (arr) => {
@@ -79,13 +66,6 @@ onMount(async () => {
     printFeed()
     // scrollDown()
     
-})
-
-onDestroy(() => {
-    window.api.removeAllListeners('roomMsg')
-    window.api.removeAllListeners('sent_room')
-    window.api.removeAllListeners('set-channels')
-    window.api.removeAllListeners('history-update')
 })
 
 // window.api.receive('sent_group', (data) => {
