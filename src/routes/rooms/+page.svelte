@@ -76,6 +76,12 @@ onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
     scrollDown()
+    //Listens for new messages from backend
+    window.api.receive('roomMsg', (data) => {
+        newMessage(data)
+        
+        
+    })
     window.api.receive('history-update', (data) => {
         const inroom = $swarm.activeSwarm?.key === data.key
 
@@ -96,14 +102,6 @@ onMount(async () => {
     })
     
 })
-
-run(() => {
-
-//Listens for new messages from backend
-window.api.receive('roomMsg', (data) => {
-    newMessage(data)
-       
-})})
 
 function newMessage(data) {
     const file = isFile(data)
