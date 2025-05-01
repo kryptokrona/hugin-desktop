@@ -52,10 +52,10 @@
         x = e.pageX
         y = e.pageY
     }
-    // document.addEventListener('contextmenu', (e) => {
-    //     e.preventDefault();
-    //     window.api.send('right-click', {x, y})
-    // });
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        window.api.send('right-click', {x, y})
+    });
 
 
     let startAnimation = $state()
