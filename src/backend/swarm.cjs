@@ -497,7 +497,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         if (!message) return 'Ban'
         const exists = await feedMessageExists(message.hash)
         if (exists) return
-        const verify = await verifySignature(message.message, message.address, message.signature)
+        const verify = await verifySignature(message.message + message.hash, message.address, message.signature)
         if (!verify) return 'Ban'
         await saveFeedMessage(message)
         message.type = "feed"
