@@ -115,7 +115,7 @@ run(() => {
 .card {
     position: relative;
     display: flex;
-    background-color: #171717;
+    background-color:  var(--backgound-color);
     border-radius: 10px;
     box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--card-border);
@@ -267,7 +267,7 @@ p {
     font-family: "Montserrat";
     position: relative;
     opacity: 0.8;
-    color: white;
+    color: var(--text-color);
     z-index: 5;
 }
 
