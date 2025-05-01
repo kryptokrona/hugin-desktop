@@ -371,7 +371,7 @@ function checkReactions(array, scroll) {
     
        //All group messages all messages except reactions
        filterRooms = array.filter(
-        (m) => !(m.reply.length === 64 && filterEmojis.includes(m)) && !containsOnlyEmojis(m.message)
+        (m) => !(m.reply.length === 64 && containsOnlyEmojis(m.message)) && !filterEmojis.includes(m)
     )
     
     if (filterEmojis.length) {
