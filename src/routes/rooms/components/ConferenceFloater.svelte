@@ -14,6 +14,7 @@
     import MicIcon from '$lib/components/icons/MicIcon.svelte'
     import InCallAvatar from '$lib/components/chat/InCallAvatar.svelte'
     import { videoSettings } from '$lib/stores/mediasettings'
+    import { draggable } from '@neodrag/svelte';
     
     /** @type {{paused?: boolean}} */
     let { paused = $bindable(false) } = $props();
@@ -64,7 +65,7 @@
     
     <!-- <video class:show={calling} in:fade|global id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
     
-    <div class:show={!$swarm.showVideoGrid}
+    <div style="cursor: pointer;" use:draggable class:show={!$swarm.showVideoGrid}
         in:fly|global="{{ y: 100, duration: 200, easing: cubicOut }}"
         out:fly|global="{{ y: 100, duration: 200, easing: cubicIn }}"
         class="card"
@@ -75,10 +76,9 @@
                 <p>{time}</p>
             </div>
             <div class="caller">
-                {#each $swarm.voice_channel as call}
+                {#each $swarm.voice_channel.slice(-3) as call}
                     <InCallAvatar call={call} />
                 {/each}
-                <!-- <p>{this_call.name}</p> -->
             </div>
     
             <audio bind:paused></audio>
