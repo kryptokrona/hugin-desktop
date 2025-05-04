@@ -16,19 +16,13 @@
     
     let in_voice = $state(false)
     const my_address = $user.myAddress
-    let thisSwarm = false
     let active = $derived(thisSwarm)
-    
+    let thisSwarm = $derived($swarm.voice)
     $effect(() => {
-       thisSwarm = $swarm.active.find(a => a.voice_connected)
-       console.log("render conference")
-       console.log(" $swarm.active",  $swarm.active)
-        if (thisSwarm) {
-            if (thisSwarm.voice_connected) {
-                console.log("IN VOICCEEEEEE -_Z_>_>_>_>_>_>_>", in_voice)
-                in_voice = true
-            } else in_voice = false
-        }
+       console.log("render conference channel?", $swarm.voice_channel)
+        if ($swarm.voice_channel.some(a => a.address === my_address)) {
+            in_voice = true
+        } else in_voice = false
     })
 
     onMount(async () => {
@@ -130,7 +124,7 @@
             {/if}
             </div>
             <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}">
-                <ConferenceControls />
+                <ConferenceControls active={thisSwarm} />
             </div>
         </div>
     </div>

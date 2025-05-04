@@ -113,9 +113,10 @@ const join_voice_channel = async (video = false, screen) => {
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
+        $swarm.voice = thisSwarm
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
-        thisSwarm.voice_connected = true
+
         $swarm = $swarm
         loading = false
         console.log("Should be joined and connected here in this swarm", thisSwarm)

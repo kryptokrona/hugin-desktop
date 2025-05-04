@@ -53,7 +53,7 @@
         
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
-        const thisSwarm = $swarm.active.find(a => a.voice_connected)
+        const thisSwarm = $swarm.voice
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {

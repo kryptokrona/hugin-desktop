@@ -29,7 +29,7 @@
     let topic = $state("")
     const my_address = $user.myAddress
 
-    let thisSwarm = $derived($swarm.active.find(a => a.voice_connected))
+    let thisSwarm = $derived($swarm.voice)
     let in_voice = $derived(voice_channel.some(a => a.address === my_address))
 
     run(() => {
@@ -87,7 +87,7 @@
         $swarm.voice_channel = thisSwarm.voice_channel
         window.api.send("join-voice", {key: thisSwarm.key, videoMute: !$videoSettings.myVideo, video: $videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
-        thisSwarm.voice_connected = true
+        $swarm.voice = thisSwarm
         $swarm = $swarm
         loading = false
         console.log("Should be joined and connected here in this swarm", thisSwarm)

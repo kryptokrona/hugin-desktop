@@ -42,10 +42,8 @@
             //Check my current active swarm voice channel and remove aswell
             let active = $swarm.voice_channel.find(a => a.address === my_address)
             if (!active) return true
-            //Change voice connected status in other channels
-            let old = $swarm.active.find(a => a.voice_connected === true)
-            if (old) old.voice_connected = false
 
+            $swarm.voice = false
             
             //Remove from the active voice channel we have
             console.log("Want to exit old voice")
