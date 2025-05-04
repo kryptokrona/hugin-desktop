@@ -121,31 +121,6 @@
         })
 
 
-        window.api.receive('group-notification', ([data, add = false]) => {
-            const thisgroup = data.group === $groups.thisGroup.key
-            const ingroups = $page.url.pathname === '/groups'
-            const group = $groups.groupArray.find(a => a.key === data.group)
-            if (data.address == $user.myAddress) return
-            if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
-            if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
-            new_messages = true
-            data.key = data.address
-            
-            //Future notifications page
-            $notify.notifications.push(data)
-            if ($notify.new.length < 2 && !$notify.que && !add) {
-                if (!$notify.off.some(a => a === group.name)) {
-                    board_message_sound.play()
-                    $notify.new.push(data)
-                }
-            }
-            if (!$misc.focus && thisgroup && ingroups) return
-            if (add) return
-            data.type = "group"
-            $notify.unread.push(data)
-            $notify.new = $notify.new
-        })
-
         window.api.receive('room-notification', ([data, add = false]) => {
             console.log("room notification", data)
             if ($notify.notifications.some(a => a.hash === data.hash)) return

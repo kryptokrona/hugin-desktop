@@ -150,7 +150,7 @@ const checkErr = (e, tip = false) => {
 }
 
 //Send message to store and DB
-const sendRoomMsg = async (e, tipping = false) => {
+const sendRoomMsg = async (e, tipping = false, reaction = false) => {
     const error = checkErr(e, tipping)
     if (error) return
     let msg = e.text
@@ -204,6 +204,7 @@ const sendRoomMsg = async (e, tipping = false) => {
     window.api.sendRoomMessage(sendMsg)
     printRoomMessage(myRoomMessage)
     replyExit()
+    if (reaction) return
     scrollDown()
 }
 
@@ -592,7 +593,7 @@ const hideModal = () => {
             {#each fixedRooms as message (message.hash)}
             <div animate:flip="{{duration: 150}}">
                 <GroupMessage
-                    ReactTo="{(e) => sendRoomMsg(e)}"
+                    ReactTo="{(e) => sendRoomMsg(e, false, true)}"
                     ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
                     DeleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
