@@ -494,7 +494,7 @@
 
     run(() => {
     if ($user.idleTime >= $user.idleLimit) {
-          if ($webRTC.call.length === 0 && !$swarm.active.some(a => a.voice_connected) && !$beam.active.length) {
+          if ($webRTC.call.length === 0 && !$swarm.voice && !$beam.active.length) {
           $user.loggedIn = false
           goto('/login');
           }

@@ -135,6 +135,7 @@ export const swarm = writable({
     myStream: false,
     screenshare: false,
     showInfo: true,
+    voice: false
 })
 
 

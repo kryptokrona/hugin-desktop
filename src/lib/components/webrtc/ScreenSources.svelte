@@ -35,7 +35,7 @@
         if ($swarm.call.length === 0) {
             $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         }
-        const thisSwarm = $swarm.active.find(a => a.voice_connected)
+        const thisSwarm = $swarm.voice
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: false, audioMute: !$swarm.audio, video: false})
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
