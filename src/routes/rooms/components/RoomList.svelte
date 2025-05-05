@@ -50,6 +50,12 @@ window.api.receive('roomMsg', () => {
     filterActiveHugins()
     printRooms()
 })
+
+})
+
+window.api.receive('added-room', (key) => { 
+    $swarm.activeSwarm.key = key
+    filterActiveHugins()
 })
 
 run(() => {
@@ -109,16 +115,15 @@ const printRoom = async (room) => {
 
 //Function to get all users in a room.
 async function filterActiveHugins() {
-    console.log("Filter")
-   const users = await window.api.getRoomUsers($swarm.activeSwarm?.key)
-   const all = []
-    for (const u of users) {
-        const user = {address: u.address, room: u.room, name: u.name}
-        make_avatar(u.avatar, u.address)
-        all.push(user)
-    }
-    console.log("Updated hugins")
-    $rooms.activeHugins = all
+    const users = await window.api.getRoomUsers($swarm.activeSwarm?.key)
+    const all = []
+        for (const u of users) {
+            const user = {address: u.address, room: u.room, name: u.name}
+            make_avatar(u.avatar, u.address)
+            all.push(user)
+        }
+        console.log("Updated hugins")
+        $rooms.activeHugins = all
 
 }
 

@@ -47,7 +47,7 @@ run(() => {
     if ($rooms.thisRoom?.key) {
         room = $rooms.thisRoom.key
     }
-    if (thisSwarm && $rooms.activeHugins) {
+    if ($swarm.activeSwarm)  {
         updateList()
     }
 
@@ -71,6 +71,7 @@ const notIncludes = (a) => {
 
 const updateList = () => {
     //Adds connected and known users to one array
+    onlineUsers = []
     knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)),
     ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
     updateOnline()
