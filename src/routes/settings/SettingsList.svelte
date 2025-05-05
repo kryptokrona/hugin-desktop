@@ -39,13 +39,6 @@
         },
 
         {
-            name: 'Messages',
-            text: 'Message & Input settings',
-            icon: nodeIcon,
-            route: "/settings/messagesettings"
-        },
-
-        {
             name: 'Security',
             text: 'Set your security preferences',
             icon: nodeIcon,
