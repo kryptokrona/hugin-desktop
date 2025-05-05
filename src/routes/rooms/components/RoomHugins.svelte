@@ -34,7 +34,6 @@ let voice_channel = $derived(thisSwarm)
 
 //Active hugins
 
-
 $effect(() => {
     if ($swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
     if (!thisSwarm) return
@@ -47,7 +46,7 @@ run(() => {
     if ($rooms.thisRoom?.key) {
         room = $rooms.thisRoom.key
     }
-    if ($swarm.activeSwarm)  {
+    if ($swarm.activeSwarm && thisSwarm)  {
         updateList()
     }
 
