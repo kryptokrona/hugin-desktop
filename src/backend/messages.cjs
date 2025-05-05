@@ -998,6 +998,7 @@ async function save_group_message(msg, hash, time, offchain, channel = false, ad
     const saved = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!saved) return false
     if (room) {
+        Hugin.send('added-room', msg.group)
         Hugin.send('roomMsg', saved)
         Hugin.send('sent_room')
         return
