@@ -129,7 +129,7 @@
             const group = $rooms.roomArray.find(a => a.key === data.group)
             if (data.address == $user.myAddress) return
             if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
-            if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus) return
+            if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus && !$swarm.showVideoGrid) return
             new_messages = true
             data.room = true
             //Future notifications page
