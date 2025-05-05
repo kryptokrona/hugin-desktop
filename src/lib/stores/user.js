@@ -154,6 +154,11 @@ export const rooms = writable({
     avatars: []
  })
 
+ export const pushToTalk = writable({
+    key: null,
+    on: false
+ })
+
  export const files = writable([])
 
  export const theme = writable(localStorage.getItem("themes") ?? 'dark');

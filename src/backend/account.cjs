@@ -1,4 +1,4 @@
-const { app, ipcMain } = require('electron')
+const { app, ipcMain, globalShortcut } = require('electron')
 const userDataDir = app.getPath('userData')
 const downloadDir = app.getPath('downloads')
 const { JSONFile, Low } = require('@commonify/lowdb')
@@ -9,9 +9,9 @@ const db = new Low(adapter)
 const dbPath = userDataDir + '/SQLmessages.db'
 const { getGroups, loadBlockList, loadKeys, loadDB, saveRoomUser, loadRoomUsers } = require('./database.cjs')
 const fs = require('fs')
-
 const Store = require('electron-store')
 const { hash } = require('crypto')
+const { toBrowbroserKey } = require('./utils.cjs')
 const store = new Store()
 
 ipcMain.on('set-avatar', (e, data) => {
@@ -83,6 +83,19 @@ ipcMain.on('set-nickname', (e, name) => {
   Hugin.nickname = name
 })
 
+
+ipcMain.on('push-to-talk', (e, setting) => {
+  
+  store.set({
+    pushToTalk: {
+      key: setting.key,
+      on: setting.on,
+      name: setting.name
+    }
+  })
+
+})
+
 class Account {
     constructor () {
       
@@ -99,6 +112,7 @@ class Account {
     this.avatar = ""
     this.syncImages = null
     this.huginNode = {}
+    this.talkKey = null
 
     }
 
@@ -137,7 +151,13 @@ class Account {
       const usersBanned = store.get('bannedUsers') ?? []
       const files = store.get('files') ?? []
       const avatars = []
+      const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
+      if (pushToTalk.on) {
+        this.talkKey = pushToTalk.key
+        this.talk(pushToTalk)
+      }
       
+     
       this.sender('wallet-started', [
         this.node,
         my_groups.reverse(),
@@ -151,7 +171,8 @@ class Account {
         banned,
         files,
         avatars,
-        this.syncImages
+        this.syncImages,
+        pushToTalk
       ])
 
       this.known_keys = keys
@@ -206,6 +227,25 @@ class Account {
     
      }
   
+     talk() {
+      const { uIOhook } = require('uiohook-napi')
+
+      uIOhook.on('keydown', (e) => {
+        const code = toBrowbroserKey(e.keycode)
+        if (code === this.talkKey) {
+          this.send('key-event', {state: 'DOWN', keyCode: code})
+        }
+      })
+
+      uIOhook.on('keyup', (e) => {
+        const code = toBrowbroserKey(e.keycode)
+        if (code === this.talkKey) {
+          this.send('key-event', {state: 'UP', keyCode: code})
+        }
+      })
+    
+    uIOhook.start()
+    }
 }
 
   let Hugin = new Account()

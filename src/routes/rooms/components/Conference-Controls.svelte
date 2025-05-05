@@ -107,7 +107,7 @@
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
-        a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        a.myStream.getAudioTracks().forEach((track) => (track.enabled = $swarm.audio))
         })
     }
 
@@ -171,7 +171,7 @@
     }
     </script>
     
-    <div class="wrapper layered-shadow">
+    <div class:drag={$swarm.showVideoGrid} class="wrapper layered-shadow">
         <div>
         <div class="connectButton">
             {#if !in_voice}
@@ -249,6 +249,11 @@
     }
     .connectButton {
             padding: 15px;
+    }
+
+    .drag {
+        pointer-events: auto;
+        -webkit-app-region: no-drag;
     }
     </style>
     

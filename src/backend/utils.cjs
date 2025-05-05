@@ -451,6 +451,68 @@ const sanitize_join_swarm_data = (data) => {
     const visibleChars = text.replace(new RegExp('[\n\rs]+|( )+', 'g'), '');
     return onlyEmojis.length === visibleChars.length;
   };
+
+  // Map from raw key codes (e.g., evdev or native input) to browser keyCode
+const rawToBrowserKeyCode = {
+  1: 27,     // Esc
+  2: 49,     // 1
+  3: 50,     // 2
+  4: 51,     // 3
+  5: 52,     // 4
+  6: 53,     // 5
+  7: 54,     // 6
+  8: 55,     // 7
+  9: 56,     // 8
+  10: 57,    // 9
+  11: 48,    // 0
+  14: 8,     // Backspace
+  15: 9,     // Tab
+  16: 81,    // Q
+  17: 87,    // W
+  18: 69,    // E
+  19: 82,    // R
+  20: 84,    // T
+  21: 89,    // Y
+  22: 85,    // U
+  23: 73,    // I
+  24: 79,    // O
+  25: 80,    // P
+  28: 13,    // Enter
+  30: 65,    // A
+  31: 83,    // S
+  32: 68,    // D
+  33: 70,    // F
+  34: 71,    // G
+  35: 72,    // H
+  36: 74,    // J
+  37: 75,    // K
+  38: 76,    // L
+  44: 90,    // Z
+  45: 88,    // X
+  46: 67,    // C
+  47: 86,    // V
+  48: 66,    // B
+  49: 78,    // N
+  50: 77,    // M
+  57: 32,    // Space
+  58: 20,    // Caps Lock
+  59: 112,   // F1
+  60: 113,   // F2
+  61: 114,   // F3
+  62: 115,   // F4
+  63: 116,   // F5
+  64: 117,   // F6
+  65: 118,   // F7
+  66: 119,   // F8
+  67: 120,   // F9
+  68: 121,   // F10
+};
+
+// Convert raw code to browser keyCode
+function toBrowbroserKey(rawCode) {
+  return rawToBrowserKeyCode[rawCode] || 0; // 0 = unknown
+}
+
  
 
-module.exports = {isLatin, containsOnlyEmojis, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
+module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
