@@ -57,9 +57,11 @@
 svg {
     transition: 200ms ease-in-out;
     cursor: pointer;
-
+    -webkit-app-region: no-drag;
+    pointer-events: auto;
     &:hover {
         opacity: 80%;
     }
+    
 }
 </style>

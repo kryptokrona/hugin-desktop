@@ -55,7 +55,7 @@
     
     </script>
     
-    <div style="display: flex; flex-direction: column" onclick={() => open = !open}>
+    <div style="display: flex; flex-direction: column; z-index: 9999" onclick={() => open = !open}>
         
         <Screenshare/>
         {#if open}
@@ -109,6 +109,7 @@
         border-radius: 0.4rem;
         z-index: 999;
         max-height: 400px;
+        -webkit-app-region: no-drag;
         div {
             text-align: center;
             border-radius: 5px;

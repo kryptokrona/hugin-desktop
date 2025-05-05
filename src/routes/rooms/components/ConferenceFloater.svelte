@@ -23,7 +23,8 @@
     let startTime = Date.now()
     let time = $state('0:00:00')
     let timer
-    
+    let thisSwarm = $derived($swarm.voice)
+
     onMount(() => {
         timer = setInterval(() => {
             let currentTime = Date.now()
@@ -53,11 +54,10 @@
         
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
-        const thisSwarm = $swarm.voice
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
         $swarm.call.forEach((a) => {
-            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+            a.myStream.getAudioTracks().forEach((track) => (track.enabled = $swarm.audio))
         })
     }
 
@@ -76,7 +76,7 @@
                 <p>{time}</p>
             </div>
             <div class="caller">
-                {#each $swarm.voice_channel.slice(-3) as call}
+                {#each thisSwarm.voice_channel.slice(-3) as call}
                     <InCallAvatar call={call} />
                 {/each}
             </div>

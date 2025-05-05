@@ -126,6 +126,7 @@ run(() => {
     transition: 0.35s;
     aspect-ratio: 16/9;
     pointer-events: none;
+    -webkit-app-region: no-drag;
 
     video {
         position: absolute;
@@ -273,6 +274,7 @@ p {
 
 .hide {
     display: none;
+    transition: 300ms ease-in-out;
 }
 
 .loader {

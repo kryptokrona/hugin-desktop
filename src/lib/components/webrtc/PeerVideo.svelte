@@ -225,6 +225,7 @@ const resize = (size) => {
     transition: 0.35s;
     aspect-ratio: 16/9;
     pointer-events: none;
+    -webkit-app-region: no-drag;
 
     video {
         position: absolute;

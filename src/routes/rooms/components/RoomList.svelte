@@ -289,6 +289,7 @@ function flipper(node, {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-color);
+    -webkit-app-region: drag;
 }
 
 .card {

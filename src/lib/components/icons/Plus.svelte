@@ -1,6 +1,5 @@
 <script>
     import { createBubbler } from 'svelte/legacy';
-
     const bubble = createBubbler();
 </script>
 
@@ -67,3 +66,17 @@
         </g>
     </g>
 </svg>
+
+<style lang="scss">
+    svg {
+        transition: 200ms ease-in-out;
+        cursor: pointer;
+        -webkit-app-region: no-drag;
+        pointer-events: auto;
+        &:hover {
+            opacity: 80%;
+        }
+        
+    }
+</style>
+    
