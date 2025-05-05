@@ -1,7 +1,7 @@
 <script>
     import wrtc from '@koush/wrtc'
     import Peer from 'simple-peer'
-    import { audioLevel, user, swarm } from '$lib/stores/user.js'
+    import { audioLevel, user, swarm, pushToTalk } from '$lib/stores/user.js'
     import { onMount } from 'svelte'
     import { sleep } from '$lib/utils/utils'
     import { mediaSettings, videoSettings, audioSettings, video } from '$lib/stores/mediasettings'
@@ -409,7 +409,6 @@
     
         peer2.on('connect', () => {
             // SOUND EFFECT
-            window.api.successMessage('Call established')
             console.log('Connection established;')
             let startTone = new Audio('/audio/startcall.mp3')
             startTone.play()
@@ -498,7 +497,7 @@ async function play_video() {
     
     async function checkMyVolume(stream) {
         let interval
-        if (!$swarm.audio) {
+        if (!$swarm.audio || $pushToTalk.on) {
             stream.getAudioTracks().forEach((track) => (track.enabled = false))
         }
         $swarm.myStream = stream
