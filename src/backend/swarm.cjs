@@ -724,7 +724,7 @@ const request_feed = (address, topic) => {
 }
 
 const send_feed_history = async (address, topic) => {
-  const messages = await printFeed()
+  const messages = await printFeed(0, true)
   const history = {
     type: SEND_FEED_HISTORY,
     messages
