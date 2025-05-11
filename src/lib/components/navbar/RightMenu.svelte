@@ -401,9 +401,8 @@ run(() => {
 
     &:hover,
     :hover > .icon {
-        background-color: rgba(255, 255, 255, 0.4);
-        background-color: #313131;
-        opacity: 100%;
+         background-color: var(--border-color);
+         opacity: 100%;
     }
 }
 
