@@ -672,19 +672,18 @@ p {
     background: var(--backgound-color);
     display: inline-flex;
     font-size: 11px;
-    height: 25px;
-    font-family: 'Montserrat';
+    height: 22px;
+    font-family: "Montserrat";
     font-weight: 100;
     position: absolute;
-    bottom: 55px;
-    left: 17px;
+    bottom: 50px;
+    left: 0px;
     justify-content: center;
-    color: var(--text-color);
+    color: var(--success-color);
     padding: 4px;
     width: fit-content;
     z-index: 9;
-    border: 1px solid;
-    border-radius: 2px;
+    border: px solid;
     cursor: pointer;
 }
 
