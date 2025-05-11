@@ -25,6 +25,8 @@ const DOWNLOAD_REQUEST = 'download-request'
 const REQUEST_FEED = 'request-feed';
 const SEND_FEED_HISTORY = 'send-feed-history';
 
+const ONE_DAY = 24 * 60 * 60 * 1000
+
 const EventEmitter = require('bare-events')
 
 let localFiles = []
@@ -766,6 +768,35 @@ const find_missing_peers = async (active, peers) => {
       }
     }
   };
+
+  const send_friend_request = (address, key) => {
+    const active = get_active(key)
+    if (!active) return
+
+    const message = {
+        hugin: Hugin.address + keychain.getMsgKey(),
+        type: 'friend'
+    }
+    send_peer_message(address, active.topic, message)
+  }
+
+  const got_friend_request = (con, address, message) => {
+
+    if (!'hugin' in message) return
+    if (typeof message.hugin !== 'string') return
+    if (message.hugin.length > 200) return
+    if (message.hugin.substring(99) !== address) return
+
+    const request = {
+        name: con.name,
+        hugin: message.hugin,
+        address: address,
+    }
+    
+    Hugin.send('friend-request', message.hugin)
+
+
+  }
   
 
 const check_missed_messages = async (hashes) => {
@@ -862,6 +893,8 @@ const process_files = async (data, active, con, topic) => {
         if (!Array.isArray(data.files)) return 'Ban'
         if (data.files.length > 10) return 'Ban'
         for (const file of data.files) {
+            const old = (Date.now() - file.time) > ONE_DAY
+            if (old) continue
             if (!check_hash(file.hash)) continue
             if (downloading.some(a => a === file.hash)) continue
             if (Hugin.get_files().some(a => a.time === file.time)) continue
