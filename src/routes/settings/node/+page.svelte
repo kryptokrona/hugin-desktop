@@ -91,7 +91,6 @@
 
     <h2>Message node</h2>
     <div class="node">
-        <input spellcheck="false" placeholder="Enter node address" bind:value="{huginNode}"/>
         <br>
         <Button
         text="Connect"
@@ -103,6 +102,10 @@
     disabled="{false}"
     on:click="{connect('', true)}"
     />
+    <br>
+    <div style="margin-bottom: 10px;"></div>
+        <input spellcheck="false" placeholder="Enter node address" bind:value="{huginNode}"/>
+      
     </div>
     <div class="nodeinfo">
         
