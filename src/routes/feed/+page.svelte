@@ -22,6 +22,7 @@ import Backward from "$lib/components/icons/Backward.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
 import AddCircle from '$lib/components/icons/AddCircle.svelte';
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
+	import { flip } from 'svelte/animate';
 
 
 let replyto = ''
@@ -102,9 +103,11 @@ const sendFeedMsg = async (e, tipping = false) => {
     new_message.replies = [];
     new_message.react = [];
     printFeedReply(new_message)
-    if (new_message.reply == focusedMessage.hash) {
+    if (new_message.reply === focusedMessage.hash) {
         updateReactionsFocused(new_message)
+        printFeed()
         feedMessages = [...feedMessages];
+        focusMessage(focusedMessage)
     } else {
         printRoomMessage(new_message)
     }
@@ -146,7 +149,7 @@ const printFeedReply = (reply) => {
     ) {
         updateReactionsReply(reply)
     } else {
-        focusedMessage.replies.push(reply);
+        focusedMessage.replies.unshift(reply);
     }
     focusedMessage = focusedMessage;
 }
@@ -576,10 +579,12 @@ const focusMessage = async (message) => {
                         <p style="cursor: pointer">{$feed.new.length} new messages</p>
                 </div>
             {/if}
-            {#each feedMessages as message (message.hash)}
             {#if feedMessages.length === 0}
-            <div><p>Placeholder for no messages</p></div>
+            <div><p>No feed messages found</p></div>
             {/if}
+            {#each feedMessages as message (message.hash)}
+          
+            <div animate:flip="{{duration: 100}}">
                 <FeedMessage
                     onPress={() => focusMessage(message)}
                     ReactTo="{(e) => sendFeedMsg(e)}"
@@ -587,6 +592,7 @@ const focusMessage = async (message) => {
                     DeleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
                 />
+                </div>
             {/each}
             {#if (feedMessages.length + emojiMessages.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
@@ -594,6 +600,7 @@ const focusMessage = async (message) => {
 
         </div>
         <div class:expanded={expanded} class="message_details right_side" in:fly|global="{{ y: 50 }}">
+             <div class="outer details" >
             <span class:expanded={expanded} class="go_back" onclick={setExpanded}>
                 {#if (expanded)}
                 <Backward />
@@ -611,6 +618,7 @@ const focusMessage = async (message) => {
                 message="{focusedMessage}"
             />
             {#each focusedMessage.replies as message (message.hash)}
+             <div animate:flip="{{duration: 100}}">
             <FeedMessage
                 onPress={() => focusMessage(message)}
                 ReactTo="{(e) => sendFeedMsg(e)}"
@@ -618,11 +626,14 @@ const focusMessage = async (message) => {
                 DeleteMsg="{(e) => deleteMessage(message.hash)}"
                 message="{message}"
             />
+            </div>
             {/each}
             </div>
             {:else if expanded}
             <div in:fade="{{ duration: 1300 }}" class="feed-start"><p>Type a message below to start a new discussion!</p></div>
             {/if}
+            
+            </div>
             <div class:expanded={expanded} class="messageinput">
                 <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
             </div>
@@ -637,6 +648,10 @@ const focusMessage = async (message) => {
 </Dropzone>
 
 <style lang="scss">
+
+.details {
+    height: 90%;
+}
 
 .feed-start {
     width: 50%;
