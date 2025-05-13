@@ -82,9 +82,7 @@
         <p in:fade|global class="message">{file.fileName} </p>
     {:else if uploading && !uploadDone}
         <div in:fade|global>
-            {#if !group}
             <Progress file={file} send={true}/>
-            {/if}
         </div>
     <p in:fade|global class="message sending blink_me">Uploading...</p>
     {/if}
@@ -102,7 +100,7 @@
             </div>
         {:else if audio}
             <AudioPlayer src={data} />
-        {:else if  data == (OTHER || NOT_FOUND || undefined)}
+        {:else if  data == (OTHER || NOT_FOUND) || (uploadDone || saved)}
         <p class="message done" in:fade|global>Uploaded!</p>
         <p in:fade|global class="message">{file.fileName} </p>
         {/if}
