@@ -56,7 +56,11 @@ const checkPass = async () => {
   $user.idleTime = 0
   loadSpin = true
   const verify = await window.api.verifyPass(myPassword)
-  if (!verify) window.api.errorMessage('Wrong password')
+  if (!verify) {
+    window.api.errorMessage('Wrong password')
+    $misc.loading = false
+    loadSpin = false
+  }
   if (verify) {
       loadSpin = false
       $layoutState.showNodeSelector = false
