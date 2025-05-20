@@ -19,6 +19,8 @@
 		if ($swarm.call.length) {
 		if ($pushToTalk.on === false) {
 				setAudio(true)
+				key = ''
+				code = 0
 			} else {
 				setAudio(false)
 			}
@@ -32,7 +34,6 @@
 	}
 	function onkey(e) {
 		if (!$pushToTalk.on) return
-		console.log("e", e)
 		key = e.key
 		code = e.keyCode
 	}
