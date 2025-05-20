@@ -6,7 +6,7 @@
     import { fly } from 'svelte/transition'
     import { cubicIn, cubicOut } from 'svelte/easing'
     import { onDestroy, onMount } from 'svelte'
-    import { swarm } from '$lib/stores/user.js'
+    import { pushToTalk, swarm } from '$lib/stores/user.js'
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import { calcTime } from '$lib/utils/utils.js'
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
@@ -56,6 +56,8 @@
         $swarm.audio = !$swarm.audio
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
+        if ($pushToTalk.on) return
+        
         $swarm.call.forEach((a) => {
             a.myStream.getAudioTracks().forEach((track) => (track.enabled = $swarm.audio))
         })
