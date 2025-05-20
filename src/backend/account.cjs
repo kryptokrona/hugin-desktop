@@ -14,6 +14,7 @@ const { hash } = require('crypto')
 const { toBrowbroserKey } = require('./utils.cjs')
 const store = new Store()
 
+      const { uIOhook } = require('uiohook-napi')
 ipcMain.on('set-avatar', (e, data) => {
   const avatar = Buffer.from(data).toString('base64')
   store.set({
@@ -228,11 +229,11 @@ class Account {
      }
   
      talk() {
-      const { uIOhook } = require('uiohook-napi')
 
       uIOhook.on('keydown', (e) => {
         const code = toBrowbroserKey(e.keycode)
         if (code === this.talkKey) {
+          console.log("keydown")
           this.send('key-event', {state: 'DOWN', keyCode: code})
         }
       })
@@ -240,6 +241,7 @@ class Account {
       uIOhook.on('keyup', (e) => {
         const code = toBrowbroserKey(e.keycode)
         if (code === this.talkKey) {
+          console.log("keyup")
           this.send('key-event', {state: 'UP', keyCode: code})
         }
       })
