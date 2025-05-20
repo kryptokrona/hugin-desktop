@@ -2,7 +2,7 @@
     import { run } from 'svelte/legacy';
 
     import { onMount } from "svelte"
-    import { upload, fileViewer } from '$lib/stores/files'
+    import { upload, fileViewer, localFiles } from '$lib/stores/files'
     import { fade } from "svelte/transition"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import Progress from "$lib/components/chat/Progress.svelte"
@@ -19,6 +19,7 @@
     let audio = $state(false)
     let image = $state(false)
     let saved = $state(false)
+    let shared = $state(false)
 
     const NOT_FOUND = "File not found"
     const OTHER = "File"
@@ -29,6 +30,7 @@
     })
 
     run(() => {
+        shared = $localFiles.some(a => file.time === a.time)
         uploading = $upload.some(a => file.time === a.time)
         uploadDone = $upload.some(a => (uploading && a.progress === 100))
     });
@@ -78,16 +80,18 @@
 </script>
 
 <div class="file" class:group in:fade|global="{{ duration: 150 }}">
-    {#if !uploadDone && !uploading && !saved}
-        <p in:fade|global class="message">{file.fileName} </p>
-    {:else if uploading && !uploadDone}
+
+     {#if uploading || uploadDone}
         <div in:fade|global>
             <Progress file={file} send={true}/>
         </div>
-    <p in:fade|global class="message sending blink_me">Uploading...</p>
+    {/if}
+
+    {#if (!uploadDone && !uploading && !saved) || (shared && !uploadDone)}
+        <p in:fade|global class="message sending blink_me">Uploading...</p>
     {/if}
     
-    {#if uploadDone || saved}
+    {#if uploadDone || (saved && !shared)}
         {#if video}
             <VideoPlayer src={file}/>
         {:else if image}
@@ -100,10 +104,14 @@
             </div>
         {:else if audio}
             <AudioPlayer src={data} />
-        {:else if  data == (OTHER || NOT_FOUND) || (uploadDone || saved)}
+        {:else if  uploadDone || (saved && !shared)}
         <p class="message done" in:fade|global>Uploaded!</p>
         <p in:fade|global class="message">{file.fileName} </p>
+        
+         {:else if data == (OTHER || NOT_FOUND) && !shared}
+         <p in:fade|global class="message">{file.fileName} </p>
         {/if}
+        
     {/if}
 </div>
 
