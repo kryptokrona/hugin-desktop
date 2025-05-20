@@ -552,7 +552,7 @@ async function sync_from_node(node) {
     const lastChecked = store.get('pool.checked')
     store.set({
         pool: {
-            checked: Date.now()
+            checked: Date.now() - 2000
         }
     })
     const resp = await Nodes.sync({
@@ -864,120 +864,6 @@ async function decryptRtcMessage(message) {
     if (!newMsg) return
 
     save_message(newMsg, true)
-}
-
-
-async function sync_group_history(timeframe, recommended_api, key=false, page=1) {
-    if (recommended_api === undefined) return
-    fetch(`${recommended_api}?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
-    .then((response) => response.json())
-    .then(async (json) => {
-        const items = json.encrypted_group_posts;
-        Hugin.send('success-notify-message', 'Found messages! Syncing...')
-        for (const message of items) {   
-            try {
-                    let tx = {}
-                    tx.sb = message.tx_sb
-                    tx.t = message.tx_timestamp
-                    await decrypt_group_message(tx, message.tx_hash, key)
-                        
-                }
-                 catch {
-                }
-        }
-        if(json.current_page != json.total_pages) {
-            sync_group_history(timeframe, recommended_api, key, page+1)
-        }
-    })
-}
-
-async function decrypt_group_message(tx, hash, group_key = false) {
-
-    try {
-    let decryptBox = false
-    let offchain = false
-    let groups = await loadGroups()
-    
-    if (group_key.length === 64) {
-        let msg = tx
-        tx = JSON.parse(trimExtra(msg))
-        groups.unshift({ key: group_key })
-        offchain = true
-    }
-
-    let key
-
-    let i = 0
-
-    while (!decryptBox && i < groups.length) {
-        let possibleKey = groups[i].key
-
-        i += 1
-
-        try {
-            decryptBox = nacl.secretbox.open(
-                hexToUint(tx.sb),
-                nonceFromTimestamp(tx.t),
-                hexToUint(possibleKey)
-            )
-
-            key = possibleKey
-        } catch (err) {
-        }
-    }
-    
-    if (!decryptBox) {
-        return false
-    }
-
-    const message_dec = naclUtil.encodeUTF8(decryptBox)
-    const payload_json = JSON.parse(message_dec)
-    const from = payload_json.k
-    const this_addr = await Address.fromAddress(from)
-
-    const verified = await xkrUtils.verifyMessageSignature(
-        payload_json.m,
-        this_addr.spend.publicKey,
-        payload_json.s
-    )
-
-    if (!verified) return false
-    if (block_list.some(a => a.address === from)) return false
-
-    payload_json.hash = hash
-    payload_json.t = tx.t
-    payload_json.sent = false
-    
-    const message = sanitize_group_message(payload_json, false)
-    if (!message) return false
-    await save_group_message(message, hash, tx.t, offchain)
-    if (!saved) return false
-
-    return [message, tx.t, hash]
-
-    } catch {
-        return false
-    }
-}
-
-async function decryptGroupRtcMessage(message, key) {
-    try {
-        let hash = message.substring(0, 64)
-        let [groupMessage, time, txHash] = await decrypt_group_message(message, hash, key)
-
-        if (!groupMessage) {
-            return
-        }
-        if (groupMessage.m === 'ᛊNVITᛊ') {
-            if (groupMessage.r.length === 163) {
-                let invited = sanitizeHtml(groupMessage.r)
-                Hugin.send('group_invited_contact', invited)
-                console.log('Invited')
-            }
-        }
-    } catch (e) {
-        console.log('Not an invite')
-    }
 }
 
 const check_balance = async () => {
