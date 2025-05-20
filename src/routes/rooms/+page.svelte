@@ -59,8 +59,11 @@ run(() => {
 
 const isFile = (data) => {
     const findit = (arr) => {
-        return arr.find(a => a.hash === data.hash && parseInt(data.time) === parseInt(a.time))
+        return arr.find(a => parseInt(data.time) === parseInt(a.time))
     }
+    const local = findit($localFiles)
+    if (local) return local
+    
     let file = findit($files)
     if (file) {
         file.saved = true
@@ -68,8 +71,6 @@ const isFile = (data) => {
     }
     const remote = findit($remoteFiles)
     if (remote) return remote
-    const local = findit($localFiles)
-    if (local) return local
 }
 
 onMount(async () => {
@@ -490,6 +491,7 @@ async function dropFile(e) {
     }
     $files.push(acceptedFiles[0])
     $localFiles.push(acceptedFiles[0])
+    $localFiles = $localFiles
     $files = $files
     printRoomMessage(message)
     window.api.groupUpload(filename, path, $swarm.activeSwarm?.key, size, time, hash)
