@@ -195,7 +195,7 @@
         justify-content: space-between;
         flex-direction: column;
         width: 100%;
-        height: 95%;
+        height: 98%;
     }
     
     .video-grid {
