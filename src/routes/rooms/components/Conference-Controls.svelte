@@ -8,7 +8,7 @@
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
-    import { swarm, user, groups, rtc_groups, rooms } from '$lib/stores/user.js'
+    import { swarm, user, groups, rtc_groups, rooms, pushToTalk } from '$lib/stores/user.js'
     import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
     import { onDestroy, onMount } from 'svelte'
     import { calcTime, sleep } from '$lib/utils/utils.js'
@@ -106,6 +106,7 @@
         $swarm.audio = !$swarm.audio
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
+        if ($pushToTalk.on) return
         $swarm.call.forEach((a) => {
         a.myStream.getAudioTracks().forEach((track) => (track.enabled = $swarm.audio))
         })
