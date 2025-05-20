@@ -153,26 +153,31 @@ class Account {
       const files = store.get('files') ?? []
       const avatars = []
       const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
+
+      //This is here because moving it to a method in here makes it unreliable on keypress.
       if (pushToTalk.on) {
 
+        //PUSH TO TALK keydown!
         this.talkKey = pushToTalk.key
-              uIOhook.on('keydown', (e) => {
-        const code = toBrowbroserKey(e.keycode)
-        if (code === this.talkKey) {
-          console.log("keydown")
-          this.send('key-event', {state: 'DOWN', keyCode: code})
-        }
-      })
+        uIOhook.on('keydown', (e) => {
+          const code = toBrowbroserKey(e.keycode)
+          if (code === this.talkKey) {
+            console.log("keydown")
+            this.send('key-event', {state: 'DOWN', keyCode: code})
+          }
+        })
 
-      uIOhook.on('keyup', (e) => {
-        const code = toBrowbroserKey(e.keycode)
-        if (code === this.talkKey) {
-          console.log("keyup")
-          this.send('key-event', {state: 'UP', keyCode: code})
-        }
+        //PUSH TO TALK keyup!
+        uIOhook.on('keyup', (e) => {
+          const code = toBrowbroserKey(e.keycode)
+          if (code === this.talkKey) {
+            console.log("keyup")
+            this.send('key-event', {state: 'UP', keyCode: code})
+          }
 
-      })
+        })
     
+      //Starts the listener
       uIOhook.start()
       }
       
