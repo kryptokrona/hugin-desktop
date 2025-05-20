@@ -123,7 +123,7 @@ window.api.receive('login-failed', async () => {
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
                 <button onclick={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
-                        <Moon color="#000000" size="20" unit="px"/>
+                        <Moon color="var(--border-color)" size="20" unit="px"/>
                     {:else}
                         <ArrowRight/>
                     {/if}
@@ -197,7 +197,7 @@ window.api.receive('login-failed', async () => {
 
     button {
       border: none;
-      background-color: #252525;
+      background-color: var(--border-color);
       height: 36px;
       width: 48px;
       display: inline-flex;
