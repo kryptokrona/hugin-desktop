@@ -83,7 +83,7 @@ const check_avatar = (address) => {
 .card {
     display: flex;
     padding: 1px;
-    height: 72px;
+    height: 80px;
     width: 300px;
     flex-direction: column;
     box-sizing: border-box;
@@ -97,7 +97,7 @@ const check_avatar = (address) => {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-height: 69px;
+    max-height: 80px;
     border-radius: 3px;
     background-color: var(--backgound-color);
 }
@@ -142,13 +142,13 @@ h4 {
 .message {
     font-family: 'Montserrat';
     font-size: 12px;
-    display: inline-flex;
+    display: block;
     height: 30px;
-    overflow: hidden;
     padding-right: 10px;
-    margin-left: 44px;
-    margin-top: -9px;
+    padding-left: 20px;
     word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .success {
