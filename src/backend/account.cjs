@@ -13,8 +13,8 @@ const Store = require('electron-store')
 const { hash } = require('crypto')
 const { toBrowbroserKey } = require('./utils.cjs')
 const store = new Store()
+const { uIOhook } = require('uiohook-napi')
 
-      const { uIOhook } = require('uiohook-napi')
 ipcMain.on('set-avatar', (e, data) => {
   const avatar = Buffer.from(data).toString('base64')
   store.set({
@@ -154,8 +154,26 @@ class Account {
       const avatars = []
       const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
       if (pushToTalk.on) {
+
         this.talkKey = pushToTalk.key
-        this.talk(pushToTalk)
+              uIOhook.on('keydown', (e) => {
+        const code = toBrowbroserKey(e.keycode)
+        if (code === this.talkKey) {
+          console.log("keydown")
+          this.send('key-event', {state: 'DOWN', keyCode: code})
+        }
+      })
+
+      uIOhook.on('keyup', (e) => {
+        const code = toBrowbroserKey(e.keycode)
+        if (code === this.talkKey) {
+          console.log("keyup")
+          this.send('key-event', {state: 'UP', keyCode: code})
+        }
+
+      })
+    
+      uIOhook.start()
       }
       
      
@@ -228,26 +246,6 @@ class Account {
     
      }
   
-     talk() {
-
-      uIOhook.on('keydown', (e) => {
-        const code = toBrowbroserKey(e.keycode)
-        if (code === this.talkKey) {
-          console.log("keydown")
-          this.send('key-event', {state: 'DOWN', keyCode: code})
-        }
-      })
-
-      uIOhook.on('keyup', (e) => {
-        const code = toBrowbroserKey(e.keycode)
-        if (code === this.talkKey) {
-          console.log("keyup")
-          this.send('key-event', {state: 'UP', keyCode: code})
-        }
-      })
-    
-    uIOhook.start()
-    }
 }
 
   let Hugin = new Account()
