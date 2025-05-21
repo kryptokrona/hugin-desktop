@@ -828,10 +828,7 @@ const getFeedMessageReplies = async (hash) => {
 
         for(const row of stmt.iterate(hash)) {
 
-            console.log('Found reply!', row.message);
-
             if (containsOnlyEmojis(row.message) && row.message.length < 9) {
-                console.log('Found emoji!', row.message);
                 reactions.push(row);
             } else {
                 replies.push(row);
@@ -860,7 +857,6 @@ const printFeed = async (page=0, sync=false) => {
         DESC
         LIMIT ${offset}, ${limit}`
 
-        console.log('feed sql:', feed);
         const stmt = database.prepare(feed)
 
         for (const row of stmt.iterate()) {
