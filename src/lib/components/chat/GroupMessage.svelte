@@ -24,6 +24,7 @@ import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
+import CodeBlock from './CodeBlock.svelte';
 
     /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
     let {
@@ -80,6 +81,8 @@ let offchain = $state(false)
 let thisReply = $state(false)
 let replyError = $state(false)
 let timeformat = $state("HH:mm")
+let codeBlock = $state(false)
+
 if ((Date.now() - 40000000) > timestamp) {
     //Show date also for older messages
     timeformat = "D MMM, HH:mm"
@@ -127,7 +130,13 @@ function checkMessage() {
         if (myMsg) checkLink()
         return
     }
-    
+
+    // if (msg.startsWith("```") && msg.endsWith("```")) { 
+    //     msg = msg.slice(3,-3) 
+    //     codeBlock = true 
+    //     return
+    // }
+        
     if (!isLatin(nickname)) {
         asian = true
     }
@@ -424,6 +433,8 @@ run(() => {
                 <UploadFile file={file} group={true} rtc={rtc}/>
             {:else if tip && tipMessage}
                 <Tip tip={tipMessage}/>
+            <!-- {:else if codeBlock}
+                <CodeBlock code={msg} /> -->
             {:else}
                 <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
             {/if}
