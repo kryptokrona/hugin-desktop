@@ -323,6 +323,7 @@ const hideModal = () => {
             {/if}
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
+                <div class="fade"></div>
                 {#each savedMsg as message (message.timestamp)}
                 <div animate:flip="{{duration: 100}}">
                     <ChatBubble

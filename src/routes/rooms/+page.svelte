@@ -592,6 +592,7 @@ const hideModal = () => {
                     <Loader/>
                 </div>
             {/if}
+             <div class="fade"></div>
             {#each fixedRooms as message (message.hash)}
             <div animate:flip="{{duration: 150}}">
                 <GroupMessage
@@ -721,10 +722,10 @@ p {
 
 .fade {
     position: absolute;
-    top: 0;
+    top: 57px;
     width: 100%;
     height: 40px;
-    background: linear-gradient(180deg, #121212, #12121200);
+    background: linear-gradient(180deg, var(--fade-color),var(--fade-to-color));
     z-index: 100;
 }
 
