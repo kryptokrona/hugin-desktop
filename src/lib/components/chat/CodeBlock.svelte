@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
 
     import Highlight, { HighlightAuto } from "svelte-highlight";
     import ashes from "svelte-highlight/styles/ashes";
@@ -30,15 +29,5 @@
       border-radius: 5px;
       font-family: "Montserrat";
     }
-
-    .code p {
-      font-family: "Montserrat";
-    }
-
-    .hljs {
-      white-space: pre-wrap;
-      border-radius: 5px !important;
-    }
-    
    
   </style>
