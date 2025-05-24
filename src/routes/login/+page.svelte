@@ -123,7 +123,7 @@ window.api.receive('login-failed', async () => {
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
                 <button onclick={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
-                        <Moon color="var(--border-color)" size="20" unit="px"/>
+                        <Moon color="var(--text-color)" size="20" unit="px"/>
                     {:else}
                         <ArrowRight/>
                     {/if}
