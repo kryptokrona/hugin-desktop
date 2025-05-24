@@ -196,7 +196,7 @@
 
     .count {
         font-size: 12px;
-        color: var(--text-color);
+        color: white;
     }
 
     .asian {
