@@ -582,7 +582,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             active.peers = peers
             const time = parseInt(joined.time)
 
-            process_request(data.messages, active.key, false)
+            process_request(joined.messages, active.key, false)
 
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
             const [in_voice, video] = get_local_voice_status(topic)
