@@ -582,6 +582,8 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             active.peers = peers
             const time = parseInt(joined.time)
 
+            process_request(data.messages, active.key, false)
+
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
             const [in_voice, video] = get_local_voice_status(topic)
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
@@ -649,7 +651,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
                 send_history(con.address, topic, active.key, active.files)
                 return true
             } else if (data.type === SEND_HISTORY && con.request) {
-                process_request(data.messages, active.key, false)
+                // process_request(data.messages, active.key, false)
                 con.request = false
                 if ('files' in data) {
                     process_files(data, active, con, topic)
@@ -990,6 +992,7 @@ const send_joined_message = async (topic, dht_keys, connection) => {
         sig = sign_admin_message(dht_keys, active.key, adminkeys)
     }
     const signature = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
+    const messages = await printGroup(key, 0)
 
     let [voice, video, audioMute, videoMute, screenshare] = get_local_voice_status(topic)
     if (video) voice = true
@@ -1009,7 +1012,8 @@ const send_joined_message = async (topic, dht_keys, connection) => {
         idSig: signature,
         audioMute,
         videoMute,
-        screenshare
+        screenshare,
+        messages
     })
     try {
         connection.write(data)
