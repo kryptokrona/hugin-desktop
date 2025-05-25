@@ -385,6 +385,7 @@ main {
     height: 40px;
     background: linear-gradient(180deg, var(--fade-color), var(--fade-to-color));
     z-index: 100;
+    pointer-events: none;
 }
 
 .outer {
