@@ -16,11 +16,12 @@
     window.api.send('push-to-talk', $pushToTalk)
 		window.api.successMessage('Updated media settings...')
 		
-		if ($swarm.call.length) {
 		if ($pushToTalk.on === false) {
-				setAudio(true)
 				key = ''
 				code = 0
+		if ($swarm.call.length) {
+				setAudio(true)
+			
 			} else {
 				setAudio(false)
 			}
@@ -57,15 +58,24 @@
 							red={!active}
 							text="{active ? 'On' : 'Off'}"
 					/>
+					
+						</div>
+					<p style="height: 10px;">
              {#if active}
 							{#if key !== null}
-								<p style="margin-left: 20px;">{key}</p>
+								{#if key.length === 0}
+									Press any key
+								{:else}
+									{key}
+								{/if}
 							{/if}
              {/if}
-						</div>
+						 </p>
       </div>
 			<br>
+			<div class="save">
 			<Button text="Save"	disabled="{false}" on:click={save} />
+			</div>
   </div>
 </div>
   
@@ -105,4 +115,11 @@
       margin-right: 15px;
   }
   
+	.push {
+    width: 40px !important;
+	}
+
+	.save {
+		width: 50px;
+	}
   </style>
