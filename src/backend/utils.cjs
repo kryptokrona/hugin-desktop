@@ -192,8 +192,10 @@ const sanitize_join_swarm_data = (data) => {
     if (typeof videoMute !== 'boolean') return false;
     const screenshare = data?.screenshare;
     if (typeof screenshare !== 'boolean') return false;
-    const messages = data?.messages;
-    if (!Array.isArray(data?.messages)) return false;
+    let messages = data?.messages;
+    if (!Array.isArray(data?.messages)) {
+       messages = []
+    }
     
     let avatar = ""
     if (data.avatar !== undefined && data.avatar?.length > 0) {
