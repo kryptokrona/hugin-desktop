@@ -139,8 +139,9 @@ const rename = () => {
     padding: 1rem;
     width: 100%;
     color: var(--title-color);
+    border: 1px solid transparent;
     border-bottom: 1px solid var(--border-color);
-  background-color: var(--backgound-color);
+    background-color: var(--backgound-color);
     transition: 200ms ease-in-out;
     cursor: pointer;
     opacity: 0.9;
