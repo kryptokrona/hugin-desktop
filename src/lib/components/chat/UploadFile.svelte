@@ -87,11 +87,12 @@
         </div>
     {/if}
 
-    {#if (!uploadDone && !uploading && !saved) || (shared && !uploadDone)}
+    {#if ((!uploadDone && !uploading && !saved) || (shared && !uploadDone)) && (!image &&  !video && !audio)}
         <p in:fade|global class="message sending blink_me">Uploading...</p>
+        <p in:fade|global class="message">{file.fileName} </p>
     {/if}
     
-    {#if uploadDone || (saved && !shared)}
+    {#if uploadDone || (saved && !shared) || (image ||  video || audio)}
         {#if video}
             <VideoPlayer src={file}/>
         {:else if image}
