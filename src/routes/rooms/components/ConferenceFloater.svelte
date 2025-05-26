@@ -78,7 +78,7 @@
                 <p>{time}</p>
             </div>
             <div class="caller">
-                {#each thisSwarm.voice_channel.slice(-3) as call}
+                {#each $swarm.voice?.voice_channel.slice(-3) as call}
                     <InCallAvatar call={call} />
                 {/each}
             </div>
