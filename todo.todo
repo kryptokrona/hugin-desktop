@@ -22,3 +22,5 @@ Features:
     ✔ Add push to talk button @done(25-05-26 12:03)
     ☐ Move theme selector to settings
     ☐ Add group invites
+    ☐ Remove unnecessary in app notifications (History sync etc)
+    ☐ Remove sound for in app notifications that are not messages
