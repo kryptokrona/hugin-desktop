@@ -134,6 +134,8 @@ function checkMessage() {
         //if (myMsg) checkLink()
         return
     }
+
+    link = false
     
     if (!isLatin(message.nickname)) {
         asian = true
