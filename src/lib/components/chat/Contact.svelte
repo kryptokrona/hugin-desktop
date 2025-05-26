@@ -210,7 +210,8 @@ p {
 
 .active {
     background-color: var(--card-background);
-    border-bottom: 1px solid transparent;
+    border: 1px solid var(--success-color) !important;
+    border-radius: 2px;
 }
 
 .count {
