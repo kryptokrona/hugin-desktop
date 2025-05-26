@@ -376,7 +376,7 @@ p {
 }
 
 .online {
-    background-color: var(--success-color);
+    background-color: #3fd782;
     width: 8px;
     height: 8px;
     border-radius: 50%;

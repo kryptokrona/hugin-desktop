@@ -88,7 +88,6 @@ const rename = () => {
     out:fade|global
     class:rgb="{thisCall}"
     class:active="{contact.chat === $user.activeChat.chat}"
-    class:online={online}
     onclick={() => printThis(contact)} >
     
     {#await check_avatar(contact.chat)}
@@ -111,6 +110,11 @@ const rename = () => {
     {/await}
    
     <div class="content">
+        {#if online}
+        <div class="online">
+
+        </div>
+        {/if}
         <h4 class:asian class:big={asian} style="color: {getColorFromHash(contact.chat)}">{contact.name}</h4>
         
         {#if !beamInvite}
@@ -160,6 +164,9 @@ const rename = () => {
     margin-top: 6px;
     border-radius: 5px;
     object-fit: cover;
+    width: 25px !important;
+    height: 25px !important;
+    margin: 6px;
 }
 
 .content {
@@ -220,6 +227,13 @@ p {
 }
 
 .online {
-    box-shadow: inset 10px 0 7px -7px var(--success-color);
+    background-color: #3fd782;
+    border-radius: 50%;
+    height: 6px;
+    width: 7px;
+    left: -17px;
+    top: 0px;
+    box-shadow: 0 0 10px white;
+    position: relative;
 }
 </style>

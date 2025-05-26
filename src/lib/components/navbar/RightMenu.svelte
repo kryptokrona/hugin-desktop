@@ -215,7 +215,7 @@ run(() => {
                         window.api.send('end-beam', $user.activeChat.chat)
                     }   else newBeam()}}>
                 
-                    <Lightning connected={connectedBeam} connecting={activeBeam} />
+                    <Lightning connected={connectedBeam} connecting={activeBeam && !connectedBeam} />
                 </div>
             </Tooltip>
             {#if activeBeam}
