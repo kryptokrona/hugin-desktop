@@ -1,9 +1,13 @@
 Bugs:
     ✔ Fix "Auto" node on create account being slow @done(25-04-09 23:03)
     ☐ Node picker has duplicated buttons
-    ☐ Wrong color on in app notification
+    ✔ Wrong color on in app notification @done(25-05-26 12:03)
     ☐ No default avatar shown when none chosen
-    ☐ Login doesn't work after auto lock
+    ✔ Login doesn't work after auto lock @done(25-05-26 12:03)
+    ☐ When clicking a messages with a link in feeds first, you cant focus on another message
+    ☐ Sometimes it doesnt work to focus on a reply in feeds
+    ☐ Some special characters like & becomes &amp; in messages
+    ☐ When uploading a picture, the picture won't show - instead "Uploading.." is shown
 
 Feed:
     ✔ Add "x new message - click to load" button @done(25-04-15 13:25)
@@ -15,3 +19,8 @@ Feed:
 Features:
     ☐ Add check node statuses
     ☐ Add node picker for hugin node
+    ✔ Add push to talk button @done(25-05-26 12:03)
+    ☐ Move theme selector to settings
+    ☐ Add group invites
+    ☐ Remove unnecessary in app notifications (History sync etc)
+    ☐ Remove sound for in app notifications that are not messages
