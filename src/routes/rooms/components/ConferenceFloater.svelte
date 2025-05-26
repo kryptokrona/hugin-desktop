@@ -6,7 +6,7 @@
     import { fly } from 'svelte/transition'
     import { cubicIn, cubicOut } from 'svelte/easing'
     import { onDestroy, onMount } from 'svelte'
-    import { pushToTalk, swarm } from '$lib/stores/user.js'
+    import { pushToTalk, swarm, user } from '$lib/stores/user.js'
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import { calcTime } from '$lib/utils/utils.js'
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
@@ -39,6 +39,8 @@
     
     //End call with all peers
     const endCall = () => {
+       const filter = $swarm.voice.voice_channel.filter(a => a.address !== $user.myAddress)
+       $swarm.voice.voice_channel = filter
        window.api.exitVoiceChannel()
         //We pause the ringtone and destroy the popup
     }
