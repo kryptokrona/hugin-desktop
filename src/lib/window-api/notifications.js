@@ -3,6 +3,9 @@ import toast from "svelte-5-french-toast";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { checkWait, sleep } from "$lib/utils/utils";
 let success = new Audio('/audio/success.mp3')
+import {sounds} from '$lib/stores/user.js'
+import { get } from 'svelte/store';
+
 if (browser) {
 
     window.api.receive('error_msg', async (error) => {
@@ -44,12 +47,13 @@ if (browser) {
         })
     })
 
-    window.api.receive('success-notify-message', (data)  => {
+    window.api.receive('success-notify-message', (data, sound)  => {
         toast.success(`${data}`, {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
-        success.play()
+
+        if (get(sounds).on && sound) success.play()
 
     })
 

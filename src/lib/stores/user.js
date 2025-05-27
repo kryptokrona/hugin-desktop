@@ -159,6 +159,10 @@ export const rooms = writable({
     on: false
  })
 
+ export const sounds = writable({
+    on: true,
+ })
+
  export const files = writable([])
 
  export const theme = writable(localStorage.getItem("themes") ?? 'dark');

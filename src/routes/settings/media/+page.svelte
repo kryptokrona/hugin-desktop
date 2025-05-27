@@ -2,7 +2,7 @@
 	import { preventDefault } from 'svelte/legacy';
 	import Button from "$lib/components/buttons/Button.svelte";
 	import FillButton from "$lib/components/buttons/FillButton.svelte";
-  import { pushToTalk, swarm } from "$lib/stores/user"
+  import { pushToTalk, sounds, swarm } from "$lib/stores/user"
   import { get_avatar } from "$lib/utils/hugin-utils"
   import { fade } from "svelte/transition"
 
@@ -39,6 +39,11 @@
 		code = e.keyCode
 	}
   
+	function toggleSounds() {
+		$sounds.on = !$sounds.on
+		window.api.send('sounds', $sounds.on)
+	}
+
   </script>
   
 	<svelte:window on:keyup|preventDefault="{onkey}" />
@@ -75,6 +80,23 @@
 			<br>
 			<div class="save">
 			<Button text="Save"	disabled="{false}" on:click={save} />
+			</div>
+			<br>
+
+			<br>
+ 				<h2>Sounds</h2>
+			<br>
+
+			<h4>Notifications</h4>
+			<br>
+			<div class="push">
+				<FillButton
+					on:click="{() => toggleSounds()}"
+					enabled="{$sounds.on}"
+					disabled="{false}"
+					red={!$sounds.on}
+					text="{$sounds.on ? 'On' : 'Off'}"
+			/>
 			</div>
   </div>
 </div>

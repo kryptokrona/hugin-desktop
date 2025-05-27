@@ -239,8 +239,8 @@ const WINDOW_API = {
         ipcRenderer.send('error-notify-message-main', errorMessage)
     },
 
-    successMessage: async (channel, successMessage) => {
-        ipcRenderer.send('success-notify-message-main', channel, successMessage)
+    successMessage: async (successMessage, sound = true) => {
+        ipcRenderer.send('success-notify-message-main', successMessage, sound)
     },
 
     groupUpload: async (filename, path, topic, fileSize, time, hash, room) => {

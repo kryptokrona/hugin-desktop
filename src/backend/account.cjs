@@ -109,6 +109,15 @@ ipcMain.on('push-to-talk', (e, setting) => {
   }
 })
 
+
+ipcMain.on('sounds', (e, setting) => {
+
+  store.set({ 
+    sounds: setting
+  })
+
+ })
+
 class Account {
     constructor () {
       
@@ -165,6 +174,7 @@ class Account {
       const files = store.get('files') ?? []
       const avatars = []
       const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
+      const sounds = store.get('sounds') ?? true
 
       if (pushToTalk.on) {
         push_to_talk(pushToTalk)
@@ -185,7 +195,8 @@ class Account {
         files,
         avatars,
         this.syncImages,
-        pushToTalk
+        pushToTalk,
+        sounds
       ])
 
       this.known_keys = keys
