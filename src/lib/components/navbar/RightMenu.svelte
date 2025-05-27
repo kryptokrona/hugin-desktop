@@ -417,6 +417,7 @@ run(() => {
     margin-bottom: 5px;
     cursor: pointer;
     height: 55px;
+    width: 55px;
     object-fit: cover;
 }
 
