@@ -35,6 +35,8 @@ let thisSwarm = $state(false)
 let in_voice = $state(false)
 let activeBeam = $derived( $swarm.active.some(a => a.chat === thisChat.chat))
 
+
+
 $effect(() => {
    activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
 })
@@ -64,14 +66,12 @@ let thisChat = $derived($user.activeChat)
 let connectedBeam = $derived($swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat)))
 run(() => {
       if (activeBeam) {
-        if (thisSwarm) return
       thisSwarm = $swarm.active.find(a => a.chat === thisChat.chat)
    }
-   });
+});
 
 run(() => {
-      if (thisSwarm && $swarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
-       console.log("thisSwarm", thisSwarm)
+      if (thisSwarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
        in_voice = true
    } else in_voice = false
    });
