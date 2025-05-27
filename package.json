@@ -3,7 +3,7 @@
     "author": "Kryptokrona Developers <info@kryptokrona.org>",
     "email": "info@kryptokrona.org",
     "productName": "Hugin Messenger",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "private": true,
     "description": "A messenger app built on top of the kryptokrona blockchain",
     "main": "src/backend/electron.cjs",
@@ -101,6 +101,9 @@
         "tweetnacl-sealed-box": "^1.0.5",
         "tweetnacl-util": "^0.15.1",
         "uiohook-napi": "^1.5.4"
+    },
+    "optionalDependencies": {
+        "node-mac-permissions": "^2.5.0"
     },
     "devDependencies": {
         "@sveltejs/adapter-static": "^3.0.1",

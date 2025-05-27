@@ -95,6 +95,18 @@ ipcMain.on('push-to-talk', (e, setting) => {
     }
   })
 
+  if (setting.on) {
+    
+    if (process.platform === 'darwin') {
+      //Perms to access push to talk.
+      const { askForAccessibilityAccess } = require('node-mac-permissions')
+      askForAccessibilityAccess()
+    }
+
+    push_to_talk(setting)
+  } else {
+    uIOhook.stop();
+  }
 })
 
 class Account {
@@ -154,31 +166,8 @@ class Account {
       const avatars = []
       const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
 
-      //This is here because moving it to a method in here makes it unreliable on keypress.
       if (pushToTalk.on) {
-
-        //PUSH TO TALK keydown!
-        this.talkKey = pushToTalk.key
-        uIOhook.on('keydown', (e) => {
-          const code = toBrowbroserKey(e.keycode)
-          if (code === this.talkKey) {
-            console.log("keydown")
-            this.send('key-event', {state: 'DOWN', keyCode: code})
-          }
-        })
-
-        //PUSH TO TALK keyup!
-        uIOhook.on('keyup', (e) => {
-          const code = toBrowbroserKey(e.keycode)
-          if (code === this.talkKey) {
-            console.log("keyup")
-            this.send('key-event', {state: 'UP', keyCode: code})
-          }
-
-        })
-    
-      //Starts the listener
-      uIOhook.start()
+        push_to_talk(pushToTalk)
       }
       
      
@@ -251,6 +240,32 @@ class Account {
     
      }
   
+}
+
+function push_to_talk(pushToTalk) {
+  
+   //PUSH TO TALK keydown!
+    Hugin.talkKey = pushToTalk.key
+    uIOhook.on('keydown', (e) => {
+      const code = toBrowbroserKey(e.keycode)
+      if (code === Hugin.talkKey) {
+        console.log("keydown")
+        Hugin.send('key-event', {state: 'DOWN', keyCode: code})
+      }
+    })
+
+    //PUSH TO TALK keyup!
+    uIOhook.on('keyup', (e) => {
+      const code = toBrowbroserKey(e.keycode)
+      console.log("key up")
+      if (code === Hugin.talkKey) {
+        console.log("keyup")
+        Hugin.send('key-event', {state: 'UP', keyCode: code})
+      }
+
+    })
+  //Starts the listener
+  uIOhook.start()
 }
 
   let Hugin = new Account()
