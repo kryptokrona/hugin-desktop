@@ -10,7 +10,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds} from '$lib/stores/user.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -117,7 +117,7 @@
 
         window.api.receive('switch-node', (data) => {
            $misc.node = data
-           window.api.successMessage(`You are connected to ${data.node}`)
+           window.api.successMessage(`You are connected to ${data.node}`, false)
         })
 
 
@@ -136,10 +136,16 @@
             $notify.notifications.push(data)
             if ($notify.new.length < 2 && !$notify.que && !add) {
                 if (!$notify.off.some(a => a === group.name)) {
-                    board_message_sound.play()
+                    if ($misc.focus && $sounds.on) {
+                        console.log("$misc.focus && $sounds.on", $misc.focus, $sounds.on)
+                        board_message_sound.play()
+                    }
                     $notify.new.push(data)
                     data.roomName = group.name
-                    window.api.send('notify-room', data)
+                    if (!$misc.focus) {
+                         console.log("OS notify", $misc.focus, $sounds.on)
+                        window.api.send('notify-room', data)
+                    }
                 }
             }
             if (!$misc.focus && thisgroup && ingroups) return
@@ -171,7 +177,7 @@
             
             data.message = data.msg
             data.type = 'message'
-            new_message_sound.play()
+            if ($misc.focus && $sounds.on) new_message_sound.play()
 
             //If we are active in the chat, but minimized.
             if (
@@ -197,6 +203,29 @@
                 }
             })
         })
+
+        window.api.receive('user-joined-voice-channel', data => {
+            console.log("Someone joined a call, layout", data)
+            let contact = $user.contacts.find((a) => a.chat == data.address)
+            console.log("contact", contact)
+            if (!contact) return
+            let room = $swarm.active.find(a => a.topic === topic)
+            console.log("Room", room)
+            if (!room) return
+            if (!room.beam) return
+
+            let joined = {
+                chat: data.address,
+                file: false,
+                timestamp: data.time,
+                msg: ` ${contact.name} joined call...`,
+                sent: false,
+                beam: true
+            }
+
+            console.log("Saved joined voice")
+            saveToStore(joined)
+        }) 
 
 
         const saveToStore = (data) => {
@@ -258,7 +287,7 @@
                     $appUpdateState.step = 4
                     $appUpdateState.openPopup = true
                 }
-                window.api.successMessage('Hugin is up to date.')
+                window.api.successMessage('Hugin is up to date.', false)
                 break
             case 'downloaded':
                 $appUpdateState.openPopup = true
@@ -367,7 +396,7 @@
         if (!status) {
             window.api.errorMessage('Disconnected from node.')
         } else {
-            window.api.successMessage('Connected to node')
+            window.api.successMessage('Connected to node', false)
         }
     })
 
