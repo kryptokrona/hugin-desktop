@@ -209,19 +209,23 @@
             let contact = $user.contacts.find((a) => a.chat == data.address)
             console.log("contact", contact)
             if (!contact) return
-            let room = $swarm.active.find(a => a.topic === topic)
+            let room = $swarm.active.find(a => a.topic === data.topic)
             console.log("Room", room)
             if (!room) return
             if (!room.beam) return
+            //We are already in the call
+            if (room === $swarm.voice) return
 
             let joined = {
                 chat: data.address,
                 file: false,
-                timestamp: data.time,
-                msg: ` ${contact.name} joined call...`,
+                timestamp: Date.now(),
+                msg: ` ${contact.name} started a call`,
                 sent: false,
                 beam: true
             }
+
+            window.api.successMessage(joined.msg)
 
             console.log("Saved joined voice")
             saveToStore(joined)

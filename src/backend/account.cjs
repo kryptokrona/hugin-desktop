@@ -260,7 +260,6 @@ function push_to_talk(pushToTalk) {
     uIOhook.on('keydown', (e) => {
       const code = toBrowbroserKey(e.keycode)
       if (code === Hugin.talkKey) {
-        console.log("keydown")
         Hugin.send('key-event', {state: 'DOWN', keyCode: code})
       }
     })
@@ -270,7 +269,6 @@ function push_to_talk(pushToTalk) {
       const code = toBrowbroserKey(e.keycode)
       console.log("key up")
       if (code === Hugin.talkKey) {
-        console.log("keyup")
         Hugin.send('key-event', {state: 'UP', keyCode: code})
       }
 

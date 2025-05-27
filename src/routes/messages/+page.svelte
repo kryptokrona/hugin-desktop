@@ -28,15 +28,8 @@ let toggleRename = $state(false)
 let wantToAdd = $state(false)
 let windowHeight = $state()
 let windowChat = $state()
-let in_voice = $state(false)
 
 let thisSwarm = $derived($swarm.active.find(a => a.chat === $user.activeChat.chat))
-run(() => {
-        if (thisSwarm && thisSwarm.voice_channel.some(a => a.address === $user.activeChat.chat)) {
-        in_voice = true
-    } else in_voice = false
-    });
-
 //Get messages on mount.
 onMount(async () => {
     $fileViewer.enhanceImage = false
@@ -75,6 +68,13 @@ onMount(async () => {
         let failed = savedMsg.find(a => a.msg === data.message)
         failed.error = true
         savedMsg = savedMsg
+    })
+
+    window.api.receive('user-joined-voice-channel', async (data) => {
+        console.log("Someone joined a call, nmessages", data)
+        if (data.address === $user.activeChat.chat) {
+            savedMsg = $messages.filter((x) => x.chat === $user.activeChat.chat)
+        }
     })
 
 })
@@ -318,9 +318,6 @@ const hideModal = () => {
 
     <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
         <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}">
-            {#if in_voice} 
-                <ActiveCall/>
-            {/if}
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
                 <div class="fade"></div>

@@ -379,7 +379,7 @@ async function send_voice_channel_sdp(data) {
 }
 
 const send_voice_channel_status = async (joined, status, update = false) => {
-  const active = active_swarms.find(a => a.key === status.key)
+  let active = active_swarms.find(a => a.key === status.key)
   if (!active) return
   const msg = active.topic
   const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
@@ -847,7 +847,6 @@ const send_missing_messages = async (hashes, address, topic) => {
 
 const request_history = (address, topic, files) => {
     console.log("Reqeust history from another peer")
-    console.log("Files:", files)
     const message = {
         type: REQUEST_HISTORY,
         files
@@ -930,6 +929,7 @@ const process_request = async (messages, key, live = false) => {
             if (!message) continue
             await saveGroupMsg(message, false, true)
             if (live) missing.push(message)
+            Hugin.send('room-notification', [message, false])
             i++
         }
         //Only send update trigger if new messages has been processed.
@@ -955,6 +955,9 @@ const update_voice_channel_status = (data, con) => {
     con.video = data.video
     //Send status to front-end
     Hugin.send("voice-channel-status", data)
+    if (data.voice === true) {
+        Hugin.send('user-joined-voice-channel', data)
+    }
     return true
 }
 
@@ -1335,7 +1338,7 @@ const errorMessage = (message) => {
 }
 
 ipcMain.on('join-voice', async (e, data) => {
-    send_voice_channel_status(true, data)
+    send_voice_channel_status(true, data, false)
 })
 
 ipcMain.on('exit-voice', async (e, key) => {
