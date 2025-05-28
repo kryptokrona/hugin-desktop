@@ -68,10 +68,10 @@ run(() => {
       if (activeBeam) {
       thisSwarm = $swarm.active.find(a => a.chat === thisChat.chat)
    }
-});
+   });
 
 run(() => {
-      if (thisSwarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
+      if (thisSwarm && $swarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
        in_voice = true
    } else in_voice = false
    });
