@@ -14,14 +14,15 @@ import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
 import { sleep } from '$lib/utils/utils'
 import FileViewer from '$lib/components/popups/FileViewer.svelte'
-import { fileSettings, fileViewer } from '$lib/stores/files.js'
+import { fileSettings, fileViewer, localFiles, remoteFiles } from '$lib/stores/files.js'
 import BigImage from '$lib/components/popups/BigImage.svelte'
 import DropFile from '$lib/components/popups/DropFile.svelte'
 import ActiveCall from './components/ActiveCall.svelte'
-	import { flip } from 'svelte/animate';
+import { flip } from 'svelte/animate';
+import Button from '$lib/components/buttons/Button.svelte';
 
 let active_contact = $state()
-let savedMsg = $state([])
+let messageList = $state([])
 let contact
 let dragover = $state(false)
 let toggleRename = $state(false)
@@ -54,9 +55,27 @@ onMount(async () => {
     window.api.receive('newMsg', async (data) => {
 
         if (data.chat === $user.activeChat.chat) {
+            const file = isFile(data)
+            if (file) data.file = file
             printMessage(data)
         }
     })
+
+    window.api.receive('remote-file-added', async (data) => {
+
+        if (data.chat === $user.activeChat.chat) {
+            messageList = sortMessages(messageList)
+        }
+    })
+
+    window.api.receive('user-joined-voice-channel', async (data) => {
+        await sleep(200)
+        if (data.address === $user.activeChat.chat) {
+            messageList = sortMessages(messageList)
+        }
+    })
+
+
 
     window.api.receive('privateMsg', async (data) => {
         if (data.chat === $user.activeChat.chat) {
@@ -65,16 +84,9 @@ onMount(async () => {
     })
 
     window.api.receive('pm-send-error', async (data) => {
-        let failed = savedMsg.find(a => a.msg === data.message)
+        let failed = messageList.find(a => a.msg === data.message)
         failed.error = true
-        savedMsg = savedMsg
-    })
-
-    window.api.receive('user-joined-voice-channel', async (data) => {
-        console.log("Someone joined a call, nmessages", data)
-        if (data.address === $user.activeChat.chat) {
-            savedMsg = $messages.filter((x) => x.chat === $user.activeChat.chat)
-        }
+        messageList = messageList
     })
 
 })
@@ -93,26 +105,51 @@ const isFile = (data) => {
         file.saved = true
         return file
     }
+    const remote = findit($remoteFiles)
+    if (remote) return remote
+    const local = findit($localFiles)
+    if (local) return local
     return false
 }
 
+function sortMessages(arr) {
+    return removeDuplicates(
+    [ ...arr,...$messages.filter((x) => x.chat === $user.activeChat.chat)]
+    .sort((a, b) => a.timestamp - b.timestamp))
+
+}
+async function loadMessages() {
+    const dbMessages = await window.api.getConversation($user.activeChat.chat, 0)
+    return sortMessages(dbMessages)
+    
+}
+
+const removeDuplicates = (arr) => {
+    let uniq = {}
+    return arr.filter((obj) => !uniq[parseInt(obj.timestamp)] && (uniq[parseInt(obj.timestamp)] = true))
+}
+
 //Prints conversation from active contact
-const printConversation = (active) => {
+const printConversation = async (active) => {
+    messageList = []
     const active_chat = { chat: active.chat, key: active.key, name: active.name }
     $user.activeChat = active_chat
     const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
     $notify.unread = clear
     active_contact = active.chat + active.key
-    let msgs = $messages.filter((x) => x.chat === active.chat)
+    
+    const allMessages = await loadMessages()
+
     let updated = []
-    for (const a of msgs) {
+    for (const a of allMessages) {
         const file = isFile(a) 
         if (file) a.file = file
         updated.push(a)
     }
-    savedMsg = updated
+    messageList = removeDuplicates(updated)
     scrollDown()
 }
+
 //Chat to add
 const handleAddChat = (e) => {
     let addContact = e.chat + e.key
@@ -121,7 +158,7 @@ const handleAddChat = (e) => {
     //Add input to message arr
     let newMessage = e
 
-    saveToStore(newMessage)
+    // saveToStore(newMessage)
     //Prepare send function and filter
     printConversation(newMessage)
     //Close popup
@@ -129,20 +166,14 @@ const handleAddChat = (e) => {
 }
 //Update messages live if users keep chat mounted
 const printMessage = (data) => {
-    savedMsg.push(data)
-    savedMsg = savedMsg
+    messageList.push(data)
+    messageList = messageList
     scrollDown()
 }
 
 
 const scrollDown = () => {
-    windowChat.scrollTop = windowChat.scrollTopMax
-}
-
-const saveToStore = (data) => {
-    messages.update((current) => {
-        return [...current, data]
-    })
+   windowChat.scrollTop = 0;
 }
 
 run(() => {
@@ -177,7 +208,7 @@ const sendMsg = (e) => {
         beam: beam
     }
 
-    saveToStore(myMessage)
+    printMessage(myMessage)
     window.api.sendMsg(msg, active_contact, offChain, false, beam)
     //printMessage(myMessage)
     console.log('Message sent')
@@ -199,10 +230,6 @@ const checkErr = (e) => {
 const openAdd = () => {
     wantToAdd = !wantToAdd
 }
-
-run(() => {
-        savedMsg = $messages.filter((x) => x.chat === $user.activeChat.chat)
-    });
 
 function renameContact(e) {
     let thisContact = $user.rename.chat + $user.rename.key
@@ -255,7 +282,7 @@ async function dropFile(e) {
         file: acceptedFiles[0],
     }
     printMessage(message)
-    saveToStore(message)
+    // saveToStore(message)
 
     window.api.groupUpload(filename, path, $user.activeChat.chat, size, time, hash, !beam)
 }
@@ -274,12 +301,23 @@ const sendTransaction = (e) => {
     let tx = e
     window.api.sendTransaction(tx)
 }
-
 const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
 
+let loadMore = $state(true)
+
+const noLoad = () => {
+    pageNum--; loadMore = false; return
+}
+
+async function loadMoreMessages() {
+    pageNum++
+    const more = await window.api.getConversation($user.activeChat.chat, pageNum)
+    messageList = [...messageList, ...more]
+    if (more.length === 0) {noLoad(); return}
+}
 
 </script>
 
@@ -317,11 +355,14 @@ const hideModal = () => {
     />
 
     <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
-        <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}">
+        <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}" bind:this={windowChat} bind:clientHeight={windowHeight}>
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
-            <div class="inner" bind:this={windowChat} bind:clientHeight={windowHeight}>
+            <div class="inner">
                 <div class="fade"></div>
-                {#each savedMsg as message (message.timestamp)}
+                {#if messageList.length > 99 && loadMore} 
+                    <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
+                {/if}
+                {#each messageList as message (message.timestamp)}
                 <div animate:flip="{{duration: 100}}">
                     <ChatBubble
                         on:download="{() => download(message.msg)}"

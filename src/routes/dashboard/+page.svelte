@@ -22,7 +22,6 @@
     const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrade to Hugin +'}`
     onMount(async () => {
         $user.started = true
-        if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
         if (!localStorage.getItem('guide')) {
             //Set welcome = true to enable guide popup
             //welcome = true

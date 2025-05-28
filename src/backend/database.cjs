@@ -781,7 +781,11 @@ const getConversations = async () => {
 }
 
 //Get a chosen conversation from the reciepients xkr address.
-const getConversation = async (chat) => {
+const getConversation = async (chat, page) => {
+    let limit = 100
+    let offset = 0
+    if (page !== 0) offset = page * limit
+    
     const thisConversation = []
     return new Promise((resolve, reject) => {
         const getChat = `SELECT
@@ -794,7 +798,9 @@ const getConversation = async (chat) => {
         WHERE chat = ?
         ORDER BY
             timestamp
-        DESC`
+        DESC
+        LIMIT ${offset}, ${limit}`
+        
         const stmt = database.prepare(getChat)
         for(const row of stmt.iterate(chat)) {
             if (row === undefined) continue

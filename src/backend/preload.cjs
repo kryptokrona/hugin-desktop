@@ -56,6 +56,9 @@ const WINDOW_API = {
     getConversations: async () => {
         return await ipcRenderer.invoke('get-conversations')
     },
+    getConversation: async (chat, page) => {
+        return await ipcRenderer.invoke('get-conversation', chat, page)
+    },
     getGroups: async () => {
         return await ipcRenderer.invoke('get-groups')
     },

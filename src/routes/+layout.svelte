@@ -157,27 +157,25 @@
         })
 
         window.api.receive('privateMsg', (data) => {
-            //If active chat, focused and in message page, return
-            if (
-            data.chat === $user.activeChat.chat 
-            && $misc.focus
-            && $page.url.pathname === '/messages'
-            ) {
-            saveToStore(data)  
-            return
-            }
-            
             //If address is our own, maybe sent from mobile
             if (data.chat === $user.myAddress) return
-            
-            saveToStore(data)
+
+            // saveToStore(data)
             //Convert message to notification
             const contact = $user.contacts.find((a) => a.chat === data.chat)
             if (contact) data.name = contact.name
             
             data.message = data.msg
             data.type = 'message'
-            if ($misc.focus && $sounds.on) new_message_sound.play()
+
+            const inchat = 
+            data.chat === $user.activeChat.chat 
+            && $misc.focus
+            && $page.url.pathname === '/messages'
+
+            if ($misc.focus && $sounds.on && !inchat) new_message_sound.play()
+            if (!$misc.focus) window.api.send('notify-dm', data)
+                    
 
             //If we are active in the chat, but minimized.
             if (

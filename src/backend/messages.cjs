@@ -78,6 +78,15 @@ ipcMain.on('notify-room', (e, data) => {
       notification.show()
 })
 
+ipcMain.on('notify-dm', (e, data) => {
+    const notification = new Notification({
+        title: data.name,
+        body: data.msg,
+        icon: 'src/static/icon.png',
+      });
+      notification.show()
+})
+
 ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
     send_group_message(msg, offchain, swarm)
 })
@@ -161,6 +170,10 @@ ipcMain.on('delete-messages-after', async (e, days) => {
 
 ipcMain.handle('get-feed-messages', async (e, page) => {
     return await printFeed(page)
+})
+
+ipcMain.handle('get-conversation', async (e, chat, page) => {
+    return await getConversation(chat, page)
 })
 
 
