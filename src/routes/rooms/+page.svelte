@@ -112,7 +112,7 @@ function newMessage(data) {
     const inrooms = $page.url.pathname === '/rooms'
     if (data.address === $user.myAddress) return
         if ((thisroom || thistopic || roomtopic) && inrooms) {
-            printRoomMessage(data)
+            printRoomMessage(data, file)
         } else {
             console.log("Another room")
         }
@@ -214,7 +214,7 @@ const scrollDown = () => {
 }
 
 //Prints any single group message. 
-const printRoomMessage = (roomMsg) => {
+const printRoomMessage = (roomMsg, file = false) => {
     if (
         roomMsg.reply.length === 64 &&
         roomMsg.message.length < 9 &&
@@ -227,7 +227,11 @@ const printRoomMessage = (roomMsg) => {
     roomMessages.update((current) => {
         return [roomMsg, ...current]
     })
-    fixedRooms = removeDuplicates(fixedRooms)
+
+    //If we sync older files, make sure to sort the incoming messages.
+    if (file) {
+      fixedRooms = removeDuplicates(fixedRooms.sort((a, b) => b.time - a.time)) 
+    } else  fixedRooms = removeDuplicates(fixedRooms)
 }
 
 
