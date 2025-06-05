@@ -97,3 +97,16 @@ export const hashPadding = () => {
     return Date.now().toString() + Math.floor(Math.random() * 1000).toString()
 }
 
+export function extractHuginLinkAndClean(text) {
+  const regex = /hugin:\/\/[^\s]+\/[a-fA-F0-9]{128}/;
+  const match = text.match(regex);
+
+  if (match && match[0]) {
+    const huginLink = match[0];
+    const cleanedMessage = text.replace(huginLink, '').trim();
+    return { huginLink, cleanedMessage };
+  }
+
+  return { huginLink: '', cleanedMessage: text };
+}
+
