@@ -13,6 +13,7 @@
     import { fly } from 'svelte/transition'
     import Welcome from './components/Welcome.svelte'
 	import Upgrade from './components/Upgrade.svelte';
+	import Notifications from './components/Notifications.svelte';
     
     let date = new Date()
     let hrs = date.getHours()
@@ -62,7 +63,7 @@
 
 <Funds/>
 <div class="grid"  in:fly|global="{{ y: 100 }}">
-    <!-- <StandardGroups onClick={() => upgrade = true}/>  -->
+    <Notifications/> 
     <Transactions/>
     <!-- <CreateRoom/> -->
 </div>

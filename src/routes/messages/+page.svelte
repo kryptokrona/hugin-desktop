@@ -319,6 +319,13 @@ async function loadMoreMessages() {
     if (more.length === 0) {noLoad(); return}
 }
 
+let imTyping = false
+const typing = (e) => {
+    if (imTyping === e.typing) return
+    imTyping = e.typing
+    window.api.send('typing', {key: $swarm.activeSwarm.key, typing: e.typing})
+}
+
 </script>
 
 {#if $fileViewer.enhanceImage}
@@ -379,7 +386,7 @@ async function loadMoreMessages() {
             </div>
             </Dropzone>
         </div>
-        <ChatInput onMessage="{sendMsg}" />
+        <ChatInput onMessage="{sendMsg}" onTyping={(e) => typing(e)} />
     </div>
 </main>
 
