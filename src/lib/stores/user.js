@@ -151,7 +151,9 @@ export const rooms = writable({
     banned: [],
     ban: {},
     activeSwarm: {},
-    avatars: []
+    avatars: [],
+    params: null,
+    typingUsers: []
  })
 
  export const pushToTalk = writable({
