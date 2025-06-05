@@ -428,6 +428,11 @@ const sanitize_join_swarm_data = (data) => {
     return clean
   }
 
+  const sanitize_typing_message = (data) => { 
+    if (typeof data?.typing !== 'boolean') return [false, false];
+    return [data?.typing, true]
+  }
+
   const isLatin = (text) => {
     const REGEX_CHINESE =
       /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
@@ -520,4 +525,4 @@ function toBrowbroserKey(rawCode) {
 
  
 
-module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
+module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sanitize_typing_message, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}

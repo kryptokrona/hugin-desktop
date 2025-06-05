@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed, feedMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
@@ -65,7 +65,7 @@ async connect(address, pub) {
     //We verify if the private node has the correct public key.
     if (remotePublicKey.toString('hex') !== address.slice(-64)) {
       return true
-    }
+    } 
     return false
     }}, sig, dht_keys, base_keys)
 
@@ -148,6 +148,7 @@ async change(address, pub) {
         this.node = null
         this.discovery = null
         this.address = null
+        this.topic = ''
     }
 
   console.log("Connecting to node...")
@@ -158,9 +159,9 @@ async change(address, pub) {
 async reconnect() {
   while(this.connection === null) {
     Hugin.send('hugin-node-connection', false)
-    await sleep(10000)
     console.log("Reconnecting to node...")
     this.discovery.refresh({client: true, server: false})
+    await sleep(10000)
   }
   return
 }
@@ -492,6 +493,13 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         }
     }
 
+    if ('typing' in data) {
+        const [typing, checked] = sanitize_typing_message(data)
+        if (!checked) return
+        if (!con.address) return
+        Hugin.send('typing', {typing, key: active.key, address: con.address})
+    }
+
     // If feed message
     if ('type' in data) {
         if (data.type === 'feed') {
@@ -599,7 +607,10 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             console.log("=======================================")
             console.log("--USER:", con.name, "JOINED THE ROOM--")
             console.log("=======================================")
-            Hugin.send("peer-connected", joined)
+
+
+            connection_joined(joined, topic, admin)
+          
             return true
         }
 
@@ -610,7 +621,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         }
     }
 
-    if (!con.joined) return "Error"
+    if (!con.joined) return true
 
     if ('type' in data) {
 
@@ -716,6 +727,27 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
      if (Hugin.blocked(con.address)) return true
     
     return false
+}
+
+function connection_joined(joined, topic, admin) {
+
+      const connected = {
+        topic,
+        admin,
+        joined: true,
+        time: joined.time,
+        address: joined.address,
+        name: joined.name,
+        voice: joined.voice,
+        video: joined.video,
+        avatar: joined.avatar,
+        audioMute: joined.audioMute,
+        videoMute: joined.videoMute,
+        screenshare: joined.screenshare
+    }
+
+    //TODO set svelte rune states?
+    Hugin.send("peer-connected", connected)
 }
 
 
@@ -1031,7 +1063,6 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
         return
     }
     if (check === "Error") {
-        console.log("Check failed")
         connection_closed(connection, topic)
         return
     }
@@ -1336,6 +1367,13 @@ const check_file_message = async (data, topic, address, con, beam) => {
 const errorMessage = (message) => {
     Hugin.send('error-notify-message', message)
 }
+
+ipcMain.on('typing', (e, data, beam = false) => {
+    const send = {
+        typing: data.typing
+    }
+    send_swarm_message(JSON.stringify(send), data.key, beam)
+})
 
 ipcMain.on('join-voice', async (e, data) => {
     send_voice_channel_status(true, data, false)

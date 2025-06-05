@@ -5,6 +5,7 @@ const sanitizeHtml = require('sanitize-html')
 const Store = require('electron-store')
 const store = new Store()
 const {sleep, containsOnlyEmojis} = require('./utils.cjs')
+const { Hugin } = require('./account.cjs')
 
 const closeDB = async () => {
     database.close();    
