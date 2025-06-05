@@ -4,7 +4,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import {  onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user, rooms, transactions } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms, transactions, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -14,7 +14,7 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { hashPadding, isLatin, openURL } from '$lib/utils/utils'
+import { extractHuginLinkAndClean, hashPadding, isLatin, openURL } from '$lib/utils/utils'
 import DownloadFile from './DownloadFile.svelte'
 import UploadFile from './UploadFile.svelte'
 import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -47,6 +47,7 @@ import CodeBlock from './CodeBlock.svelte';
         ReplyTo,
         ReactTo,
         DeleteMessage,
+        JoinRoom,
     } = $props();
 let tipMessage = $state("");
     
@@ -72,6 +73,10 @@ let messageLink = $state("")
 let youtube_shared_link_type = false
 let asian = $state(false)
 let showMenu = $state(false)
+let isInvite = $state(false)
+let inviteName = $state('')
+let inviteKey = $state('')
+
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
@@ -115,6 +120,10 @@ onDestroy(() => {
 function checkMessage() {
 
     if (tip) return
+
+    if (!isLatin(nickname)) {
+        asian = true
+    }
     
     if (msg.match(geturl)) {
         link = true
@@ -131,15 +140,23 @@ function checkMessage() {
         return
     }
 
+    const {huginLink, cleanedMessage} = extractHuginLinkAndClean(msg)
+
+    if (huginLink.length) {
+        msg = cleanedMessage
+        inviteKey = huginLink.slice(-128)
+        const parse = huginLink.split('hugin://')[1]
+        const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
+        inviteName = roomName.replace(/-/g, ' ');
+        isInvite = true
+    } else return
+
+
     // if (msg.startsWith("```") && msg.endsWith("```")) { 
     //     msg = msg.slice(3,-3) 
     //     codeBlock = true 
     //     return
     // }
-        
-    if (!isLatin(nickname)) {
-        asian = true
-    }
 }
 
 async function checkreply(reply) {
@@ -225,14 +242,6 @@ const deleteMsg = (e) => {
 }
 
 
-
-
-
-
-
-
-
-
 const checkLink = () => {
         if (messageLink.includes('&list')) {
             messageLink = messageLink.split('&list')[0]
@@ -271,6 +280,17 @@ const sendMoney = () => {
         to: msgFrom,
         name: nickname
     }
+}
+
+function joinInvite () {
+    if (inviteKey.length !== 128) return
+    if (inviteName.length === 0) return
+
+    JoinRoom({
+        name: inviteName,
+        key: inviteKey,
+        admin: false
+    })
 }
 
 
@@ -399,21 +419,25 @@ run(() => {
                         <div class="emojiContainer">
                             <emoji-picker bind:this={emojiPicker}></emoji-picker>
                         </div>
+                         {#if !rtc}
                         <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
                             <Emoji size="16px" stroke={"var(--text-color)"}/>
                         </button>
+                        {/if}
                     </div>
-                    {#if room && !myMsg}
-                    <PayIcon size={18} on:click={sendMoney}/>
-                    {/if}
-                    <ReplyArrow on:click="{replyTo}" />
                     {#if !rtc}
-                    {#if !myMsg}
-                    <Dots on:click="{() => showMenu = true}"/>
-                    {/if}
-                    {#if showMenu && !myMsg}
-                        <UserOptions admin={admin} info={{address: msgFrom, name: nickname}}/>
-                    {/if}
+                        {#if room && !myMsg}
+                        <PayIcon size={18} on:click={sendMoney}/>
+                        {/if}
+                        <ReplyArrow on:click="{replyTo}" />
+                        {#if !rtc}
+                        {#if !myMsg}
+                        <Dots on:click="{() => showMenu = true}"/>
+                        {/if}
+                        {#if showMenu && !myMsg}
+                            <UserOptions admin={admin} info={{address: msgFrom, name: nickname}}/>
+                        {/if}
+                        {/if}
                     {/if}
                 </div>
             </div>
@@ -427,9 +451,9 @@ run(() => {
                 <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if emojiMessage}
                 <p class:rtc class="emoji">{msg}</p>
-            {:else if file && !myMsg}
+            {:else if file && !myMsg && !rtc}
                 <DownloadFile file={file} group={true} rtc={rtc}/>
-            {:else if file && myMsg}
+            {:else if file && myMsg && !rtc}
                 <UploadFile file={file} group={true} rtc={rtc}/>
             {:else if tip && tipMessage}
                 <Tip tip={tipMessage}/>
@@ -437,6 +461,15 @@ run(() => {
                 <CodeBlock code={msg} /> -->
             {:else}
                 <p class:rtc class:joined={joined} style="user-select: text;">{msg}</p>
+                {#if isInvite}
+                <div class="inviteRoom">
+                    <br>
+                    <h4>{inviteName}</h4>
+                    {#if !$swarm.active.some(a => a.key === inviteKey)}
+                        <Button text={"Join"} disabled={false} on:click={() => joinInvite()} />
+                    {/if}
+                </div>
+                {/if}
             {/if}
         </div>
 
@@ -579,7 +612,7 @@ p {
 }
 
 .rtc {
-    max-width: 240px;
+    max-width: 500px;
 }
 
 .min {
@@ -655,5 +688,17 @@ button {
     border-radius: 15px;
     padding: 10px;
     object-fit: cover;
+}
+
+.inviteRoom {
+    border-radius: 5px;
+    display: flex;
+    border: 1px solid var(--success-color);
+    padding: 10px;
+    align-items: center;
+    margin-right: 50px;
+    margin-left: 30px;
+    justify-content: center;
+    gap: 20px;
 }
 </style>

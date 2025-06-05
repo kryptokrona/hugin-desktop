@@ -43,6 +43,21 @@ let loadMore = $state(true)
 let admin = $state(false)
 const welcomeAddress = $misc.welcomeAddress
 let thisSwarm = $state(false)
+let someoneTyping = $state(null);
+let usersTyping = $state(0);
+
+const filteredUsers = () => { 
+    return $rooms.typingUsers.filter(a => a.topic === $rooms.thisRoom?.topic)
+}
+
+$effect(() => {
+    usersTyping = filteredUsers().length;
+    if (usersTyping === 0) return
+    if (usersTyping > 1) return
+    someoneTyping = filteredUsers()[0] ?? null;
+})
+
+
 
 let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
 run(() => {
@@ -76,6 +91,14 @@ const isFile = (data) => {
 onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
+    if ($rooms.params !== null) {
+        const inviteKey = $rooms.params.slice(-128)
+        const parse = $rooms.params.split('hugin://')[1]
+        const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
+        const inviteName = roomName.replace(/-/g, ' ');
+        addNewRoom({key: inviteKey, name: inviteName, admin: false})
+        $rooms.params = null
+    }
     scrollDown()
     //Listens for new messages from backend
     window.api.receive('roomMsg', (data) => {
@@ -285,6 +308,7 @@ const openAddRoom = () => {
 
 //Adds new Group to groArray and prints that Group, its probably empty.
 const addNewRoom = async (e) => {
+    console.log("AAADDD ROOM INVITE", e)
     let room = e
     const admin = e.admin
     if (room.length < 32) return
@@ -548,6 +572,15 @@ const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
+
+
+let imTyping = false
+const typing = (e) => {
+    if (imTyping === e.typing) return
+    imTyping = e.typing
+    window.api.send('typing', {key: $swarm.activeSwarm.key, typing: e.typing})
+}
+
 </script>
 
 
@@ -602,6 +635,7 @@ const hideModal = () => {
                     ReactTo="{(e) => sendRoomMsg(e, false, true)}"
                     ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
                     DeleteMsg="{(e) => deleteMessage(message.hash)}"
+                    JoinRoom="{(e) => addNewRoom(e)}"
                     message="{message}"
                     reply="{message.reply}"
                     msg="{message.message}"
@@ -630,7 +664,16 @@ const hideModal = () => {
                 {reply_exit_icon} Reply to {$rooms.replyTo.nick}
             </div>
         {/if}
-        <ChatInput onMessage="{(e) => sendRoomMsg(e)}" />
+        {#if usersTyping > 0}
+            <div class="typing">
+                {#if usersTyping > 1}
+                    {usersTyping} users are typing...
+                {:else}
+                    {someoneTyping.name} is typing...
+                {/if}
+            </div>
+        {/if}
+        <ChatInput onMessage="{(e) => sendRoomMsg(e)}" onTyping={(e) => typing(e)} />
     </div>
     <RoomHugins />
 </main>
@@ -686,6 +729,26 @@ p {
     left: 0px;
     justify-content: center;
     color: var(--success-color);
+    padding: 4px;
+    width: fit-content;
+    z-index: 9;
+    border: px solid;
+    cursor: pointer;
+}
+
+.typing {
+    background: var(--backgound-color);
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: bold;
+    height: 22px;
+    font-family: "Montserrat";
+    font-weight: 100;
+    position: absolute;
+    bottom: 2px;
+    left: 0px;
+    justify-content: center;
+    color: var(--text-color);
     padding: 4px;
     width: fit-content;
     z-index: 9;

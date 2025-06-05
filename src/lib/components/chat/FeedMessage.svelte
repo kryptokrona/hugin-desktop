@@ -4,7 +4,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import {  onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user, rooms, transactions, feed } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms, transactions, feed, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -14,7 +14,7 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { hashPadding, isLatin, openURL } from '$lib/utils/utils'
+import { extractHuginLinkAndClean, hashPadding, isLatin, openURL } from '$lib/utils/utils'
 import DownloadFile from './DownloadFile.svelte'
 import UploadFile from './UploadFile.svelte'
 import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -24,6 +24,7 @@ import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
+	import { goto } from '$app/navigation';
 
 // message,
 //   replies,
@@ -78,6 +79,11 @@ let messageLink = $state("")
 let youtube_shared_link_type = false
 let asian = $state(false)
 let showMenu = $state(false)
+let isInvite = $state(false)
+let inviteName = $state('')
+let inviteKey = $state('')
+let inviteLink = ""
+
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
@@ -140,6 +146,18 @@ function checkMessage() {
     if (!isLatin(message.nickname)) {
         asian = true
     }
+    
+    const {huginLink, cleanedMessage} = extractHuginLinkAndClean(message.message)
+
+    if (huginLink.length) {
+        message.message = cleanedMessage
+        inviteKey = huginLink.slice(-128)
+        inviteLink = huginLink
+        const parse = huginLink.split('hugin://')[1]
+        const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
+        inviteName = roomName.replace(/-/g, ' ');
+        isInvite = true
+    } else return
 }
 
 async function checkreply(reply) {
@@ -285,6 +303,16 @@ const messagePressed = () => {
 }
 
 
+function joinInvite() {
+    if (inviteKey.length !== 128) return
+    if (inviteName.length === 0) return
+
+    $rooms.params = inviteLink
+
+    goto('/rooms')
+}
+
+
 run(() => {
         if (tip !== "") {
         try {
@@ -399,6 +427,15 @@ run(() => {
                 <Tip tip={tipMessage}/>
             {:else}
                 <p style="user-select: text;">{message.message}</p>
+                {#if isInvite}
+                <div class="inviteRoom">
+                    <br>
+                    <h4>{inviteName}</h4>
+                    {#if !$swarm.active.some(a => a.key === inviteKey)}
+                        <Button text={"Join"} disabled={false} on:click={() => joinInvite()} />
+                    {/if}
+                </div>
+                {/if}
             {/if}
         </div>
 
@@ -618,5 +655,18 @@ button {
     border-radius: 15px;
     padding: 10px;
     object-fit: cover;
+}
+
+.inviteRoom {
+    border-radius: 5px;
+    display: flex;
+    border: 1px solid var(--success-color);
+    padding: 10px;
+    align-items: center;
+    margin-right: 50px;
+    margin-left: 30px;
+    width: 450px;
+    justify-content: center;
+    gap: 20px;
 }
 </style>
