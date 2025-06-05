@@ -594,6 +594,14 @@ async function fetch_hugin_messages() {
     return list
 }
 
+  async function generate_push_view_tag(address) {
+    const myAddr = await Address.fromAddress(address);
+    const pubKey = myAddr.m_keys.m_viewKeys.m_publicKey;
+    const weeklyTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7));
+    const hash = await crypto.cn_fast_hash(pubKey + weeklyTimestamp);
+    return hash.substring(0,3);
+  }
+
 
 async function send_message(message, receiver, off_chain = false, group = false, beam_this = false) {
     //Assert address length
@@ -611,13 +619,14 @@ async function send_message(message, receiver, off_chain = false, group = false,
     
     let timestamp = Date.now()
     let payload_hex
-    const seal = has_history ? false : true
+    let seal = has_history ? false : true
+    if (!off_chain) seal = true
     
     payload_hex = await encrypt_hugin_message(message, messageKey, seal, address)
     //Choose subwallet with message inputs
-
+    const viewtag = await generate_push_view_tag(address)
     if (!off_chain) {
-        const sent = await Nodes.message(payload_hex)
+        const sent = await Nodes.message(payload_hex, viewtag)
         if (typeof sent.success !== 'boolean') {
             return
         }
@@ -676,6 +685,7 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
             k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
             msg: message,
             s: signature,
+            name: Hugin.nickname
         }
         let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
         box = new naclSealed.sealedbox(
