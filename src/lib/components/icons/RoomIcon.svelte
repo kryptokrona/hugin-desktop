@@ -49,7 +49,7 @@
     
     .dot {
         position: absolute;
-        background-color: var(--primary-color);
+        background-color: var(--success-color);
         border-radius: 2px;
         height: 16px;
         width: 10px;

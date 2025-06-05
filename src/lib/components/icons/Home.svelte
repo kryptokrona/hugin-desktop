@@ -38,7 +38,7 @@ let thispage = $derived($page.url.pathname === '/dashboard')
 
     .dot {
         position: absolute;
-        background-color: white;
+        background-color: var(--success-color);
         border-radius: 2px;
         height: 16px;
         width: 10px;
