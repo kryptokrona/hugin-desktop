@@ -120,11 +120,11 @@
 </script>
 
 <main>
-{#if nodeFailed}
+<!-- {#if nodeFailed}
     <div class="backdrop">
         <NodeSelector onConnect={(e) => setNode(e)} goBack={() => nodeFailed = false}/>
     </div>
-{/if}
+{/if} -->
 
 {#if wallet == false}
 
