@@ -184,7 +184,7 @@ parse(d) {
   }
 }
 
-async message(payload) {
+async message(payload, viewtag) {
   return new Promise( async (resolve, reject) => {
   const timestamp = Date.now()
   this.requests.set(timestamp, { resolve, reject })
@@ -202,7 +202,9 @@ async message(payload) {
     timestamp,
     hash: id,
     signature,
-    id: timestamp
+    id: timestamp,
+    push: true,
+    viewtag
     }
 
   }
@@ -827,7 +829,7 @@ const find_missing_peers = async (active, peers) => {
         address: address,
     }
     
-    Hugin.send('friend-request', message.hugin)
+    Hugin.send('friend-request', request)
 
 
   }
