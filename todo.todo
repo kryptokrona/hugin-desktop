@@ -3,6 +3,9 @@ Bugs:
     ☐ Node picker has duplicated buttons
     ☐ Wrong color on in app notification
     ☐ No default avatar shown when none chosen
+    ☐ Cannot choose microphone or camera
+    ☐ Own microphone activity indicator disabled when changing audio input
+
 
 Features:
     ☐ Add check node statuses
