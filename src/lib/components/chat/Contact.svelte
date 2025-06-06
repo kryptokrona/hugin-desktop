@@ -12,7 +12,7 @@ let { contact = $bindable(), ThisContact, OpenRename } = $props();
 let thisCall = $state(false)
 let beamInvite = $state(false)
 let asian = $state(false)
-let online = $state(false)
+let online = $derived($swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat)))
 
 
 onMount(async () => {
@@ -75,14 +75,6 @@ const rename = () => {
     OpenRename()
 }
 
-run(() => {
-    if ($swarm.active.length) {
-      online = $swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat));
-    } else {
-      online = false
-    }
-  });
-
   const check_avatar = (address) => {
     const found = $rooms.avatars.find(a => a.address === address)
     if (found) return found.avatar
@@ -96,7 +88,6 @@ run(() => {
     out:fade|global
     class:rgb="{thisCall}"
     class:active="{contact.chat === $user.activeChat.chat}"
-    class:online={online}
     onclick={() => printThis(contact)} >
     
     {#await check_avatar(contact.chat)}
@@ -119,6 +110,11 @@ run(() => {
     {/await}
    
     <div class="content">
+        {#if online}
+        <div class="online">
+
+        </div>
+        {/if}
         <h4 class:asian class:big={asian} style="color: {getColorFromHash(contact.chat)}">{contact.name}</h4>
         
         {#if !beamInvite}
@@ -143,8 +139,9 @@ run(() => {
     padding: 1rem;
     width: 100%;
     color: var(--title-color);
+    border: 1px solid transparent;
     border-bottom: 1px solid var(--border-color);
-  background-color: var(--backgound-color);
+    background-color: var(--backgound-color);
     transition: 200ms ease-in-out;
     cursor: pointer;
     opacity: 0.9;
@@ -152,7 +149,7 @@ run(() => {
     &:hover {
         color: white;
         opacity: 1;
-        background-color: var(--card-border);
+        background-color: var(--card-background);
         border-bottom: 1px solid transparent;
     }
 }
@@ -168,6 +165,9 @@ run(() => {
     margin-top: 6px;
     border-radius: 5px;
     object-fit: cover;
+    width: 25px !important;
+    height: 25px !important;
+    margin: 6px;
 }
 
 .content {
@@ -210,8 +210,9 @@ p {
 }
 
 .active {
-    background-color: var(--border-color);
-    border-bottom: 1px solid transparent;
+    background-color: var(--card-background);
+    border: 1px solid var(--success-color) !important;
+    border-radius: 2px;
 }
 
 .count {
@@ -228,6 +229,13 @@ p {
 }
 
 .online {
-    box-shadow: inset 10px 0 7px -7px var(--success-color);
+    background-color: #3fd782;
+    border-radius: 50%;
+    height: 6px;
+    width: 7px;
+    left: -17px;
+    top: 0px;
+    box-shadow: 0 0 10px white;
+    position: relative;
 }
 </style>

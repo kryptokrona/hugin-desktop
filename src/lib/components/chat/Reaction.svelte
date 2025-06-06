@@ -1,6 +1,6 @@
 <script>
     import { run } from 'svelte/legacy'
-    import { fade } from 'svelte/transition'
+    import { fade, fly, scale } from 'svelte/transition'
 
     /** @type {{reacts?: any, reactCount?: number, thisReaction: any, emoji: any, react?: boolean, counter?: boolean}} */
     let {
@@ -15,6 +15,7 @@
 let filterReactions = $state([])
 let hoverReaction = false
 let filterReactors = $state([])
+let press = $state(false)
 
 run(() => {
         if (reacts.length) filterReactions = reacts.filter((a) => a.message == thisReaction.message)
@@ -29,11 +30,15 @@ run(() => {
     });
 
 const sendReaction = () => {
+press = true
 onSendReaction({
         msg: thisReaction.message,
         grp: thisReaction.group,
         reply: thisReaction.reply,
     })
+    setTimeout(() => {
+            press = false
+    }, 150)
 }
 
 run(() => {
@@ -41,7 +46,8 @@ run(() => {
     });
 </script>
 
-<div class="reaction" onclick={sendReaction}>
+
+<div class:pressed={press} in:fly={{y : 150}} class="reaction" onclick={sendReaction}>
     {thisReaction.message}
     {#if filterReactions.length >= 1}
         <p class="count">{reactCount}</p>
@@ -79,6 +85,12 @@ run(() => {
             width: max-content;
         }
     }
+}
+
+.pressed {
+    background-color: var(--success-color) !important;
+    transform: scale(1.1);
+    transition: transform 150ms ease-in-out;
 }
 
 .reactor {

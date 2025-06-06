@@ -25,6 +25,9 @@ const WINDOW_API = {
     sendRoomMessage: (msg) => {
         ipcRenderer.send('send-room-message', msg)
     },
+    sendFeedMessage: async (msg) => {
+        return await ipcRenderer.invoke('send-feed-message', msg)
+    },
     decryptMessage: (msg) => {
         ipcRenderer.send('decrypt_message', msg)
     },
@@ -41,14 +44,20 @@ const WINDOW_API = {
     getMessages: async () => {
         return await ipcRenderer.invoke('get-messages')
     },
-    getFeedMessages: async () => {
-        return await ipcRenderer.invoke('get-feed-messages')
+    getFeedReplies: async (hash) => {
+        return await ipcRenderer.invoke('get-feed-replies', hash)
+    },
+    getFeedMessages: async (index) => {
+        return await ipcRenderer.invoke('get-feed-messages', index)
     },
     getGroupReply: async (hash) => {
         return await ipcRenderer.invoke('get-group-reply', hash)
     },
     getConversations: async () => {
         return await ipcRenderer.invoke('get-conversations')
+    },
+    getConversation: async (chat, page) => {
+        return await ipcRenderer.invoke('get-conversation', chat, page)
     },
     getGroups: async () => {
         return await ipcRenderer.invoke('get-groups')
@@ -233,8 +242,8 @@ const WINDOW_API = {
         ipcRenderer.send('error-notify-message-main', errorMessage)
     },
 
-    successMessage: async (channel, successMessage) => {
-        ipcRenderer.send('success-notify-message-main', channel, successMessage)
+    successMessage: async (successMessage, sound = true) => {
+        ipcRenderer.send('success-notify-message-main', successMessage, sound)
     },
 
     groupUpload: async (filename, path, topic, fileSize, time, hash, room) => {

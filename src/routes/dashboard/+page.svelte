@@ -13,16 +13,16 @@
     import { fly } from 'svelte/transition'
     import Welcome from './components/Welcome.svelte'
 	import Upgrade from './components/Upgrade.svelte';
+	import Notifications from './components/Notifications.svelte';
     
     let date = new Date()
     let hrs = date.getHours()
     let greet = $state()
     let welcome = $state(false)
 
-    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrage Hugin +'}`
+    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrade to Hugin +'}`
     onMount(async () => {
         $user.started = true
-        if (!$user.loggedIn) messages.set(await window.api.getMessages((res) => {}))
         if (!localStorage.getItem('guide')) {
             //Set welcome = true to enable guide popup
             //welcome = true
@@ -63,7 +63,7 @@
 
 <Funds/>
 <div class="grid"  in:fly|global="{{ y: 100 }}">
-    <StandardGroups onClick={() => upgrade = true}/> 
+    <Notifications/> 
     <Transactions/>
     <!-- <CreateRoom/> -->
 </div>

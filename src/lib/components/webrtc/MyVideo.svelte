@@ -115,7 +115,7 @@ run(() => {
 .card {
     position: relative;
     display: flex;
-    background-color: #171717;
+    background-color:  var(--backgound-color);
     border-radius: 10px;
     box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--card-border);
@@ -126,6 +126,7 @@ run(() => {
     transition: 0.35s;
     aspect-ratio: 16/9;
     pointer-events: none;
+    -webkit-app-region: no-drag;
 
     video {
         position: absolute;
@@ -267,12 +268,13 @@ p {
     font-family: "Montserrat";
     position: relative;
     opacity: 0.8;
-    color: white;
+    color: var(--text-color);
     z-index: 5;
 }
 
 .hide {
     display: none;
+    transition: 300ms ease-in-out;
 }
 
 .loader {

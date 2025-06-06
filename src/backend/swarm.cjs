@@ -1,7 +1,7 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash} = require('./utils.cjs');
-const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed} = require("./database.cjs")
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message} = require('./utils.cjs');
+const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed, feedMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
 } = require('electron')
@@ -25,6 +25,8 @@ const DOWNLOAD_REQUEST = 'download-request'
 const REQUEST_FEED = 'request-feed';
 const SEND_FEED_HISTORY = 'send-feed-history';
 
+const ONE_DAY = 24 * 60 * 60 * 1000
+
 const EventEmitter = require('bare-events')
 
 let localFiles = []
@@ -45,6 +47,7 @@ class NodeConnection extends EventEmitter {
     this.pending = []
     this.public = 'a8b2ddb6f70e02b8ab3a1b144f5ddf0616ed6029b9129d6c12bc7660f5b430c5'
     this.topic = ''
+    this.address = null
   }
 
 async connect(address, pub) {
@@ -62,7 +65,7 @@ async connect(address, pub) {
     //We verify if the private node has the correct public key.
     if (remotePublicKey.toString('hex') !== address.slice(-64)) {
       return true
-    }
+    } 
     return false
     }}, sig, dht_keys, base_keys)
 
@@ -101,11 +104,18 @@ async listen() {
    conn.on('data', d => {
     const string = d.toString()
     const data = this.parse(string)
-    console.log("Got response messages from node:", data.response.length)
     if (!data) return
+    
+    if ('address' in data) {
+        if (typeof data.address !== 'string') return
+        if (data.address.length !== 99) return
+        this.address = data.address
+        return
+    }
+
       if (this.requests.has(data.id)) {
         const { resolve, reject } = this.requests.get(data.id);
-        if ('chunk' in data) {
+        if ('chunks' in data) {
           this.pending.push(data.repsonse)
           return
         }
@@ -128,13 +138,20 @@ async listen() {
 }
 
 async change(address, pub) {
-  await this.node.leave(Buffer.from(this.topic))
-  await this.node.destroy()
-  this.connection.end()
-  this.connection = null
-  this.node = null
-  this.discovery = null
-  Hugin.send('hugin-node-connection', false)
+    if (this.node) {
+        await this.node.leave(Buffer.from(this.topic))
+        await this.node.destroy()
+        if (this.connection !== null) {
+            this.connection.end()
+            this.connection = null
+        }
+        this.node = null
+        this.discovery = null
+        this.address = null
+        this.topic = ''
+    }
+
+  console.log("Connecting to node...")
 
   this.connect(address, pub)
 }
@@ -142,14 +159,15 @@ async change(address, pub) {
 async reconnect() {
   while(this.connection === null) {
     Hugin.send('hugin-node-connection', false)
-    await sleep(5000)
     console.log("Reconnecting to node...")
     this.discovery.refresh({client: true, server: false})
+    await sleep(10000)
   }
   return
 }
 
 sync(data) {
+    if (!this.connection) return []
   return new Promise((resolve, reject) => {
     data.id = data.timestamp
     this.requests.set(data.id, { resolve, reject });
@@ -166,10 +184,10 @@ parse(d) {
   }
 }
 
-async message(payload) {
+async message(payload, viewtag) {
   return new Promise( async (resolve, reject) => {
-  this.requests.set(data.timestamp, { resolve, reject })
-  this.connection.write(JSON.stringify(data))
+  const timestamp = Date.now()
+  this.requests.set(timestamp, { resolve, reject })
   
   //Create a new derived view key pair for sending messages to nodes.
   const [signKey, pub] = await keychain.messageKeyPair()
@@ -181,15 +199,18 @@ async message(payload) {
     message: {
     cipher: payload,
     pub,
-    timestamp: Date.now(),
+    timestamp,
     hash: id,
-    signature
+    signature,
+    id: timestamp,
+    push: true,
+    viewtag
     }
 
   }
 
   if (this.connection === null) {
-    reject("No connection")
+    resolve({success: false, reason: 'No connection'})
   }
 
   this.connection.write(JSON.stringify(data))
@@ -361,7 +382,7 @@ async function send_voice_channel_sdp(data) {
 }
 
 const send_voice_channel_status = async (joined, status, update = false) => {
-  const active = active_swarms.find(a => a.key === status.key)
+  let active = active_swarms.find(a => a.key === status.key)
   if (!active) return
   const msg = active.topic
   const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey)
@@ -474,13 +495,25 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         }
     }
 
+    if ('typing' in data) {
+        const [typing, checked] = sanitize_typing_message(data)
+        if (!checked) return
+        if (!con.address) return
+        Hugin.send('typing', {typing, key: active.key, address: con.address})
+    }
+
     // If feed message
     if ('type' in data) {
         if (data.type === 'feed') {
         const message = sanitize_feed_message(data)
-        console.log('feed data log: ', message);
         if (!message) return 'Ban'
+        const exists = await feedMessageExists(message.hash)
+        if (exists) return
+        const verify = await verifySignature(message.message + message.hash, message.address, message.signature)
+        if (!verify) return 'Ban'
         await saveFeedMessage(message)
+        message.type = "feed"
+        forward_feed_message(message)
         Hugin.send('feed-message', message);
         return
         }
@@ -559,6 +592,8 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             active.peers = peers
             const time = parseInt(joined.time)
 
+            process_request(joined.messages, active.key, false)
+
             //If our new connection is also in voice, check who was connected first to decide who creates the offer
             const [in_voice, video] = get_local_voice_status(topic)
             if (con.voice && in_voice && (parseInt(active.time) > time)  ) {
@@ -574,7 +609,10 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             console.log("=======================================")
             console.log("--USER:", con.name, "JOINED THE ROOM--")
             console.log("=======================================")
-            Hugin.send("peer-connected", joined)
+
+
+            connection_joined(joined, topic, admin)
+          
             return true
         }
 
@@ -585,7 +623,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
         }
     }
 
-    if (!con.joined) return "Error"
+    if (!con.joined) return true
 
     if ('type' in data) {
 
@@ -626,7 +664,7 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
                 send_history(con.address, topic, active.key, active.files)
                 return true
             } else if (data.type === SEND_HISTORY && con.request) {
-                process_request(data.messages, active.key, false)
+                // process_request(data.messages, active.key, false)
                 con.request = false
                 if ('files' in data) {
                     process_files(data, active, con, topic)
@@ -693,6 +731,27 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
     return false
 }
 
+function connection_joined(joined, topic, admin) {
+
+      const connected = {
+        topic,
+        admin,
+        joined: true,
+        time: joined.time,
+        address: joined.address,
+        name: joined.name,
+        voice: joined.voice,
+        video: joined.video,
+        avatar: joined.avatar,
+        audioMute: joined.audioMute,
+        videoMute: joined.videoMute,
+        screenshare: joined.screenshare
+    }
+
+    //TODO set svelte rune states?
+    Hugin.send("peer-connected", connected)
+}
+
 
 const request_feed = (address, topic) => {
   console.log('Requsting feed..');
@@ -703,7 +762,7 @@ const request_feed = (address, topic) => {
 }
 
 const send_feed_history = async (address, topic) => {
-  const messages = await printFeed()
+  const messages = await printFeed(0, true)
   const history = {
     type: SEND_FEED_HISTORY,
     messages
@@ -720,16 +779,20 @@ const save_feed_history = async (messages) => {
 }
 
 
-const send_feed_message = async (message, reply, tip) => {
+const send_feed_message = async (message, reply='', tip) => {
   const hash = randomKey()
-  const signature = await signMessage(message+hash, keychain.getPrivKeys[0]);
-  const payload = {type: 'feed', message, nickname: Hugin.name, address: Hugin.address, reply: "", tip, hash, timestamp: Date.now(), signature};
+  const signature = await signMessage(message+hash, keychain.getXKRKeypair().privateSpendKey);
+  const payload = {type: 'feed', message, nickname: Hugin.nickname, address: Hugin.address, reply, tip, hash, timestamp: Date.now(), signature};
+  forward_feed_message(payload)
+  return payload;
+}
+
+const forward_feed_message = (payload) => {
   for (const swarm of active_swarms) {
     for (const peer of swarm.connections) {
       peer.connection.write(JSON.stringify(payload))
     }
   }
-  return payload;
 }
 
 const find_missing_peers = async (active, peers) => {
@@ -741,6 +804,35 @@ const find_missing_peers = async (active, peers) => {
       }
     }
   };
+
+  const send_friend_request = (address, key) => {
+    const active = get_active(key)
+    if (!active) return
+
+    const message = {
+        hugin: Hugin.address + keychain.getMsgKey(),
+        type: 'friend'
+    }
+    send_peer_message(address, active.topic, message)
+  }
+
+  const got_friend_request = (con, address, message) => {
+
+    if (!'hugin' in message) return
+    if (typeof message.hugin !== 'string') return
+    if (message.hugin.length > 200) return
+    if (message.hugin.substring(99) !== address) return
+
+    const request = {
+        name: con.name,
+        hugin: message.hugin,
+        address: address,
+    }
+    
+    Hugin.send('friend-request', request)
+
+
+  }
   
 
 const check_missed_messages = async (hashes) => {
@@ -789,7 +881,6 @@ const send_missing_messages = async (hashes, address, topic) => {
 
 const request_history = (address, topic, files) => {
     console.log("Reqeust history from another peer")
-    console.log("Files:", files)
     const message = {
         type: REQUEST_HISTORY,
         files
@@ -837,6 +928,8 @@ const process_files = async (data, active, con, topic) => {
         if (!Array.isArray(data.files)) return 'Ban'
         if (data.files.length > 10) return 'Ban'
         for (const file of data.files) {
+            const old = (Date.now() - file.time) > ONE_DAY
+            if (old) continue
             if (!check_hash(file.hash)) continue
             if (downloading.some(a => a === file.hash)) continue
             if (Hugin.get_files().some(a => a.time === file.time)) continue
@@ -870,6 +963,7 @@ const process_request = async (messages, key, live = false) => {
             if (!message) continue
             await saveGroupMsg(message, false, true)
             if (live) missing.push(message)
+            Hugin.send('room-notification', [message, false])
             i++
         }
         //Only send update trigger if new messages has been processed.
@@ -895,6 +989,9 @@ const update_voice_channel_status = (data, con) => {
     con.video = data.video
     //Send status to front-end
     Hugin.send("voice-channel-status", data)
+    if (data.voice === true) {
+        Hugin.send('user-joined-voice-channel', data)
+    }
     return true
 }
 
@@ -932,6 +1029,7 @@ const send_joined_message = async (topic, dht_keys, connection) => {
         sig = sign_admin_message(dht_keys, active.key, adminkeys)
     }
     const signature = await signMessage(dht_keys.get().publicKey.toString('hex'), keychain.getXKRKeypair().privateSpendKey)
+    const messages = await printGroup(key, 0)
 
     let [voice, video, audioMute, videoMute, screenshare] = get_local_voice_status(topic)
     if (video) voice = true
@@ -951,7 +1049,8 @@ const send_joined_message = async (topic, dht_keys, connection) => {
         idSig: signature,
         audioMute,
         videoMute,
-        screenshare
+        screenshare,
+        messages
     })
     try {
         connection.write(data)
@@ -966,7 +1065,6 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
         return
     }
     if (check === "Error") {
-        console.log("Check failed")
         connection_closed(connection, topic)
         return
     }
@@ -1272,8 +1370,15 @@ const errorMessage = (message) => {
     Hugin.send('error-notify-message', message)
 }
 
+ipcMain.on('typing', (e, data, beam = false) => {
+    const send = {
+        typing: data.typing
+    }
+    send_swarm_message(JSON.stringify(send), data.key, beam)
+})
+
 ipcMain.on('join-voice', async (e, data) => {
-    send_voice_channel_status(true, data)
+    send_voice_channel_status(true, data, false)
 })
 
 ipcMain.on('exit-voice', async (e, key) => {
@@ -1338,4 +1443,4 @@ function get_sdp(data) {
 }
 
 
-module.exports = {new_swarm, send_swarm_message, end_swarm, Nodes}
+module.exports = {send_feed_message, new_swarm, send_swarm_message, end_swarm, Nodes}

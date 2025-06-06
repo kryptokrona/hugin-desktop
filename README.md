@@ -34,9 +34,11 @@
 </a>
 </p>
 
-Hugin is a messaging service where messages are relayed by Kryptokrona nodes. Your messages are secured with industry leading encryption so that only you and your chat partner have the possibility to read them. **The purpose** is **not** to gather any personal information about the users, unlike most apps and social media.
+Hugin is a messaging service where messages are relayed by other users and Hugin nodes.
+Your messages are secured with industry leading encryption so that only you and your chat partner have the possibility to read them.
+**The purpose** is **not** to gather any personal information about the users, unlike most apps and social media.
 
-Hugin also packs some powerful decentralized P2P encrypted features like **video, voice**, **screen sharing** and **filesharing**. This is possible because we've managed to compress the requests to establish a connection (called SDP) with WebRTC from over 2000 characters to less than 200 – which means that a connection through Hugin is possible!
+Hugin also packs some powerful decentralized P2P encrypted features like **video, voice**, **screen sharing** and **filesharing**. 
 
 # Table of Contents
 
@@ -55,16 +57,14 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 -   Web: https://hugin.chat
 -   GitHub: https://github.com/kryptokrona
--   Hugin: hugin group on `20b4821b90b2ea7355cb7ed7fa60823016eedef0e3541376888f8adc55df75f8` 
--   It is HIGHLY recommended to join our group on Hugin Messenger if you want to contribute to stay up to date on what is happening on the project.
 
 # Technologies
 
-- Node 16 (16.16.0 currently)
+- Node 16 (18.17+ currently)
 - Electron
 - Svelte
 - WebRTC
-- Hypercore Protocol
+- Hyperswarm
 
 # Getting Started
 

@@ -35,6 +35,8 @@ const sender = (channel, data) => {
     mainWindow.webContents.send(channel, data)
 }
 
+app.setAppUserModelId('Hugin');
+
 //Create misc.db
 const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
@@ -342,13 +344,8 @@ ipcMain.on('error-notify-message-main', async (e, error) => {
     mainWindow.webContents.send('error-notify-message', error)
 })
 
-ipcMain.on('success-notify-message-main', async (e, notify, channel = false) => {
-    //Optional channel, maybe useful?
-    if (!channel) {
-        mainWindow.webContents.send('success-notify-message', notify)
-        return
-    }
-    mainWindow.webContents.send(channel, notify)
+ipcMain.on('success-notify-message-main', async (e, notify, sound) => {
+    mainWindow.webContents.send('success-notify-message', notify, sound)
 })
 
 

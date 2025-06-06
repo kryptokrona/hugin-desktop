@@ -48,6 +48,10 @@ export const rtc_groups = writable({
     unread: []
 })
 
+export const feed = writable({
+    new: []
+})
+
 export const misc = writable({
     syncState: 'Syncing',
     walletBlockCount: null,
@@ -131,6 +135,7 @@ export const swarm = writable({
     myStream: false,
     screenshare: false,
     showInfo: true,
+    voice: false
 })
 
 
@@ -146,7 +151,18 @@ export const rooms = writable({
     banned: [],
     ban: {},
     activeSwarm: {},
-    avatars: []
+    avatars: [],
+    params: null,
+    typingUsers: []
+ })
+
+ export const pushToTalk = writable({
+    key: null,
+    on: false
+ })
+
+ export const sounds = writable({
+    on: true,
  })
 
  export const files = writable([])

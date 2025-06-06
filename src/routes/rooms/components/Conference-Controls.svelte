@@ -8,7 +8,7 @@
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
-    import { swarm, user, groups, rtc_groups, rooms } from '$lib/stores/user.js'
+    import { swarm, user, groups, rtc_groups, rooms, pushToTalk } from '$lib/stores/user.js'
     import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
     import { onDestroy, onMount } from 'svelte'
     import { calcTime, sleep } from '$lib/utils/utils.js'
@@ -29,7 +29,7 @@
     let topic = $state("")
     const my_address = $user.myAddress
 
-    let thisSwarm = $derived($swarm.active.find(a => a.voice_connected))
+    let thisSwarm = $derived($swarm.voice)
     let in_voice = $derived(voice_channel.some(a => a.address === my_address))
 
     run(() => {
@@ -87,7 +87,7 @@
         $swarm.voice_channel = thisSwarm.voice_channel
         window.api.send("join-voice", {key: thisSwarm.key, videoMute: !$videoSettings.myVideo, video: $videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
-        thisSwarm.voice_connected = true
+        $swarm.voice = thisSwarm
         $swarm = $swarm
         loading = false
         console.log("Should be joined and connected here in this swarm", thisSwarm)
@@ -106,8 +106,9 @@
         $swarm.audio = !$swarm.audio
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
+        if ($pushToTalk.on) return
         $swarm.call.forEach((a) => {
-        a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+        a.myStream.getAudioTracks().forEach((track) => (track.enabled = $swarm.audio))
         })
     }
 
@@ -171,7 +172,7 @@
     }
     </script>
     
-    <div class="wrapper layered-shadow">
+    <div class:drag={$swarm.showVideoGrid} class="wrapper layered-shadow">
         <div>
         <div class="connectButton">
             {#if !in_voice}
@@ -249,6 +250,11 @@
     }
     .connectButton {
             padding: 15px;
+    }
+
+    .drag {
+        pointer-events: auto;
+        -webkit-app-region: no-drag;
     }
     </style>
     

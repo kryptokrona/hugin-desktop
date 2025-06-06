@@ -1,4 +1,4 @@
-const { app, ipcMain } = require('electron')
+const { app, ipcMain, globalShortcut } = require('electron')
 const userDataDir = app.getPath('userData')
 const downloadDir = app.getPath('downloads')
 const { JSONFile, Low } = require('@commonify/lowdb')
@@ -9,10 +9,11 @@ const db = new Low(adapter)
 const dbPath = userDataDir + '/SQLmessages.db'
 const { getGroups, loadBlockList, loadKeys, loadDB, saveRoomUser, loadRoomUsers } = require('./database.cjs')
 const fs = require('fs')
-
 const Store = require('electron-store')
 const { hash } = require('crypto')
+const { toBrowbroserKey } = require('./utils.cjs')
 const store = new Store()
+const { uIOhook } = require('uiohook-napi')
 
 ipcMain.on('set-avatar', (e, data) => {
   const avatar = Buffer.from(data).toString('base64')
@@ -83,6 +84,40 @@ ipcMain.on('set-nickname', (e, name) => {
   Hugin.nickname = name
 })
 
+
+ipcMain.on('push-to-talk', (e, setting) => {
+  
+  store.set({
+    pushToTalk: {
+      key: setting.key,
+      on: setting.on,
+      name: setting.name
+    }
+  })
+
+  if (setting.on) {
+    
+    if (process.platform === 'darwin') {
+      //Perms to access push to talk.
+      const { askForAccessibilityAccess } = require('node-mac-permissions')
+      askForAccessibilityAccess()
+    }
+
+    push_to_talk(setting)
+  } else {
+    uIOhook.stop();
+  }
+})
+
+
+ipcMain.on('sounds', (e, setting) => {
+
+  store.set({ 
+    sounds: setting
+  })
+
+ })
+
 class Account {
     constructor () {
       
@@ -98,6 +133,8 @@ class Account {
     this.roomFiles = []
     this.avatar = ""
     this.syncImages = null
+    this.huginNode = {}
+    this.talkKey = null
 
     }
 
@@ -110,6 +147,7 @@ class Account {
       this.address = wallet.getPrimaryAddress()
       this.avatar = get_avatar()
       this.syncImages = store.get('syncImages') ?? []
+      this.huginNode = store.get('huginNode') ?? {address: '', pub: true}
       if (!store.get('pool.checked')) {
         //If no value is set, check from 24h back on first check.
         store.set({
@@ -135,7 +173,14 @@ class Account {
       const usersBanned = store.get('bannedUsers') ?? []
       const files = store.get('files') ?? []
       const avatars = []
+      const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
+      const sounds = store.get('sounds') ?? true
+
+      if (pushToTalk.on) {
+        push_to_talk(pushToTalk)
+      }
       
+     
       this.sender('wallet-started', [
         this.node,
         my_groups.reverse(),
@@ -149,7 +194,9 @@ class Account {
         banned,
         files,
         avatars,
-        this.syncImages
+        this.syncImages,
+        pushToTalk,
+        sounds
       ])
 
       this.known_keys = keys
@@ -204,6 +251,30 @@ class Account {
     
      }
   
+}
+
+function push_to_talk(pushToTalk) {
+  
+   //PUSH TO TALK keydown!
+    Hugin.talkKey = pushToTalk.key
+    uIOhook.on('keydown', (e) => {
+      const code = toBrowbroserKey(e.keycode)
+      if (code === Hugin.talkKey) {
+        Hugin.send('key-event', {state: 'DOWN', keyCode: code})
+      }
+    })
+
+    //PUSH TO TALK keyup!
+    uIOhook.on('keyup', (e) => {
+      const code = toBrowbroserKey(e.keycode)
+      console.log("key up")
+      if (code === Hugin.talkKey) {
+        Hugin.send('key-event', {state: 'UP', keyCode: code})
+      }
+
+    })
+  //Starts the listener
+  uIOhook.start()
 }
 
   let Hugin = new Account()

@@ -1,14 +1,11 @@
 <script>
     import { run } from 'svelte/legacy';
 
-import RoomHugins from "./components/RoomHugins.svelte"
-import RoomList from "./components/RoomList.svelte"
-
 import {fade, fly} from 'svelte/transition'
-import ChatInput from '$lib/components/chat/ChatInput.svelte'
+import FeedChatInput from '$lib/components/chat/FeedChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import FeedMessage from '$lib/components/chat/FeedMessage.svelte'
-import {notify, user, swarm, rooms, misc, files, transactions} from '$lib/stores/user.js'
+import {notify, user, swarm, rooms, misc, files, transactions, feed} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
@@ -19,16 +16,20 @@ import Button from '$lib/components/buttons/Button.svelte'
 import Dropzone from "svelte-file-dropzone";
 import DropFile from '$lib/components/popups/DropFile.svelte'
 import { fileViewer, localFiles, remoteFiles } from '$lib/stores/files'
-import AddRoom from "./components/AddRoom.svelte"
 import BigImage from "$lib/components/popups/BigImage.svelte"
-import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
+import Backward from "$lib/components/icons/Backward.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
+import AddCircle from '$lib/components/icons/AddCircle.svelte';
+import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
+	import { flip } from 'svelte/animate';
+
 
 let replyto = ''
 let reply_exit_icon = 'x'
 let noMsgs = $state(false)
 let loader = $state(false)
+let expanded = $state($feed.expanded)
 let textMessages = $state([])
 let emojiMessages = $state([])
 let feedMessages = $state([])
@@ -37,24 +38,13 @@ let scrollGroups = []
 let windowHeight = $state()
 let windowChat = $state()
 let channelMessages = []
-let pageNum = 0;
+let pageNum = $state(0);
 let loadMore = $state(true)
 let admin = $state(false)
 const welcomeAddress = $misc.welcomeAddress
 let thisSwarm = $state(false)
+let focusedMessage = $state({});
 
-let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
-run(() => {
-        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-    });
-
-run(() => {
-        replyTrue = $rooms.replyTo?.reply
-    });
-
-run(() => {
-        if (thisSwarm) admin = thisSwarm.admin
-    });
 
 const isFile = (data) => {
     const findit = (arr) => {
@@ -75,15 +65,8 @@ onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
     printFeed()
-    scrollDown()
+    // scrollDown()
     
-})
-
-onDestroy(() => {
-    window.api.removeAllListeners('roomMsg')
-    window.api.removeAllListeners('sent_room')
-    window.api.removeAllListeners('set-channels')
-    window.api.removeAllListeners('history-update')
 })
 
 // window.api.receive('sent_group', (data) => {
@@ -101,6 +84,7 @@ window.api.receive('set-channels', async () => {
 const checkErr = (e, tip = false) => {
     let error = false
     if (e.text.length === 0 && !tip) return true 
+    if (e.text === '💬') return true;
     if (e.text.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
@@ -110,65 +94,34 @@ const checkErr = (e, tip = false) => {
 }
 
 //Send message to store and DB
-const sendRoomMsg = async (e, tipping = false) => {
+const sendFeedMsg = async (e, tipping = false) => {
     const error = checkErr(e, tipping)
     if (error) return
-    let msg = e.text
-    let myaddr = $user.myAddress
-    let time = Date.now()
-    const hash = await window.api.createGroup()
-    let myName = $user.username
-    let room = $swarm.activeSwarm?.key
-    let in_swarm = true
-    let in_channel = $swarm.activeChannel.name
-    let tip = false
-    //Reaction switch
-    if (e.reply) {
-        replyto = e.reply
+    let message = e.text
+    const reply = e.reply || focusedMessage?.hash || '';
+    const new_message = await window.api.sendFeedMessage({message, reply});
+    new_message.replies = [];
+    new_message.react = [];
+    printFeedReply(new_message)
+    if (new_message.reply === focusedMessage.hash) {
+        updateReactionsFocused(new_message)
+        printFeed()
+        feedMessages = [...feedMessages];
+        focusMessage(focusedMessage)
+    } else {
+        printRoomMessage(new_message)
     }
-
-    if (e.tip) {
-        tip = e.tip
-    }
-    
-    //Construct a new json object (myGroupMessage) to be able to print our message instant.
-    let myRoomMessage = {
-        message: msg,
-        grp: room,
-        reply: replyto,
-        address: myaddr,
-        time: time,
-        name: myName,
-        hash: hash,
-        sent: true,
-        tip: tip
-    }
-    let sendMsg = {
-        m: msg,
-        g: room,
-        r: replyto,
-        k: myaddr,
-        t: time,
-        n: myName,
-        hash: hash,
-        swarm: in_swarm,
-        sent: true,
-        tip: tip
-    }
-
-    if (in_channel) {
-        sendMsg.c = in_channel
-    }
-
-    $transactions.pending = false
-    window.api.sendRoomMessage(sendMsg)
-    printRoomMessage(myRoomMessage)
-    replyExit()
-    scrollDown()
+    if(new_message?.reply?.length == 0) focusMessage(new_message);
 }
 
+const check_avatar = (address) => {
+    const found = $rooms.avatars.find(a => a.address === address)
+    if (found) return found.avatar
+    else return false
+}
 
 const scrollDown = () => {
+    return;
     windowChat.scrollTop = windowChat.scrollTopMax
 }
 
@@ -181,12 +134,24 @@ const printRoomMessage = (roomMsg) => {
     ) {
         updateReactions(roomMsg)
     } else {
+        if (roomMsg?.reply?.length) return;
         feedMessages.unshift(roomMsg)
     }
-    roomMessages.update((current) => {
-        return [roomMsg, ...current]
-    })
     feedMessages = removeDuplicates(feedMessages)
+}
+
+const printFeedReply = (reply) => {
+    if (reply.reply == '') return;
+    if (
+        reply.reply.length === 64 &&
+        reply.message.length < 9 &&
+        containsOnlyEmojis(reply.message)
+    ) {
+        updateReactionsReply(reply)
+    } else {
+        focusedMessage.replies.unshift(reply);
+    }
+    focusedMessage = focusedMessage;
 }
 
 
@@ -275,13 +240,12 @@ run(() => {
 async function printFeed() {
     loadMore = true
     pageNum = 0
-    feedMessages = await window.api.getFeedMessages()
+    $feed.new = []
+    feedMessages = await window.api.getFeedMessages(0)
     emojiMessages = []
     textMessages = []
     console.log("Get messages", feedMessages)
-    checkReactions(feedMessages, false)
     replyExit()
-    scrollDown()
     loader = false
 }
 
@@ -353,6 +317,7 @@ function addEmoji(scroll) {
 async function updateReactions(msg) {
 
     feedMessages.some(function (r) {
+        if (focusedMessage.hash == msg.hash) return;
         if (r.hash == msg.reply && !r.react) {
             r.react = []
             msg.hash = msg.hash + hashPadding
@@ -363,6 +328,38 @@ async function updateReactions(msg) {
         }
     })
     feedMessages = feedMessages
+}
+
+async function updateReactionsReply(msg) {
+
+    focusedMessage.replies.some(function (r) {
+        if (r.hash == msg.reply && !r.react) {
+            r.react = []
+            msg.hash = msg.hash + hashPadding
+            r.react.push(msg)
+        } else if (r.hash == msg.reply && r.react) {
+            msg.hash = msg.hash + hashPadding
+            r.react.push(msg)
+        }
+    })
+    focusedMessage = focusedMessage
+
+}
+
+async function updateReactionsFocused(msg) {
+
+if (focusedMessage.hash == msg.reply) {
+
+    if (containsOnlyEmojis(msg.message)) {
+        focusedMessage.react.push(msg);
+    } else {
+        focusedMessage.react.push({message:'💬'})
+    }
+    
+}
+
+focusedMessage = focusedMessage
+
 }
 
 const deleteMessage = async (hash) => {
@@ -386,7 +383,7 @@ async function getMessages(group) {
 }
 
 async function getMoreMessages() {
-    return await window.api.printRoom($swarm.activeSwarm?.key, pageNum)
+    return await await window.api.getFeedMessages(pageNum)
 }
 
 let dragover = $state(false)
@@ -397,6 +394,18 @@ function drag() {
 
 function nodrag() {
     dragover = false
+}
+
+const setExpanded = () => {
+    if (expanded) {
+        expanded = false; 
+        focusedMessage = {}
+        $feed.expanded = false
+    } else {
+        expanded = true;
+        $feed.expanded = true  
+        focusedMessage = focusedMessage
+    }
 }
 
 async function dropFile(e) {
@@ -467,6 +476,7 @@ const sendTransaction = async (e) => {
     let tx = e
     $transactions.pending = tx
     const sent = await window.api.sendTransaction(tx)
+    return;
     if (sent) {
         const e = {
         detail: {
@@ -487,6 +497,21 @@ const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
+
+const focusMessage = async (message) => {
+    console.log('Focus message:', message);
+    for (const reply of message?.replies) {
+        const {replies, reactions} = await window.api.getFeedReplies(reply.hash);
+        reply.replies = replies;
+        reply.react = reactions;
+    }
+    $feed.expanded = true
+    focusedMessage = message;
+    expanded = true;
+
+}
+
+
 </script>
 
 
@@ -520,8 +545,6 @@ const hideModal = () => {
 <main in:fade|global="{{ duration: 350 }}">
     
     <div class="feed_container" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
-
-        <span class="new_post">+</span>
         
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly|global="{{ y: 50 }}">
             
@@ -530,18 +553,90 @@ const hideModal = () => {
                     <Loader/>
                 </div>
             {/if} -->
+            {#if $feed.new.length} 
+                <div class="unread" onclick={() => printFeed()}>
+                        <div class="unread_avatars">
+                            {#each $feed.new.slice(-3) as message}
+                                {#await check_avatar(message.address)}
+                                {:then avatar}
+                                {#if avatar}
+                                    <img
+                                        class="custom-avatar"
+                                        src="{avatar}"
+                                        alt=""
+                                    />
+                                {:else}
+                                    <img
+                                    style="background: {getColorFromHash(message.hash)}"
+                                    class="avatar"
+                                    src="data:image/png;base64,{get_avatar(message.address)}"
+                                    alt=""
+                                />
+                                {/if}
+                                {/await}
+                            {/each}
+                        </div>
+                        <p style="cursor: pointer">{$feed.new.length} new messages</p>
+                </div>
+            {/if}
+            {#if feedMessages.length === 0}
+            <div><p>No feed messages found</p></div>
+            {/if}
             {#each feedMessages as message (message.hash)}
+          
+            <div animate:flip="{{duration: 100}}">
                 <FeedMessage
-                    ReactTo="{(e) => sendRoomMsg(e)}"
+                    onPress={() => focusMessage(message)}
+                    ReactTo="{(e) => sendFeedMsg(e)}"
                     ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
                     DeleteMsg="{(e) => deleteMessage(message.hash)}"
                     message="{message}"
                 />
+                </div>
             {/each}
             {#if (feedMessages.length + emojiMessages.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
 
+        </div>
+        <div class:expanded={expanded} class="message_details right_side" in:fly|global="{{ y: 50 }}">
+             <div class="outer details" >
+            <span class:expanded={expanded} class="go_back" onclick={setExpanded}>
+                {#if (expanded)}
+                <Backward />
+                {:else}
+                <AddCircle />
+                {/if}
+            </span>
+            {#if focusedMessage.message?.length > 0 && expanded}
+            <div class="focused_message">
+                <FeedMessage
+                onPress={() => {}}
+                ReactTo="{(e) => sendFeedMsg(e)}"
+                ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                DeleteMsg="{(e) => deleteMessage(message.hash)}"
+                message="{focusedMessage}"
+            />
+            {#each focusedMessage.replies as message (message.hash)}
+             <div animate:flip="{{duration: 100}}">
+            <FeedMessage
+                onPress={() => focusMessage(message)}
+                ReactTo="{(e) => sendFeedMsg(e)}"
+                ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
+                DeleteMsg="{(e) => deleteMessage(message.hash)}"
+                message="{message}"
+            />
+            </div>
+            {/each}
+            </div>
+            {:else if expanded}
+            <div in:fade="{{ duration: 1300 }}" class="feed-start"><p>Type a message below to start a new discussion!</p></div>
+            {/if}
+            
+            </div>
+            <div class:expanded={expanded} class="messageinput">
+                <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
+            </div>
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
@@ -553,11 +648,44 @@ const hideModal = () => {
 </Dropzone>
 
 <style lang="scss">
-.new_post {
+
+.details {
+    height: 90%;
+}
+
+.feed-start {
+    width: 50%;
+    text-align: center;
+    margin: auto;
+}
+
+.feed-start p {
+    padding: 20px;
+    font-family: "Montserrat";
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.unread_avatars {
+  display: flex;
+}
+
+.unread img {
+    margin-left: -10px;
+    border-radius: 50%;
+    width: 26px;
+    border: 1px solid var(--background-color);
+}
+
+.unread_avatars img:first-child {
+  margin-left: 0;
+}
+
+.go_back {
     border-radius: 50%;
     position: absolute;
-    top: 50px;
-    right: 150px;
+    top: calc(50% - 21px);
+    left: -21px;
     color: var(--text-color);
     text-align: center;
     vertical-align: middle;
@@ -566,10 +694,36 @@ const hideModal = () => {
     width: 42px;
     font-size: 24pt;
     background-color: var(--background-color);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--border-color);
     cursor: pointer;
     z-index: 999;
-    box-shadow: 2px 2px rgba(0,0,0,0.1);
+    rotate: 0deg;
+}
+
+.messageinput.expanded {
+    display: flex;
+}
+
+.messageinput {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.go_back.expanded {
+    rotate: 180deg;
+    line-height: 40px;
+}
+
+.message_details.expanded {
+    width: 100% !important;
+    transition: 200ms ease-in-out;
+}
+
+.expanded {
+    transition: 0.2s all;
 }
 
 .new_post:hover {
@@ -579,6 +733,8 @@ const hideModal = () => {
 
 .feed_container {
     width: calc(100% - 85px);
+    display: flex;
+    flex-direction: row;
 }
 
 h3 {
@@ -662,12 +818,21 @@ p {
 
 .outer {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     overflow: auto;
     padding-bottom: 5px;
     position: initial !important;
-    height: calc(100% - 131px);
+    display: flex;
     width: 100%;
+}
+
+.message_details {
+    width: 10%;
+    display: flex;
+    border-left: 1px solid var(--border-color);
+    position: relative;
+    justify-content: flex-start !important;
+    transition: 200ms ease-in-out;
 }
 
 .fade {
@@ -700,4 +865,29 @@ p {
     border-radius: 3px;
     border: 3px solid var(--scrollbarBG);
 }
+.unread p {
+    font-size: 12px;
+    font-family: "Montserrat";
+    margin-left: 7px;
+} 
+
+.unread {
+    height: 45px;
+    display: flex;
+    position: relative;
+    align-items: center;
+    border-bottom: 5px;
+    cursor: pointer;
+    transition: 200ms ease-in-out;
+    justify-content: space-evenly;
+    border-radius: 22.5px;
+    border: 1px solid var(--border-color);
+    position: absolute;
+    background: var(--background-color);
+    padding: 15px;
+    left: 25%;
+    top: 15px;
+}
+
+
 </style>

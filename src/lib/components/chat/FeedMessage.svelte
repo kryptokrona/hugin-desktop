@@ -4,7 +4,7 @@
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
 import {  onMount, onDestroy } from 'svelte'
-import { groups, rtc_groups, webRTC, user, rooms, transactions } from '$lib/stores/user.js'
+import { groups, rtc_groups, webRTC, user, rooms, transactions, feed, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
 import ReplyArrow from '$lib/components/icons/ReplyArrow.svelte'
@@ -14,7 +14,7 @@ import { rtcgroupMessages } from '$lib/stores/rtcgroupmsgs.js'
 import Dots from '$lib/components/icons/Dots.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import Youtube from "svelte-youtube-embed";
-import { hashPadding, isLatin, openURL } from '$lib/utils/utils'
+import { extractHuginLinkAndClean, hashPadding, isLatin, openURL } from '$lib/utils/utils'
 import DownloadFile from './DownloadFile.svelte'
 import UploadFile from './UploadFile.svelte'
 import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -24,6 +24,7 @@ import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
+	import { goto } from '$app/navigation';
 
 // message,
 //   replies,
@@ -49,6 +50,8 @@ import Tip from './Tip.svelte'
         ReactTo,
         DeleteMsg,
         reply_to_this = $bindable(false),
+        onPress,
+        isReply = false
     } = $props();
 let tipMessage = $state("");
 
@@ -76,6 +79,11 @@ let messageLink = $state("")
 let youtube_shared_link_type = false
 let asian = $state(false)
 let showMenu = $state(false)
+let isInvite = $state(false)
+let inviteName = $state('')
+let inviteKey = $state('')
+let inviteLink = ""
+
 let geturl = new RegExp(
             "(^|[ \t\r\n])((ftp|http|https|mailto|file|):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){3,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))"
             ,"g"
@@ -95,6 +103,8 @@ const nameColor = getColorFromHash(message.address)
 
 onMount( async () => {
     emojiPicker.addEventListener('emoji-click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
             openEmoji = false
             reactTo(e)
         })
@@ -130,10 +140,24 @@ function checkMessage() {
         //if (myMsg) checkLink()
         return
     }
+
+    link = false
     
     if (!isLatin(message.nickname)) {
         asian = true
     }
+    
+    const {huginLink, cleanedMessage} = extractHuginLinkAndClean(message.message)
+
+    if (huginLink.length) {
+        message.message = cleanedMessage
+        inviteKey = huginLink.slice(-128)
+        inviteLink = huginLink
+        const parse = huginLink.split('hugin://')[1]
+        const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
+        inviteName = roomName.replace(/-/g, ' ');
+        isInvite = true
+    } else return
 }
 
 async function checkreply(reply) {
@@ -208,6 +232,12 @@ const positionEmojiContainer = (open) => {
         // Otherwise, position it below the button
         emojiContainer.style.top = initialTop + 'px';
     }
+
+    if (!$feed.expanded) {
+        emojiContainer.style.left = '550px'
+    } else {
+        emojiContainer.style.left = '150px'
+    }
 }
 
 
@@ -265,6 +295,21 @@ const sendMoney = () => {
         to: message.address,
         name: message.nickname
     }
+}
+
+const messagePressed = () => {
+    if (openEmoji) return;
+    onPress();
+}
+
+
+function joinInvite() {
+    if (inviteKey.length !== 128) return
+    if (inviteName.length === 0) return
+
+    $rooms.params = inviteLink
+
+    goto('/rooms')
 }
 
 
@@ -325,35 +370,7 @@ run(() => {
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div bind:this={messageContainer} class="message feedmessage" class:yt={youtube} id="{message.hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}}>
-    <div>
-        {#if replyMessage}
-            {#if thisReply}
-                <div class="reply">
-                    <div style="display: flex; gap: 10px; align-items: center">
-                        <RepliedArrow />
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <p class:asian class="reply_nickname">{thisReply.name}</p>
-                            <p>{thisReply.message}</p>
-                        </div>
-                    </div>
-                </div>
-            {:else if replyError}
-                <div in:fade|global="{{ duration: 150 }}" class="reply">
-                    <img
-                        class="reply_avatar"
-                        src="data:image/png;base64,{get_avatar(
-                            'SEKReU6UELRfBmKNUuo5mP58LVQcQqEKwZgfC7hMd5puRjMLJ5cJcLbFLkJCh6CpsB9WD2z4kqKWQGVABJxRAG5z9Hc1Esg1KV4'
-                        )}"
-                        alt=""
-                    />
-                    <p class="reply_nickname">Can't find reply</p>
-                    <br />
-                    <p style="color: red">This reply is not in the mempool</p>
-                </div>
-            {/if}
-        {/if}
-    </div>
+<div bind:this={messageContainer} class="message feedmessage" class:yt={youtube} id="{message.hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}} onclick={messagePressed}>
     <div>
         <div>
             <div class="header">
@@ -382,19 +399,14 @@ run(() => {
                 </div>
                 <div class="actions">
                     <div style="display: flex;">
-                        <div class="emojiContainer">
+                        <div class="emojiContainer" onclick={(e) => {e.stopPropagation}}>
                             <emoji-picker bind:this={emojiPicker}></emoji-picker>
                         </div>
-                        <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
-                            <Emoji size="16px" stroke={"var(--text-color)"}/>
+                        <button alt="React with emoji" class="emoji-button" onclick={(e) => { e.stopPropagation(); openEmoji = !openEmoji }}>
+                            <Emoji size="20px" stroke={"var(--text-color)"}/>
                         </button>
                     </div>
-                    <PayIcon size={18} on:click={sendMoney}/>
-                    <ReplyArrow on:click="{replyTo}" />
-                    <Dots on:click="{() => showMenu = true}"/>
-                    {#if showMenu}
-                        <UserOptions admin={admin} info={{address: message.address, name: message.nickname}}/>
-                    {/if}
+                    <PayIcon size={22} on:click={sendMoney}/>
                 </div>
             </div>
             {#if youtube}
@@ -415,6 +427,15 @@ run(() => {
                 <Tip tip={tipMessage}/>
             {:else}
                 <p style="user-select: text;">{message.message}</p>
+                {#if isInvite}
+                <div class="inviteRoom">
+                    <br>
+                    <h4>{inviteName}</h4>
+                    {#if !$swarm.active.some(a => a.key === inviteKey)}
+                        <Button text={"Join"} disabled={false} on:click={() => joinInvite()} />
+                    {/if}
+                </div>
+                {/if}
             {/if}
         </div>
 
@@ -446,6 +467,7 @@ run(() => {
     white-space: pre-line;
     width: 100%;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
 
     
     .header {
@@ -600,9 +622,10 @@ p {
 
 .emojiContainer {
    position: absolute;
-   right: 7rem;
+   left: 150px;
    display: none;
    z-index: 3;
+   pointer-events: all !important;
 }
 
 .joined {
@@ -632,5 +655,18 @@ button {
     border-radius: 15px;
     padding: 10px;
     object-fit: cover;
+}
+
+.inviteRoom {
+    border-radius: 5px;
+    display: flex;
+    border: 1px solid var(--success-color);
+    padding: 10px;
+    align-items: center;
+    margin-right: 50px;
+    margin-left: 30px;
+    width: 450px;
+    justify-content: center;
+    gap: 20px;
 }
 </style>

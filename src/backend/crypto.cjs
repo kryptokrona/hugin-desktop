@@ -114,7 +114,7 @@ const keychain =  {
 
     async messageKeyPair() {
         const [priv, view] = keychain.getPrivKeys()
-        const keys = await crypto.generateViewKeysFromPrivateSpendKey(view)
+        const keys = await crypto.generateDeterministicSubwalletKeys(priv, 1)
         const address = await Address.fromSeed(keys.private_key)
         const pub = address.m_keys.m_spendKeys.m_publicKey
         const signKey = address.m_keys.m_spendKeys.m_privateKey

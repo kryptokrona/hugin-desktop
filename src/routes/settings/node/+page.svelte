@@ -18,7 +18,12 @@
         getHeight();
     })
 
-    let status = $derived(synced ? "Connected" : "Syncing blocks")
+    let status = $state('Syncing...')
+
+
+    $effect(()=> {
+        status = synced ? "Connected" : "Syncing blocks"
+    })
 
     run(() => {
         synced = $misc.syncedStatus
@@ -69,8 +74,7 @@
             window.api.errorMessage('Address format is not correct.')
             return
         }
-        window.api.send('hugin-node', address, pub)
-        HuginNode.address = address
+        window.api.send('hugin-node', {address, pub})
     }
 
 
@@ -87,7 +91,6 @@
 
     <h2>Message node</h2>
     <div class="node">
-        <input spellcheck="false" placeholder="Enter node address" bind:value="{huginNode}"/>
         <br>
         <Button
         text="Connect"
@@ -99,16 +102,22 @@
     disabled="{false}"
     on:click="{connect('', true)}"
     />
+    <br>
+    <div style="margin-bottom: 10px;"></div>
+        <input spellcheck="false" placeholder="Enter node address" bind:value="{huginNode}"/>
+      
     </div>
-    <p class="nodeinfo">
-        {#if HuginNode.connected}
+    <div class="nodeinfo">
+        
+    <h4>Status</h4>
+        {#if $HuginNode.connected}
             <p class="nodeinfo syncstatus" class:sync="{true}">
                 Connected
             </p>
         {:else}
             <p class="nodeinfo syncstatus" class:sync="{false}">No connection</p>
         {/if}
-    </p>
+        </div>
 
 <h2>Node</h2>
 <div class="change_node">
@@ -175,6 +184,11 @@ h2 {
 
 .nodeinfo {
     font-size: 17px !important;
+}
+
+.node {
+    margin-bottom: 7px;
+    margin-left: -5px;
 }
 
 .button {

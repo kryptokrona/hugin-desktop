@@ -1,7 +1,7 @@
 <script>
 import { run } from 'svelte/legacy';
 
-import { misc, user, userAvatar, swarm, webRTC, rooms, theme } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm, webRTC, rooms, theme, feed } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -12,7 +12,6 @@ import XkrLogo from '$lib/components/icons/XkrLogo.svelte'
 import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores'
 import { layoutState } from '$lib/stores/layout-state.js'
-import AlphaIcon from '$lib/components/icons/AlphaIcon.svelte'
 import Logout from '$lib/components/icons/Logout.svelte'
 import Home from '../icons/Home.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
@@ -84,10 +83,8 @@ const roomRouteAndMenu = () => {
 
 const feedRouteAndMenu = () => {
     if ($page.url.pathname === '/feed') {
-        // $layoutState.hideGroupList = !$layoutState.hideGroupList
     } else {
         setTimeout(() => {
-            $layoutState.hideGroupList = false
         }, 300)
         goto('/feed')
     }
@@ -209,14 +206,6 @@ run(() => {
             </div>
         </Tooltip>      
         <XkrLogo grey="{true}" />
-        <Tooltip title="Github">
-            <div
-            onclick={() =>
-                openURL('https://github.com/kryptokrona/hugin-desktop/issues/new/choose')}
-        >
-            <AlphaIcon />
-        </div>
-        </Tooltip> 
     </div>
 </div>
 

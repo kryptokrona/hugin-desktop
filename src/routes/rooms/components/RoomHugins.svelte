@@ -34,7 +34,6 @@ let voice_channel = $derived(thisSwarm)
 
 //Active hugins
 
-
 $effect(() => {
     if ($swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
     if (!thisSwarm) return
@@ -47,7 +46,7 @@ run(() => {
     if ($rooms.thisRoom?.key) {
         room = $rooms.thisRoom.key
     }
-    if (thisSwarm && $rooms.activeHugins) {
+    if ($swarm.activeSwarm && thisSwarm)  {
         updateList()
     }
 
@@ -71,6 +70,7 @@ const notIncludes = (a) => {
 
 const updateList = () => {
     //Adds connected and known users to one array
+    onlineUsers = []
     knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)),
     ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
     updateOnline()
@@ -113,9 +113,10 @@ const join_voice_channel = async (video = false, screen) => {
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
+        $swarm.voice = thisSwarm
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
         //Set to true? here
-        thisSwarm.voice_connected = true
+
         $swarm = $swarm
         loading = false
         console.log("Should be joined and connected here in this swarm", thisSwarm)
@@ -375,7 +376,7 @@ p {
 }
 
 .online {
-    background-color: var(--success-color);
+    background-color: #3fd782;
     width: 8px;
     height: 8px;
     border-radius: 50%;

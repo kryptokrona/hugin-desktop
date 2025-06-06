@@ -1,8 +1,8 @@
 <script>
-   import { run } from 'svelte/legacy';
+   import { run, preventDefault } from 'svelte/legacy';
 
     import MyVideo from '$lib/components/webrtc/MyVideo.svelte'
-    import { rooms, swarm } from '$lib/stores/user.js'
+    import { pushToTalk, rooms, swarm } from '$lib/stores/user.js'
     import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
     import { fade, fly } from 'svelte/transition'
@@ -16,19 +16,15 @@
     
     let in_voice = $state(false)
     const my_address = $user.myAddress
-    let thisSwarm = false
     let active = $derived(thisSwarm)
-    
+    let thisSwarm = $derived($swarm.voice)
+    let talkOn = new Audio('/audio/talk.mp3')
+    let talkOff = new Audio('/audio/notalk.mp3')
     $effect(() => {
-       thisSwarm = $swarm.active.find(a => a.voice_connected)
-       console.log("render conference")
-       console.log(" $swarm.active",  $swarm.active)
-        if (thisSwarm) {
-            if (thisSwarm.voice_connected) {
-                console.log("IN VOICCEEEEEE -_Z_>_>_>_>_>_>_>", in_voice)
-                in_voice = true
-            } else in_voice = false
-        }
+       console.log("render conference channel?", $swarm.voice_channel)
+        if ($swarm.voice_channel.some(a => a.address === my_address)) {
+            in_voice = true
+        } else in_voice = false
     })
 
     onMount(async () => {
@@ -83,8 +79,49 @@
       videoCalls = $swarm.call.filter(a => a.connected === true)
    });
 
+   let pressed = false
+
+   window.api.receive('key-event', event => {
+    if (event.state === "DOWN") talk(event)
+    else notalk(event)
+   })
+
+   function talk(e) {
+    if (!check(e)) return
+    if (pressed) return
+    talkOn.play()
+    pressed = true
+    setAudio(true)
+    console.log("Talking.....")
+   }
+   
+   
+   function notalk(e) {
+    if (!check(e)) return
+    pressed = false
+    setAudio(false)
+    talkOff.play()
+    console.log("No Talking.....")
+   }
+
+   function check(e) {
+    if ($swarm.call.length === 0) return false
+    if (!$pushToTalk.on) return false
+    if ($pushToTalk.key !== e.keyCode) return false
+    if (!$swarm.audio) return false
+    return true
+   }
+
+   function setAudio(mode) {
+    $swarm.call.forEach((a) => {
+        a.myStream.getAudioTracks().forEach((track) => (track.enabled = mode))
+    })
+   }
+
     </script>
-    
+
+<svelte:window onkeyup={notalk} onkeydown={talk} />
+
     <div in:fade|global out:fade|global class:show="{$swarm.showVideoGrid}" class="layout">
         {#if $fileViewer.enhanceImage}
             <BigImage />
@@ -95,7 +132,7 @@
             <!-- {#if thisSwarm?.connections.length && in_voice}
                 <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} Active connections</h4>
             {/if} -->
-            <div class="video-grid">
+            <div class:drag={$swarm.showVideoGrid} class="video-grid">
             {#if in_voice}
                     <MyVideo active={active}/>
                 {#if videoCalls.length}
@@ -130,7 +167,7 @@
             {/if}
             </div>
             <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}">
-                <ConferenceControls />
+                <ConferenceControls active={thisSwarm} />
             </div>
         </div>
     </div>
@@ -158,6 +195,7 @@
         justify-content: space-between;
         flex-direction: column;
         width: 100%;
+        height: 98%;
     }
     
     .video-grid {
@@ -197,6 +235,11 @@
         visibility: visible;
         pointer-events: all !important;
         transition: ease-out 200ms;
+    }
+
+    .drag {
+        pointer-events: auto;
+        -webkit-app-region: drag;
     }
     
     input {

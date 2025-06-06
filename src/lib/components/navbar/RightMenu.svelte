@@ -31,9 +31,15 @@ let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
 let video = false
 let videoInput = $state()
-let thisSwarm = $state({voice_channel: []})
+let thisSwarm = $state(false)
 let in_voice = $state(false)
-let activeBeam = $state()
+let activeBeam = $derived( $swarm.active.some(a => a.chat === thisChat.chat))
+
+
+
+$effect(() => {
+   activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
+})
 
 run(() => {
       if ($mediaSettings.devices.length) {
@@ -56,9 +62,7 @@ run(() => {
 let thisChat = $derived($user.activeChat)
 
 //Beam reactive button states
-run(() => {
-      if ($swarm) activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
-   });
+
 let connectedBeam = $derived($swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat)))
 run(() => {
       if (activeBeam) {
@@ -68,7 +72,6 @@ run(() => {
 
 run(() => {
       if (thisSwarm && $swarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
-       console.log("thisSwarm", thisSwarm)
        in_voice = true
    } else in_voice = false
    });
@@ -146,10 +149,10 @@ const join_voice_channel = async (video = false, screen) => {
         console.log("Want to Join new voice")
         thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
-        //Set to true? here
-        thisSwarm.voice_connected = true
-        $swarm = $swarm
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare}) 
+        $swarm.voice = thisSwarm
+        console.log("this swarm ", thisSwarm)
+        $swarm.active = $swarm.active
         console.log("Should be joined and connected here in this swarm", thisSwarm)
     }
 
@@ -212,7 +215,7 @@ run(() => {
                         window.api.send('end-beam', $user.activeChat.chat)
                     }   else newBeam()}}>
                 
-                    <Lightning connected={connectedBeam} connecting={activeBeam} />
+                    <Lightning connected={connectedBeam} connecting={activeBeam && !connectedBeam} />
                 </div>
             </Tooltip>
             {#if activeBeam}
@@ -398,9 +401,8 @@ run(() => {
 
     &:hover,
     :hover > .icon {
-        background-color: rgba(255, 255, 255, 0.4);
-        background-color: #313131;
-        opacity: 100%;
+         background-color: var(--border-color);
+         opacity: 100%;
     }
 }
 
@@ -415,6 +417,7 @@ run(() => {
     margin-bottom: 5px;
     cursor: pointer;
     height: 55px;
+    width: 55px;
     object-fit: cover;
 }
 

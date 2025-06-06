@@ -10,10 +10,17 @@ import Moon from 'svelte-loading-spinners/dist/ts/Moon.svelte'
 
 let loading = $state(false)
 let downloaded = $state(false)
+let installing = $state(false)
+
 const download = async () => {
     loading = true
     downloaded = true
     window.api.send('download-update')
+}
+
+const install = () => {
+    installing = true
+    window.api.send('install-update')
 }
 
 run(() => {
@@ -82,11 +89,15 @@ run(() => {
                 <div></div>
                 <h4>Your update is ready, please press install to restart.</h4>
                 <div class="buttons">
-                    <FillButton
-                        text="Install"
-                        enabled="{true}"
-                        on:click="{() => window.api.send('install-update')}"
-                    />
+                    {#if installing}
+                        <Moon color="#f5f5f5" size="20" unit="px"/>
+                    {:else}
+                        <FillButton
+                            text="Install"
+                            enabled="{true}"
+                            on:click="{() => install()}"
+                        />
+                    {/if}
                 </div>
             </div>
 

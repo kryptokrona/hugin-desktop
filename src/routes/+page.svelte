@@ -1,7 +1,7 @@
 <script>
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {files, groups, misc, notify, rooms, user} from '$lib/stores/user.js'
+    import {files, groups, misc, notify, pushToTalk, rooms, sounds, user} from '$lib/stores/user.js'
     import {onMount, setContext} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
@@ -47,7 +47,7 @@
         $misc.loading = false
     })
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages, ptt, sound]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
@@ -61,6 +61,9 @@
         $rooms.banned = banned
         $files = fileList
         $misc.syncImages = syncImages
+        $pushToTalk = ptt
+        $sounds.on = sound
+
         setAvatars(avatars)
         if (avatar.length) setCustomAvatar(avatar)
         loginSuccess()
@@ -97,9 +100,9 @@
         console.log('login success')
         await sleep(5000)
         if ($notify.que) await sleep(4000)
+        $user.started = true
         await goto('/dashboard')
         $user.loggedIn = true
-        $user.started = true
     }
 
     const goTo = restore => {
@@ -117,11 +120,11 @@
 </script>
 
 <main>
-{#if nodeFailed}
+<!-- {#if nodeFailed}
     <div class="backdrop">
         <NodeSelector onConnect={(e) => setNode(e)} goBack={() => nodeFailed = false}/>
     </div>
-{/if}
+{/if} -->
 
 {#if wallet == false}
 

@@ -29,34 +29,26 @@
         const my_address = $user.myAddress
         if (!reconnect) $swarm.showVideoGrid = false
             //Leave any active first, check if my own address is active in some channel
-            //Also remove from voice channel
-            let swarms = $swarm.active
             //Remove my own address from swarm active voice channel list in UI
-            swarms.forEach(joined => {
+            $swarm.active.forEach(joined => {
                 if (joined.voice_channel.some(a => a.address === my_address)) {
                 let removed = joined.voice_channel.filter(a => a.address !== my_address) 
                 joined.voice_channel = removed
                 }
             })
-            
+
             //Check my current active swarm voice channel and remove aswell
             let active = $swarm.voice_channel.find(a => a.address === my_address)
             if (!active) return true
-            //Change voice connected status in other channels
-            let old = $swarm.active.find(a => a.voice_connected === true)
-            if (old) old.voice_connected = false
 
+            $swarm.voice = false
             
             //Remove from the active voice channel we have
             console.log("Want to exit old voice")
             $swarm.voice_channel = []
             
             if ($swarm.myStream) $swarm.myStream.getTracks().forEach((track) => track.stop())
-            
-            //Stop any active stream
-            if (!old) return true
-
-            
+        
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
                 $videoSettings.myVideo = false
@@ -65,11 +57,11 @@
                 $swarm.myStream = false
                 $videoSettings.active = false
             }
-            
-            console.log("Left voice channel!")
+        
             //Send status to backend
-            window.api.send("exit-voice", old.key)
+            window.api.send("exit-voice", active.key)
             $videoSettings.myVideo = false
+            $swarm = $swarm
             return true
     }
     

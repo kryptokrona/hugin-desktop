@@ -24,6 +24,7 @@ import BigImage from "$lib/components/popups/BigImage.svelte"
 import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
+	import { flip } from 'svelte/animate';
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -42,6 +43,21 @@ let loadMore = $state(true)
 let admin = $state(false)
 const welcomeAddress = $misc.welcomeAddress
 let thisSwarm = $state(false)
+let someoneTyping = $state(null);
+let usersTyping = $state(0);
+
+const filteredUsers = () => { 
+    return $rooms.typingUsers.filter(a => a.topic === $rooms.thisRoom?.topic)
+}
+
+$effect(() => {
+    usersTyping = filteredUsers().length;
+    if (usersTyping === 0) return
+    if (usersTyping > 1) return
+    someoneTyping = filteredUsers()[0] ?? null;
+})
+
+
 
 let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
 run(() => {
@@ -58,8 +74,11 @@ run(() => {
 
 const isFile = (data) => {
     const findit = (arr) => {
-        return arr.find(a => a.hash === data.hash && parseInt(data.time) === parseInt(a.time))
+        return arr.find(a => parseInt(data.time) === parseInt(a.time))
     }
+    const local = findit($localFiles)
+    if (local) return local
+    
     let file = findit($files)
     if (file) {
         file.saved = true
@@ -67,14 +86,26 @@ const isFile = (data) => {
     }
     const remote = findit($remoteFiles)
     if (remote) return remote
-    const local = findit($localFiles)
-    if (local) return local
 }
 
 onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
+    if ($rooms.params !== null) {
+        const inviteKey = $rooms.params.slice(-128)
+        const parse = $rooms.params.split('hugin://')[1]
+        const roomName = parse.slice(0, (parse.length - 1) - inviteKey.length)
+        const inviteName = roomName.replace(/-/g, ' ');
+        addNewRoom({key: inviteKey, name: inviteName, admin: false})
+        $rooms.params = null
+    }
     scrollDown()
+    //Listens for new messages from backend
+    window.api.receive('roomMsg', (data) => {
+        newMessage(data)
+        
+        
+    })
     window.api.receive('history-update', (data) => {
         const inroom = $swarm.activeSwarm?.key === data.key
 
@@ -90,31 +121,29 @@ onMount(async () => {
         if (inroom) {
             const room = {key: data.key, name: $rooms.thisRoom.name,}
             printRoom(room)
-            window.api.successMessage('Synced history')
         }
-    })
-    //Listens for new messages from backend
-    window.api.receive('roomMsg', (data) => {
-        const file = isFile(data)
-        if (file) data.file = file
-        const thisroom = data.group === $swarm.activeSwarm.key
-        const roomtopic = data.topic === $swarm.activeSwarm.topic
-        const thistopic = data.file?.key === $swarm.activeSwarm.topic
-        const inrooms = $page.url.pathname === '/rooms'
-        if (data.address === $user.myAddress) return
-            if ((thisroom || thistopic || roomtopic) && inrooms) {
-                printRoomMessage(data)
-            } else {
-                console.log("Another room")
-            }
-            
-            return
     })
     
 })
 
+function newMessage(data) {
+    const file = isFile(data)
+    if (file) data.file = file
+    const thisroom = data.group === $swarm.activeSwarm.key
+    const roomtopic = data.topic === $swarm.activeSwarm.topic
+    const thistopic = data.file?.key === $swarm.activeSwarm.topic
+    const inrooms = $page.url.pathname === '/rooms'
+    if (data.address === $user.myAddress) return
+        if ((thisroom || thistopic || roomtopic) && inrooms) {
+            printRoomMessage(data, file)
+        } else {
+            console.log("Another room")
+        }
+        
+        return
+}
+
 onDestroy(() => {
-    window.api.removeAllListeners('roomMsg')
     window.api.removeAllListeners('sent_room')
     window.api.removeAllListeners('set-channels')
     window.api.removeAllListeners('history-update')
@@ -134,8 +163,8 @@ window.api.receive('set-channels', async () => {
 //Check for possible errors
 const checkErr = (e, tip = false) => {
     let error = false
-    if (e.text.length === 0 && !tip) return true 
-    if (e.text.length > 777) error = "Message is too long"
+    if (e.text?.length === 0 && !tip) return true 
+    if (e.text?.length > 777) error = "Message is too long"
     if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
@@ -144,7 +173,7 @@ const checkErr = (e, tip = false) => {
 }
 
 //Send message to store and DB
-const sendRoomMsg = async (e, tipping = false) => {
+const sendRoomMsg = async (e, tipping = false, reaction = false) => {
     const error = checkErr(e, tipping)
     if (error) return
     let msg = e.text
@@ -198,6 +227,7 @@ const sendRoomMsg = async (e, tipping = false) => {
     window.api.sendRoomMessage(sendMsg)
     printRoomMessage(myRoomMessage)
     replyExit()
+    if (reaction) return
     scrollDown()
 }
 
@@ -207,7 +237,7 @@ const scrollDown = () => {
 }
 
 //Prints any single group message. 
-const printRoomMessage = (roomMsg) => {
+const printRoomMessage = (roomMsg, file = false) => {
     if (
         roomMsg.reply.length === 64 &&
         roomMsg.message.length < 9 &&
@@ -220,7 +250,11 @@ const printRoomMessage = (roomMsg) => {
     roomMessages.update((current) => {
         return [roomMsg, ...current]
     })
-    fixedRooms = removeDuplicates(fixedRooms)
+
+    //If we sync older files, make sure to sort the incoming messages.
+    if (file) {
+      fixedRooms = removeDuplicates(fixedRooms.sort((a, b) => b.time - a.time)) 
+    } else  fixedRooms = removeDuplicates(fixedRooms)
 }
 
 
@@ -274,6 +308,7 @@ const openAddRoom = () => {
 
 //Adds new Group to groArray and prints that Group, its probably empty.
 const addNewRoom = async (e) => {
+    console.log("AAADDD ROOM INVITE", e)
     let room = e
     const admin = e.admin
     if (room.length < 32) return
@@ -365,7 +400,7 @@ function checkReactions(array, scroll) {
     
        //All group messages all messages except reactions
        filterRooms = array.filter(
-        (m) => !(m.reply.length === 64 && filterEmojis.includes(m)) && !containsOnlyEmojis(m.message)
+        (m) => !(m.reply.length === 64 && containsOnlyEmojis(m.message)) && !filterEmojis.includes(m)
     )
     
     if (filterEmojis.length) {
@@ -483,6 +518,7 @@ async function dropFile(e) {
     }
     $files.push(acceptedFiles[0])
     $localFiles.push(acceptedFiles[0])
+    $localFiles = $localFiles
     $files = $files
     printRoomMessage(message)
     window.api.groupUpload(filename, path, $swarm.activeSwarm?.key, size, time, hash)
@@ -520,12 +556,10 @@ const sendTransaction = async (e) => {
     const sent = await window.api.sendTransaction(tx)
     if (sent) {
         const e = {
-        detail: {
         text: "",
          tip: {
             amount: $transactions.pending.amount,
             receiver: fixedRooms.find(a => a.address === $transactions.pending.to).name
-        }
         }
     }
         sendRoomMsg(e, true)
@@ -538,6 +572,15 @@ const hideModal = () => {
     $transactions.tip = false
     $transactions.send = { name: '' }
 }
+
+
+let imTyping = false
+const typing = (e) => {
+    if (imTyping === e.typing) return
+    imTyping = e.typing
+    window.api.send('typing', {key: $swarm.activeSwarm.key, typing: e.typing})
+}
+
 </script>
 
 
@@ -585,11 +628,14 @@ const hideModal = () => {
                     <Loader/>
                 </div>
             {/if}
+             <div class="fade"></div>
             {#each fixedRooms as message (message.hash)}
+            <div animate:flip="{{duration: 150}}">
                 <GroupMessage
-                    ReactTo="{(e) => sendRoomMsg(e)}"
+                    ReactTo="{(e) => sendRoomMsg(e, false, true)}"
                     ReplyTo="{(e) => replyToMessage(message.hash, message.name)}"
                     DeleteMsg="{(e) => deleteMessage(message.hash)}"
+                    JoinRoom="{(e) => addNewRoom(e)}"
                     message="{message}"
                     reply="{message.reply}"
                     msg="{message.message}"
@@ -604,6 +650,7 @@ const hideModal = () => {
                     admin="{admin}"
                     tip="{message.tip}"
                 />
+            </div>
             {/each}
             {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 
                 <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
@@ -617,7 +664,16 @@ const hideModal = () => {
                 {reply_exit_icon} Reply to {$rooms.replyTo.nick}
             </div>
         {/if}
-        <ChatInput onMessage="{(e) => sendRoomMsg(e)}" />
+        {#if usersTyping > 0}
+            <div class="typing">
+                {#if usersTyping > 1}
+                    {usersTyping} users are typing...
+                {:else}
+                    {someoneTyping.name} is typing...
+                {/if}
+            </div>
+        {/if}
+        <ChatInput onMessage="{(e) => sendRoomMsg(e)}" onTyping={(e) => typing(e)} />
     </div>
     <RoomHugins />
 </main>
@@ -665,19 +721,38 @@ p {
     background: var(--backgound-color);
     display: inline-flex;
     font-size: 11px;
-    height: 25px;
-    font-family: 'Montserrat';
+    height: 22px;
+    font-family: "Montserrat";
     font-weight: 100;
     position: absolute;
-    bottom: 55px;
-    left: 17px;
+    bottom: 50px;
+    left: 0px;
+    justify-content: center;
+    color: var(--success-color);
+    padding: 4px;
+    width: fit-content;
+    z-index: 9;
+    border: px solid;
+    cursor: pointer;
+}
+
+.typing {
+    background: var(--backgound-color);
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: bold;
+    height: 22px;
+    font-family: "Montserrat";
+    font-weight: 100;
+    position: absolute;
+    bottom: 2px;
+    left: 0px;
     justify-content: center;
     color: var(--text-color);
     padding: 4px;
     width: fit-content;
     z-index: 9;
-    border: 1px solid;
-    border-radius: 2px;
+    border: px solid;
     cursor: pointer;
 }
 
@@ -713,11 +788,12 @@ p {
 
 .fade {
     position: absolute;
-    top: 0;
+    top: 57px;
     width: 100%;
     height: 40px;
-    background: linear-gradient(180deg, #121212, #12121200);
+    background: linear-gradient(180deg, var(--fade-color),var(--fade-to-color));
     z-index: 100;
+    pointer-events: none;
 }
 
 .outer {

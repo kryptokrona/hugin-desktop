@@ -72,6 +72,7 @@ async function getImage(path) {
 
 img {
     max-width: 600px;
+    max-height: 100vh;
 }
 
 .backdrop {

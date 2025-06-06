@@ -21,7 +21,9 @@ const {
     addRoom,
     addRoomKeys,
     printFeed,
-    removeRoom
+    removeRoom,
+    saveFeedMessage,
+    getFeedMessageReplies
 } = require("./database.cjs")
 const {
     trimExtra, 
@@ -34,7 +36,7 @@ const {
     sanitize_group_message
 } = require('./utils.cjs')
 
-const { send_swarm_message, new_swarm, end_swarm, Nodes } = require("./swarm.cjs")
+const { send_swarm_message, new_swarm, end_swarm, Nodes, send_feed_message } = require("./swarm.cjs")
 
 const { Address, Crypto, CryptoNote} = require('kryptokrona-utils')
 const { extraDataToMessage } = require('hugin-crypto')
@@ -50,6 +52,7 @@ const Store = require('electron-store');
 const { Hugin } = require('./account.cjs')
 const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs')
 const store = new Store()
+const { Notification } = require('electron');
 
 let known_pool_txs = []
 let known_keys = []
@@ -65,12 +68,42 @@ let incoming_group_que = []
 // })
 //GROUPS MESSAGES
 
+ipcMain.on('notify-room', (e, data) => {
+    console.log("Send notification", data)
+    const notification = new Notification({
+        title: data.name + ' in ' + data.roomName,
+        body: data.message,
+        icon: 'src/static/icon.png',
+      });
+      notification.show()
+})
+
+ipcMain.on('notify-dm', (e, data) => {
+    const notification = new Notification({
+        title: data.name,
+        body: data.msg,
+        icon: 'src/static/icon.png',
+      });
+      notification.show()
+})
+
 ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
     send_group_message(msg, offchain, swarm)
 })
 
 ipcMain.on('send-room-message', (e, m) => {
     send_room_message(m)
+})
+
+ipcMain.handle('send-feed-message', async (e, m) => {
+    const sent = await send_feed_message(m.message, m.reply, false);
+    saveFeedMessage(sent);
+    return sent;
+})
+
+ipcMain.handle('get-feed-replies', async (e, hash) => {
+    const replies = await getFeedMessageReplies(hash);
+    return replies;
 })
 
 ipcMain.handle('get-group-reply', async (e, data) => {
@@ -135,15 +168,26 @@ ipcMain.on('delete-messages-after', async (e, days) => {
     })
 })
 
-ipcMain.handle('get-feed-messages', async (data) => {
-    return await printFeed()
+ipcMain.handle('get-feed-messages', async (e, page) => {
+    return await printFeed(page)
+})
+
+ipcMain.handle('get-conversation', async (e, chat, page) => {
+    return await getConversation(chat, page)
 })
 
 
 //PRIVATE MESSAGES
 
-ipcMain.on('hugin-node', (e, address, pub) => {
+ipcMain.on('hugin-node', (e, {address, pub}) => {
     Nodes.change(address, pub)
+    store.set({
+        huginNode: {
+            address,
+            pub
+        }
+    })
+    Hugin.huginNode = {address, pub}
 })
 
 ipcMain.handle('get-conversations', async (e) => {
@@ -243,7 +287,7 @@ async function key_derivation_hash(chat) {
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
     peer_dms()
-    Nodes.connect('', true)
+    Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub)
     await sleep(5000)
     known_keys = Hugin.known_keys
     block_list = Hugin.block_list
@@ -521,7 +565,7 @@ async function sync_from_node(node) {
     const lastChecked = store.get('pool.checked')
     store.set({
         pool: {
-            checked: Date.now()
+            checked: Date.now() - 2000
         }
     })
     const resp = await Nodes.sync({
@@ -550,6 +594,14 @@ async function fetch_hugin_messages() {
     return list
 }
 
+  async function generate_push_view_tag(address) {
+    const myAddr = await Address.fromAddress(address);
+    const pubKey = myAddr.m_keys.m_viewKeys.m_publicKey;
+    const weeklyTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7));
+    const hash = await crypto.cn_fast_hash(pubKey + weeklyTimestamp);
+    return hash.substring(0,3);
+  }
+
 
 async function send_message(message, receiver, off_chain = false, group = false, beam_this = false) {
     //Assert address length
@@ -567,20 +619,23 @@ async function send_message(message, receiver, off_chain = false, group = false,
     
     let timestamp = Date.now()
     let payload_hex
-    const seal = has_history ? false : true
+    let seal = has_history ? false : true
+    if (!off_chain) seal = true
     
     payload_hex = await encrypt_hugin_message(message, messageKey, seal, address)
     //Choose subwallet with message inputs
-
+    const viewtag = await generate_push_view_tag(address)
     if (!off_chain) {
-        const sent = await Nodes.message(payload_hex)
+        const sent = await Nodes.message(payload_hex, viewtag)
         if (typeof sent.success !== 'boolean') {
             return
         }
         if (!sent.success) {
             if (typeof sent.reason !== 'string') return
+            if (sent.reason.length > 40) return
             console.log("Reason:", sent.reason)
-            Hugin.send('error-notify-message', 'Error sending message...')
+            Hugin.send('error-notify-message', sent.reason)
+            Hugin.send('success-notify-message', 'Please upgrade to Hugin +')
             return
         }
 
@@ -600,6 +655,9 @@ async function send_message(message, receiver, off_chain = false, group = false,
         sent: true,
         t: timestamp,
         chat: address,
+    }
+    if (!has_history) {  
+        known_keys.push(messageKey)
     }
     save_message(saveThisMessage, true)
 }
@@ -627,6 +685,7 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
             k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
             msg: message,
             s: signature,
+            name: Hugin.nickname
         }
         let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
         box = new naclSealed.sealedbox(
@@ -830,120 +889,6 @@ async function decryptRtcMessage(message) {
     save_message(newMsg, true)
 }
 
-
-async function sync_group_history(timeframe, recommended_api, key=false, page=1) {
-    if (recommended_api === undefined) return
-    fetch(`${recommended_api}?from=${timeframe}&to=${Date.now() / 1000}&size=50&page=` + page)
-    .then((response) => response.json())
-    .then(async (json) => {
-        const items = json.encrypted_group_posts;
-        Hugin.send('success-notify-message', 'Found messages! Syncing...')
-        for (const message of items) {   
-            try {
-                    let tx = {}
-                    tx.sb = message.tx_sb
-                    tx.t = message.tx_timestamp
-                    await decrypt_group_message(tx, message.tx_hash, key)
-                        
-                }
-                 catch {
-                }
-        }
-        if(json.current_page != json.total_pages) {
-            sync_group_history(timeframe, recommended_api, key, page+1)
-        }
-    })
-}
-
-async function decrypt_group_message(tx, hash, group_key = false) {
-
-    try {
-    let decryptBox = false
-    let offchain = false
-    let groups = await loadGroups()
-    
-    if (group_key.length === 64) {
-        let msg = tx
-        tx = JSON.parse(trimExtra(msg))
-        groups.unshift({ key: group_key })
-        offchain = true
-    }
-
-    let key
-
-    let i = 0
-
-    while (!decryptBox && i < groups.length) {
-        let possibleKey = groups[i].key
-
-        i += 1
-
-        try {
-            decryptBox = nacl.secretbox.open(
-                hexToUint(tx.sb),
-                nonceFromTimestamp(tx.t),
-                hexToUint(possibleKey)
-            )
-
-            key = possibleKey
-        } catch (err) {
-        }
-    }
-    
-    if (!decryptBox) {
-        return false
-    }
-
-    const message_dec = naclUtil.encodeUTF8(decryptBox)
-    const payload_json = JSON.parse(message_dec)
-    const from = payload_json.k
-    const this_addr = await Address.fromAddress(from)
-
-    const verified = await xkrUtils.verifyMessageSignature(
-        payload_json.m,
-        this_addr.spend.publicKey,
-        payload_json.s
-    )
-
-    if (!verified) return false
-    if (block_list.some(a => a.address === from)) return false
-
-    payload_json.hash = hash
-    payload_json.t = tx.t
-    payload_json.sent = false
-    
-    const message = sanitize_group_message(payload_json, false)
-    if (!message) return false
-    await save_group_message(message, hash, tx.t, offchain)
-    if (!saved) return false
-
-    return [message, tx.t, hash]
-
-    } catch {
-        return false
-    }
-}
-
-async function decryptGroupRtcMessage(message, key) {
-    try {
-        let hash = message.substring(0, 64)
-        let [groupMessage, time, txHash] = await decrypt_group_message(message, hash, key)
-
-        if (!groupMessage) {
-            return
-        }
-        if (groupMessage.m === 'ᛊNVITᛊ') {
-            if (groupMessage.r.length === 163) {
-                let invited = sanitizeHtml(groupMessage.r)
-                Hugin.send('group_invited_contact', invited)
-                console.log('Invited')
-            }
-        }
-    } catch (e) {
-        console.log('Not an invite')
-    }
-}
-
 const check_balance = async () => {
     try {
         let [munlockedBalance, mlockedBalance] = await Hugin.wallet.getBalance()
@@ -962,6 +907,7 @@ async function save_group_message(msg, hash, time, offchain, channel = false, ad
     const saved = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!saved) return false
     if (room) {
+        Hugin.send('added-room', msg.group)
         Hugin.send('roomMsg', saved)
         Hugin.send('sent_room')
         return
@@ -993,6 +939,8 @@ async function save_message(msg, offchain = false) {
     if (msg.type === 'sealedbox' && !sent) {
         let hugin = addr + key
         await save_contact(hugin)
+        const hash = await key_derivation_hash(addr)
+        new_swarm({key: hash}, true, addr + key);
     }
 
     let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
@@ -1041,11 +989,8 @@ async function save_contact(hugin_address, nickname = false, first = false) {
 async function check_history(messageKey, addr) {
     //Check history
     if (known_keys.indexOf(messageKey) > -1) {  
-        let [conv] = await getConversation(addr)
-        if (parseInt(conv.timestamp) < parseInt(store.get("db.versionDate"))) return false
         return true
     } else {
-        known_keys.push(messageKey)
         return false
     }
 

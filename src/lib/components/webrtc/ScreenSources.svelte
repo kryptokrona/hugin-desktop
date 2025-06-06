@@ -35,7 +35,7 @@
         if ($swarm.call.length === 0) {
             $swarm.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
         }
-        const thisSwarm = $swarm.active.find(a => a.voice_connected)
+        const thisSwarm = $swarm.voice
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: false, audioMute: !$swarm.audio, video: false})
         $swarm.call.forEach((a) => {
             a.myStream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled))
@@ -55,7 +55,7 @@
     
     </script>
     
-    <div style="display: flex; flex-direction: column" onclick={() => open = !open}>
+    <div style="display: flex; flex-direction: column; z-index: 9999" onclick={() => open = !open}>
         
         <Screenshare/>
         {#if open}
@@ -109,6 +109,7 @@
         border-radius: 0.4rem;
         z-index: 999;
         max-height: 400px;
+        -webkit-app-region: no-drag;
         div {
             text-align: center;
             border-radius: 5px;

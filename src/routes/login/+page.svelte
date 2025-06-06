@@ -11,6 +11,7 @@ import toast from 'svelte-5-french-toast'
 import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { sleep } from '$lib/utils/utils'
+	import { page } from '$app/state';
 
 let myPassword = $state("")
 let enableLogin = $state(false)
@@ -35,13 +36,14 @@ onDestroy(() => {
   window.api.removeAllListeners('login-failed')
 })
 
-run(() => {
+$effect(() => {
     enableLogin = myPassword.length > 1
 });
 
 const enter = async (e) => {
-  if (enableLogin && e.keyCode === 13) {
-    if (started) {
+  if (enableLogin && e.key === 'Enter') {
+
+    if ($user.started) {
       await checkPass()
       return
     }
@@ -51,23 +53,27 @@ const enter = async (e) => {
 }
 
 const checkPass = async () => {
+  $user.idleTime = 0
   loadSpin = true
   const verify = await window.api.verifyPass(myPassword)
-  if (!verify) window.api.errorMessage('Wrong password')
+  if (!verify) {
+    window.api.errorMessage('Wrong password')
+    $misc.loading = false
+    loadSpin = false
+  }
   if (verify) {
       loadSpin = false
       $layoutState.showNodeSelector = false
       $misc.loading = false
-      await goto('/dashboard')
-      await sleep(300)
+      goto("/dashboard")
       $user.loggedIn = true
   }
 }
 
 //Handle login, sets logeged in to true and gets user address
 const handleLogin = async (e) => {
-  if (started) {
-    await checkPass()
+  if ($user.started) {
+    checkPass()
     return
   }
     
@@ -105,7 +111,7 @@ window.api.receive('login-failed', async () => {
 
 </script>
 
-<svelte:window onkeyup={preventDefault(enter)}/>
+<svelte:window onkeyup={enter} />
 
 <div class="wrapper" in:fly|global={{ delay: 300, duration: 300, y : 50 }} out:fly|global={{ delay: 100, duration: 100, y : -50 }}>
     {#if $layoutState.showNodeSelector}
@@ -117,7 +123,7 @@ window.api.receive('login-failed', async () => {
                 <input placeholder="Password..." type="password"  bind:this="{passwordField}" bind:value="{myPassword}"/>
                 <button onclick={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
                     {#if loadSpin}
-                        <Moon color="#000000" size="20" unit="px"/>
+                        <Moon color="var(--text-color)" size="20" unit="px"/>
                     {:else}
                         <ArrowRight/>
                     {/if}
@@ -191,7 +197,7 @@ window.api.receive('login-failed', async () => {
 
     button {
       border: none;
-      background-color: #252525;
+      background-color: var(--border-color);
       height: 36px;
       width: 48px;
       display: inline-flex;

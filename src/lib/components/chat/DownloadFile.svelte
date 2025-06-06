@@ -17,7 +17,7 @@
     
     let downloadDone = $state(false)
     let downloading = $state(false)
-    let clicked = false
+    let clicked = $state(false)
     let downloaders = []
     
     let video = $state(false)
@@ -87,7 +87,6 @@
     }
     
     const downloadFile = (file) => {
-        clicked = true
         const thisFile = $remoteFiles.find(a => a.fileName === file.fileName && file.time === a.time)
         window.api.send('group-download', thisFile)
     };
@@ -106,11 +105,14 @@
 
 <div class="file" class:group in:fade|global="{{ duration: 150 }}">
     {#if !downloadDone && !downloading && !saved}
-         {#if !clicked}
+    
         <p class="message" in:fade|global>{file.fileName}</p>
-        <Button on:click|once={downloadFile(file)} disabled={false} text="Download file"/>
+         {#if !clicked}
+         <div onclick={() => clicked = true}>
+             <Button on:click|once={() => downloadFile(file)} disabled={false} text="Download file"/>
+         </div>
         {:else}
-        <p class="message loading blink_me" in:fade|global>Connecting</p>
+        <p class="message loading blink_me" in:fade|global>Start downloading...</p>
         {/if}
     {:else if downloading && !downloadDone}
         <p class="message done blink_me" in:fade|global>Downloading</p>

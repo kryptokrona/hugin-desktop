@@ -6,7 +6,7 @@
     import { fly } from 'svelte/transition'
     import { cubicIn, cubicOut } from 'svelte/easing'
     import { onDestroy, onMount } from 'svelte'
-    import { swarm } from '$lib/stores/user.js'
+    import { pushToTalk, swarm, user } from '$lib/stores/user.js'
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import { calcTime } from '$lib/utils/utils.js'
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
@@ -14,6 +14,7 @@
     import MicIcon from '$lib/components/icons/MicIcon.svelte'
     import InCallAvatar from '$lib/components/chat/InCallAvatar.svelte'
     import { videoSettings } from '$lib/stores/mediasettings'
+    import { draggable } from '@neodrag/svelte';
     
     /** @type {{paused?: boolean}} */
     let { paused = $bindable(false) } = $props();
@@ -22,7 +23,8 @@
     let startTime = Date.now()
     let time = $state('0:00:00')
     let timer
-    
+    let thisSwarm = $derived($swarm.voice)
+
     onMount(() => {
         timer = setInterval(() => {
             let currentTime = Date.now()
@@ -37,6 +39,8 @@
     
     //End call with all peers
     const endCall = () => {
+       const filter = $swarm.voice.voice_channel.filter(a => a.address !== $user.myAddress)
+       $swarm.voice.voice_channel = filter
        window.api.exitVoiceChannel()
         //We pause the ringtone and destroy the popup
     }
@@ -52,11 +56,12 @@
         
     const toggleAudio = () => {
         $swarm.audio = !$swarm.audio
-        const thisSwarm = $swarm.active.find(a => a.voice_connected)
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: $videoSettings.screenshare, audioMute: !$swarm.audio, video: $videoSettings.myVideo})
         if (!$swarm.myStream) return
+        if ($pushToTalk.on) return
+        
         $swarm.call.forEach((a) => {
-            a.myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled))
+            a.myStream.getAudioTracks().forEach((track) => (track.enabled = $swarm.audio))
         })
     }
 
@@ -64,7 +69,7 @@
     
     <!-- <video class:show={calling} in:fade|global id="peerVideo" playsinline autoplay bind:this={peerVideo}></video> -->
     
-    <div class:show={!$swarm.showVideoGrid}
+    <div style="cursor: pointer;" use:draggable class:show={!$swarm.showVideoGrid}
         in:fly|global="{{ y: 100, duration: 200, easing: cubicOut }}"
         out:fly|global="{{ y: 100, duration: 200, easing: cubicIn }}"
         class="card"
@@ -75,10 +80,9 @@
                 <p>{time}</p>
             </div>
             <div class="caller">
-                {#each $swarm.voice_channel as call}
+                {#each $swarm.voice?.voice_channel.slice(-3) as call}
                     <InCallAvatar call={call} />
                 {/each}
-                <!-- <p>{this_call.name}</p> -->
             </div>
     
             <audio bind:paused></audio>

@@ -12,7 +12,7 @@
   import {sleep} from "$lib/utils/utils.js";
 
   /** @type {{rtc?: boolean}} */
-  let { rtc = false, onMessage, onTyping} = $props();
+  let { rtc = false, onMessage } = $props();
 
   let openEmoji = $state();
   let emojiPicker = $state()
@@ -40,7 +40,6 @@
     if (messageInput && !shiftKey && e.key === 'Enter') {
       e.preventDefault()
       sendMsg()
-      onTyping({typing: false})
       return false
     }
     if(shiftKey && e.key ==='Enter') {
@@ -120,9 +119,6 @@
   //Checks if input is empty
   run(() => {
     enableSend = !!messageInput
-    if (enableSend) onTyping({typing: true})
-    else onTyping({typing: false})
-
   });
   run(() => {
     if (messageInput.length < 2) resetInputHeight()

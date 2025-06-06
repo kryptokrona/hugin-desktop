@@ -32,6 +32,7 @@ const sendTransaction = async () => {
         to: 'SEKReVsk6By22AuCcRnQGkSjY6r4AxuXxSV9ygAXwnWxGAhSPinP7AsYUdqPNKmsPg2M73FiA19JT3oy31WDZq1jBkfy3kxEMNM',
         amount: parseInt(99) * 100000,
         paymentID: publicKey,
+        upgrade: true
     })
 
     if (sent) {
@@ -45,7 +46,7 @@ const sendTransaction = async () => {
       <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="field">
       
       <Cards> 
-        {#if !sent && localStorage.getItem('hugin+') === undefined}
+        {#if !sent && !localStorage.getItem('hugin+')}
           <p>-✅Send messages to your contacts if they are offline.</p>
           <p>-✅Unlock future perks and special features.</p>
           <p>-✅Support the project and help grow Hugin</p>
@@ -54,7 +55,7 @@ const sendTransaction = async () => {
               {:else if sent || localStorage.getItem('hugin+') === 'true'}
               <p in:fly>✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅</p>
               <p in:fly> You have upgraded to Hugin +</p>
-              <p in:fly> Wait a couple of minutes for the transaction to settle..</p>
+              {#if sent}<p in:fly> Wait a couple of minutes for the transaction to settle..</p>{/if}
               <p in:fly> Thanks for your support.</p>
               <p in:fly>✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅</p>
         {/if}
@@ -76,7 +77,7 @@ const sendTransaction = async () => {
   }
 
   p {
-    font-family: "Montserrat";
+    font-family: "Montserrat" !important;
   }
   
   </style>
