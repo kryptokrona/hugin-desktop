@@ -505,6 +505,9 @@ const focusMessage = async (message) => {
         reply.replies = replies;
         reply.react = reactions;
     }
+    expanded = false
+    focusedMessage = {message: ''}
+    await sleep(50)
     $feed.expanded = true
     focusedMessage = message;
     expanded = true;
@@ -541,7 +544,7 @@ const focusMessage = async (message) => {
     <BigImage />
 {/if}
 
-<Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => dropFile(e)}>
+
 <main in:fade|global="{{ duration: 350 }}">
     
     <div class="feed_container" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
@@ -599,7 +602,7 @@ const focusMessage = async (message) => {
             {/if}
 
         </div>
-        <div class:expanded={expanded} class="message_details right_side" in:fly|global="{{ y: 50 }}">
+        <div class:expanded={$feed.expanded} class="message_details right_side" in:fly|global="{{ y: 50 }}">
              <div class="outer details" >
             <span class:expanded={expanded} class="go_back" onclick={setExpanded}>
                 {#if (expanded)}
@@ -645,7 +648,6 @@ const focusMessage = async (message) => {
         {/if}
     </div>
 </main>
-</Dropzone>
 
 <style lang="scss">
 
