@@ -3,6 +3,10 @@ Bugs:
     ☐ Node picker has duplicated buttons
     ✔ Wrong color on in app notification @done(25-05-26 12:03)
     ☐ No default avatar shown when none chosen
+    ☐ Cannot choose microphone or camera
+    ☐ Own microphone activity indicator disabled when changing audio input
+
+
     ✔ Login doesn't work after auto lock @done(25-05-26 12:03)
     ☐ When clicking a messages with a link in feeds first, you cant focus on another message
     ☐ Sometimes it doesnt work to focus on a reply in feeds
