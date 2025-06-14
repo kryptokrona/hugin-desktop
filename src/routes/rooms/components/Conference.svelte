@@ -166,9 +166,11 @@
             {/if}
             {/if}
             </div>
+            {#if in_voice}
             <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}">
                 <ConferenceControls active={thisSwarm} />
             </div>
+            {/if}
         </div>
     </div>
     
