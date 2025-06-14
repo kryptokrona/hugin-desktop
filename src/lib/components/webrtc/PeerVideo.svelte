@@ -261,6 +261,7 @@ img {
     left: calc(50% - 100px);
     top: calc(50% - 100px);
     z-index: 4;
+    border-radius: 15px;
 }
 .caller {
     display: flex;
