@@ -354,14 +354,14 @@ const typing = (e) => {
 {/if}
 
 
-<main in:fade|global="{{ duration: 350 }}">
+<main in:fade|global="{{ duration: 250 }}">
     <ChatList
         OpenRename="{(a) => openRename(a)}"
         onConversation="{(e) => printConversation(e)}"
         onOpen="{openAdd}"
     />
 
-    <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
+    <div class="right_side" out:fade|global="{{ duration: 100 }}">
         <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}" bind:this={windowChat} bind:clientHeight={windowHeight}>
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner">

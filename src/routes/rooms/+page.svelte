@@ -611,13 +611,13 @@ const typing = (e) => {
 {/if}
 
 <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={(e) => dropFile(e)}>
-<main in:fade|global="{{ duration: 350 }}">
+<main in:fade|global="{{ duration: 250 }}">
     <RoomList
         onPrintRoom="{(e) => printRoom(e)}"
         onRemoveRoom="{() => printRoom($rooms.roomArray[0])}"
     />
     
-    <div class="right_side" in:fade|global="{{ duration: 350 }}" out:fade|global="{{ duration: 100 }}">
+    <div class="right_side" out:fade|global="{{ duration: 100 }}">
       
         <TopBar />
         
