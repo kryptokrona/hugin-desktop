@@ -521,53 +521,11 @@ function set_known_pooltxs(checkedTxs) {
     return known
 }
 
-async function trimTxs(json) {
-    json = JSON.stringify(json)
-    .replaceAll('.txPrefix', '')
-    .replaceAll('transactionPrefixInfo.txHash', 'transactionPrefixInfotxHash')
-
-    json = JSON.parse(json)
-
-    return json.addedTxs
-}
-
-async function check_node_version(node) {
-    try {
-    const version =  await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
-    const json = await version.json()
-    if (json.version === "1.1.4") return true
-    else return false
-    } catch(e) {
-        return false
-    }
-}
-
-async function get_pool_changes_lite(node) {
-    try {
-    const resp = await fetch(
-        'http://' + node.node + ':' + node.port.toString() + '/get_pool_changes_lite',
-        {
-            method: 'POST',
-            body: JSON.stringify({ knownTxsIds: known_pool_txs }),
-        }
-    )
-    return await resp.json()
-
-    } catch(e) {
-        //Node error
-        return false
-    }
-}
-
 
 async function sync_from_node(node) {
     if (Nodes.connection === null) return []
     const lastChecked = store.get('pool.checked')
-    store.set({
-        pool: {
-            checked: Date.now() - 2000
-        }
-    })
+  
     const resp = await Nodes.sync({
         request: true, 
         type: 'some', 
@@ -590,6 +548,12 @@ async function fetch_hugin_messages() {
         console.log('No incoming messages...')
         return false
     }
+
+    store.set({
+        pool: {
+            checked: Date.now() - 1000
+        }
+    })
     
     return list
 }
