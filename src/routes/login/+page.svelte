@@ -21,9 +21,9 @@ let passwordField = $state()
 let started = $derived($user.started)
 
 run(() => {
-    if (errNode) {
-    $layoutState.showNodeSelector = true
-  }
+  //   if (errNode) {
+  //   $layoutState.showNodeSelector = true
+  // }
   });
 
 onMount(async () => {

@@ -3,7 +3,7 @@
 
   import { onDestroy, onMount} from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
-  import {boards, webRTC, groups, beam, swarm} from '$lib/stores/user.js'
+  import {boards, webRTC, groups, beam, swarm, keyboard} from '$lib/stores/user.js'
   import {page} from '$app/stores'
   import {user} from '$lib/stores/user.js'
   import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -21,11 +21,22 @@
   let mount = $state(false)
   let activeBeam = $state(false)
   let to = $state("")
+  let inrooms = $state(false)
+  let inmessages = $state(false)
+  let infeed = $state(false)
+  let messageInput = $state($keyboard.input)
   let shiftKey
+
+  run(() => {
+    messageInput = $keyboard.input
+  })
 
   onMount(async () => {
     mount = true
+    checkPath()
+    //Check if we have any active texts in this contact or room chat.
     fieldFocus()
+    await sleep(100);
     await sleep(1000)
     //Not sure why it takes so long to find the emoji picker.
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
@@ -34,6 +45,80 @@
   onDestroy(() => {
     window.api.removeAllListeners("emoji-click");
   })
+
+
+  function checkPath() {
+    //Separating these to avoid collisions between windows.
+    switch($page.url.pathname) {
+
+      case '/messages': 
+        inmessages = true
+        console.log("In messages")
+        break;
+      
+      case '/feed': 
+        infeed = true
+        break;
+  
+      case '/rooms':
+        inrooms = true
+         console.log("In rooms")
+        break;
+    }
+  }
+
+  function saveText() {
+    if (infeed) {
+      //Wait with feed.
+      
+    } else if (inrooms) {
+      let [inRoom, room] = getActiveRoom()
+      if (inRoom) {
+        inRoom.text = messageInput
+      } else {
+        $keyboard.room.push({room, text: messageInput})
+      }
+
+    } else if (inmessages) {
+      let [inChat, chat] = getActiveChat()
+      if (inChat) {
+      inChat.text = messageInput
+      } else {
+      $keyboard.messages.push({chat, text: messageInput})
+      }
+    }
+
+    console.log("messageInput", messageInput)
+    console.log("keyboard", $keyboard)
+    $keyboard.input = messageInput
+    $keyboard = $keyboard
+  }
+
+
+  function clearSavedText() {
+    if (inmessages) {
+      let [inChat] = getActiveChat()
+      if (inChat) {
+         $keyboard.messages = $keyboard.messages.filter(a => a !== inChat)
+      }
+    } else if (inrooms) {
+      let [inRoom] = getActiveRoom()
+      if (inRoom) {
+         $keyboard.room = $keyboard.room.filter(a => a !== inRoom)
+      }
+    }
+  }
+
+  function getActiveRoom() {
+    if (!$swarm.activeSwarm) return [undefined, false]
+    const room = $swarm.activeSwarm.key
+    return [$keyboard.room.find(a => a.room === room), room]
+  }
+
+  function getActiveChat() {
+    const chat = $user.activeChat.chat
+    return [$keyboard.messages.find(a => a.chat === chat), chat]
+  }
 
   const keyup = (e) => {
     if (e.key === 'Shift') shiftKey = false
@@ -46,6 +131,7 @@
     if(shiftKey && e.key ==='Enter') {
       autosize()
     }
+    saveText()
   }
 
   const keydown = (e) => {
@@ -66,8 +152,6 @@
     openEmoji = false
   }
 
-  //Input data to dispatch
-  let messageInput = $state("")
 
   //To handle button disabled enabled
   let enableSend = $state(false)
@@ -83,6 +167,7 @@
       swarm: activeSwarm
     })
     resetInputHeight()
+    clearSavedText()
     messageInput = ''
   }
 
@@ -117,6 +202,7 @@
   }
 
 
+
   //Checks if input is empty
   run(() => {
     enableSend = !!messageInput
@@ -130,11 +216,6 @@
   run(() => {
     if ($user.activeChat) {
       off_chain = $webRTC.call.some((a) => a.chat == $user.activeChat.chat && a.connected)
-    }
-  });
-  run(() => {
-    if ($groups.replyTo.reply && $page.url.pathname === '/groups' && mount) {
-      fieldFocus()
     }
   });
   run(() => {
@@ -158,15 +239,8 @@
   });
   run(() => {
     if (mount) {
-      if ($page.url.pathname === '/groups') {
-        to = $groups.thisGroup.name
-        if (activeSwarm) {
-          //Show channel name
-          if ($swarm.activeChannel.name.length) to = "#" + $swarm.activeChannel.name
-        }
-      }
 
-      if ($page.url.pathname === '/messages') {
+      if (inmessages) {
         to = $user.activeChat.name
       }
 

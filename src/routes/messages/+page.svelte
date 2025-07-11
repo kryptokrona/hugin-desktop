@@ -8,7 +8,7 @@ import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import ChatList from '$lib/components/chat/ChatList.svelte'
 import AddChat from '$lib/components/chat/AddChat.svelte'
-import {boards, notify, transactions, user, beam, webRTC, swarm, files} from '$lib/stores/user.js'
+import {boards, notify, transactions, user, beam, webRTC, swarm, files, keyboard} from '$lib/stores/user.js'
 import Rename from '$lib/components/chat/Rename.svelte'
 import SendTransaction from '$lib/components/finance/SendTransaction.svelte'
 import Dropzone from "svelte-file-dropzone";
@@ -129,14 +129,23 @@ const removeDuplicates = (arr) => {
     return arr.filter((obj) => !uniq[parseInt(obj.timestamp)] && (uniq[parseInt(obj.timestamp)] = true))
 }
 
+function getActiveChat(chat) {
+    return $keyboard.messages.find(a => a.chat === chat)
+}
+
 //Prints conversation from active contact
 const printConversation = async (active) => {
     messageList = []
+    $keyboard.input = ''
     const active_chat = { chat: active.chat, key: active.key, name: active.name }
     $user.activeChat = active_chat
     const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
     $notify.unread = clear
     active_contact = active.chat + active.key
+
+    const inChat = getActiveChat(active.chat)
+    if (inChat) $keyboard.input = inChat.text
+    $keyboard = $keyboard
     
     const allMessages = await loadMessages()
 

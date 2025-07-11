@@ -169,6 +169,13 @@ export const rooms = writable({
 
  export const theme = writable(localStorage.getItem("themes") ?? 'dark');
 
+ export const keyboard = writable({
+    room: [],
+    messages: [],
+    feed: [],
+    input: ''
+ })
+
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {
         return get_avatar($user.myAddress)

@@ -8,7 +8,7 @@ import {fade, fly} from 'svelte/transition'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
-import {notify, user, swarm, rooms, misc, files, transactions} from '$lib/stores/user.js'
+import {notify, user, swarm, rooms, misc, files, transactions, keyboard} from '$lib/stores/user.js'
 import {onDestroy, onMount} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
@@ -340,8 +340,13 @@ run(() => {
     }
     });
 
+function getActiveRoom(room) {
+    return $keyboard.room.find(a => a.room === room)
+}
+
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.
 async function printRoom(room, create = false) {
+    $keyboard.input = ''
     loadMore = true
     pageNum = 0
     fixedRooms = []
@@ -365,6 +370,11 @@ async function printRoom(room, create = false) {
     const active = $swarm.active.find(a => a.key === room.key)
     $swarm.activeSwarm = active
     $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: active.topic}
+
+    const inRoom = getActiveRoom(room.key)
+    if (inRoom) $keyboard.input = inRoom.text
+    $keyboard = $keyboard
+
     checkReactions(messages, false)
     replyExit()
     scrollDown()
