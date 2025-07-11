@@ -85,6 +85,7 @@ let activeDevice = $derived($mediaSettings.cameraId)
     border-radius: 0.4rem;
     z-index: 999;
     max-height: 400px;
+    -webkit-app-region: no-drag;
     div {
         text-align: center;
         border-radius: 5px;
