@@ -36,7 +36,6 @@
     checkPath()
     //Check if we have any active texts in this contact or room chat.
     fieldFocus()
-    await sleep(100);
     await sleep(1000)
     //Not sure why it takes so long to find the emoji picker.
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
