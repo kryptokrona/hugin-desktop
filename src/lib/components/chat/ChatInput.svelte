@@ -53,7 +53,6 @@
 
       case '/messages': 
         inmessages = true
-        console.log("In messages")
         break;
       
       case '/feed': 
@@ -62,7 +61,6 @@
   
       case '/rooms':
         inrooms = true
-         console.log("In rooms")
         break;
     }
   }
@@ -88,8 +86,6 @@
       }
     }
 
-    console.log("messageInput", messageInput)
-    console.log("keyboard", $keyboard)
     $keyboard.input = messageInput
     $keyboard = $keyboard
   }
@@ -145,7 +141,6 @@
 
   //This handles the emojis, lets fork the repo and make a darker theme.
   function onEmoji(emoji) {
-    console.log("Emoji!", emoji)
     if (messageInput) {
       messageInput += emoji
     } else messageInput = emoji
@@ -194,7 +189,6 @@
 
 
   function autosize() {
-    console.log(messageField.scrollHeight)
     if(messageInput !== '') {
       messageField.style.cssText = 'height:auto';
       messageField.style.cssText = 'height:' + messageField.scrollHeight + 'px';
