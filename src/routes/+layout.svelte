@@ -144,37 +144,45 @@
 
     window.api.receive('room-notification', ([data, add = false]) => {
         console.log("room notification", data)
+
+
+        //Initial state check
         if ($notify.notifications.some(a => a.hash === data.hash)) return
         const thisgroup = data.group === $rooms.thisRoom.key
         const ingroups = $page.url.pathname === '/rooms'
         const group = $rooms.roomArray.find(a => a.key === data.group)
-        if (Date.now() - parseInt(data.time) > 120000) return
         if (data.address == $user.myAddress) return
         if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
         if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus && !$swarm.showVideoGrid) return
         new_messages = true
         data.room = true
-        //Future notifications page
-        $notify.notifications.push(data)
+
+        //Check if we want to play sound and display notif.
         if ($notify.new.length < 2 && !$notify.que && !add) {
+            if (Date.now() - parseInt(data.time) > 120000) return
+            //In app notif.
             if (!$notify.off.some(a => a === group.name)) {
                 if ($misc.focus && $sounds.on) {
-                    console.log("$misc.focus && $sounds.on", $misc.focus, $sounds.on)
                     board_message_sound.play()
                 }
                 $notify.new.push(data)
-                data.roomName = group.name
-                if (!$misc.focus) {
-                        console.log("OS notify", $misc.focus, $sounds.on)
+                //Os notif.
+                if (!$misc.focus) { 
+                    data.roomName = group.name
                     window.api.send('notify-room', data)
                 }
             }
         }
+
+        //Add to notifications page
+        $notify.notifications.push(data)
+
         if (!$misc.focus && thisgroup && ingroups) return
         if (add) return
+
+        //Add to unread ie. shows the unread counter, and dots on the sidebar.
         data.type = 'room'
         $notify.unread.push(data)
-        console.log("unread!", $notify.unread)
         $notify = $notify
     })
 
