@@ -73,7 +73,7 @@
       if (inRoom) {
         inRoom.text = messageInput
       } else {
-        $keyboard.room.push({room, text: messageInput})
+        $keyboard.room.set(room, {text: messageInput})
       }
 
     } else if (inmessages) {
@@ -81,7 +81,7 @@
       if (inChat) {
       inChat.text = messageInput
       } else {
-      $keyboard.messages.push({chat, text: messageInput})
+      $keyboard.messages.set(chat, {text: messageInput})
       }
     }
 
@@ -92,14 +92,14 @@
 
   function clearSavedText() {
     if (inmessages) {
-      let [inChat] = getActiveChat()
+      let [inChat, chat] = getActiveChat()
       if (inChat) {
-         $keyboard.messages = $keyboard.messages.filter(a => a !== inChat)
+         $keyboard.messages.delete(chat)
       }
     } else if (inrooms) {
-      let [inRoom] = getActiveRoom()
+      let [inRoom, room] = getActiveRoom()
       if (inRoom) {
-         $keyboard.room = $keyboard.room.filter(a => a !== inRoom)
+         $keyboard.room.delete(room)
       }
     }
   }
@@ -107,12 +107,12 @@
   function getActiveRoom() {
     if (!$swarm.activeSwarm) return [undefined, false]
     const room = $swarm.activeSwarm.key
-    return [$keyboard.room.find(a => a.room === room), room]
+    return [$keyboard.room.get(room), room]
   }
 
   function getActiveChat() {
     const chat = $user.activeChat.chat
-    return [$keyboard.messages.find(a => a.chat === chat), chat]
+    return [$keyboard.messages.get(chat), chat]
   }
 
   const keyup = (e) => {

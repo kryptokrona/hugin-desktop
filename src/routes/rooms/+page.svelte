@@ -341,7 +341,7 @@ run(() => {
     });
 
 function getActiveRoom(room) {
-    return $keyboard.room.find(a => a.room === room)
+    return $keyboard.room.get(room)
 }
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.

@@ -100,7 +100,6 @@ const isFile = (data) => {
         return arr.find(a => parseInt(data.timestamp) === parseInt(a.time))
     }
     let file = findit($files)
-    console.log("Find file!", file)
     if (file) {
         file.saved = true
         return file
@@ -130,7 +129,7 @@ const removeDuplicates = (arr) => {
 }
 
 function getActiveChat(chat) {
-    return $keyboard.messages.find(a => a.chat === chat)
+    return $keyboard.messages.get(chat)
 }
 
 //Prints conversation from active contact
@@ -216,6 +215,8 @@ const sendMsg = (e) => {
         timestamp: Date.now(),
         beam: beam
     }
+    
+    $keyboard.input = ''
 
     printMessage(myMessage)
     window.api.sendMsg(msg, active_contact, offChain, false, beam)

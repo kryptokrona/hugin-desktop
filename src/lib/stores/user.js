@@ -170,8 +170,8 @@ export const rooms = writable({
  export const theme = writable(localStorage.getItem("themes") ?? 'dark');
 
  export const keyboard = writable({
-    room: [],
-    messages: [],
+    room: new Map(),
+    messages: new Map(),
     feed: [],
     input: ''
  })
