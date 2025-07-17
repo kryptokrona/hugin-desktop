@@ -30,7 +30,7 @@
     const my_address = $user.myAddress
 
     let thisSwarm = $derived($swarm.voice)
-    let in_voice = $derived(voice_channel.some(a => a.address === my_address))
+    let in_voice = $derived(voice_channel.has(my_address))
 
     run(() => {
         if (thisSwarm) channels = thisSwarm.channels
@@ -53,45 +53,6 @@
     onDestroy(() => {
         clearInterval(timer)
     })
-
-    const share_profile = async () => {
-        return
-        const profile = await window.api.getProfile()
-        const hash = await window.api.createGroup()
-        const time = Date.now()
-        window.api.groupUpload(profile.name, profile.path, $swarm.activeSwarm.topic, profile.size, time, hash, true)
-}
-
-    const join_voice_channel = async (video = false, screen) => {
-        loading = true
-        if (in_voice) return
-        if (thisSwarm.voice_channel.length > 9) {
-            window.api.errorMessage('There are too many in the call')
-            loading = false
-            return
-        }
-        console.log("Joining!")
-        await sleep(50)
-        //Leave any active first
-        if ($swarm.voice_channel.length) {
-            console.log("Still in voice")
-            window.api.errorMessage('You are already in a voice channel')
-            return
-            //We already have an active call.
-            disconnect_from_active_voice()
-        }
-        startTone.play()
-        $swarm.showVideoGrid = true
-        console.log("Want to Join new voice")
-        thisSwarm.voice_channel.push({address: my_address, name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = thisSwarm.voice_channel
-        window.api.send("join-voice", {key: thisSwarm.key, videoMute: !$videoSettings.myVideo, video: $videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
-        //Set to true? here
-        $swarm.voice = thisSwarm
-        $swarm = $swarm
-        loading = false
-        console.log("Should be joined and connected here in this swarm", thisSwarm)
-    }
 
     function disconnect_from_active_voice() {
         window.api.exitVoiceChannel()
@@ -176,7 +137,6 @@
         <div>
         <div class="connectButton">
             {#if !in_voice}
-            <FillButton text={"Join call"} enabled={true} loading={loading} on:click={join_voice_channel}/>
             {:else}
             <p>{time}</p>
             {/if}

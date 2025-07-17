@@ -26,6 +26,7 @@ let status = $state({})
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {
     if (!active) return
+    console.log("PEER", call)
     peerVideo.srcObject = call.peerStream
     peerAudio.srcObject = call.peerStream
     $videoGrid.peerVideos.push({chat: call.chat, size: 1})
@@ -36,14 +37,17 @@ onMount(() => {
 })
 
 run(() => {
-    status = channel?.find(a => a.address === call.chat)
+    console.log("channel", channel)
+    console.log("call.chat", call.chat)
+    status = channel.get(call.chat)
+    console.log("STATUS CALL", status)
   });
 
 async function setName() {
     if (!active) {
-        return channel.find(a => call.address === a.address)
+        return channel.get(call.address)
     }
-    else if ($swarm.call.length) return channel.find(a => call.chat === a.address)
+    else if ($swarm.call.length) return channel.get(call.chat)
     else return $user.contacts.find(a => a.chat === call.chat)
 }
 

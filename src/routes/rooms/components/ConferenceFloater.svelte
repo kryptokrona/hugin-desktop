@@ -39,8 +39,7 @@
     
     //End call with all peers
     const endCall = () => {
-       const filter = $swarm.voice.voice_channel.filter(a => a.address !== $user.myAddress)
-       $swarm.voice.voice_channel = filter
+       $swarm.voice.voice_channel.delete($user.myAddress)
        window.api.exitVoiceChannel()
         //We pause the ringtone and destroy the popup
     }
@@ -80,7 +79,7 @@
                 <p>{time}</p>
             </div>
             <div class="caller">
-                {#each $swarm.voice?.voice_channel.slice(-3) as call}
+                {#each [...$swarm.voice_channel.entries()].slice(-3) as [key, call]}
                     <InCallAvatar call={call} />
                 {/each}
             </div>

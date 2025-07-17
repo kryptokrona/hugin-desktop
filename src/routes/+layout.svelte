@@ -235,14 +235,14 @@
     window.api.receive('user-joined-voice-channel', data => {
         console.log("Someone joined a call, layout", data)
         let contact = $user.contacts.find((a) => a.chat == data.address)
-        console.log("contact", contact)
         if (!contact) return
         let room = $swarm.active.find(a => a.topic === data.topic)
-        console.log("Room", room)
+        console.log("Rojom", room)
         if (!room) return
         if (!room.beam) return
         //We are already in the call
         if (room === $swarm.voice) return
+        if ($swarm.voice.voice_channel.has(data.address)) return
 
         let joined = {
             chat: data.address,
@@ -619,9 +619,6 @@
         //         time: file.time
         // })
     }
-    
-    
-
 
 
 </script>
@@ -638,7 +635,7 @@
 
     {#if $swarm.active.length}
             <Conference />
-            {#if $swarm.voice_channel.some(a => a.address === $user.myAddress)}
+            {#if $swarm.voice_channel.has($user.myAddress)}
                 <ConferenceFloater />
             {/if}
     {/if}

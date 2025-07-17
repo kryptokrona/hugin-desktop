@@ -35,7 +35,7 @@
         $rooms.removeRoom = !$rooms.removeRoom
     }
 
-    let in_voice = $derived(voice_channel.some(a => a.address === $user.myAddress))
+    let in_voice = $derived(voice_channel.has($user.myAddress))
     
     run(() => {
         if (thisSwarm) channels = thisSwarm.channels

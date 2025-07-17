@@ -71,7 +71,8 @@ run(() => {
    });
 
 run(() => {
-      if (thisSwarm && $swarm.voice_channel.some(a => a.address === $user.myAddress && a.key === thisSwarm.key)) {
+    const me = thisSwarm.voice_channel.get($user.myAddress)
+    if (me && me.key === thisSwarm.key) {
        in_voice = true
    } else in_voice = false
    });
@@ -138,7 +139,7 @@ const join_voice_channel = async (video = false, screen) => {
         if (in_voice) return
         console.log("Joining!")
         //Leave any active first
-        if ($swarm.voice_channel.length) {
+        if ($swarm.voice_channel.size) {
             console.log("Still in voice")
             window.api.errorMessage('You are already in a voice channel')
             return
@@ -147,13 +148,13 @@ const join_voice_channel = async (video = false, screen) => {
         }
         startTone.play()
         console.log("Want to Join new voice")
-        thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
+        const address = $user.myAddress
+        thisSwarm.voice_channel.set(address, {address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare}) 
         $swarm.voice = thisSwarm
         console.log("this swarm ", thisSwarm)
         $swarm.active = $swarm.active
-        console.log("Should be joined and connected here in this swarm", thisSwarm)
     }
 
 

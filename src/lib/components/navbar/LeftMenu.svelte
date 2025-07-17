@@ -112,7 +112,7 @@ const selectAvatar = async () => {
   };
 
 run(() => {
-    if ($webRTC.call.length || $swarm.voice_channel.some(a => a.address === $user.myAddress)) {
+    if ($webRTC.call.length || $swarm.voice_channel.has($user.myAddress)) {
       in_voice = true
   } else in_voice = false
   });

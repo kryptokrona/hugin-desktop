@@ -245,7 +245,7 @@ const create_swarm = async (data, beam, chat) => {
         topic: topicHash,
         key: invite,
         channels: [],
-        voice_channel: [],
+        voice_channel: new Map(),
         connections: [],
         time: startTime,
         admin,
@@ -1429,7 +1429,7 @@ function get_sdp(data) {
 
     if ('renegotiate' in data.data) {
         offer = false
-    } 
+    }
 
     sendMessage = {
         data: data.data,

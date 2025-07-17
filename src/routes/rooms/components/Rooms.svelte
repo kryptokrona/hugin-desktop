@@ -31,23 +31,28 @@
             //Leave any active first, check if my own address is active in some channel
             //Remove my own address from swarm active voice channel list in UI
             $swarm.active.forEach(joined => {
-                if (joined.voice_channel.some(a => a.address === my_address)) {
-                let removed = joined.voice_channel.filter(a => a.address !== my_address) 
-                joined.voice_channel = removed
+                if (joined.voice_channel.has(my_address)) {
+                joined.voice_channel.delete(my_address)
                 }
             })
 
+            if ($swarm.myStream) {
+                try {
+                    $swarm.myStream.getTracks().forEach((track) => track.stop())
+                } catch(e) {
+                    console.log("Error stopping tracks.")
+                }
+            }
+
             //Check my current active swarm voice channel and remove aswell
-            let active = $swarm.voice_channel.find(a => a.address === my_address)
+            let active = $swarm.voice_channel.has(my_address)
             if (!active) return true
 
             $swarm.voice = false
             
             //Remove from the active voice channel we have
             console.log("Want to exit old voice")
-            $swarm.voice_channel = []
-            
-            if ($swarm.myStream) $swarm.myStream.getTracks().forEach((track) => track.stop())
+            $swarm.voice_channel = new Map()
         
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {

@@ -21,8 +21,7 @@
     let talkOn = new Audio('/audio/talk.mp3')
     let talkOff = new Audio('/audio/notalk.mp3')
     $effect(() => {
-       console.log("render conference channel?", $swarm.voice_channel)
-        if ($swarm.voice_channel.some(a => a.address === my_address)) {
+        if ($swarm.voice_channel.has(my_address)) {
             in_voice = true
         } else in_voice = false
     })
@@ -64,7 +63,7 @@
     let isConnecting = $state(false)
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
     run(() => {
-      if ($swarm.call.some(a => thisSwarm?.voice_channel.some(b => b.address === a.chat) && !a.connected && in_voice && a.chat !== my_address)) {
+      if ($swarm.call.some(a => thisSwarm?.voice_channel.has(a.chat) && !a.connected && in_voice && a.chat !== my_address)) {
            isConnecting = true
        } else {
            isConnecting = false
@@ -147,13 +146,11 @@
                 {/if}
             {:else}
             {#if thisSwarm}
-                {#if thisSwarm?.voice_channel?.length}
+                {#if thisSwarm?.voice_channel?.size}
             
-                    {#each thisSwarm?.voice_channel as peer (peer.address)}
-            
-                        <PeerVideo call="{peer}" active="{false}" channel="{thisSwarm.voice_channel}"/>
-                        
-                    {/each}
+                {#each [...thisSwarm?.voice_channel.entries()] as [key, peer] (peer.address)}
+                        <PeerVideo call={peer} active={false} channel={thisSwarm.voice_channel} />
+                {/each}
 
                 {:else}
                  <div class:blink_me={true} in:fly|global={{ x: 150}}>

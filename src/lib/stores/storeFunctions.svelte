@@ -42,6 +42,7 @@
 
     function swarm_connected(data) {
         console.log( 'Swarm connected', data)
+        data.voice_channel = new Map()
         $swarm.active.push(data)
         updateActiveSwarm()
     }
@@ -119,9 +120,8 @@
         joined.connections = still_active
         
         //Also remove from voice channel
-        if (joined.voice_channel.some(a => a.address === data.address)) {
-            let removed = joined.voice_channel.filter(a => a.address !== data.address) 
-            joined.voice_channel = removed
+        if (joined.voice_channel.has(data.address)) {
+            joined.voice_channel.delete(data.address)
         }
 
         // if ($swarm.call.some(a => a.chat === data.address)) {
@@ -138,9 +138,7 @@
         let removed = $swarm.active.filter(a => a.topic !== topic)
         //Remove from voice channel also
         let disconnected = $swarm.active.find(a => a.topic === topic)
-        let still_active = disconnected.voice_channel.filter(a => a.address !== $user.myAddress)
-        //Then update that voicechannel list
-        still_active.voice_channel = still_active
+        disconnected.voice_channel.delete($user.myAddress)
         //Update active swarm store
         $swarm.active = removed
         updateActiveSwarm()
@@ -149,26 +147,29 @@
     function voice_channel_status(data) {
         let active = $swarm.active.find(a => a.topic === data.topic)
         if (!active) return
-        let joined = active.voice_channel.some(a => a.address === data.address)
-        let user = active.connections.find(a => a.address === data.address)
+        let joined = active.voice_channel.has(data.address)
+        let connected = active.connections.find(a => a.address === data.address)
         //First connection status
         if (data.voice === true && !joined) {
-            user.name = data.name
-            active.voice_channel.push(data)
+            connected.name = data.name
+            active.voice_channel.set(data.address, data)
         } else if (data.voice === true && joined) { 
             //Update voice channel status
-            let update = active.voice_channel.filter(a => a.address !== data.address)
-            active.voice_channel = update
+            active.voice_channel.delete(data.address)
             updateActiveSwarm()
-            active.voice_channel.push(data)
+            active.voice_channel.set(data.address, data)
         } else if (data.voice === false) {
-           let still_active = active.voice_channel.filter(a => a.address !== data.address)
-           active.voice_channel = still_active
+           active.voice_channel.delete(data.address)
         } 
+
+        console.log("active.voice_channel", active.voice_channel)
+        console.log("$swarm.voice_channel ", $swarm.voice_channel )
         
         //We are only active in one voice channel, if someone disconnects. Update status.
-        if ($swarm?.voice_channel.length) {
-            if (active.key === $swarm.voice_channel[0].key || data.topic === $swarm.voice_channel[0].topic) {
+        if ($swarm?.voice_channel.size) {
+            const inchannel = $swarm.voice_channel.get($user.myAddress)
+            console.log("inchannel", inchannel)
+            if (inchannel && (inchannel.key === data.key) || (inchannel.topic === data.topic)) {
                 $swarm.voice_channel = active.voice_channel
             }
         }

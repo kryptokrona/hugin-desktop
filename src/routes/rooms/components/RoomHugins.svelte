@@ -30,7 +30,7 @@ let onlineUsers = []
 let thisSwarm = false
 let knownUsers = $state($rooms.activeHugins)
 let room = $state('')
-let voice_channel = $derived(thisSwarm)
+let voice_channel = $state([])
 
 //Active hugins
 
@@ -54,8 +54,16 @@ run(() => {
 
 const updateCall = () => {
     if (!thisSwarm) return
-    in_voice = thisSwarm.voice_channel.some(a => a.address === $user.myAddress)
-    voice_channel = thisSwarm.voice_channel
+    if (thisSwarm.voice_channel.size === voice_channel.length) return
+    in_voice = thisSwarm.voice_channel.has($user.myAddress)
+    addVoiceUsers()
+}
+
+const addVoiceUsers = () => {
+    voice_channel = []
+    for (const [key, val] of thisSwarm.voice_channel.entries()) {
+        voice_channel.push(val)
+    }
 }
 
 
@@ -94,14 +102,14 @@ function showUser(user) {
 const join_voice_channel = async (video = false, screen) => {
         loading = true
         if (in_voice) return
-        if (thisSwarm.voice_channel?.length > 9) {
+        if (thisSwarm.voice_channel.size > 9) {
             window.api.errorMessage('There are too many in the call')
             loading = false
             return
         }
         console.log("Joining!")
         //Leave any active first
-        if ($swarm.voice_channel.length) {
+        if ($swarm.voice_channel.size) {
             console.log("Still in voice")
             window.api.errorMessage('You are already in a voice channel')
             return
@@ -111,7 +119,8 @@ const join_voice_channel = async (video = false, screen) => {
         startTone.play()
         await sleep(50)
         console.log("Want to Join new voice")
-        thisSwarm.voice_channel.push({address: $user.myAddress, name: $user.username, key: thisSwarm.key })
+        const address = $user.myAddress
+        thisSwarm.voice_channel.set(address, {address, name: $user.username, key: thisSwarm.key })
         $swarm.voice_channel = thisSwarm.voice_channel
         $swarm.voice = thisSwarm
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
@@ -156,7 +165,6 @@ const join_voice_channel = async (video = false, screen) => {
                     {#each voice_channel as voice (voice.address)}
                         <VoiceUser voice_user={voice} voice_channel={thisSwarm.voice_channel} />
                     {/each}
-
             </div>
 
             <div class="user-list" >

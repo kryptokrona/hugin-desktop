@@ -24,6 +24,13 @@
           isTalking = false
       }
   });
+
+  $effect(()=> {
+    console.log("voice_user", voice_user)
+     console.log("voice_user", voice_user)
+      console.log("voice_user", voice_user)
+       console.log("voice_user", voice_user)
+  })
   
     const check_avatar = (address) => {
        const found = $rooms.avatars.find(a => a.address === address)
@@ -31,7 +38,7 @@
        else return false
     }
     //Check if we are also online in this channel
-    let in_voice = $derived(voice_channel.some(a => a.address === $user.myAddress))
+    let in_voice = $derived(voice_channel.get(user.myAddress))
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
 
 </script>

@@ -125,7 +125,7 @@ export const beam = writable({
 export const swarm = writable({
     active: [],
     myVideo: false,
-    voice_channel: [],
+    voice_channel: new Map(),
     call: [],
     newChannel: false,
     activeChannel: {name: ""},
