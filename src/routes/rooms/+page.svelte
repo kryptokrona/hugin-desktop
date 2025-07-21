@@ -36,7 +36,7 @@ let fixedRooms = $state([])
 let replyTrue = $state(false)
 let scrollGroups = []
 let windowHeight = $state()
-let windowChat = $state()
+let windowChat
 let channelMessages = []
 let pageNum = 0;
 let loadMore = $state(true)
@@ -104,7 +104,6 @@ onMount(async () => {
     window.api.receive('roomMsg', (data) => {
         newMessage(data)
         
-        
     })
     window.api.receive('history-update', (data) => {
         const inroom = $swarm.activeSwarm?.key === data.key
@@ -140,6 +139,7 @@ function newMessage(data) {
             console.log("Another room")
         }
         
+        scrollDown()
         return
 }
 

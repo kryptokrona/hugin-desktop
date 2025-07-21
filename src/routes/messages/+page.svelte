@@ -28,7 +28,7 @@ let dragover = $state(false)
 let toggleRename = $state(false)
 let wantToAdd = $state(false)
 let windowHeight = $state()
-let windowChat = $state()
+let windowChat
 
 let thisSwarm = $derived($swarm.active.find(a => a.chat === $user.activeChat.chat))
 //Get messages on mount.
