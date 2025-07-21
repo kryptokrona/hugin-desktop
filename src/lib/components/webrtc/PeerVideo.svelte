@@ -51,6 +51,7 @@ async function setName() {
     const contact = $user.contacts.find(a => a.chat === call.chat)
     if (!contact) return {name: 'Anon'}
     else return contact
+}
 
 const playVideo = () => {
     peerVideo.play()
