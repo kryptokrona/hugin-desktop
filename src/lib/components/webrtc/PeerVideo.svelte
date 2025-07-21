@@ -48,8 +48,9 @@ async function setName() {
         return channel.get(call.address)
     }
     else if ($swarm.call.length) return channel.get(call.chat)
-    else return $user.contacts.find(a => a.chat === call.chat)
-}
+    const contact = $user.contacts.find(a => a.chat === call.chat)
+    if (!contact) return {name: 'Anon'}
+    else return contact
 
 const playVideo = () => {
     peerVideo.play()
@@ -181,7 +182,7 @@ const resize = (size) => {
     {#await setName() then contact}
     <div class="status">
         <div class:in_call="{true}"></div>
-        <div class="name">{contact.name}</div>
+        <div class="name">{contact?.name}</div>
         <div class="voicestatus">
             {#if status?.audioMute}
                 <MuteIcon size={"20px"}/>
