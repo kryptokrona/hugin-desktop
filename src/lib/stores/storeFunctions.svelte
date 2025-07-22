@@ -168,8 +168,7 @@
         //We are only active in one voice channel, if someone disconnects. Update status.
         if ($swarm?.voice_channel.size) {
             const inchannel = $swarm.voice_channel.get($user.myAddress)
-            console.log("inchannel", inchannel)
-            if (inchannel && (inchannel.key === data.key) || (inchannel.topic === data.topic)) {
+            if (inchannel && (inchannel?.key === data.key) || (inchannel?.topic === data.topic)) {
                 $swarm.voice_channel = active.voice_channel
             }
         }

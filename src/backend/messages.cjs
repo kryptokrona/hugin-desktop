@@ -1,4 +1,4 @@
-const { keychain } = require('./crypto.cjs')
+const { keychain, encrypt_sealed_box } = require('./crypto.cjs')
 const {
     loadKnownTxs, 
     saveHash, 
@@ -199,8 +199,8 @@ ipcMain.handle('get-messages', async (data) => {
     return await getMessages()
 })
 
-ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam) => {
-    send_message(msg, receiver, off_chain, grp, beam)
+ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam, call) => {
+    send_message(msg, receiver, off_chain, grp, beam, call)
 })
 
 //Listens for event from frontend and saves contact and nickname.
@@ -558,16 +558,16 @@ async function fetch_hugin_messages() {
     return list
 }
 
-  async function generate_push_view_tag(address) {
+  async function generate_push_view_tag(address, call) {
     const myAddr = await Address.fromAddress(address);
     const pubKey = myAddr.m_keys.m_viewKeys.m_publicKey;
     const weeklyTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7));
     const hash = await crypto.cn_fast_hash(pubKey + weeklyTimestamp);
-    return hash.substring(0,3);
+    return call ? hash : hash.substring(0,3);
   }
 
 
-async function send_message(message, receiver, off_chain = false, group = false, beam_this = false) {
+async function send_message(message, receiver, off_chain = false, group = false, beam_this = false, call = false) {
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -586,9 +586,10 @@ async function send_message(message, receiver, off_chain = false, group = false,
     let seal = has_history ? false : true
     if (!off_chain) seal = true
     
-    payload_hex = await encrypt_hugin_message(message, messageKey, seal, address)
+    payload_hex = await encrypt_hugin_message(message, messageKey, seal, address, call)
     //Choose subwallet with message inputs
-    const viewtag = await generate_push_view_tag(address)
+    const viewtag = await generate_push_view_tag(address, call)
+
     if (!off_chain) {
         const sent = await Nodes.message(payload_hex, viewtag)
         if (typeof sent.success !== 'boolean') {
@@ -626,7 +627,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
     save_message(saveThisMessage, true)
 }
 
-async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr) {
+async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr, roomCall = false) {
     let timestamp = Date.now()
     let my_address = Hugin.wallet.getPrimaryAddress()
     const addr = await Address.fromAddress(toAddr)
@@ -640,6 +641,7 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
     const outDerivation = await crypto.generateKeyDerivation(toKey, keys.private_key);
     const hashDerivation = await crypto.cn_fast_hash(outDerivation)
     const viewTag = hashDerivation.substring(0,2)
+    const call = roomCall ? await key_derivation_hash(toAddr) : false
 
     if (sealed) {
 
@@ -649,7 +651,8 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
             k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
             msg: message,
             s: signature,
-            name: Hugin.nickname
+            name: Hugin.nickname,
+            call
         }
         let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json))
         box = new naclSealed.sealedbox(
@@ -657,6 +660,10 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
             nonceFromTimestamp(timestamp),
             hexToUint(messageKey)
         )
+
+        if (roomCall) {
+            box = encrypt_sealed_box(messageKey, payload_json_decoded)
+        }
     } else if (!sealed) {
         console.log('Has history, not using sealedbox')
         let payload_json = { from: my_address, msg: message }

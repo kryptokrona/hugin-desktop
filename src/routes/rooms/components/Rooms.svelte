@@ -44,15 +44,11 @@
                 }
             }
 
-            //Check my current active swarm voice channel and remove aswell
-            let active = $swarm.voice_channel.has(my_address)
-            if (!active) return true
-
-            $swarm.voice = false
-            
             //Remove from the active voice channel we have
             console.log("Want to exit old voice")
             $swarm.voice_channel = new Map()
+
+            $swarm.voice = false
         
             //Reset state if we are / were alone in the channel
             if ($swarm.call.length === 0) {
