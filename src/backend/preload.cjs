@@ -16,8 +16,8 @@ const WINDOW_API = {
         ipcRenderer.send('add-chat', hugin, name, first)
     },
     // HANDLE MESSAGES
-    sendMsg: (msg, address, offChain, grp = false, beam) => {
-        ipcRenderer.send('send-msg', msg, address, offChain, grp, beam)
+    sendMsg: (msg, address, offChain, grp = false, beam, call) => {
+        ipcRenderer.send('send-msg', msg, address, offChain, grp, beam, call)
     },
     sendGroupMessage: (msg, offchain, swarm) => {
         ipcRenderer.send('send-group-message', msg, offchain, swarm)

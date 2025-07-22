@@ -80,6 +80,8 @@ run(() => {
 //Starts any call
 const startCall = async () => {
     join_voice_channel()
+    if (connectedBeam) return
+    window.api.sendMsg('Call started', contact, false, false, false, true)
 }
 
 const openAdd = () => {
