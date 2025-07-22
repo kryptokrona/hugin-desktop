@@ -10,6 +10,7 @@ const Keychains = require('keypear');
 const { ipcMain } = require('electron');
 const { saveMsg } = require('./database.cjs');
 const { extraDataToMessage } = require('hugin-crypto');
+const sodium = require('sodium-native')
 
 ipcMain.handle('get-room-invite', async () => {
     return create_room_invite()
@@ -123,6 +124,13 @@ const keychain =  {
     
 }
 
+function encrypt_sealed_box(pk, m) {
+  const pub = Buffer.from(pk, 'hex')
+  const cipher = Buffer.alloc(m.length + sodium.crypto_box_SEALBYTES)
+  sodium.crypto_box_seal(cipher, m, pub)
+  return cipher
+}
+
 function create_peer_base_keys(buf) { 
     const keypair = DHT.keyPair(buf)
     const keys = Keychains.from(keypair) 
@@ -197,4 +205,4 @@ const decrpyt_beam_message = async (str, msgKey) => {
 }
 
 
-module.exports = {decrpyt_beam_message, sign_admin_message, sign_joined_message, verify_signature, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}
+module.exports = {encrypt_sealed_box, decrpyt_beam_message, sign_admin_message, sign_joined_message, verify_signature, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}
