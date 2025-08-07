@@ -63,11 +63,13 @@
     let isConnecting = $state(false)
     //If so the user is connecting to our call if he is not yet connected in $swarm.call
     run(() => {
-      if ($swarm.call.some(a => thisSwarm?.voice_channel.has(a.chat) && !a.connected && in_voice && a.chat !== my_address)) {
-           isConnecting = true
-       } else {
-           isConnecting = false
-       }
+        if (thisSwarm) {
+            if ($swarm.call.some(a => thisSwarm?.voice_channel.has(a.chat) && !a.connected && in_voice && a.chat !== my_address)) {
+                isConnecting = true
+            } else {
+                isConnecting = false
+            }
+        }
    });
     
     run(() => {
