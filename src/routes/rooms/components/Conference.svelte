@@ -134,7 +134,7 @@
                 <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} Active connections</h4>
             {/if} -->
             <div class:drag={$swarm.showVideoGrid} class="video-grid">
-            {#if in_voice}
+            {#if in_voice && thisSwarm}
                     <MyVideo active={active}/>
                 {#if videoCalls.length}
                     {#each videoCalls as peer (peer.chat)}
@@ -147,6 +147,7 @@
                 </div>
                 {/if}
             {:else}
+            
             {#if thisSwarm}
                 {#if thisSwarm?.voice_channel?.size}
             
