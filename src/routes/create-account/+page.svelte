@@ -82,7 +82,7 @@
     })
 
     window.api.receive('wallet-started', async () => {
-        await goto('/rooms')
+        await goto('/dashboard')
         $misc.loading = false
         $user.loggedIn = true
         username = ''
