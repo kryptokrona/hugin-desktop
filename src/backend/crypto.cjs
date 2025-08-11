@@ -137,11 +137,14 @@ function create_peer_base_keys(buf) {
     return keys
 }
 
+let dht_keys
 function get_new_peer_keys(key) {
     const secret = Buffer.alloc(32).fill(key)
     const base_keys = create_peer_base_keys(secret)
     const seed = randomKey()
-    const dht_keys = create_keys_from_seed(seed)
+    if (!dht_keys) {
+        dht_keys = create_keys_from_seed(seed)
+    }
     //Sign the dht public key with our base_keys
     const signature = base_keys.get().sign(dht_keys.get().publicKey)
     return [base_keys, dht_keys, signature]
