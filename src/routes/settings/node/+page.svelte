@@ -7,24 +7,20 @@
     import { slide } from 'svelte/transition';
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
 
-    // State
     let synced = $state(false);
     let networkHeight = $state();
     let walletHeight = $state();
     let connecting = $state(false);
-    let huginNode = $state('');
-    let connectionMode = $state('public'); // 'public' or 'private'
+    let huginNode = $derived($HuginNode.address);
+    let publicNode = $state(true);
     let status = $state('Syncing...');
 
-    // Active node
     let activeNode = $derived($misc.node.node ?? 'Connecting');
 
-    // Lifecycle
     onMount(() => {
         getHeight();
     });
 
-    // Effects
     $effect(() => {
         status = synced ? 'Connected' : 'Syncing blocks';
     });
@@ -48,7 +44,6 @@
         }
     });
 
-    // Functions
     async function getHeight() {
         let heightStatus = await window.api.getHeight();
         walletHeight = heightStatus.walletHeight;
@@ -70,13 +65,16 @@
     };
 
     const connect = () => {
-        const pub = connectionMode === 'public';
+        const pub = publicNode;
         if (!pub && huginNode.length < 99) {
             window.api.errorMessage('Address format is not correct.');
             return;
         }
         window.api.send('hugin-node', { address: pub ? '' : huginNode, pub });
     };
+
+    const truncateAddress = (addr) =>
+        addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : 'Not set';
 </script>
 
 {#if $layoutState.showNodeSelector}
@@ -88,78 +86,76 @@
     </div>
 {/if}
 
+<!-- Message Node -->
 <section class="card">
     <h2>Message Node</h2>
 
-    <div class="current-node">
-        <strong>Status:</strong>
-        <span>{#if HuginNode.connected}
-            Connected
+    <!-- First row: Status | Address -->
+    <div class="row">
+        <div class="status">
+            <h4>Status</h4>
+            {#if $HuginNode.connected}
+                <p class="nodeinfo syncstatus sync">Connected</p>
             {:else}
-            Disconnected
+                <p class="nodeinfo syncstatus">Disconnected</p>
             {/if}
-        </span>
-    </div>
-
-    <div class="mode-toggle">
-        <div
-            class="toggle-option {connectionMode === 'public' ? 'active' : ''}"
-            on:click={() => (connectionMode = 'public')}
-        >
-            Public
         </div>
-        <div
-            class="toggle-option {connectionMode === 'private' ? 'active' : ''}"
-            on:click={() => (connectionMode = 'private')}
-        >
-            Private
+        <div class="node">
+            <h4>Address</h4>
+            {#if publicNode}
+                <p class="nodeinfo ellipsis">Public Node</p>
+            {:else}
+                <p class="nodeinfo ellipsis">{truncateAddress(huginNode)}</p>
+            {/if}
         </div>
     </div>
 
-    {#if connectionMode === 'private'}
-        <div transition:slide|local={{ duration: 250 }}>
+    <div class="row gap">
+        <div class="mode-toggle">
+            <div
+                class="toggle-option {publicNode ? 'active' : ''}"
+                on:click={() => (publicNode = true)}
+            >
+                Public
+            </div>
+            <div
+                class="toggle-option {!publicNode ? 'active' : ''}"
+                on:click={() => (publicNode = false)}
+            >
+                Private
+            </div>
+        </div>
+          <Button
+            text="Connect"
+            disabled={false}
+            on:click={() => connect()}
+        />
+        {#if !publicNode}
             <input
                 spellcheck="false"
                 placeholder="Enter node address"
                 bind:value={huginNode}
+                class="ellipsis-input"
+                transition:slide|local={{ duration: 250 }}
             />
-        </div>
-    {/if}
-
-    <div class="buttons">
-        <Button text="Connect" on:click={connect} />
+        {/if}
     </div>
 </section>
 
+<!-- Normal Node -->
 <section class="card">
     <h2>Node</h2>
-    <div class="change_node">
-        <Button
-            text="Change Node"
-            disabled={false}
-            on:click={() => ($layoutState.showNodeSelector = true)}
-        />
-    </div>
 
-    <div class="nodestatus">
-        <div class="node">
-            <h4>Address</h4>
-            <p class:syncstatus={connecting} class="nodeinfo">{activeNode}</p>
-        </div>
-
+    <!-- First row: Status | Height -->
+    <div class="row">
         <div class="status">
             <h4>Status</h4>
             {#if synced}
-                <p class="nodeinfo syncstatus" class:sync={synced}>
-                    {status}
-                </p>
+                <p class="nodeinfo syncstatus sync">{status}</p>
             {:else}
-                <p class="nodeinfo syncstatus" class:sync={synced}>
-                    Syncing blocks
-                </p>
+                <p class="nodeinfo syncstatus">Syncing blocks</p>
             {/if}
         </div>
-
         <div class="height">
             <h4>Height</h4>
             {#if synced}
@@ -168,6 +164,21 @@
                 <p class="nodeinfo">{walletHeight}</p>
             {/if}
         </div>
+    </div>
+
+    <!-- Second row: Address | Change button -->
+    <div class="row gap">
+        <div class="node">
+            <h4>Address</h4>
+            <p class:syncstatus={connecting} class="nodeinfo ellipsis">
+                {activeNode}
+            </p>
+        </div>
+        <Button
+            text="Change"
+            disabled={false}
+            on:click={() => ($layoutState.showNodeSelector = true)}
+        />
     </div>
 </section>
 
@@ -183,11 +194,14 @@
     margin-bottom: 2rem;
 }
 
-.current-node {
-    font-size: 1rem;
-    strong {
-        color: var(--text-highlight);
-    }
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.row.gap {
+    gap: 1rem;
 }
 
 .mode-toggle {
@@ -209,27 +223,26 @@
 
 .toggle-option.active {
     background: var(--primary-color);
-    color: var(--button-text-color);
+    color: var(--success-color);
 }
 
-.buttons {
-    display: flex;
-    gap: 1rem;
+.ellipsis-input {
+    width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-input {
-    width: 100%;
-    height: 45px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 0.5rem;
-    font-size: 1rem;
-    background-color: transparent;
+.ellipsis {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nodeinfo {
+    font-size: 17px !important;
     color: var(--text-color);
-    margin-top: 0.5rem;
-    &:focus {
-        outline: 2px solid var(--primary-color);
-    }
 }
 
 .sync {
@@ -238,19 +251,6 @@ input {
 
 .syncstatus {
     color: var(--alert-color);
-}
-
-.nodeinfo {
-    font-size: 17px !important;
-}
-
-.node {
-    margin-bottom: 7px;
-    margin-left: -5px;
-}
-
-.change_node {
-    margin-left: -5px;
 }
 
 .backdrop {
@@ -264,5 +264,24 @@ input {
     width: 100%;
     background-color: var(--backgound-color);
     z-index: 103;
+}
+
+
+input {
+    margin: 0 auto;
+    width: 400px;
+    height: 37px;
+    transition: 200ms ease-in-out;
+    color: var(--text-color);
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    font-size: 1.1rem;
+    outline: none;
+    padding: 10px;
+    border-radius: 5px;
+
+    &:focus {
+        border: 1px solid var(--success-color) !important;
+    }
 }
 </style>

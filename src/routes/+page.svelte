@@ -101,7 +101,7 @@
         await sleep(5000)
         if ($notify.que) await sleep(4000)
         $user.started = true
-        await goto('/rooms')
+        await goto('/dashboard')
         $user.loggedIn = true
     }
 

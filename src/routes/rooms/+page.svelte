@@ -369,7 +369,7 @@ async function printRoom(room, create = false) {
     }
     const active = $swarm.active.find(a => a.key === room.key)
     $swarm.activeSwarm = active
-    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: active.topic}
+    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: active?.topic}
 
     const inRoom = getActiveRoom(room.key)
     if (inRoom) $keyboard.input = inRoom.text
