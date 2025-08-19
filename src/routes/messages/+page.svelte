@@ -333,7 +333,8 @@ let imTyping = false
 const typing = (e) => {
     if (imTyping === e.typing) return
     imTyping = e.typing
-    window.api.send('typing', {key: $swarm.activeSwarm.key, typing: e.typing})
+    if ($swarm.activeSwarm?.key) return
+    window.api.send('typing', {key: $swarm.activeSwarm?.key, typing: e.typing})
 }
 
 </script>
