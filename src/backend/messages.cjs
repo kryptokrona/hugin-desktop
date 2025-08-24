@@ -690,7 +690,72 @@ async function send_room_message(message) {
     send_swarm_message(swarmMessage, message.g)
     const save = sanitize_group_message(message, true)
     save_group_message(save, message.hash, message.t, false, true, false, true)
+    send_room_message_push(message)
 }
+
+async function generate_room_view_tag(room) {
+    const hash = await crypto.cn_fast_hash(room);
+    return hash.substring(0,5);
+}
+
+async function send_room_message_push(message) {
+
+    try {
+    const roomKey = message.g.substring(0,64);
+    const secretKey = keychain.getNaclKeys(roomKey).secretKey;
+
+    let payload_message = {
+      message: message.m, 
+      reply: message.r, 
+      tip: message.tip || '', 
+      hash: message.hash,
+      name: message.n,
+      address: message.k
+    };
+
+    let payload_message_decoded = naclUtil.decodeUTF8(
+      JSON.stringify(payload_message),
+    );
+
+    const timestamp = message.t;
+    const nonce = nonceFromTimestamp(timestamp);
+
+    let secretbox = nacl.secretbox(
+      payload_message_decoded,
+      nonce,
+      secretKey
+    );
+
+    let payload_json = {
+      box: Buffer.from(secretbox).toString('hex'),
+      viewTag: await generate_room_view_tag(message.g)
+    };
+
+    let payload_json_decoded = naclUtil.decodeUTF8(
+      JSON.stringify(payload_json),
+    );
+
+    let box = new naclSealed.sealedbox(
+      payload_json_decoded,
+      nonceFromTimestamp(timestamp),
+      hexToUint('6e49ab1a59019b2c22eb27efc5664be419c9d3d58016319cd0915e0494de4071'),
+    );
+
+    //Box object
+    let payload_box = {
+      box: Buffer.from(box).toString('hex'),
+      t: timestamp
+    };
+    // Convert json to hex
+    let payload_hex = toHex(JSON.stringify(payload_box));
+
+    Nodes.register(payload_hex)
+
+
+    } catch (e) {
+      console.log('❌ Error sending push:', e)
+    }
+  }
 
 
 async function send_group_message(message, offchain = false, swarm = false) {
@@ -804,7 +869,6 @@ async function send_group_message(message, offchain = false, swarm = false) {
             hash: random_key,
             time: message.t,
         })
-        
     }
 }
 

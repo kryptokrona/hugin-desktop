@@ -184,6 +184,21 @@ parse(d) {
   }
 }
 
+async register(data) {
+
+  if (this.connection === null) {
+    await this.reconnect();
+  }
+  
+  const payload = {
+    register: true,
+    data
+  }
+  if (!this.connection) return;
+  this.connection.write(JSON.stringify(payload));
+  
+}
+
 async message(payload, viewtag) {
   return new Promise( async (resolve, reject) => {
   const timestamp = Date.now()
