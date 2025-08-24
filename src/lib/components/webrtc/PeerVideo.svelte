@@ -21,7 +21,7 @@ let windowCheck = $state(false)
 let audio = false
 let status = $state({})
   /** @type {{active?: boolean, call: any, channel?: any}} */
-  let { active = true, call, channel = [] } = $props();
+  let { active = true, call, channel } = $props();
 
 // When incoming call and this get mounted we play the ringtone
 onMount(() => {

@@ -217,7 +217,7 @@
 
         new_messages = true
         $notify.unread.push(data)
-        $notify.new.push(data)
+        // $notify.new.push(data)
         $notify.unread = $notify.unread
         console.log('unread', $notify.unread)
     })

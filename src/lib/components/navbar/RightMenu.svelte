@@ -71,10 +71,12 @@ run(() => {
    });
 
 run(() => {
-    const me = thisSwarm.voice_channel.get($user.myAddress)
-    if (me && me.key === thisSwarm.key) {
-       in_voice = true
-   } else in_voice = false
+    if (thisSwarm) {
+        const me = thisSwarm.voice_channel.get($user.myAddress)
+        if (me && me.key === thisSwarm.key) {
+        in_voice = true
+        } else in_voice = false
+   }
    });
 
 //Starts any call

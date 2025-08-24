@@ -1,177 +1,248 @@
 <script>
     import { run } from 'svelte/legacy';
+    import Button from '$lib/components/buttons/Button.svelte';
+    import { misc, HuginNode } from '$lib/stores/user.js';
+    import { layoutState } from '$lib/stores/layout-state.js';
+    import { onMount } from 'svelte';
+    import { slide } from 'svelte/transition';
+    import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
 
-    import Button from '$lib/components/buttons/Button.svelte'
-    import { misc, HuginNode } from '$lib/stores/user.js'
-    import {layoutState} from '$lib/stores/layout-state.js'
-    import { onMount } from 'svelte'
-    import { fade } from 'svelte/transition'
-    import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
+    let synced = $state(false);
+    let networkHeight = $state();
+    let walletHeight = $state();
+    let connecting = $state(false);
+    let huginNode = $derived($HuginNode.address);
+    let publicNode = $state(true);
+    let status = $state('Syncing...');
 
-    let synced = $state(false)
-    let networkHeight = $state()
-    let walletHeight = $state()
-    let connecting = $state(false)
-    let huginNode = $state('')
-    
+    let activeNode = $derived($misc.node.node ?? 'Connecting');
+
     onMount(() => {
         getHeight();
-    })
+    });
 
-    let status = $state('Syncing...')
-
-
-    $effect(()=> {
-        status = synced ? "Connected" : "Syncing blocks"
-    })
-
-    run(() => {
-        synced = $misc.syncedStatus
+    $effect(() => {
+        status = synced ? 'Connected' : 'Syncing blocks';
     });
 
     run(() => {
-        networkHeight
-        walletHeight
+        synced = $misc.syncedStatus;
     });
 
-    let activeNode = $derived($misc.node.node ?? "Connecting")
+    run(() => {
+        networkHeight;
+        walletHeight;
+    });
 
     run(() => {
-        if (activeNode === "Connecting") {
-            connecting = true
-            synced = false
+        if (activeNode === 'Connecting') {
+            connecting = true;
+            synced = false;
         } else {
-            connecting = false
-            synced = true
+            connecting = false;
+            synced = true;
         }
     });
 
     async function getHeight() {
-        let heightStatus = await window.api.getHeight()
-        walletHeight = heightStatus.walletHeight
-        networkHeight = heightStatus.networkHeight
+        let heightStatus = await window.api.getHeight();
+        walletHeight = heightStatus.walletHeight;
+        networkHeight = heightStatus.networkHeight;
     }
 
     const connectToNode = (e) => {
-        $layoutState.showNodeSelector = false
-        $misc.node = e.node
-        changeNode()
-        window.api.switchNode($misc.node)
-    }
+        $layoutState.showNodeSelector = false;
+        $misc.node = e.node;
+        changeNode();
+        window.api.switchNode($misc.node);
+    };
 
-        
-    //Change node defaults values and triggers getHeight
     const changeNode = () => {
-        console.log('Changed')
-        networkHeight = ''
-        walletHeight = ''
-        synced = false
-        getHeight()
-    }
+        networkHeight = '';
+        walletHeight = '';
+        synced = false;
+        getHeight();
+    };
 
-    const connect = (address, pub) => {
-        if (!pub && address.length < 99) {
-            window.api.errorMessage('Address format is not correct.')
-            return
+    const connect = () => {
+        const pub = publicNode;
+        if (!pub && huginNode.length < 99) {
+            window.api.errorMessage('Address format is not correct.');
+            return;
         }
-        window.api.send('hugin-node', {address, pub})
-    }
+        window.api.send('hugin-node', { address: pub ? '' : huginNode, pub });
+    };
 
-
+    const truncateAddress = (addr) =>
+        addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : 'Not set';
 </script>
 
 {#if $layoutState.showNodeSelector}
     <div class="backdrop">
         <NodeSelector
-            goBack="{() => ($layoutState.showNodeSelector = false)}"
-            onConnect="{(e) => connectToNode(e)}"
+            goBack={() => ($layoutState.showNodeSelector = false)}
+            onConnect={(e) => connectToNode(e)}
         />
     </div>
 {/if}
 
-    <h2>Message node</h2>
-    <div class="node">
-        <br>
-        <Button
-        text="Connect"
-        disabled="{false}"
-        on:click="{connect(huginNode, false)}"
-    />
-    <Button
-    text="Random"
-    disabled="{false}"
-    on:click="{connect('', true)}"
-    />
-    <br>
-    <div style="margin-bottom: 10px;"></div>
-        <input spellcheck="false" placeholder="Enter node address" bind:value="{huginNode}"/>
-      
-    </div>
-    <div class="nodeinfo">
-        
-    <h4>Status</h4>
-        {#if $HuginNode.connected}
-            <p class="nodeinfo syncstatus" class:sync="{true}">
-                Connected
-            </p>
-        {:else}
-            <p class="nodeinfo syncstatus" class:sync="{false}">No connection</p>
-        {/if}
-        </div>
+<!-- Message Node -->
+<section class="card">
+    <h2>Message Node</h2>
 
-<h2>Node</h2>
-<div class="change_node">
-    <Button
-        text="Change Node"
-        enabled="{false}"
-        disabled="{false}"
-        on:click="{() => ($layoutState.showNodeSelector = true)}"
-    />
-</div>
-<div class="settings" in:fade|global>
-<div class="nodestatus">
-
-    <div class="node">
-        <h4>Address</h4>
-            <p class:syncstatus={connecting} class="nodeinfo">{activeNode}</p>
-    </div>
+    <!-- First row: Status | Address -->
+    <div class="row">
         <div class="status">
             <h4>Status</h4>
-
-            {#if synced}
-                <p class="nodeinfo syncstatus" class:sync="{synced}">
-                    {status}
-                </p>
+            {#if $HuginNode.connected}
+                <p class="nodeinfo syncstatus sync">Connected</p>
             {:else}
-                <p class="nodeinfo syncstatus" class:sync="{synced}">Syncing blocks</p>
+                <p class="nodeinfo syncstatus">Disconnected</p>
+            {/if}
+        </div>
+        <div class="node">
+            <h4>Address</h4>
+            {#if publicNode}
+                <p class="nodeinfo ellipsis">Public Node</p>
+            {:else}
+                <p class="nodeinfo ellipsis">{truncateAddress(huginNode)}</p>
+            {/if}
+        </div>
+    </div>
+
+    <div class="row gap">
+        <div class="mode-toggle">
+            <div
+                class="toggle-option {publicNode ? 'active' : ''}"
+                on:click={() => (publicNode = true)}
+            >
+                Public
+            </div>
+            <div
+                class="toggle-option {!publicNode ? 'active' : ''}"
+                on:click={() => (publicNode = false)}
+            >
+                Private
+            </div>
+        </div>
+          <Button
+            text="Connect"
+            disabled={false}
+            on:click={() => connect()}
+        />
+        {#if !publicNode}
+            <input
+                spellcheck="false"
+                placeholder="Enter node address"
+                bind:value={huginNode}
+                class="ellipsis-input"
+                transition:slide|local={{ duration: 250 }}
+            />
+        {/if}
+    </div>
+</section>
+
+<!-- Normal Node -->
+<section class="card">
+    <h2>Node</h2>
+
+    <!-- First row: Status | Height -->
+    <div class="row">
+        <div class="status">
+            <h4>Status</h4>
+            {#if synced}
+                <p class="nodeinfo syncstatus sync">{status}</p>
+            {:else}
+                <p class="nodeinfo syncstatus">Syncing blocks</p>
             {/if}
         </div>
         <div class="height">
             <h4>Height</h4>
-
             {#if synced}
                 <p class="nodeinfo">{networkHeight}</p>
             {:else}
-                <p class="nodeinfo"> {walletHeight}</p>
+                <p class="nodeinfo">{walletHeight}</p>
             {/if}
         </div>
     </div>
 
-</div>
+    <!-- Second row: Address | Change button -->
+    <div class="row gap">
+        <div class="node">
+            <h4>Address</h4>
+            <p class:syncstatus={connecting} class="nodeinfo ellipsis">
+                {activeNode}
+            </p>
+        </div>
+        <Button
+            text="Change"
+            disabled={false}
+            on:click={() => ($layoutState.showNodeSelector = true)}
+        />
+    </div>
+</section>
 
 <style lang="scss">
-
-h2 {
-    margin-bottom: 10px;
+.card {
+    background: var(--background-secondary);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
-.settings {
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-    margin-top: 2rem;
-    border-radius: 10px;
-    display: grid;
-    transition: 0.25s ease-in-out all;
-    grid-template-columns: repeat(1, 1fr);
+.row.gap {
+    gap: 1rem;
+}
+
+.mode-toggle {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    width: fit-content;
+}
+
+.toggle-option {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: var(--background-secondary);
+    color: var(--text-color);
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+}
+
+.toggle-option.active {
+    background: var(--primary-color);
+    color: var(--success-color);
+}
+
+.ellipsis-input {
+    width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ellipsis {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nodeinfo {
+    font-size: 17px !important;
+    color: var(--text-color);
 }
 
 .sync {
@@ -180,25 +251,6 @@ h2 {
 
 .syncstatus {
     color: var(--alert-color);
-}
-
-.nodeinfo {
-    font-size: 17px !important;
-}
-
-.node {
-    margin-bottom: 7px;
-    margin-left: -5px;
-}
-
-.button {
-    margin-left: -5px;
-    margin-bottom: 10px;
-}
-
-.networkheight {
-    font-size: 15px;
-
 }
 
 .backdrop {
@@ -214,25 +266,22 @@ h2 {
     z-index: 103;
 }
 
-.change_node {
-    margin-left: -5px;
-}
 
 input {
     margin: 0 auto;
-    width: 500px;
-    height: 50px;
+    width: 400px;
+    height: 37px;
     transition: 200ms ease-in-out;
     color: var(--text-color);
     background-color: transparent;
     border: 1px solid var(--border-color);
     font-size: 1.1rem;
     outline: none;
-    border-radius: 5px;
     padding: 10px;
+    border-radius: 5px;
+
     &:focus {
-        outline: none;
+        border: 1px solid var(--success-color) !important;
     }
 }
-
 </style>
