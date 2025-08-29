@@ -5,6 +5,7 @@
   import { pushToTalk, sounds, swarm } from "$lib/stores/user"
   import { get_avatar } from "$lib/utils/hugin-utils"
   import { fade } from "svelte/transition"
+  import { t } from '$lib/utils/translation.js'
 
 
 	let active = $derived($pushToTalk.on)
@@ -14,7 +15,7 @@
   function save() {
     $pushToTalk = {key: code, on: $pushToTalk.on, name: key}
     window.api.send('push-to-talk', $pushToTalk)
-		window.api.successMessage('Updated media settings...')
+		    window.api.successMessage(t('updatedMediaSettings') || 'Updated media settings...')
 		
 		if ($pushToTalk.on === false) {
 				key = ''
@@ -47,12 +48,12 @@
   </script>
   
 	<svelte:window on:keyup|preventDefault="{onkey}" />
-  <h2>Media</h2>
+  <h2>{t('media') || 'Media'}</h2>
   <div class="settings" in:fade|global>
       <div class="inner">
           <div class="list-wrapper">
-						
-						<h4>Push to talk</h4>
+
+						<h4>{t('pushToTalk') || 'Push to talk'}</h4>
 						<br>
 						<div class="push">
 							<br>
@@ -61,15 +62,15 @@
 							enabled="{active}"
 							disabled="{false}"
 							red={!active}
-							text="{active ? 'On' : 'Off'}"
+							text="{active ? t('on') || 'On' : t('off') || 'Off'}"
 					/>
-					
+
 						</div>
 					<p style="height: 10px;">
              {#if active}
 							{#if key !== null}
 								{#if key.length === 0}
-									Press any key
+									{t('pressAnyKey') || 'Press any key'}
 								{:else}
 									{key}
 								{/if}
@@ -79,15 +80,15 @@
       </div>
 			<br>
 			<div class="save">
-			<Button text="Save"	disabled="{false}" on:click={save} />
+			<Button text={t('save') || 'Save'}	disabled="{false}" on:click={save} />
 			</div>
 			<br>
 
 			<br>
- 				<h2>Sounds</h2>
+ 				<h2>{t('sounds') || 'Sounds'}</h2>
 			<br>
 
-			<h4>Notifications</h4>
+			<h4>{t('notifications') || 'Notifications'}</h4>
 			<br>
 			<div class="push">
 				<FillButton
@@ -95,7 +96,7 @@
 					enabled="{$sounds.on}"
 					disabled="{false}"
 					red={!$sounds.on}
-					text="{$sounds.on ? 'On' : 'Off'}"
+					text="{$sounds.on ? t('on') || 'On' : t('off') || 'Off'}"
 			/>
 			</div>
   </div>

@@ -3,6 +3,7 @@
 
     import {fade} from 'svelte/transition'
     import {misc, user} from '$lib/stores/user.js'
+    import { t } from '$lib/utils/translation.js'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
@@ -57,7 +58,7 @@
         loading = true
         const node = await getBestNode()
         if (!node) {
-            window.api.errorMessage('Auto node did not load')
+            window.api.errorMessage(t('autoNodeDidNotLoad') || 'Auto node did not load')
             return
         }
         const event = {node: node}
@@ -96,23 +97,23 @@
 <div class="main" in:fade|global>
     {#if step === 1 && $user.restore}
         <div in:fade|global class="wrapper">
-            <h2>Please enter your mnemonic seed</h2>
+            <h2>{t('pleaseEnterMnemonicSeed') || 'Please enter your mnemonic seed'}</h2>
 
             <input
                     spellcheck="false"
-                    placeholder="Type your mnemonic here"
+                    placeholder={t('typeMnemonicHere') || "Type your mnemonic here"}
                     bind:value="{mnemonic}"
             />
             <input
                     type="text"
                     spellcheck="false"
-                    placeholder="Blockheight"
+                    placeholder={t('blockHeight') || "Blockheight"}
                     bind:value="{blockHeight}"
             />
 
             <div class="button_wrapper">
                 <FillButton
-                        text="Back"
+                        text={t('back') || "Back"}
                         disabled="{false}"
                         on:click="{() => {
                         $user.restore = false
@@ -122,7 +123,7 @@
                 <FillButton
                         disabled="{mnemonic.length < 0}"
                         enabled="{mnemonic.length > 0}"
-                        text="Next"
+                        text={t('next') || "Next"}
                         on:click="{() => createAcc()}"
                 />
             </div>
@@ -131,34 +132,34 @@
 
     {#if step === 1 && !$user.restore}
         <div in:fade|global class="wrapper">
-            <h2>Enter your username</h2>
-            <input type="text" spellcheck="false" placeholder="Username" bind:value="{username}"/>
+            <h2>{t('enterUsername') || 'Enter your username'}</h2>
+            <input type="text" spellcheck="false" placeholder={t('username') || "Username"} bind:value="{username}"/>
 
             <div class="button_wrapper">
-                <FillButton text="Back" disabled="{false}" on:click="{() => goto('/')}"/>
+                <FillButton text={t('back') || "Back"} disabled="{false}" on:click="{() => goto('/')}"/>
                 <FillButton
                         disabled="{username.length < 0}"
                         enabled="{username.length > 0}"
-                        text="Next"
+                        text={t('next') || "Next"}
                         on:click="{() => (step = 2)}"
                 />
             </div>
         </div>
     {:else if step === 2}
         <div in:fade|global class="wrapper">
-            <h1>Create wallet</h1>
-            <input type="password" placeholder="Password" bind:value="{password}"/>
-            <input type="password" placeholder="Confirm Password" bind:value="{confirmPassword}"/>
+            <h1>{t('createWallet') || 'Create wallet'}</h1>
+            <input type="password" placeholder={t('password') || "Password"} bind:value="{password}"/>
+            <input type="password" placeholder={t('confirmPassword') || "Confirm Password"} bind:value="{confirmPassword}"/>
 
             <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
-                <FillButton disabled="{false}" text="Back" on:click="{() => (step = 1)}"/>
+                <FillButton disabled="{false}" text={t('back') || "Back"} on:click="{() => (step = 1)}"/>
                 <FillButton
                         disabled="{!(
                         walletName.length > 0 &&
                         password.length > 0 &&
                         password === confirmPassword
                     )}"
-                        text="Next"
+                        text={t('next') || "Next"}
                         enabled="{walletName.length > 0 &&
                         password.length > 0 &&
                         password === confirmPassword}"
@@ -168,15 +169,15 @@
         </div>
     {:else if step === 3}
     <div in:fade|global class="wrapper">
-        <h1>Node</h1>
+        <h1>{t('node') || 'Node'}</h1>
         <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
         <div class="nodes" class:show={showNodes}>
             <NodeSelector goBack="{() => (showNodes = false)}" onConnect="{(e) => handleLogin(e)}"/>
         </div>
-            <FillButton disabled="{false}" text="Custom" on:click="{() => (showNodes = true)}"/>
-            
-            <FillButton disabled="{false}" info={true} loading={loading} text="Auto" on:click="{async () => await autoNode()}"/>
-         
+            <FillButton disabled="{false}" text={t('custom') || "Custom"} on:click="{() => (showNodes = true)}"/>
+
+            <FillButton disabled="{false}" info={true} loading={loading} text={t('auto') || "Auto"} on:click="{async () => await autoNode()}"/>
+
         </div>
     </div>
     {/if}

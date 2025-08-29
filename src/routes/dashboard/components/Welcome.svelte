@@ -6,6 +6,7 @@ import Backdrop from "$lib/components/layouts/Backdrop.svelte"
 import Cards from "$lib/components/layouts/Cards.svelte"
 import { fly } from "svelte/transition"
 import { user } from '$lib/stores/user.js'
+import { t } from '$lib/utils/translation.js'
 
 let {
     onClose
@@ -20,11 +21,11 @@ const close = () => {
 <Backdrop>
     <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="field">
     
-    <Cards> 
-            <h2>Welcome {$user.username} </h2>
-        <p>Would you like to know more about how to use Hugin?</p>
-            <FillButton enabled={true} disabled={false} text={'Continue'} on:click={close}/>
-            <FillButton text={'Explpre'} info={true} on:click={close}/>
+    <Cards>
+            <h2>{t('welcomeToHugin', { username: $user.username }) || `Welcome ${$user.username}`}</h2>
+        <p>{t('wouldYouLikeToKnowMore') || 'Would you like to know more about how to use Hugin?'}</p>
+            <FillButton enabled={true} disabled={false} text={t('continue') || 'Continue'} on:click={close}/>
+            <FillButton text={t('explore') || 'Explore'} info={true} on:click={close}/>
     </Cards>
 </div>
 </Backdrop>

@@ -1,6 +1,7 @@
 <script >
     import { page } from "$app/stores"
     import { rooms, transactions, user } from "$lib/stores/user"
+    import { t } from '$lib/utils/translation.js'
     /** @type {{info: any, admin?: boolean}} */
     let { info, admin = false } = $props();
 
@@ -29,9 +30,9 @@
 </script>
 
 <div class="menu">
-    <span onclick={toggleBlock} class="action">Block</span>
+    <span onclick={toggleBlock} class="action">{t('block') || 'Block'}</span>
     {#if admin}
-    <span onclick={toggleBan} class="action">Ban</span>
+    <span onclick={toggleBan} class="action">{t('ban') || 'Ban'}</span>
     {/if}
 </div>
 

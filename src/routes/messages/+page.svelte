@@ -1,5 +1,6 @@
 <script>
-import { run } from 'svelte/legacy';
+	import { run } from 'svelte/legacy';
+	import { t } from '$lib/utils/translation.js';
 
 import {fade, fly} from 'svelte/transition'
 import {onDestroy, onMount} from 'svelte'
@@ -228,8 +229,8 @@ const sendMsg = (e) => {
 const checkErr = (e) => {
     let error = false
     if (e.text.length === 0) return true
-    if (e.text.length > 777) error = "Message is too long"
-    if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
+    if (e.text.length > 777) error = t('messageTooLong') || "Message is too long"
+    if ($user.wait) error = t('pleaseWaitBeforeSending') || 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
     window.api.errorMessage(error)
@@ -261,7 +262,7 @@ const download = (link) => {
 async function dropFile(e) {
     dragover = false
     if (!thisSwarm) {
-        window.api.errorMessage('No connection...')
+        window.api.errorMessage(t('noConnection') || 'No connection...')
         return
     }
     const { acceptedFiles, fileRejections } = e.detail
@@ -377,8 +378,8 @@ const typing = (e) => {
             <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
             <div class="inner">
                 <div class="fade"></div>
-                {#if messageList.length > 99 && loadMore} 
-                    <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
+                {#if messageList.length > 99 && loadMore}
+                    <Button text={t('loadMore') || "Load more"} disabled={false} on:click={() => loadMoreMessages()} />
                 {/if}
                 {#each messageList as message (message.timestamp)}
                 <div animate:flip="{{duration: 100}}">

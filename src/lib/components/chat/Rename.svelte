@@ -6,10 +6,11 @@
 import { fade, fly } from 'svelte/transition'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { user } from '$lib/stores/user.js'
+import { t } from '$lib/utils/translation.js'
 
 let enableAddButton = $state(false)
 let text = $state('')
-let name = 'Change'
+let name = t('change') || 'Change'
 let rename = $state(false)
     /** @type {{this_contact: any, onRename:any, OpenRename: any}} */
     let { this_contact, onRename, OpenRename,  } = $props();
@@ -61,7 +62,7 @@ const remove = () => {
     {#if rename}
     <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="field">
         <input
-            placeholder="Rename {$user.rename.name}"
+            placeholder={t('renameContact', { name: $user.rename.name }) || `Rename ${$user.rename.name}`}
             type="text"
             spellcheck="false"
             autocomplete="false"
@@ -79,12 +80,12 @@ const remove = () => {
         <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
             <FillButton
                 disabled="{false}"
-                text="Rename"
+                text={t('rename') || 'Rename'}
                 on:click="{() => rename = true}" />
             <FillButton
                 disabled="{false}"
                 red="{true}"
-                text="Remove"
+                text={t('remove') || 'Remove'}
                 on:click|once="{remove}" />
         </div>
     </div>

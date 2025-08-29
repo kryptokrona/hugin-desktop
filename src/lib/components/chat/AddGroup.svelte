@@ -8,6 +8,7 @@ import FillButton from '$lib/components/buttons/FillButton.svelte'
 import Button from '$lib/components/buttons/Button.svelte'
 import { groups, notify } from '$lib/stores/user.js'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
+import { t } from '$lib/utils/translation.js'
 
 
 let enableAddGroupButton = $state(false)
@@ -23,7 +24,7 @@ let {
     AddGroup
 } = $props()
 
-let create_group = $derived(create ? 'Create' : 'Join')
+let create_group = $derived(create ? t('create') || 'Create' : t('join') || 'Join')
 
 const enter = (e) => {
     if (enableAddGroupButton && key.length === 64 && e.keyCode === 13) {
@@ -48,11 +49,11 @@ const checkError = () => {
     let error = false
     let errorMessage
     if ($groups.groupArray.some((g) => g.name === name)) {
-        errorMessage = 'Group name already exists',
+        errorMessage = t('groupNameAlreadyExists') || 'Group name already exists',
         error = true
     }
     if ($groups.groupArray.some((g) => g.key === key)) {
-        errorMessage =  'This group key already exists',
+        errorMessage = t('groupKeyAlreadyExists') || 'This group key already exists',
         error = true
     }
     if (error) {
@@ -72,7 +73,7 @@ const addGroup = async () => {
         name: name,
     })
 
-    window.api.successMessage('Joined group')
+    window.api.successMessage(t('joinedGroup') || 'Joined group')
 
     key = ''
     enableAddGroupButton = false
@@ -111,18 +112,18 @@ const joinGroup = () => {
     <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
         {#if !newgroup}
             <div >
-            <p>Create a new group?</p>
+            <p>{t('createNewGroup') || 'Create a new group?'}</p>
                 <FillButton
-                text="{"Create"}"
+                text={t('create') || 'Create'}
                 disabled="{false}"
                 enabled="{true}"
                 on:click="{() => createNewGroup()}"
             />
             </div>
             <div>
-            <p>Join your friends group?</p>
+            <p>{t('joinFriendsGroup') || 'Join your friends group?'}</p>
             <FillButton
-                text="{"Join"}"
+                text={t('join') || 'Join'}
                 disabled="{false}"
                 enabled="{true}"
                 on:click|once="{() => joinGroup()}"
@@ -132,13 +133,13 @@ const joinGroup = () => {
 
         {#if newgroup}
 
-            <h3 in:fade|global>Name your group</h3>
-            <input placeholder="Name your group" type="text" bind:value="{name}" />
+            <h3 in:fade|global>{t('nameYourGroup') || 'Name your group'}</h3>
+            <input placeholder={t('nameYourGroup') || 'Name your group'} type="text" bind:value="{name}" />
             {#if create}
-            <Button disabled="{false}" text="Generate key" on:click="{() => createGroup()}" />
+            <Button disabled="{false}" text={t('generateKey') || 'Generate key'} on:click="{() => createGroup()}" />
             {/if}
             <div class="key-wrapper" in:fade|global>
-                <input placeholder="Input group key" type="text" bind:value="{key}" />
+                <input placeholder={t('inputGroupKey') || 'Input group key'} type="text" bind:value="{key}" />
                 {#if key.length}
                     <img in:fade|global class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                 {/if}

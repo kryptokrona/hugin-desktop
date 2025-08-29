@@ -24,7 +24,8 @@ import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
-import CodeBlock from './CodeBlock.svelte';
+import CodeBlock from './CodeBlock.svelte'
+import { t } from '$lib/utils/translation.js'
 
     /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
     let {
@@ -466,7 +467,7 @@ run(() => {
                     <br>
                     <h4>{inviteName}</h4>
                     {#if !$swarm.active.some(a => a.key === inviteKey)}
-                        <Button text={"Join"} disabled={false} on:click={() => joinInvite()} />
+                        <Button text={t('join') || 'Join'} disabled={false} on:click={() => joinInvite()} />
                     {/if}
                 </div>
                 {/if}

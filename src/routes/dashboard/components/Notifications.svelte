@@ -5,6 +5,7 @@
     import Time from 'svelte-time'
 	  import GroupMessage from '$lib/components/chat/GroupMessage.svelte';
 	  import Button from '$lib/components/buttons/Button.svelte';
+    import { t } from '$lib/utils/translation.js'
 
     function clear() {
       $notify.notifications = []
@@ -14,11 +15,11 @@
 
 <div in:fade|global class="wrapper">
     <div class="header">
-        <h3 style="font-weight: 800" >Notifications</h3>
+        <h3 style="font-weight: 800" >{t('notifications') || 'Notifications'}</h3>
 
         <div style="display: flex; align-items: center; gap: 1rem">
             <div  style="dispay: block;">
-              <Button text="Clear" disabled={false} on:click={() => clear()}/>
+              <Button text={t('clear') || 'Clear'} disabled={false} on:click={() => clear()}/>
             </div>
         </div>
     </div>

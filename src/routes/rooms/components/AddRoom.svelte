@@ -7,6 +7,7 @@
     import Button from '$lib/components/buttons/Button.svelte'
     import { rooms, notify } from '$lib/stores/user.js'
     import { get_avatar } from '$lib/utils/hugin-utils.js'
+    import { t } from '$lib/utils/translation.js'
     
     let {
         onAddRoom
@@ -37,15 +38,15 @@
         let error = false
         let errorMessage
         if ($rooms.banned.some(a => a === invite)) {
-            errorMessage = 'You are banned',
+            errorMessage = t('youAreBanned') || 'You are banned',
             error = true
         }
         if ($rooms.roomArray.some((g) => g.name === name)) {
-            errorMessage = 'Group name already exists',
+            errorMessage = t('roomNameAlreadyExists') || 'Group name already exists',
             error = true
         }
         if ($rooms.roomArray.some((g) => g.key === invite)) {
-            errorMessage =  'This group key already exists',
+            errorMessage = t('roomKeyAlreadyExists') || 'This group key already exists',
             error = true
         }
         if (error) {
@@ -67,9 +68,9 @@
             name: name,
             admin: adm
         })
-    
-        window.api.successMessage('Joined Room')
-    
+
+        window.api.successMessage(t('joinedRoom') || 'Joined Room')
+
         key = ''
         enableAddGroupButton = false
         $rooms.addRoom = false
@@ -108,7 +109,7 @@
         console.log("Wanna join")
     }
     
-        let create_group = $derived(create ? 'Create' : 'Join')
+        let create_group = $derived(create ? (t('create') || 'Create') : (t('join') || 'Join'))
     run(() => {
         if (invite.length) {
             console.log("Invite link avatar", invite)
@@ -143,18 +144,18 @@
         <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
             {#if !newgroup}
                 <div >
-                <p>Create a new Room</p>
+                <p>{t('createNewRoom') || 'Create a new Room'}</p>
                     <FillButton
-                    text="{"Create"}"
+                    text={t('create') || 'Create'}
                     disabled="{false}"
                     enabled="{true}"
                     on:click="{() => createNewRoom()}"
                 />
                 </div>
                 <div>
-                <p>Join your friends Room</p>
+                <p>{t('joinFriendsRoom') || 'Join your friends Room'}</p>
                 <FillButton
-                    text="{"Join"}"
+                    text={t('join') || 'Join'}
                     disabled="{false}"
                     enabled="{true}"
                     on:click|once="{() => joinRoom()}"
@@ -163,15 +164,15 @@
              {/if}
     
             {#if create}
-    
-                <h3 in:fade|global>Name your Room</h3>
-                <input placeholder="Name your Room" type="text" disabled={lockName} bind:value="{name}" />
+
+                <h3 in:fade|global>{t('nameYourRoom') || 'Name your Room'}</h3>
+                <input placeholder={t('nameYourRoom') || 'Name your Room'} type="text" disabled={lockName} bind:value="{name}" />
                 {#if name.length}
-                <Button disabled="{false}" text="Generate invite" on:click="{() => createInvite()}" />
+                <Button disabled="{false}" text={t('generateInvite') || 'Generate invite'} on:click="{() => createInvite()}" />
                 {/if}
                 <div class="key-wrapper" in:fade|global>
                     {#if invite.length}
-                    <div in:fade|global><h3 style="color: var(--success-color)">Invite created</h3></div>
+                    <div in:fade|global><h3 style="color: var(--success-color)">{t('inviteCreated') || 'Invite created'}</h3></div>
                     <!-- <input placeholder="Input room key" type="text" bind:value="{link}" /> -->
                     {/if}
                     {#if link.length}
@@ -191,7 +192,7 @@
                 {/if}
             </div>
             <div class="key-wrapper" in:fade|global>
-                <input placeholder="Invite link" type="text" bind:value="{link}" />
+                <input placeholder={t('inviteLink') || 'Invite link'} type="text" bind:value="{link}" />
                 {#if invite.length}
                     <img in:fade|global class="avatar" src="data:image/png;base64,{get_avatar(invite)}" alt="" />
                 {/if}

@@ -3,6 +3,7 @@
     import { fade, fly } from 'svelte/transition'
     import { user } from '$lib/stores/user.js'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
+    import { t } from '$lib/utils/translation.js'
 
     const blockContact = () => {
         window.api.send('block', $user.block)
@@ -12,11 +13,11 @@
 
     <div in:fade|global="{{ duration: 100 }}" out:fade|global="{{ duration: 80 }}" class="backdrop" onclick={() => $user.block = false}>
         <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
-            <h3 in:fade|global>Block {$user.block.name}?</h3>
+            <h3 in:fade|global>{t('blockContact', { name: $user.block.name }) || `Block ${$user.block.name}?`}</h3>
 
                 <FillButton
                     red={true}
-                    text="Block"
+                    text={t('block') || 'Block'}
                     disabled={false}
                     on:click={blockContact} />
         </div>

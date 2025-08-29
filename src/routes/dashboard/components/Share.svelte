@@ -1,6 +1,7 @@
 <script>
 import { fade } from 'svelte/transition'
 import { user } from '$lib/stores/user.js'
+import { t } from '$lib/utils/translation.js'
 
 let open = $state()
 let copied = $state()
@@ -21,15 +22,15 @@ const buttonGlow = () => {
 
 <div style="display: flex; flex-direction: column">
     <div class="share" class:border_rgb="{copied}" class:open onclick={() => (open = !open)}>
-        <h5>{copied ? 'Copied' : 'Address'}</h5>
+        <h5>{copied ? (t('copied') || 'Copied') : (t('address') || 'Address')}</h5>
     </div>
     {#if open}
         <div in:fade|global class="list layered-shadow">
             <div onclick={() => copyThis($user.myAddress)}>
-                <h5>Payment</h5>
+                <h5>{t('payment') || 'Payment'}</h5>
             </div>
             <div onclick={() => copyThis($user.huginAddress)}>
-                <h5>Hugin</h5>
+                <h5>{t('hugin') || 'Hugin'}</h5>
             </div>
         </div>
     {/if}

@@ -1,5 +1,6 @@
 <script>
     import { run } from 'svelte/legacy';
+    import { t } from '$lib/utils/translation.js';
 
 import {fade, fly} from 'svelte/transition'
 import FeedChatInput from '$lib/components/chat/FeedChatInput.svelte'
@@ -85,8 +86,8 @@ const checkErr = (e, tip = false) => {
     let error = false
     if (e.text.length === 0 && !tip) return true 
     if (e.text === '💬') return true;
-    if (e.text.length > 777) error = "Message is too long"
-    if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
+    if (e.text.length > 777) error = t('messageTooLong') || "Message is too long"
+    if ($user.wait) error = t('pleaseWaitBeforeSending') || 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
     window.api.errorMessage(error)
@@ -212,7 +213,7 @@ const addNewRoom = async (e) => {
     //Avoid svelte collision
     let hash = Date.now().toString() + hashPadding()
     let add = {
-        m: 'Joined Room',
+        m: t('joinedRoom') || 'Joined Room',
         n: room.name,
         hash: hash,
         t: Date.now().toString(),
@@ -426,7 +427,7 @@ async function dropFile(e) {
     }
     const hash = await window.api.createGroup()
     const message = {
-        message: 'File shared',
+        message: t('fileShared') || 'File shared',
         grp: $swarm.activeSwarm?.key,
         name: $user.username,
         address: $user.myAddress,
@@ -579,14 +580,14 @@ const focusMessage = async (message) => {
                                 {/await}
                             {/each}
                         </div>
-                        <p style="cursor: pointer">{$feed.new.length} new messages</p>
+                        <p style="cursor: pointer">{t('newMessages', { count: $feed.new.length }) || `${$feed.new.length} new messages`}</p>
                 </div>
             {/if}
             {#if feedMessages.length === 0}
-            <div><p>No feed messages found</p></div>
+            <div><p>{t('noFeedMessagesFound') || 'No feed messages found'}</p></div>
             {/if}
             {#each feedMessages as message (message.hash)}
-          
+
             <div animate:flip="{{duration: 100}}">
                 <FeedMessage
                     onPress={() => focusMessage(message)}
@@ -597,8 +598,8 @@ const focusMessage = async (message) => {
                 />
                 </div>
             {/each}
-            {#if (feedMessages.length + emojiMessages.length) > 49 && loadMore } 
-                <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
+            {#if (feedMessages.length + emojiMessages.length) > 49 && loadMore }
+                <Button text={t('loadMore') || "Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
 
         </div>
@@ -633,9 +634,9 @@ const focusMessage = async (message) => {
             {/each}
             </div>
             {:else if expanded}
-            <div in:fade="{{ duration: 1300 }}" class="feed-start"><p>Type a message below to start a new discussion!</p></div>
+            <div in:fade="{{ duration: 1300 }}" class="feed-start"><p>{t('typeMessageToStartDiscussion') || 'Type a message below to start a new discussion!'}</p></div>
             {/if}
-            
+
             </div>
             <div class:expanded={expanded} class="messageinput">
                 <FeedChatInput onMessage="{(e) => sendFeedMsg(e)}" />
@@ -643,7 +644,7 @@ const focusMessage = async (message) => {
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
-                {reply_exit_icon} Reply to {$rooms.replyTo.nick}
+                {reply_exit_icon} {t('replyTo', { nick: $rooms.replyTo.nick }) || `Reply to ${$rooms.replyTo.nick}`}
             </div>
         {/if}
     </div>

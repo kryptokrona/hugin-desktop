@@ -6,6 +6,7 @@
 import { fade, fly } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
+import { t } from '$lib/utils/translation.js'
 
 
 let enableButton = $state(false)
@@ -38,7 +39,7 @@ const handleAdd = () => {
         name: nickname,
         chat: addr,
         key: pubkey,
-        msg: 'New friend added!',
+        msg: t('newFriendAdded') || 'New friend added!',
         sent: true,
         timestamp: Date.now().toString(),
     })
@@ -86,7 +87,7 @@ run(() => {
             {/if}
             <input
                 out:fade|global
-                placeholder="Enter Hugin address"
+                placeholder={t('enterHuginAddress') || 'Enter Hugin address'}
                 type="text"
                 spellcheck="false"
                 autocomplete="false"
@@ -97,7 +98,7 @@ run(() => {
                     disabled="{!enableButton}"
                     enabled="{enableButton && step == 1}"
                     on:click="{next}"
-                    text="Next"
+                    text={t('next') || 'Next'}
                 />
             </div>
         {/if}
@@ -115,7 +116,7 @@ run(() => {
             {/if}
             <input
                 in:fade|global
-                placeholder="Enter a nickname"
+                placeholder={t('enterNickname') || 'Enter a nickname'}
                 type="text"
                 spellcheck="false"
                 autocomplete="false"
@@ -126,7 +127,7 @@ run(() => {
                     disabled="{!enableButton}"
                     enabled="{step == 2 && nickname.length}"
                     on:click="{handleAdd}"
-                    text="Add"
+                    text={t('add') || 'Add'}
                 />
             </div>
         </div>

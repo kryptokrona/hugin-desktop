@@ -3,48 +3,49 @@
     import { messageWallet, user} from '$lib/stores/user.js'
     import Button from "$lib/components/buttons/Button.svelte"
     import { groups, misc } from '$lib/stores/user.js'
+    import { t } from '$lib/utils/translation.js'
 
     let deleteAfter = $state($misc.deleteAfter)
     let autoLogout = $state($user.idleLimit)
 
     const setAutoDeleteAfter = (days) => {
         window.api.deleteMessageAfter(days)
-        window.api.successMessage('Timeframe changed')
+        window.api.successMessage(t('timeframeChanged') || 'Timeframe changed')
     }
 
     const changeIdleLimit = () => {
         $user.idleLimit = autoLogout
         window.api.changeIdleTime(autoLogout)
-        window.api.successMessage('Idle time changed')
+        window.api.successMessage(t('idleTimeChanged') || 'Idle time changed')
     } 
 
     </script>
     
-    <h2>Security</h2>
+    <h2>{t('security') || 'Security'}</h2>
     <div class="settings" in:fade|global>
-        <p>Set the amount of days to preserve messages,
+        <p>{t('setAmountOfDaysToPreserveMessages') || 'Set the amount of days to preserve messages'},
         <br>
-        0 means preserve forever</p>
+        {t('zeroMeansPreserveForever') || '0 means preserve forever'}</p>
         <br>
    </div>
     <div class="autodelete">
-        <input spellcheck="false" placeholder="Enter amount of days" bind:value="{deleteAfter}"/>
+        <input spellcheck="false" placeholder={t('enterAmountOfDays') || 'Enter amount of days'} bind:value="{deleteAfter}"/>
         <Button
-        text="Set timeframe"
+        text={t('setTimeframe') || 'Set timeframe'}
         disabled="{false}"
         on:click="{setAutoDeleteAfter(deleteAfter)}"
     />
     </div>
 
     <div class="settings" in:fade|global>
-        <p>Choose how long time in seconds before auto logout.
+        <p>{t('chooseHowLongBeforeAutoLogout') || 'Choose how long time in seconds before auto logout'}.
         <br></p>
         <br>
    </div>
     <div class="autodelete">
-        <input spellcheck="false" placeholder="Enter number of seconds" bind:value="{autoLogout}"/>
+        <input spellcheck="false" placeholder={t('enterNumberOfSeconds') || 'Enter number of seconds'} bind:value="{autoLogout}"/>
         <Button
-        text="Change"
+        text={t('change') || 'Change'}
         disabled="{false}"
         on:click="{changeIdleLimit}"
     />

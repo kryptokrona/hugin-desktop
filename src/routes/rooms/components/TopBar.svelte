@@ -1,5 +1,6 @@
 <script>
     import { run } from 'svelte/legacy';
+    import { t } from '$lib/utils/translation.js';
 
 import Bell from "$lib/components/icons/Bell.svelte"
 import Groupcall from "$lib/components/icons/Groupcall.svelte"
@@ -37,9 +38,9 @@ const toggleNotification = () => {
     if (muteGroup) {
         const filter = $notify.off.filter(a => a !== roomName)
         $notify.off = filter
-        window.api.successMessage('Activated notifications.')
+        window.api.successMessage(t('activatedNotifications'))
     } else {
-        window.api.errorMessage('Notifications turned off.')
+        window.api.errorMessage(t('notificationsTurnedOff'))
         $notify.off.push(roomName)
     }
     $notify = $notify
@@ -50,9 +51,9 @@ const toggleSyncImages = () => {
     if (syncImages) {
         const filter = $misc.syncImages.filter(a => a !== thisSwarm.topic)
         $misc.syncImages = filter
-        window.api.errorMessage('Image syncing deactivated.')
+        window.api.errorMessage(t('imageSyncingDeactivated'))
     } else {
-        window.api.successMessage('Activated image syncing for this room.')
+        window.api.successMessage(t('activatedImageSyncing'))
         $misc.syncImages.push(thisSwarm.topic)
     }
     $misc = $misc
@@ -74,7 +75,7 @@ let muteGroup = $derived($notify.off.some(a => a === roomName))
 let syncImages = $derived($misc.syncImages.some(a => a === thisSwarm.topic))
 
 function copyThis(copy) {
-    const msg = 'You copied a Room invite key'
+    const msg = t('copiedRoomInviteKey')
     window.api.successMessage(msg)
     const linkName = roomName.replace(/ /g, '-');
     const invite = 'hugin://' + linkName + '/' + copy
@@ -91,7 +92,7 @@ function toggleActions() {
     <div style="display: flex; padding-bottom: 10px">
         <h3 title={roomName} class:asian style="font-size: 17px; padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" onclick={() => copyThis(room)}>{roomName}</h3>
     <div style="display: inline-block; margin-left: auto">
-        <Tooltip title="Invite key">
+        <Tooltip title={t('inviteKey')}>
             <div onclick={() => copyThis(room)}>
         <AddToCall />
             </div>

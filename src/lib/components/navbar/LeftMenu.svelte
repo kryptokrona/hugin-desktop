@@ -1,5 +1,6 @@
 <script>
 import { run } from 'svelte/legacy';
+import { t } from '$lib/utils/translation.js';
 
 import { misc, user, userAvatar, swarm, webRTC, rooms, theme, feed } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
@@ -99,7 +100,7 @@ const selectAvatar = async () => {
     console.log('Selected', files[0]);
     const file = files[0];
     if (file.size > 200000) {
-        window.api.errorMessage('Avatar file size is too big')
+        window.api.errorMessage(t('avatarFileSizeTooBig') || 'Avatar file size is too big')
         return
     }
     const [arr, type] = await window.api.loadFile(file.path, file.size)
@@ -151,12 +152,12 @@ run(() => {
                 {/if}
             </div>
         <!-- </Tooltip> -->
-        <Tooltip title="Dashboard">
+        <Tooltip title={t('dashboard') || 'Dashboard'}>
             <div onclick={() => goto('/dashboard')} class="button">
                 <Home />
             </div>
         </Tooltip>
-        <Tooltip title="Messages">
+        <Tooltip title={t('messages') || 'Messages'}>
             <div onclick={messagesRouteAndMenu} class="button">
                 <MessageIcon />
             </div>
@@ -166,18 +167,18 @@ run(() => {
                 <GroupIcon />
             </div>
         </Tooltip>  -->
-        <Tooltip title="Rooms">
+        <Tooltip title={t('rooms') || 'Rooms'}>
             <div onclick={roomRouteAndMenu} class="button">
                 <RoomIcon />
             </div>
         </Tooltip>
 
-        <Tooltip title="Feed">
+        <Tooltip title={t('feed') || 'Feed'}>
             <div onclick={feedRouteAndMenu} class="button">
                 <FeedIcon />
             </div>
         </Tooltip>
-        
+
         <!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
@@ -185,7 +186,7 @@ run(() => {
     </div>
     <div class="draggable"></div>
     <div class="nav">
-        <Tooltip title="Theme">
+        <Tooltip title={t('theme') || 'Theme'}>
             <div onclick={toggleTheme} class="button">
                 {#if $theme === 'dark'}
                 <Theme active={true}/>
@@ -194,13 +195,13 @@ run(() => {
                 {/if}
             </div>
         </Tooltip>
-        
-        <Tooltip title="Settings">
+
+        <Tooltip title={t('settings') || 'Settings'}>
             <div onclick={() => goto('/settings/node')} class="button">
                 <SettingsIcon />
             </div>
         </Tooltip>
-        <Tooltip title="Logout">
+        <Tooltip title={t('logout') || 'Logout'}>
             <div class='button' onclick={handleLogout}>
                 <Logout/>
             </div>

@@ -2,63 +2,72 @@
 
     import {fade} from 'svelte/transition'
     import Category from '/src/routes/settings/Category.svelte'
+    import { t, getCurrentLanguage } from '$lib/utils/translation.js'
 
     let nodeIcon = ""
+    let currentLanguage = $state(getCurrentLanguage())
 
     let {
         ChangeCategory
     } = $props()
 
-    const settings = [
+    // Make settings reactive to language changes
+    const settings = $derived([
         {
-            name: 'Node',
-            text: 'Change connection settings',
+            name: t('node') || 'Node',
+            text: t('changeConnectionSettings') || 'Change connection settings',
             icon: nodeIcon,
             route: "/settings/node"
         },
-
         {
-            name: 'Wallet',
-            text: 'Copy your keys and mnemonic seed',
+            name: t('wallet') || 'Wallet',
+            text: t('copyKeysAndMnemonic') || 'Copy your keys and mnemonic seed',
             icon: nodeIcon,
             route: "/settings/wallet"
         },
-
         {
-            name: 'Media',
-            text: 'Change audio/video settings',
+            name: t('media') || 'Media',
+            text: t('changeAudioVideoSettings') || 'Change audio/video settings',
             icon: nodeIcon,
             route: "/settings/media"
         },
-
         {
-            name: 'Updates',
-            text: 'Check current version or update',
+            name: t('update') || 'Update',
+            text: t('checkCurrentVersion') || 'Check current version or update',
             icon: nodeIcon,
             route: "/settings/updates"
         },
-
         {
-            name: 'Security',
-            text: 'Set your security preferences',
+            name: t('security') || 'Security',
+            text: t('setSecurityPreferences') || 'Set your security preferences',
             icon: nodeIcon,
             route: "/settings/security"
         },
-
         {
-            name: 'Files',
-            text: 'Change file settings',
+            name: t('changeLanguage') || 'Language',
+            text: t('changeLanguageSettings') || 'Change language settings',
+            icon: nodeIcon,
+            route: "/settings/language"
+        },
+        {
+            name: t('files') || 'Files',
+            text: t('changeFileSettings') || 'Change file settings',
             icon: nodeIcon,
             route: "/settings/files"
         },
-    ]
+    ])
+
+    // Update current language when it changes (for reactivity)
+    $effect(() => {
+        currentLanguage = getCurrentLanguage()
+    })
 
 
 </script>
 
 <div class="wrapper" in:fade|global>
     <div class="top">
-        <h2>Settings</h2>
+        <h2>{t('settings') || 'Settings'}</h2>
         <br>
     </div>
     <div class="list-wrapper">

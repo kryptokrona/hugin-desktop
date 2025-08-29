@@ -4,6 +4,7 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import { rooms, swarm } from '$lib/stores/user'
     import Backdrop from '$lib/components/layouts/Backdrop.svelte'
+    import { t } from '$lib/utils/translation.js'
     
     let {
         onClose
@@ -11,7 +12,7 @@
 
     const ban = () => {
         window.api.send('ban-user', {address: $rooms.ban.address, key: $rooms.thisRoom.key})
-        window.api.successMessage('Banned user')
+        window.api.successMessage(t('bannedUser') || 'Banned user')
         $rooms.ban = {}
         close()
     }
@@ -27,11 +28,11 @@
 
     
         <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
-            <h3 in:fade|global>Ban {$rooms.ban.name}?</h3>
+            <h3 in:fade|global>{t('banUserQuestion', { name: $rooms.ban.name }) || `Ban ${$rooms.ban.name}?`}</h3>
 
                 <FillButton
                     red={true}
-                    text="Block"
+                    text={t('ban') || 'Block'}
                     disabled={false}
                     on:click|once="{ban}" />
         </div>

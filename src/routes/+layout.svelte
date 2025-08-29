@@ -37,6 +37,7 @@
     import Rooms from '../routes/rooms/components/Rooms.svelte'
     import { goto } from '$app/navigation'
     import RoomNotification from '$lib/components/popups/RoomNotification.svelte'
+    import { setLanguage } from '$lib/utils/translation.js'
   /** @type {{children?: import('svelte').Snippet}} */
     let { children } = $props();
     let ready = $state(false)
@@ -61,7 +62,8 @@
     let startAnimation = $state()
 
     onMount(async () => {
-        
+
+        // Initialize theme
         if (typeof $theme !== 'string')
         {
             $theme = 'dark'

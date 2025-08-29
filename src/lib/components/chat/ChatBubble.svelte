@@ -13,6 +13,7 @@
     import Youtube from "svelte-youtube-embed";
     import DownloadFile from '$lib/components/chat/DownloadFile.svelte'
     import UploadFile from '$lib/components/chat/UploadFile.svelte'
+    import { t } from '$lib/utils/translation.js'
 
   /** @type {{message: any, msgFrom: any, ownMsg: any, files?: boolean, timestamp: any, beamMsg?: boolean, error?: boolean}} */
   let {
@@ -166,7 +167,7 @@
             // Fall through
             case 'Λ':
                 // Call offer
-                message = `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
+                message = t('callStarted', { type: message.substring(0, 1) == 'Δ' ? t('video') || 'Video' : t('audio') || 'Audio' }) || `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
                 break
         }
     });
@@ -223,9 +224,9 @@
                 <UploadFile file={files} />
                 </div>
                     {:else if beamInvite || oldInvite}
-                        <p in:fade|global class="message">Started a beam ⚡️</p>
+                        <p in:fade|global class="message">{t('startedBeam') || 'Started a beam ⚡️'}</p>
                     {:else if beamConnected}
-                        <p in:fade|global class="message blink_me finish">Beam connected ⚡️</p>
+                        <p in:fade|global class="message blink_me finish">{t('beamConnected') || 'Beam connected ⚡️'}</p>
                     {:else if youtube}
                         <p class="message">{messageText}</p>
                         <Youtube id={embed_code} />
@@ -283,26 +284,26 @@
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <div style="margin-top: 1rem">
                             {#if beamFile && !clicked}
-                            <p class="message">{$user.activeChat.name} is sharing files with you.</p>
+                            <p class="message">{t('userSharingFiles', { name: $user.activeChat.name }) || `${$user.activeChat.name} is sharing files with you.`}</p>
                             <br>
-                            <FillButton text="⚡️ Connect" disabled={false} on:click={joinBeam}/>
+                            <FillButton text={t('connect') || "⚡️ Connect"} disabled={false} on:click={joinBeam}/>
                             {:else if !beamFile && !clicked}
-                            <p class="message">{$user.activeChat.name} has started a p2p chat.</p>
+                            <p class="message">{t('userStartedP2PChat', { name: $user.activeChat.name }) || `${$user.activeChat.name} has started a p2p chat.`}</p>
                             <br>
-                            <FillButton text="⚡️ Join" disabled={false} on:click={joinBeam}/>
+                            <FillButton text={t('join') || "⚡️ Join"} disabled={false} on:click={joinBeam}/>
                             {:else if clicked}
-                            <p class="message finish" in:fade|global>Connecting</p>
+                            <p class="message finish" in:fade|global>{t('connecting') || 'Connecting'}</p>
                             {/if}
                         </div>
                     {:else if oldInvite}
-                        <p in:fade|global class="message">Started a beam ⚡️</p>
+                        <p in:fade|global class="message">{t('startedBeam') || 'Started a beam ⚡️'}</p>
                     {:else if beamConnected}
-                        <p class="message blink_me finish" in:fade|global>Beam connected ⚡️</p>
+                        <p class="message blink_me finish" in:fade|global>{t('beamConnected') || 'Beam connected ⚡️'}</p>
                     {:else if youtube}
                         <p class="message">{messageText}</p>
                         <Youtube id={embed_code} />
                     {:else if youtubeLink}
-                        <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
+                        <Button disabled="{false}" text={t('openYoutube') || "Open Youtube"} on:click={() => openEmbed()} />
                     {:else if link}
                         <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" onclick={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>

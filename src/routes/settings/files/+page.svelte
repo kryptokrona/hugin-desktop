@@ -3,6 +3,7 @@
     import Button from "$lib/components/buttons/Button.svelte"
     import { sleep } from "$lib/utils/utils"
     import { user } from '$lib/stores/user.js'
+    import { t } from '$lib/utils/translation.js'
     let loading = $state(false)
     let path = $state("")
 
@@ -18,21 +19,21 @@
         $user.downloadPath = path
         await sleep(200)
         loading = false
-        window.api.successMessage('Download directory changed')
+        window.api.successMessage(t('downloadDirectoryChanged') || 'Download directory changed')
     }
 
     </script>
     
-    <h2>Files</h2>
+    <h2>{t('files') || 'Files'}</h2>
     <div class="settings" in:fade|global>
-        <p>Change download directory
+        <p>{t('changeDownloadDirectory') || 'Change download directory'}
         <br>
         <p>{$user.downloadPath}</p>
     <div class="changedir">
-        <input spellcheck="false" type="text" placeholder="Enter new directory path" bind:value="{path}"/>
+        <input spellcheck="false" type="text" placeholder={t('enterNewDirectoryPath') || 'Enter new directory path'} bind:value="{path}"/>
         <Button
         color="green"
-        text="Browse"
+        text={t('browse') || 'Browse'}
         disabled="{false}"
         on:click="{openDirectoryDialog}"
     />
@@ -41,7 +42,7 @@
      <div>
         <Button
         color="green"
-        text="Save"
+        text={t('save') || 'Save'}
         loading={loading}
         disabled="{false}"
         on:click="{changeDownloadPath}"

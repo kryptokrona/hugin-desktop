@@ -12,6 +12,7 @@
     import { Moon } from 'svelte-loading-spinners'
     import BigImage from '$lib/components/popups/BigImage.svelte'
     import { fileViewer } from '$lib/stores/files'
+    import { t } from '$lib/utils/translation.js'
 	import { onMount } from 'svelte';
     
     let in_voice = $state(false)
@@ -157,7 +158,7 @@
 
                 {:else}
                  <div class:blink_me={true} in:fly|global={{ x: 150}}>
-                        <h4 style="color: var(--info-color)">Click join call to enter...</h4>
+                        <h4 style="color: var(--info-color)">{t('clickJoinCall') || 'Click join call to enter...'}</h4>
                  </div>
                  <!-- {#if thisSwarm?.connections.length}
                     <h4 style="color: var(--success-color)">{thisSwarm?.connections.length} connected</h4>

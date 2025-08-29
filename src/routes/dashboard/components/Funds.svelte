@@ -3,6 +3,7 @@
     import {prettyNumbers} from '$lib/utils/utils.js'
     import {onDestroy, onMount} from 'svelte'
     import {layoutState} from '$lib/stores/layout-state.js'
+    import { t } from '$lib/utils/translation.js'
 
     let interval
     onMount(async () => {
@@ -26,17 +27,17 @@
     }
 </script>
 
-<div class="cards">
+    <div class="cards">
     <div class="card" style="border-right: 1px solid var(--border-color)">
-        <h4>Balance</h4>
+        <h4>{t('balance') || 'Balance'}</h4>
         <p class="balance">{prettyNumbers($misc.balance[0])}</p>
     </div>
     <div class="card">
-        <h4>Locked</h4>
+        <h4>{t('locked') || 'Locked'}</h4>
         <p class="balance">{prettyNumbers($misc.balance[1])}</p>
     </div>
     <div class="card" style="border-right: 1px solid var(--border-color)">
-        <h4>Funds ratio</h4>
+        <h4>{t('fundsRatio') || 'Funds ratio'}</h4>
         <div class="ratio">
             <div
                     class="unlocked"
@@ -49,8 +50,8 @@
         </div>
     </div>
     <div class="card">
-        <h4>Node status</h4>
-        <p class="node_status" class:synced={$misc.syncState}>{$misc.syncState ? $misc.syncState : 'Loading'} </p>
+        <h4>{t('nodeStatus') || 'Node status'}</h4>
+        <p class="node_status" class:synced={$misc.syncState}>{$misc.syncState ? $misc.syncState : t('loading') || 'Loading'}</p>
     </div>
 </div>
 

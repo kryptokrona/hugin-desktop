@@ -10,6 +10,7 @@ import RemoveGroup from '$lib/components/chat/RemoveGroup.svelte'
 import {sleep} from '$lib/utils/utils.js'
 import {flip} from 'svelte/animate'
 import Room from './Room.svelte'
+import { t } from '$lib/utils/translation.js'
 
 let roomList = $state([])
 let room = $state('')
@@ -215,7 +216,7 @@ function flipper(node, {
 <div class="wrapper" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
     <div class="top" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
         {#if show_groups}
-            <h2>Rooms</h2>
+            <h2>{t('rooms') || 'Rooms'}</h2>
             <br />
             <div class="buttons">
                 <Plus on:click="{addRoom}" />

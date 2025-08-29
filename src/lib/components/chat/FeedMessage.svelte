@@ -24,6 +24,7 @@ import { groupMessages } from '$lib/stores/groupmsgs'
 import UserOptions from '/src/routes/rooms/components/UserOptions.svelte'
 import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
+import { t } from '$lib/utils/translation.js'
 	import { goto } from '$app/navigation';
 
 // message,
@@ -432,7 +433,7 @@ run(() => {
                     <br>
                     <h4>{inviteName}</h4>
                     {#if !$swarm.active.some(a => a.key === inviteKey)}
-                        <Button text={"Join"} disabled={false} on:click={() => joinInvite()} />
+                        <Button text={t('join') || 'Join'} disabled={false} on:click={() => joinInvite()} />
                     {/if}
                 </div>
                 {/if}

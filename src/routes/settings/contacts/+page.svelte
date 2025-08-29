@@ -2,20 +2,21 @@
 import { groups } from "$lib/stores/user"
 import { get_avatar } from "$lib/utils/hugin-utils"
 import { fade } from "svelte/transition"
+import { t } from '$lib/utils/translation.js'
 
 </script>
 
-<h2>Contacts</h2>
+<h2>{t('contacts') || 'Contacts'}</h2>
 <div class="settings" in:fade|global>
     <div class="inner blocklist">
         <div class="list-wrapper">
-            <h4>Block list</h4>
+            <h4>{t('blockList') || 'Block list'}</h4>
             {#each $groups.blockList as blocked (blocked.address)}
             {#if blocked.name !== undefined}
                 <div class="card">
                     <p class="name">{blocked.name}</p>
                     <br>
-                    <p class="unblock" onclick={() => window.api.send('unblock', blocked.address)}>Unblock</p>
+                    <p class="unblock" onclick={() => window.api.send('unblock', blocked.address)}>{t('unblock') || 'Unblock'}</p>
                 </div>
             {/if}
             {/each}

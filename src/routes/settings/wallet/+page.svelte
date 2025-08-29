@@ -1,6 +1,7 @@
 
 <script>
     import { run } from 'svelte/legacy';
+    import { t } from '$lib/utils/translation.js';
 
 import Button from "$lib/components/buttons/Button.svelte"
 import RescanHeight from "$lib/components/popups/RescanHeight.svelte"
@@ -62,29 +63,29 @@ run(() => {
     <Verify onOk={() => showInfo()} onClose={() => verify = false}/>
  {/if}
  
-<h2>Wallet</h2>
+<h2>{t('wallet') || 'Wallet'}</h2>
 <div class="rescan">
-    <Button text="Rescan wallet" enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
+    <Button text={t('rescanWallet') || 'Rescan wallet'} enabled="{false}" disabled="{false}" on:click="{() => $js_wallet.rescan = true}" />
 </div>
 
 <div class="settings" in:fade|global>
     <div class="inner keys">
-        <h3>Private keys</h3>
+        <h3>{t('privateKeys') || 'Private keys'}</h3>
         <div class="button">
             <Button
                 disabled="{false}"
-                text="Show private keys"
+                text={t('showPrivateKeys') || 'Show private keys'}
                 on:click="{() => prompt(true)}"
             />
         </div>
         <br />
         {#if showKeys}
-            <h6>Spend Key</h6>
+            <h6>{t('spendKey') || 'Spend Key'}</h6>
             <p style="user-select: text;" in:fade|global type="text">
                 {privateSpendKey}
             </p>
 
-            <h6>View key</h6>
+            <h6>{t('viewKey') || 'View key'}</h6>
             <p style="user-select: text;" in:fade|global type="text">
                 {privateViewKey}
             </p>
@@ -92,13 +93,13 @@ run(() => {
     </div>
 
     <div class="inner mnemonic">
-        <h3>Mnemonic seed</h3>
+        <h3>{t('mnemonicSeed') || 'Mnemonic seed'}</h3>
         <div class="button">
-            <Button disabled="{false}" text="Show mnemonic seed" on:click="{() =>  prompt(false)}" />
+            <Button disabled="{false}" text={t('showMnemonicSeed') || 'Show mnemonic seed'} on:click="{() =>  prompt(false)}" />
         </div>
         <br />
         {#if showMnemonic}
-            <h6>Mnemonic seed</h6>
+            <h6>{t('mnemonicSeed') || 'Mnemonic seed'}</h6>
             <p style="user-select: text;" in:fade|global type="text">
                 {seedPhrase}
             </p>

@@ -10,6 +10,7 @@
   import {layoutState, videoGrid} from '$lib/stores/layout-state.js'
   import 'emoji-picker-element';
   import {sleep} from "$lib/utils/utils.js";
+  import { t } from '$lib/utils/translation.js';
 
   /** @type {{rtc?: boolean}} */
   let { rtc = false, onMessage, onTyping} = $props();
@@ -246,7 +247,7 @@
 <div class="wrapper" class:rtc
      class:hide="{$boards.thisBoard == 'Home' && $page.url.pathname === '/boards'}"
      class:border-top="{$page.url.pathname !== '/boards'}">
-    <textarea rows="1" placeholder="Message {to}" bind:this="{messageField}" bind:value="{messageInput}" onclick={() => openEmoji = false}></textarea>
+    <textarea rows="1" placeholder={t('messageTo', { to }) || `Message ${to}`} bind:this="{messageField}" bind:value="{messageInput}" onclick={() => openEmoji = false}></textarea>
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="display: flex">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">

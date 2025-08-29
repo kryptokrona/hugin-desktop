@@ -5,6 +5,7 @@ import Pen from '$lib/components/icons/Pen.svelte'
 import { user } from '$lib/stores/user.js'
 import { fade, fly } from 'svelte/transition'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
+import { t } from '$lib/utils/translation.js'
 
 let open = $state()
 let username = $state()
@@ -46,7 +47,7 @@ $user.username = window.localStorage.getItem('userName')
     >
         <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
             <input
-                placeholder="Enter nickname"
+                placeholder={t('enterNickname') || "Enter nickname"}
                 type="text"
                 spellcheck="false"
                 autocomplete="false"
@@ -57,7 +58,7 @@ $user.username = window.localStorage.getItem('userName')
                     on:click="{save}"
                     enabled="{username}"
                     disabled="{false}"
-                    text="Change"
+                    text={t('change') || "Change"}
                 />
             </div>
         </div>

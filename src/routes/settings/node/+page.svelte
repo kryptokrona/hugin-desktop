@@ -6,6 +6,7 @@
     import { onMount } from 'svelte';
     import { slide } from 'svelte/transition';
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
+    import { t } from '$lib/utils/translation.js';
 
     let synced = $state(false);
     let networkHeight = $state();
@@ -13,16 +14,16 @@
     let connecting = $state(false);
     let huginNode = $derived($HuginNode.address);
     let publicNode = $state(true);
-    let status = $state('Syncing...');
+    let status = $state(t('syncing') || 'Syncing...');
 
-    let activeNode = $derived($misc.node.node ?? 'Connecting');
+    let activeNode = $derived(($misc.node.node ?? t('connecting')) || 'Connecting');
 
     onMount(() => {
         getHeight();
     });
 
     $effect(() => {
-        status = synced ? 'Connected' : 'Syncing blocks';
+        status = synced ? t('connected') || 'Connected' : t('syncingBlocks') || 'Syncing blocks';
     });
 
     run(() => {
@@ -67,14 +68,14 @@
     const connect = () => {
         const pub = publicNode;
         if (!pub && huginNode.length < 99) {
-            window.api.errorMessage('Address format is not correct.');
+            window.api.errorMessage(t('addressFormatNotCorrect') || 'Address format is not correct.');
             return;
         }
         window.api.send('hugin-node', { address: pub ? '' : huginNode, pub });
     };
 
     const truncateAddress = (addr) =>
-        addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : 'Not set';
+        addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : t('notSet') || 'Not set';
 </script>
 
 {#if $layoutState.showNodeSelector}
@@ -88,22 +89,22 @@
 
 <!-- Message Node -->
 <section class="card">
-    <h2>Message Node</h2>
+    <h2>{t('messageNode') || 'Message Node'}</h2>
 
     <!-- First row: Status | Address -->
     <div class="row">
         <div class="status">
-            <h4>Status</h4>
+            <h4>{t('status') || 'Status'}</h4>
             {#if $HuginNode.connected}
-                <p class="nodeinfo syncstatus sync">Connected</p>
+                <p class="nodeinfo syncstatus sync">{t('connected') || 'Connected'}</p>
             {:else}
-                <p class="nodeinfo syncstatus">Disconnected</p>
+                <p class="nodeinfo syncstatus">{t('disconnected') || 'Disconnected'}</p>
             {/if}
         </div>
         <div class="node">
-            <h4>Address</h4>
+            <h4>{t('address') || 'Address'}</h4>
             {#if publicNode}
-                <p class="nodeinfo ellipsis">Public Node</p>
+                <p class="nodeinfo ellipsis">{t('publicNode') || 'Public Node'}</p>
             {:else}
                 <p class="nodeinfo ellipsis">{truncateAddress(huginNode)}</p>
             {/if}
@@ -116,24 +117,24 @@
                 class="toggle-option {publicNode ? 'active' : ''}"
                 on:click={() => (publicNode = true)}
             >
-                Public
+                {t('public') || 'Public'}
             </div>
             <div
                 class="toggle-option {!publicNode ? 'active' : ''}"
                 on:click={() => (publicNode = false)}
             >
-                Private
+                {t('private') || 'Private'}
             </div>
         </div>
           <Button
-            text="Connect"
+            text={t('connect') || 'Connect'}
             disabled={false}
             on:click={() => connect()}
         />
         {#if !publicNode}
             <input
                 spellcheck="false"
-                placeholder="Enter node address"
+                placeholder={t('enterNodeAddress') || 'Enter node address'}
                 bind:value={huginNode}
                 class="ellipsis-input"
                 transition:slide|local={{ duration: 250 }}
@@ -144,20 +145,20 @@
 
 <!-- Normal Node -->
 <section class="card">
-    <h2>Node</h2>
+    <h2>{t('node') || 'Node'}</h2>
 
     <!-- First row: Status | Height -->
     <div class="row">
         <div class="status">
-            <h4>Status</h4>
+            <h4>{t('status') || 'Status'}</h4>
             {#if synced}
                 <p class="nodeinfo syncstatus sync">{status}</p>
             {:else}
-                <p class="nodeinfo syncstatus">Syncing blocks</p>
+                <p class="nodeinfo syncstatus">{t('syncingBlocks') || 'Syncing blocks'}</p>
             {/if}
         </div>
         <div class="height">
-            <h4>Height</h4>
+            <h4>{t('height') || 'Height'}</h4>
             {#if synced}
                 <p class="nodeinfo">{networkHeight}</p>
             {:else}
@@ -169,13 +170,13 @@
     <!-- Second row: Address | Change button -->
     <div class="row gap">
         <div class="node">
-            <h4>Address</h4>
+            <h4>{t('address') || 'Address'}</h4>
             <p class:syncstatus={connecting} class="nodeinfo ellipsis">
                 {activeNode}
             </p>
         </div>
         <Button
-            text="Change"
+            text={t('change') || 'Change'}
             disabled={false}
             on:click={() => ($layoutState.showNodeSelector = true)}
         />

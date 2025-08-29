@@ -6,6 +6,7 @@ import {fade} from 'svelte/transition'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {notify, user, webRTC, beam, swarm, rooms} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
+import { t } from '$lib/utils/translation.js'
 
   /** @type {{contact: any, ThisContact: any, OpenRename: any, Rename: any}} */
 let { contact = $bindable(), ThisContact, OpenRename } = $props();
@@ -47,7 +48,7 @@ run(() => {
 
 run(() => {
     if (contact.msg.substring(0,11) === "BEAMFILE://") { 
-      contact.msg = "File shared ⚡️"
+      contact.msg = t('fileShared') || 'File shared ⚡️'
   }
   });
 
@@ -120,7 +121,7 @@ const rename = () => {
         {#if !beamInvite}
         <p>{contact.msg}</p>
         {:else if beamInvite}
-        <p>Started a beam ⚡️</p>
+        <p>{t('startedBeam') || 'Started a beam ⚡️'}</p>
         {/if}
     </div>
     {#if counter > 0}

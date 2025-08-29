@@ -9,6 +9,7 @@
     import {fade, fly} from 'svelte/transition'
     import {flip} from 'svelte/animate'
     import { notify } from '$lib/stores/user.js'
+    import { t } from '$lib/utils/translation.js'
 
     let chatList = $state([])
     let {
@@ -90,7 +91,7 @@ run(() => {
 
 <div class="wrapper" class:hide="{$layoutState.hideChatList === true}" in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}">
     <div class="top" in:fly|global="{{ y: 50 }}"  out:fly|global="{{ y: -50 }}">
-        <h2>Messages</h2>
+        <h2>{t('messages') || 'Messages'}</h2>
         <AddCircle on:click="{() => onOpen()}" />
     </div>
     <div class="list-wrapper" in:fly|global="{{ y: 50 }}">

@@ -7,6 +7,7 @@
     import Forward from '$lib/components/icons/Forward.svelte'
     import Backward from '$lib/components/icons/Backward.svelte'
     import Time from 'svelte-time'
+    import { t } from '$lib/utils/translation.js'
 
     let pageNum = $state(0)
     let pages = $state()
@@ -38,7 +39,7 @@
 
 <div in:fade|global class="wrapper">
     <div class="header">
-        <h3 style="font-weight: 800">Transactions</h3>
+        <h3 style="font-weight: 800">{t('transactions') || 'Transactions'}</h3>
 
         <div style="display: flex; align-items: center; gap: 1rem">
             <p>{page}/{pages}</p>
@@ -71,7 +72,7 @@
         </div>
     {:else}
         <div class="notx">
-            <h3>No transactions</h3>
+            <h3>{t('noTransactions') || 'No transactions'}</h3>
         </div>
     {/if}
 </div>

@@ -2,6 +2,7 @@
   import { run, preventDefault } from 'svelte/legacy';
   import { fade, fly } from 'svelte/transition';
   import { misc, notify, user } from '$lib/stores/user.js';
+  import { t } from '$lib/utils/translation.js';
   import { Moon } from "svelte-loading-spinners";
   import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
   import { goto } from '$app/navigation';
@@ -20,7 +21,13 @@
   let started = $derived($user.started);
 
   // Word flip logic
-  const words = ["encrypted.", "private.", "secure.", "decentralized."];
+  const words = [
+    t('encrypted') || "encrypted",
+    t('private') || "private",
+    t('secure') || "secure",
+    t('decentralized') || "decentralized"
+  ];
+  
   let currentIndex = $state(0);
   let currentWord = $state(words[currentIndex]);
   let intervalId;
@@ -60,7 +67,7 @@
     loadSpin = true;
     const verify = await window.api.verifyPass(myPassword);
     if (!verify) {
-      window.api.errorMessage('Wrong password');
+      window.api.errorMessage(t('wrongPassword') || 'Wrong password');
       $misc.loading = false;
       loadSpin = false;
     } else {
@@ -104,7 +111,7 @@
   };
 
   window.api.receive('login-failed', async () => {
-    toast.error('Wrong password', {
+    toast.error(t('wrongPassword') || 'Wrong password', {
       position: 'top-right',
       style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
     });
@@ -132,7 +139,7 @@
       </span>
 
     <div class="field">
-      <input placeholder="Password..." type="password" bind:this={passwordField} bind:value={myPassword} />
+      <input placeholder={t('password') || "Password..."} type="password" bind:this={passwordField} bind:value={myPassword} />
       <button onclick={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
         {#if loadSpin}
           <Moon color="var(--text-color)" size="20" unit="px" />
@@ -254,6 +261,8 @@
     justify-content: center;
     align-items: center;
     color: var(--success-color);
+    width: 205px;
+    text-align: center;
 }
 
 .flip-word {

@@ -1,5 +1,6 @@
 <script>
     import { run } from 'svelte/legacy';
+    import { t } from '$lib/utils/translation.js';
 
 import RoomHugins from "./components/RoomHugins.svelte"
 import RoomList from "./components/RoomList.svelte"
@@ -164,8 +165,8 @@ window.api.receive('set-channels', async () => {
 const checkErr = (e, tip = false) => {
     let error = false
     if (e.text?.length === 0 && !tip) return true 
-    if (e.text?.length > 777) error = "Message is too long"
-    if ($user.wait) error = 'Please wait a couple of minutes before sending a message.'
+    if (e.text?.length > 777) error = t('messageTooLong') || "Message is too long"
+    if ($user.wait) error = t('pleaseWaitBeforeSending') || 'Please wait a couple of minutes before sending a message.'
     if (!error) return false
 
     window.api.errorMessage(error)
@@ -316,7 +317,7 @@ const addNewRoom = async (e) => {
     //Avoid svelte collision
     let hash = Date.now().toString() + hashPadding()
     let add = {
-        m: 'Joined Room',
+        m: t('joinedRoom') || 'Joined Room',
         n: room.name,
         hash: hash,
         t: Date.now().toString(),
@@ -513,7 +514,7 @@ async function dropFile(e) {
     }
     const hash = await window.api.createGroup()
     const message = {
-        message: 'File shared',
+        message: t('fileShared') || 'File shared',
         grp: $swarm.activeSwarm?.key,
         name: $user.username,
         address: $user.myAddress,
@@ -662,24 +663,24 @@ const typing = (e) => {
                 />
             </div>
             {/each}
-            {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore } 
-                <Button text={"Load more"} disabled={false} on:click={() => loadMoreMessages()} />
+            {#if (fixedRooms.length + filterEmojis.length) > 49 && loadMore }
+                <Button text={t('loadMore') || "Load more"} disabled={false} on:click={() => loadMoreMessages()} />
             {/if}
             {:else}
-            <FillButton disabled={true} red={true} text="Banned"/>
+            <FillButton disabled={true} red={true} text={t('banned') || "Banned"}/>
             {/if}
         </div>
         {#if replyTrue}
             <div class="reply_to_exit" class:reply_to="{replyTrue}" onclick={() => replyExit()}>
-                {reply_exit_icon} Reply to {$rooms.replyTo.nick}
+                {reply_exit_icon} {t('replyTo', { nick: $rooms.replyTo.nick }) || `Reply to ${$rooms.replyTo.nick}`}
             </div>
         {/if}
         {#if usersTyping > 0}
             <div class="typing">
                 {#if usersTyping > 1}
-                    {usersTyping} users are typing...
+                    {t('usersTyping', { count: usersTyping }) || `${usersTyping} users are typing...`}
                 {:else}
-                    {someoneTyping.name} is typing...
+                    {t('userTyping', { name: someoneTyping.name }) || `${someoneTyping.name} is typing...`}
                 {/if}
             </div>
         {/if}

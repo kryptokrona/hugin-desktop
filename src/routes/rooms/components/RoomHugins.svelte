@@ -2,6 +2,7 @@
     import { run } from 'svelte/legacy';
 
 import {fade, fly} from 'svelte/transition'
+import { t } from '$lib/utils/translation.js'
 import {groups, swarm, user, notify, rooms} from '$lib/stores/user.js'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
 import {layoutState, swarmGroups} from '$lib/stores/layout-state.js'
@@ -103,7 +104,7 @@ const join_voice_channel = async (video = false, screen) => {
         loading = true
         if (in_voice) return
         if (thisSwarm.voice_channel.size > 9) {
-            window.api.errorMessage('There are too many in the call')
+            window.api.errorMessage(t('tooManyInCall'))
             loading = false
             return
         }
@@ -111,7 +112,7 @@ const join_voice_channel = async (video = false, screen) => {
         //Leave any active first
         if ($swarm.voice_channel.size) {
             console.log("Still in voice")
-            window.api.errorMessage('You are already in a voice channel')
+            window.api.errorMessage(t('alreadyInVoiceChannel'))
             return
             disconnect_from_active_voice()
             //We already have an active call.
@@ -158,7 +159,7 @@ const join_voice_channel = async (video = false, screen) => {
             <div class="voice" style="cursor: pointer;border-bottom: 1px solid var(--border-color);">
                 <div class="voice-list" onclick={join_voice_channel}>
                 
-                    <p style="margin-top: 0px;margin-right: 5px;font-family: Montserrat;font-weight: 700;margin-bottom: -4px;">Voice channel</p>
+                    <p style="margin-top: 0px;margin-right: 5px;font-family: Montserrat;font-weight: 700;margin-bottom: -4px;">{t('voiceChannel')}</p>
                     <span style="margin-top: 4px"><Groupcall size="{14}" /></span>
 
                 </div>
@@ -172,7 +173,7 @@ const join_voice_channel = async (video = false, screen) => {
             padding-top: 4px;
             display: flex;
             border-bottom: 1px solid var(--border-color);">
-                <p style="font-family: Montserrat; font-weight: 700">Users ({knownUsers.length})</p>
+                <p style="font-family: Montserrat; font-weight: 700">{t('users')} ({knownUsers.length})</p>
             </div>
 
             

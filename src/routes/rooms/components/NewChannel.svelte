@@ -4,6 +4,7 @@
     import { fade, fly } from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {swarm, groups} from '$lib/stores/user.js'
+    import { t } from '$lib/utils/translation.js'
 
     
     let enableAdd = $state(false)
@@ -28,7 +29,7 @@
         let error = false
         let errorMessage
         if (thisSwarm.channels.some((g) => g.name === name)) {
-            errorMessage = 'Channel already exists'
+            errorMessage = t('channelAlreadyExists') || 'Channel already exists'
             error = true
         }
 
@@ -51,8 +52,8 @@
 
 
         window.api.send("new-channel", {name, key: $groups.thisGroup.key})
-    
-        window.api.successMessage('Channel created')
+
+        window.api.successMessage(t('channelCreated') || 'Channel created')
         $swarm.newChannel = false
     }
 
@@ -71,10 +72,10 @@
     
         <div in:fly|global="{{ y: 50 }}" out:fly|global="{{ y: -50 }}" class="card">
                 <div >
-                <p>Channel name</p>
-                <input placeholder="Name the channel" type="text" bind:value="{name}" />
+                <p>{t('channelName') || 'Channel name'}</p>
+                <input placeholder={t('nameTheChannel') || 'Name the channel'} type="text" bind:value="{name}" />
                     <FillButton
-                    text="{"Create"}"
+                    text={t('create') || 'Create'}
                     disabled="{false}"
                     enabled="{enableAdd}"
                     on:click|once="{() => new_channel()}"

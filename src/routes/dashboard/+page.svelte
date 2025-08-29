@@ -14,22 +14,23 @@
     import Welcome from './components/Welcome.svelte'
 	import Upgrade from './components/Upgrade.svelte';
 	import Notifications from './components/Notifications.svelte';
+	import { t } from '$lib/utils/translation.js';
     
     let date = new Date()
     let hrs = date.getHours()
     let greet = $state()
     let welcome = $state(false)
 
-    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : 'Upgrade to Hugin +'}`
+    const upgraded = `${localStorage.getItem('hugin+') ? 'Hugin+' : t('upgradeToHuginPlus') || 'Upgrade to Hugin +'}`
     onMount(async () => {
         $user.started = true
         if (!localStorage.getItem('guide')) {
             //Set welcome = true to enable guide popup
             //welcome = true
         }
-        if (hrs < 12) greet = 'Good Morning'
-        else if (hrs >= 12 && hrs <= 17) greet = 'Good Afternoon'
-        else if (hrs >= 17 && hrs <= 24) greet = 'Good Evening'
+        if (hrs < 12) greet = t('goodMorning') || 'Good Morning'
+        else if (hrs >= 12 && hrs <= 17) greet = t('goodAfternoon') || 'Good Afternoon'
+        else if (hrs >= 17 && hrs <= 24) greet = t('goodEvening') || 'Good Evening'
     })
 
     let upgrade = $state(false)

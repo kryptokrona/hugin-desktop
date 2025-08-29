@@ -3,6 +3,7 @@
 
     import { fade } from 'svelte/transition'
     import { audioSettings, mediaSettings } from '$lib/stores/mediasettings.js'
+    import { t } from '$lib/utils/translation.js'
     /** @type {{conference?: boolean}} */
     let { conference = false } = $props();
     let open = $state()
@@ -44,7 +45,7 @@
         <div in:fade|global class="list layered-shadow">
 
             <div>
-                <h4>Microphone</h4>
+                <h4>{t('microphone') || 'Microphone'}</h4>
             </div>
 
                 {#each audioInput as src}
@@ -54,7 +55,7 @@
                 {/each}
 
             <div>
-                <h4>Speakers</h4>
+                <h4>{t('speakers') || 'Speakers'}</h4>
             </div>
             
                 {#each audioOutput as src}
@@ -66,7 +67,7 @@
     {/if}
                 
             <div class="share" class:border_rgb="{changed}" class:open onclick={() => (open = !open)}>
-                <h5>Audio</h5>
+                <h5>{t('audio') || 'Audio'}</h5>
             </div>
 
     </div>

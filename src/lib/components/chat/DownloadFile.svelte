@@ -10,6 +10,7 @@
     import Progress from "$lib/components/chat/Progress.svelte"
     import { sleep } from "$lib/utils/utils"
     import AudioPlayer from "./AudioPlayer.svelte"
+    import { t } from '$lib/utils/translation.js'
 
    /** @type {{file: any, group?: boolean, rtc?: boolean}} */
    let { file, group = false, rtc = false } = $props();
@@ -26,8 +27,8 @@
     let saved = $state(false)
     let data = $state()
 
-    const NOT_FOUND = "File not found"
-    const OTHER = "File"
+    const NOT_FOUND = t('fileNotFound') || "File not found"
+    const OTHER = t('file') || "File"
 
     onMount(async () => {
         if (file.saved) saved = true
@@ -109,21 +110,21 @@
         <p class="message" in:fade|global>{file.fileName}</p>
          {#if !clicked}
          <div onclick={() => clicked = true}>
-             <Button on:click|once={() => downloadFile(file)} disabled={false} text="Download file"/>
+             <Button on:click|once={() => downloadFile(file)} disabled={false} text={t('downloadFile') || 'Download file'}/>
          </div>
         {:else}
-        <p class="message loading blink_me" in:fade|global>Start downloading...</p>
+        <p class="message loading blink_me" in:fade|global>{t('startDownloading') || 'Start downloading...'}</p>
         {/if}
     {:else if downloading && !downloadDone}
-        <p class="message done blink_me" in:fade|global>Downloading</p>
+        <p class="message done blink_me" in:fade|global>{t('downloading') || 'Downloading'}</p>
         <div in:fade|global>
             <Progress file={file} send={false}/>
         </div>
-    {:else if !downloading && !downloadDone && !saved && data === (OTHER || NOT_FOUND)} 
+    {:else if !downloading && !downloadDone && !saved && data === (OTHER || NOT_FOUND)}
         <p class="message" in:fade|global>{file.fileName}</p>
 
     {/if}
-        
+
     {#if downloadDone || saved}
         {#if !video}
             {#if data === (OTHER || NOT_FOUND)}
@@ -132,7 +133,7 @@
                     <Progress file={file} send={false}/>
                 </div>
                 {/if}
-            <p class="message done">File downloaded!</p>
+            <p class="message done">{t('fileDownloaded') || 'File downloaded!'}</p>
             <p class="message">{file.fileName}</p>
             {:else if data === NOT_FOUND}
             <p class="message error">{NOT_FOUND}</p>

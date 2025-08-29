@@ -2,6 +2,7 @@
 import { fade } from 'svelte/transition'
 import { webRTC, swarm } from '$lib/stores/user.js'
 import { mediaSettings, videoSettings } from '$lib/stores/mediasettings'
+import { t } from '$lib/utils/translation.js'
     /** @type {{conference?: boolean}} */
     let { conference = false } = $props();
 let open = $state()
@@ -46,7 +47,7 @@ let activeDevice = $derived($mediaSettings.cameraId)
         </div>
     {/if}
     <div class="share" class:border_rgb="{changed}" class:open onclick={() => (open = !open)}>
-        <h5>Camera</h5>
+        <h5>{t('camera') || 'Camera'}</h5>
     </div>
 </div>
 
