@@ -103,6 +103,7 @@
   "inputNodeUrl": "手动输入节点",
   "randomNode": "随机节点",
   "connectToNode": "连接节点",
+  "connect": "连接",
   "checkNodes": "刷新节点状态",
   "activateWalletSync": "实时同步钱包",
   "reportBug": "意见反馈",

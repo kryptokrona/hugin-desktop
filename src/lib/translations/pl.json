@@ -100,6 +100,7 @@
   "inputNodeUrl": "Enter node URL",
   "randomNode": "Random node",
   "connectToNode": "Connect to node",
+  "connect": "Połącz",
   "checkNodes": "Sprawdź węzły",
   "requestBiometric": "Żądaj biometrii",
   "authenticateBiometric": "Uwierzytelnij za pomocą biometrii",

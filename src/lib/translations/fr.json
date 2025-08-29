@@ -99,6 +99,7 @@
   "inputNodeUrl": "Entrer l'URL du nœud",
   "randomNode": "Nœud aléatoire",
   "connectToNode": "Se connecter au nœud",
+  "connect": "Connecter",
   "checkNodes": "Vérifier les nœuds",
   "requestBiometric": "Demander biométrique",
   "authenticateBiometric": "S'authentifier avec biométrique",

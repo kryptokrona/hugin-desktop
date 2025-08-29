@@ -125,6 +125,7 @@
   "inputNodeUrl": "Node-URL eingeben",
   "randomNode": "Zufälliger Node",
   "connectToNode": "Mit Node verbinden",
+  "connect": "Verbinden",
   "checkNodes": "Nodes überprüfen",
   "requestBiometric": "Biometrie anfordern",
   "authenticateBiometric": "Mit Biometrie authentifizieren",

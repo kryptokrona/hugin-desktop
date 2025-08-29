@@ -100,6 +100,7 @@
   "inputNodeUrl": "Syötä solmun URL",
   "randomNode": "Satunnainen solmu",
   "connectToNode": "Yhdistä solmuun",
+  "connect": "Yhdistä",
   "checkNodes": "Tarkista solmut",
   "debugLog": "Virheloki",
   "noMnemonicError": "Lompakko ei pystynyt antamaan mnemoniikkaa",

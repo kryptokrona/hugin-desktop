@@ -101,6 +101,7 @@
   "inputNodeUrl": "Ingresar URL del nodo",
   "randomNode": "Nodo aleatorio",
   "connectToNode": "Conectar al nodo",
+  "connect": "Conectar",
   "checkNodes": "Verificar nodos",
   "themeLight": "Claro",
   "debugLog": "Registro de depuración",

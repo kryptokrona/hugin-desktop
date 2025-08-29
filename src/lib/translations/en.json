@@ -99,6 +99,7 @@
   "inputNodeUrl": "Enter node URL",
   "randomNode": "Random node",
   "connectToNode": "Connect to node",
+  "connect": "Connect",
   "checkNodes": "Check nodes",
   "requestBiometric": "Request biometric",
   "authenticateBiometric": "Authenticate with biometric",

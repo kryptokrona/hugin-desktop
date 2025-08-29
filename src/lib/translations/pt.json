@@ -100,6 +100,7 @@
   "inputNodeUrl": "Inserir URL do nó",
   "randomNode": "Nó aleatório",
   "connectToNode": "Conectar ao nó",
+  "connect": "Conectar",
   "checkNodes": "Verificar nós",
   "reportBug": "Reportar bug",
   "noFunds": "Fundos insuficientes",

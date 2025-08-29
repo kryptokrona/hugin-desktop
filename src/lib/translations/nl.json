@@ -100,6 +100,7 @@
   "inputNodeUrl": "Node URL invoeren",
   "randomNode": "Willekeurige node",
   "connectToNode": "Verbinden met node",
+  "connect": "Verbinden",
   "checkNodes": "Nodes controleren",
   "reportBug": "Bug rapporteren",
   "noFunds": "Onvoldoende middelen",

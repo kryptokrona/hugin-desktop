@@ -100,6 +100,7 @@
   "inputNodeUrl": "Enter node URL",
   "randomNode": "Random node",
   "connectToNode": "Connect to node",
+  "connect": "Anslut",
   "checkNodes": "Kontrollera noder",
   "requestBiometric": "Begär biometri",
   "authenticateBiometric": "Autentisera med biometri",
