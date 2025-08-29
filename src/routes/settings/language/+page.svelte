@@ -3,7 +3,7 @@
     import { languages } from '$lib/translations/langs.js';
     import { setLanguage, getCurrentLanguage, t } from '$lib/utils/translation.js';
 
-    let currentLanguage = $state(getCurrentLanguage()?.code || 'en');
+    let currentLanguage = $derived(getCurrentLanguage()?.code || 'en');
     let isLoading = $state(false);
 
     // Update currentLanguage when it changes in the store
