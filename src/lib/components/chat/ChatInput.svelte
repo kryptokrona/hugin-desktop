@@ -3,7 +3,7 @@
 
   import { onDestroy, onMount} from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
-  import {boards, webRTC, groups, beam, swarm, keyboard} from '$lib/stores/user.js'
+  import {boards, webRTC, groups, beam, swarm, keyboard, rooms} from '$lib/stores/user.js'
   import {page} from '$app/stores'
   import {user} from '$lib/stores/user.js'
   import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -240,6 +240,17 @@
 
     }
   });
+
+  run(() => {
+    if (mount) {
+
+      if (inrooms) {
+        to = $rooms.thisRoom.name
+      }
+
+    }
+  });
+
 </script>
 
 <svelte:window onkeyup={keyup} onkeydown={keydown}/>
