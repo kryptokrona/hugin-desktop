@@ -1,8 +1,10 @@
 import Identicon from 'identicon.js'
 import intToRGB from 'int-to-rgb'
+import { hashPadding } from './utils'
 
 export function get_avatar(hash, format = 'png', big = false) {
     // Get custom color scheme based on address
+    if (hash.length < 20) hash = hashPadding() + '13333333337'
     let rgb = intToRGB(hashCode(hash))
     let size = 40
     if (big) size = 200
