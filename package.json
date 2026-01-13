@@ -57,7 +57,7 @@
         "@neodrag/svelte": "^2.3.2",
         "app-root-dir": "^1.0.2",
         "auto-launch": "^5.0.5",
-        "better-sqlite3-multiple-ciphers": "^12.6.0",
+        "better-sqlite3-multiple-ciphers": "^11.10.0",
         "corestore": "^6.18.4",
         "debounceify": "^1.1.0",
         "electron-context-menu": "^3.6.0",
