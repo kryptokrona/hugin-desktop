@@ -10,7 +10,7 @@
     "type": "module",
     "repository": "https://github.com/kryptokrona/hugin-desktop",
     "scripts": {
-        "postinstall": "patch-package && electron-rebuild install-app-deps && electron-rebuild -f -w better-sqlite3-multiple-ciphers",
+        "postinstall": "patch-package && electron-rebuild -f -w better-sqlite3-multiple-ciphers",
         "patch": "patch-package",
         "pack": "build --dir",
         "dist": "electron-builder",
