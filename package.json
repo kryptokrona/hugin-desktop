@@ -10,7 +10,7 @@
     "type": "module",
     "repository": "https://github.com/kryptokrona/hugin-desktop",
     "scripts": {
-        "postinstall": "patch-package && electron-rebuild -f -w better-sqlite3-multiple-ciphers",
+        "postinstall": "patch-package && electron-rebuild install-app-deps && electron-rebuild -f -w better-sqlite3-multiple-ciphers",
         "patch": "patch-package",
         "pack": "build --dir",
         "dist": "electron-builder",
@@ -90,7 +90,6 @@
         "progress-stream": "^2.0.0",
         "sanitize-html": "^2.12.1",
         "simple-peer": "^9.11.1",
-        "sqlite3": "^5.1.7",
         "streamx": "^2.22.0",
         "svelte-5-french-toast": "^2.0.4",
         "svelte-file-dropzone": "^1.0.0",
