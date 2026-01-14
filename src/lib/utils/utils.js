@@ -58,13 +58,13 @@ export const containsOnlyEmojis = (text) => {
 
 export const isLatin = (text) => {
     const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
-    const isChinese = text.match(REGEX_CHINESE);
+    const isChinese = text?.match(REGEX_CHINESE);
     if(isChinese) return false
     const REGEX_JAPAN = /[\u3040-\u30FF\u31F0-\u31FF\uFF00-\uFFEF]/;
-    const isJapanese = text.match(REGEX_JAPAN);
+    const isJapanese = text?.match(REGEX_JAPAN);
     if(isJapanese) return false
     const REGEX_KOREA = /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/;
-    const isKorean = text.match(REGEX_KOREA);
+    const isKorean = text?.match(REGEX_KOREA);
     if(isKorean) return false
     return true
 }

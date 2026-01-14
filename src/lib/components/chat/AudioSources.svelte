@@ -11,10 +11,10 @@ let audioDevices = $mediaSettings.devices.filter((a) => a.kind == 'audioinput')
 
 function pickSource(src) {
     console.log('pick', src)
-    console.log('deviceid', src.deviceId)
-    console.log('change this', src.id)
-    $webRTC.audioId = src.deviceId
-    window.api.changeAudioSource(src.deviceId)
+    console.log('deviceid', src?.deviceId)
+    console.log('change this', src?.id)
+    $webRTC.audioId = src?.deviceId
+    window.api.changeAudioSource(src?.deviceId)
     buttonGlow()
 }
 

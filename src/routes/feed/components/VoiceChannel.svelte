@@ -1,7 +1,7 @@
 <script>
     import wrtc from '@koush/wrtc'
     import Peer from 'simple-peer'
-    import { audioLevel, user, swarm, pushToTalk } from '$lib/stores/user.js'
+    import { audioLevel, user, swarm } from '$lib/stores/user.js'
     import { onMount } from 'svelte'
     import { sleep } from '$lib/utils/utils'
     import { mediaSettings, videoSettings, audioSettings, video } from '$lib/stores/mediasettings'
@@ -184,7 +184,7 @@
     if ($swarm.myStream) {
         if ($swarm.myStream.getVideoTracks().length === 0) add = true
     }
-    const thisSwarm = $swarm.voice
+    const thisSwarm = $swarm.active.find(a => a.voice_connected)
     window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: !$videoSettings.myVideo, screenshare: true, audioMute: !$swarm.audio, video: true})
     changeVideoSource(screen_stream, 'screen', add)
     }
@@ -230,7 +230,7 @@
         }
 
         if ($videoSettings.screenshare) return
-        const thisSwarm = $swarm.voice
+        const thisSwarm = $swarm.active.find(a => a.voice_connected)
         window.api.updateVoiceChannelStatus({key: thisSwarm.key, videoMute: false, screenshare: false, audioMute: !$swarm.audio, video: true})
         $mediaSettings.cameraId = id
     }
@@ -409,6 +409,7 @@
     
         peer2.on('connect', () => {
             // SOUND EFFECT
+            window.api.successMessage('Call established')
             console.log('Connection established;')
             let startTone = new Audio('/audio/startcall.mp3')
             startTone.play()
@@ -497,7 +498,7 @@ async function play_video() {
     
     async function checkMyVolume(stream) {
         let interval
-        if (!$swarm.audio || $pushToTalk.on) {
+        if (!$swarm.audio) {
             stream.getAudioTracks().forEach((track) => (track.enabled = false))
         }
         $swarm.myStream = stream
@@ -612,7 +613,7 @@ async function play_video() {
     
         $swarm.call = filter
 
-        const in_voice = $swarm.voice_channel.has($user.myAddress)
+        const in_voice = $swarm.voice_channel.some(a => a.address === $user.myAddress)
 
         if (in_voice) {
             //Still in channel, dont stop video/voice tracks.

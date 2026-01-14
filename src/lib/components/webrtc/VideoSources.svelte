@@ -13,11 +13,11 @@ let videoDevices = $mediaSettings.devices.filter((a) => a.kind == 'videoinput')
 
 function pickSource(src) {
     let add = false
-    if ($mediaSettings.cameraId === src.deviceId && !$videoSettings.screenshare) return
+    if ($mediaSettings.cameraId === src?.deviceId && !$videoSettings.screenshare) return
     if (!$videoSettings.myVideo && conference) add = true
     
     $videoSettings.loading = true
-    window.api.changeSource(src.deviceId, conference, add)
+    window.api.changeSource(src?.deviceId, conference, add)
     if ($videoSettings.screenshare) {
         $videoSettings.screenshare = false
     }
@@ -41,7 +41,7 @@ let activeDevice = $derived($mediaSettings.cameraId)
         <div in:fade|global class="list layered-shadow">
             {#each videoDevices as src}
                 <div onclick={() => pickSource(src)}>
-                    <h5 class:picked={activeDevice === src.deviceId}>{src.label}</h5>
+                    <h5 class:picked={activeDevice === src?.deviceId}>{src.label}</h5>
                 </div>
             {/each}
         </div>
