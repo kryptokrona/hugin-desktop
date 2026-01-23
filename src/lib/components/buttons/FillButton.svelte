@@ -38,8 +38,6 @@
     min-width: 100px;
     width: 100%;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 1rem;
     transition: 250ms ease-in-out;
     font-family: 'Montserrat', sans-serif;
     opacity: 0.9;
@@ -57,9 +55,7 @@
     background-color: var(--success-color);
     border-color: var(--border-color);
     color: var(--text-color);
-    font-size: 1rem;
     text-shadow:  0 0 1px black;
-    font-weight: 600;
 
     &:hover {
       opacity: 1;

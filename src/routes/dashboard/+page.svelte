@@ -13,6 +13,7 @@
     import { fly } from 'svelte/transition'
     import Welcome from './components/Welcome.svelte'
 	import Upgrade from './components/Upgrade.svelte';
+    import QR from './components/QR.svelte';
 	import Notifications from './components/Notifications.svelte';
 	import { t } from '$lib/utils/translation.js';
     
@@ -34,6 +35,7 @@
     })
 
     let upgrade = $state(false)
+    let showQR = $state("")
 
 </script>
 
@@ -46,19 +48,23 @@
     <Upgrade onClose={() => (upgrade = false)}/>
 {/if}
 
+{#if showQR != ""} 
+  <QR data={showQR} onClose={() => (showQR = "")}/>
+{/if}
+
 <div class="header" in:fly|global="{{ y: 100 }}">
     <div style="display: flex; align-items: center; gap: 0.5rem">
-        <h1>{greet}, {$user.username}!</h1>
+        <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
         <EditName/>
     </div>
     <div class="button_wrapper">
             <FillButton
                 text="{upgraded}"
-                    enabled="{true}"
-                    disabled="{false}"
+
+                    rgb="{true}"
                     on:click="{() => upgrade = true}"/>
                 
-        <Share/>
+        <Share onShowQR={(value) => (showQR = value)} />
     </div>
 </div>
 
@@ -89,6 +95,7 @@
   .button_wrapper {
     display: flex;
     gap: 1rem;
+    margin-right: -13px;
   }
   
 </style>
