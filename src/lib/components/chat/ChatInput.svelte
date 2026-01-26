@@ -181,6 +181,7 @@
 
   async function fieldFocus() {
     await tick()
+    if ($layoutState.modalOpen) return
     messageField?.focus()
   }
 
@@ -213,12 +214,12 @@
     }
   });
   run(() => {
-    if ($videoGrid.showChat && $videoGrid.showVideoGrid) {
+    if ($videoGrid.showChat && $videoGrid.showVideoGrid && !$layoutState.modalOpen) {
       fieldFocus()
     }
   });
   run(() => {
-    if (mount && $user.activeChat) {
+    if (mount && $user.activeChat && !$layoutState.modalOpen) {
       fieldFocus()
     }
   })

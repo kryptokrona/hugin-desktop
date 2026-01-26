@@ -8,7 +8,9 @@
     import { rooms, notify } from '$lib/stores/user.js'
     import { get_avatar } from '$lib/utils/hugin-utils.js'
     import { t } from '$lib/utils/translation.js'
-    
+    import { onMount, onDestroy, tick } from 'svelte'
+    import { layoutState } from '$lib/stores/layout-state.js'
+
     let {
         onAddRoom
     } = $props()
@@ -25,6 +27,8 @@
     let lockName = $state(false)
     let link = $state('')
     let adm = false
+    let nameField
+    let keyField
     
     const enter = (e) => {
         if (enableAddGroupButton && invite.length === 128 && e.keyCode === 13) {
@@ -134,6 +138,35 @@
     run(() => {
         avatar
     });
+    async function focusCurrentField() {
+        await tick()
+
+        if (!newgroup) return
+
+        if (!name && nameField) {
+            nameField.focus()
+            return
+        }
+
+        if (!create && newgroup) {
+            keyField.focus()
+        }
+    }
+
+    onMount(() => {
+    layoutState.update(v => ({ ...v, modalOpen: true }))
+    })
+
+    onDestroy(() => {
+    layoutState.update(v => ({ ...v, modalOpen: false }))
+    })
+
+    run(() => {
+    if (newgroup) {
+        focusCurrentField()
+    }
+    })
+
 </script>
     
     <svelte:window onkeyup={preventDefault(enter)} />
@@ -166,7 +199,13 @@
             {#if create}
 
                 <h3 in:fade|global>{t('nameYourRoom') || 'Name your Room'}</h3>
-                <input placeholder={t('nameYourRoom') || 'Name your Room'} type="text" disabled={lockName} bind:value="{name}" />
+                <input 
+                placeholder={t('nameYourRoom') || 'Name your Room'} 
+                type="text" 
+                disabled={lockName} 
+                bind:value="{name}" 
+                bind:this={nameField}
+                />
                 {#if name.length}
                 <Button disabled="{false}" text={t('generateInvite') || 'Generate invite'} on:click="{() => createInvite()}" />
                 {/if}
@@ -192,7 +231,12 @@
                 {/if}
             </div>
             <div class="key-wrapper" in:fade|global>
-                <input placeholder={t('inviteLink') || 'Invite link'} type="text" bind:value="{link}" />
+                <input 
+                placeholder={t('inviteLink') || 'Invite link'} 
+                type="text" 
+                bind:value="{link}" 
+                bind:this={keyField}
+                />
                 {#if invite.length}
                     <img in:fade|global class="avatar" src="data:image/png;base64,{get_avatar(invite)}" alt="" />
                 {/if}
@@ -220,10 +264,11 @@
         left: 0;
         width: 100%;
         background-color: var(--backdrop-color);
+        backdrop-filter: blur(8px);
         z-index: 103;
         border-radius: 15px;
     }
-    
+
     h3 {
         margin: 0;
         color: var(--title-color);

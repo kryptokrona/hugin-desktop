@@ -7,6 +7,7 @@ export const layoutState = writable({
     showNodeSelector: false,
     showFaucetButton: true,
     showActiveList: false,
+    modalOpen: false,
 })
 
 export const videoGrid = writable({
