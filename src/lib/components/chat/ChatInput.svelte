@@ -1,7 +1,7 @@
 <script>
   import { run } from 'svelte/legacy';
 
-  import { onDestroy, onMount} from 'svelte'
+  import { onDestroy, onMount, tick } from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
   import {boards, webRTC, groups, beam, swarm, keyboard, rooms} from '$lib/stores/user.js'
   import {page} from '$app/stores'
@@ -36,7 +36,7 @@
     mount = true
     checkPath()
     //Check if we have any active texts in this contact or room chat.
-    fieldFocus()
+    await fieldFocus()
     await sleep(1000)
     //Not sure why it takes so long to find the emoji picker.
     emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
@@ -180,8 +180,8 @@
 
 
   async function fieldFocus() {
-    await sleep(200)
-    messageField.focus()
+    await tick()
+    messageField?.focus()
   }
 
 
@@ -217,6 +217,11 @@
       fieldFocus()
     }
   });
+  run(() => {
+    if (mount && $user.activeChat) {
+      fieldFocus()
+    }
+  })
   run(() => {
     if ($swarm.active.length) {
       activeBeam = $swarm.active.some(a => a.chat === $user.activeChat.chat && a.connections.some(a => a.address === $user.activeChat.chat))
