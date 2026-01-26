@@ -295,6 +295,7 @@ function joinInvite () {
 }
 
 const reactThumbsUp = () => {
+    return;
   ReactTo({
     text: '👍',
     reply: hash,
