@@ -294,6 +294,14 @@ function joinInvite () {
     })
 }
 
+const reactThumbsUp = () => {
+  ReactTo({
+    text: '👍',
+    reply: hash,
+  })
+}
+
+
 
 run(() => {
         if (tip !== "") {
@@ -359,7 +367,16 @@ run(() => {
 
 <!-- Takes incoming data and turns it into a board message that we then use in {#each} methods. -->
 
-<div bind:this={messageContainer} class="message" class:yt={rtc && youtube} id="{hash}" class:reply_active="{reply_to_this}" in:fade|global="{{ duration: 150 }}" onmouseleave={() => { openEmoji = false;  showMenu = false}}>
+<div 
+    bind:this={messageContainer} 
+    class="message" 
+    class:yt={rtc && youtube} 
+    id="{hash}" 
+    class:reply_active="{reply_to_this}" 
+    in:fade|global="{{ duration: 150 }}" 
+    onmouseleave={() => { openEmoji = false;  showMenu = false}}
+    ondblclick={reactThumbsUp}
+    >
     <div>
         {#if replyMessage}
             {#if thisReply}
