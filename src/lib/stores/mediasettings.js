@@ -22,3 +22,8 @@ export const mediaSettings = writable({
 export const video = writable({
     play: false,
 })
+
+export const voiceActivation = writable({
+    enabled: false,
+    sensitivity: 160,  // Default threshold (0-255)
+})

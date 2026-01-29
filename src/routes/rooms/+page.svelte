@@ -666,7 +666,17 @@ const typing = (e) => {
                 </div>
             {/if}
              <div class="fade"></div>
-            {#each fixedRooms as message (message.hash)}
+            {#each fixedRooms as message, i (message.hash)}
+            {@const nextMessage = i < fixedRooms.length - 1 ? fixedRooms[i + 1] : null}
+            {@const isGrouped = nextMessage && 
+                nextMessage.address === message.address &&
+                !nextMessage.reply &&
+                !nextMessage.tip &&
+                !nextMessage.file &&
+                !message.reply &&
+                !message.tip &&
+                !message.file &&
+                (nextMessage.time - message.time) < 300000}
             <div animate:flip="{{duration: 150}}">
                 <GroupMessage
                     ReactTo="{(e) => sendRoomMsg(e, false, true)}"
@@ -686,6 +696,7 @@ const typing = (e) => {
                     room="{true}"
                     admin="{admin}"
                     tip="{message.tip}"
+                    grouped="{isGrouped}"
                 />
             </div>
             {/each}

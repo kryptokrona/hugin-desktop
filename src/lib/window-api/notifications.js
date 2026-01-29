@@ -53,7 +53,11 @@ if (browser) {
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
 
-        if (get(sounds).on && sound) success.play()
+        if (get(sounds).on && sound) {
+            success.volume = 0.3 // 30% volume
+            success.play()
+        }
+            
 
     })
 

@@ -89,7 +89,9 @@
         }
 
         board_message_sound = new Audio('/audio/boardmessage.mp3')
+        board_message_sound.volume = 0.3 // 30% volume
         new_message_sound = new Audio('/audio/message.mp3')
+        new_message_sound.volume = 0.3 // 30% volume
 
 
     })

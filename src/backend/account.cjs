@@ -118,6 +118,18 @@ ipcMain.on('sounds', (e, setting) => {
 
  })
 
+
+ipcMain.on('voice-activation', (e, setting) => {
+
+  store.set({ 
+    voiceActivation: {
+      enabled: setting.enabled,
+      sensitivity: setting.sensitivity
+    }
+  })
+
+ })
+
 class Account {
     constructor () {
       
@@ -175,6 +187,7 @@ class Account {
       const avatars = []
       const pushToTalk = store.get('pushToTalk') ?? {key: null, on: false, name: ''}
       const sounds = store.get('sounds') ?? true
+      const voiceActivation = store.get('voiceActivation') ?? {enabled: true, sensitivity: 160}
 
       if (pushToTalk.on) {
         push_to_talk(pushToTalk)
@@ -196,7 +209,8 @@ class Account {
         avatars,
         this.syncImages,
         pushToTalk,
-        sounds
+        sounds,
+        voiceActivation
       ])
 
       this.known_keys = keys

@@ -2,6 +2,7 @@
     import {fade} from 'svelte/transition'
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {files, groups, misc, notify, pushToTalk, rooms, sounds, user} from '$lib/stores/user.js'
+    import {voiceActivation} from '$lib/stores/mediasettings.js'
     import {onMount, setContext} from 'svelte'
     import {goto} from '$app/navigation'
     import {Moon} from "svelte-loading-spinners";
@@ -56,7 +57,7 @@
     goto(url);
   });
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages, ptt, sound]) => {
+    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages, ptt, sound, voiceAct]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
         $misc.node = {node: node.node, port: parseInt(node.port)}
@@ -72,6 +73,7 @@
         $misc.syncImages = syncImages
         $pushToTalk = ptt
         $sounds.on = sound
+        $voiceActivation = voiceAct
 
         const roomKeys = new Set($rooms.roomArray.map((r) => r.key))
         const [unreadPm, unreadGroups, unreadFeed] = await Promise.all([
