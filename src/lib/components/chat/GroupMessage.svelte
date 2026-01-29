@@ -27,7 +27,7 @@ import Tip from './Tip.svelte'
 import CodeBlock from './CodeBlock.svelte'
 import { t } from '$lib/utils/translation.js'
 
-    /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
+    /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, grouped?: boolean, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
     let {
         msg,
         msgFrom,
@@ -45,6 +45,7 @@ import { t } from '$lib/utils/translation.js'
         room = false,
         admin = false,
         tip = false,
+        grouped = false,
         ReplyTo,
         ReactTo,
         DeleteMessage,
@@ -390,7 +391,8 @@ run(() => {
     </div>
     <div>
         <div>
-            <div class="header">
+            <div class="header" class:grouped>
+                {#if !grouped}
                 <div style="display: flex; align-items: center; margin-left: -10px">
                     {#await check_avatar(msgFrom)}
                     {:then avatar}
@@ -415,6 +417,8 @@ run(() => {
                         >
                     </h5>
                 </div>
+                {/if}
+                {#if !grouped}
                 <div class="actions">
                     <div style="display: flex;">
                         <div class="emojiContainer">
@@ -441,7 +445,9 @@ run(() => {
                         {/if}
                     {/if}
                 </div>
+                {/if}
             </div>
+            <div class="message-content" class:grouped>
             {#if youtube}
                 <Youtube id={embed_code} />
                 <p class:rtc style="user-select: text;">{messageText}</p>
@@ -472,6 +478,35 @@ run(() => {
                 </div>
                 {/if}
             {/if}
+            {#if grouped}
+            <div class="actions grouped-actions">
+                <div style="display: flex;">
+                    <div class="emojiContainer">
+                        <emoji-picker bind:this={emojiPicker}></emoji-picker>
+                    </div>
+                     {#if !rtc}
+                    <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
+                        <Emoji size="16px" stroke={"var(--text-color)"}/>
+                    </button>
+                    {/if}
+                </div>
+                {#if !rtc}
+                    {#if room && !myMsg}
+                    <PayIcon size={18} on:click={sendMoney}/>
+                    {/if}
+                    <ReplyArrow on:click="{replyTo}" />
+                    {#if !rtc}
+                    {#if !myMsg}
+                    <Dots on:click="{() => showMenu = true}"/>
+                    {/if}
+                    {#if showMenu && !myMsg}
+                        <UserOptions admin={admin} info={{address: msgFrom, name: nickname}}/>
+                    {/if}
+                    {/if}
+                {/if}
+            </div>
+            {/if}
+            </div>
         </div>
 
         <div class="reactions">
@@ -497,14 +532,23 @@ run(() => {
     flex-direction: column;
     box-sizing: border-box;
     color: var(--text-color);
-    padding: 10px 10px 10px 20px;
+    padding: 10px 10px 0px 20px;
     border: 1px solid transparent;
     white-space: pre-line;
+    
+    &:has(.header.grouped) {
+        padding-top: 5px;
+        padding-bottom: 0px;
+    }
     
     .header {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        
+        &.grouped {
+            margin-left: 30px;
+        }
     }
 
 
@@ -514,6 +558,24 @@ run(() => {
         .actions {
                 opacity: 100%;
             }
+    }
+}
+
+.message-content {
+    &.grouped {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        
+        p {
+            flex: 1;
+        }
+        
+        .grouped-actions {
+            flex-shrink: 0;
+            margin-left: auto;
+        }
     }
 }
 

@@ -15,7 +15,7 @@
     import UploadFile from '$lib/components/chat/UploadFile.svelte'
     import { t } from '$lib/utils/translation.js'
 
-  /** @type {{message: any, msgFrom: any, ownMsg: any, files?: boolean, timestamp: any, beamMsg?: boolean, error?: boolean}} */
+  /** @type {{message: any, msgFrom: any, ownMsg: any, files?: boolean, timestamp: any, beamMsg?: boolean, error?: boolean, grouped?: boolean}} */
   let {
     message = $bindable(),
     msgFrom,
@@ -23,7 +23,8 @@
     files = false,
     timestamp,
     beamMsg = false,
-    error = false
+    error = false,
+    grouped = false
   } = $props();
     
     let torrent = false
@@ -185,6 +186,7 @@
     {#if ownMsg}
         <div class="wrapper" class:error={error}>
                
+            {#if !grouped}
             {#await check_avatar(address)}
             {:then avatar}
             {#if avatar}
@@ -204,8 +206,10 @@
             </div>
             {/if}
             {/await}
+            {/if}
 
-            <div class="content">
+            <div class="content" class:grouped>
+                {#if !grouped}
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class:asian class="nickname" style="color: {getColorFromHash($user.myAddress)}">
                         {$user.username}
@@ -219,6 +223,7 @@
                         </div>
                     {/if}
                 </div>
+                {/if}
                 {#if files}
                 <div style="cursor: pointer">
                 <UploadFile file={files} />
@@ -243,6 +248,7 @@
     {:else}
         <div class="wrapper">
 
+            {#if !grouped}
             {#await check_avatar(msgFrom)}
             {:then avatar}
             {#if avatar}
@@ -262,8 +268,10 @@
             </div>
             {/if}
             {/await}
+            {/if}
         
-            <div class="content">
+            <div class="content" class:grouped>
+                {#if !grouped}
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class:asian class="nickname" style="color: {getColorFromHash(msgFrom)}">
                         {$user.activeChat.name}
@@ -277,6 +285,7 @@
                         </div>
                     {/if}
                 </div>
+                {/if}
                 {#if files}
                 <div style="cursor: pointer">
                    <DownloadFile file={files}/>
@@ -319,12 +328,17 @@
 <style lang="scss">
 
 .wrapper {
-    padding: 10px 20px;
+    padding: 10px 20px 0px 20px;
     display: flex;
     width: 100%;
 
     &:hover {
         background-color: var(--card-background);
+    }
+    
+    &:has(.content.grouped) {
+        padding-top: 5px;
+        padding-bottom: 0px;
     }
 }
 
@@ -352,6 +366,10 @@
   justify-content: center;
   width: 100%;
   gap: 0.25rem;
+  
+  &.grouped {
+    margin-left: 48px;
+  }
 
   .nickname {
     margin: 0;

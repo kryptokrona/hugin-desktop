@@ -381,7 +381,15 @@ const typing = (e) => {
                 {#if messageList.length > 99 && loadMore}
                     <Button text={t('loadMore') || "Load more"} disabled={false} on:click={() => loadMoreMessages()} />
                 {/if}
-                {#each messageList as message (message.timestamp)}
+                {#each messageList as message, i (message.timestamp)}
+                {@const nextMessage = i < messageList.length - 1 ? messageList[i + 1] : null}
+                {@const currentSender = message.sent ? $user.myAddress : message.chat}
+                {@const nextSender = nextMessage ? (nextMessage.sent ? $user.myAddress : nextMessage.chat) : null}
+                {@const isGrouped = nextMessage && 
+                    currentSender === nextSender &&
+                    !nextMessage.file &&
+                    !message.file &&
+                    (nextMessage.timestamp - message.timestamp) < 300000}
                 <div animate:flip="{{duration: 100}}">
                     <ChatBubble
                         on:download="{() => download(message.msg)}"
@@ -392,6 +400,7 @@ const typing = (e) => {
                         timestamp="{message.timestamp}"
                         beamMsg="{message.beam}"
                         error="{message?.error}"
+                        grouped="{isGrouped}"
                     />
                 </div>
                 {/each}
