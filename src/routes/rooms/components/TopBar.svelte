@@ -12,12 +12,15 @@ import { misc, notify, rooms, swarm } from "$lib/stores/user"
 import { isLatin } from "$lib/utils/utils"
 import Dots from '$lib/components/icons/Dots.svelte'
 import FileSync from "$lib/components/icons/FileSync.svelte"
+import QRIcon from '$lib/components/icons/QRIcon.svelte'
+import QR from '../../dashboard/components/QR.svelte';
 
 let roomName = $state()
 let asian = $state(false)
 let room = $state('')
 let admin = $state(false)
 let thisSwarm = $state(false)
+let showQR = $state(false)
 
 let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
 run(() => {
@@ -89,9 +92,19 @@ function toggleActions() {
 </script>
 
 <div class="top" style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px; border-bottom: 1px solid var(--border-color); height: 57px">
+   
+    {#if showQR} 
+    <QR data={'hugin://' + roomName.replace(/ /g, '-') + '/' + room} onClose={() => (showQR = false)}/>
+    {/if}
+   
     <div style="display: flex; padding-bottom: 10px">
         <h3 title={roomName} class:asian style="font-size: 17px; padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" onclick={() => copyThis(room)}>{roomName}</h3>
     <div style="display: inline-block; margin-left: auto">
+        
+        <div style="cursor: pointer; display: inline-block; width: 25px;" onclick={() => showQR = true}>
+            <QRIcon size="22" />
+        </div>
+
         <Tooltip title={t('inviteKey')}>
             <div onclick={() => copyThis(room)}>
         <AddToCall />
