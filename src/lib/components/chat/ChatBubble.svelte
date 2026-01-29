@@ -65,16 +65,16 @@
 
         if (files) return
 
-        if (message.match(geturl)) {
+        if (message?.match(geturl)) {
             link = true
-            messageLink = message.match(geturl)
-            messageText = message.replace(messageLink,'')
+            messageLink = message?.match(geturl)
+            messageText = message?.replace(messageLink,'')
             //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
             messageLink = messageLink[0]
         }
 
-        if (link && message.match(/youtube.com/) || message.match(/youtu.be/)) {
-            if (message.match(/youtu.be/)) youtube_shared_link_type = true
+        if (link && message?.match(/youtube.com/) || message?.match(/youtu.be/)) {
+            if (message?.match(/youtu.be/)) youtube_shared_link_type = true
             youtubeLink = true
             if (ownMsg) checkLink()
             return

@@ -7,8 +7,11 @@ import { fade, fly } from 'svelte/transition'
 import { get_avatar } from '$lib/utils/hugin-utils.js'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { t } from '$lib/utils/translation.js'
+import { onDestroy, onMount, tick } from 'svelte'
+import {layoutState} from '$lib/stores/layout-state.js'
 
-
+let addressField
+let nicknameField
 let enableButton = $state(false)
 let nickname = $state('')
 let addr = $state()
@@ -21,6 +24,27 @@ let step = $state(1)
 let {
     AddChat
 } = $props()
+
+async function focusCurrentField() {
+  await tick()
+
+  if (step === 1) {
+    addressField?.focus()
+  }
+
+  if (step === 2) {
+    nicknameField?.focus()
+  }
+}
+
+onMount(() => {
+    layoutState.update(v => ({ ...v, modalOpen: true }))
+    focusCurrentField()
+})
+
+onDestroy(() => {
+  layoutState.update(v => ({ ...v, modalOpen: false }))
+})
 
 run(() => {
     if (text.length > 98) {
@@ -69,8 +93,11 @@ const next = () => {
 }
 
 run(() => {
-        step
-    });
+  if (step) {
+    focusCurrentField()
+  }
+})
+
 </script>
 
 <div onclick={self(bubble('click'))} in:fade|global="{{ duration: 70 }}" out:fade|global="{{ duration: 100 }}" class="backdrop">
@@ -86,12 +113,13 @@ run(() => {
                 />
             {/if}
             <input
-                out:fade|global
-                placeholder={t('enterHuginAddress') || 'Enter Hugin address'}
-                type="text"
-                spellcheck="false"
-                autocomplete="false"
-                bind:value="{text}"
+            out:fade|global
+            placeholder={t('enterHuginAddress') || 'Enter Hugin address'}
+            type="text"
+            spellcheck="false"
+            autocomplete="false"
+            bind:this={addressField}
+            bind:value="{text}"
             />
             <div style="width: 100px; margin-left: 10px">
                 <FillButton
@@ -115,12 +143,13 @@ run(() => {
                 />
             {/if}
             <input
-                in:fade|global
-                placeholder={t('enterNickname') || 'Enter a nickname'}
-                type="text"
-                spellcheck="false"
-                autocomplete="false"
-                bind:value="{nickname}"
+            in:fade|global
+            placeholder={t('enterNickname') || 'Enter a nickname'}
+            type="text"
+            spellcheck="false"
+            autocomplete="false"
+            bind:this={nicknameField}
+            bind:value="{nickname}"
             />
             <div style="width: 100px; margin-left: 10px">
                 <FillButton

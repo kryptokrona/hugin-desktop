@@ -14,7 +14,7 @@
     function pickSource(src, input) {
         console.log('pick', src)
         console.log("Confere", conference)
-        window.api.changeAudioSource(src.deviceId, conference, input)
+        window.api.changeAudioSource(src?.deviceId, conference, input)
         buttonGlow()
     }
     
@@ -50,7 +50,7 @@
 
                 {#each audioInput as src}
                     <div onclick={() => pickSource(src, true)}>
-                        <h5 class:picked={pickedInput === src.deviceId}>{src.label}</h5>
+                        <h5 class:picked={pickedInput === src?.deviceId}>{src.label}</h5>
                     </div>
                 {/each}
 
@@ -60,7 +60,7 @@
             
                 {#each audioOutput as src}
                     <div onclick={() => pickSource(src, false)}>
-                        <h5 class:picked={pickedOutput === src.deviceId}>{src.label}</h5>
+                        <h5 class:picked={pickedOutput === src?.deviceId}>{src.label}</h5>
                     </div>
                 {/each}
         </div>

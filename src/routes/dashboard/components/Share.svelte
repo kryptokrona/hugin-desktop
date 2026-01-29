@@ -2,6 +2,7 @@
 import { fade } from 'svelte/transition'
 import { user } from '$lib/stores/user.js'
 import { t } from '$lib/utils/translation.js'
+import QRIcon from '$lib/components/icons/QRIcon.svelte'
 
 let open = $state()
 let copied = $state()
@@ -18,6 +19,9 @@ const buttonGlow = () => {
         open = false
     }, 1000)
 }
+
+let { onShowQR } = $props();
+
 </script>
 
 <div style="display: flex; flex-direction: column">
@@ -26,12 +30,22 @@ const buttonGlow = () => {
     </div>
     {#if open}
         <div in:fade|global class="list layered-shadow">
-            <div onclick={() => copyThis($user.myAddress)}>
-                <h5>{t('payment') || 'Payment'}</h5>
-            </div>
-            <div onclick={() => copyThis($user.huginAddress)}>
-                <h5>{t('hugin') || 'Hugin'}</h5>
-            </div>
+            <span>
+                <div onclick={() => copyThis($user.myAddress)}>
+                    <h5>{t('payment') || 'Payment'}</h5>
+                </div>
+                <div onclick={() => onShowQR($user.myAddress)}>
+                    <QRIcon />
+                </div>
+            </span>
+            <span>
+                <div onclick={() => copyThis($user.huginAddress)}>
+                    <h5>{t('hugin') || 'Hugin'}</h5>
+                </div>
+                <div onclick={() => onShowQR($user.huginAddress)}>
+                    <QRIcon />
+                </div>
+            </span>
         </div>
     {/if}
 </div>
@@ -45,7 +59,7 @@ const buttonGlow = () => {
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
     width: 120px;
-    height: 38px;
+    height: 40px;
     cursor: pointer;
     transition: 200ms;
 
@@ -63,12 +77,19 @@ const buttonGlow = () => {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    width: 120px;
+    width: 136px;
     padding: 5px;
     margin-top: 45px;
     background-color: var(--card-background);
     border: 1px solid var(--card-border);
     border-radius: 0.4rem;
+
+    span {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;  // 👈 key line
+        align-items: center;
+    }
 
     div {
         text-align: center;

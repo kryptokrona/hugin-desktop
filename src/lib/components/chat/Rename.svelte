@@ -7,7 +7,10 @@ import { fade, fly } from 'svelte/transition'
 import FillButton from '$lib/components/buttons/FillButton.svelte'
 import { user } from '$lib/stores/user.js'
 import { t } from '$lib/utils/translation.js'
+import { onDestroy, onMount, tick } from 'svelte'
+import {layoutState} from '$lib/stores/layout-state.js'
 
+let nicknameField
 let enableAddButton = $state(false)
 let text = $state('')
 let name = t('change') || 'Change'
@@ -22,6 +25,19 @@ const enter = (e) => {
     }
 }
 
+async function focusField() {
+  await tick()
+  nicknameField?.focus()
+}
+
+onMount(() => {
+    layoutState.update(v => ({ ...v, modalOpen: true }))
+})
+
+onDestroy(() => {
+  layoutState.update(v => ({ ...v, modalOpen: false }))
+})
+
 run(() => {
     if (text.length > 0) {
         //Enable add button
@@ -30,6 +46,12 @@ run(() => {
         enableAddButton = false
     }
 });
+
+run(() => {
+  if (rename) {
+    focusField()
+  }
+})
 
 // Dispatch the inputted data
 const renameContact = (board) => {
@@ -67,6 +89,7 @@ const remove = () => {
             spellcheck="false"
             autocomplete="false"
             bind:value="{text}"
+            bind:this={nicknameField}
         />
         <FillButton
             text="{name}"
