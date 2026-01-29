@@ -4,7 +4,7 @@
     import { audioLevel, user, swarm, pushToTalk } from '$lib/stores/user.js'
     import { onMount } from 'svelte'
     import { sleep } from '$lib/utils/utils'
-    import { mediaSettings, videoSettings, audioSettings, video } from '$lib/stores/mediasettings'
+    import { mediaSettings, videoSettings, audioSettings, video, voiceActivation } from '$lib/stores/mediasettings'
 
     onMount(() => {
         checkSources()
@@ -271,6 +271,7 @@
         let this_call = $swarm.call.find(a => a.chat === data.address)
         let peer1 = await startPeer1(stream, data.address, data.topic, this_call)
     
+        console.log('[VoiceChannel] Calling checkMyVolume from gotMedia')
         checkMyVolume(stream)
         //Set swarm store update for call
         this_call.peer = peer1
@@ -368,6 +369,7 @@
             this_call.peer = peer2
             this_call.chat = data.address
             this_call.myStream = stream
+            console.log('[VoiceChannel] Calling checkMyVolume from got_answer_media')
             checkMyVolume(stream)
 
             peer2.on('stream', (peerStream) => {
@@ -497,8 +499,20 @@ async function play_video() {
     
     async function checkMyVolume(stream) {
         let interval
+        let silenceTimeout = null
+        let currentlyTransmitting = false
+        let logCounter = 0 // Log every 10th check to avoid spam
+        
+        console.log('[Voice Activation] checkMyVolume initialized', {
+            voiceActivationMode: !$pushToTalk.on,
+            pushToTalkOn: $pushToTalk.on,
+            swarmAudio: $swarm.audio,
+            sensitivity: $voiceActivation.sensitivity
+        })
+        
         if (!$swarm.audio || $pushToTalk.on) {
             stream.getAudioTracks().forEach((track) => (track.enabled = false))
+            console.log('[Voice Activation] Audio tracks disabled (audio off or push-to-talk on)')
         }
         $swarm.myStream = stream
 
@@ -508,16 +522,84 @@ async function play_video() {
         analyser.fftSize = 32
         source.connect(analyser);
 
-        interval = setInterval(checkAudioPresence,100)
+        interval = setInterval(checkAudioPresence, 100)
 
         function checkAudioPresence() {
             const dataArray = new Uint8Array(analyser.frequencyBinCount)
             if ($swarm.myStream) {
-            analyser.getByteFrequencyData(dataArray);
-            $audioLevel.meTalking = dataArray.some(value => value > 160)
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Use voice activation sensitivity when not in push-to-talk mode
+                const threshold = !$pushToTalk.on 
+                    ? $voiceActivation.sensitivity 
+                    : 160
+                
+                const maxValue = Math.max(...dataArray)
+                const isSpeaking = dataArray.some(value => value > threshold)
+                
+                // Log every 10th check (once per second) or when state changes
+                const previouslyTalking = $audioLevel.meTalking
+                $audioLevel.meTalking = isSpeaking
+                
+                logCounter++
+                if (logCounter >= 10 || (isSpeaking !== previouslyTalking)) {
+                    console.log('[Voice Activation] Audio check:', {
+                        maxAudioLevel: maxValue,
+                        threshold: threshold,
+                        isSpeaking: isSpeaking,
+                        voiceActivationMode: !$pushToTalk.on,
+                        pushToTalkOn: $pushToTalk.on,
+                        swarmAudio: $swarm.audio,
+                        currentlyTransmitting: currentlyTransmitting,
+                        sensitivity: $voiceActivation.sensitivity
+                    })
+                    logCounter = 0
+                }
+                
+                // Voice activation logic (when not in push-to-talk mode and audio is enabled)
+                if (!$pushToTalk.on && $swarm.audio) {
+                    if (isSpeaking) {
+                        // Clear any pending silence timeout
+                        if (silenceTimeout) {
+                            clearTimeout(silenceTimeout)
+                            silenceTimeout = null
+                            console.log('[Voice Activation] Silence timeout cleared (still speaking)')
+                        }
+                        
+                        // Enable audio if not already transmitting
+                        if (!currentlyTransmitting) {
+                            stream.getAudioTracks().forEach((track) => (track.enabled = true))
+                            currentlyTransmitting = true
+                            console.log('[Voice Activation] AUDIO ENABLED - Voice detected above threshold', {
+                                maxLevel: maxValue,
+                                threshold: threshold
+                            })
+                        }
+                    } else if (currentlyTransmitting && !silenceTimeout) {
+                        // Start silence delay timer (200ms)
+                        silenceTimeout = setTimeout(() => {
+                            stream.getAudioTracks().forEach((track) => (track.enabled = false))
+                            currentlyTransmitting = false
+                            silenceTimeout = null
+                            console.log('[Voice Activation] AUDIO DISABLED - Silence detected (200ms delay)')
+                        }, 200)
+                        console.log('[Voice Activation] Silence timeout started (200ms)')
+                    }
+                } else {
+                    // Log why voice activation is not working
+                    if (logCounter === 0) {
+                        console.log('[Voice Activation] Not active because:', {
+                            voiceActivationMode: !$pushToTalk.on,
+                            pushToTalkOn: $pushToTalk.on,
+                            swarmAudio: $swarm.audio
+                        })
+                    }
+                }
             } else {
                 clearInterval(interval)
+                if (silenceTimeout) clearTimeout(silenceTimeout)
                 $audioLevel.meTalking = false
+                console.log('[Voice Activation] Stream ended, interval cleared')
             }
         }
         
