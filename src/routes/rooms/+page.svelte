@@ -25,7 +25,7 @@ import BigImage from "$lib/components/popups/BigImage.svelte"
 import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
-	import { flip } from 'svelte/animate';
+import { flip } from 'svelte/animate';
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -57,6 +57,32 @@ $effect(() => {
     if (usersTyping > 1) return
     someoneTyping = filteredUsers()[0] ?? null;
 })
+
+let lastRoomFromUrl = null;
+
+$effect(() => {
+  const roomKey = $page.url.searchParams.get('room');
+  if (!roomKey) return;
+
+  // avoid re-running for same value
+  if (roomKey === lastRoomFromUrl) return;
+
+  // wait until rooms are hydrated
+  if (!$rooms.roomArray?.length) return;
+
+  const room = $rooms.roomArray.find(r => r.key === roomKey);
+  if (!room) return;
+
+  lastRoomFromUrl = roomKey;
+  window.api.markGroupMessagesReadByGroup(roomKey)
+  const clear = $notify.unread.filter(unread => unread.group !== roomKey)
+  $notify.unread = clear
+
+  printRoom(room);
+  setTimeout(() => {
+    $rooms.openingLink = false;
+  }, 1000)
+});
 
 
 

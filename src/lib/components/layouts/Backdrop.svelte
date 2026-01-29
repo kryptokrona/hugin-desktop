@@ -37,6 +37,7 @@
     width: 100%;
     background-color: var(--backdrop-color);
     -webkit-backdrop-filter: blur(9px);
+    backdrop-filter: blur(9px);
     z-index: 103;
     border-radius: 15px;
 }

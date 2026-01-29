@@ -124,11 +124,15 @@ function messagesTable() {
                    chat TEXT,
                    sent BOOLEAN,
                    timestamp TEXT,
+                   read INTEGER DEFAULT 0,
                    UNIQUE (timestamp)
                )`
     return new Promise(
         (resolve, reject) => {
            database.prepare(messageTable).run()
+           try {
+               database.prepare('ALTER TABLE messages ADD COLUMN read INTEGER DEFAULT 0').run()
+           } catch (e) {}
         },
         () => {
             resolve()
@@ -195,6 +199,9 @@ const groupMessageTable = () => {
                  database.prepare(update).run()
              } catch(e) {
              }
+            try {
+                database.prepare('ALTER TABLE groupmessages ADD COLUMN read INTEGER DEFAULT 0').run()
+            } catch (e) {}
         },
         () => {
             console.log("WOOOOOO OR:D::DSA:DA:DA:DA:AD:A:_------")
@@ -203,6 +210,9 @@ const groupMessageTable = () => {
                  database.prepare(update).run()
              } catch(e) {
              }
+            try {
+                database.prepare('ALTER TABLE groupmessages ADD COLUMN read INTEGER DEFAULT 0').run()
+            } catch (e) {}
 
             resolve()
         }
@@ -233,11 +243,15 @@ const groupChannelsMessagesTable = () => {
                      time TEXT,
                      channel TEXT,
                      room TEXT,
+                     read INTEGER DEFAULT 0,
                      UNIQUE (hash)
                  )`
     return new Promise(
         (resolve, reject) => {
             database.prepare(channelMessage).run()
+            try {
+                database.prepare('ALTER TABLE channelmessage ADD COLUMN read INTEGER DEFAULT 0').run()
+            } catch (e) {}
         },
         () => {
             resolve()
@@ -246,8 +260,8 @@ const groupChannelsMessagesTable = () => {
 }
 
 const welcomeMessage = () => {
-    const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp)
-                          VALUES (?, ?, ?, ?)`
+    const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp, read)
+                          VALUES (?, ?, ?, ?, 0)`
     return new Promise(
         (resolve, reject) => {
             database.prepare(huginMessage).run(
@@ -328,12 +342,15 @@ const feedMessageTable = () => {
         nickname TEXT,
         hash TEXT,
         signature TEXT,
+        read INTEGER DEFAULT 0,
         UNIQUE (hash)
     )`
    return new Promise(
     (resolve, reject) => {
         database.prepare(feedMessage).run()
-        
+        try {
+            database.prepare('ALTER TABLE feedmessages ADD COLUMN read INTEGER DEFAULT 0').run()
+        } catch (e) {}
     })
 }
 
@@ -493,9 +510,10 @@ const getLatestList = async (list) => {
 }
 
 async function saveFeedMessage(msg) {
+    if (await feedMessageExists(msg.hash)) return;
     try {
     database.prepare(
-        'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash, read) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
     ).run(msg.address, msg.message, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash)
 
     } catch(a) {
@@ -539,12 +557,13 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     reply,
     hash,
     sent,
-    tip
+    tip,
+    read
           )
        VALUES
-           (? ,?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(msg.message, msg.address, '', msg.group, msg.time, msg.name, msg.reply, msg.hash, msg.sent, tip)
+    ).run(msg.message, msg.address, '', msg.group, msg.time, msg.name, msg.reply, msg.hash, msg.sent, tip, msg.sent)
 
         } catch(a) {
             console.log("Sql lite", a)
@@ -575,10 +594,10 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
     //Save to DB
         database.prepare(
             `REPLACE INTO messages
-                (msg, chat, sent, timestamp)
+                (msg, chat, sent, timestamp, read)
             VALUES
-                (?, ?, ?, ?)`
-        ).run([message, addr, sent, timestamp])
+                (?, ?, ?, ?, ?)`
+        ).run([message, addr, sent, timestamp, sent])
     
         
     let newMsg = {
@@ -616,9 +635,9 @@ const saveChannelMessage = (hsh, timestamp, chnl, grp) => {
         //Save to DB
         database.prepare(
             `REPLACE INTO channelmessage
-                (hash, time, channel, room)
+                (hash, time, channel, room, read)
             VALUES
-                (?, ?, ?, ?)`
+                (?, ?, ?, ?, 0)`
         ).run([hsh, timestamp, chnl, grp])
 
     } catch (a) {
@@ -809,6 +828,51 @@ const getConversation = async (chat, page) => {
         }
         resolve(thisConversation)
     })
+}
+
+const getUnreadMessages = () => {
+    return database.prepare('SELECT * FROM messages WHERE read = 0 ORDER BY timestamp DESC').all()
+}
+
+const getUnreadGroupMessages = () => {
+    return database.prepare('SELECT * FROM groupmessages WHERE read = 0 ORDER BY time DESC').all()
+}
+
+const getUnreadFeedMessages = () => {
+    return database.prepare("SELECT * FROM feedmessages WHERE read = 0 AND (reply IS NULL OR reply = '') ORDER BY timestamp DESC").all();
+}
+
+const getUnreadChannelMessages = () => {
+    return database.prepare('SELECT * FROM channelmessage WHERE read = 0').all()
+}
+
+
+const markMessageRead = (timestamp) => {
+    database.prepare('UPDATE messages SET read = 1 WHERE timestamp = ?').run(timestamp)
+}
+
+const markGroupMessageRead = (hash) => {
+    database.prepare('UPDATE groupmessages SET read = 1 WHERE hash = ?').run(hash)
+}
+
+const markChannelMessageRead = (hash) => {
+    database.prepare('UPDATE channelmessage SET read = 1 WHERE hash = ?').run(hash)
+}
+
+const markFeedMessageRead = (hash) => {
+    database.prepare('UPDATE feedmessages SET read = 1 WHERE hash = ?').run(hash)
+}
+
+const markMessagesReadByChat = (chat) => {
+    database.prepare('UPDATE messages SET read = 1 WHERE chat = ?').run(chat)
+}
+
+const markGroupMessagesReadByGroup = (grp) => {
+    database.prepare('UPDATE groupmessages SET read = 1 WHERE grp = ?').run(grp)
+}
+
+const markAllFeedMessagesRead = () => {
+    database.prepare('UPDATE feedmessages SET read = 1 WHERE 1 = 1').run()
 }
 
 ipcMain.handle('print-group', async (e, grp, page) => {
@@ -1113,4 +1177,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
+module.exports = {getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getUnreadMessages, getUnreadGroupMessages, getUnreadChannelMessages, getUnreadFeedMessages, markMessageRead, markGroupMessageRead, markChannelMessageRead, markFeedMessageRead, markMessagesReadByChat, markGroupMessagesReadByGroup, markAllFeedMessagesRead, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}

@@ -26,6 +26,7 @@ import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
 import CodeBlock from './CodeBlock.svelte'
 import { t } from '$lib/utils/translation.js'
+import { goto } from '$app/navigation';
 
     /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, grouped?: boolean, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
     let {
@@ -50,6 +51,7 @@ import { t } from '$lib/utils/translation.js'
         ReactTo,
         DeleteMessage,
         JoinRoom,
+        contextLabel
     } = $props();
 let tipMessage = $state("");
     
@@ -95,7 +97,7 @@ if ((Date.now() - 40000000) > timestamp) {
     timeformat = "D MMM, HH:mm"
 }
 
-const nameColor = getColorFromHash(msgFrom)
+const nameColor = msgFrom ? getColorFromHash(msgFrom) : '#888888'
 
 
 onMount( async () => {
@@ -430,8 +432,15 @@ run(() => {
                     {/if}
                     {/await}
                     <h5 class:asian class="nickname" style="color: {nameColor}" class:blink_me={file}>
-                        {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
-                            >| <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(message.time)}" /></span
+                        {nickname}
+                        {#if contextLabel}
+                            <span class="context-label">
+                                {contextLabel}
+                            </span>
+                        {/if}
+                        <span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
+                            >| 
+                            <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}" /></span
                         >
                     </h5>
                 </div>
@@ -492,6 +501,9 @@ run(() => {
                     <h4>{inviteName}</h4>
                     {#if !$swarm.active.some(a => a.key === inviteKey)}
                         <Button text={t('join') || 'Join'} disabled={false} on:click={() => joinInvite()} />
+                    {/if}
+                    {#if $swarm.active.some(a => a.key === inviteKey)}
+                        <Button text={t('show') || 'Show'} disabled={false} on:click={() => goto(`/rooms?room=${inviteKey}`)} />
                     {/if}
                 </div>
                 {/if}
@@ -781,5 +793,10 @@ button {
     margin-left: 30px;
     justify-content: center;
     gap: 20px;
+}
+.context-label {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
 }
 </style>
