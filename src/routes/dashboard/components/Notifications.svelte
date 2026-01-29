@@ -1,9 +1,48 @@
 <script>
-    import {notify, user} from '$lib/stores/user.js'
+    import {notify, rooms, user} from '$lib/stores/user.js'
     import {fade} from 'svelte/transition'
     import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
     import Button from '$lib/components/buttons/Button.svelte'
     import { t } from '$lib/utils/translation.js'
+    import { goto } from '$app/navigation'
+
+    function getNotifKind(notif) {
+      if (notif.type === 'feed') return 'feed'
+      if (notif.type === 'room' || notif.room) return 'room'
+      return 'dm'
+    }
+
+    function getLocationLabel(notif) {
+      const kind = getNotifKind(notif)
+
+      if (kind === 'feed') return 'in feed'
+      if (kind === 'room') return `in ${$rooms.roomArray.find(r => r.key === notif.group).name || 'room'}`
+      return 'in DM'
+    }
+
+    function onNotificationClick(notif) {
+      const kind = getNotifKind(notif)
+
+      if (kind === 'feed') {
+        goto('/feed')
+        return
+      }
+
+      if (kind === 'room') {
+        $rooms.openingLink = true;
+        goto(`/rooms`);
+        setTimeout(() => {
+          goto(`/rooms?room=${notif.group}`)
+        }, 500)
+        return
+      }
+
+      // DM
+      // const contactId = (notif.address || '') + (notif.key || '')
+      // active.chat, key: active.key, name: active.name
+      goto(`/messages?chat=${notif.chat}&name=${notif.name}`)
+    }
+
 
     const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
@@ -11,6 +50,10 @@
         $notify.unread.filter((notif) => {
             const ts = parseInt(notif.timestamp || notif.time || 0, 10)
             return ts > Date.now() - ONE_DAY_MS
+        }).sort((a, b) => {
+            const tsA = parseInt(a.timestamp || a.time || 0, 10)
+            const tsB = parseInt(b.timestamp || b.time || 0, 10)
+            return tsB - tsA // newest first (descending order)
         })
     )
 
@@ -31,27 +74,37 @@
         </div>
     </div>
     <div class="notifs">
-        {#each recentUnread as notif}
-            <GroupMessage
-                rtc={true}
-                ReactTo="{(e) => console.log('react to')}"
-                ReplyTo="{(e) => console.log('reply to')}"
-                DeleteMsg="{(e) => console.log('delete to')}"
-                message="{notif}"
-                reply="{notif.reply ?? ''}"
-                msg="{notif.message ?? notif.msg ?? ''}"
-                myMsg="{notif.sent ?? false}"
-                group="{notif.grp ?? notif.group ?? ''}"
-                nickname="{notif.name ?? notif.nickname ?? ''}"
-                msgFrom="{notif.address ?? notif.hash ?? ''}"
-                timestamp="{notif.time ?? notif.timestamp ?? 0}"
-                hash="{notif.hash ?? ''}"
-                file="{notif?.file}"
-                room="{notif.type === 'room'}"
-                admin="{false}"
-                tip="{notif.tip}"
-            />
-        {/each}
+      {#each recentUnread as notif}
+      {console.log('notif',notif)}
+        <div
+          class="notif-wrapper"
+          role="button"
+          tabindex="0"
+          on:click={() => onNotificationClick(notif)}
+        >
+          <GroupMessage
+            rtc={true}
+            ReactTo="{(e) => console.log('react to')}"
+            ReplyTo="{(e) => console.log('reply to')}"
+            DeleteMsg="{(e) => console.log('delete to')}"
+            message="{notif}"
+            reply="{notif.reply ?? ''}"
+            msg="{notif.message ?? notif.msg ?? ''}"
+            myMsg="{notif.sent ?? false}"
+            group="{notif.grp ?? notif.group ?? ''}"
+            nickname="{notif.name ?? notif.nickname ?? ''}"
+            msgFrom="{notif.address ?? notif.chat ?? ''}"
+            timestamp="{parseInt(notif.timestamp)}"
+            hash="{notif.hash ?? ''}"
+            file="{notif?.file}"
+            room="{getNotifKind(notif) === 'room'}"
+            admin="{false}"
+            tip="{notif.tip}"
+            contextLabel="{getLocationLabel(notif)}"
+          />
+        </div>
+      {/each}
+
     </div>
 </div>
 
@@ -111,6 +164,14 @@
   .tx {
     color: var(--warn-color);
     display: flex;
+  }
+
+  .notif-wrapper {
+    cursor: pointer;
+  }
+
+  .notif-wrapper:hover {
+    background: var(--hover-bg, rgba(255,255,255,0.03));
   }
   
 </style>

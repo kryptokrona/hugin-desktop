@@ -510,6 +510,7 @@ const getLatestList = async (list) => {
 }
 
 async function saveFeedMessage(msg) {
+    if (await feedMessageExists(msg.hash)) return;
     try {
     database.prepare(
         'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash, read) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
@@ -830,20 +831,21 @@ const getConversation = async (chat, page) => {
 }
 
 const getUnreadMessages = () => {
-    return database.prepare('SELECT * FROM messages WHERE read = 0').all()
+    return database.prepare('SELECT * FROM messages WHERE read = 0 ORDER BY timestamp DESC').all()
 }
 
 const getUnreadGroupMessages = () => {
-    return database.prepare('SELECT * FROM groupmessages WHERE read = 0').all()
+    return database.prepare('SELECT * FROM groupmessages WHERE read = 0 ORDER BY time DESC').all()
+}
+
+const getUnreadFeedMessages = () => {
+    return database.prepare("SELECT * FROM feedmessages WHERE read = 0 AND (reply IS NULL OR reply = '') ORDER BY timestamp DESC").all();
 }
 
 const getUnreadChannelMessages = () => {
     return database.prepare('SELECT * FROM channelmessage WHERE read = 0').all()
 }
 
-const getUnreadFeedMessages = () => {
-    return database.prepare('SELECT * FROM feedmessages WHERE read = 0').all()
-}
 
 const markMessageRead = (timestamp) => {
     database.prepare('UPDATE messages SET read = 1 WHERE timestamp = ?').run(timestamp)
@@ -870,7 +872,7 @@ const markGroupMessagesReadByGroup = (grp) => {
 }
 
 const markAllFeedMessagesRead = () => {
-    database.prepare('UPDATE feedmessages SET read = 1').run()
+    database.prepare('UPDATE feedmessages SET read = 1 WHERE 1 = 1').run()
 }
 
 ipcMain.handle('print-group', async (e, grp, page) => {

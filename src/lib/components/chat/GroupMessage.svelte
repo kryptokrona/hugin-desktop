@@ -50,6 +50,7 @@ import { goto } from '$app/navigation';
         ReactTo,
         DeleteMessage,
         JoinRoom,
+        contextLabel
     } = $props();
 let tipMessage = $state("");
     
@@ -429,8 +430,15 @@ run(() => {
                     {/if}
                     {/await}
                     <h5 class:asian class="nickname" style="color: {nameColor}" class:blink_me={file}>
-                        {nickname}<span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
-                            >| <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(message.time)}" /></span
+                        {nickname}
+                        {#if contextLabel}
+                            <span class="context-label">
+                                {contextLabel}
+                            </span>
+                        {/if}
+                        <span class="time" style="font-family: 'Montserrat'" class:min="{rtc}"
+                            >| 
+                            <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}" /></span
                         >
                     </h5>
                 </div>
@@ -723,5 +731,10 @@ button {
     margin-left: 30px;
     justify-content: center;
     gap: 20px;
+}
+.context-label {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
 }
 </style>

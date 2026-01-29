@@ -25,7 +25,7 @@ import BigImage from "$lib/components/popups/BigImage.svelte"
 import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
-	import { flip } from 'svelte/animate';
+import { flip } from 'svelte/animate';
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -74,7 +74,14 @@ $effect(() => {
   if (!room) return;
 
   lastRoomFromUrl = roomKey;
+  window.api.markGroupMessagesReadByGroup(roomKey)
+  const clear = $notify.unread.filter(unread => unread.group !== roomKey)
+  $notify.unread = clear
+
   printRoom(room);
+  setTimeout(() => {
+    $rooms.openingLink = false;
+  }, 1000)
 });
 
 

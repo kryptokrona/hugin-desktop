@@ -21,6 +21,8 @@ import DropFile from '$lib/components/popups/DropFile.svelte'
 import ActiveCall from './components/ActiveCall.svelte'
 import { flip } from 'svelte/animate';
 import Button from '$lib/components/buttons/Button.svelte';
+import {page} from '$app/stores'
+
 
 let active_contact = $state()
 let messageList = $state([])
@@ -338,6 +340,31 @@ const typing = (e) => {
     if ($swarm.activeSwarm?.key) return
     window.api.send('typing', {key: $swarm.activeSwarm?.key, typing: e.typing})
 }
+let lastContactFromUrl = null;
+
+$effect(() => {
+  const contactId = $page.url.searchParams.get('chat');
+  if (!contactId) return;
+
+  // prevent loops
+  if (contactId === lastContactFromUrl) return;
+
+  // wait until contacts are loaded
+  if (!$user.contacts?.length) return;
+  
+
+  const contact = $user.contacts.find(
+    c => c.chat === contactId
+  );
+
+  if (!contact) {
+    console.log('No contact found', )
+  };
+
+  lastContactFromUrl = contactId;
+  const active_chat = { address: contactId, chat: contactId, key: contact.key, name: $page.url.searchParams.get('name') }
+  printConversation(active_chat);
+});
 
 </script>
 
