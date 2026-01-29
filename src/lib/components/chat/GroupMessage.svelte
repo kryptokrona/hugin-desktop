@@ -26,6 +26,7 @@ import PayIcon from '../icons/PayIcon.svelte'
 import Tip from './Tip.svelte'
 import CodeBlock from './CodeBlock.svelte'
 import { t } from '$lib/utils/translation.js'
+import { goto } from '$app/navigation';
 
     /** @type {{msg: any, msgFrom: any, group: any, reply?: string, myMsg: any, timestamp: any, nickname?: string, hash: any, message: any, reply_to_this?: boolean, rtc?: boolean, joined?: boolean, file?: boolean, room?: boolean, admin?: boolean, tip?: booleanm, ReactTo: any, DeleteMessage: any, ReplyTo: any}} */
     let {
@@ -94,7 +95,7 @@ if ((Date.now() - 40000000) > timestamp) {
     timeformat = "D MMM, HH:mm"
 }
 
-const nameColor = getColorFromHash(msgFrom)
+const nameColor = msgFrom ? getColorFromHash(msgFrom) : '#888888'
 
 
 onMount( async () => {
@@ -486,6 +487,9 @@ run(() => {
                     <h4>{inviteName}</h4>
                     {#if !$swarm.active.some(a => a.key === inviteKey)}
                         <Button text={t('join') || 'Join'} disabled={false} on:click={() => joinInvite()} />
+                    {/if}
+                    {#if $swarm.active.some(a => a.key === inviteKey)}
+                        <Button text={t('show') || 'Show'} disabled={false} on:click={() => goto(`/rooms?room=${inviteKey}`)} />
                     {/if}
                 </div>
                 {/if}

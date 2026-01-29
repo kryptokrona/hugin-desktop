@@ -47,6 +47,15 @@
         $misc.loading = false
     })
 
+    window.api.receive('notification-room-click', ({ roomKey }) => {
+      console.log('Notification clicked fe')
+    if (!roomKey) return;
+
+    let url = `/rooms?room=${roomKey}`;
+
+    goto(url);
+  });
+
     window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages, ptt, sound]) => {
         $user.contacts = my_contacts
         //Set chosen node from last startup in store
@@ -63,6 +72,47 @@
         $misc.syncImages = syncImages
         $pushToTalk = ptt
         $sounds.on = sound
+
+        const roomKeys = new Set($rooms.roomArray.map((r) => r.key))
+        const [unreadPm, unreadGroups, unreadFeed] = await Promise.all([
+            window.api.getUnreadMessages(),
+            window.api.getUnreadGroupMessages(),
+            window.api.getUnreadFeedMessages()
+        ])
+        const unread = [
+            ...unreadPm.map((m) => {
+                const contact = my_contacts.find((c) => c.address === m.chat)
+                return { type: 'message', chat: m.chat, msg: m.msg, message: m.msg, timestamp: m.timestamp, name: contact?.name }
+            }),
+            ...unreadGroups.map((m) => ({
+                type: roomKeys.has(m.grp) ? 'room' : 'group',
+                group: m.grp,
+                grp: m.grp,
+                message: m.message,
+                msg: m.message,
+                time: m.time,
+                timestamp: m.time,
+                hash: m.hash,
+                name: m.name,
+                address: m.address,
+                sent: m.sent,
+                reply: m.reply,
+                tip: m.tip
+            })),
+            ...unreadFeed.map((m) => ({
+                type: 'feed',
+                message: m.message,
+                msg: m.message,
+                timestamp: m.timestamp,
+                time: m.timestamp,
+                nickname: m.nickname,
+                name: m.nickname,
+                hash: m.hash,
+                address: m.address,
+                reply: m.reply
+            }))
+        ]
+        $notify.unread = unread
 
         setAvatars(avatars)
         if (avatar.length) setCustomAvatar(avatar)

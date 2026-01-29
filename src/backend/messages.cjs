@@ -23,7 +23,16 @@ const {
     printFeed,
     removeRoom,
     saveFeedMessage,
-    getFeedMessageReplies
+    getFeedMessageReplies,
+    getUnreadMessages,
+    getUnreadGroupMessages,
+    getUnreadFeedMessages,
+    markMessagesReadByChat,
+    markGroupMessagesReadByGroup,
+    markAllFeedMessagesRead,
+    markMessageRead,
+    markGroupMessageRead,
+    markFeedMessageRead
 } = require("./database.cjs")
 const {
     trimExtra, 
@@ -175,6 +184,16 @@ ipcMain.handle('get-feed-messages', async (e, page) => {
 ipcMain.handle('get-conversation', async (e, chat, page) => {
     return await getConversation(chat, page)
 })
+
+ipcMain.handle('get-unread-messages', async () => getUnreadMessages())
+ipcMain.handle('get-unread-group-messages', async () => getUnreadGroupMessages())
+ipcMain.handle('get-unread-feed-messages', async () => getUnreadFeedMessages())
+ipcMain.handle('mark-messages-read-by-chat', async (e, chat) => markMessagesReadByChat(chat))
+ipcMain.handle('mark-group-messages-read-by-group', async (e, grp) => markGroupMessagesReadByGroup(grp))
+ipcMain.handle('mark-all-feed-messages-read', async () => markAllFeedMessagesRead())
+ipcMain.handle('mark-message-read', async (e, timestamp) => markMessageRead(timestamp))
+ipcMain.handle('mark-group-message-read', async (e, hash) => markGroupMessageRead(hash))
+ipcMain.handle('mark-feed-message-read', async (e, hash) => markFeedMessageRead(hash))
 
 
 //PRIVATE MESSAGES

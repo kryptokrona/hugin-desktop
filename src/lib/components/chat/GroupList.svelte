@@ -125,7 +125,8 @@ const removeGroup = async () => {
 }
 
 //Read message
-function readMessage(e) {
+async function readMessage(e) {
+    await window.api.markGroupMessagesReadByGroup(e.key)
     const clear = $notify.unread.filter(unread => unread.group !== e.key)
     $notify.unread = clear
 

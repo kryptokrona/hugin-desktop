@@ -139,6 +139,7 @@ const printConversation = async (active) => {
     $keyboard.input = ''
     const active_chat = { chat: active.chat, key: active.key, name: active.name }
     $user.activeChat = active_chat
+    await window.api.markMessagesReadByChat(active.chat)
     const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
     $notify.unread = clear
     active_contact = active.chat + active.key

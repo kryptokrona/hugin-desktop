@@ -59,6 +59,15 @@ const WINDOW_API = {
     getConversation: async (chat, page) => {
         return await ipcRenderer.invoke('get-conversation', chat, page)
     },
+    getUnreadMessages: async () => ipcRenderer.invoke('get-unread-messages'),
+    getUnreadGroupMessages: async () => ipcRenderer.invoke('get-unread-group-messages'),
+    getUnreadFeedMessages: async () => ipcRenderer.invoke('get-unread-feed-messages'),
+    markMessagesReadByChat: async (chat) => ipcRenderer.invoke('mark-messages-read-by-chat', chat),
+    markGroupMessagesReadByGroup: async (grp) => ipcRenderer.invoke('mark-group-messages-read-by-group', grp),
+    markAllFeedMessagesRead: async () => ipcRenderer.invoke('mark-all-feed-messages-read'),
+    markMessageRead: async (timestamp) => ipcRenderer.invoke('mark-message-read', timestamp),
+    markGroupMessageRead: async (hash) => ipcRenderer.invoke('mark-group-message-read', hash),
+    markFeedMessageRead: async (hash) => ipcRenderer.invoke('mark-feed-message-read', hash),
     getGroups: async () => {
         return await ipcRenderer.invoke('get-groups')
     },

@@ -65,6 +65,9 @@ const isFile = (data) => {
 onMount(async () => {
     $fileViewer.enhanceImage = false
     $fileViewer.focusImage = ""
+    await window.api.markAllFeedMessagesRead()
+    $notify.unread = $notify.unread.filter((u) => u.type !== 'feed')
+    $notify = $notify
     printFeed()
     // scrollDown()
     

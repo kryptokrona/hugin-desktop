@@ -58,6 +58,25 @@ $effect(() => {
     someoneTyping = filteredUsers()[0] ?? null;
 })
 
+let lastRoomFromUrl = null;
+
+$effect(() => {
+  const roomKey = $page.url.searchParams.get('room');
+  if (!roomKey) return;
+
+  // avoid re-running for same value
+  if (roomKey === lastRoomFromUrl) return;
+
+  // wait until rooms are hydrated
+  if (!$rooms.roomArray?.length) return;
+
+  const room = $rooms.roomArray.find(r => r.key === roomKey);
+  if (!room) return;
+
+  lastRoomFromUrl = roomKey;
+  printRoom(room);
+});
+
 
 
 let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
