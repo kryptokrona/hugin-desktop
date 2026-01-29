@@ -14,7 +14,8 @@ Bugs:
     ☐ Room invites cannot be clicked to enter room
     ✔ Typed message "follows" into next chat @done(25-09-23 17:36)
     ☐ Read status of messages not persisted (Add read (boolean) to db tables)
-
+    ☐ "Name" is typing.. -indicator sometimes get stuck
+    ☐ Sometimes messages appear in notifications, but are not visible in the app
 
 Feed:
     ✔ Add "x new message - click to load" button @done(25-04-15 13:25)
@@ -34,3 +35,6 @@ Features:
     ✔ Add QR codes to invites and such @done(26-01-23 19:39)
     ☐ Add QR codes for room invites
     ☐ Show all unread messages on dashboard (instead of notifications)
+
+Improvements:
+    ☐ Streamline create new room (i.e. don't force user to click "generate" just do it automatically)
