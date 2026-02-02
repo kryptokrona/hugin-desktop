@@ -835,7 +835,7 @@ const getUnreadMessages = () => {
 }
 
 const getUnreadGroupMessages = () => {
-    return database.prepare('SELECT * FROM groupmessages WHERE read = 0 ORDER BY time DESC').all()
+    return database.prepare("SELECT * FROM groupmessages WHERE read = 0 AND (reply IS NULL OR reply = '') ORDER BY time DESC").all()
 }
 
 const getUnreadFeedMessages = () => {

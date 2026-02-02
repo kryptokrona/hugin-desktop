@@ -44,10 +44,10 @@
     }
 
 
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000
-
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000 * 7
     const recentUnread = $derived(
         $notify.unread.filter((notif) => {
+            if (notif.message === 'Joined room') return false
             const ts = parseInt(notif.timestamp || notif.time || 0, 10)
             return ts > Date.now() - ONE_DAY_MS
         }).sort((a, b) => {
@@ -75,7 +75,6 @@
     </div>
     <div class="notifs">
       {#each recentUnread as notif}
-      {console.log('notif',notif)}
         <div
           class="notif-wrapper"
           role="button"
