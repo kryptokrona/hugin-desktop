@@ -31,7 +31,7 @@
     let keyField
     
     const enter = (e) => {
-        if (enableAddGroupButton && invite.length === 128 && e.keyCode === 13) {
+        if (enableAddGroupButton && e.keyCode === 13) {
             addRoom()
         }
     }
@@ -63,6 +63,10 @@
     // Dispatch the inputted data
     const addRoom = async () => {
         console.log("add room!")
+        
+        if (create && !invite) {
+             await createInvite()
+        }
         let error = checkError()
         if (error) return
         // Dispatch the inputted data
@@ -118,13 +122,12 @@
         if (invite.length) {
             console.log("Invite link avatar", invite)
             avatar = get_avatar(invite)
-    
-            if (invite.length === 128) {
-                //Enable add button
-                enableAddGroupButton = true
-            }
+        }
+
+        if (create) {
+            enableAddGroupButton = name.length > 0
         } else {
-            enableAddGroupButton = false
+            enableAddGroupButton = invite.length === 128
         }
     });
     run(() => {
@@ -206,9 +209,7 @@
                 bind:value="{name}" 
                 bind:this={nameField}
                 />
-                {#if name.length}
-                <Button disabled="{false}" text={t('generateInvite') || 'Generate invite'} on:click="{() => createInvite()}" />
-                {/if}
+
                 <div class="key-wrapper" in:fade|global>
                     {#if invite.length}
                     <div in:fade|global><h3 style="color: var(--success-color)">{t('inviteCreated') || 'Invite created'}</h3></div>
