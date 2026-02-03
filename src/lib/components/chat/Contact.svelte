@@ -91,6 +91,7 @@ const rename = () => {
     class:active="{contact.chat === $user.activeChat.chat}"
     onclick={() => printThis(contact)} >
     
+    <div class="avatar-wrapper">
     {#await check_avatar(contact.chat)}
     {:then avatar}
     {#if avatar}
@@ -109,13 +110,13 @@ const rename = () => {
         />
     {/if}
     {/await}
+    {#if online}
+        <div class="online-indicator"></div>
+    {/if}
+    </div>
    
     <div class="content">
-        {#if online}
-        <div class="online">
 
-        </div>
-        {/if}
         <h4 class:asian class:big={asian} style="color: {getColorFromHash(contact.chat)}">{contact.name}</h4>
         
         {#if !beamInvite}
@@ -155,8 +156,18 @@ const rename = () => {
     }
 }
 
-.avatar {
+.avatar-wrapper {
+    position: relative;
+    /* margin-bottom 10px from .avatar moved here if needed, but flex handling might change. 
+       Let's keep margin on avatar for now or move it here. 
+       The original had margin-bottom: 10px on avatar. */
     margin-bottom: 10px;
+    display: flex;
+    align-items: center; /* Center avatar in wrapper if needed */
+}
+
+.avatar {
+    /* margin-bottom: 10px; */ /* Moved to wrapper to avoid gap between avatar and indicator if absolute */
     max-width: 35px;
     opacity: 0.92;
     cursor: pointer;
@@ -229,14 +240,22 @@ p {
     font-size: 17px;
 }
 
-.online {
-    background-color: #3fd782;
+.online-indicator {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    height: 6px;
-    width: 7px;
-    left: -17px;
-    top: 0px;
-    box-shadow: 0 0 10px white;
-    position: relative;
+    background: var(--accent-color, #4CAF50);
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    border: 2px solid var(--backgound-color); 
+    animation: pulse 2s ease-in-out infinite;
+    z-index: 10;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 </style>
