@@ -235,7 +235,11 @@ function flipper(node, {
             <div class="list-wrapper"  in:fly|global="{{ y: 50 }}">
                 {#each roomList as room (room.key)}
                     <div animate:flip="{{duration: 250}}">
-                        <Room r="{room}" onPrintRoom="{() => printRoom(room)}" />
+                        <Room 
+                            r="{room}" 
+                            onPrintRoom="{() => printRoom(room)}" 
+                            usersOnline={$swarm.active.find(a => a.key === room.key)?.connections.length > 0}
+                        />
                     </div>
                 {/each}
             </div>

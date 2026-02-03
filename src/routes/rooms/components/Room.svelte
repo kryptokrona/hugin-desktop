@@ -6,8 +6,8 @@
     import { notify, swarm, user, rooms} from '$lib/stores/user.js'
     import { isLatin } from '$lib/utils/utils'
     
-    /** @type {{r: any, onPrintRoom: any}} */
-    let { r, onPrintRoom } = $props();
+    /** @type {{r: any, onPrintRoom: any, usersOnline: boolean}} */
+    let { r, onPrintRoom, usersOnline = false } = $props();
     let channels = $state([])
     let voice_channel = $state([])
     let asian = $state(false)
@@ -60,8 +60,12 @@
         class:active="{$swarm.activeSwarm?.key === r.key}"
         onclick={(e) => printRoom(r)}
     >
-    
-        <img class="avatar" onclick={openRemove} src="data:image/png;base64,{get_avatar(r.key)}" alt="" />
+        <div class="avatar-wrapper">
+             <img class="avatar" onclick={openRemove} src="data:image/png;base64,{get_avatar(r.key)}" alt="" />
+             {#if usersOnline}
+                <div class="online-indicator"></div>
+             {/if}
+        </div>
         <div class="content">
             <h4 class:asian class:big={asian}>{r.name}</h4>
             <div class="text">
@@ -128,12 +132,38 @@
         }
     }
     
-    .avatar {
+    .avatar-wrapper {
+        position: relative;
         margin-bottom: 10px;
+        height: 30px; /* Match avatar height if known, usually better to let content dictate but here we need constraints for absolute pos */
+        display: flex; /* Ensure avatar fits */
+    }
+
+    .avatar {
+        /* margin-bottom: 10px; moved to wrapper */
         opacity: 0.92;
         cursor: pointer;
     }
     
+    .online-indicator {
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-color, #4CAF50);
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        border: 2px solid var(--backgound-color); 
+        animation: pulse 2s ease-in-out infinite;
+        z-index: 10;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
     .content {
         margin-left: 10px;
         display: flex;
