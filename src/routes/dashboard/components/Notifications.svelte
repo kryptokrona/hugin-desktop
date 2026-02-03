@@ -93,7 +93,7 @@
             group="{notif.grp ?? notif.group ?? ''}"
             nickname="{notif.name ?? notif.nickname ?? ''}"
             msgFrom="{notif.address ?? notif.chat ?? ''}"
-            timestamp="{parseInt(notif.timestamp)}"
+            timestamp="{parseInt(notif.timestamp || notif.time || 0)}"
             hash="{notif.hash ?? ''}"
             file="{notif?.file}"
             room="{getNotifKind(notif) === 'room'}"
