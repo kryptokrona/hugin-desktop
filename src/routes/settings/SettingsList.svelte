@@ -55,6 +55,12 @@
             icon: nodeIcon,
             route: "/settings/files"
         },
+        {
+            name: t('theme') || 'Theme',
+            text: t('changeThemeSettings') || 'Change theme settings',
+            icon: nodeIcon,
+            route: "/settings/theme"
+        },
     ])
 
     // Update current language when it changes (for reactivity)

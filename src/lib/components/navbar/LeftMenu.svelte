@@ -17,7 +17,7 @@ import Logout from '$lib/components/icons/Logout.svelte'
 import Home from '../icons/Home.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
 import { onMount } from 'svelte'
-import Theme from '$lib/components/icons/Theme.svelte';
+
 
 let sync = $derived($misc.syncState)
 let avatar = $state()
@@ -118,18 +118,7 @@ run(() => {
   } else in_voice = false
   });
 
-  const LIGHT = 'light'
-  const DARK = 'dark'
 
-  const toggleTheme = () => {
-
-    if ($theme === DARK) {
-        $theme = LIGHT
-    } else $theme = DARK
-
-    localStorage.setItem('themes', $theme);
-    document.documentElement.className = $theme;
-  };
 
 </script>
 
@@ -186,15 +175,7 @@ run(() => {
     </div>
     <div class="draggable"></div>
     <div class="nav">
-        <Tooltip title={t('theme') || 'Theme'}>
-            <div onclick={toggleTheme} class="button">
-                {#if $theme === 'dark'}
-                <Theme active={true}/>
-                {:else}
-                <Theme active={false}/>
-                {/if}
-            </div>
-        </Tooltip>
+
 
         <Tooltip title={t('settings') || 'Settings'}>
             <div onclick={() => goto('/settings/node')} class="button">

@@ -11,6 +11,7 @@
 
     //Stores
     import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds} from '$lib/stores/user.js'
+    import { themes } from '$lib/theme/themes.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -62,15 +63,43 @@
     let startAnimation = $state()
 
     onMount(async () => {
-
         // Initialize theme
-        if (typeof $theme !== 'string')
-        {
-            $theme = 'dark'
-            localStorage.setItem('themes', $theme)
+        const savedThemeName = localStorage.getItem('themeName') || 'aesir';
+        const savedMode = localStorage.getItem('themes') || 'dark';
+        
+        // Ensure proper classes and vars are set
+        // We need to import applyTheme or reimplement it here. 
+        // Re-implementing briefly for robustness in layout to ensure no FOUC
+        
+        let initialTheme = themes[savedThemeName] ? themes[savedThemeName][savedMode] : themes['neutral']['dark'];
+        const root = document.documentElement;
+        
+        if (initialTheme) {
+             root.style.setProperty('--backgound-color', initialTheme.background);
+             root.style.setProperty('--background-color', initialTheme.background);
+             root.style.setProperty('--card-background', initialTheme.card);
+             root.style.setProperty('--border-color', initialTheme.border);
+             root.style.setProperty('--card-border', initialTheme.border);
+             root.style.setProperty('--primary-color', initialTheme.primary);
+             root.style.setProperty('--text-color', initialTheme.foreground);
+             root.style.setProperty('--title-color', initialTheme.foreground);
+             root.style.setProperty('--input-background', initialTheme.input);
         }
 
-        document.documentElement.className = $theme;
+        if (savedMode === 'light') {
+            root.classList.remove('dark', 'blue');
+            root.classList.add('light');
+             $theme = 'light'
+        } else if (savedMode === 'dark') {
+            root.classList.remove('light', 'blue');
+            root.classList.add('dark');
+             $theme = 'dark'
+        } else {
+             root.classList.remove('light', 'dark');
+             root.classList.add('blue'); 
+             $theme = 'color'
+        }
+
 
         ready = true
         startAnimation = true
