@@ -9,6 +9,7 @@ import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
 import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte'
 import RoomIcon from '$lib/components/icons/RoomIcon.svelte'
 import FeedIcon from '$lib/components/icons/FeedIcon.svelte'
+import WalletIcon from '$lib/components/icons/WalletIcon.svelte'
 import XkrLogo from '$lib/components/icons/XkrLogo.svelte'
 import { openURL } from '$lib/utils/utils.js'
 import { page } from '$app/stores'
@@ -165,6 +166,12 @@ run(() => {
         <Tooltip title={t('feed') || 'Feed'}>
             <div onclick={feedRouteAndMenu} class="button">
                 <FeedIcon />
+            </div>
+        </Tooltip>
+
+        <Tooltip title="Wallet">
+            <div onclick={() => goto('/wallet')} class="button">
+                <WalletIcon />
             </div>
         </Tooltip>
 
