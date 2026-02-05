@@ -366,7 +366,68 @@ $effect(() => {
   printConversation(active_chat);
 });
 
+
+const handlePaste = async (e) => {
+    // First check for files with paths (like from File Explorer)
+    if (e.clipboardData && e.clipboardData.files.length > 0) {
+        const files = Array.from(e.clipboardData.files)
+        // Check if the file has a path (from file system)
+        if (files[0].path) {
+            e.preventDefault()
+            const event = {
+                detail: {
+                    acceptedFiles: files,
+                    fileRejections: []
+                }
+            }
+            dropFile(event)
+            return
+        }
+    }
+    
+    // Check for clipboard items (like screenshots without file paths)
+    if (e.clipboardData && e.clipboardData.items) {
+        for (const item of e.clipboardData.items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault()
+                const blob = item.getAsFile()
+                if (!blob) continue
+                
+                // Convert blob to base64
+                const reader = new FileReader()
+                reader.onload = async () => {
+                    const base64Data = reader.result
+                    const extension = blob.type.split('/')[1] || 'png'
+                    const filename = `screenshot.${extension}`
+                    
+                    // Save to temp file via IPC
+                    const result = await window.api.saveClipboardImage(base64Data, filename)
+                    if (result && result.path) {
+                        // Create a file-like object with the path
+                        const fileObj = {
+                            name: filename,
+                            path: result.path,
+                            size: result.size,
+                            type: blob.type
+                        }
+                        const event = {
+                            detail: {
+                                acceptedFiles: [fileObj],
+                                fileRejections: []
+                            }
+                        }
+                        dropFile(event)
+                    }
+                }
+                reader.readAsDataURL(blob)
+                return
+            }
+        }
+    }
+}
+
 </script>
+<svelte:window on:paste={handlePaste} />
 
 {#if $fileViewer.enhanceImage}
     <BigImage />

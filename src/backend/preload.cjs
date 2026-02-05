@@ -275,6 +275,9 @@ const WINDOW_API = {
     },
     getDirectoryPath: async () => {
         return await ipcRenderer.invoke('select-directory')
+    },
+    saveClipboardImage: async (base64Data, filename) => {
+        return await ipcRenderer.invoke('save-clipboard-image', base64Data, filename)
     }
 }
 

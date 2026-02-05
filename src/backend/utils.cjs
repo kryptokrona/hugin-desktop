@@ -36,6 +36,29 @@ ipcMain.handle('select-directory', () => {
     return dir;
 });
 
+ipcMain.handle('save-clipboard-image', async (e, base64Data, filename) => {
+    const { app } = require('electron')
+    const path = require('path')
+    const fs = require('fs')
+    
+    // Create temp directory if it doesn't exist
+    const tempDir = path.join(app.getPath('temp'), 'hugin-clipboard')
+    if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true })
+    }
+    
+    // Generate unique filename
+    const uniqueFilename = `${Date.now()}-${filename}`
+    const filePath = path.join(tempDir, uniqueFilename)
+    
+    // Convert base64 to buffer and write to file
+    const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, '')
+    const buffer = Buffer.from(base64Content, 'base64')
+    fs.writeFileSync(filePath, buffer)
+    
+    return { path: filePath, size: buffer.length }
+});
+
 
 //Check if it is an image or video with allowed type
 function check_if_media(path, size, check = false) {
