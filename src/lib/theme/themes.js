@@ -1,6 +1,6 @@
 import { lightenHexColor } from '$lib/utils/hugin-utils';
 
-function generateMonochromaticColorTheme(accent) {
+export function generateMonochromaticColorTheme(accent) {
   return {
     accent,
     accentForeground: lightenHexColor(accent, 80),
