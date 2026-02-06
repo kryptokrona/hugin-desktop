@@ -321,5 +321,6 @@
   "audio": "Audio",
   "microphone": "Microphone",
   "speakers": "Speakers",
-  "show": "Show"
+  "show": "Show",
+  "changeThemeSettings": "Change theme settings"
 }
