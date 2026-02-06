@@ -68,9 +68,6 @@
         const savedMode = localStorage.getItem('themes') || 'dark';
         
         // Ensure proper classes and vars are set
-        // We need to import applyTheme or reimplement it here. 
-        // Re-implementing briefly for robustness in layout to ensure no FOUC
-        
         let initialTheme = themes[savedThemeName] ? themes[savedThemeName][savedMode] : themes['neutral']['dark'];
         const root = document.documentElement;
         
@@ -81,9 +78,23 @@
              root.style.setProperty('--border-color', initialTheme.border);
              root.style.setProperty('--card-border', initialTheme.border);
              root.style.setProperty('--primary-color', initialTheme.primary);
+             root.style.setProperty('--primary-foreground-color', initialTheme.primaryForeground || '#fff');
              root.style.setProperty('--text-color', initialTheme.foreground);
              root.style.setProperty('--title-color', initialTheme.foreground);
              root.style.setProperty('--input-background', initialTheme.input);
+             
+             // Set mode-specific variables
+             if (savedMode === 'color') {
+                 root.style.setProperty('--input-placeholder', initialTheme.foreground || '#fff');
+                 root.style.setProperty('--success-color', initialTheme.foreground || '#fff');
+                 root.style.setProperty('--warn-color', initialTheme.foreground || '#fff');
+                 root.style.setProperty('--info-color', initialTheme.foreground || '#fff');
+             } else {
+                 root.style.setProperty('--input-placeholder', savedMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(88, 99, 99, 0.4)');
+                 root.style.setProperty('--success-color', '#5a8bdb');
+                 root.style.setProperty('--warn-color', '#f25f61');
+                 root.style.setProperty('--info-color', '#5f86f2');
+             }
         }
 
         if (savedMode === 'light') {

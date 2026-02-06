@@ -32,26 +32,40 @@
         
         // Borders
         root.style.setProperty('--border-color', selectedTheme.border);
-        root.style.setProperty('--card-border', selectedTheme.border); // Assuming card-border follows border
+        root.style.setProperty('--card-border', selectedTheme.border);
 
         // Primary
         root.style.setProperty('--primary-color', selectedTheme.primary);
+        // Primary foreground for button text contrast
+        root.style.setProperty('--primary-foreground-color', selectedTheme.primaryForeground || '#fff');
 
         // Text & Foreground
-        // Attempting to map 'foreground' (which is usually text color in the mobile theme) to desktop text vars
         root.style.setProperty('--text-color', selectedTheme.foreground);
-        root.style.setProperty('--title-color', selectedTheme.foreground); // Or maybe selectedTheme.cardForeground?
+        root.style.setProperty('--title-color', selectedTheme.foreground);
 
         // Inputs
         root.style.setProperty('--input-background', selectedTheme.input); 
-        // We might need to adjust opacity for input background if it was RGBA before, but mobile theme provides solid colors usually.
-        // Actually, looking at global.scss for light/dark, input-background was rgba(0,0,0,0.4) etc. 
-        // The mobile theme provides a solid hex. We'll try using it directly.
+        // Set placeholder color - for color mode, use lighter text
+        if (themeMode === 'color') {
+            root.style.setProperty('--input-placeholder', selectedTheme.foreground || '#fff');
+        } else {
+            // Restore default placeholder colors for dark/light
+            root.style.setProperty('--input-placeholder', themeMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(88, 99, 99, 0.4)');
+        }
 
-        // Also update the class for any specific CSS overrides that rely on .dark/.light
-        // Since 'color' mode is new, we might treat it as 'dark' base for some things or 'light' for others?
-        // The user snippet for 'color' seems to use 'color' mode string found in sharedColors.
-        
+        // Status colors - for color mode, use light versions that work on colored backgrounds
+        if (themeMode === 'color') {
+            root.style.setProperty('--success-color', selectedTheme.foreground || '#fff');
+            root.style.setProperty('--warn-color', selectedTheme.foreground || '#fff');
+            root.style.setProperty('--info-color', selectedTheme.foreground || '#fff');
+        } else {
+            // Restore defaults for dark/light
+            root.style.setProperty('--success-color', '#5a8bdb');
+            root.style.setProperty('--warn-color', '#f25f61');
+            root.style.setProperty('--info-color', '#5f86f2');
+        }
+
+        // Update class for CSS overrides
         if (themeMode === 'light') {
             root.classList.remove('dark', 'blue');
             root.classList.add('light');
@@ -59,10 +73,8 @@
             root.classList.remove('light', 'blue');
             root.classList.add('dark');
         } else {
-             // For 'color', we might default to 'dark' base styles if 'blue' isn't sufficient
-             // global.scss seems to have comments for blue.
              root.classList.remove('light', 'dark');
-             root.classList.add('blue'); // or custom 'color' class if we add it to global.scss
+             root.classList.add('blue');
         }
     }
 
@@ -182,11 +194,8 @@
 
             &.active {
                 background: var(--primary-color);
-                color: var(--primary-foreground, #fff); 
                 border-color: var(--primary-color);
-                /* If primary color is very light, we might need dark text? 
-                   Mobile theme 'primaryForeground' handles this. */
-                 color: var(--primary-foreground-color, #fff); /* We didn't set this yet, will default to white */
+                color: var(--primary-foreground-color, #fff);
             }
         }
     }
