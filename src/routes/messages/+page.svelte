@@ -524,6 +524,7 @@ main {
     display: flex;
     flex-direction: column;
     padding-top: 20px;
+    padding-bottom: 20px;
     width: 100%;
 }
 
