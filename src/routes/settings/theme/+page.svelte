@@ -70,9 +70,9 @@
             root.style.setProperty('--info-color', '#ffffff');
             root.style.setProperty('--alert-color', '#ffffff');
         } else {
-            root.style.setProperty('--success-color', '#5a8bdb');
+            root.style.setProperty('--success-color', selectedTheme.primary);
             root.style.setProperty('--warn-color', '#f25f61');
-            root.style.setProperty('--info-color', '#5f86f2');
+            root.style.setProperty('--info-color', selectedTheme.primary);
             root.style.setProperty('--alert-color', '#f2cb5f');
         }
 

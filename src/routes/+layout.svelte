@@ -106,9 +106,9 @@
              } else if (savedMode === 'light') {
                  root.style.setProperty('--input-placeholder', 'rgba(88, 99, 99, 0.4)');
                  root.style.setProperty('--input-border', 'rgba(90, 88, 88, 0.9)');
-                 root.style.setProperty('--success-color', '#5a8bdb');
+                 root.style.setProperty('--success-color', initialTheme.primary);
                  root.style.setProperty('--warn-color', '#f25f61');
-                 root.style.setProperty('--info-color', '#5f86f2');
+                 root.style.setProperty('--info-color', initialTheme.primary);
                  root.style.setProperty('--alert-color', '#f2cb5f');
                  root.style.setProperty('--nav-backgound-color', 'rgba(224, 224, 224, 0.9)');
                  root.style.setProperty('--fade-color', '#fdfdfd');
@@ -119,9 +119,9 @@
              } else {
                  root.style.setProperty('--input-placeholder', 'rgba(255, 255, 255, 0.6)');
                  root.style.setProperty('--input-border', 'rgba(255, 255, 255, 0.15)');
-                 root.style.setProperty('--success-color', '#5a8bdb');
+                 root.style.setProperty('--success-color', initialTheme.primary);
                  root.style.setProperty('--warn-color', '#f25f61');
-                 root.style.setProperty('--info-color', '#5f86f2');
+                 root.style.setProperty('--info-color', initialTheme.primary);
                  root.style.setProperty('--alert-color', '#f2cb5f');
                  root.style.setProperty('--nav-backgound-color', 'rgba(32, 32, 32, 0.9)');
                  root.style.setProperty('--fade-color', '#121212');
