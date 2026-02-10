@@ -322,5 +322,7 @@
   "microphone": "Microphone",
   "speakers": "Speakers",
   "show": "Show",
-  "changeThemeSettings": "Change theme settings"
+  "changeThemeSettings": "Change theme settings",
+  "wrongPassword": "Wrong password",
+  "back": "Back"
 }
