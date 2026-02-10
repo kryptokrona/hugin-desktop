@@ -52,32 +52,42 @@
   <QR data={showQR} onClose={() => (showQR = "")}/>
 {/if}
 
-<div class="header" in:fly|global="{{ y: 100 }}">
-    <div style="display: flex; align-items: center; gap: 0.5rem">
-        <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
-        <EditName/>
-    </div>
-    <div class="button_wrapper">
-            <FillButton
-                text="{upgraded}"
+<div class="dashboard-layout">
+    <div class="header" in:fly|global="{{ y: 100 }}">
+        <div style="display: flex; align-items: center; gap: 0.5rem">
+            <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
+            <EditName/>
+        </div>
+        <div class="button_wrapper">
+                <FillButton
+                    text="{upgraded}"
 
-                    rgb="{true}"
-                    on:click="{() => upgrade = true}"/>
-                
-        <Share onShowQR={(value) => (showQR = value)} />
+                        rgb="{true}"
+                        on:click="{() => upgrade = true}"/>
+                    
+            <Share onShowQR={(value) => (showQR = value)} />
+        </div>
     </div>
-</div>
 
-<Funds/>
-<div class="grid"  in:fly|global="{{ y: 100 }}">
-    <Notifications/> 
-    <Transactions/>
-    <!-- <CreateRoom/> -->
+    <Funds/>
+    <div class="grid"  in:fly|global="{{ y: 100 }}">
+        <Notifications/> 
+        <Transactions/>
+        <!-- <CreateRoom/> -->
+    </div>
 </div>
 
 <style lang="scss">
-  .grid {
+  .dashboard-layout {
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    overflow: hidden;
+  }
+
+  .grid {
+    flex: 1;
+    min-height: 0;
     width: 100%;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));

@@ -324,5 +324,6 @@
   "show": "Show",
   "changeThemeSettings": "Change theme settings",
   "wrongPassword": "Wrong password",
-  "back": "Back"
+  "back": "Back",
+  "noNotifications": "You're all caught up!"
 }
