@@ -150,7 +150,7 @@
   }
 
   .sent {
-    color: var(--success-color) !important;
+    color: var(--text-color) !important;
   }
 
   .tx {

@@ -55,7 +55,7 @@
 <div class="dashboard-layout">
     <div class="header" in:fly|global="{{ y: 100 }}">
         <div style="display: flex; align-items: center; gap: 0.5rem">
-            <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
+            <h1>{greet}{$user.username ? ", "+$user.username : ""}!</h1>
             <EditName/>
         </div>
         <div class="button_wrapper">

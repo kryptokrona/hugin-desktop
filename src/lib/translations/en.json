@@ -325,5 +325,17 @@
   "changeThemeSettings": "Change theme settings",
   "wrongPassword": "Wrong password",
   "back": "Back",
-  "noNotifications": "You're all caught up!"
+  "noNotifications": "You're all caught up!",
+  "resetColor": "Reset color",
+  "customizeColor": "Customize color",
+  "voiceActivated": "Voice activated",
+  "voiceActivatedDesc": "Automatically activate/deactivate microphone when you start/end speaking.",
+  "pushToTalkDesc": "Press and hold to talk.",
+  "sensitivity": "Sensitivity",
+  "sensitivityDesc": "Adjust the sensitivity voice activation.",
+  "pushToTalkKey": "Push to talk key",
+  "pressKeyToSet": "Press the key you want to use for push to talk and then hit save.",
+  "inputMode": "Input mode",
+  "private": "Private",
+  "mnemonicSeed": "Mnemonic seed"
 }

@@ -102,7 +102,7 @@
   }
 
   .synced {
-    color: var(--success-color) !important;
+    color: var(--text-color) !important;
   }
 
   .node_status {
