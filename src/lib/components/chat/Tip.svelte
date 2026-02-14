@@ -35,6 +35,7 @@
         padding: 5px;
         margin: 0px;
         margin-left: 25px;
+        background-color: var(--primary-color);
     }
   
     .insetBorder {
@@ -47,7 +48,7 @@
     }
 
     p {
-        color: black;
+        color: var(--text-color);
         font-family: Montserrat;
         font-size: 15px;
         padding-right: 10px;
@@ -58,7 +59,6 @@
   <div
     class="cardContainer"
     style="
-      background-color: #f5f5f5;
       transform: rotateX({rotateX});
       opacity: {opacity};
     "

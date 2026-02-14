@@ -44,12 +44,12 @@
         <div style="display: flex; align-items: center; gap: 1rem">
             <p>{page}/{pages}</p>
             <div>
-                {#if pageNum > 0}
+                <span style="{pageNum === 0 ? 'opacity: 0.5; pointer-events: none;' : ''}">
                     <Backward on:click="{() => getTransactions(pageNum - 1)}"/>
-                {/if}
-                {#if pages >= page + 1}
+                </span>
+                <span style="{pages < page + 1 ? 'opacity: 0.5; pointer-events: none;' : ''}">
                     <Forward on:click="{() => getTransactions(pageNum + 1)}"/>
-                {/if}
+                </span>
             </div>
         </div>
     </div>
@@ -80,7 +80,10 @@
 <style lang="scss">
   .wrapper {
     grid-column: span 6 / span 6;
-    height: calc(60% - 70px);
+    height: 100%; /* Changed to fill container */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 
     .header {
       display: flex;
@@ -88,17 +91,19 @@
       border-bottom: 1px solid var(--border-color);
       padding: 0.75rem 2rem;
       height: 50px;
+      flex-shrink: 0;
     }
 
     .transactions {
-      height: 100%;
+      flex: 1; /* Fill remaining space */
       width: 100%;
-      overflow: scroll;
+      overflow-y: auto; /* Scroll internally */
       box-sizing: border-box;
       --scrollbarBG: transparent;
       --thumbBG: #3337;
       scrollbar-width: thin;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+      padding-bottom: 10px;
     }
 
     .transactions::-webkit-scrollbar {
@@ -137,14 +142,15 @@
 
   .notx {
     display: flex;
-    height: 80vh;
+    flex: 1; /* Fill remaining space */
+    height: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
   }
 
   .sent {
-    color: var(--success-color) !important;
+    color: var(--text-color) !important;
   }
 
   .tx {

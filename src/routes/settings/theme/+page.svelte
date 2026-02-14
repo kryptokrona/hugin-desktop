@@ -1,14 +1,16 @@
 <script>
     import { t } from '$lib/utils/translation.js';
     import { theme } from '$lib/stores/user.js';
-    import { themes } from '$lib/theme/themes.js';
+    import { themes, generateMonochromaticColorTheme } from '$lib/theme/themes.js';
     import { fade } from 'svelte/transition';
     import { onMount } from 'svelte';
+    import ColorPicker from 'svelte-awesome-color-picker';
 
     // State for current theme name and mode
     // We try to load from localStorage or default to 'aesir' and the current theme store value
     let currentThemeName = $state(localStorage.getItem('themeName') || 'aesir'); 
     let mode = $state($theme === 'light' ? 'light' : $theme === 'dark' ? 'dark' : 'color');
+    let customColor = $state(localStorage.getItem('customThemeColor') || '');
 
     // Derived states for UI
     const isDark = $derived(mode === 'dark');
@@ -16,10 +18,24 @@
     const isColor = $derived(mode === 'color');
 
     // Function to apply the theme variables to the document
-    function applyTheme(themeName, themeMode) {
+    function applyTheme(themeName, themeMode, accentOverride) {
         if (!themes[themeName]) return;
         
-        const selectedTheme = themes[themeName][themeMode];
+        let selectedTheme;
+        if (themeMode === 'color') {
+            // Generate dynamic theme from accent color
+            // Use accentOverride or the default accent for the theme
+            const accent = accentOverride || themes[themeName][themeMode].accent;
+            selectedTheme = generateMonochromaticColorTheme(accent);
+        } else {
+            // Use preset as base and override primary if accentOverride is present
+            selectedTheme = { ...themes[themeName][themeMode] };
+            if (accentOverride) {
+                selectedTheme.primary = accentOverride;
+                // You could also dynamically adjust primaryForeground here if needed
+            }
+        }
+        
         const root = document.documentElement;
 
         // Map the theme colors to the desktop CSS variables
@@ -32,65 +48,89 @@
         
         // Borders
         root.style.setProperty('--border-color', selectedTheme.border);
-        root.style.setProperty('--card-border', selectedTheme.border); // Assuming card-border follows border
+        root.style.setProperty('--card-border', selectedTheme.border);
 
         // Primary
-        root.style.setProperty('--primary-color', selectedTheme.primary);
+        root.style.setProperty('--primary-color', selectedTheme.primary || selectedTheme.accent);
+        root.style.setProperty('--primary-foreground-color', selectedTheme.primaryForeground || '#fff');
 
         // Text & Foreground
-        // Attempting to map 'foreground' (which is usually text color in the mobile theme) to desktop text vars
         root.style.setProperty('--text-color', selectedTheme.foreground);
-        root.style.setProperty('--title-color', selectedTheme.foreground); // Or maybe selectedTheme.cardForeground?
+        root.style.setProperty('--title-color', selectedTheme.foreground);
 
         // Inputs
         root.style.setProperty('--input-background', selectedTheme.input); 
-        // We might need to adjust opacity for input background if it was RGBA before, but mobile theme provides solid colors usually.
-        // Actually, looking at global.scss for light/dark, input-background was rgba(0,0,0,0.4) etc. 
-        // The mobile theme provides a solid hex. We'll try using it directly.
+        root.style.setProperty('--input-placeholder', themeMode === 'color' || themeMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(88, 99, 99, 0.4)');
+        root.style.setProperty('--input-border', themeMode === 'color' || themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(90, 88, 88, 0.9)');
 
-        // Also update the class for any specific CSS overrides that rely on .dark/.light
-        // Since 'color' mode is new, we might treat it as 'dark' base for some things or 'light' for others?
-        // The user snippet for 'color' seems to use 'color' mode string found in sharedColors.
+        // Status colors
+        if (themeMode === 'color') {
+            root.style.setProperty('--success-color', '#ffffff');
+            root.style.setProperty('--warn-color', '#ffffff');
+            root.style.setProperty('--info-color', '#ffffff');
+            root.style.setProperty('--alert-color', '#ffffff');
+        } else {
+            root.style.setProperty('--success-color', selectedTheme.primary);
+            root.style.setProperty('--warn-color', '#f25f61');
+            root.style.setProperty('--info-color', selectedTheme.primary);
+            root.style.setProperty('--alert-color', '#f2cb5f');
+        }
+
+        // Additional UI vars for full coverage
+        root.style.setProperty('--logo-color', '#ffffff');
+        root.style.setProperty('--backdrop-color', 'rgba(0, 0, 0, 0.5)');
         
-        if (themeMode === 'light') {
+        if (themeMode === 'color') {
+            root.style.setProperty('--nav-backgound-color', selectedTheme.background);
+            root.style.setProperty('--fade-color', selectedTheme.background);
+            root.style.setProperty('--fade-to-color', 'transparent');
+            root.classList.remove('light', 'dark');
+            root.classList.add('blue');
+        } else if (themeMode === 'light') {
+            root.style.setProperty('--nav-backgound-color', 'rgba(224, 224, 224, 0.9)');
+            root.style.setProperty('--fade-color', '#fdfdfd');
+            root.style.setProperty('--fade-to-color', '#fdfdfd04');
             root.classList.remove('dark', 'blue');
             root.classList.add('light');
-        } else if (themeMode === 'dark') {
+        } else {
+            root.style.setProperty('--nav-backgound-color', 'rgba(32, 32, 32, 0.9)');
+            root.style.setProperty('--fade-color', '#121212');
+            root.style.setProperty('--fade-to-color', '#12121200');
             root.classList.remove('light', 'blue');
             root.classList.add('dark');
-        } else {
-             // For 'color', we might default to 'dark' base styles if 'blue' isn't sufficient
-             // global.scss seems to have comments for blue.
-             root.classList.remove('light', 'dark');
-             root.classList.add('blue'); // or custom 'color' class if we add it to global.scss
         }
     }
 
     // Effect to apply changes when state changes
     $effect(() => {
-        applyTheme(currentThemeName, mode);
+        applyTheme(currentThemeName, mode, customColor);
         // Sync with store
         if (mode === 'light' || mode === 'dark') {
-             // Only update the simple store if it matches supported values, or maybe we update it anyway?
-             // user.js store initializes from localStorage 'themes'.
              if ($theme !== mode) theme.set(mode);
         } else {
-            // For 'color' mode, we might need to decide what to put in the store. 
-            // The store logic in LeftMenu was simple string toggle.
             if ($theme !== 'color') theme.set('color');
         }
         
         // Persist
         localStorage.setItem('themes', mode);
         localStorage.setItem('themeName', currentThemeName);
+        if (customColor) {
+            localStorage.setItem('customThemeColor', customColor);
+        } else {
+            localStorage.removeItem('customThemeColor');
+        }
     });
 
     function setMode(newMode) {
         mode = newMode;
+        // Reset color picker to the preset's color
+        customColor = mode === 'color' ? themes[currentThemeName][mode].accent : themes[currentThemeName][mode].primary;
     }
 
     function setTheme(name) {
         currentThemeName = name;
+        // Reset color picker to the preset's color
+        customColor = mode === 'color' ? themes[currentThemeName][mode].accent : themes[currentThemeName][mode].primary;
     }
 
 </script>
@@ -111,6 +151,23 @@
             <button class:active={isColor} onclick={() => setMode('color')}>
                 {t('themeColor') || 'Color'}
             </button>
+        </div>
+
+        <div class="color-picker-container">
+            <p>{t('customizeColor') || 'Customize Theme Color'}</p>
+            <div class="picker">
+                 <ColorPicker 
+                    bind:hex={customColor} 
+                    isAlpha={false}
+                    --picker-z-index="100"
+                    --cp-bg-color="var(--card-background)"
+                    --cp-border-color="var(--border-color)"
+                    --cp-text-color="var(--primary-foreground-color)"
+                 />
+                 <button class="reset-btn" onclick={() => customColor = mode === 'color' ? themes[currentThemeName][mode].accent : themes[currentThemeName][mode].primary}>
+                    {t('resetColor') || 'Reset to Default'}
+                 </button>
+            </div>
         </div>
 
         <div class="themes-grid">
@@ -182,11 +239,8 @@
 
             &.active {
                 background: var(--primary-color);
-                color: var(--primary-foreground, #fff); 
                 border-color: var(--primary-color);
-                /* If primary color is very light, we might need dark text? 
-                   Mobile theme 'primaryForeground' handles this. */
-                 color: var(--primary-foreground-color, #fff); /* We didn't set this yet, will default to white */
+                color: var(--primary-foreground-color, #fff);
             }
         }
     }
@@ -246,5 +300,41 @@
         color: var(--text-color);
         font-size: 12px;
         font-family: 'Montserrat';
+    }
+
+    .color-picker-container {
+        margin-bottom: 25px;
+        padding: 15px;
+        background: var(--card-background);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+
+        p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .picker {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .reset-btn {
+            padding: 8px 15px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            
+            &:hover {
+                background: var(--border-color);
+            }
+        }
     }
 </style>

@@ -74,35 +74,41 @@
         </div>
     </div>
     <div class="notifs">
-      {#each recentUnread as notif}
-        <div
-          class="notif-wrapper"
-          role="button"
-          tabindex="0"
-          on:click={() => onNotificationClick(notif)}
-        >
-          <GroupMessage
-            rtc={true}
-            ReactTo="{(e) => console.log('react to')}"
-            ReplyTo="{(e) => console.log('reply to')}"
-            DeleteMsg="{(e) => console.log('delete to')}"
-            message="{notif}"
-            reply="{notif.reply ?? ''}"
-            msg="{notif.message ?? notif.msg ?? ''}"
-            myMsg="{notif.sent ?? false}"
-            group="{notif.grp ?? notif.group ?? ''}"
-            nickname="{notif.name ?? notif.nickname ?? ''}"
-            msgFrom="{notif.address ?? notif.chat ?? ''}"
-            timestamp="{parseInt(notif.timestamp || notif.time || 0)}"
-            hash="{notif.hash ?? ''}"
-            file="{notif?.file}"
-            room="{getNotifKind(notif) === 'room'}"
-            admin="{false}"
-            tip="{notif.tip}"
-            contextLabel="{getLocationLabel(notif)}"
-          />
+      {#if recentUnread.length > 0}
+        {#each recentUnread as notif}
+            <div
+            class="notif-wrapper"
+            role="button"
+            tabindex="0"
+            on:click={() => onNotificationClick(notif)}
+            >
+            <GroupMessage
+                rtc={true}
+                ReactTo="{(e) => console.log('react to')}"
+                ReplyTo="{(e) => console.log('reply to')}"
+                DeleteMsg="{(e) => console.log('delete to')}"
+                message="{notif}"
+                reply="{notif.reply ?? ''}"
+                msg="{notif.message ?? notif.msg ?? ''}"
+                myMsg="{notif.sent ?? false}"
+                group="{notif.grp ?? notif.group ?? ''}"
+                nickname="{notif.name ?? notif.nickname ?? ''}"
+                msgFrom="{notif.address ?? notif.chat ?? ''}"
+                timestamp="{parseInt(notif.timestamp || notif.time || 0)}"
+                hash="{notif.hash ?? ''}"
+                file="{notif?.file}"
+                room="{getNotifKind(notif) === 'room'}"
+                admin="{false}"
+                tip="{notif.tip}"
+                contextLabel="{getLocationLabel(notif)}"
+            />
+            </div>
+        {/each}
+      {:else}
+        <div class="notx">
+            <h3>{t('noNotifications') || 'No notifications'}</h3>
         </div>
-      {/each}
+      {/if}
 
     </div>
 </div>
@@ -110,8 +116,11 @@
 <style lang="scss">
   .wrapper {
     grid-column: span 6 / span 6;
-    height: calc(100% - 70px);
+    height: 100%;
     border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 
     .header {
       display: flex;
@@ -119,18 +128,20 @@
       border-bottom: 1px solid var(--border-color);
       padding: 0.75rem 2rem;
       height: 50px;
+      flex-shrink: 0;
     }
 
     .notifs {
-      height: 55%;
+      flex: 1;
+      min-height: 0;
       width: 100%;
-      overflow: scroll;
+      overflow-y: auto;
       box-sizing: border-box;
       --scrollbarBG: transparent;
       --thumbBG: #3337;
       scrollbar-width: thin;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
-      margin-bottom: 20px;
+      padding-bottom: 20px;
     }
 
     .notifs::-webkit-scrollbar {
@@ -150,7 +161,7 @@
 
   .notx {
     display: flex;
-    height: 80vh;
+    height: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;

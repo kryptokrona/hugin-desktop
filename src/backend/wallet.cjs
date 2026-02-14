@@ -320,7 +320,7 @@ const getSyncStatus = () => {
 }
 
 const getTransactions = async (startIndex, all = false) => {
-        const showPerPage = 10
+        const showPerPage = 20
         let txs = []
         const allTx = await js_wallet.getTransactions()
         const pages = Math.ceil(allTx.length / showPerPage)
