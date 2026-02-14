@@ -1,12 +1,13 @@
 <script>
     import { fade, fly } from "svelte/transition";
     import { misc } from '$lib/stores/user.js';
-    import { prettyNumbers } from '$lib/utils/utils.js';
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount} from 'svelte';
     import toast from "svelte-5-french-toast";
     import FillButton from '$lib/components/buttons/FillButton.svelte';
     import Button from '$lib/components/buttons/Button.svelte';
     import { t } from '$lib/utils/translation.js';
+    import Funds from "$routes/dashboard/components/Funds.svelte";
+    import Transactions from "$routes/dashboard/components/Transactions.svelte";
 
     let address = $state('');
     let amount = $state('');
@@ -14,26 +15,33 @@
     let password = $state('');
     let showConfirm = $state(false);
     let sending = $state(false);
-    let interval;
+    
+    let validAddress = $state(false);
+    let validPaymentId = $state(true); // Default true since optional
+    
 
-    onMount(async () => {
-        await getBalance();
-        interval = setInterval(getBalance, 1000 * 15);
-    });
-
-    onDestroy(() => {
-        clearInterval(interval);
-    });
-
-    async function getBalance() {
-        $misc.balance = await window.api.getBalance();
+    const validateAddress = async () => {
+        if (address.length === 0) {
+            validAddress = false;
+            return;
+        }
+        validAddress = await window.api.validateAddress(address);
+    }
+    
+    const validatePaymentId = async () => {
+        if (paymentId.length === 0) {
+            validPaymentId = true; // Optional
+            return;
+        }
+        validPaymentId = await window.api.validatePaymentID(paymentId);
     }
 
     const pasteAddress = async () => {
         const pastedAddress = await navigator.clipboard.readText();
-        // Basic validation - XKR addresses are 99 chars, Hugin addresses are 163
-        if (pastedAddress.length >= 95) {
-            address = pastedAddress;
+        address = pastedAddress;
+        await validateAddress();
+        
+        if (validAddress) {
             toast.success('Address pasted', {
                 position: 'top-right',
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
@@ -46,20 +54,46 @@
         }
     };
 
+    const pastePaymentID = async () => {
+        const pastedPaymentId = await navigator.clipboard.readText();
+        paymentId = pastedPaymentId;
+        await validatePaymentID();
+        
+        if (validPaymentId) {
+            toast.success('Payment ID pasted', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            });
+        } else {
+             toast.error('Invalid Payment ID format', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            });
+        }
+    };
+
     const sendMaxAmount = () => {
         // Balance is in atomic units (100000 = 1 XKR), leave 0.1 XKR for fee
         const maxAmount = ($misc.balance[0] / 100000) - 0.1;
         amount = maxAmount > 0 ? maxAmount.toFixed(5) : '0';
     };
 
-    const prepareSend = () => {
-        if (!address || address.length < 95) {
+    const prepareSend = async () => {
+        if (!validAddress) {
             toast.error('Please enter a valid address', {
                 position: 'top-right',
                 style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
             });
             return;
         }
+        if (!validPaymentId) {
+             toast.error('Invalid Payment ID', {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            });
+            return;
+        }
+        
         if (!amount || parseFloat(amount) <= 0) {
             toast.error('Please enter an amount', {
                 position: 'top-right',
@@ -107,6 +141,7 @@
             amount = '';
             paymentId = '';
             password = '';
+            validAddress = false;
             showConfirm = false;
         } else {
             toast.error('Transaction failed', {
@@ -123,114 +158,129 @@
 </script>
 
 <main in:fade|global="{{ duration: 250 }}">
+    
     <div class="content">
         <div class="header">
-            <h3 style="font-weight: 800">{t('send') || 'Send'}</h3>
+            <h1 style="font-weight: 800">{t('wallet') || 'Wallet'}</h1>
         </div>
 
-        <div class="balance-section">
-            <div class="balance-card">
-                <h4>{t('availableBalance') || 'Available Balance'}</h4>
-                <p class="balance">{prettyNumbers($misc.balance[0])} <span class="ticker">XKR</span></p>
-            </div>
-            <div class="balance-card">
-                <h4>{t('locked') || 'Locked'}</h4>
-                <p class="balance">{prettyNumbers($misc.balance[1])} <span class="ticker">XKR</span></p>
-            </div>
+        <div class="funds-wrapper">
+            <Funds simple={true} />
         </div>
 
-        {#if !showConfirm}
-            <div class="form" in:fly|local="{{ y: 20 }}">
-                <div class="field">
-                    <label for="address">{t('recipientAddress') || 'Recipient Address'}</label>
-                    <div class="input-row">
-                        <input 
-                            id="address"
-                            type="text" 
-                            placeholder="SEKR..." 
-                            bind:value={address} 
-                        />
-                        <Button text={t('paste') || "Paste"} disabled={false} on:click={pasteAddress} />
-                    </div>
-                </div>
+        <div class="grid-layout">
+            <div class="send-section">
+                <!-- <div class="section-header">
+                    <h3>{t('send') || 'Send'}</h3>
+                </div> -->
 
-                <div class="field">
-                    <label for="paymentId">{t('paymentId') || 'Payment ID'} ({t('optional') || 'optional'})</label>
-                    <input 
-                        id="paymentId"
-                        type="text" 
-                        placeholder="64 character hex string..." 
-                        bind:value={paymentId} 
-                    />
-                </div>
-
-                <div class="field">
-                    <label for="amount">{t('amount') || 'Amount'}</label>
-                    <div class="input-row">
-                        <input 
-                            id="amount"
-                            type="number" 
-                            step="0.00001"
-                            placeholder="0.00000" 
-                            bind:value={amount} 
-                        />
-                        <Button text={t('max') || "Max"} disabled={false} on:click={sendMaxAmount} />
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <FillButton 
-                        text={t('send') || "Send"} 
-                        enabled={address.length > 0 && parseFloat(amount) > 0}
-                        on:click={prepareSend} 
-                    />
-                </div>
-            </div>
-        {:else}
-            <div class="confirm" in:fly|local="{{ y: 20 }}">
-                <h4>{t('confirmTransaction') || 'Confirm Transaction'}</h4>
-                
-                <div class="tx-details">
-                    <div class="tx-row">
-                        <span class="label">{t('to') || 'To'}:</span>
-                        <span class="value address">{address.substring(0, 20)}...{address.substring(address.length - 10)}</span>
-                    </div>
-                    <div class="tx-row">
-                        <span class="label">{t('amount') || 'Amount'}:</span>
-                        <span class="value amount-value">{amount} XKR</span>
-                    </div>
-                    {#if paymentId}
-                        <div class="tx-row">
-                            <span class="label">{t('paymentId') || 'Payment ID'}:</span>
-                            <span class="value">{paymentId.substring(0, 16)}...</span>
+                {#if !showConfirm}
+                    <div class="form" in:fly|local="{{ y: 20 }}">
+                        <div class="field">
+                            <label for="address">{t('address') || 'Recipient Address'}</label>
+                            <div class="input-row">
+                                <input 
+                                    class:valid={validAddress}
+                                    id="address"
+                                    type="text" 
+                                    placeholder="SEKR..." 
+                                    bind:value={address} 
+                                    oninput={validateAddress}
+                                    onblur={validateAddress}
+                                />
+                                <Button text={t('paste') || "Paste"} disabled={false} on:click={pasteAddress} />
+                            </div>
                         </div>
-                    {/if}
-                    <div class="tx-row">
-                        <span class="label">{t('fee') || 'Fee'}:</span>
-                        <span class="value">0.00001 XKR</span>
+
+                        <div class="field">
+                            <label for="paymentId">{t('paymentId') || 'Payment ID'} ({t('optional') || 'optional'})</label>
+                            <div class="input-row">
+                                <input 
+                                    class:valid={validPaymentId && paymentId.length > 0}
+                                    id="paymentId"
+                                    type="text" 
+                                    placeholder="64 character hex string..." 
+                                    bind:value={paymentId} 
+                                    oninput={validatePaymentId}
+                                    onblur={validatePaymentId}
+                                />
+                                <Button text={t('paste') || "Paste"} disabled={false} on:click={pastePaymentID} />
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="amount">{t('amount') || 'Amount'}</label>
+                            <div class="input-row">
+                                <input 
+                                    id="amount"
+                                    type="number" 
+                                    step="0.00001"
+                                    placeholder="0.00000" 
+                                    bind:value={amount} 
+                                />
+                                <Button text={t('max') || "Max"} disabled={false} on:click={sendMaxAmount} />
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <FillButton 
+                                text={t('send') || "Send"} 
+                                enabled={validAddress && parseFloat(amount) > 0 && validPaymentId}
+                                on:click={prepareSend} 
+                            />
+                        </div>
                     </div>
-                </div>
+                {:else}
+                    <div class="confirm" in:fly|local="{{ y: 20 }}">
+                        <h4>{t('confirmTransaction') || 'Confirm Transaction'}</h4>
+                        
+                        <div class="tx-details">
+                            <div class="tx-row">
+                                <span class="label">{t('to') || 'To'}:</span>
+                                <span class="value address">{address.substring(0, 20)}...{address.substring(address.length - 10)}</span>
+                            </div>
+                            <div class="tx-row">
+                                <span class="label">{t('amount') || 'Amount'}:</span>
+                                <span class="value amount-value">{amount} XKR</span>
+                            </div>
+                            {#if paymentId}
+                                <div class="tx-row">
+                                    <span class="label">{t('paymentId') || 'Payment ID'}:</span>
+                                    <span class="value">{paymentId.substring(0, 16)}...</span>
+                                </div>
+                            {/if}
+                            <div class="tx-row">
+                                <span class="label">{t('fee') || 'Fee'}:</span>
+                                <span class="value">0.00001 XKR</span>
+                            </div>
+                        </div>
 
-                <div class="field">
-                    <label for="password">{t('enterPassword') || 'Enter Password to Confirm'}</label>
-                    <input 
-                        id="password"
-                        type="password" 
-                        placeholder="Your wallet password" 
-                        bind:value={password} 
-                    />
-                </div>
+                        <div class="field">
+                            <label for="password">{t('enterPassword') || 'Enter Password to Confirm'}</label>
+                            <input 
+                                id="password"
+                                type="password" 
+                                placeholder="Your wallet password" 
+                                bind:value={password} 
+                            />
+                        </div>
 
-                <div class="actions">
-                    <Button text={t('cancel') || "Cancel"} disabled={false} on:click={cancelSend} />
-                    <FillButton 
-                        text={sending ? (t('sending') || "Sending...") : (t('confirm') || "Confirm")} 
-                        enabled={password.length > 0 && !sending}
-                        on:click={confirmSend} 
-                    />
-                </div>
+                        <div class="actions">
+                            <Button text={t('cancel') || "Cancel"} disabled={false} on:click={cancelSend} />
+                            <FillButton 
+                                text={sending ? (t('sending') || "Sending...") : (t('confirm') || "Confirm")} 
+                                enabled={password.length > 0 && !sending}
+                                on:click={confirmSend} 
+                            />
+                        </div>
+                    </div>
+                {/if}
             </div>
-        {/if}
+            
+            <div class="transactions-wrapper">
+                <Transactions/>
+            </div>
+        </div>
     </div>
 </main>
 
@@ -246,58 +296,52 @@
 
     .content {
         width: 100%;
-        max-width: 600px;
         margin: 0 auto;
-        padding: 0 2rem;
+        display: flex;
+        flex-direction: column;
     }
 
     .header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         width: 100%;
         height: 80px;
         border-bottom: 1px solid var(--border-color);
-        margin-bottom: 1.5rem;
+        padding: 0 2rem;
+
+        h1 {
+             color: var(--title-color);
+             font-size: 2rem;
+             margin: 0;
+        }
     }
 
-    .balance-section {
+    .grid-layout {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 2rem;
+        flex: 1;
+        overflow: hidden;
     }
 
-    .balance-card {
-        padding: 1.5rem;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background-color: var(--card-background);
-
-        h4 {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            opacity: 0.7;
-        }
-
-        .balance {
-            font-family: "Major Mono Display";
-            font-size: 1.25rem;
-            margin: 0;
-            color: var(--primary-color);
-        }
-
-        .ticker {
-            font-family: 'Montserrat';
-            font-size: 0.875rem;
-            opacity: 0.6;
-        }
+    .send-section {
+        padding: 2rem;
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+    }
+    
+    .transactions-wrapper {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        width: calc(100% - 4rem);
     }
 
     .form, .confirm {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        max-width: 600px;
+        margin: 0 auto;
     }
 
     .field {
@@ -309,12 +353,13 @@
             font-size: 0.875rem;
             font-weight: 600;
             opacity: 0.8;
+            color: var(--text-color);
         }
 
         input {
             padding: 12px 16px;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--input-border);
             background-color: var(--input-background);
             color: var(--text-color);
             font-size: 1rem;
@@ -326,6 +371,7 @@
             }
 
             &::placeholder {
+                color: var(--input-placeholder);
                 opacity: 0.5;
             }
 
@@ -333,6 +379,14 @@
             &::-webkit-inner-spin-button {
                 -webkit-appearance: none;
                 margin: 0;
+            }
+        }
+
+        .valid {
+            border-color: var(--success-color);
+            
+            &:focus {
+                border-color: var(--success-color);
             }
         }
     }
@@ -357,6 +411,7 @@
         h4 {
             font-weight: 700;
             margin-bottom: 0.5rem;
+            color: var(--title-color);
         }
     }
 
@@ -379,10 +434,12 @@
 
         .label {
             opacity: 0.7;
+            color: var(--text-color);
         }
 
         .value {
             font-weight: 600;
+            color: var(--title-color);
         }
 
         .address {

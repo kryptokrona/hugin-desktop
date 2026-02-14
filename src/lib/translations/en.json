@@ -321,5 +321,10 @@
   "audio": "Audio",
   "microphone": "Microphone",
   "speakers": "Speakers",
-  "show": "Show"
+  "show": "Show",
+  "paymentId": "Payment ID",
+  "confirm": "Confirm",
+  "to": "To",
+  "enterPassword": "Enter password",
+  "max": "Max"
 }

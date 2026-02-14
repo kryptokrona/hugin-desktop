@@ -278,6 +278,12 @@ const WINDOW_API = {
     },
     saveClipboardImage: async (base64Data, filename) => {
         return await ipcRenderer.invoke('save-clipboard-image', base64Data, filename)
+    },
+    validateAddress: async (address) => {
+        return await ipcRenderer.invoke('validate-address', address)
+    },
+    validatePaymentID: async (id) => {
+        return await ipcRenderer.invoke('validate-payment-id', id)
     }
 }
 

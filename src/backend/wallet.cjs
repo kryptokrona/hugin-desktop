@@ -486,3 +486,28 @@ async function sendTx(tx) {
 
 module.exports = {loadDaemon, loadWallet, createAccount, createWallet, saveWallet, saveWalletToFile, pickNode,loadAccount, loadHugin, createMessageSubWallet, loadMiscData }
 
+// Validation Handlers
+ipcMain.handle('validate-address', async (event, address) => {
+    try {
+        console.log('Validating address:', address)
+        const isValid = WB.validateAddress(address, true)
+        console.log('Valid?', isValid)
+        return isValid
+    } catch (error) {
+        console.error('Address validation error:', error)
+        return false
+    }
+})
+
+ipcMain.handle('validate-payment-id', async (event, paymentId) => {
+    try {
+        if (!paymentId) return true // Empty payment ID is valid (optional)
+        console.log('Validating payment ID:', paymentId)
+        const isValid = WB.validatePaymentID(paymentId, true)
+        console.log('Valid?', isValid)
+        return isValid.errorCode === 0 
+    } catch (error) {
+        console.error('Payment ID validation error:', error)
+        return false
+    }
+})
