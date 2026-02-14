@@ -740,7 +740,7 @@
 
     {#if $user.loggedIn}
         <LeftMenu/>
-        {#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard' && $page.url.pathname !== '/feed'}
+        {#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard' && $page.url.pathname !== '/feed' && $page.url.pathname !== '/wallet'}
             <RightMenu/>
         {/if}
     {/if}

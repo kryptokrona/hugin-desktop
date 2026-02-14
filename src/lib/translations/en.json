@@ -322,6 +322,11 @@
   "microphone": "Microphone",
   "speakers": "Speakers",
   "show": "Show",
+  "paymentId": "Payment ID",
+  "confirm": "Confirm",
+  "to": "To",
+  "enterPassword": "Enter password",
+  "max": "Max"
   "changeThemeSettings": "Change theme settings",
   "wrongPassword": "Wrong password",
   "back": "Back",

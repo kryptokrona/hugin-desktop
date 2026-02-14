@@ -25,17 +25,19 @@
             $layoutState.showFaucetButton = false
         }
     }
+    export let simple = false
 </script>
 
-    <div class="cards">
+    <div class="cards" class:simple={simple}>
     <div class="card" style="border-right: 1px solid var(--border-color)">
         <h4>{t('balance') || 'Balance'}</h4>
         <p class="balance">{prettyNumbers($misc.balance[0])}</p>
     </div>
-    <div class="card">
+    <div class="card" style:border-right={simple ? 'none' : '1px solid var(--border-color)'}>
         <h4>{t('locked') || 'Locked'}</h4>
         <p class="balance">{prettyNumbers($misc.balance[1])}</p>
     </div>
+    {#if !simple}
     <div class="card" style="border-right: 1px solid var(--border-color)">
         <h4>{t('fundsRatio') || 'Funds ratio'}</h4>
         <div class="ratio">
@@ -53,14 +55,19 @@
         <h4>{t('nodeStatus') || 'Node status'}</h4>
         <p class="node_status" class:synced={$misc.syncState}>{$misc.syncState ? $misc.syncState : t('loading') || 'Loading'}</p>
     </div>
+    {/if}
 </div>
 
 <style lang="scss">
   .cards {
-    height: 240px;
     display: grid;
     width: 100%;
     grid-template-columns: repeat(12, minmax(0, 1fr));
+    height: 240px;
+
+    &.simple {
+      height: 120px;
+    }
 
     .card {
       display: flex;
