@@ -10,7 +10,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds, transactionList} from '$lib/stores/user.js'
     import { themes, generateMonochromaticColorTheme } from '$lib/theme/themes.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
@@ -298,6 +298,22 @@
                 huginAddress: huginAddr,
             }
         })
+    })
+
+    // Listen for real-time wallet updates (transactions)
+    window.api.onWalletUpdate(async (data) => {
+        console.log('Global wallet update:', data)
+        
+        // Update Transactions (fetch page 0)
+        const transactions = await window.api.getTransactions(0)
+        transactionList.set({
+            txs: transactions.pageTx,
+            pages: transactions.pages
+        })
+
+        // Update Balance
+        const balance = await window.api.getBalance()
+        $misc.balance = balance
     })
 
     window.api.receive('user-joined-voice-channel', data => {

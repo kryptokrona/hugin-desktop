@@ -1,7 +1,7 @@
 <script>
     import { run } from 'svelte/legacy';
 
-    import {user} from '$lib/stores/user.js'
+    import {user, transactionList} from '$lib/stores/user.js'
     import {fade} from 'svelte/transition'
     import {onMount} from 'svelte'
     import Forward from '$lib/components/icons/Forward.svelte'
@@ -10,9 +10,13 @@
     import { t } from '$lib/utils/translation.js'
 
     let pageNum = $state(0)
-    let pages = $state()
-    let txList = $state([])
+    
+    // Subscribe to store
+    let pages = $derived($transactionList.pages)
+    let txList = $derived($transactionList.txs)
+
     onMount(() => {
+        // Initial fetch if empty or just to be sure we are up to date on mount
         getTransactions(pageNum)
     })
 
@@ -22,18 +26,16 @@
       if (num === 0) startIndex = num;
 
         let transactions = await window.api.getTransactions(startIndex)
-        $user.transactions = transactions.pageTx
-        pages = transactions.pages
-        txList = $user.transactions
-        console.log(transactions)
+        
+        // Update the global store
+        transactionList.set({
+            txs: transactions.pageTx,
+            pages: transactions.pages
+        })
+        
+
     }
 
-    run(() => {
-        pageNum
-    });
-    run(() => {
-        txList
-    });
     let page = $derived(pageNum + 1)
 </script>
 
@@ -53,7 +55,7 @@
             </div>
         </div>
     </div>
-    {#if $user.transactions.length > 0}
+    {#if txList.length > 0}
         <div class="transactions">
             {#each txList as tx}
                 <div class="row">

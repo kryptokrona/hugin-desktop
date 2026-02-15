@@ -1,5 +1,5 @@
 import {browser} from "$app/environment";
-import {misc} from "$lib/stores/user.js";
+import {misc, transactionList} from "$lib/stores/user.js";
 
 if(browser) {
     window.api.receive('node', async (node) => {
@@ -29,6 +29,15 @@ if(browser) {
             return {
                 ...current,
                 syncState: data,
+            }
+        })
+    })
+
+    window.api.receive('transaction-update', (data) => {
+        transactionList.update((current) => {
+            return {
+                ...current,
+                txs: [data, ...current.txs],
             }
         })
     })

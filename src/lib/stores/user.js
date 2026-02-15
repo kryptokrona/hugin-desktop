@@ -114,6 +114,11 @@ export const transactions = writable({
     send: false,
 })
 
+export const transactionList = writable({
+    txs: [],
+    pages: 0
+})
+
 export const messageWallet = writable({
     optimized: false
 })

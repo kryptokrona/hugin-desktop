@@ -112,7 +112,13 @@ async function startHugin(walletName, password, node) {
 
     js_wallet.on('createdtx', async (tx) => {
         console.log('***** outgoing *****', tx)
+        incomingTx(tx)
         await saveWallet(js_wallet, walletName, password)
+    })
+
+    js_wallet.on('transaction', (transaction) => {
+        console.log('Transaction event received:', transaction)
+        sender('transaction-update', transaction)
     })
 
     //Wallet heightchange event with funtion that saves wallet only if we are synced
@@ -369,6 +375,7 @@ function incomingTx(transaction) {
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
         console.log('transaction', transaction)
         sender('new-message', transaction.toJSON())
+        sender('transaction-update', transaction)
 
 }
 

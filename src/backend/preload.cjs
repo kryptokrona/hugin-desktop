@@ -284,6 +284,9 @@ const WINDOW_API = {
     },
     validatePaymentID: async (id) => {
         return await ipcRenderer.invoke('validate-payment-id', id)
+    },
+    onWalletUpdate: (callback) => {
+        ipcRenderer.on('transaction-update', (event, data) => callback(data))
     }
 }
 
