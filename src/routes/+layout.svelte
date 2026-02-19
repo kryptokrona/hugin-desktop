@@ -91,7 +91,7 @@
              root.style.setProperty('--input-background', initialTheme.input);
              // Set mode-specific variables
              if (savedMode === 'color') {
-                 root.style.setProperty('--input-placeholder', 'rgba(255, 255, 255, 0.6)');
+                 root.style.setProperty('--input-placeholder', 'var(--text-color)');
                  root.style.setProperty('--input-border', 'rgba(255, 255, 255, 0.15)');
                  root.style.setProperty('--success-color', '#ffffff');
                  root.style.setProperty('--warn-color', '#ffffff');
@@ -104,7 +104,7 @@
                  root.classList.add('blue');
                  $theme = 'color'
              } else if (savedMode === 'light') {
-                 root.style.setProperty('--input-placeholder', 'rgba(88, 99, 99, 0.4)');
+                 root.style.setProperty('--input-placeholder', 'var(--text-color)');
                  root.style.setProperty('--input-border', 'rgba(90, 88, 88, 0.9)');
                  root.style.setProperty('--success-color', initialTheme.primary);
                  root.style.setProperty('--warn-color', '#f25f61');
@@ -117,7 +117,7 @@
                  root.classList.add('light');
                  $theme = 'light'
              } else {
-                 root.style.setProperty('--input-placeholder', 'rgba(255, 255, 255, 0.6)');
+                 root.style.setProperty('--input-placeholder', 'var(--text-color)');
                  root.style.setProperty('--input-border', 'rgba(255, 255, 255, 0.15)');
                  root.style.setProperty('--success-color', initialTheme.primary);
                  root.style.setProperty('--warn-color', '#f25f61');

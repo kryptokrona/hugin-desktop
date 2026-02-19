@@ -60,7 +60,7 @@
 
         // Inputs
         root.style.setProperty('--input-background', selectedTheme.input); 
-        root.style.setProperty('--input-placeholder', themeMode === 'color' || themeMode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(88, 99, 99, 0.4)');
+        root.style.setProperty('--input-placeholder', 'var(--text-color)');
         root.style.setProperty('--input-border', themeMode === 'color' || themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(90, 88, 88, 0.9)');
 
         // Status colors

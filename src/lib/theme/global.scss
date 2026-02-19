@@ -58,7 +58,7 @@
     --card-background: #171717;
     --input-border: rgba(255, 255, 255, 0.15);
     --input-background: rgba(0, 0, 0, 0.4);
-    --input-placeholder: rgba(255, 255, 255, 0.6);
+    --input-placeholder: var(--text-color);
 
     --desktop-padding: 0 40px;
     --mobile-padding: 0 20px;
@@ -92,7 +92,7 @@
     --card-background: #f9f9f9;
     --input-border: rgba(90, 88, 88, 0.9);
     --input-background: rgba(222, 222, 222, 0.8);
-    --input-placeholder: rgba(88, 99, 99, 0.4);
+    --input-placeholder: var(--text-color);
 
     --desktop-padding: 0 40px;
     --mobile-padding: 0 20px;
@@ -162,6 +162,11 @@ html {
     box-sizing: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+::placeholder {
+    color: var(--input-placeholder) !important;
+    opacity: 0.5 !important;
 }
 
 @font-face {
