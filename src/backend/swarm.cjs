@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message, pow_config, logPow, pow_find_share, pow_calculate_shares, validate_pow_job} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed, feedMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
@@ -12,8 +12,7 @@ const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", video
 const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
 const { Storage } = require("./storage.cjs");
-const { Crypto, Address } = require('kryptokrona-utils');
-const crypto = new Crypto()
+
 
 const MISSING_MESSAGES = 'missing-messages';
 const REQUEST_MESSAGES = 'request-messages';
@@ -45,9 +44,11 @@ class NodeConnection extends EventEmitter {
     this.requests = new Map()
     this.discovery = null
     this.pending = []
-    this.public = 'a8b2ddb6f70e02b8ab3a1b144f5ddf0616ed6029b9129d6c12bc7660f5b430c5'
+    this.public = 'xkr96c0f8a36e951b399681d447922f6c54c28c6ef3cad1c65d3568008151337'
     this.topic = ''
     this.address = null
+    this.currentJob = null
+    this.jobPollTimer = null
   }
 
 async connect(address, pub) {
@@ -56,8 +57,10 @@ async connect(address, pub) {
   const key = pub ? this.public : address
   const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
   const topicHash = base_keys.publicKey.toString('hex')
+  console.log('topicHash', topicHash)
     this.node = new HyperSwarm({ maxPeers: 1,
     firewall (remotePublicKey) {
+      console.log('remotePublicKey', remotePublicKey.toString('hex'))
 
     //If we are connecting to a public node. Allow connection.
     if (pub) return false
@@ -93,6 +96,7 @@ async listen() {
   async node_connection(conn) {
     this.connection = conn
     Hugin.send('hugin-node-connection', true)
+    this.startJobPolling()
     conn.on('error', () => {
     console.log("Got error connection signal")
         conn.end();
@@ -127,6 +131,29 @@ async listen() {
 
         if ('success' in data) {
           resolve(data)
+          this.requests.delete(data.id);
+          return
+        }
+
+        // Handle job response from node
+        if (data.type === 'job' || data.type === 'job_pending') {
+          logPow('job_response', { id: data.id, type: data.type, jobId: data.job?.job_id });
+          if (data.job) {
+            const validation = validate_pow_job(data.job)
+            if (validation.ok) {
+              this.setJob(data.job);
+            } else {
+              logPow('job_reject', { reason: validation.reason });
+            }
+          }
+          resolve(data);
+          this.requests.delete(data.id);
+          return
+        }
+
+        // Handle share result from node
+        if (data.type === 'share_result') {
+          resolve(data);
           this.requests.delete(data.id);
           return
         }
@@ -199,10 +226,129 @@ async register(data) {
   
 }
 
+startJobPolling() {
+  if (this.jobPollTimer) return;
+  this.jobPollTimer = setInterval(async () => {
+    if (!this.connection) return;
+    const response = await this.requestJob();
+    if (response && response.job) {
+      this.setJob(response.job);
+    }
+  }, 15000);
+}
+
+setJob(job) {
+  if (!job || !job.job_id) return;
+  if (this.currentJob && this.currentJob.job_id === job.job_id) return;
+  this.currentJob = job;
+  logPow('job_set', { jobId: job.job_id });
+}
+
+// Request mining job from node for PoW
+async requestJob() {
+  if (!this.connection) return null;
+  return new Promise((resolve, reject) => {
+    const id = Date.now();
+    this.requests.set(id, { resolve, reject });
+    this.connection.write(JSON.stringify({
+      type: 'job_request',
+      id
+    }));
+    logPow('job_request', { id });
+    // Timeout after 10s
+    setTimeout(() => {
+      if (this.requests.has(id)) {
+        this.requests.delete(id);
+        logPow('job_request_timeout', { id });
+        resolve(null);
+      }
+    }, 10000);
+  });
+}
+
+// Check if hash meets difficulty target
+// Submit shares to node (for mining rewards, separate from message posting)
+async submitShares(shares) {
+  if (!this.connection || !shares || shares.length === 0) return null;
+  return new Promise((resolve, reject) => {
+    const id = Date.now();
+    this.requests.set(id, { resolve, reject });
+    this.connection.write(JSON.stringify({
+      type: 'share',
+      shares,
+      id
+    }));
+    logPow('share_submit', { id, count: shares.length });
+    setTimeout(() => {
+      if (this.requests.has(id)) {
+        this.requests.delete(id);
+        logPow('share_submit_timeout', { id });
+        resolve({ status: 'timeout' });
+      }
+    }, 30000);
+  });
+}
+
 async message(payload, viewtag) {
   return new Promise( async (resolve, reject) => {
   const timestamp = Date.now()
   this.requests.set(timestamp, { resolve, reject })
+  
+  if (this.connection === null) {
+    resolve({success: false, reason: 'No connection'})
+    return
+  }
+
+  // Start PoW on send, then keep slow PoW until we have >2 shares
+  let pow = null
+  try {
+    if (!this.currentJob) {
+      const jobResponse = await this.requestJob();
+      if (jobResponse && jobResponse.job) {
+        this.setJob(jobResponse.job);
+      } else {
+        logPow('job_response_missing');
+      }
+    }
+
+    const required_shares = pow_config.SHARES;
+    const job = this.currentJob;
+    const shares = [];
+    const jobId = job && job.job_id;
+
+    if (job && shares.length < required_shares) {
+      const remaining = required_shares - shares.length;
+      const boost_hashes_per_second = pow_config.BOOST_HASHES_PER_SECOND;
+      const boost_time_budget_ms = pow_config.BOOST_TIME_BUDGET_MS;
+      const boostResult = await pow_calculate_shares(job, remaining, {
+        hashes_per_second: boost_hashes_per_second,
+        time_budget_ms: boost_time_budget_ms
+      });
+      if (boostResult && boostResult.shares) {
+        shares.push(...boostResult.shares);
+      }
+    }
+
+    if (job && shares.length > 0) {
+      pow = { job, shares };
+      logPow('pow_message_ready', { jobId: job.job_id, shares: shares.length });
+    }
+  } catch (e) {
+    console.log('PoW calculation failed:', e.message)
+    logPow('pow_error', { message: e && e.message });
+  }
+
+  if (!pow || !pow.shares || pow.shares.length === 0) {
+    console.log('PoW required')
+    console.log('pow', pow)
+    if (pow) {
+      console.log('shares', pow.shares)
+      console.log('job', pow.job)
+    }
+    logPow('pow_message_blocked', { reason: 'no_shares', jobId: (pow && pow.job && pow.job.job_id) || null });
+    resolve({success: false, reason: 'PoW required'})
+    return
+  }
   
   //Create a new derived view key pair for sending messages to nodes.
   const [signKey, pub] = await keychain.messageKeyPair()
@@ -219,14 +365,16 @@ async message(payload, viewtag) {
     signature,
     id: timestamp,
     push: true,
-    viewtag
+    viewtag,
+    pow: {
+      job: pow.job,
+      shares: pow.shares
+    }
     }
 
   }
 
-  if (this.connection === null) {
-    resolve({success: false, reason: 'No connection'})
-  }
+  console.log("Send message to node ***** ---->")
 
   this.connection.write(JSON.stringify(data))
   
@@ -1117,7 +1265,7 @@ const send_swarm_message = (message, key, beam = false) => {
         }
     }
 
-    console.log("Swarm msg sent!")
+    console.log("Swarm msg sent!", message)
 }
 
 const get_room_state = async (key) => {
