@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message, pow_config, logPow, pow_find_share, pow_calculate_shares, validate_pow_job} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message, logPow, validate_pow_job} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed, feedMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
@@ -12,6 +12,9 @@ const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", video
 const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
 const { Storage } = require("./storage.cjs");
+const { extractPrevIdFromBlob } = require('hugin-utils')
+const { message_challenge, create_pow_scheduler, create_rate_policy } = require('hugin-utils/challenge')
+const { create_node_worker_backend } = require('hugin-utils/challenge/node_worker')
 
 
 const MISSING_MESSAGES = 'missing-messages';
@@ -35,6 +38,18 @@ let downloading = []
 let uploading = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 
+const POW_NONCE_TAG_BITS = 4
+const pow_scheduler = create_pow_scheduler()
+const pow_rate_policy = create_rate_policy({
+  total_hashes_per_second_cap: 1500,
+  phase1_hashes_per_second_cap: 950,
+  phase2_hashes_per_second_cap: 250,
+  phase1_ms: 2 * 60 * 1000,
+  slice_ms_phase1: 10000,
+  slice_ms_phase2: 10000
+})
+const pow_backend = create_node_worker_backend({ max_job_time_ms: 90000 })
+
 
 class NodeConnection extends EventEmitter {
   constructor() {
@@ -48,6 +63,9 @@ class NodeConnection extends EventEmitter {
     this.topic = ''
     this.address = null
     this.currentJob = null
+    this.jobGeneration = 0
+    this.currentPrevId = null
+    this.previousPrevId = null
     this.jobPollTimer = null
   }
 
@@ -57,7 +75,6 @@ async connect(address, pub) {
   const key = pub ? this.public : address
   const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
   const topicHash = base_keys.publicKey.toString('hex')
-  console.log('topicHash', topicHash)
     this.node = new HyperSwarm({ maxPeers: 1,
     firewall (remotePublicKey) {
       console.log('remotePublicKey', remotePublicKey.toString('hex'))
@@ -96,7 +113,7 @@ async listen() {
   async node_connection(conn) {
     this.connection = conn
     Hugin.send('hugin-node-connection', true)
-    this.startJobPolling()
+    this.start_job_polling()
     conn.on('error', () => {
     console.log("Got error connection signal")
         conn.end();
@@ -116,6 +133,18 @@ async listen() {
         this.address = data.address
         return
     }
+
+      // Unsolicited job push (no pending request id)
+      if (data.type === 'job' && data.job && !this.requests.has(data.id)) {
+        logPow('job_push', { type: data.type, jobId: data.job?.job_id })
+        const validation = validate_pow_job(data.job)
+        if (validation.ok) {
+          this.set_job(data.job)
+        } else {
+          logPow('job_reject', { reason: validation.reason })
+        }
+        return
+      }
 
       if (this.requests.has(data.id)) {
         const { resolve, reject } = this.requests.get(data.id);
@@ -141,7 +170,7 @@ async listen() {
           if (data.job) {
             const validation = validate_pow_job(data.job)
             if (validation.ok) {
-              this.setJob(data.job);
+              this.set_job(data.job);
             } else {
               logPow('job_reject', { reason: validation.reason });
             }
@@ -226,29 +255,38 @@ async register(data) {
   
 }
 
-startJobPolling() {
+// Poll the node for updated mining jobs.
+// We also accept job pushes, but polling keeps us synced if pushes are missed.
+start_job_polling() {
   if (this.jobPollTimer) return;
   this.jobPollTimer = setInterval(async () => {
     if (!this.connection) return;
-    const response = await this.requestJob();
+    const response = await this.request_job();
     if (response && response.job) {
-      this.setJob(response.job);
+      this.set_job(response.job);
     }
   }, 15000);
 }
 
-setJob(job) {
+// Update the current PoW job (and track prev_id transitions).
+set_job(job) {
   if (!job || !job.job_id) return;
   if (this.currentJob && this.currentJob.job_id === job.job_id) return;
+  const prevId = extractPrevIdFromBlob(job.blob)
+  if (prevId) {
+    this.previousPrevId = this.currentPrevId
+    this.currentPrevId = prevId
+  }
   this.currentJob = job;
+  this.jobGeneration++
   logPow('job_set', { jobId: job.job_id });
 }
 
-// Request mining job from node for PoW
-async requestJob() {
+// Request a challenge job template from the node.
+async request_job() {
   if (!this.connection) return null;
   return new Promise((resolve, reject) => {
-    const id = Date.now();
+    const id = randomKey();
     this.requests.set(id, { resolve, reject });
     this.connection.write(JSON.stringify({
       type: 'job_request',
@@ -267,11 +305,11 @@ async requestJob() {
 }
 
 // Check if hash meets difficulty target
-// Submit shares to node (for mining rewards, separate from message posting)
-async submitShares(shares) {
+// Submit shares to node
+async submit_shares(shares) {
   if (!this.connection || !shares || shares.length === 0) return null;
   return new Promise((resolve, reject) => {
-    const id = Date.now();
+    const id = randomKey();
     this.requests.set(id, { resolve, reject });
     this.connection.write(JSON.stringify({
       type: 'share',
@@ -289,6 +327,38 @@ async submitShares(shares) {
   });
 }
 
+// Calculate shares for a message challenge.
+async challenge(message_hash) {
+  if (!this.connection) return null
+  const get_job = async () => {
+    if (this.currentJob) return this.currentJob
+    const jobResponse = await this.request_job();
+    if (jobResponse && jobResponse.job) {
+      this.set_job(jobResponse.job);
+      return this.currentJob
+    }
+    return null
+  }
+
+  const freshness_policy = (job) => {
+    const prevId = extractPrevIdFromBlob(job && job.blob)
+    if (!prevId || !this.currentPrevId) return false
+    return prevId === this.currentPrevId || prevId === this.previousPrevId
+  }
+
+  return await message_challenge({
+    get_job,
+    backend: pow_backend,
+    message_hash,
+    required_shares: 1,
+    nonce_tag_bits: POW_NONCE_TAG_BITS,
+    scheduler: pow_scheduler,
+    rate_policy: pow_rate_policy,
+    freshness_policy,
+    log: (event, data) => logPow(event, data)
+  })
+}
+
 async message(payload, viewtag) {
   return new Promise( async (resolve, reject) => {
   const timestamp = Date.now()
@@ -299,39 +369,14 @@ async message(payload, viewtag) {
     return
   }
 
-  // Start PoW on send, then keep slow PoW until we have >2 shares
+  // Message id is part of the payload verified by other nodes.
+  // We derive a nonce-tag from this to prevent replaying the same PoW across different messages.
+  const id = randomKey()
   let pow = null
   try {
-    if (!this.currentJob) {
-      const jobResponse = await this.requestJob();
-      if (jobResponse && jobResponse.job) {
-        this.setJob(jobResponse.job);
-      } else {
-        logPow('job_response_missing');
-      }
-    }
-
-    const required_shares = pow_config.SHARES;
-    const job = this.currentJob;
-    const shares = [];
-    const jobId = job && job.job_id;
-
-    if (job && shares.length < required_shares) {
-      const remaining = required_shares - shares.length;
-      const boost_hashes_per_second = pow_config.BOOST_HASHES_PER_SECOND;
-      const boost_time_budget_ms = pow_config.BOOST_TIME_BUDGET_MS;
-      const boostResult = await pow_calculate_shares(job, remaining, {
-        hashes_per_second: boost_hashes_per_second,
-        time_budget_ms: boost_time_budget_ms
-      });
-      if (boostResult && boostResult.shares) {
-        shares.push(...boostResult.shares);
-      }
-    }
-
-    if (job && shares.length > 0) {
-      pow = { job, shares };
-      logPow('pow_message_ready', { jobId: job.job_id, shares: shares.length });
+    pow = await this.challenge(id)
+    if (pow && pow.shares) {
+      logPow('pow_message_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
     }
   } catch (e) {
     console.log('PoW calculation failed:', e.message)
@@ -353,7 +398,6 @@ async message(payload, viewtag) {
   //Create a new derived view key pair for sending messages to nodes.
   const [signKey, pub] = await keychain.messageKeyPair()
   //We sign the payload and hash to avoid denial of service attacks.
-  const id = randomKey()
   const signature = await signMessage(payload + id, signKey)
   const data = {
     type: 'post',
@@ -367,6 +411,7 @@ async message(payload, viewtag) {
     push: true,
     viewtag,
     pow: {
+      version: 2,
       job: pow.job,
       shares: pow.shares
     }
@@ -1415,12 +1460,12 @@ const request_download = (download) => {
 const send_peer_message = (address, topic, message) => {
     const active = get_active_topic(topic)
     if (!active) {
-        errorMessage('Swarm is not active')
+        error_message('Swarm is not active')
         return
     }
     const con = active.connections.find(a => a.address === address)
     if (!con) {
-        errorMessage('Connection is closed')
+        error_message('Connection is closed')
         return
     }
     console.log("Sending peer message")
@@ -1457,7 +1502,7 @@ const share_file = (file) => {
 const start_upload = async (file, topic) => {
     const sendFile = localFiles.find(a => a.fileName === file.fileName && file.topic === topic && a.time === file.time)
     if (!sendFile) {
-        errorMessage('File not found')
+        error_message('File not found')
         return
     }
     return await upload_ready(sendFile, topic, file.address)
@@ -1529,7 +1574,9 @@ const check_file_message = async (data, topic, address, con, beam) => {
 
 }
 
-const errorMessage = (message) => {
+// Small helper to centralize error notifications to the UI process.
+// Avoids repeating event names and keeps call sites terse.
+const error_message = (message) => {
     Hugin.send('error-notify-message', message)
 }
 

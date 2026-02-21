@@ -2,8 +2,6 @@ const nacl = require('tweetnacl')
 const sanitizeHtml = require('sanitize-html')
 const { Crypto, Keys } = require('kryptokrona-utils')
 const { getNonceOffset } = require('hugin-utils')
-const { fork } = require('child_process')
-const path = require('path')
 const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
 //PoW defaults (tuned for desktop app)
@@ -24,95 +22,17 @@ const logPow = (...args) => {
     }
 }
 
-//Long-lived PoW worker process (keeps CPU work off main thread)
-let pow_worker = null
-let pow_worker_ready = false
-let pow_worker_requests = new Map()
-let pow_worker_cleanup_set = false
-
-//Start the worker once and keep it around
-function ensure_pow_worker() {
-    if (pow_worker && pow_worker_ready) return
-    const worker_path = path.join(__dirname, 'worker.cjs')
-    pow_worker = fork(worker_path, [], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] })
-    pow_worker_ready = true
-    if (!pow_worker_cleanup_set) {
-        pow_worker_cleanup_set = true
-        setup_pow_worker_cleanup()
-    }
-
-    pow_worker.on('message', (msg) => {
-        if (!msg || !msg.req_id) return
-        const pending = pow_worker_requests.get(msg.req_id)
-        if (!pending) return
-        pow_worker_requests.delete(msg.req_id)
-        if (msg.type === 'result') {
-            pending.resolve(msg.result)
-            return
-        }
-        const error = msg.error || 'pow_worker_error'
-        pending.reject(new Error(error))
-    })
-
-    pow_worker.on('exit', (code) => {
-        pow_worker_ready = false
-        for (const [, pending] of pow_worker_requests) {
-            pending.reject(new Error(`pow_worker_exit_${code}`))
-        }
-        pow_worker_requests.clear()
-    })
-}
-
-//Ensure the worker is killed when the app exits
-function setup_pow_worker_cleanup() {
-    const cleanup = () => {
-        if (pow_worker) {
-            try { pow_worker.kill() } catch (e) {}
-            pow_worker = null
-            pow_worker_ready = false
-        }
-    }
-    process.once('exit', cleanup)
-    process.once('SIGINT', cleanup)
-    process.once('SIGTERM', cleanup)
-    process.once('beforeExit', cleanup)
-}
-
-//Send request to worker and await response
-function pow_worker_call(type, payload, timeout_ms) {
-    ensure_pow_worker()
-    return new Promise((resolve, reject) => {
-        const req_id = `${Date.now()}-${Math.random()}`
-        let timer = null
-        if (timeout_ms && timeout_ms > 0) {
-            timer = setTimeout(() => {
-                pow_worker_requests.delete(req_id)
-                reject(new Error('pow_worker_timeout'))
-            }, timeout_ms)
-        }
-        pow_worker_requests.set(req_id, {
-            resolve: (result) => {
-                if (timer) clearTimeout(timer)
-                resolve(result)
-            },
-            reject: (error) => {
-                if (timer) clearTimeout(timer)
-                reject(error)
-            }
-        })
-        pow_worker.send({ type, req_id, payload })
-    })
-}
-
 //Basic hex guard for incoming job data
 function is_hex_string(value) {
     return typeof value === 'string' && /^[0-9a-f]+$/i.test(value)
 }
 
+
 //Sanitize PoW job from decentralized nodes
 function validate_pow_job(job) {
     if (!job || typeof job !== 'object') return { ok: false, reason: 'invalid_job' }
-    if (!is_hex_string(job.job_id)) return { ok: false, reason: 'invalid_job_id' }
+    // pool job_id is typically a numeric string; only enforce type/length
+    if (typeof job.job_id !== 'string' || job.job_id.length > 32) return { ok: false, reason: 'invalid_job_id' }
     if (!is_hex_string(job.blob)) return { ok: false, reason: 'invalid_blob' }
     if (job.blob.length % 2 !== 0) return { ok: false, reason: 'invalid_blob_len' }
     if ((job.blob.length / 2) > pow_config.MAX_BLOB_HEX_BYTES) return { ok: false, reason: 'blob_too_large' }
@@ -121,62 +41,6 @@ function validate_pow_job(job) {
     if (typeof offset !== 'number' || offset < 0) return { ok: false, reason: 'invalid_nonce_offset' }
     if ((offset + 4) * 2 > job.blob.length) return { ok: false, reason: 'nonce_out_of_bounds' }
     return { ok: true }
-}
-
-//Single-share PoW (worker-backed)
-async function pow_find_share(job, start_nonce, options = {}) {
-    const validation = validate_pow_job(job)
-    if (!validation.ok) {
-        throw new Error(validation.reason)
-    }
-    const hashes_per_second = parseInt(options.hashes_per_second || pow_config.HASHES_PER_SECOND, 10)
-    const requested_time_budget_ms = parseInt(options.time_budget_ms || pow_config.TIME_BUDGET_MS, 10)
-    const time_budget_ms = Math.min(requested_time_budget_ms, pow_config.MAX_JOB_TIME_MS)
-    const timeout_ms = time_budget_ms > 0 ? time_budget_ms + 1500 : pow_config.MAX_JOB_TIME_MS + 1500
-    return await pow_worker_call('find_share', {
-        job,
-        start_nonce,
-        options: {
-            hashes_per_second,
-            time_budget_ms,
-            max_job_time_ms: pow_config.MAX_JOB_TIME_MS
-        }
-    }, timeout_ms)
-}
-
-//Multi-share PoW (worker-backed)
-async function pow_calculate_shares(job, required_shares = 1, options = {}) {
-    const validation = validate_pow_job(job)
-    if (!validation.ok) {
-        throw new Error(validation.reason)
-    }
-    if (!job || !job.blob || !job.target) {
-        throw new Error('Invalid job data')
-    }
-
-    const hashes_per_second = parseInt(options.hashes_per_second || pow_config.HASHES_PER_SECOND, 10)
-    const requested_time_budget_ms = parseInt(options.time_budget_ms || pow_config.TIME_BUDGET_MS, 10)
-    const time_budget_ms = Math.min(requested_time_budget_ms, pow_config.MAX_JOB_TIME_MS)
-    logPow('pow_start', { jobId: job.job_id, requiredShares: required_shares })
-
-    const timeout_ms = time_budget_ms > 0
-        ? (time_budget_ms * required_shares) + 2000
-        : pow_config.MAX_JOB_TIME_MS + 2000
-    const result = await pow_worker_call('calculate_shares', {
-        job,
-        required_shares,
-        options: {
-            hashes_per_second,
-            time_budget_ms,
-            max_job_time_ms: pow_config.MAX_JOB_TIME_MS
-        }
-    }, timeout_ms)
-
-    if (!result || !Array.isArray(result.shares) || result.shares.length === 0) {
-        logPow('pow_share_not_found', { jobId: job.job_id })
-    }
-
-    return result || { job, shares: [] }
 }
 const {createReadStream} = require("fs");
 const MEDIA_TYPES = [
@@ -723,4 +587,4 @@ function toBrowbroserKey(rawCode) {
 
  
 
-module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sanitize_typing_message, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES, pow_config, logPow, pow_find_share, pow_calculate_shares, validate_pow_job}
+module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sanitize_typing_message, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES, pow_config, logPow, validate_pow_job}

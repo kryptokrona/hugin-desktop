@@ -87,7 +87,11 @@ onMount(async () => {
     })
 
     window.api.receive('pm-send-error', async (data) => {
-        let failed = messageList.find(a => a.msg === data.message)
+        const ts = data?.timestamp
+        let failed = ts
+            ? messageList.find(a => parseInt(a.timestamp) === parseInt(ts))
+            : messageList.find(a => a.msg === data.message)
+        if (!failed) return
         failed.error = true
         messageList = messageList
     })
@@ -212,18 +216,19 @@ const sendMsg = (e) => {
       offChain = true;
     }
 
+    const timestamp = Date.now()
     let myMessage = {
         chat: $user.activeChat.chat,
         msg: msg,
         sent: true,
-        timestamp: Date.now(),
+        timestamp,
         beam: beam
     }
     
     $keyboard.input = ''
 
     printMessage(myMessage)
-    window.api.sendMsg(msg, active_contact, offChain, false, beam)
+    window.api.sendMsg(msg, active_contact, offChain, false, beam, false, timestamp)
     //printMessage(myMessage)
     console.log('Message sent')
 }

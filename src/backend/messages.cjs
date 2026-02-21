@@ -18,6 +18,7 @@ const {
     getGroupReply,
     loadGroups,
     deleteMessage,
+    deletePrivateMessage,
     addRoom,
     addRoomKeys,
     printFeed,
@@ -218,8 +219,8 @@ ipcMain.handle('get-messages', async (data) => {
     return await getMessages()
 })
 
-ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam, call) => {
-    send_message(msg, receiver, off_chain, grp, beam, call)
+ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam, call, timestamp) => {
+    send_message(msg, receiver, off_chain, grp, beam, call, timestamp)
 })
 
 //Listens for event from frontend and saves contact and nickname.
@@ -586,7 +587,7 @@ async function fetch_hugin_messages() {
   }
 
 
-async function send_message(message, receiver, off_chain = false, group = false, beam_this = false, call = false) {
+async function send_message(message, receiver, off_chain = false, group = false, beam_this = false, call = false, forced_timestamp = false) {
     //Assert address length
     if (receiver.length !== 163) {
         return
@@ -601,6 +602,12 @@ async function send_message(message, receiver, off_chain = false, group = false,
     let has_history = await check_history(messageKey, address)
     
     let timestamp = Date.now()
+    if (forced_timestamp !== false && forced_timestamp !== undefined && forced_timestamp !== null) {
+        const parsed = parseInt(forced_timestamp, 10)
+        if (!Number.isNaN(parsed)) {
+            timestamp = parsed
+        }
+    }
     let payload_hex
     let seal = has_history ? false : true
     if (!off_chain) seal = true
@@ -609,17 +616,33 @@ async function send_message(message, receiver, off_chain = false, group = false,
     //Choose subwallet with message inputs
     const viewtag = await generate_push_view_tag(address, call)
 
+    const saveThisMessage = {
+        msg: message,
+        k: messageKey,
+        sent: true,
+        t: String(timestamp),
+        chat: address,
+    }
+
     if (!off_chain) {
-        const sent = await Nodes.message(payload_hex, viewtag)
-        if (typeof sent.success !== 'boolean') {
-            return
-        }
-        if (!sent.success) {
-            if (typeof sent.reason !== 'string') return
-            if (sent.reason.length > 40) return
-            console.log("Reason:", sent.reason)
-            Hugin.send('error-notify-message', sent.reason)
-            Hugin.send('success-notify-message', 'Please upgrade to Hugin +')
+        // Save immediately so the message isn't lost if the app closes mid-send.
+        await save_message(saveThisMessage, true)
+
+        // Send to node. If it fails, remove from DB
+        const sent = await Promise.race([
+            Nodes.message(payload_hex, viewtag),
+            sleep(200000).then(() => ({ success: false, reason: 'Timeout' }))
+        ])
+
+        if (typeof sent?.success !== 'boolean' || !sent.success) {
+            deletePrivateMessage(saveThisMessage.t)
+            Hugin.send('pm-send-error', { timestamp, message, chat: address, reason: sent?.reason || 'Failed' })
+            // Update conversation list after removal
+            Hugin.send('sent')
+            if (typeof sent?.reason === 'string' && sent.reason.length <= 40) {
+                console.log("Reason:", sent.reason)
+                Hugin.send('error-notify-message', sent.reason)
+            }
             return
         }
 
@@ -631,14 +654,6 @@ async function send_message(message, receiver, off_chain = false, group = false,
         if (beam_this) {
             send_swarm_message(sendMsg, address, true)
         }
-    }
-
-    let saveThisMessage = {
-        msg: message,
-        k: messageKey,
-        sent: true,
-        t: timestamp,
-        chat: address,
     }
     if (!has_history) {  
         known_keys.push(messageKey)
