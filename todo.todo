@@ -16,6 +16,8 @@ Bugs:
     ☐ Read status of messages not persisted (Add read (boolean) to db tables)
     ☐ "Name" is typing.. -indicator sometimes get stuck
     ☐ Sometimes messages appear in notifications, but are not visible in the app
+    ☐ Sometimes DM messages change sender in the view (i.e. when you send a message, it looks like it was written by other person)
+    ☐ New group messages do not appear instantly, but needs a rerender
 
 Feed:
     ✔ Add "x new message - click to load" button @done(25-04-15 13:25)
