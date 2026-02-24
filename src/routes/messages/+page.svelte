@@ -121,7 +121,7 @@ const isFile = (data) => {
 function sortMessages(arr) {
     return removeDuplicates(
     [ ...arr,...$messages.filter((x) => x.chat === $user.activeChat.chat)]
-    .sort((a, b) => a.timestamp - b.timestamp))
+    .sort((a, b) => b.timestamp - a.timestamp))
 
 }
 async function loadMessages() {
@@ -182,7 +182,7 @@ const handleAddChat = (e) => {
 }
 //Update messages live if users keep chat mounted
 const printMessage = (data) => {
-    messageList.push(data)
+    messageList.unshift(data)
     messageList = messageList
     scrollDown()
 }
@@ -334,7 +334,7 @@ const noLoad = () => {
 async function loadMoreMessages() {
     pageNum++
     const more = await window.api.getConversation($user.activeChat.chat, pageNum)
-    messageList = [...messageList, ...more]
+    messageList = sortMessages([...messageList, ...more])
     if (more.length === 0) {noLoad(); return}
 }
 
@@ -460,6 +460,7 @@ const handlePaste = async (e) => {
 {/if}
 
 
+<Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
 <main in:fade|global="{{ duration: 250 }}">
     <ChatList
         OpenRename="{(a) => openRename(a)}"
@@ -469,41 +470,40 @@ const handlePaste = async (e) => {
 
     <div class="right_side" out:fade|global="{{ duration: 100 }}">
         <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}" bind:this={windowChat} bind:clientHeight={windowHeight}>
-            <Dropzone noClick={true} disableDefaultStyles={true} on:dragover={()=> drag()} on:dragleave={()=> nodrag()} on:drop={dropFile}>
-            <div class="inner">
-                <div class="fade"></div>
-                {#if messageList.length > 99 && loadMore}
-                    <Button text={t('loadMore') || "Load more"} disabled={false} on:click={() => loadMoreMessages()} />
-                {/if}
-                {#each messageList as message, i (message.timestamp)}
-                {@const nextMessage = i < messageList.length - 1 ? messageList[i + 1] : null}
-                {@const currentSender = message.sent ? $user.myAddress : message.chat}
-                {@const nextSender = nextMessage ? (nextMessage.sent ? $user.myAddress : nextMessage.chat) : null}
-                {@const isGrouped = nextMessage && 
-                    currentSender === nextSender &&
-                    !nextMessage.file &&
-                    !message.file &&
-                    (nextMessage.timestamp - message.timestamp) < 300000}
-                <div animate:flip="{{duration: 100}}">
-                    <ChatBubble
-                        on:download="{() => download(message.msg)}"
-                        files="{message.file}"
-                        message="{message.msg}"
-                        ownMsg="{message.sent}"
-                        msgFrom="{message.chat}"
-                        timestamp="{message.timestamp}"
-                        beamMsg="{message.beam}"
-                        error="{message?.error}"
-                        grouped="{isGrouped}"
-                    />
-                </div>
-                {/each}
+            <div class="fade"></div>
+            {#each messageList as message, i (message.timestamp)}
+            {@const nextMessage = i < messageList.length - 1 ? messageList[i + 1] : null}
+            {@const currentSender = message.sent ? $user.myAddress : message.chat}
+            {@const nextSender = nextMessage ? (nextMessage.sent ? $user.myAddress : nextMessage.chat) : null}
+            {@const currentTs = parseInt(message.timestamp)}
+            {@const nextTs = nextMessage ? parseInt(nextMessage.timestamp) : null}
+            {@const isGrouped = nextMessage && 
+                currentSender === nextSender &&
+                !nextMessage.file &&
+                !message.file &&
+                (currentTs - nextTs) < 300000}
+            <div animate:flip="{{duration: 100}}">
+                <ChatBubble
+                    on:download="{() => download(message.msg)}"
+                    files="{message.file}"
+                    message="{message.msg}"
+                    ownMsg="{message.sent}"
+                    msgFrom="{message.chat}"
+                    timestamp="{message.timestamp}"
+                    beamMsg="{message.beam}"
+                    error="{message?.error}"
+                    grouped="{isGrouped}"
+                />
             </div>
-            </Dropzone>
+            {/each}
+            {#if messageList.length > 99 && loadMore}
+                <Button text={t('loadMore') || "Load more"} disabled={false} on:click={() => loadMoreMessages()} />
+            {/if}
         </div>
         <ChatInput onMessage="{sendMsg}" onTyping={(e) => typing(e)} />
     </div>
 </main>
+</Dropzone>
 
 <style lang="scss">
 main {

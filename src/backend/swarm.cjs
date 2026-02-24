@@ -66,6 +66,7 @@ class NodeConnection extends EventEmitter {
     this.jobGeneration = 0
     this.currentPrevId = null
     this.previousPrevId = null
+    this.twoBackPrevId = null
     this.jobPollTimer = null
   }
 
@@ -225,9 +226,16 @@ async reconnect() {
 sync(data) {
     if (!this.connection) return []
   return new Promise((resolve, reject) => {
-    data.id = data.timestamp
-    this.requests.set(data.id, { resolve, reject });
+    // If the node response is dropped (stream parsing), don't hang the background sync loop forever.
+    const id = (data && data.timestamp !== undefined && data.timestamp !== null) ? data.timestamp : Date.now()
+    data.id = id
+    this.requests.set(id, { resolve, reject });
     this.connection.write(JSON.stringify(data));
+    setTimeout(() => {
+      if (!this.requests.has(id)) return
+      this.requests.delete(id)
+      resolve([])
+    }, 2000)
   });
 }
 
@@ -274,6 +282,7 @@ set_job(job) {
   if (this.currentJob && this.currentJob.job_id === job.job_id) return;
   const prevId = extractPrevIdFromBlob(job.blob)
   if (prevId) {
+    this.twoBackPrevId = this.previousPrevId
     this.previousPrevId = this.currentPrevId
     this.currentPrevId = prevId
   }
@@ -343,7 +352,7 @@ async challenge(message_hash) {
   const freshness_policy = (job) => {
     const prevId = extractPrevIdFromBlob(job && job.blob)
     if (!prevId || !this.currentPrevId) return false
-    return prevId === this.currentPrevId || prevId === this.previousPrevId
+    return prevId === this.currentPrevId || prevId === this.previousPrevId || prevId === this.twoBackPrevId
   }
 
   return await message_challenge({
@@ -360,70 +369,100 @@ async challenge(message_hash) {
 }
 
 async message(payload, viewtag) {
-  return new Promise( async (resolve, reject) => {
-  const timestamp = Date.now()
-  this.requests.set(timestamp, { resolve, reject })
-  
-  if (this.connection === null) {
-    resolve({success: false, reason: 'No connection'})
-    return
-  }
+  if (!this.connection) return { success: false, reason: 'No connection' }
 
-  // Message id is part of the payload verified by other nodes.
-  // We derive a nonce-tag from this to prevent replaying the same PoW across different messages.
-  const id = randomKey()
-  let pow = null
-  try {
-    pow = await this.challenge(id)
-    if (pow && pow.shares) {
-      logPow('pow_message_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
-    }
-  } catch (e) {
-    console.log('PoW calculation failed:', e.message)
-    logPow('pow_error', { message: e && e.message });
-  }
+  const request_id = Date.now()
 
-  if (!pow || !pow.shares || pow.shares.length === 0) {
-    console.log('PoW required')
-    console.log('pow', pow)
-    if (pow) {
-      console.log('shares', pow.shares)
-      console.log('job', pow.job)
-    }
-    logPow('pow_message_blocked', { reason: 'no_shares', jobId: (pow && pow.job && pow.job.job_id) || null });
-    resolve({success: false, reason: 'PoW required'})
-    return
-  }
-  
+  // Message hash is part of the payload verified by other nodes and used for nonce-tagging.
+  // Keep it stable across a single retry so we don't create duplicates.
+  const message_hash = randomKey()
+
   //Create a new derived view key pair for sending messages to nodes.
   const [signKey, pub] = await keychain.messageKeyPair()
-  //We sign the payload and hash to avoid denial of service attacks.
-  const signature = await signMessage(payload + id, signKey)
-  const data = {
-    type: 'post',
-    message: {
+  const signature = await signMessage(payload + message_hash, signKey)
+
+  const baseMessage = {
     cipher: payload,
     pub,
-    timestamp,
-    hash: id,
+    timestamp: request_id,
+    hash: message_hash,
     signature,
-    id: timestamp,
+    id: request_id,
     push: true,
-    viewtag,
-    pow: {
-      version: 2,
-      job: pow.job,
-      shares: pow.shares
-    }
-    }
-
+    viewtag
   }
 
-  console.log("Send message to node ***** ---->")
+  const send_post = async (postData) => {
+    if (!this.connection) {
+      this.reconnect()
+      await sleep(5000)
+    }
+    return await new Promise((resolve, reject) => {
+      this.requests.set(request_id, { resolve, reject })
+      try {
+        this.connection.write(JSON.stringify(postData))
+      } catch (e) {
+        this.requests.delete(request_id)
+        resolve({ success: false, reason: 'write_failed' })
+        return
+      }
+      setTimeout(() => {
+        if (!this.requests.has(request_id)) return
+        this.requests.delete(request_id)
+        resolve({ success: false, reason: 'timeout' })
+      }, 60000)
+    })
+  }
 
-  this.connection.write(JSON.stringify(data))
-  
+  const compute_pow = async () => {
+    let pow = null
+    try {
+      pow = await this.challenge(message_hash)
+      if (pow && pow.shares) {
+        logPow('pow_message_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
+      }
+    } catch (e) {
+      console.log('PoW calculation failed:', e.message)
+      logPow('pow_error', { message: e && e.message });
+    }
+    return pow
+  }
+
+  const build_post = (pow) => ({
+    type: 'post',
+    message: {
+      ...baseMessage,
+      pow: {
+        version: 2,
+        job: pow.job,
+        shares: pow.shares
+      }
+    }
   })
+
+  // Attempt 1
+  let pow = await compute_pow()
+  if (!pow || !pow.shares || pow.shares.length === 0) {
+    logPow('pow_message_blocked', { reason: 'no_shares', jobId: (pow && pow.job && pow.job.job_id) || null });
+    return { success: false, reason: 'PoW required' }
+  }
+
+  let res = await send_post(build_post(pow))
+  if (res && res.success === false && res.reason === 'pool_reject') {
+    // Pool likely moved to a new job between compute and submit. Refresh job and retry once.
+    logPow('pool_reject_retry', { id: request_id, jobId: pow && pow.job && pow.job.job_id })
+    this.currentJob = null
+    const jobResponse = await this.request_job()
+    if (jobResponse && jobResponse.job) {
+      this.set_job(jobResponse.job)
+    }
+    pow = await compute_pow()
+    if (!pow || !pow.shares || pow.shares.length === 0) {
+      return { success: false, reason: 'PoW required' }
+    }
+    res = await send_post(build_post(pow))
+  }
+  return res
 }
 }
 const Nodes = new NodeConnection()
@@ -568,7 +607,7 @@ const connection_closed = (conn, topic, error = false) => {
     Hugin.send("close-voice-channel-with-peer", user.address)
     Hugin.send("peer-disconnected", {address: user.address, topic})
     const connection = active.connections.find((a) => a.connection === conn);
-    const removedPeer = active.peers.filter((a) => a !== connection.publicKey)
+    const removedPeer = active.peers.filter((a) => a !== connection?.publicKey)
     active.peers = removedPeer
     const still_active = active.connections.filter(a => a.connection !== conn)
     console.log("Connection closed")
@@ -1276,7 +1315,6 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
         connection_closed(connection, topic)
         return
     }
-    console.log("Check", check)
     if (check) return
 
     const active = get_active_topic(topic)
