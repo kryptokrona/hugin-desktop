@@ -67,7 +67,7 @@ export const misc = writable({
     focus: false,
     welcomeAddress: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
     syncImages: [],
-    autoSelectNode: false
+    autoSelectNode: localStorage.getItem('autoSelectNode') === 'true'
 })
 
 export const HuginNode = writable({

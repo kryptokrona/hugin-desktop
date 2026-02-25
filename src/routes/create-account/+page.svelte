@@ -62,6 +62,7 @@
             return
         }
         $misc.autoSelectNode = true
+        window.localStorage.setItem('autoSelectNode', 'true')
         const event = {node: node}
         
         console.log("Event node!", event)
