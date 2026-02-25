@@ -150,10 +150,10 @@
 
     const loginSuccess = async () => {
         console.log('login success')
-        await sleep(5000)
-        if ($notify.que) await sleep(4000)
         $user.started = true
-        await goto('/dashboard')
+        if (window.location.pathname === '/' || window.location.pathname === '/login') {
+            await goto('/dashboard')
+        }
         $user.loggedIn = true
     }
 

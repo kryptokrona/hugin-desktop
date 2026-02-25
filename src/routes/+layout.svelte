@@ -39,6 +39,8 @@
     import { goto } from '$app/navigation'
     import RoomNotification from '$lib/components/popups/RoomNotification.svelte'
     import { setLanguage } from '$lib/utils/translation.js'
+    import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
+    import { layoutState } from '$lib/stores/layout-state.js';
   /** @type {{children?: import('svelte').Snippet}} */
     let { children } = $props();
     let ready = $state(false)
@@ -711,6 +713,19 @@
 <TrafficLights/>
 <Toaster/>
 
+{#if $layoutState.showNodeSelector}
+    <div class="backdrop">
+        <NodeSelector
+            goBack={() => ($layoutState.showNodeSelector = false)}
+            onConnect={(e) => {
+                $layoutState.showNodeSelector = false;
+                $misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) };
+                window.api.switchNode(e.node);
+            }}
+        />
+    </div>
+{/if}
+
 {#if ready}
     <StoreFunctions/>
     {#if startAnimation}
@@ -798,6 +813,19 @@ main {
         top: 20px;
         right: 20px;
         height: 100%;
+    }
+
+    .backdrop {
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--backgound-color, rgba(0, 0, 0, 0.5));
+        z-index: 9999;
     }
 
 </style>

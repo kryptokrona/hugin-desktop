@@ -309,8 +309,7 @@ export const randomNode = async (ssl = true) => {
   }
 
   console.log('No nodes online..');
-  const fallback = nodeList[Math.floor(Math.random() * nodeList.length)];
-  return `${fallback.url}:${fallback.port}`;
+  return null;
 };
 
 fetchNodes()

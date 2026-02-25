@@ -58,6 +58,7 @@
         loading = true
         const node = await randomNode()
         if (!node) {
+            loading = false
             window.api.errorMessage(t('autoNodeDidNotLoad') || 'Auto node did not load')
             return
         }

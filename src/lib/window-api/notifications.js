@@ -6,6 +6,8 @@ let success = new Audio('/audio/success.mp3')
 import {sounds, misc} from '$lib/stores/user.js'
 import { get } from 'svelte/store';
 import { randomNode } from '$lib/stores/nodes.js';
+import { t } from '$lib/utils/translation.js';
+import NodeErrorToast from '$lib/components/custom-toasts/NodeErrorToast.svelte';
 
 if (browser) {
 
@@ -18,11 +20,6 @@ if (browser) {
     })
 
     window.api.receive('node-not-ok', async () => {
-        toast.error('Could not connect to node', {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
-
         const currentMisc = get(misc);
         if (currentMisc.autoSelectNode) {
             const newNode = await randomNode();
@@ -32,20 +29,19 @@ if (browser) {
                     return m;
                 });
                 window.api.switchNode(newNode);
-                toast.success(`Auto-connected to ${newNode}`, {
+                return;
+            } else {
+                toast.error(NodeErrorToast, {
                     position: 'top-right',
                     style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
                 });
-                return;
             }
+        } else {
+            toast.error(NodeErrorToast, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            });
         }
-
-        layoutState.update(current => {
-            return {
-                ...current,
-                showNodeSelector: true,
-            }
-        })
     })
 
     window.api.receive('sent_tx', async (data) => {

@@ -87,25 +87,18 @@
                 $misc.node = newNode;
                 changeNode();
                 window.api.switchNode(newNode);
-                if (window.api.successMessage) {
-                    window.api.successMessage(t('reconnectedToNewNode') || `Auto-connected to ${newNode}`);
-                }
             } else {
                 connecting = false;
+                if (window.api.errorMessage) {
+                   window.api.errorMessage(t('noNodesFound') || 'No nodes found');
+                }
             }
         }
     };
 </script>
 
 <div class="settings-container">
-{#if $layoutState.showNodeSelector}
-    <div class="backdrop">
-        <NodeSelector
-            goBack={() => ($layoutState.showNodeSelector = false)}
-            onConnect={(e) => connectToNode(e)}
-        />
-    </div>
-{/if}
+
 
 <!-- Message Node -->
 <section class="card">

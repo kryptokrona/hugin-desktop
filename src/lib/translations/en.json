@@ -343,5 +343,8 @@
   "inputMode": "Input mode",
   "private": "Private",
   "mnemonicSeed": "Mnemonic seed",
-  "autoSelectBestNode": "Select node automatically"
+  "autoSelectBestNode": "Select node automatically",
+  "noNodesFound": "No XKR nodes available",
+  "clickToSelectNode": "Click to select node manually",
+  "couldNotConnectToNode": "Could not connect to node"
 }
