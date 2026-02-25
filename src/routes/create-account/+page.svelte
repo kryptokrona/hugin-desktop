@@ -7,7 +7,7 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
-    import { getBestNode } from '$lib/stores/nodes'
+    import { randomNode } from '$lib/stores/nodes'
     let mnemonic = $state('')
     let blockHeight = $state()
     let password = $state('')
@@ -56,7 +56,7 @@
 
     const autoNode = async () => {
         loading = true
-        const node = await getBestNode()
+        const node = await randomNode()
         if (!node) {
             window.api.errorMessage(t('autoNodeDidNotLoad') || 'Auto node did not load')
             return

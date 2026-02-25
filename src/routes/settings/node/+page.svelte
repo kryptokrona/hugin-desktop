@@ -166,6 +166,10 @@
     </div>
 
     <div class="info-grid">
+        <div class="info-item" style="grid-column: span 2; display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+            <span class="info-label">{t('autoSelectBestNode') || 'Auto-select best node on disconnect'}</span>
+            <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--accent-color, #4CAF50); cursor: pointer;" bind:checked={$misc.autoSelectNode} />
+        </div>
         <div class="info-item">
             <span class="info-label">{t('status') || 'Status'}</span>
             <div class="status-indicator {synced ? 'connected' : 'syncing'}">

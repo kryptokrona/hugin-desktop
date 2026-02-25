@@ -3,8 +3,9 @@ import toast from "svelte-5-french-toast";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { checkWait, sleep } from "$lib/utils/utils";
 let success = new Audio('/audio/success.mp3')
-import {sounds} from '$lib/stores/user.js'
+import {sounds, misc} from '$lib/stores/user.js'
 import { get } from 'svelte/store';
+import { randomNode } from '$lib/stores/nodes.js';
 
 if (browser) {
 
@@ -16,11 +17,29 @@ if (browser) {
         })
     })
 
-    window.api.receive('node-not-ok', () => {
+    window.api.receive('node-not-ok', async () => {
         toast.error('Could not connect to node', {
             position: 'top-right',
             style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
         })
+
+        const currentMisc = get(misc);
+        if (currentMisc.autoSelectNode) {
+            const newNode = await randomNode();
+            if (newNode) {
+                misc.update(m => {
+                    m.node = newNode;
+                    return m;
+                });
+                window.api.switchNode(newNode);
+                toast.success(`Auto-connected to ${newNode}`, {
+                    position: 'top-right',
+                    style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+                });
+                return;
+            }
+        }
+
         layoutState.update(current => {
             return {
                 ...current,

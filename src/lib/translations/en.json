@@ -342,5 +342,6 @@
   "pressKeyToSet": "Press the key you want to use for push to talk and then hit save.",
   "inputMode": "Input mode",
   "private": "Private",
-  "mnemonicSeed": "Mnemonic seed"
+  "mnemonicSeed": "Mnemonic seed",
+  "autoSelectBestNode": "Select node automatically"
 }

@@ -66,7 +66,8 @@ export const misc = writable({
     deleteAfter: undefined,
     focus: false,
     welcomeAddress: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
-    syncImages: []
+    syncImages: [],
+    autoSelectNode: false
 })
 
 export const HuginNode = writable({
