@@ -3,7 +3,7 @@
 	import { t } from '$lib/utils/translation.js';
 
 import {fade, fly} from 'svelte/transition'
-import {onDestroy, onMount} from 'svelte'
+import {onDestroy, onMount, tick} from 'svelte'
 import {messages} from '$lib/stores/messages.js'
 import ChatBubble from '$lib/components/chat/ChatBubble.svelte'
 import ChatInput from '$lib/components/chat/ChatInput.svelte'
@@ -188,8 +188,12 @@ const printMessage = (data) => {
 }
 
 
-const scrollDown = () => {
-   windowChat.scrollTop = 0;
+const scrollDown = async () => {
+    await tick()
+    if (!windowChat) return
+    const dir = getComputedStyle(windowChat).flexDirection
+    const isReversed = dir === 'column-reverse'
+    windowChat.scrollTop = isReversed ? 0 : windowChat.scrollHeight
 }
 
 run(() => {

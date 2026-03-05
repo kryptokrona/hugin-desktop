@@ -174,8 +174,7 @@ onDestroy(() => {
     window.api.removeAllListeners('sent_room')
     window.api.removeAllListeners('set-channels')
     window.api.removeAllListeners('history-update')
-    window.api.removeAllListeners('roomMsg')
-    
+    window.api.removeAllListeners('roomMsg') 
 })
 
 // window.api.receive('sent_group', (data) => {

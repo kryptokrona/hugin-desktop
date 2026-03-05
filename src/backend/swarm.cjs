@@ -1,6 +1,6 @@
 const HyperSwarm = require("hyperswarm-hugin");
 
-const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, hash, sanitize_typing_message, logPow, validate_pow_job} = require('./utils.cjs');
+const {sleep, sanitize_join_swarm_data, sanitize_voice_status_data, sanitize_file_message, sanitize_group_message, check_hash, toHex, randomKey, check_if_media, sanitize_feed_message, sanitize_typing_message, logPow, validate_pow_job} = require('./utils.cjs');
 const {saveGroupMsg, getChannels, loadRoomKeys, removeRoom, printGroup, groupMessageExists, getLatestRoomHashes, roomMessageExists, getGroupReply, saveMsg, saveFeedMessage, printFeed, feedMessageExists} = require("./database.cjs")
 const { app,
     ipcMain
@@ -13,7 +13,7 @@ const { add_local_file, start_download, add_remote_file, send_file, update_remot
 const { Hugin } = require("./account.cjs");
 const { Storage } = require("./storage.cjs");
 const { extractPrevIdFromBlob } = require('hugin-utils')
-const { message_challenge, create_pow_scheduler, create_rate_policy } = require('hugin-utils/challenge')
+const { create_pow_scheduler, create_rate_policy } = require('hugin-utils/challenge')
 const { create_node_worker_backend } = require('hugin-utils/challenge/node_worker')
 
 
@@ -38,12 +38,15 @@ let downloading = []
 let uploading = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 
-const POW_NONCE_TAG_BITS = 4
+const POW_MAX_JOB_TIME_MS = 90000
+const POW_NONCE_TAG_BITS = 0
+const POW_NONCE_TAG_VALUE = 0
+const POW_REQUIRED_SHARES = 2
 const pow_scheduler = create_pow_scheduler()
 const pow_rate_policy = create_rate_policy({
-  total_hashes_per_second_cap: 1500,
-  phase1_hashes_per_second_cap: 950,
-  phase2_hashes_per_second_cap: 250,
+  total_hashes_per_second_cap: 1000,
+  phase1_hashes_per_second_cap: 1000,
+  phase2_hashes_per_second_cap: 1000,
   phase1_ms: 2 * 60 * 1000,
   slice_ms_phase1: 10000,
   slice_ms_phase2: 10000
@@ -181,13 +184,6 @@ async listen() {
           return
         }
 
-        // Handle share result from node
-        if (data.type === 'share_result') {
-          resolve(data);
-          this.requests.delete(data.id);
-          return
-        }
-
         resolve(data.response);
         this.requests.delete(data.id);
      }
@@ -249,18 +245,107 @@ parse(d) {
 }
 
 async register(data) {
+  try {
+    if (this.connection === null) {
+      await this.reconnect();
+    }
+    if (!this.connection) return { success: false, reason: 'No connection' };
 
-  if (this.connection === null) {
-    await this.reconnect();
+    const request_id = Date.now()
+    const message_hash = randomKey()
+    const max_attempts = 3
+
+    const should_retry = (res) => {
+      if (!res) return true
+      if (res.success === true) return false
+      return !!res.reason
+    }
+
+    const compute_pow = async () => {
+      let pow = null
+      try {
+        pow = await this.challenge(message_hash)
+        if (pow && pow.shares) {
+          logPow('pow_register_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
+        }
+      } catch (e) {
+        logPow('pow_error', { message: e && e.message });
+      }
+      return pow
+    }
+
+    const send_register = async (payload) => {
+      if (!this.connection) {
+        this.reconnect()
+        await sleep(5000)
+      }
+      return await new Promise((resolve, reject) => {
+        this.requests.set(request_id, { resolve, reject })
+        try {
+          this.connection.write(JSON.stringify(payload))
+        } catch (e) {
+          this.requests.delete(request_id)
+          resolve({ success: false, reason: 'write_failed' })
+          return
+        }
+        setTimeout(() => {
+          if (!this.requests.has(request_id)) return
+          this.requests.delete(request_id)
+          resolve({ success: false, reason: 'timeout' })
+        }, 60000)
+      })
+    }
+
+    const build_register = (pow) => ({
+      register: true,
+      data,
+      timestamp: request_id,
+      id: request_id,
+      hash: message_hash,
+      pow: {
+        version: 2,
+        job: pow.job,
+        shares: pow.shares,
+        auth: pow.auth
+      }
+    })
+
+    let last_res = { success: false, reason: 'unknown' }
+    for (let attempt = 1; attempt <= max_attempts; attempt++) {
+      let pow = await compute_pow()
+      if (!pow || !pow.shares || pow.shares.length === 0) {
+        logPow('pow_register_retry', { attempt, reason: 'no_shares' })
+        this.currentJob = null
+        const jobResponse = await this.request_job()
+        if (jobResponse && jobResponse.job) this.set_job(jobResponse.job)
+        last_res = { success: false, reason: 'PoW required' }
+        continue
+      }
+
+      const auth = this.build_pow_auth(message_hash, request_id, pow.shares, String(data || ''))
+      if (!auth) {
+        logPow('pow_register_retry', { attempt, reason: 'pow_auth_failed' })
+        await sleep(100)
+        continue
+      }
+      const res = await send_register(build_register({ ...pow, auth }))
+      if (res && res.success === true) return res
+
+      last_res = res || { success: false, reason: 'unknown' }
+      if (!should_retry(last_res)) break
+
+      logPow('pow_register_retry', { attempt, reason: last_res.reason, jobId: pow && pow.job && pow.job.job_id })
+      this.currentJob = null
+      const jobResponse = await this.request_job()
+      if (jobResponse && jobResponse.job) this.set_job(jobResponse.job)
+      await sleep(100)
+    }
+
+    return last_res
+  } catch (e) {
+    logPow('pow_register_error', { message: e && e.message })
+    return { success: false, reason: 'register_exception' }
   }
-  
-  const payload = {
-    register: true,
-    data
-  }
-  if (!this.connection) return;
-  this.connection.write(JSON.stringify(payload));
-  
 }
 
 // Poll the node for updated mining jobs.
@@ -313,156 +398,225 @@ async request_job() {
   });
 }
 
-// Check if hash meets difficulty target
-// Submit shares to node
-async submit_shares(shares) {
-  if (!this.connection || !shares || shares.length === 0) return null;
-  return new Promise((resolve, reject) => {
-    const id = randomKey();
-    this.requests.set(id, { resolve, reject });
-    this.connection.write(JSON.stringify({
-      type: 'share',
-      shares,
-      id
-    }));
-    logPow('share_submit', { id, count: shares.length });
-    setTimeout(() => {
-      if (this.requests.has(id)) {
-        this.requests.delete(id);
-        logPow('share_submit_timeout', { id });
-        resolve({ status: 'timeout' });
-      }
-    }, 30000);
-  });
+build_pow_auth(message_hash, timestamp, shares, context = '') {
+  if (!Array.isArray(shares) || !shares.length) return null
+  const share = shares[0]
+  const [, oneTimeKeys] = get_new_peer_keys(randomKey())
+  const signer = oneTimeKeys && oneTimeKeys.get ? oneTimeKeys.get() : null
+  if (!signer || !signer.sign || !signer.publicKey) return null
+  const payload = `powsig:v2:${String(message_hash || '')}:${timestamp}:${String(share.job_id || '')}:${String(share.nonce || '').toLowerCase()}:${String(share.result || '').toLowerCase()}:${String(context || '')}`
+  const sig = signer.sign(Buffer.from(payload))
+  if (!sig) return null
+  return {
+    pub: Buffer.from(signer.publicKey).toString('hex'),
+    sig: Buffer.from(sig).toString('hex'),
+    nonce: String(share.nonce || '').toLowerCase()
+  }
 }
 
 // Calculate shares for a message challenge.
 async challenge(message_hash) {
   if (!this.connection) return null
-  const get_job = async () => {
-    if (this.currentJob) return this.currentJob
-    const jobResponse = await this.request_job();
-    if (jobResponse && jobResponse.job) {
-      this.set_job(jobResponse.job);
-      return this.currentJob
+  const release = pow_scheduler.acquire()
+  try {
+    const start = Date.now()
+    const shares = []
+    const allShares = []
+    const selected_nonces = new Set()
+    const all_nonces = new Set()
+
+    while (Date.now() - start < POW_MAX_JOB_TIME_MS && shares.length < POW_REQUIRED_SHARES) {
+      let job = this.currentJob
+      if (!job) {
+        const jobResponse = await this.request_job()
+        if (jobResponse && jobResponse.job) {
+          this.set_job(jobResponse.job)
+          job = this.currentJob
+        }
+      }
+      if (!job) {
+        await sleep(250)
+        continue
+      }
+
+      const prevId = extractPrevIdFromBlob(job && job.blob)
+      const fresh = !!prevId && !!this.currentPrevId && (
+        prevId === this.currentPrevId ||
+        prevId === this.previousPrevId ||
+        prevId === this.twoBackPrevId
+      )
+      if (!fresh) {
+        logPow('pow_stale_local', { jobId: job.job_id })
+        const refreshed = await this.request_job()
+        if (refreshed && refreshed.job) this.set_job(refreshed.job)
+        await sleep(250)
+        continue
+      }
+
+      const elapsed_ms = Date.now() - start
+      const { hashes_per_second, time_budget_ms, in_phase1 } = pow_rate_policy({
+        active_tasks: pow_scheduler.active_count(),
+        elapsed_ms
+      })
+
+      let share = null
+      try {
+        share = await pow_backend.find_share({
+          job,
+          hashes_per_second,
+          time_budget_ms,
+          // Hard-disable nonce tag filtering: mine full nonce space.
+          nonce_tag_bits: POW_NONCE_TAG_BITS,
+          nonce_tag_value: POW_NONCE_TAG_VALUE,
+          log: (event, data) => logPow(event, data)
+        })
+      } catch (e) {
+        if (e && e.message === 'pow_worker_timeout') {
+          logPow('pow_worker_timeout_retry', { jobId: job.job_id, sliceMs: time_budget_ms, hps: hashes_per_second })
+          await sleep(in_phase1 ? 100 : 300)
+          continue
+        }
+        throw e
+      }
+
+      if (share && typeof share.nonce === 'string' && typeof share.result === 'string') {
+        const normalized = {
+          job_id: String(share.job_id),
+          nonce: share.nonce.toLowerCase(),
+          result: share.result.toLowerCase()
+        }
+        if (!all_nonces.has(normalized.nonce)) {
+          all_nonces.add(normalized.nonce)
+          allShares.push(normalized)
+        }
+        if (!selected_nonces.has(normalized.nonce)) {
+          selected_nonces.add(normalized.nonce)
+          shares.push(normalized)
+        }
+      }
+
+      if (shares.length >= POW_REQUIRED_SHARES) {
+        return { job, shares, allShares }
+      }
+
+      await sleep(in_phase1 ? 50 : 250)
     }
+
     return null
+  } finally {
+    release()
   }
-
-  const freshness_policy = (job) => {
-    const prevId = extractPrevIdFromBlob(job && job.blob)
-    if (!prevId || !this.currentPrevId) return false
-    return prevId === this.currentPrevId || prevId === this.previousPrevId || prevId === this.twoBackPrevId
-  }
-
-  return await message_challenge({
-    get_job,
-    backend: pow_backend,
-    message_hash,
-    required_shares: 1,
-    nonce_tag_bits: POW_NONCE_TAG_BITS,
-    scheduler: pow_scheduler,
-    rate_policy: pow_rate_policy,
-    freshness_policy,
-    log: (event, data) => logPow(event, data)
-  })
 }
 
 async message(payload, viewtag) {
-  if (!this.connection) return { success: false, reason: 'No connection' }
+  try {
+    if (!this.connection) return { success: false, reason: 'No connection' }
 
-  const request_id = Date.now()
+    const request_id = Date.now()
+    const max_attempts = 3
 
-  // Message hash is part of the payload verified by other nodes and used for nonce-tagging.
-  // Keep it stable across a single retry so we don't create duplicates.
-  const message_hash = randomKey()
+    // Keep hash stable across retries to avoid duplicates.
+    const message_hash = randomKey()
 
-  //Create a new derived view key pair for sending messages to nodes.
-  const [signKey, pub] = await keychain.messageKeyPair()
-  const signature = await signMessage(payload + message_hash, signKey)
-
-  const baseMessage = {
-    cipher: payload,
-    pub,
-    timestamp: request_id,
-    hash: message_hash,
-    signature,
-    id: request_id,
-    push: true,
-    viewtag
-  }
-
-  const send_post = async (postData) => {
-    if (!this.connection) {
-      this.reconnect()
-      await sleep(5000)
+    const baseMessage = {
+      cipher: payload,
+      timestamp: request_id,
+      hash: message_hash,
+      id: request_id,
+      push: true,
+      viewtag
     }
-    return await new Promise((resolve, reject) => {
-      this.requests.set(request_id, { resolve, reject })
+
+    const should_retry = (res) => {
+      if (!res) return true
+      if (res.success === true) return false
+      return !!res.reason
+    }
+
+    const send_post = async (postData) => {
+      if (!this.connection) {
+        this.reconnect()
+        await sleep(5000)
+      }
+      return await new Promise((resolve, reject) => {
+        this.requests.set(request_id, { resolve, reject })
+        try {
+          this.connection.write(JSON.stringify(postData))
+        } catch (e) {
+          this.requests.delete(request_id)
+          resolve({ success: false, reason: 'write_failed' })
+          return
+        }
+        setTimeout(() => {
+          if (!this.requests.has(request_id)) return
+          this.requests.delete(request_id)
+          resolve({ success: false, reason: 'timeout' })
+        }, 60000)
+      })
+    }
+
+    const compute_pow = async () => {
+      let pow = null
       try {
-        this.connection.write(JSON.stringify(postData))
+        pow = await this.challenge(message_hash)
+        if (pow && pow.shares) {
+          logPow('pow_message_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
+        }
       } catch (e) {
-        this.requests.delete(request_id)
-        resolve({ success: false, reason: 'write_failed' })
-        return
+        logPow('pow_error', { message: e && e.message });
       }
-      setTimeout(() => {
-        if (!this.requests.has(request_id)) return
-        this.requests.delete(request_id)
-        resolve({ success: false, reason: 'timeout' })
-      }, 60000)
+      return pow
+    }
+
+    const build_post = (pow) => ({
+      type: 'post',
+      message: {
+        ...baseMessage,
+        pow: {
+          version: 2,
+          job: pow.job,
+          shares: pow.shares,
+          auth: pow.auth
+        }
+      }
     })
-  }
 
-  const compute_pow = async () => {
-    let pow = null
-    try {
-      pow = await this.challenge(message_hash)
-      if (pow && pow.shares) {
-        logPow('pow_message_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
+    let last_res = { success: false, reason: 'unknown' }
+    for (let attempt = 1; attempt <= max_attempts; attempt++) {
+      let pow = await compute_pow()
+      if (!pow || !pow.shares || pow.shares.length === 0) {
+        logPow('pow_message_retry', { attempt, reason: 'no_shares' })
+        this.currentJob = null
+        const jobResponse = await this.request_job()
+        if (jobResponse && jobResponse.job) this.set_job(jobResponse.job)
+        last_res = { success: false, reason: 'PoW required' }
+        continue
       }
-    } catch (e) {
-      console.log('PoW calculation failed:', e.message)
-      logPow('pow_error', { message: e && e.message });
-    }
-    return pow
-  }
 
-  const build_post = (pow) => ({
-    type: 'post',
-    message: {
-      ...baseMessage,
-      pow: {
-        version: 2,
-        job: pow.job,
-        shares: pow.shares
+      const authContext = String(baseMessage.cipher || '')
+      const auth = this.build_pow_auth(message_hash, request_id, pow.shares, authContext)
+      if (!auth) {
+        logPow('pow_message_retry', { attempt, reason: 'pow_auth_failed' })
+        await sleep(100)
+        continue
       }
-    }
-  })
+      const res = await send_post(build_post({ ...pow, auth }))
+      if (res && res.success === true) return res
 
-  // Attempt 1
-  let pow = await compute_pow()
-  if (!pow || !pow.shares || pow.shares.length === 0) {
-    logPow('pow_message_blocked', { reason: 'no_shares', jobId: (pow && pow.job && pow.job.job_id) || null });
-    return { success: false, reason: 'PoW required' }
-  }
+      last_res = res || { success: false, reason: 'unknown' }
+      if (!should_retry(last_res)) break
 
-  let res = await send_post(build_post(pow))
-  if (res && res.success === false && res.reason === 'pool_reject') {
-    // Pool likely moved to a new job between compute and submit. Refresh job and retry once.
-    logPow('pool_reject_retry', { id: request_id, jobId: pow && pow.job && pow.job.job_id })
-    this.currentJob = null
-    const jobResponse = await this.request_job()
-    if (jobResponse && jobResponse.job) {
-      this.set_job(jobResponse.job)
+      logPow('pow_message_retry', { attempt, reason: last_res.reason, jobId: pow && pow.job && pow.job.job_id })
+      this.currentJob = null
+      const jobResponse = await this.request_job()
+      if (jobResponse && jobResponse.job) this.set_job(jobResponse.job)
+      await sleep(100)
     }
-    pow = await compute_pow()
-    if (!pow || !pow.shares || pow.shares.length === 0) {
-      return { success: false, reason: 'PoW required' }
-    }
-    res = await send_post(build_post(pow))
+    return last_res
+  } catch (e) {
+    logPow('pow_message_error', { message: e && e.message })
+    return { success: false, reason: 'message_exception' }
   }
-  return res
 }
 }
 const Nodes = new NodeConnection()
@@ -1018,6 +1172,7 @@ const send_feed_history = async (address, topic) => {
 }
 
 const save_feed_history = async (messages) => {
+  if (!Array.isArray(messages)) return
   for (const data of messages) {
     const message = sanitize_feed_message(data)
     if (!message) continue
