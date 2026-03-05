@@ -724,7 +724,7 @@ async function send_room_message(message) {
     send_swarm_message(swarmMessage, message.g)
     const save = sanitize_group_message(message, true)
     save_group_message(save, message.hash, message.t, false, true, false, true)
-    send_room_message_push(message)
+    await send_room_message_push(message)
 }
 
 async function generate_room_view_tag(room) {
@@ -783,7 +783,11 @@ async function send_room_message_push(message) {
     // Convert json to hex
     let payload_hex = toHex(JSON.stringify(payload_box));
 
-    Nodes.register(payload_hex)
+    const reg = await Nodes.register(payload_hex)
+    if (!reg || reg.success !== true) {
+      const reason = reg && typeof reg.reason === 'string' ? reg.reason : 'push_registration_failed'
+      console.log('❌ Push registration failed:', reason)
+    }
 
 
     } catch (e) {
