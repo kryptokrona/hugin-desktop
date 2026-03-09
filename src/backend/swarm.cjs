@@ -135,6 +135,7 @@ async listen() {
         if (typeof data.address !== 'string') return
         if (data.address.length !== 99) return
         this.address = data.address
+        Hugin.send('hugin-node-address', data.address)
         return
     }
 

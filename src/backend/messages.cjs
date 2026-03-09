@@ -307,6 +307,7 @@ async function key_derivation_hash(chat) {
 const start_message_syncer = async () => {
     //Load knownTxsIds to backgroundSyncMessages on startup
     peer_dms()
+    console.log("Hugin.huginNode", Hugin.huginNode)
     Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub)
     await sleep(5000)
     known_keys = Hugin.known_keys

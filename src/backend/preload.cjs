@@ -147,6 +147,9 @@ const WINDOW_API = {
     getNodes: async () => {
         ipcRenderer.send('get-nodes')
     },
+    getHuginNode: async () => {
+        return await ipcRenderer.invoke('get-hugin-node')
+    },
     switchNode: (node) => {
         ipcRenderer.send('switch-node', node)
     },

@@ -122,6 +122,11 @@
         new_message_sound = new Audio('/audio/message.mp3')
         new_message_sound.volume = 0.3 // 30% volume
 
+        const savedNode = await window.api.getHuginNode()
+        if (savedNode) {
+            $HuginNode.inputAddress = savedNode.address
+            $HuginNode.public = savedNode.pub
+        }
 
     })
 
@@ -478,6 +483,11 @@
         $files.push(file)
         $files = $files
     })
+
+	window.api.receive('hugin-node-address', (addr) => {
+		console.log('Hugin node address', addr)
+		$HuginNode.address = addr;
+	});
 
     window.api.receive('remote-file-added', (data, update)  => {
         console.log('Remote file added', data)

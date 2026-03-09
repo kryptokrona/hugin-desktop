@@ -133,7 +133,6 @@
   "connecting": "Connecting",
   "syncingBlocks": "Syncing blocks",
   "addressFormatNotCorrect": "Address format is not correct.",
-  "notSet": "Not set",
   "messageNode": "Message Node",
   "publicNode": "Public Node",
   "public": "Public",
@@ -321,5 +320,7 @@
   "audio": "Audio",
   "microphone": "Microphone",
   "speakers": "Speakers",
-  "show": "Show"
+  "show": "Show",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
 }

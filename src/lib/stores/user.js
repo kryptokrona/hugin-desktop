@@ -1,5 +1,5 @@
-import {derived, writable} from 'svelte/store'
-import {get_avatar} from '$lib/utils/hugin-utils.js'
+import { derived, writable } from 'svelte/store'
+import { get_avatar } from '$lib/utils/hugin-utils.js'
 
 //Default values
 export const user = writable({
@@ -23,7 +23,7 @@ export const user = writable({
 
 export const boards = writable({
     addBoard: false,
-    replyTo: {reply: false},
+    replyTo: { reply: false },
     thisBoard: "",
     boardsArray: ['Home'],
     newBoards: [],
@@ -31,8 +31,8 @@ export const boards = writable({
 
 export const groups = writable({
     addGroup: false,
-    replyTo: {reply: false},
-    thisGroup: {key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false},
+    replyTo: { reply: false },
+    thisGroup: { key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false },
     groupArray: [],
     blockList: [],
     activeHugins: [],
@@ -44,7 +44,7 @@ export const groups = writable({
 
 export const rtc_groups = writable({
     addGroup: false,
-    replyTo: {reply: false},
+    replyTo: { reply: false },
     unread: []
 })
 
@@ -71,8 +71,9 @@ export const misc = writable({
 
 export const HuginNode = writable({
     connected: false,
-    public: false,
-    address: ''
+    public: true,
+    address: '',
+    inputAddress: ''
 })
 
 export const webRTC = writable({
@@ -128,7 +129,7 @@ export const swarm = writable({
     voice_channel: new Map(),
     call: [],
     newChannel: false,
-    activeChannel: {name: ""},
+    activeChannel: { name: "" },
     activeChannelMessages: [],
     audio: true,
     showVideoGrid: false,
@@ -141,8 +142,8 @@ export const swarm = writable({
 
 export const rooms = writable({
     addRoom: false,
-    replyTo: {reply: false},
-    thisRoom: {key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false},
+    replyTo: { reply: false },
+    thisRoom: { key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false },
     roomArray: [],
     blockList: [],
     activeHugins: [],
@@ -154,27 +155,27 @@ export const rooms = writable({
     avatars: [],
     params: null,
     typingUsers: []
- })
+})
 
- export const pushToTalk = writable({
+export const pushToTalk = writable({
     key: null,
     on: false
- })
+})
 
- export const sounds = writable({
+export const sounds = writable({
     on: true,
- })
+})
 
- export const files = writable([])
+export const files = writable([])
 
- export const theme = writable(localStorage.getItem("themes") ?? 'dark');
+export const theme = writable(localStorage.getItem("themes") ?? 'dark');
 
- export const keyboard = writable({
+export const keyboard = writable({
     room: new Map(),
     messages: new Map(),
     feed: [],
     input: ''
- })
+})
 
 export const userAvatar = derived(user, ($user) => {
     if ($user.huginAddress.length > 15) {

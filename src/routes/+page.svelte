@@ -1,306 +1,336 @@
 <script>
-    import {fade} from 'svelte/transition'
-    import FillButton from '$lib/components/buttons/FillButton.svelte'
-    import {files, groups, misc, notify, pushToTalk, rooms, sounds, user} from '$lib/stores/user.js'
-    import {voiceActivation} from '$lib/stores/mediasettings.js'
-    import {onMount, setContext} from 'svelte'
-    import {goto} from '$app/navigation'
-    import {Moon} from "svelte-loading-spinners";
-    import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
-    import { sleep } from '$lib/utils/utils'
+	import { fade } from 'svelte/transition';
+	import FillButton from '$lib/components/buttons/FillButton.svelte';
+	import {
+		files,
+		groups,
+		misc,
+		notify,
+		pushToTalk,
+		rooms,
+		sounds,
+		user,
+		HuginNode
+	} from '$lib/stores/user.js';
+	import { voiceActivation } from '$lib/stores/mediasettings.js';
+	import { onMount, setContext } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { Moon } from 'svelte-loading-spinners';
+	import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
+	import { sleep } from '$lib/utils/utils';
 
-    let wallet = $state()
-    let nodeFailed = $state()
+	let wallet = $state();
+	let nodeFailed = $state();
 
-    onMount( async () => {
-        window.api.send('app', true)
-        window.api.receive('version', version => {
-            $misc.version = version
-        })
-      window.api.receive('os-arch', data => {
-        console.log(`You're running ${data.os} on ${data.arch}`)
-        $misc.os = data.os
-        $misc.arch = data.arch
-      })
+	onMount(async () => {
+		window.api.send('app', true);
+		window.api.receive('version', (version) => {
+			$misc.version = version;
+		});
+		window.api.receive('os-arch', (data) => {
+			console.log(`You're running ${data.os} on ${data.arch}`);
+			$misc.os = data.os;
+			$misc.arch = data.arch;
+		});
 
-        $user.username = window.localStorage.getItem('userName')
-        if (!$user.username) $user.username = 'Anon'
-        window.api.send('set-nickname', $user.username)
+		$user.username = window.localStorage.getItem('userName');
+		if (!$user.username) $user.username = 'Anon';
+		window.api.send('set-nickname', $user.username);
 
-        window.api.receive('wallet-exist', async (data, walletName, node) => {
-            console.log('node? wallet exist', node)
-            $misc.node = node
-            wallet = data
-            if (wallet) {
-                await goto('/login')
-            }
-            if (walletName === undefined) return
-            console.log('wallet exists', walletName)
-            $user.thisWallet = walletName[0]
-        })
+		window.api.receive('wallet-exist', async (data, walletName, node) => {
+			console.log('node? wallet exist', node);
+			$misc.node = node;
+			wallet = data;
+			if (wallet) {
+				await goto('/login');
+			}
+			if (walletName === undefined) return;
+			console.log('wallet exists', walletName);
+			$user.thisWallet = walletName[0];
+		});
+	});
 
-    })
+	window.api.receive('node-not-ok', () => {
+		setTimeout(() => {
+			nodeFailed = true;
+		}, 500);
+		$misc.loading = false;
+	});
 
-    window.api.receive('node-not-ok', () => {
-        setTimeout(() => {
-            nodeFailed = true
-        }, 500)
-        $misc.loading = false
-    })
+	window.api.receive('notification-room-click', ({ roomKey }) => {
+		console.log('Notification clicked fe');
+		if (!roomKey) return;
 
-    window.api.receive('notification-room-click', ({ roomKey }) => {
-      console.log('Notification clicked fe')
-    if (!roomKey) return;
+		let url = `/rooms?room=${roomKey}`;
 
-    let url = `/rooms?room=${roomKey}`;
+		goto(url);
+	});
 
-    goto(url);
-  });
+	window.api.receive(
+		'wallet-started',
+		async ([
+			node,
+			my_groups,
+			block_list,
+			my_contacts,
+			deleteAfter,
+			path,
+			avatar,
+			idle,
+			notifications,
+			banned,
+			fileList,
+			avatars,
+			syncImages,
+			ptt,
+			sound,
+			voiceAct
+		]) => {
+			$user.contacts = my_contacts;
+			//Set chosen node from last startup in store
+			$misc.node = { node: node.node, port: parseInt(node.port) };
+			$groups.blockList = block_list;
+			$groups.groupArray = my_groups;
+			$misc.deleteAfter = deleteAfter;
+			$user.downloadPath = path;
+			$user.idleLimit = idle;
+			$notify.off = notifications;
+			$rooms.roomArray = await window.api.getRooms();
+			$rooms.banned = banned;
+			$files = fileList;
+			$misc.syncImages = syncImages;
+			$pushToTalk = ptt;
+			$sounds.on = sound;
+			$voiceActivation = voiceAct;
 
-    window.api.receive('wallet-started', async ([node, my_groups, block_list, my_contacts, deleteAfter, path, avatar, idle, notifications, banned, fileList, avatars, syncImages, ptt, sound, voiceAct]) => {
-        $user.contacts = my_contacts
-        //Set chosen node from last startup in store
-        $misc.node = {node: node.node, port: parseInt(node.port)}
-        $groups.blockList = block_list
-        $groups.groupArray = my_groups
-        $misc.deleteAfter = deleteAfter
-        $user.downloadPath = path
-        $user.idleLimit = idle
-        $notify.off = notifications
-        $rooms.roomArray = await window.api.getRooms()
-        $rooms.banned = banned
-        $files = fileList
-        $misc.syncImages = syncImages
-        $pushToTalk = ptt
-        $sounds.on = sound
-        $voiceActivation = voiceAct
+			const roomKeys = new Set($rooms.roomArray.map((r) => r.key));
+			const [unreadPm, unreadGroups, unreadFeed] = await Promise.all([
+				window.api.getUnreadMessages(),
+				window.api.getUnreadGroupMessages(),
+				window.api.getUnreadFeedMessages()
+			]);
+			const unread = [
+				...unreadPm.map((m) => {
+					const contact = my_contacts.find((c) => c.address === m.chat);
+					return {
+						type: 'message',
+						chat: m.chat,
+						msg: m.msg,
+						message: m.msg,
+						timestamp: m.timestamp,
+						name: contact?.name
+					};
+				}),
+				...unreadGroups.map((m) => ({
+					type: roomKeys.has(m.grp) ? 'room' : 'group',
+					group: m.grp,
+					grp: m.grp,
+					message: m.message,
+					msg: m.message,
+					time: m.time,
+					timestamp: m.time,
+					hash: m.hash,
+					name: m.name,
+					address: m.address,
+					sent: m.sent,
+					reply: m.reply,
+					tip: m.tip
+				})),
+				...unreadFeed.map((m) => ({
+					type: 'feed',
+					message: m.message,
+					msg: m.message,
+					timestamp: m.timestamp,
+					time: m.timestamp,
+					nickname: m.nickname,
+					name: m.nickname,
+					hash: m.hash,
+					address: m.address,
+					reply: m.reply
+				}))
+			];
+			$notify.unread = unread;
 
-        const roomKeys = new Set($rooms.roomArray.map((r) => r.key))
-        const [unreadPm, unreadGroups, unreadFeed] = await Promise.all([
-            window.api.getUnreadMessages(),
-            window.api.getUnreadGroupMessages(),
-            window.api.getUnreadFeedMessages()
-        ])
-        const unread = [
-            ...unreadPm.map((m) => {
-                const contact = my_contacts.find((c) => c.address === m.chat)
-                return { type: 'message', chat: m.chat, msg: m.msg, message: m.msg, timestamp: m.timestamp, name: contact?.name }
-            }),
-            ...unreadGroups.map((m) => ({
-                type: roomKeys.has(m.grp) ? 'room' : 'group',
-                group: m.grp,
-                grp: m.grp,
-                message: m.message,
-                msg: m.message,
-                time: m.time,
-                timestamp: m.time,
-                hash: m.hash,
-                name: m.name,
-                address: m.address,
-                sent: m.sent,
-                reply: m.reply,
-                tip: m.tip
-            })),
-            ...unreadFeed.map((m) => ({
-                type: 'feed',
-                message: m.message,
-                msg: m.message,
-                timestamp: m.timestamp,
-                time: m.timestamp,
-                nickname: m.nickname,
-                name: m.nickname,
-                hash: m.hash,
-                address: m.address,
-                reply: m.reply
-            }))
-        ]
-        $notify.unread = unread
+			setAvatars(avatars);
+			if (avatar.length) setCustomAvatar(avatar);
+			loginSuccess();
+		}
+	);
 
-        setAvatars(avatars)
-        if (avatar.length) setCustomAvatar(avatar)
-        loginSuccess()
-    })
+	const setAvatars = (avatars) => {
+		const update = [];
+		for (const a of avatars) {
+			console.log('avarat', a);
+			const blob = new Blob([a.avatar]);
+			const imageUrl = URL.createObjectURL(blob);
+			const set = { avatar: imageUrl, address: a.address };
+			update.push(set);
+		}
+		$rooms.avatars = update;
+	};
 
-    const setAvatars = (avatars) => {
-      const update = []
-      for (const a of avatars) {
-        console.log("avarat", a)
-        const blob = new Blob( [ a.avatar ]);
-        const imageUrl = URL.createObjectURL( blob );
-        const set = {avatar: imageUrl, address: a.address}
-        update.push(set)
-      }
-      $rooms.avatars = update
-    }
+	const setCustomAvatar = async (buf) => {
+		console.log('Set avatar', buf);
+		const blob = new Blob([buf]);
+		const imageUrl = URL.createObjectURL(blob);
+		$user.customAvatar = imageUrl;
+		$rooms.avatars.push({ address: $user.myAddress, avatar: imageUrl });
+		$rooms.avatars = $rooms.avatars;
+	};
 
-    const setCustomAvatar = async (buf) => {
-      console.log("Set avatar", buf)
-      const blob = new Blob( [ buf ]);
-      const imageUrl = URL.createObjectURL( blob );
-      $user.customAvatar = imageUrl
-      $rooms.avatars.push({address: $user.myAddress, avatar: imageUrl})
-      $rooms.avatars = $rooms.avatars
-    }
+	//Sets our own address in svelte store
+	window.api.receive('addr', async (huginAddr) => {
+		$user.huginAddress = huginAddr;
+		$user.myAddress = huginAddr.substring(0, 99);
+	});
 
-    //Sets our own address in svelte store
-    window.api.receive('addr', async (huginAddr) => {
-        $user.huginAddress = huginAddr
-        $user.myAddress = huginAddr.substring(0,99)
-    })
+	const loginSuccess = async () => {
+		console.log('login success');
+		await sleep(5000);
+		if ($notify.que) await sleep(4000);
+		$user.started = true;
+		await goto('/dashboard');
+		$user.loggedIn = true;
+	};
 
-    const loginSuccess = async () => {
-        console.log('login success')
-        await sleep(5000)
-        if ($notify.que) await sleep(4000)
-        $user.started = true
-        await goto('/dashboard')
-        $user.loggedIn = true
-    }
+	const goTo = (restore) => {
+		$user.restore = !!restore;
+		goto('/create-account');
+	};
 
-    const goTo = restore => {
-        $user.restore = !!restore
-        goto('/create-account')
-    }
-
-    const setNode = (e) => {
-        if(e.node) {
-            $misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) }
-            nodeFailed = false
-        }
-    }
-
+	const setNode = (e) => {
+		if (e.node) {
+			$misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) };
+			nodeFailed = false;
+		}
+	};
 </script>
 
 <main>
-<!-- {#if nodeFailed}
+	<!-- {#if nodeFailed}
     <div class="backdrop">
         <NodeSelector onConnect={(e) => setNode(e)} goBack={() => nodeFailed = false}/>
     </div>
 {/if} -->
 
-{#if wallet == false}
-
-    <div in:fade|global class="wrapper">
-        <div class="init">
-            <h1>Hugin</h1>
-            <div>
-                <FillButton disabled="{false}" text="Create Account" on:click="{() => goTo(false)}"/>
-                <FillButton disabled="{false}" text="Restore Account" on:click="{() => goTo(true)}"/>
-            </div>
-            <p style="color: white; opacity: 30%">v{$misc.version}</p>
-        </div>
-    </div>
-
-{:else if wallet == undefined}
-
-    <div class="wrapper">
-        <Moon color="#ffffff" size="30" unit="px"/>
-    </div>
-
-{/if}
+	{#if wallet == false}
+		<div in:fade|global class="wrapper">
+			<div class="init">
+				<h1>Hugin</h1>
+				<div>
+					<FillButton disabled={false} text="Create Account" on:click={() => goTo(false)} />
+					<FillButton disabled={false} text="Restore Account" on:click={() => goTo(true)} />
+				</div>
+				<p style="color: white; opacity: 30%">v{$misc.version}</p>
+			</div>
+		</div>
+	{:else if wallet == undefined}
+		<div class="wrapper">
+			<Moon color="#ffffff" size="30" unit="px" />
+		</div>
+	{/if}
 </main>
+
 <style lang="scss">
+	main {
+		display: flex;
+		height: 100vh;
+		overflow: hidden;
+		z-index: 3;
+		width: 100%;
+	}
+	.wrapper {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+		width: 100%;
+		color: var(--text-color);
+	}
 
-  main {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-      z-index: 3;
-      width: 100%;
-  }
-  .wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100%;
-    color: var(--text-color);
-  }
+	.login-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		justify-content: center;
+		align-items: center;
+	}
 
-  .login-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    justify-content: center;
-    align-items: center;
-  }
+	.init {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		gap: 2rem;
 
-  .init {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
+		div {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+		}
+	}
 
-    div {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-  }
+	.field {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0 6px 0 10px;
+		background-color: var(--card-background);
+		border: 1px solid var(--card-border);
+		border-radius: 8px;
+		transition: 100ms ease-in-out;
 
-  .field {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 6px 0 10px;
-    background-color: var(--card-background);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    transition: 100ms ease-in-out;
+		&:focus-within {
+			border: 1px solid #404040;
+		}
 
-    &:focus-within {
-      border: 1px solid #404040;
-    }
+		input {
+			margin: 0 auto;
+			width: 200px;
+			height: 48px;
+			transition: 200ms ease-in-out;
+			color: var(--text-color);
+			background-color: transparent;
+			border: none;
+			font-size: 1.1rem;
 
-    input {
-      margin: 0 auto;
-      width: 200px;
-      height: 48px;
-      transition: 200ms ease-in-out;
-      color: var(--text-color);
-      background-color: transparent;
-      border: none;
-      font-size: 1.1rem;
+			&:focus {
+				outline: none;
+			}
+		}
 
-      &:focus {
-        outline: none;
-      }
-    }
+		button {
+			border: none;
+			background-color: #252525;
+			height: 36px;
+			width: 48px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: 100ms ease-in-out;
 
-    button {
-      border: none;
-      background-color: #252525;
-      height: 36px;
-      width: 48px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: 100ms ease-in-out;
+			&:hover {
+				background: #303030;
+			}
+		}
+	}
 
-      &:hover {
-        background: #303030;
-      }
-    }
-  }
+	.enableLogin {
+		background-color: #3fd782 !important;
+	}
 
-  .enableLogin {
-    background-color: #3fd782 !important;
-  }
-
-  .backdrop {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--backgound-color);
-    z-index: 103;
-  }
-
+	.backdrop {
+		position: fixed;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		background-color: var(--backgound-color);
+		z-index: 103;
+	}
 </style>
