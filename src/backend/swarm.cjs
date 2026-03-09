@@ -261,7 +261,6 @@ async register(data) {
       if (res.success === true) return false
       return !!res.reason
     }
-
     const compute_pow = async () => {
       let pow = null
       try {
@@ -312,6 +311,8 @@ async register(data) {
     })
 
     let last_res = { success: false, reason: 'unknown' }
+    let stale_share_retries = 0
+    const max_stale_share_retries = 3
     for (let attempt = 1; attempt <= max_attempts; attempt++) {
       let pow = await compute_pow()
       if (!pow || !pow.shares || pow.shares.length === 0) {
@@ -335,11 +336,23 @@ async register(data) {
       last_res = res || { success: false, reason: 'unknown' }
       if (!should_retry(last_res)) break
 
+      const recalc = this.should_recalc_share(last_res)
+      if (recalc && stale_share_retries < max_stale_share_retries) {
+        stale_share_retries++
+        logPow('pow_register_recalc', {
+          attempt,
+          stale_share_retries,
+          reason: last_res.reason,
+          jobId: pow && pow.job && pow.job.job_id
+        })
+        attempt--
+      }
+
       logPow('pow_register_retry', { attempt, reason: last_res.reason, jobId: pow && pow.job && pow.job.job_id })
       this.currentJob = null
       const jobResponse = await this.request_job()
       if (jobResponse && jobResponse.job) this.set_job(jobResponse.job)
-      await sleep(100)
+      await sleep(recalc ? 25 : 100)
     }
 
     return last_res
@@ -413,6 +426,22 @@ build_pow_auth(message_hash, timestamp, shares, context = '') {
     sig: Buffer.from(sig).toString('hex'),
     nonce: String(share.nonce || '').toLowerCase()
   }
+}
+
+should_recalc_share(res) {
+  if (!res || typeof res !== 'object') return false
+  const reason = typeof res.reason === 'string' ? res.reason.toLowerCase() : ''
+  if (reason.includes('pool_reject') || reason.includes('invalid_share') || reason.includes('stale') || reason.includes('job')) {
+    return true
+  }
+  if (!Array.isArray(res.rejects)) return false
+  return res.rejects.some((entry) => {
+    if (!entry) return false
+    const txt = typeof entry === 'string'
+      ? entry.toLowerCase()
+      : JSON.stringify(entry).toLowerCase()
+    return txt.includes('invalid') || txt.includes('stale') || txt.includes('low') || txt.includes('job')
+  })
 }
 
 // Calculate shares for a message challenge.
@@ -533,7 +562,6 @@ async message(payload, viewtag) {
       if (res.success === true) return false
       return !!res.reason
     }
-
     const send_post = async (postData) => {
       if (!this.connection) {
         this.reconnect()
@@ -583,6 +611,8 @@ async message(payload, viewtag) {
     })
 
     let last_res = { success: false, reason: 'unknown' }
+    let stale_share_retries = 0
+    const max_stale_share_retries = 3
     for (let attempt = 1; attempt <= max_attempts; attempt++) {
       let pow = await compute_pow()
       if (!pow || !pow.shares || pow.shares.length === 0) {
@@ -607,11 +637,23 @@ async message(payload, viewtag) {
       last_res = res || { success: false, reason: 'unknown' }
       if (!should_retry(last_res)) break
 
+      const recalc = this.should_recalc_share(last_res)
+      if (recalc && stale_share_retries < max_stale_share_retries) {
+        stale_share_retries++
+        logPow('pow_message_recalc', {
+          attempt,
+          stale_share_retries,
+          reason: last_res.reason,
+          jobId: pow && pow.job && pow.job.job_id
+        })
+        attempt--
+      }
+
       logPow('pow_message_retry', { attempt, reason: last_res.reason, jobId: pow && pow.job && pow.job.job_id })
       this.currentJob = null
       const jobResponse = await this.request_job()
       if (jobResponse && jobResponse.job) this.set_job(jobResponse.job)
-      await sleep(100)
+      await sleep(recalc ? 25 : 100)
     }
     return last_res
   } catch (e) {
