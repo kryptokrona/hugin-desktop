@@ -773,7 +773,7 @@ async function send_room_message_push(message) {
     let box = new naclSealed.sealedbox(
       payload_json_decoded,
       nonceFromTimestamp(timestamp),
-      hexToUint('6e49ab1a59019b2c22eb27efc5664be419c9d3d58016319cd0915e0494de4071'),
+      hexToUint('6e18d19b3c94f7c2c4da5dc6f17305f8ab6da33f8beb18e63a0f048d2a21c345'),
     );
 
     //Box object
