@@ -27,6 +27,7 @@ const DOWNLOAD_REQUEST = 'download-request'
 const REQUEST_FEED = 'request-feed';
 const SEND_FEED_HISTORY = 'send-feed-history';
 
+
 const ONE_DAY = 24 * 60 * 60 * 1000
 
 const EventEmitter = require('bare-events')
@@ -118,8 +119,12 @@ async listen() {
     this.connection = conn
     Hugin.send('hugin-node-connection', true)
     this.start_job_polling()
-    conn.on('error', () => {
-    console.log("Got error connection signal")
+    conn.on('error', (error) => {
+    if (error?.code === 'ETIMEDOUT') {
+        console.log('Node connection timed out, reconnecting')
+    } else {
+        console.log("Got error connection signal", error)
+    }
         conn.end();
         conn.destroy();
         this.connection = null
@@ -211,11 +216,15 @@ async change(address, pub) {
 }
 
 async reconnect() {
+  let i = 0
   while(this.connection === null) {
-    Hugin.send('hugin-node-connection', false)
-    console.log("Reconnecting to node...")
+    if (i % 20 === 0) {
+      console.log(`Reconnecting to node... (attempt ${i})`)
+      Hugin.send('hugin-node-connection', false)
+    }
     this.discovery.refresh({client: true, server: false})
     await sleep(10000)
+    i++
   }
   return
 }
@@ -705,8 +714,12 @@ const create_swarm = async (data, beam, chat) => {
     Hugin.send('set-channels')
 
     swarm.on('connection', (connection, information) => {
-        new_connection(connection, topicHash, dht_keys, information, beam)
-
+        try {
+            new_connection(connection, topicHash, dht_keys, information, beam)
+        } catch (error) {
+            console.log('Failed to initialize swarm connection', error)
+            connection_closed(connection, topicHash, true)
+        }
     })
 
     process.once('SIGINT', function () {
@@ -771,11 +784,18 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
         peer, 
         request: false, knownHashes: [],
         publicKey: peer.publicKey.toString('hex')})
-    send_joined_message(topic, dht_keys, connection)
+    send_joined_message(topic, dht_keys, connection).catch((error) => {
+        console.log('Failed to send joined message', error)
+        connection_closed(connection, topic, true)
+    })
     //checkIfOnline(hash)
     connection.on('data', async data => {
-        incoming_message(data, topic, connection, peer, beam)
-
+        try {
+            await incoming_message(data, topic, connection, peer, beam)
+        } catch (error) {
+            console.log('Incoming message handler failed', error)
+            connection_closed(connection, topic, true)
+        }
     })
 
     connection.on('close', () => {
@@ -783,8 +803,12 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
         connection_closed(connection, topic)
     })
 
-    connection.on('error', () => {
-        console.log("Got error connection signal")
+    connection.on('error', (error) => {
+        if (error.code === 'ETIMEDOUT') {
+            console.log('Connection timed out, closing peer connection')
+        } else {
+            console.log("Got error connection signal", error)
+        }
         connection_closed(connection, topic, true)
     })
 
