@@ -538,7 +538,7 @@ async challenge(message_hash) {
   }
 }
 
-async message(payload, viewtag) {
+async message(payload, viewtag, kind = 'dm', hash = randomKey()) {
   try {
     if (!this.connection) return { success: false, reason: 'No connection' }
 
@@ -546,7 +546,7 @@ async message(payload, viewtag) {
     const max_attempts = 3
 
     // Keep hash stable across retries to avoid duplicates.
-    const message_hash = randomKey()
+    const message_hash = hash
 
     const baseMessage = {
       cipher: payload,
@@ -554,7 +554,8 @@ async message(payload, viewtag) {
       hash: message_hash,
       id: request_id,
       push: true,
-      viewtag
+      viewtag,
+      kind
     }
 
     const should_retry = (res) => {
@@ -624,7 +625,7 @@ async message(payload, viewtag) {
         continue
       }
 
-      const authContext = String(baseMessage.cipher || '')
+      const authContext = kind ? `${kind}:${String(baseMessage.cipher || '')}` : String(baseMessage.cipher || '')
       const auth = this.build_pow_auth(message_hash, request_id, pow.shares, authContext)
       if (!auth) {
         logPow('pow_message_retry', { attempt, reason: 'pow_auth_failed' })

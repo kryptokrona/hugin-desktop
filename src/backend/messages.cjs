@@ -631,7 +631,7 @@ async function send_message(message, receiver, off_chain = false, group = false,
 
         // Send to node. If it fails, remove from DB
         const sent = await Promise.race([
-            Nodes.message(payload_hex, viewtag),
+            Nodes.message(payload_hex, viewtag, call ? 'call' : 'dm'),
             sleep(200000).then(() => ({ success: false, reason: 'Timeout' }))
         ])
 
@@ -784,9 +784,14 @@ async function send_room_message_push(message) {
     // Convert json to hex
     let payload_hex = toHex(JSON.stringify(payload_box));
 
-    const reg = await Nodes.register(payload_hex)
-    if (!reg || reg.success !== true) {
-      const reason = reg && typeof reg.reason === 'string' ? reg.reason : 'push_registration_failed'
+    const sent = await Nodes.message(
+      payload_hex,
+      await generate_room_view_tag(message.g),
+      'room',
+      message.hash,
+    )
+    if (!sent || sent.success !== true) {
+      const reason = sent && typeof sent.reason === 'string' ? sent.reason : 'push_registration_failed'
       console.log('❌ Push registration failed:', reason)
     }
 
