@@ -60,6 +60,8 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
     
      database.prepare(`DELETE FROM groupmessages WHERE time < ?`).run(removeAfter)
     }
+
+    markMessagesReadByChat(welcomeAddress)
 }
 
 
@@ -261,7 +263,7 @@ const groupChannelsMessagesTable = () => {
 
 const welcomeMessage = () => {
     const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp, read)
-                          VALUES (?, ?, ?, ?, 0)`
+                          VALUES (?, ?, ?, ?, 1)`
     return new Promise(
         (resolve, reject) => {
             database.prepare(huginMessage).run(
@@ -272,6 +274,7 @@ const welcomeMessage = () => {
         () => {
             resolve()
         }
+        
     )
 }
 
@@ -771,7 +774,7 @@ const getConversations = async () => {
     //Remove Hugin welcome message and contact if new contact was added.
     if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
         removeContact(welcomeAddress)
-       // removeMessages(welcomeAddress)
+        removeMessages(welcomeAddress)
     }
     let row
     const myConversations = []
