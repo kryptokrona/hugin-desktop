@@ -70,6 +70,8 @@ let block_list = []
 let incoming_messages = []
 let incoming_pm_que = []
 let incoming_group_que = []
+let background_sync_runs = 0
+const MAX_BACKGROUND_SYNC_RUNS = 10
 //IPC MAIN LISTENERS
 //MISC
 
@@ -353,6 +355,12 @@ const start_message_syncer = async () => {
 }
 
 async function background_sync_messages(checkedTxs = false) {
+    if (!checkedTxs) {
+        if (background_sync_runs >= MAX_BACKGROUND_SYNC_RUNS) return
+        background_sync_runs++
+    } else {
+        background_sync_runs = 0
+    }
     console.log('Background syncing...')
     const incoming = incoming_messages.length > 0 ? true : false
     //First start, set known pool txs
@@ -1101,4 +1109,4 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
     await sync_group_history(timeframe, settings.recommended_api, settings.key)
 })
 
-module.exports = {check_history, save_message, start_message_syncer, send_message}
+module.exports = {check_history, save_message, start_message_syncer, send_message, decrypt_hugin_messages}

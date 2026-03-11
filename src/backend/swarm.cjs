@@ -30,7 +30,8 @@ const SEND_FEED_HISTORY = 'send-feed-history';
 
 const ONE_DAY = 24 * 60 * 60 * 1000
 
-const EventEmitter = require('bare-events')
+const EventEmitter = require('bare-events');
+const { decrypt_hugin_messages } = require("./messages.cjs");
 
 let localFiles = []
 let remoteFiles = []
@@ -135,6 +136,11 @@ async listen() {
     const string = d.toString()
     const data = this.parse(string)
     if (!data) return
+    if (data.type === 'new-message' && Array.isArray(data.messages)) {
+      console.log("New messages from node", data.messages.length)
+      decrypt_hugin_messages(data.messages)
+      return
+    }
     
     if ('address' in data) {
         if (typeof data.address !== 'string') return
