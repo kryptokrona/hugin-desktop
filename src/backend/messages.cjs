@@ -8,6 +8,7 @@ const {
     saveThisContact, 
     getConversation, 
     getConversations, 
+    getContacts,
     getMessages, 
     removeMessages, 
     removeContact, 
@@ -232,6 +233,10 @@ ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam, call, timestamp)
 
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
+    if (typeof hugin_address !== 'string' || hugin_address.length !== 128) {
+      Hugin.send('error-notify-message', 'Invalid contact length')
+      return
+    }
     save_contact(hugin_address, nickname, first)
     const chat = hugin_address.substring(0,99)
     const key = await key_derivation_hash(chat)
@@ -240,9 +245,18 @@ ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
 })
 
 
-ipcMain.on('remove-contact', (e, contact) => {
+ipcMain.on('remove-contact', async (e, contact) => {
+    const contacts = await getContacts()
+    const removedKeys = contacts
+      .filter((entry) => entry && entry.address === contact)
+      .map((entry) => entry.key)
     removeContact(contact)
     removeMessages(contact)
+    end_swarm(contact, true)
+    if (removedKeys.length) {
+      known_keys = known_keys.filter((key) => !removedKeys.includes(key))
+      Hugin.known_keys = Hugin.known_keys.filter((key) => !removedKeys.includes(key))
+    }
     Hugin.send('sent')
 })
 
@@ -1075,7 +1089,7 @@ async function save_contact(hugin_address, nickname = false, first = false) {
             sent: true,
             t: Date.now(),
         })
-        known_keys.pop(key)
+        known_keys = known_keys.filter((known) => known !== key)
     }
 }
 

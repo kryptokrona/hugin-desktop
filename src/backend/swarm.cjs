@@ -802,6 +802,20 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
     console.log("*****************************************")
     console.log("***********NEW CONNECTION!***************")
     console.log("*****************************************")
+    const incomingPublicKey = peer.publicKey.toString('hex')
+    const duplicateByPublicKey = active.connections.find(
+      (a) => a.connection !== connection && a.publicKey === incomingPublicKey
+    )
+    if (duplicateByPublicKey) {
+      if (duplicateByPublicKey.joined && is_connection_healthy(duplicateByPublicKey.connection)) {
+        try {
+          connection.end()
+          connection.destroy()
+        } catch (e) {}
+        return
+      }
+      connection_closed(duplicateByPublicKey.connection, topic, true)
+    }
     active.connections.push({
         connection,
         topic: topic,
@@ -811,7 +825,7 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
         video: false, 
         peer, 
         request: false, knownHashes: [],
-        publicKey: peer.publicKey.toString('hex')})
+        publicKey: incomingPublicKey})
     send_joined_message(topic, dht_keys, connection).catch((error) => {
         console.log('Failed to send joined message', error)
         connection_closed(connection, topic, true)
@@ -1083,6 +1097,12 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
             con.admin = admin
             con.video = joined.video
             con.request = true
+            close_duplicate_peer_connections(
+              active,
+              con.connection,
+              (entry) => !!entry.address && entry.address === joined.address,
+              topic,
+            )
             active.peers.push(peer.publicKey.toString('hex'))
             let uniq = {}
             const peers = active.peers.filter((obj) => !uniq[obj] && (uniq[obj] = true))
@@ -1713,6 +1733,23 @@ const get_active = (key) => {
     return active_swarms.find(a => a.key === key)
 }
 
+const is_connection_healthy = (connection) => {
+    if (!connection) return false
+    if (connection.destroyed) return false
+    if (connection.writable === false) return false
+    return true
+}
+
+const close_duplicate_peer_connections = (active, keepConnection, predicate, topic) => {
+    if (!active) return
+    const duplicates = active.connections.filter(
+      (entry) => entry.connection !== keepConnection && predicate(entry)
+    )
+    for (const duplicate of duplicates) {
+      connection_closed(duplicate.connection, topic, true)
+    }
+}
+
 const get_beam = (address) => {
     for (const a of active_swarms) {
         if (!a.beam) continue
@@ -1752,17 +1789,26 @@ const send_peer_message = (address, topic, message) => {
         error_message('Swarm is not active')
         return
     }
-    const con = active.connections.find(a => a.address === address)
-    if (!con) {
+    const candidates = active.connections.filter(a => a.address === address)
+    if (!candidates.length) {
         error_message('Connection is closed')
         return
     }
     console.log("Sending peer message")
-    try {
+    const ordered = candidates.sort((a, b) => {
+      const aScore = (a.joined ? 2 : 0) + (is_connection_healthy(a.connection) ? 1 : 0)
+      const bScore = (b.joined ? 2 : 0) + (is_connection_healthy(b.connection) ? 1 : 0)
+      return bScore - aScore
+    })
+    for (const con of ordered) {
+      try {
         con.connection.write(JSON.stringify(message))
-    } catch(e) {
         return
+      } catch(e) {
+        continue
+      }
     }
+    error_message('Connection write failed')
 }
 
 
