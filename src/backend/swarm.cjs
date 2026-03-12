@@ -118,7 +118,13 @@ async connect(address, pub) {
 
 async listen() {
   this.node.on('connection', (conn, info) => {
-    if (this.connection) return
+    if (this.connection) {
+      try {
+        conn.end()
+        conn.destroy()
+      } catch (e) {}
+      return
+    }
     this.node_connection(conn)
   })
 
@@ -221,18 +227,38 @@ handle_node_packet(data) {
 }
 
 async change(address, pub) {
-    if (this.node) {
-        await this.node.leave(Buffer.from(this.topic))
-        await this.node.destroy()
-        if (this.connection !== null) {
-            this.connection.end()
-            this.connection = null
-        }
-        this.node = null
-        this.discovery = null
-        this.address = null
-        this.topic = ''
+    Hugin.send('hugin-node-connection', false)
+
+    if (this.connection !== null) {
+      try {
+        this.connection.end()
+        this.connection.destroy()
+      } catch (e) {}
+      this.connection = null
     }
+    this.rpc = null
+    this.requests = new Map()
+    this.pending = []
+
+    if (this.discovery) {
+      try {
+        await this.discovery.destroy()
+      } catch (e) {}
+      this.discovery = null
+    }
+    if (this.node) {
+      try {
+        if (this.topic) {
+          await this.node.leave(Buffer.from(this.topic))
+        }
+      } catch (e) {}
+      try {
+        await this.node.destroy()
+      } catch (e) {}
+    }
+    this.node = null
+    this.address = null
+    this.topic = ''
 
   console.log("Connecting to node...")
 
@@ -246,7 +272,9 @@ async reconnect() {
       console.log(`Reconnecting to node... (attempt ${i})`)
       Hugin.send('hugin-node-connection', false)
     }
-    this.discovery.refresh({client: true, server: false})
+    if (this.discovery) {
+      this.discovery.refresh({client: true, server: false})
+    }
     await sleep(10000)
     i++
   }

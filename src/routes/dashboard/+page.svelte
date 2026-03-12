@@ -58,11 +58,11 @@
         <EditName/>
     </div>
     <div class="button_wrapper">
-            <FillButton
+            <!-- <FillButton
                 text="{upgraded}"
 
                     rgb="{true}"
-                    on:click="{() => upgrade = true}"/>
+                    on:click="{() => upgrade = true}"/> -->
                 
         <Share onShowQR={(value) => (showQR = value)} />
     </div>

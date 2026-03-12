@@ -234,7 +234,8 @@ ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam, call, timestamp)
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
     console.log("add-chat", hugin_address.length)
-    if (typeof hugin_address !== 'string' || hugin_address.length !== 128) {
+    console.log("hugin_address", hugin_address)
+    if (typeof hugin_address !== 'string' || hugin_address.length !== 163) {
       Hugin.send('error-notify-message', 'Invalid contact length')
       return
     }

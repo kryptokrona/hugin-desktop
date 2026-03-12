@@ -12,12 +12,23 @@
 	let networkHeight = $state();
 	let walletHeight = $state();
 	let connecting = $state(false);
+	let nodeConnectPending = $state(false);
+	let nodeConnectTimeout = null;
 	let status = $state(t('syncing') || 'Syncing...');
 
 	let activeNode = $derived(($misc.node.node ?? t('connecting')) || 'Connecting');
 
 	onMount(() => {
 		getHeight();
+		window.api.receive('hugin-node-connection', (isConnected) => {
+			if (isConnected) {
+				nodeConnectPending = false;
+				if (nodeConnectTimeout) {
+					clearTimeout(nodeConnectTimeout);
+					nodeConnectTimeout = null;
+				}
+			}
+		});
 	});
 
 	$effect(() => {
@@ -64,11 +75,18 @@
 	};
 
 	const connect = () => {
+		if (nodeConnectPending) return;
 		const pub = $HuginNode.public;
 		if (!pub && $HuginNode.inputAddress.length < 99) {
 			window.api.errorMessage(t('addressFormatNotCorrect') || 'Address format is not correct.');
 			return;
 		}
+		nodeConnectPending = true;
+		if (nodeConnectTimeout) clearTimeout(nodeConnectTimeout);
+		nodeConnectTimeout = setTimeout(() => {
+			nodeConnectPending = false;
+			nodeConnectTimeout = null;
+		}, 15000);
 		$HuginNode.connected = false;
 		$HuginNode.address = '';
 		window.api.send('hugin-node', { address: $HuginNode.inputAddress, pub });
@@ -141,7 +159,16 @@
 				</div>
 			{/if}
 
-			<Button text={t('connect') || 'Connect'} disabled={false} on:click={() => connect()} />
+			<div class="connect-row">
+				<Button
+					text={nodeConnectPending ? `${t('connecting') || 'Connecting'}...` : t('connect') || 'Connect'}
+					disabled={nodeConnectPending}
+					on:click={() => connect()}
+				/>
+				{#if nodeConnectPending}
+					<span class="inline-spinner" aria-label={t('connecting') || 'Connecting'}></span>
+				{/if}
+			</div>
 		</div>
 	</section>
 
@@ -186,11 +213,13 @@
 				</span>
 			</div>
 
-			<Button
-				text={t('change') || 'Change'}
-				disabled={false}
-				on:click={() => ($layoutState.showNodeSelector = true)}
-			/>
+			<div class="change-row">
+				<Button
+					text={t('change') || 'Change'}
+					disabled={false}
+					on:click={() => ($layoutState.showNodeSelector = true)}
+				/>
+			</div>
 		</div>
 	</section>
 </div>
@@ -428,6 +457,32 @@
 		border-radius: 10px;
 		border: 1px solid var(--border-color, #2a2a2a);
 		flex: 1;
+	}
+
+	.connect-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.change-row {
+		display: flex;
+		align-items: center;
+	}
+
+	.inline-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-top-color: var(--accent-color, #4caf50);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.node-label {
