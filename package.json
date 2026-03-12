@@ -58,6 +58,7 @@
         "@svelte-put/qr": "^2.1.1",
         "app-root-dir": "^1.0.2",
         "auto-launch": "^5.0.5",
+        "bare-rpc": "^1.1.0",
         "better-sqlite3-multiple-ciphers": "^11.10.0",
         "corestore": "^6.18.4",
         "debounceify": "^1.1.0",

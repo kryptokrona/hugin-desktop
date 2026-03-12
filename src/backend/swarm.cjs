@@ -15,6 +15,8 @@ const { Storage } = require("./storage.cjs");
 const { extractPrevIdFromBlob } = require('hugin-utils')
 const { create_pow_scheduler, create_rate_policy } = require('hugin-utils/challenge')
 const { create_node_worker_backend } = require('hugin-utils/challenge/node_worker')
+const RPC = require('bare-rpc')
+const b4a = require('b4a')
 
 
 const MISSING_MESSAGES = 'missing-messages';
@@ -55,6 +57,10 @@ const pow_rate_policy = create_rate_policy({
 
 const pow_backend = create_node_worker_backend({ max_job_time_ms: 90000 })
 
+const RPC_COMMANDS = Object.freeze({
+  PACKET: 1
+})
+
 process.on('uncaughtException', (err) => {
   console.log('Caught an unhandled exception:', err);
 });
@@ -69,6 +75,7 @@ class NodeConnection extends EventEmitter {
     super()
     this.node = null
     this.connection = null
+    this.rpc = null
     this.requests = new Map()
     this.discovery = null
     this.pending = []
@@ -126,6 +133,11 @@ async listen() {
   }
   async node_connection(conn) {
     this.connection = conn
+    this.rpc = new RPC(conn, (req) => {
+      const data = this.parse(b4a.toString(req.data))
+      if (data) this.handle_node_packet(data)
+      req.reply(JSON.stringify({ ok: true, data: null, error: null }))
+    })
     Hugin.send('hugin-node-connection', true)
     conn.on('error', (error) => {
     if (error?.code === 'ETIMEDOUT') {
@@ -139,74 +151,73 @@ async listen() {
         this.reconnect()
    })
 
-   conn.on('data', d => {
-    const string = d.toString()
-    const data = this.parse(string)
-    console.log("Data from node", data)
-    if (!data) return
-    if (data.type === 'new-message' && Array.isArray(data.messages)) {
-      Nodes.emit('new-message', data.messages)
+   conn.on('data', () => {})
+}
+
+handle_node_packet(data) {
+  console.log("Data from node", data)
+  if (data.type === 'new-message' && Array.isArray(data.messages)) {
+    Nodes.emit('new-message', data.messages)
+    return
+  }
+  
+  if ('address' in data) {
+      if (typeof data.address !== 'string') return
+      if (data.address.length !== 99) return
+      this.address = data.address
+      Hugin.send('hugin-node-address', data.address)
+      return
+  }
+
+    // Unsolicited job push (no pending request id)
+    if (data.type === 'job' && data.job && !this.requests.has(data.id)) {
+      logPow('job_push', { type: data.type, jobId: data.job?.job_id })
+      const validation = validate_pow_job(data.job)
+      if (validation.ok) {
+        this.set_job(data.job)
+      } else {
+        logPow('job_reject', { reason: validation.reason })
+      }
       return
     }
-    
-    if ('address' in data) {
-        if (typeof data.address !== 'string') return
-        if (data.address.length !== 99) return
-        this.address = data.address
-        Hugin.send('hugin-node-address', data.address)
-        return
-    }
 
-      // Unsolicited job push (no pending request id)
-      if (data.type === 'job' && data.job && !this.requests.has(data.id)) {
-        logPow('job_push', { type: data.type, jobId: data.job?.job_id })
-        const validation = validate_pow_job(data.job)
-        if (validation.ok) {
-          this.set_job(data.job)
-        } else {
-          logPow('job_reject', { reason: validation.reason })
-        }
+    if (this.requests.has(data.id)) {
+      const { resolve } = this.requests.get(data.id);
+      if ('chunks' in data) {
+        this.pending.push(data.repsonse)
+        return
+      }
+      if ('done' in data) {
+        resolve(this.pending);
+        this.requests.delete(data.id);
         return
       }
 
-      if (this.requests.has(data.id)) {
-        const { resolve, reject } = this.requests.get(data.id);
-        if ('chunks' in data) {
-          this.pending.push(data.repsonse)
-          return
-        }
-        if ('done' in data) {
-          resolve(this.pending);
-          this.requests.delete(data.id);
-          return
-        }
-
-        if ('success' in data) {
-          resolve(data)
-          this.requests.delete(data.id);
-          return
-        }
-
-        // Handle job response from node
-        if (data.type === 'job' || data.type === 'job_pending') {
-          logPow('job_response', { id: data.id, type: data.type, jobId: data.job?.job_id });
-          if (data.job) {
-            const validation = validate_pow_job(data.job)
-            if (validation.ok) {
-              this.set_job(data.job);
-            } else {
-              logPow('job_reject', { reason: validation.reason });
-            }
-          }
-          resolve(data);
-          this.requests.delete(data.id);
-          return
-        }
-
-        resolve(data.response);
+      if ('success' in data) {
+        resolve(data)
         this.requests.delete(data.id);
-     }
-    })
+        return
+      }
+
+      // Handle job response from node
+      if (data.type === 'job' || data.type === 'job_pending') {
+        logPow('job_response', { id: data.id, type: data.type, jobId: data.job?.job_id });
+        if (data.job) {
+          const validation = validate_pow_job(data.job)
+          if (validation.ok) {
+            this.set_job(data.job);
+          } else {
+            logPow('job_reject', { reason: validation.reason });
+          }
+        }
+        resolve(data);
+        this.requests.delete(data.id);
+        return
+      }
+
+      resolve(data.response);
+      this.requests.delete(data.id);
+   }
 }
 
 async change(address, pub) {
@@ -242,6 +253,18 @@ async reconnect() {
   return
 }
 
+send_packet(packet) {
+  if (!this.rpc) return false
+  try {
+    const req = this.rpc.request(RPC_COMMANDS.PACKET)
+    req.send(JSON.stringify(packet))
+    req.reply().catch(() => {})
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
 sync(data) {
     if (!this.connection) return []
   return new Promise((resolve, reject) => {
@@ -249,7 +272,10 @@ sync(data) {
     const id = (data && data.timestamp !== undefined && data.timestamp !== null) ? data.timestamp : Date.now()
     data.id = id
     this.requests.set(id, { resolve, reject });
-    this.connection.write(JSON.stringify(data));
+    if (!this.send_packet(data)) {
+      this.requests.delete(id)
+      resolve([])
+    }
     setTimeout(() => {
       if (!this.requests.has(id)) return
       this.requests.delete(id)
@@ -303,9 +329,7 @@ async register(data) {
       }
       return await new Promise((resolve, reject) => {
         this.requests.set(request_id, { resolve, reject })
-        try {
-          this.connection.write(JSON.stringify(payload))
-        } catch (e) {
+        if (!this.send_packet(payload)) {
           this.requests.delete(request_id)
           resolve({ success: false, reason: 'write_failed' })
           return
@@ -405,10 +429,15 @@ async request_job() {
   return new Promise((resolve, reject) => {
     const id = randomKey();
     this.requests.set(id, { resolve, reject });
-    this.connection.write(JSON.stringify({
+    const sent = this.send_packet({
       type: 'job_request',
       id
-    }));
+    })
+    if (!sent) {
+      this.requests.delete(id)
+      resolve(null)
+      return
+    }
     logPow('job_request', { id });
     // Timeout after 10s
     setTimeout(() => {
@@ -579,9 +608,7 @@ async message(payload, viewtag, kind = 'dm', hash = randomKey()) {
       }
       return await new Promise((resolve, reject) => {
         this.requests.set(request_id, { resolve, reject })
-        try {
-          this.connection.write(JSON.stringify(postData))
-        } catch (e) {
+        if (!this.send_packet(postData)) {
           this.requests.delete(request_id)
           resolve({ success: false, reason: 'write_failed' })
           return
