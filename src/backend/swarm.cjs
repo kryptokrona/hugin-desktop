@@ -184,7 +184,7 @@ handle_node_packet(data) {
     if (this.requests.has(data.id)) {
       const { resolve } = this.requests.get(data.id);
       if ('chunks' in data) {
-        this.pending.push(data.repsonse)
+        this.pending.push(data.response)
         return
       }
       if ('done' in data) {
@@ -269,6 +269,7 @@ sync(data) {
     if (!this.connection) return []
   return new Promise((resolve, reject) => {
     // If the node response is dropped (stream parsing), don't hang the background sync loop forever.
+    this.pending = []
     const id = (data && data.timestamp !== undefined && data.timestamp !== null) ? data.timestamp : Date.now()
     data.id = id
     this.requests.set(id, { resolve, reject });
