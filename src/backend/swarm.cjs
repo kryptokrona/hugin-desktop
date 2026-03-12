@@ -31,7 +31,6 @@ const SEND_FEED_HISTORY = 'send-feed-history';
 const ONE_DAY = 24 * 60 * 60 * 1000
 
 const EventEmitter = require('bare-events');
-const { decrypt_hugin_messages } = require("./messages.cjs");
 
 let localFiles = []
 let remoteFiles = []
@@ -53,7 +52,16 @@ const pow_rate_policy = create_rate_policy({
   slice_ms_phase1: 10000,
   slice_ms_phase2: 10000
 })
+
 const pow_backend = create_node_worker_backend({ max_job_time_ms: 90000 })
+
+process.on('uncaughtException', (err) => {
+  console.log('Caught an unhandled exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 
 class NodeConnection extends EventEmitter {
@@ -119,7 +127,6 @@ async listen() {
   async node_connection(conn) {
     this.connection = conn
     Hugin.send('hugin-node-connection', true)
-    this.start_job_polling()
     conn.on('error', (error) => {
     if (error?.code === 'ETIMEDOUT') {
         console.log('Node connection timed out, reconnecting')
@@ -135,10 +142,10 @@ async listen() {
    conn.on('data', d => {
     const string = d.toString()
     const data = this.parse(string)
+    console.log("Data from node", data)
     if (!data) return
     if (data.type === 'new-message' && Array.isArray(data.messages)) {
-      console.log("New messages from node", data.messages.length)
-      decrypt_hugin_messages(data.messages)
+      Nodes.emit('new-message', data.messages)
       return
     }
     
@@ -377,19 +384,6 @@ async register(data) {
   }
 }
 
-// Poll the node for updated mining jobs.
-// We also accept job pushes, but polling keeps us synced if pushes are missed.
-start_job_polling() {
-  if (this.jobPollTimer) return;
-  this.jobPollTimer = setInterval(async () => {
-    if (!this.connection) return;
-    const response = await this.request_job();
-    if (response && response.job) {
-      this.set_job(response.job);
-    }
-  }, 15000);
-}
-
 // Update the current PoW job (and track prev_id transitions).
 set_job(job) {
   if (!job || !job.job_id) return;
@@ -471,7 +465,7 @@ async challenge(message_hash) {
     const all_nonces = new Set()
 
     while (Date.now() - start < POW_MAX_JOB_TIME_MS && shares.length < POW_REQUIRED_SHARES) {
-      let job = this.currentJob
+      let job = null
       if (!job) {
         const jobResponse = await this.request_job()
         if (jobResponse && jobResponse.job) {

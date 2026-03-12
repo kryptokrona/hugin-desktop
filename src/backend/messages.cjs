@@ -212,6 +212,11 @@ ipcMain.on('hugin-node', (e, {address, pub}) => {
     Hugin.huginNode = {address, pub}
 })
 
+Nodes.on('new-message', (messages) => {
+    console.log("New messages from node", messages.length)
+    decrypt_hugin_messages(messages)
+})
+
 ipcMain.handle('get-conversations', async (e) => {
     let contacts = await getConversations()
     return contacts.reverse()
@@ -707,6 +712,7 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
         if (roomCall) {
             box = encrypt_sealed_box(messageKey, payload_json_decoded)
         }
+        
     } else if (!sealed) {
         console.log('Has history, not using sealedbox')
         let payload_json = { from: my_address, msg: message }
@@ -1109,4 +1115,4 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
     await sync_group_history(timeframe, settings.recommended_api, settings.key)
 })
 
-module.exports = {check_history, save_message, start_message_syncer, send_message, decrypt_hugin_messages}
+module.exports = {check_history, save_message, start_message_syncer, send_message}
