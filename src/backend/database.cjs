@@ -8,7 +8,12 @@ const {sleep, containsOnlyEmojis} = require('./utils.cjs')
 const { Hugin } = require('./account.cjs')
 
 const closeDB = async () => {
-    database.close();    
+    if (!database) return
+    try {
+      database.close()
+    } catch (e) {
+      // Ignore shutdown close errors on partially initialized startup.
+    }
 }
 
 let database
