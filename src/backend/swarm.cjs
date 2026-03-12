@@ -12,9 +12,7 @@ const LOCAL_VOICE_STATUS_OFFLINE = {voice: false, video: false, topic: "", video
 const { add_local_file, start_download, add_remote_file, send_file, update_remote_file } = require("./beam.cjs");
 const { Hugin } = require("./account.cjs");
 const { Storage } = require("./storage.cjs");
-const { extractPrevIdFromBlob } = require('hugin-utils')
-const { create_pow_scheduler, create_rate_policy } = require('hugin-utils/challenge')
-const { create_node_worker_backend } = require('hugin-utils/challenge/node_worker')
+const { createChallenge } = require('hugin-utils/challenge')
 const RPC = require('bare-rpc')
 const b4a = require('b4a')
 
@@ -42,20 +40,8 @@ let uploading = []
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE
 
 const POW_MAX_JOB_TIME_MS = 90000
-const POW_NONCE_TAG_BITS = 0
-const POW_NONCE_TAG_VALUE = 0
-const POW_REQUIRED_SHARES = 2
-const pow_scheduler = create_pow_scheduler()
-const pow_rate_policy = create_rate_policy({
-  total_hashes_per_second_cap: 1000,
-  phase1_hashes_per_second_cap: 1000,
-  phase2_hashes_per_second_cap: 1000,
-  phase1_ms: 2 * 60 * 1000,
-  slice_ms_phase1: 10000,
-  slice_ms_phase2: 10000
-})
-
-const pow_backend = create_node_worker_backend({ max_job_time_ms: 90000 })
+const POW_REQUIRED_SHARES = 1
+const challenge = createChallenge()
 
 const RPC_COMMANDS = Object.freeze({
   PACKET: 1
@@ -83,11 +69,6 @@ class NodeConnection extends EventEmitter {
     this.topic = ''
     this.address = null
     this.currentJob = null
-    this.jobGeneration = 0
-    this.currentPrevId = null
-    this.previousPrevId = null
-    this.twoBackPrevId = null
-    this.jobPollTimer = null
   }
 
 async connect(address, pub) {
@@ -437,19 +418,12 @@ async register(data) {
   }
 }
 
-// Update the current PoW job (and track prev_id transitions).
 set_job(job) {
-  if (!job || !job.job_id) return;
-  if (this.currentJob && this.currentJob.job_id === job.job_id) return;
-  const prevId = extractPrevIdFromBlob(job.blob)
-  if (prevId) {
-    this.twoBackPrevId = this.previousPrevId
-    this.previousPrevId = this.currentPrevId
-    this.currentPrevId = prevId
-  }
-  this.currentJob = job;
-  this.jobGeneration++
-  logPow('job_set', { jobId: job.job_id });
+  if (!job || !job.job_id) return
+  if (this.currentJob && this.currentJob.job_id === job.job_id) return
+  this.currentJob = job
+  challenge.setJob(job)
+  logPow('job_set', { jobId: job.job_id })
 }
 
 // Request a challenge job template from the node.
@@ -511,98 +485,44 @@ should_recalc_share(res) {
   })
 }
 
-// Calculate shares for a message challenge.
 async challenge(message_hash) {
   if (!this.connection) return null
-  const release = pow_scheduler.acquire()
-  try {
-    const start = Date.now()
-    const shares = []
-    const allShares = []
-    const selected_nonces = new Set()
-    const all_nonces = new Set()
 
-    while (Date.now() - start < POW_MAX_JOB_TIME_MS && shares.length < POW_REQUIRED_SHARES) {
-      let job = null
-      if (!job) {
-        const jobResponse = await this.request_job()
-        if (jobResponse && jobResponse.job) {
-          this.set_job(jobResponse.job)
-          job = this.currentJob
-        }
-      }
-      if (!job) {
-        await sleep(250)
-        continue
-      }
+  const start = Date.now()
+  const shares = []
 
-      const prevId = extractPrevIdFromBlob(job && job.blob)
-      const fresh = !!prevId && !!this.currentPrevId && (
-        prevId === this.currentPrevId ||
-        prevId === this.previousPrevId ||
-        prevId === this.twoBackPrevId
-      )
-      if (!fresh) {
-        logPow('pow_stale_local', { jobId: job.job_id })
-        const refreshed = await this.request_job()
-        if (refreshed && refreshed.job) this.set_job(refreshed.job)
-        await sleep(250)
-        continue
-      }
+  if (!challenge.hasJob()) {
+    const res = await this.request_job()
+    if (res && res.job) this.set_job(res.job)
+  }
 
-      const elapsed_ms = Date.now() - start
-      const { hashes_per_second, time_budget_ms, in_phase1 } = pow_rate_policy({
-        active_tasks: pow_scheduler.active_count(),
-        elapsed_ms
-      })
-
-      let share = null
-      try {
-        share = await pow_backend.find_share({
-          job,
-          hashes_per_second,
-          time_budget_ms,
-          // Hard-disable nonce tag filtering: mine full nonce space.
-          nonce_tag_bits: POW_NONCE_TAG_BITS,
-          nonce_tag_value: POW_NONCE_TAG_VALUE,
-          log: (event, data) => logPow(event, data)
-        })
-      } catch (e) {
-        if (e && e.message === 'pow_worker_timeout') {
-          logPow('pow_worker_timeout_retry', { jobId: job.job_id, sliceMs: time_budget_ms, hps: hashes_per_second })
-          await sleep(in_phase1 ? 100 : 300)
-          continue
-        }
-        throw e
-      }
-
-      if (share && typeof share.nonce === 'string' && typeof share.result === 'string') {
-        const normalized = {
-          job_id: String(share.job_id),
-          nonce: share.nonce.toLowerCase(),
-          result: share.result.toLowerCase()
-        }
-        if (!all_nonces.has(normalized.nonce)) {
-          all_nonces.add(normalized.nonce)
-          allShares.push(normalized)
-        }
-        if (!selected_nonces.has(normalized.nonce)) {
-          selected_nonces.add(normalized.nonce)
-          shares.push(normalized)
-        }
-      }
-
-      if (shares.length >= POW_REQUIRED_SHARES) {
-        return { job, shares, allShares }
-      }
-
-      await sleep(in_phase1 ? 50 : 250)
+  while (Date.now() - start < POW_MAX_JOB_TIME_MS && shares.length < POW_REQUIRED_SHARES) {
+    if (!challenge.hasJob()) {
+      await sleep(250)
+      continue
     }
 
-    return null
-  } finally {
-    release()
+    const remaining = POW_MAX_JOB_TIME_MS - (Date.now() - start)
+    if (remaining <= 0) break
+
+    const share = await challenge.findShare(Math.min(remaining, 30000))
+
+    if (share) {
+      shares.push({
+        job_id: String(share.job_id),
+        nonce: share.nonce.toLowerCase(),
+        result: share.result.toLowerCase()
+      })
+    } else {
+      const res = await this.request_job()
+      if (res && res.job) this.set_job(res.job)
+    }
   }
+
+  if (shares.length >= POW_REQUIRED_SHARES) {
+    return { job: challenge.currentJob, shares }
+  }
+  return null
 }
 
 async message(payload, viewtag, kind = 'dm', hash = randomKey()) {
