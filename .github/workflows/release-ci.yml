@@ -25,7 +25,7 @@ jobs:
                   tag_name: ${{ github.ref }}
                   release_name: Release ${{ github.ref }}
                   draft: true
-                  prerelease: false
+                  prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-rc') || contains(github.ref, '-alpha') }}
 
     build:
         name: 'Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}'
