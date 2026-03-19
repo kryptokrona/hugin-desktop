@@ -33,14 +33,11 @@ let video = false
 let videoInput = $state()
 let thisSwarm = $state(false)
 let in_voice = $state(false)
-let activeBeam = $derived( $swarm.active.some(a => a.chat === thisChat.chat))
-
-
-
-$effect(() => {
-   activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
-})
-
+let thisChat = $derived($user.activeChat || {})
+let thisChatAddr = $derived(thisChat.chat || thisChat.conversation || thisChat.address || '')
+let thisChatKey = $derived(thisChat.key || '')
+let thisChatName = $derived(thisChat.name || thisChat.nickname || 'Unknown')
+let activeBeam = $derived(thisChatAddr ? $swarm.active.some(a => a.chat === thisChatAddr) : false)
 run(() => {
       if ($mediaSettings.devices.length) {
        videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
@@ -50,23 +47,26 @@ run(() => {
 run(() => {
     if ($user.activeChat) {
         active_contact = $user.activeChat
-        contact = $user.activeChat.chat + $user.activeChat.key
-        basicAvatar = get_avatar(active_contact.chat)
+        const chat = $user.activeChat.chat || $user.activeChat.conversation || $user.activeChat.address || ''
+        const key = $user.activeChat.key || ''
+        contact = chat + key
+        basicAvatar = get_avatar(chat)
     } else {
         $user.activeChat = $user.contacts[0]
         active_contact = $user.activeChat
     }
 });
 
-//This chat
-let thisChat = $derived($user.activeChat)
-
 //Beam reactive button states
 
-let connectedBeam = $derived($swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat)))
+let connectedBeam = $derived(
+    thisChatAddr
+        ? $swarm.active.some(a => a.chat === thisChatAddr && a.connections.some(a => a.address === thisChatAddr))
+        : false
+)
 run(() => {
       if (activeBeam) {
-      thisSwarm = $swarm.active.find(a => a.chat === thisChat.chat)
+      thisSwarm = $swarm.active.find(a => a.chat === thisChatAddr)
    }
    });
 
@@ -103,8 +103,8 @@ const endCall = () => {
 const sendMoney = () => {
     $transactions.tip = true
     $transactions.send = {
-        to: $user.activeChat.chat,
-        name: $user.activeChat.name,
+        to: thisChatAddr,
+        name: thisChatName,
     }
 }
 
@@ -125,9 +125,9 @@ function copyThis(copy) {
     if (copy.length > 64) {
         //Notification
         msg = 'You copied a Hugin address'
-        name = $user.activeChat.name
+        name = thisChatName
         //Avatar in notification
-        key = $user.activeChat.chat
+        key = thisChatAddr
     }
 
     window.api.successMessage(msg)
@@ -136,7 +136,7 @@ function copyThis(copy) {
 
 
 function newBeam() {
-    window.api.createBeam($user.activeChat.chat + $user.activeChat.key)
+    window.api.createBeam(thisChatAddr + thisChatKey)
 }
 
 const join_voice_channel = async (video = false, screen) => {
@@ -166,7 +166,7 @@ let incoming_file = $state(false)
 let shared_files = $state(false)
 
 run(() => {
-      if ($remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
+      if ($remoteFiles.some(a => a.chat === thisChatAddr)) {
        incoming_file = true
    } else {
        incoming_file = false
@@ -174,7 +174,7 @@ run(() => {
    });
 
 run(() => {
-      if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
+      if ($localFiles.some(a => a.chat === thisChatAddr)) {
        shared_files = true
    } else {
        shared_files = false
@@ -194,7 +194,7 @@ run(() => {
     {#if $page.url.pathname === '/messages'}
         <div class="nav">
 
-            {#await check_avatar($user.activeChat.chat)}
+            {#await check_avatar(thisChatAddr)}
             {:then avatar}
             {#if avatar}
                 <img
@@ -202,14 +202,14 @@ run(() => {
                     class="avatar custom"
                     src="{avatar}"
                     alt=""
-                     onclick={() => copyThis($user.activeChat.chat + $user.activeChat.key)}
+                     onclick={() => copyThis(thisChatAddr + thisChatKey)}
                 />
             {:else}
             <img
                 class="avatar"
                 src="data:image/png;base64,{basicAvatar}"
                 alt=""
-                onclick={() => copyThis($user.activeChat.chat + $user.activeChat.key)}
+                onclick={() => copyThis(thisChatAddr + thisChatKey)}
                 />
             {/if}
             {/await}
@@ -217,7 +217,7 @@ run(() => {
             <Tooltip title="P2P Chat" leftAlign={true}>
                 <div class="button" onclick={() => {
                     if (connectedBeam || activeBeam) {
-                        window.api.send('end-beam', $user.activeChat.chat)
+                        window.api.send('end-beam', thisChatAddr)
                     }   else newBeam()}}>
                 
                     <Lightning connected={connectedBeam} connecting={activeBeam && !connectedBeam} />

@@ -11,8 +11,9 @@ let timer
     let { error, message, success, Hide } = $props();
 
 const group_or_room = () => {
+    const roomKey = message.room
     const findit = (arr) => {
-       return arr.find(a => a.key === message.group)
+       return arr.find(a => a.key === roomKey)
     }
     const room = findit($rooms.roomArray)
     if (!room) return findit($groups.groupArray)
@@ -50,13 +51,13 @@ function hideNotification(id) {
     >
         <div class="inner-card">
             <div class="header">
-                {#if message?.group}
-                <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="" />
+                {#if message?.type === 'room' || message?.room}
+                <img class="avatar" src="data:image/png;base64,{get_avatar(message.room)}" alt="" />
                 {:else}
-                <img class="avatar" src="data:image/png;base64,{get_avatar(message.chat)}" alt="" />
+                <img class="avatar" src="data:image/png;base64,{get_avatar(message.conversation || message.address)}" alt="" />
                 {/if}
-                <h4 class="name">{message.name}</h4>
-                {#if message?.group}<p>in {group.name}</p>{/if}
+                <h4 class="name">{message.name || message.nickname || 'Unknown'}</h4>
+                {#if message?.type === 'room' || message?.room}<p>in {group.name}</p>{/if}
             </div>
             <p class="message">{message.message}</p>
             <br />
@@ -78,7 +79,7 @@ function hideNotification(id) {
                     )}"
                     alt=""
                 />
-                <h4 class="name">{message.name}</h4>
+                <h4 class="name">{message.name || message.nickname || 'Unknown'}</h4>
             </div>
             <p class="message">{message.message}</p>
             <br />
@@ -93,8 +94,8 @@ function hideNotification(id) {
     >
         <div class="inner-card">
             <div class="header">
-                <img class="avatar" src="data:image/png;base64,{get_avatar(message.key)}" alt="" />
-                <h4>{message.name}</h4>
+                <img class="avatar" src="data:image/png;base64,{get_avatar(message.conversation || message.address)}" alt="" />
+                <h4>{message.name || message.nickname || 'Unknown'}</h4>
             </div>
             <p class="message success">{message.message}</p>
             <br />

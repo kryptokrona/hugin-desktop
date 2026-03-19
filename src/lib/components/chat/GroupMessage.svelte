@@ -60,7 +60,6 @@ let tipMessage = $state("");
 let thisreply = ''
 let openEmoji  = $state(false)
 let messageContainer = $state()
-let emojiPicker = $state()
 let has_reaction = $state(false)
 let reactions = $state([])
 let react = false
@@ -101,10 +100,6 @@ const nameColor = msgFrom ? getColorFromHash(msgFrom) : '#888888'
 
 
 onMount( async () => {
-    emojiPicker.addEventListener('emoji-click', (e) => {
-            openEmoji = false
-            reactTo(e)
-        })
         if (reply.length === 64) 
         {
         thisReply = await checkreply(reply)
@@ -118,7 +113,6 @@ onMount( async () => {
 })
 
 onDestroy(() => {
-    window.api.removeAllListeners("emoji-click")
 })
 
 function checkMessage() {
@@ -449,7 +443,9 @@ run(() => {
                 <div class="actions">
                     <div style="display: flex;">
                         <div class="emojiContainer">
-                            <emoji-picker bind:this={emojiPicker}></emoji-picker>
+                            {#if openEmoji}
+                              <emoji-picker onemoji-click={(e) => { openEmoji = false; reactTo(e) }}></emoji-picker>
+                            {/if}
                         </div>
                          {#if !rtc}
                         <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
@@ -512,7 +508,9 @@ run(() => {
             <div class="actions grouped-actions">
                 <div style="display: flex;">
                     <div class="emojiContainer">
-                        <emoji-picker bind:this={emojiPicker}></emoji-picker>
+                        {#if openEmoji}
+                          <emoji-picker onemoji-click={(e) => { openEmoji = false; reactTo(e) }}></emoji-picker>
+                        {/if}
                     </div>
                      {#if !rtc}
                     <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>

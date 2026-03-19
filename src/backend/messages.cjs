@@ -34,7 +34,9 @@ const {
     markAllFeedMessagesRead,
     markMessageRead,
     markGroupMessageRead,
-    markFeedMessageRead
+    markFeedMessageRead,
+    getFriendRequests,
+    removeFriendRequest,
 } = require("./database.cjs")
 const {
     trimExtra, 
@@ -43,9 +45,9 @@ const {
     hexToUint,
     randomKey,
     nonceFromTimestamp,
-    toHex,
-    sanitize_group_message
+    toHex
 } = require('./utils.cjs')
+const { sanitize_group_message } = require('hugin-p2p/utils')
 
 const { send_swarm_message, new_swarm, end_swarm, Nodes, send_feed_message } = require("./swarm.cjs")
 
@@ -94,7 +96,7 @@ ipcMain.on('notify-room', (e, data) => {
 ipcMain.on('notify-dm', (e, data) => {
     const notification = new Notification({
         title: data.name,
-        body: data.msg,
+        body: data.message,
         icon: 'src/static/icon.png',
       });
       notification.show()
@@ -128,24 +130,46 @@ ipcMain.handle('create-group', async () => {
 })
 
 ipcMain.on('add-group', async (e, grp) => {
+    if (!grp?.key || !grp?.name) return
     addGroup(grp)
-    const message = sanitize_group_message(grp, true)
-    save_group_message(message, grp.hash, parseInt(Date.now()), false, false, true)
+    const timestamp = Date.now()
+    const message = sanitize_group_message({
+        t: String(timestamp),
+        g: grp.key,
+        m: 'Joined group',
+        k: Hugin.address,
+        r: '',
+        s: '',
+        n: Hugin.nickname,
+        hash: randomKey(),
+        tip: false,
+    })
+    if (!message) return
+    message.sent = true
+    save_group_message(message, message.hash, parseInt(message.timestamp), false, false, true)
 })
 
 
 ipcMain.on('add-room', async (e, room, admin) => {
+    if (!room?.key || !room?.name) return
     addRoom(room)
-    //Make sure the format is correct to save.
-    const message = sanitize_group_message(room, true)
-    message.address = Hugin.address
-    message.name = Hugin.nickname
-    message.message = "Joined room"
+    const timestamp = Date.now()
+    const message = sanitize_group_message({
+        t: String(timestamp),
+        g: room.key,
+        m: 'Joined room',
+        k: Hugin.address,
+        r: '',
+        s: '',
+        n: Hugin.nickname,
+        hash: room.hash || randomKey(),
+        tip: false,
+    })
+    if (!message) return
     message.sent = true
-    save_group_message(message, room.hash, parseInt(message.timestamp), false, false, true, true)
-    if (admin) addRoomKeys(room.k, admin)
-    // sender('joined-room', room)
-    new_swarm({key: room.k})
+    save_group_message(message, message.hash, parseInt(message.timestamp), false, false, true, true)
+    if (admin) addRoomKeys(room.key, admin)
+    new_swarm({key: room.key})
 })
 
 ipcMain.on('remove-room', async (e, room) => {
@@ -247,6 +271,49 @@ ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
 })
 
 
+// ipcMain.handle('get-friend-requests', async () => {
+//     return await getFriendRequests()
+// })
+
+// ipcMain.on('accept-friend-request', async (e, address) => {
+//     const p2p = require('./p2p.cjs').get()
+//     const requests = await getFriendRequests()
+//     const req = requests.find(r => r.address === address)
+//     if (!req) return
+//     const hugin = req.hugin
+//     const name = req.name || 'Anon'
+//     save_contact(hugin, name, true)
+//     const chat = hugin.substring(0, 99)
+//     const key = await key_derivation_hash(chat)
+//     new_swarm({key}, true, hugin)
+
+//     const sentViaRoom = p2p && req.room ? p2p.acceptFriendRequest(address, req.room) : false
+//     if (!sentViaRoom) {
+//         save_message({
+//             message: 'Accepted friend request',
+//             key: hugin.substring(99, 163),
+//             conversation: chat,
+//             sent: true,
+//             timestamp: Date.now(),
+//         })
+//     }
+
+//     await removeFriendRequest(address)
+//     const remaining = await getFriendRequests()
+//     Hugin.send('friend-requests-updated', remaining)
+// })
+
+// ipcMain.on('reject-friend-request', async (e, address) => {
+//     await removeFriendRequest(address)
+//     const remaining = await getFriendRequests()
+//     Hugin.send('friend-requests-updated', remaining)
+// })
+
+// ipcMain.on('send-friend-request', (e, address, roomKey) => {
+//     const p2p = require('./p2p.cjs').get()
+//     if (p2p) p2p.sendFriendRequest(address, roomKey)
+// })
+
 ipcMain.on('remove-contact', async (e, contact) => {
     const contacts = await getContacts()
     const removedKeys = contacts
@@ -311,9 +378,9 @@ ipcMain.on('end-swarm', async (e, key) => {
 const peer_dms = async () => {
     const contacts = await getConversations()
     for (const c of contacts) {
-        if (c.chat?.length !== 99) continue
-        const hashDerivation = await key_derivation_hash(c.chat)
-        const beam = new_swarm({key: hashDerivation}, true, c.chat + c.key)
+        if (c.conversation?.length !== 99) continue
+        const hashDerivation = await key_derivation_hash(c.conversation)
+        const beam = new_swarm({key: hashDerivation}, true, c.conversation + c.key)
         if (beam === "Error") continue
         if (!beam) continue
     } 
@@ -461,7 +528,7 @@ async function check_for_pm_message(thisExtra, que = false) {
             incoming_pm_que.push(message)
             return true
         }
-        save_message(message)
+        await save_message(message)
         return true
     }
 }
@@ -469,7 +536,7 @@ async function check_for_pm_message(thisExtra, que = false) {
 async function clear_pm_que() {
     const sorted = incoming_pm_que.sort((a, b) => a.t - b.t );
     for (const message of sorted) {
-        save_message(message)
+        await save_message(message)
     }
     incoming_pm_que = []
 }
@@ -612,7 +679,8 @@ async function fetch_hugin_messages() {
     const myAddr = await Address.fromAddress(address);
     const pubKey = myAddr.m_keys.m_viewKeys.m_publicKey;
     const weeklyTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7));
-    const hash = await crypto.cn_fast_hash(pubKey + weeklyTimestamp);
+    const hashInput = toHex(String(pubKey) + String(weeklyTimestamp));
+    const hash = await crypto.cn_fast_hash(hashInput);
     return call ? hash : hash.substring(0,3);
   }
 
@@ -647,11 +715,13 @@ async function send_message(message, receiver, off_chain = false, group = false,
     const viewtag = await generate_push_view_tag(address, call)
 
     const saveThisMessage = {
-        msg: message,
-        k: messageKey,
+        message,
+        key: messageKey,
         sent: true,
-        t: String(timestamp),
-        chat: address,
+        timestamp: String(timestamp),
+        conversation: address,
+        reply: '',
+        tip: '',
     }
 
     if (!off_chain) {
@@ -665,8 +735,8 @@ async function send_message(message, receiver, off_chain = false, group = false,
         ])
 
         if (typeof sent?.success !== 'boolean' || !sent.success) {
-            deletePrivateMessage(saveThisMessage.t)
-            Hugin.send('pm-send-error', { timestamp, message, chat: address, reason: sent?.reason || 'Failed' })
+            deletePrivateMessage(saveThisMessage.timestamp)
+            Hugin.send('pm-send-error', { timestamp, message, conversation: address, reason: sent?.reason || 'Failed' })
             // Update conversation list after removal
             Hugin.send('sent')
             if (typeof sent?.reason === 'string' && sent.reason.length <= 40) {
@@ -750,12 +820,14 @@ async function encrypt_hugin_message(message, messageKey, sealed = false, toAddr
 
 async function send_room_message(message) {
     console.log("Send this!", message)
-    const swarmMessage = JSON.stringify(message)
+    const normalized = sanitize_group_message(message)
+    if (!normalized) return
+    normalized.sent = true
+    const swarmMessage = JSON.stringify(normalized)
     //Swarm message is already encrypted over the connection
-    send_swarm_message(swarmMessage, message.g)
-    const save = sanitize_group_message(message, true)
-    save_group_message(save, message.hash, message.t, false, true, false, true)
-    await send_room_message_push(message)
+    send_swarm_message(swarmMessage, normalized.room)
+    save_group_message(normalized, normalized.hash, normalized.timestamp, false, true, false, true)
+    await send_room_message_push(normalized)
 }
 
 async function generate_room_view_tag(room) {
@@ -766,23 +838,23 @@ async function generate_room_view_tag(room) {
 async function send_room_message_push(message) {
 
     try {
-    const roomKey = message.g.substring(0,64);
+    const roomKey = message.room.substring(0,64);
     const secretKey = keychain.getNaclKeys(roomKey).secretKey;
 
     let payload_message = {
-      message: message.m, 
-      reply: message.r, 
+      message: message.message, 
+      reply: message.reply, 
       tip: message.tip || '', 
       hash: message.hash,
-      name: message.n,
-      address: message.k
+      name: message.name,
+      address: message.address
     };
 
     let payload_message_decoded = naclUtil.decodeUTF8(
       JSON.stringify(payload_message),
     );
 
-    const timestamp = message.t;
+    const timestamp = message.timestamp;
     const nonce = nonceFromTimestamp(timestamp);
 
     let secretbox = nacl.secretbox(
@@ -793,7 +865,7 @@ async function send_room_message_push(message) {
 
     let payload_json = {
       box: Buffer.from(secretbox).toString('hex'),
-      viewTag: await generate_room_view_tag(message.g)
+      viewTag: await generate_room_view_tag(message.room)
     };
 
     let payload_json_decoded = naclUtil.decodeUTF8(
@@ -816,7 +888,7 @@ async function send_room_message_push(message) {
 
     const sent = await Nodes.message(
       payload_hex,
-      await generate_room_view_tag(message.g),
+      await generate_room_view_tag(message.room),
       'room',
       message.hash,
     )
@@ -898,7 +970,9 @@ async function send_group_message(message, offchain = false, swarm = false) {
             message_json.sent = true
             message_json.t = timestamp
             message_json.hash = result.transactionHash
-            const send = sanitize_group_message(message_json, true)
+            const send = sanitize_group_message(message_json)
+            if (!send) return
+            send.sent = true
             send.hash = result.transactionHash
             await save_group_message(send, result.transactionHash, timestamp, false, false, false)
             Hugin.send('sent_group', {
@@ -1016,7 +1090,7 @@ async function save_group_message(msg, hash, time, offchain, channel = false, ad
     const saved = await saveGroupMsg(msg, hash, time, offchain, channel)
     if (!saved) return false
     if (room) {
-        Hugin.send('added-room', msg.group)
+        Hugin.send('added-room', msg.room)
         Hugin.send('roomMsg', saved)
         Hugin.send('sent_room')
         return
@@ -1034,31 +1108,29 @@ async function save_group_message(msg, hash, time, offchain, channel = false, ad
 
 //Saves private message
 async function save_message(msg, offchain = false) {
-    let [message, addr, key, timestamp, sent] = sanitize_pm_message(msg)
-    if (!message) return
+    const result = sanitize_pm_message(msg)
+    if (!result.message) return
+
+    let { message, conversation, key, timestamp, sent } = result
 
     if (await messageExists(timestamp)) return
 
-    //If sent set addr to chat instead of from
-    if (msg.chat && sent) {
-        addr = msg.chat
+    if (msg.conversation && sent) {
+        conversation = msg.conversation
     }
 
-    //New message from unknown contact
     if (msg.type === 'sealedbox' && !sent) {
-        let hugin = addr + key
+        let hugin = conversation + key
         await save_contact(hugin)
-        const hash = await key_derivation_hash(addr)
-        new_swarm({key: hash}, true, addr + key);
+        const hash = await key_derivation_hash(conversation)
+        new_swarm({key: hash}, true, conversation + key);
     }
 
-    let newMsg = await saveMsg(message, addr, sent, timestamp, offchain)
+    let newMsg = await saveMsg(message, conversation, sent, timestamp, offchain)
     if (sent) {
-        //If sent, update conversation list
         Hugin.send('sent', newMsg)
         return
     }
-    //Send message to front end
     Hugin.send('newMsg', newMsg)
     Hugin.send('privateMsg', newMsg)
 }
@@ -1079,17 +1151,16 @@ async function save_contact(hugin_address, nickname = false, first = false) {
         known_keys.push(key)
     }
     
-    saveThisContact(addr, key, name)
+    await saveThisContact(addr, key, name)
     Hugin.send('saved-addr', addr)
 
     if (first) {
-        save_message({
-            msg: 'New friend added!',
-            k: key,
-            from: addr,
-            chat: addr,
+        await save_message({
+            message: 'New friend added!',
+            key,
+            conversation: addr,
             sent: true,
-            t: Date.now(),
+            timestamp: Date.now(),
         })
         known_keys = known_keys.filter((known) => known !== key)
     }
@@ -1131,4 +1202,4 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
     await sync_group_history(timeframe, settings.recommended_api, settings.key)
 })
 
-module.exports = {check_history, save_message, start_message_syncer, send_message}
+module.exports = {check_history, save_message, start_message_syncer, send_message, save_contact, new_swarm, key_derivation_hash}

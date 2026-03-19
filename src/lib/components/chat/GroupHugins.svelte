@@ -62,7 +62,7 @@ run(() => {
         activeHugins = $groups.activeHugins
     });
 
-let activeList = $derived(activeHugins.filter(a => a.grp !== a.address))
+let activeList = $derived(activeHugins.filter(a => (a.room || a.grp) !== a.address))
 
 let muteGroup = $derived($notify.off.some(a => a === groupName))
 

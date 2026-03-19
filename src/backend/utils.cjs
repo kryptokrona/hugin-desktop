@@ -211,17 +211,17 @@ function check_hash(hash) {
 
 const sanitize_pm_message = (msg) => {
     let sent = msg.sent
-    let addr = msg.sent ? sanitizeHtml(msg.chat) : sanitizeHtml(msg.from)
-    let timestamp = sanitizeHtml(msg.t)
-    let key = sanitizeHtml(msg.k)
-    let message = sanitizeHtml(msg.msg)
-    if (message?.length > 777 || msg.msg === undefined) return [false]
+    let addr = msg.sent ? sanitizeHtml(msg.conversation || msg.chat) : sanitizeHtml(msg.from)
+    let timestamp = sanitizeHtml(msg.t ?? msg.timestamp)
+    let key = sanitizeHtml(msg.k ?? msg.key)
+    let message = sanitizeHtml(msg.msg || msg.message)
+    if (message?.length > 777 || (msg.msg === undefined && msg.message === undefined)) return [false]
     if (addr?.length > 99 || addr === undefined) return [false]
     if (typeof sent !== 'boolean') return [false]
     if (timestamp?.length > 25) return [false]
     if (key?.length > 64) return [false]
 
-    return [message, addr, key, timestamp, sent]
+    return { message, conversation: addr, key, timestamp, sent }
 }
 
 const sanitize_join_swarm_data = (data) => {
@@ -325,14 +325,13 @@ const sanitize_join_swarm_data = (data) => {
       message: text,
       address: addr,
       signature: sig,
-      group: room,
-      time: timestamp,
+      room,
+      timestamp,
       name: nick,
       reply: reply,
       hash: txHash,
       sent: sent,
       channel: 'channel',
-      hash: txHash,
       tip
     };
   

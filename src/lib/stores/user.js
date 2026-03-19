@@ -107,7 +107,8 @@ export const notify = writable({
     unread: [],
     update: [],
     notifications: [],
-    off: []
+    off: [],
+    que: false
 })
 
 export const transactions = writable({
@@ -125,6 +126,7 @@ export const beam = writable({
 
 export const swarm = writable({
     active: [],
+    activeSwarm: false,
     myVideo: false,
     voice_channel: new Map(),
     call: [],
@@ -151,11 +153,13 @@ export const rooms = writable({
     showUserInfo: false,
     banned: [],
     ban: {},
-    activeSwarm: {},
     avatars: [],
     params: null,
-    typingUsers: []
+    typingUsers: [],
+    openingLink: false
 })
+
+export const friendRequests = writable([])
 
 export const pushToTalk = writable({
     key: null,

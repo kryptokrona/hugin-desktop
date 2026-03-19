@@ -16,7 +16,6 @@
   let { rtc = false, onMessage, onTyping} = $props();
 
   let openEmoji = $state();
-  let emojiPicker = $state()
   let messageField = $state()
   let off_chain = $state()
   let mount = $state(false)
@@ -37,13 +36,9 @@
     checkPath()
     //Check if we have any active texts in this contact or room chat.
     await fieldFocus()
-    await sleep(1000)
-    //Not sure why it takes so long to find the emoji picker.
-    emojiPicker.addEventListener('emoji-click', (e) => onEmoji(e.detail.unicode))
   })
 
   onDestroy(() => {
-    window.api.removeAllListeners("emoji-click");
   })
 
 
@@ -112,7 +107,7 @@
   }
 
   function getActiveChat() {
-    const chat = $user.activeChat.chat
+    const chat = $user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address || ''
     return [$keyboard.messages.get(chat), chat]
   }
 
@@ -210,7 +205,8 @@
   });
   run(() => {
     if ($user.activeChat) {
-      off_chain = $webRTC.call.some((a) => a.chat == $user.activeChat.chat && a.connected)
+      const activeChat = $user.activeChat.chat || $user.activeChat.conversation || $user.activeChat.address || ''
+      off_chain = $webRTC.call.some((a) => a.chat == activeChat && a.connected)
     }
   });
   run(() => {
@@ -225,7 +221,10 @@
   })
   run(() => {
     if ($swarm.active.length) {
-      activeBeam = $swarm.active.some(a => a.chat === $user.activeChat.chat && a.connections.some(a => a.address === $user.activeChat.chat))
+      const activeChat = $user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address || ''
+      activeBeam = activeChat
+        ? $swarm.active.some(a => a.chat === activeChat && a.connections.some(a => a.address === activeChat))
+        : false
     } else {
       activeBeam = false
     }
@@ -241,7 +240,7 @@
     if (mount) {
 
       if (inmessages) {
-        to = $user.activeChat.name
+        to = $user.activeChat?.name || $user.activeChat?.nickname || 'Unknown'
       }
 
     }
@@ -268,7 +267,9 @@
     <!--<EmojiSelector on:emoji={onEmoji} />-->
     <div style="display: flex">
         <div class:openEmoji={openEmoji} style="position: absolute; bottom: 3.45rem; right: 0; display: none">
-            <emoji-picker bind:this={emojiPicker}></emoji-picker>
+            {#if openEmoji}
+              <emoji-picker onemoji-click={(e) => onEmoji(e.detail.unicode)}></emoji-picker>
+            {/if}
         </div>
         <div class="emoji-button" onclick={() => openEmoji = !openEmoji}>
             <Emoji/>

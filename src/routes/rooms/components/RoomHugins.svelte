@@ -1,6 +1,4 @@
 <script>
-    import { run } from 'svelte/legacy';
-
 import {fade, fly} from 'svelte/transition'
 import { t } from '$lib/utils/translation.js'
 import {groups, swarm, user, notify, rooms} from '$lib/stores/user.js'
@@ -10,123 +8,110 @@ import { isLatin, sleep } from '$lib/utils/utils'
 import Groupcall from '$lib/components/icons/Groupcall.svelte'
 import VoiceUser from '$lib/components/chat/VoiceUser.svelte'
 import { videoSettings } from '$lib/stores/mediasettings'
-import UserOptions from './UserOptions.svelte'
 import BanInfo from './BanInfo.svelte'
-	import { roomMessages } from '$lib/stores/roommsgs';
+import FriendRequestPrompt from './FriendRequestPrompt.svelte'
+import { roomMessages } from '$lib/stores/roommsgs'
+import { peers } from '$lib/stores/swarm-state.svelte.js'
 const startTone = new Audio('/audio/startcall.mp3')
 
 let roomName
 let asian = false
 let firstConnect = false
 let loading = false
-let in_voice = false
-let admin = false
+let in_voice = $derived((peers.activeSwarm?.voice_channel || new Map()).has($user.myAddress))
+let admin = $derived(!!peers.activeSwarm?.admin)
 let showUserInfo = false
 let userInfo = {}
-let showMenu = false
-let infoUser = {}
-const me = {address: $user.myAddress, name: $user.username }
-const myAddress = $user.myAddress
-let onlineUsers = []
-let thisSwarm = false
-let knownUsers = $state($rooms.activeHugins)
-let room = $state('')
-let voice_channel = $state([])
-
-//Active hugins
-
-$effect(() => {
-    if ($swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-    if (!thisSwarm) return
-    admin = thisSwarm.admin
-    updateCall()
+let requestUser = $state(null)
+const myAddress = $derived($user.myAddress)
+const me = $derived({ address: $user.myAddress, name: $user.username })
+let room = $derived(peers.activeRoomKey || $rooms.thisRoom?.key || '')
+let thisSwarm = $derived(peers.activeSwarm || false)
+let voice_channel = $derived(peers.activeVoiceUsers)
+let knownUsers = $derived.by(() => {
+    const seen = new Set()
+    const result = []
+    if (me.address) {
+        seen.add(me.address)
+        result.push(me)
+    }
+    for (const u of peers.activeKnownUsers) {
+        if (!u?.address || seen.has(u.address)) continue
+        seen.add(u.address)
+        result.push(u)
+    }
+    return result
 })
 
-//Set group key
-run(() => {
-    if ($rooms.thisRoom?.key) {
-        room = $rooms.thisRoom.key
-    }
-    if ($swarm.activeSwarm && thisSwarm)  {
-        updateList()
-    }
-
-});
-
-const updateCall = () => {
-    if (!thisSwarm) return
-    if (thisSwarm.voice_channel.size === voice_channel.length) return
-    in_voice = thisSwarm.voice_channel.has($user.myAddress)
-    addVoiceUsers()
+const normalizeUsers = (users) => {
+    const seen = new Set()
+    return (users || []).filter((u) => {
+        if (!u?.address || seen.has(u.address)) return false
+        seen.add(u.address)
+        return true
+    }).map((u) => ({
+        address: u.address,
+        room: u.room,
+        name: u.name || u.nickname || 'Anon'
+    }))
 }
 
-const addVoiceUsers = () => {
-    voice_channel = []
-    for (const [key, val] of thisSwarm.voice_channel.entries()) {
-        voice_channel.push(val)
-    }
+const refreshKnownUsers = async (roomKey = room) => {
+    if (!roomKey) return
+    const users = await window.api.getRoomUsers(roomKey)
+    if (!Array.isArray(users)) return
+    const normalized = normalizeUsers(users)
+    if (normalized.length === 0 && peers.activeKnownUsers.length > 0) return
+    peers.setRoomUsers(roomKey, normalized)
 }
 
-
-const removeDuplicates = (arr) => {
-    let uniq = {}
-    return arr.filter((obj) => !uniq[obj.address] && (uniq[obj.address] = true))
+function openRequest(user) {
+    if (user.address === myAddress) return
+    requestUser = user
 }
 
-const notIncludes = (a) => {
-    return !knownUsers.includes(a.address)
+function sendFriendRequest() {
+    if (!requestUser || !room) return
+    window.api.sendFriendRequest(requestUser.address, room)
+    requestUser = null
 }
 
-const updateList = () => {
-    //Adds connected and known users to one array
-    onlineUsers = []
-    knownUsers = removeDuplicates([...thisSwarm.connections.filter(a => notIncludes(a)),
-    ...$rooms.activeHugins]).filter( a => a.address !== myAddress)
-    updateOnline()
-}
-
-const updateOnline = () => {
-     //Updates the online status and checks known users
-    onlineUsers = knownUsers.filter(a => thisSwarm.connections.map(b=>b.address).includes(a.address))
-    knownUsers.unshift(me)
-    knownUsers = removeDuplicates([...onlineUsers.filter(a => notIncludes(a)), ...knownUsers])
-}
-
-function showUser(user) {
-    // Add friend request/tip/send pm etc here?
-    if (!admin || user.address === myAddress) return
-    showMenu = true
-    infoUser = user
+function closeRequest() {
+    requestUser = null
 }
 
 
 const join_voice_channel = async (video = false, screen) => {
         loading = true
-        if (in_voice) return
+        if (in_voice) {
+            disconnect_from_active_voice()
+            loading = false
+            return
+        }
+        if (!thisSwarm) return
         if (thisSwarm.voice_channel.size > 9) {
             window.api.errorMessage(t('tooManyInCall'))
             loading = false
             return
         }
         console.log("Joining!")
-        //Leave any active first
         if ($swarm.voice_channel.size) {
             console.log("Still in voice")
             window.api.errorMessage(t('alreadyInVoiceChannel'))
             return
-            disconnect_from_active_voice()
-            //We already have an active call.
         }
         startTone.play()
         await sleep(50)
         console.log("Want to Join new voice")
         const address = $user.myAddress
-        thisSwarm.voice_channel.set(address, {address, name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = thisSwarm.voice_channel
+        const vc = new Map(thisSwarm.voice_channel || new Map())
+        vc.set(address, {address, name: $user.username, key: thisSwarm.key })
+        // Reassign Map to trigger Svelte 5 reactivity (Maps aren't deep-proxied)
+        const swm = peers.getSwarm(thisSwarm.key)
+        if (swm) swm.voice_channel = vc
+        $swarm.voice_channel = vc
         $swarm.voice = thisSwarm
         window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
-        //Set to true? here
-
         $swarm = $swarm
         loading = false
         console.log("Should be joined and connected here in this swarm", thisSwarm)
@@ -134,10 +119,14 @@ const join_voice_channel = async (video = false, screen) => {
 
     function disconnect_from_active_voice() {
         window.api.exitVoiceChannel()
+        peers.leaveVoice($user.myAddress)
+        $swarm.voice_channel = new Map()
+        $swarm.voice = false
+        $swarm = $swarm
     }
     
-    const isOnline = (user) => {
-       return (thisSwarm && user.address === myAddress) || onlineUsers.some(a => a.address === user.address)
+    const isOnline = (usr) => {
+       return usr.address === $user.myAddress || peers.isOnlineInRoom(usr.address)
     }
     
     const check_avatar = (address) => {
@@ -145,6 +134,13 @@ const join_voice_channel = async (video = false, screen) => {
        if (found) return found.avatar
        else return false
     }
+
+$effect(() => {
+    const activeKey = peers.activeRoomKey
+    $roomMessages.length
+    if (!activeKey) return
+    refreshKnownUsers(activeKey)
+})
 
 </script>
 
@@ -157,7 +153,7 @@ const join_voice_channel = async (video = false, screen) => {
         <div class="list-wrapper">
 
             <div class="voice" style="cursor: pointer;border-bottom: 1px solid var(--border-color);">
-                <div class="voice-list" onclick={join_voice_channel}>
+                <div class="voice-list" class:voice-active={voice_channel.length > 0} onclick={join_voice_channel}>
                 
                     <p style="margin-top: 0px;margin-right: 5px;font-family: Montserrat;font-weight: 700;margin-bottom: -4px;">{t('voiceChannel')}</p>
                     <span style="margin-top: 4px"><Groupcall size="{14}" /></span>
@@ -178,9 +174,9 @@ const join_voice_channel = async (video = false, screen) => {
 
             
             
-            {#each knownUsers as user}    
+            {#each knownUsers as user (user.address)}    
             
-                    <div in:fade|global class="card" class:offline={!isOnline(user)} onclick={() => showUser(user)}>
+                    <div in:fade|global class="card" class:offline={!isOnline(user)} onclick={() => openRequest(user)}>
                         {#if isOnline(user)}
                             <div class="online"></div>
                         {/if}
@@ -218,6 +214,10 @@ const join_voice_channel = async (video = false, screen) => {
         </div>
 
 </div>
+
+{#if requestUser}
+    <FriendRequestPrompt user={requestUser} onSend={sendFriendRequest} on:click={closeRequest} />
+{/if}
 
 <style lang="scss">
 p {
@@ -428,10 +428,27 @@ p {
 
 .voice-list {
     text-align: center; padding-bottom: 0; padding: 15.5px 10px 18px 10px; display: flex;
-    
+    transition: color 300ms ease;
+
     &:hover {
         background-color: var(--border-border);
     }
+}
+
+.voice-active {
+    color: #3fd782;
+
+    :global(svg) {
+        color: #3fd782;
+        fill: #3fd782;
+    }
+
+    animation: voice-pulse 2s ease-in-out infinite;
+}
+
+@keyframes voice-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .offline {
@@ -445,6 +462,39 @@ p {
     padding: 5px;
     margin: 1px;
     object-fit: cover;
+}
+
+.ctx-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9998;
+}
+
+.ctx-menu {
+    position: fixed;
+    z-index: 9999;
+    background: var(--card-color, #1a1a2e);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    min-width: 140px;
+    padding: 4px 0;
+}
+
+.ctx-item {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-family: 'Montserrat';
+    color: var(--text-color, #eee);
+    cursor: pointer;
+    transition: background 120ms;
+
+    &:hover {
+        background: rgba(255,255,255,0.08);
+    }
 }
 
 </style>

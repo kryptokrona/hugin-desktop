@@ -111,24 +111,20 @@
 			]);
 			const unread = [
 				...unreadPm.map((m) => {
-					const contact = my_contacts.find((c) => c.address === m.chat);
+					const contact = my_contacts.find((c) => c.address === m.conversation);
 					return {
 						type: 'message',
-						chat: m.chat,
-						msg: m.msg,
-						message: m.msg,
+						conversation: m.conversation,
+						message: m.message,
 						timestamp: m.timestamp,
 						name: contact?.name
 					};
 				}),
 				...unreadGroups.map((m) => ({
-					type: roomKeys.has(m.grp) ? 'room' : 'group',
-					group: m.grp,
-					grp: m.grp,
+					type: roomKeys.has(m.room) ? 'room' : 'group',
+					room: m.room,
 					message: m.message,
-					msg: m.message,
-					time: m.time,
-					timestamp: m.time,
+					timestamp: m.timestamp,
 					hash: m.hash,
 					name: m.name,
 					address: m.address,
@@ -139,9 +135,7 @@
 				...unreadFeed.map((m) => ({
 					type: 'feed',
 					message: m.message,
-					msg: m.message,
 					timestamp: m.timestamp,
-					time: m.timestamp,
 					nickname: m.nickname,
 					name: m.nickname,
 					hash: m.hash,

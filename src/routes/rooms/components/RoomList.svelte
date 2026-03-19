@@ -1,96 +1,70 @@
 <script>
-   import { run } from 'svelte/legacy';
-
-import {onDestroy, onMount} from 'svelte'
-import {fade, fly} from 'svelte/transition'
-import {roomMessages} from '$lib/stores/roommsgs.js'
-import { misc, notify, swarm, rooms} from '$lib/stores/user.js'
+import { onDestroy, onMount } from 'svelte'
+import { fly } from 'svelte/transition'
+import { misc, notify, rooms, swarm } from '$lib/stores/user.js'
 import Plus from '$lib/components/icons/Plus.svelte'
 import RemoveGroup from '$lib/components/chat/RemoveGroup.svelte'
-import {sleep} from '$lib/utils/utils.js'
-import {flip} from 'svelte/animate'
+import { sleep } from '$lib/utils/utils.js'
+import { flip } from 'svelte/animate'
 import Room from './Room.svelte'
 import { t } from '$lib/utils/translation.js'
+import { peers } from '$lib/stores/swarm-state.svelte.js'
 
-let roomList = $state([])
 let room = $state('')
 let roomName = $derived($rooms.thisRoom?.name)
+let roomList = $derived($rooms.roomArray || [])
 
-let {
-    onPrintRoom,
-    onRemoveRoom
-} = $props()
-
-
-run(() => {
-      roomList
-   });
-
-//This group name
+let { onPrintRoom, onRemoveRoom } = $props()
 
 let show_groups = $derived(true)
-	
+
+const channels = ['roomMsg', 'banned']
+
 const nogroup = {
-        nick: 'No contacts',
-        chat: 'Hugin Rooms',
-        key:  $misc.welcomeAddress,
-        msg: 'Click the + icon',
-        name: 'Private Rooms',
-    }
-    
-onMount( async () => {
+    nick: 'No contacts',
+    room: 'Hugin Rooms',
+    key: $misc.welcomeAddress,
+    msg: 'Click the + icon',
+    name: 'Private Rooms',
+}
+
+onMount(async () => {
     await printRooms()
     checkRoom()
-    filterActiveHugins()
-    
+    await filterActiveHugins()
+    window.api.receive('roomMsg', async () => {
+        await filterActiveHugins()
+        await printRooms()
+    })
+    window.api.receive('banned', async () => {
+        await printRooms()
+        await filterActiveHugins()
+        checkRoom()
+    })
 })
 
-run(() => {
-//Listen for sent message to update conversation list
-window.api.receive('roomMsg', () => {
-    filterActiveHugins()
-    printRooms()
-})
-
-})
-
-window.api.receive('added-room', (key) => { 
-    $swarm.activeSwarm.key = key
-    filterActiveHugins()
-})
-
-run(() => {
-    window.api.receive('peer-connected', () => {
-    filterActiveHugins()
-})
-})
-
-run(() => { 
-    window.api.receive('peer-disconnected', () => {
-    filterActiveHugins()
-})
-})
-
-window.api.receive('banned', (key) => {
-    printRooms()
-    filterActiveHugins()
-    checkRoom()
+onDestroy(() => {
+    for (const channel of channels) {
+        window.api.removeAllListeners(channel)
+    }
 })
 //Check active room status
 const checkRoom = () => {
     //If we have an active room
-    if ($rooms.thisRoom.chat) {
+    console.log("Checking room", $rooms.thisRoom)
+    console.log("$rooms.roomArray.length", $rooms.roomArray.length)
+    if ($rooms.thisRoom?.key && $rooms.thisRoom?.chat === true) {
         printRoom($rooms.thisRoom)
         return
     }
     //If we have rooms but no active, print the first.
-    if ($rooms.roomArray.length && !$rooms.thisRoom.chat) {
+    if ($rooms.roomArray.length && $rooms.thisRoom?.chat === false) {
         $rooms.thisRoom = $rooms.roomArray[0]
         printRoom($rooms.thisRoom)
         return
     }
     //IF we have no groups and no active room. Set default
-    if (!$rooms.thisRoom.chat || !$rooms.roomArray.length) {
+    if (!$rooms.thisRoom?.key || !$rooms.roomArray.length) {
         setEmptyRoom()
         printRoom(nogroup)
         return
@@ -99,33 +73,34 @@ const checkRoom = () => {
 
 //Display empty room for new accounts
 const setEmptyRoom = () => {
-    $rooms.roomArray.push(nogroup)
-    roomList = $rooms.roomArray
+    $rooms.roomArray = [...$rooms.roomArray, nogroup]
 }
 
 //Print chosen room key
 const printRoom = async (room) => {
-    $rooms.activeHugins = []
-    const active = $swarm.active.find(a => a.key === room.key)
-    $swarm.activeSwarm = active
+    if (!room?.key) return
     onPrintRoom(room)
     await sleep(150)
     console.log("Print room!")
-    readMessage(room)
+    await readMessage(room)
 }
 
 //Function to get all users in a room.
 async function filterActiveHugins() {
-    const users = await window.api.getRoomUsers($swarm.activeSwarm?.key)
+    const activeKey = peers.activeRoomKey || $rooms.thisRoom?.key
+    if (!activeKey) return
+    const users = await window.api.getRoomUsers(activeKey)
+    if (!Array.isArray(users)) return
     const all = []
-        for (const u of users) {
-            const user = {address: u.address, room: u.room, name: u.name}
-            make_avatar(u.avatar, u.address)
-            all.push(user)
-        }
-        console.log("Updated hugins")
-        $rooms.activeHugins = all
-
+    for (const u of users) {
+        const user = { address: u.address, room: u.room, name: u.name }
+        make_avatar(u.avatar, u.address)
+        all.push(user)
+    }
+    // Avoid wiping the sidebar due to transient empty reads.
+    if (all.length === 0 && $rooms.activeHugins.length > 0) return
+    console.log("Updated hugins")
+    peers.setRoomUsers(activeKey, all)
 }
 
 const make_avatar = (data, address) => {
@@ -139,9 +114,14 @@ const make_avatar = (data, address) => {
 }
 //Print our conversations from DBs
 async function printRooms() {
-    roomList = await window.api.getRooms()
-    $rooms.roomArray = roomList
-    filterActiveHugins()
+    const rawRooms = await window.api.getRooms()
+    const normalized = (rawRooms || []).map((room) => ({
+        ...room,
+        nick: room.nickname || 'Anon',
+        msg: room.message || ''
+    }))
+    $rooms.roomArray = normalized
+    await filterActiveHugins()
 }
 
 //Remove active group
@@ -161,17 +141,15 @@ const removeRoom = async () => {
     $rooms.removeRoom = false
     onRemoveRoom
     await sleep(100)
-    filterActiveHugins()
+    await filterActiveHugins()
 }
 
 //Read message
 async function readMessage(e) {
     await window.api.markGroupMessagesReadByGroup(e.key)
-    const clear = $notify.unread.filter(unread => unread.group !== e.key)
+    const clear = $notify.unread.filter(unread => unread.room !== e.key)
     $notify.unread = clear
-
-    roomList = roomList
-    filterActiveHugins()
+    await filterActiveHugins()
 }
 
 function sendPM() {
@@ -189,11 +167,11 @@ const addChannel = () => {
 }
 
 //Set group key
-run(() => {
-      if ($rooms.thisRoom?.key) {
-       room = $rooms.thisRoom.key
-   }
-   });
+$effect(() => {
+    if ($rooms.thisRoom?.key) {
+        room = $rooms.thisRoom.key
+    }
+})
 
 function flipper(node, {
 		delay = 0,
@@ -238,7 +216,6 @@ function flipper(node, {
                         <Room 
                             r="{room}" 
                             onPrintRoom="{() => printRoom(room)}" 
-                            usersOnline={$swarm.active.find(a => a.key === room.key)?.connections.length > 0}
                         />
                     </div>
                 {/each}

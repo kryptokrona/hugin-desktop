@@ -42,6 +42,7 @@
         "src/backend/wallet.cjs",
         "src/backend/account.cjs",
         "src/backend/storage.cjs",
+        "src/backend/p2p.cjs",
         {
             "from": "build",
             "to": ""
