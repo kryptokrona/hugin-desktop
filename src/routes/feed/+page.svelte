@@ -211,21 +211,20 @@ const openAddRoom = () => {
 const addNewRoom = async (e) => {
     let room = e
     const admin = e.admin
-    if (room.length < 32) return
+    if (!room?.key || room.key.length < 32) return
     openAddRoom()
     //Avoid svelte collision
     let hash = Date.now().toString() + hashPadding()
     let add = {
-        m: t('joinedRoom') || 'Joined Room',
-        n: room.name,
+        message: t('joinedRoom') || 'Joined Room',
+        name: room.name,
         hash: hash,
-        t: Date.now().toString(),
-        s: '',
+        timestamp: Date.now().toString(),
+        signature: '',
         sent: false,
-        r: '',
-        k: room.key,
-        g: room.key,
-        h: parseInt(Date.now() * 1000),
+        reply: '',
+        address: '',
+        room: room.key
     }
     window.api.addRoom(add, admin)
     printRoom(room, true)

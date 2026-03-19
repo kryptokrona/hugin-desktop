@@ -26,6 +26,7 @@ import TopBar from "./components/TopBar.svelte"
 import FillButton from "$lib/components/buttons/FillButton.svelte"
 import SendTransaction from "$lib/components/finance/SendTransaction.svelte"
 import { flip } from 'svelte/animate';
+import { peers } from '$lib/stores/swarm-state.svelte.js'
 
 let replyto = ''
 let reply_exit_icon = 'x'
@@ -41,9 +42,8 @@ let windowChat
 let channelMessages = []
 let pageNum = 0;
 let loadMore = $state(true)
-let admin = $state(false)
+let admin = $derived(!!peers.activeSwarm?.admin)
 const welcomeAddress = $misc.welcomeAddress
-let thisSwarm = $state(false)
 let someoneTyping = $state(null);
 let usersTyping = $state(0);
 
@@ -75,7 +75,7 @@ $effect(() => {
 
   lastRoomFromUrl = roomKey;
   window.api.markGroupMessagesReadByGroup(roomKey)
-  const clear = $notify.unread.filter(unread => unread.group !== roomKey)
+  const clear = $notify.unread.filter(unread => unread.room !== roomKey)
   $notify.unread = clear
 
   printRoom(room);
@@ -86,17 +86,8 @@ $effect(() => {
 
 
 
-let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
-run(() => {
-        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-    });
-
 run(() => {
         replyTrue = $rooms.replyTo?.reply
-    });
-
-run(() => {
-        if (thisSwarm) admin = thisSwarm.admin
     });
 
 const isFile = (data) => {
@@ -129,11 +120,12 @@ onMount(async () => {
     scrollDown()
     //Listens for new messages from backend
     window.api.receive('roomMsg', (data) => {
+        console.log("New room message in frontend", data)
         newMessage(data)
         
     })
     window.api.receive('history-update', (data) => {
-        const inroom = $swarm.activeSwarm?.key === data.key
+        const inroom = peers.activeRoomKey === data.key
 
         //Print individual missed messages in a conversation if active
         if (data.missing?.length > 0 && inroom) {
@@ -155,9 +147,10 @@ onMount(async () => {
 function newMessage(data) {
     const file = isFile(data)
     if (file) data.file = file
-    const thisroom = data.group === $swarm.activeSwarm.key
-    const roomtopic = data.topic === $swarm.activeSwarm.topic
-    const thistopic = data.file?.key === $swarm.activeSwarm.topic
+    const activeSwm = peers.activeSwarm
+    const thisroom = data.room === peers.activeRoomKey
+    const roomtopic = data.topic === activeSwm?.topic
+    const thistopic = data.file?.key === activeSwm?.topic
     const inrooms = $page.url.pathname === '/rooms'
     if (data.address === $user.myAddress) return
         if ((thisroom || thistopic || roomtopic) && inrooms) {
@@ -209,7 +202,11 @@ const sendRoomMsg = async (e, tipping = false, reaction = false) => {
     let time = Date.now()
     const hash = await window.api.createGroup()
     let myName = $user.username
-    let room = $swarm.activeSwarm?.key
+    const activeRoomKey = peers.activeRoomKey || $rooms.thisRoom?.key
+    if (!activeRoomKey || activeRoomKey.length !== 128) {
+        window.api.errorMessage(t('noActiveRoom') || 'No active room selected.')
+        return
+    }
     let in_swarm = true
     let in_channel = $swarm.activeChannel.name
     let tip = false
@@ -225,22 +222,22 @@ const sendRoomMsg = async (e, tipping = false, reaction = false) => {
     //Construct a new json object (myGroupMessage) to be able to print our message instant.
     let myRoomMessage = {
         message: msg,
-        grp: room,
+        room: activeRoomKey,
         reply: replyto,
         address: myaddr,
-        time: time,
+        timestamp: time,
         name: myName,
         hash: hash,
         sent: true,
         tip: tip
     }
     let sendMsg = {
-        m: msg,
-        g: room,
-        r: replyto,
-        k: myaddr,
-        t: time,
-        n: myName,
+        message: msg,
+        room: activeRoomKey,
+        reply: replyto,
+        address: myaddr,
+        timestamp: time,
+        name: myName,
         hash: hash,
         swarm: in_swarm,
         sent: true,
@@ -281,7 +278,7 @@ const printRoomMessage = (roomMsg, file = false) => {
 
     //If we sync older files, make sure to sort the incoming messages.
     if (file) {
-      fixedRooms = removeDuplicates(fixedRooms.sort((a, b) => b.time - a.time)) 
+      fixedRooms = removeDuplicates(fixedRooms.sort((a, b) => b.timestamp - a.timestamp)) 
     } else  fixedRooms = removeDuplicates(fixedRooms)
 }
 
@@ -339,23 +336,26 @@ const addNewRoom = async (e) => {
     console.log("AAADDD ROOM INVITE", e)
     let room = e
     const admin = e.admin
-    if (room.length < 32) return
+    if (!room?.key || room.key.length < 32) return
     openAddRoom()
     //Avoid svelte collision
     let hash = Date.now().toString() + hashPadding()
     let add = {
-        m: t('joinedRoom') || 'Joined Room',
-        n: room.name,
+        message: t('joinedRoom') || 'Joined Room',
+        name: room.name,
+        key: room.key,
         hash: hash,
-        t: Date.now().toString(),
-        s: '',
+        timestamp: Date.now().toString(),
+        signature: '',
         sent: false,
-        r: '',
-        k: room.key,
-        g: room.key,
-        h: parseInt(Date.now() * 1000),
+        reply: '',
+        address: '',
+        room: room.key
     }
     window.api.addRoom(add, admin)
+    if (!$rooms.roomArray.some(r => r.key === room.key)) {
+        $rooms.roomArray = [...$rooms.roomArray, { key: room.key, name: room.name, nick: '', msg: '', message: '' }]
+    }
     printRoom(room, true)
 }
 
@@ -374,6 +374,7 @@ function getActiveRoom(room) {
 
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.
 async function printRoom(room, create = false) {
+    console.log("print room", room)
     $keyboard.input = ''
     loadMore = true
     pageNum = 0
@@ -383,9 +384,6 @@ async function printRoom(room, create = false) {
     channelMessages = []
     filterRooms = []
     $roomMessages = []
-    $rooms.activeHugins = []
-    $swarm.activeSwarm = false
-    //Return the latest messages
     console.log("Get messages")
     const messages = await getMessages(room)
     $roomMessages = messages
@@ -393,16 +391,14 @@ async function printRoom(room, create = false) {
     if (create) {
         loader = true
         await sleep(777)
-
     }
-    const active = $swarm.active.find(a => a.key === room.key)
-    $swarm.activeSwarm = active
-    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: active?.topic}
-
+    peers.setActiveRoom(room.key)
+    $rooms.thisRoom = { key: room.key, name: room.name, chat: true, topic: peers.activeSwarm?.topic }
     const inRoom = getActiveRoom(room.key)
     if (inRoom) $keyboard.input = inRoom.text
     $keyboard = $keyboard
 
+    console.log("messages", messages)
     checkReactions(messages, false)
     replyExit()
     scrollDown()
@@ -418,7 +414,7 @@ function addFileMessage(array) {
         }
         const file = isFile(msg)
         if (!file) continue
-        if (parseInt(file.time) === parseInt(msg.time) || file.hash === msg.hash) {
+        if (parseInt(file.time) === parseInt(msg.timestamp) || file.hash === msg.hash) {
        
         array[i].file = file
         }
@@ -510,7 +506,7 @@ async function getMessages(group) {
 }
 
 async function getMoreMessages() {
-    return await window.api.printRoom($swarm.activeSwarm?.key, pageNum)
+    return await window.api.printRoom(peers.activeRoomKey, pageNum)
 }
 
 let dragover = $state(false)
@@ -542,7 +538,7 @@ async function dropFile(e) {
     const hash = await window.api.createGroup()
     const message = {
         message: t('fileShared') || 'File shared',
-        grp: $swarm.activeSwarm?.key,
+        room: peers.activeRoomKey,
         name: $user.username,
         address: $user.myAddress,
         reply: "",
@@ -551,15 +547,14 @@ async function dropFile(e) {
         sent: true,
         channel: "Room",
         joined: true,
-        hash: hash,
-        time: time
+        hash: hash
     }
     $files.push(acceptedFiles[0])
     $localFiles.push(acceptedFiles[0])
     $localFiles = $localFiles
     $files = $files
     printRoomMessage(message)
-    window.api.groupUpload(filename, path, $swarm.activeSwarm?.key, size, time, hash)
+    window.api.groupUpload(filename, path, peers.activeRoomKey, size, time, hash)
 }
 
 // function setChannels() {
@@ -616,7 +611,9 @@ let imTyping = false
 const typing = (e) => {
     if (imTyping === e.typing) return
     imTyping = e.typing
-    window.api.send('typing', {key: $swarm.activeSwarm.key, typing: e.typing})
+    const key = peers.activeRoomKey
+    if (!key) return
+    window.api.send('typing', { key, typing: e.typing })
 }
 
 const handlePaste = async (e) => {
@@ -722,7 +719,7 @@ const handlePaste = async (e) => {
         
         <div class="outer" id="group_chat_window" bind:this={windowChat} bind:clientHeight={windowHeight} in:fly|global="{{ y: 50 }}">
             {#if !$rooms.banned.some(a => a === $rooms.thisRoom?.key)}
-            {#if (fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom.chat) || loader}
+            {#if (fixedRooms.length === 0 && !$rooms.roomArray.some(a => a.key === welcomeAddress) && !$rooms.thisRoom?.key) || loader}
                 <div>
                     <Loader/>
                 </div>
@@ -738,7 +735,7 @@ const handlePaste = async (e) => {
                 !message.reply &&
                 !message.tip &&
                 !message.file &&
-                (nextMessage.time - message.time) < 300000}
+                (nextMessage.timestamp - message.timestamp) < 300000}
             <div animate:flip="{{duration: 150}}">
                 <GroupMessage
                     ReactTo="{(e) => sendRoomMsg(e, false, true)}"
@@ -749,10 +746,10 @@ const handlePaste = async (e) => {
                     reply="{message.reply}"
                     msg="{message.message}"
                     myMsg="{message.sent}"
-                    group="{message.grp}"
+                    group="{message.room}"
                     nickname="{message.name}"
                     msgFrom="{message.address}"
-                    timestamp="{message.time}"
+                    timestamp="{message.timestamp}"
                     hash="{message.hash}"
                     file="{message?.file}"
                     room="{true}"

@@ -1,33 +1,20 @@
 <script>
-    import { run } from 'svelte/legacy';
-
     import {fade} from 'svelte/transition'
     import {get_avatar} from '$lib/utils/hugin-utils.js'
-    import { notify, swarm, user, rooms} from '$lib/stores/user.js'
+    import { notify, rooms, user } from '$lib/stores/user.js'
     import { isLatin } from '$lib/utils/utils'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
     
-    /** @type {{r: any, onPrintRoom: any, usersOnline: boolean}} */
-    let { r, onPrintRoom, usersOnline = false } = $props();
-    let channels = $state([])
-    let voice_channel = $state([])
+    /** @type {{r: any, onPrintRoom: any}} */
+    let { r, onPrintRoom } = $props();
     let asian = $state(false)
-    let thisSwarm = $state(false)
-    run(() => {
-        channels
-    });
-    let isThis = $derived($rooms.thisRoom?.key === $swarm.activeSwarm?.key)
-    run(() => {
-        if (isThis && $swarm.activeSwarm) thisSwarm = $swarm.activeSwarm
-    });
-    run(() => {
-        if (thisSwarm) voice_channel = thisSwarm.voice_channel
-    });
+    let isThis = $derived($rooms.thisRoom?.key === r?.key)
+    let usersOnline = $derived(peers.onlineCount(r?.key) > 0)
     
     
     const printRoom = (rm) => {
-        const active = $swarm.active.find(a => a.key === rm.key)
-        if (rm.key === $swarm.activeSwarm.key) return
-        $swarm.activeSwarm = active
+        if (!rm?.key) return
+        if (rm.key === peers.activeRoomKey) return
         onPrintRoom()
     }
     
@@ -35,15 +22,14 @@
         $rooms.removeRoom = !$rooms.removeRoom
     }
 
-    let in_voice = $derived(voice_channel.has($user.myAddress))
-    
-    run(() => {
-        if (thisSwarm) channels = thisSwarm.channels
-    });
-    
-    let counter = $derived($notify.unread.filter(a => a.type === "room" && a.group === r.key).length)
+    let in_voice = $derived((peers.activeSwarm?.voice_channel || new Map()).has($user.myAddress))
 
-    run(() => {
+    let previewAuthor = $derived(r?.nick || r?.author || 'Anon')
+    let previewText = $derived(r?.message || r?.lastMessage || r?.text || '')
+    
+    let counter = $derived($notify.unread.filter(a => a.type === "room" && a.room === r.key).length)
+
+    $effect(() => {
         if (!isLatin(r.name)) asian = true
     });
 
@@ -57,7 +43,7 @@
         class="card"
         in:fade|global
         out:fade|global
-        class:active="{$swarm.activeSwarm?.key === r.key}"
+        class:active={peers.activeRoomKey === r.key}
         onclick={(e) => printRoom(r)}
     >
         <div class="avatar-wrapper">
@@ -69,8 +55,8 @@
         <div class="content">
             <h4 class:asian class:big={asian}>{r.name}</h4>
             <div class="text">
-                <p class:asian class="from">{r.nick}:</p>
-                <p>{r.msg}</p>
+                <p class:asian class="from">{previewAuthor}:</p>
+                <p>{previewText}</p>
             </div>
         </div>
         {#if counter > 0}

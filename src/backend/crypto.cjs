@@ -187,21 +187,21 @@ const decrpyt_beam_message = async (str, msgKey) => {
     decrypted_message.k = msgKey
     decrypted_message.sent = false
 
-    const [message, address, key, timestamp] = sanitize_pm_message(decrypted_message)
-    if (!message) return
+    const result = sanitize_pm_message(decrypted_message)
+    if (!result.message) return
     
     const newMsg = {
-        msg: message,
-        chat: address,
+        message: result.message,
+        conversation: result.conversation,
         sent: false,
-        timestamp: timestamp,
+        timestamp: result.timestamp,
         offchain: true,
         beam: true,
     }
 
     Hugin.send('newMsg', newMsg)
     Hugin.send('privateMsg', newMsg)
-    saveMsg(message, address, false, timestamp)
+    saveMsg(result.message, result.conversation, false, result.timestamp)
 }
 
 

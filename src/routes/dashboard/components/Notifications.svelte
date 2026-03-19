@@ -14,9 +14,10 @@
 
     function getLocationLabel(notif) {
       const kind = getNotifKind(notif)
+      const roomKey = notif.room
 
       if (kind === 'feed') return 'in feed'
-      if (kind === 'room') return `in ${$rooms.roomArray.find(r => r.key === notif.group).name || 'room'}`
+      if (kind === 'room') return `in ${$rooms.roomArray.find(r => r.key === roomKey)?.name || 'room'}`
       return 'in DM'
     }
 
@@ -29,10 +30,11 @@
       }
 
       if (kind === 'room') {
+        const roomKey = notif.room
         $rooms.openingLink = true;
         goto(`/rooms`);
         setTimeout(() => {
-          goto(`/rooms?room=${notif.group}`)
+          goto(`/rooms?room=${roomKey || ''}`)
         }, 500)
         return
       }
@@ -40,7 +42,9 @@
       // DM
       // const contactId = (notif.address || '') + (notif.key || '')
       // active.chat, key: active.key, name: active.name
-      goto(`/messages?chat=${notif.chat}&name=${notif.name}`)
+      const chat = notif.conversation || notif.address || ''
+      const name = notif.name || notif.nickname || 'Unknown'
+      goto(`/messages?chat=${chat}&name=${name}`)
     }
 
 
@@ -48,11 +52,11 @@
     const recentUnread = $derived(
         $notify.unread.filter((notif) => {
             if (notif.message === 'Joined room') return false
-            const ts = parseInt(notif.timestamp || notif.time || 0, 10)
+            const ts = parseInt(notif.timestamp || 0, 10)
             return ts > Date.now() - ONE_DAY_MS
         }).sort((a, b) => {
-            const tsA = parseInt(a.timestamp || a.time || 0, 10)
-            const tsB = parseInt(b.timestamp || b.time || 0, 10)
+            const tsA = parseInt(a.timestamp || 0, 10)
+            const tsB = parseInt(b.timestamp || 0, 10)
             return tsB - tsA // newest first (descending order)
         })
     )
@@ -88,12 +92,12 @@
             DeleteMsg="{(e) => console.log('delete to')}"
             message="{notif}"
             reply="{notif.reply ?? ''}"
-            msg="{notif.message ?? notif.msg ?? ''}"
+            msg="{notif.message ?? ''}"
             myMsg="{notif.sent ?? false}"
-            group="{notif.grp ?? notif.group ?? ''}"
+            group="{notif.room ?? ''}"
             nickname="{notif.name ?? notif.nickname ?? ''}"
-            msgFrom="{notif.address ?? notif.chat ?? ''}"
-            timestamp="{parseInt(notif.timestamp || notif.time || 0)}"
+            msgFrom="{notif.address ?? notif.conversation ?? ''}"
+            timestamp="{parseInt(notif.timestamp || 0)}"
             hash="{notif.hash ?? ''}"
             file="{notif?.file}"
             room="{getNotifKind(notif) === 'room'}"

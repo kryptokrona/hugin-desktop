@@ -10,7 +10,7 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds} from '$lib/stores/user.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds, friendRequests} from '$lib/stores/user.js'
     import { themes } from '$lib/theme/themes.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
@@ -147,6 +147,17 @@
         $feed = $feed
     })
 
+    window.api.receive('friend-request', (data) => {
+        if (!$friendRequests.some(r => r.address === data.address)) {
+            const normalized = { ...data, room_name: data.roomName || data.room_name || '' }
+            $friendRequests = [...$friendRequests, normalized]
+        }
+    })
+
+    window.api.receive('friend-requests-updated', (data) => {
+        $friendRequests = data || []
+    })
+
 
     window.api.receive('rec-off', (data) => {
         //This is for logging SDP for calls, to look for bugs etc during parse and expand phase
@@ -180,33 +191,45 @@
      })
 
 
-    window.api.receive('room-notification', ([data, add = false]) => {
+    window.api.receive('room-notification', (payload) => {
+        let data = null
+        let add = false
+        if (Array.isArray(payload)) {
+            data = payload[0]
+            add = payload[1] ?? false
+        } else if (payload && typeof payload === 'object') {
+            data = payload.message || payload.data || payload
+            add = payload.add ?? false
+        }
+        if (!data) return
         console.log("room notification", data)
 
 
         //Initial state check
         if ($notify.notifications.some(a => a.hash === data.hash)) return
-        const thisgroup = data.group === $rooms.thisRoom.key
+        const roomKey = data.room
+        const thisgroup = roomKey === $rooms.thisRoom.key
         const ingroups = $page.url.pathname === '/rooms'
-        const group = $rooms.roomArray.find(a => a.key === data.group)
+        const group = $rooms.roomArray.find(a => a.key === roomKey)
         if (data.address == $user.myAddress) return
         if (thisgroup && ingroups && $swarm.showVideoGrid && data.channel === "Chat room") return
         if (thisgroup && ingroups && data.channel !== "Chat room" && $misc.focus && !$swarm.showVideoGrid) return
         new_messages = true
-        data.room = true
+        data.room = roomKey
+        data.type = 'room'
 
         //Check if we want to play sound and display notif.
         if ($notify.new.length < 2 && !$notify.que && !add) {
-            if (Date.now() - parseInt(data.time) > 120000) return
+            if (Date.now() - parseInt(data.timestamp) > 120000) return
             //In app notif.
-            if (!$notify.off.some(a => a === group.name)) {
+            if (!$notify.off.some(a => a === (group?.name || 'room'))) {
                 if ($misc.focus && $sounds.on) {
                     board_message_sound.play()
                 }
                 $notify.new.push(data)
                 //Os notif.
                 if (!$misc.focus) { 
-                    data.roomName = group.name
+                    data.roomName = group?.name || 'room'
                     window.api.send('notify-room', data)
                 }
             }
@@ -219,25 +242,23 @@
         if (add) return
 
         //Add to unread ie. shows the unread counter, and dots on the sidebar.
-        data.type = 'room'
         $notify.unread.push(data)
         $notify = $notify
     })
 
     window.api.receive('privateMsg', (data) => {
-        //If address is our own, maybe sent from mobile
-        if (data.chat === $user.myAddress) return
+        const conversation = data.conversation || data.address
+        if (conversation === $user.myAddress) return
 
-        // saveToStore(data)
-        //Convert message to notification
-        const contact = $user.contacts.find((a) => a.chat === data.chat)
+        const contact = $user.contacts.find((a) => (a.conversation || a.address) === conversation)
         if (contact) data.name = contact.name
         
-        data.message = data.msg
         data.type = 'message'
+        data.conversation = conversation
 
+        const activeConversation = $user.activeChat?.conversation || $user.activeChat?.chat || $user.activeChat?.address
         const inchat = 
-        data.chat === $user.activeChat.chat 
+        conversation === activeConversation
         && $misc.focus
         && $page.url.pathname === '/messages'
 
@@ -245,9 +266,8 @@
         if (!$misc.focus) window.api.send('notify-dm', data)
                 
 
-        //If we are active in the chat, but minimized.
         if (
-            data.chat === $user.activeChat.chat 
+            conversation === activeConversation
             && !$misc.focus 
             && $page.url.pathname === '/messages'
         )
@@ -272,7 +292,7 @@
 
     window.api.receive('user-joined-voice-channel', data => {
         console.log("Someone joined a call, layout", data)
-        let contact = $user.contacts.find((a) => a.chat == data.address)
+        let contact = $user.contacts.find((a) => (a.chat || a.conversation || a.address) == data.address)
         if (!contact) return
         let room = $swarm.active.find(a => a.topic === data.topic)
         console.log("Rojom", room)
@@ -280,7 +300,7 @@
         if (!room.beam) return
         //We are already in the call
         if (room === $swarm.voice) return
-        if ($swarm.voice.voice_channel.has(data.address)) return
+        if ($swarm.voice?.voice_channel?.has(data.address)) return
 
         let joined = {
             chat: data.address,
@@ -317,8 +337,8 @@
         console.log('***** GROUP INVITED ****', data)
         let name
         let key
-        if ($user.contacts.some((a) => a.chat == data.substring(0, 99))) {
-            let contact = $user.contacts.find((a) => a.chat == data.substring(0, 99))
+        if ($user.contacts.some((a) => (a.chat || a.conversation || a.address) == data.substring(0, 99))) {
+            let contact = $user.contacts.find((a) => (a.chat || a.conversation || a.address) == data.substring(0, 99))
             name = contact.name
             key = contact.key
         } else {
@@ -447,8 +467,10 @@
 		console.log('Updated', update)
 		$beam.active = update
 	})
-    window.api.receive('login-success', ()  => {
+    window.api.receive('login-success', async ()  => {
         $user.loggedIn = true
+        const pending = await window.api.getFriendRequests()
+        $friendRequests = pending || []
     })
 
     window.api.receive('stop-beam', (addr, close = false)  => {
@@ -701,7 +723,7 @@
         <div class="notifs">
             {#if $notify.new.length < 2 && !$notify.que}
                 {#each $notify.new as notif}
-                {#if notif?.room === true}
+                {#if notif?.type === 'room'}
                     <RoomNotification Hide="{removeNotification}" message="{notif}" error="{false}"/>
                     {:else}
                     <Notification Hide="{removeNotification}" message="{notif}" error="{false}" success={true}/>

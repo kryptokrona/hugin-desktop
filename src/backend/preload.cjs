@@ -230,6 +230,18 @@ const WINDOW_API = {
         ipcRenderer.send('fetch-group-history', settings)
     },
 
+    getFriendRequests: async () => {
+        return await ipcRenderer.invoke('get-friend-requests')
+    },
+    acceptFriendRequest: (address) => {
+        ipcRenderer.send('accept-friend-request', address)
+    },
+    rejectFriendRequest: (address) => {
+        ipcRenderer.send('reject-friend-request', address)
+    },
+    sendFriendRequest: (address, roomKey) => {
+        ipcRenderer.send('send-friend-request', address, roomKey)
+    },
     removeContact: async (contact) => {
         ipcRenderer.send('remove-contact', contact)
     },

@@ -27,6 +27,7 @@ const DOWNLOAD_REQUEST = 'download-request'
 const REQUEST_FEED = 'request-feed';
 const SEND_FEED_HISTORY = 'send-feed-history';
 
+let started = false
 
 const ONE_DAY = 24 * 60 * 60 * 1000
 
@@ -527,7 +528,10 @@ async challenge(message_hash) {
 
 async message(payload, viewtag, kind = 'dm', hash = randomKey()) {
   try {
-    if (!this.connection) return { success: false, reason: 'No connection' }
+    if (!this.connection) {
+        this.reconnect()
+        return { success: false, reason: 'No connection to node' }
+    }
 
     const request_id = Date.now()
     const max_attempts = 3
@@ -658,6 +662,7 @@ const create_swarm = async (data, beam, chat) => {
     const [admin] = is_room_admin(data.key)
     const [base_keys, dht_keys, sig] = get_new_peer_keys(key)
     const topicHash = base_keys.publicKey.toString('hex')
+    if (active_swarms.some(a => a.topic === topicHash)) return true
     await Storage.load_drive(topicHash)
     const files = await Storage.load_meta(topicHash)
     const peers = beam ? 1 : 100
@@ -1417,8 +1422,8 @@ const process_request = async (messages, key, live = false) => {
                 m: m?.message,
                 k: m?.address,
                 s: m?.signature,
-                t: m?.time ? m.time : m?.timestamp,
-                g: m?.grp ? m?.grp : m?.room,
+                t: m?.timestamp,
+                g: m?.room,
                 r: m?.reply,
                 n: m?.name ? m?.name : m?.nickname,
                 hash: m?.hash,
@@ -1542,7 +1547,7 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
         return
     }
     const message = sanitize_group_message(JSON.parse(data), false)
-    console.log("Got incoming message!", message)
+    console.log("Got incoming message!", data.toString())
     if (!message) return
     const msg = await saveGroupMsg(message, false, true)
     if (!msg) return

@@ -33,7 +33,8 @@ let wantToAdd = $state(false)
 let windowHeight = $state()
 let windowChat
 
-let thisSwarm = $derived($swarm.active.find(a => a.chat === $user.activeChat.chat))
+const getActiveConv = () => $user.activeChat?.conversation || $user.activeChat?.address || ''
+let thisSwarm = $derived($swarm.active.find(a => a.chat === getActiveConv()))
 //Get messages on mount.
 onMount(async () => {
     $fileViewer.enhanceImage = false
@@ -56,8 +57,10 @@ onMount(async () => {
 
     //Listen for new message private messages saved in DB
     window.api.receive('newMsg', async (data) => {
-
-        if (data.chat === $user.activeChat.chat) {
+        const activeConv = getActiveConv()
+        if (!activeConv) return
+        const dataConv = data.conversation
+        if (dataConv === activeConv) {
             const file = isFile(data)
             if (file) data.file = file
             printMessage(data)
@@ -65,15 +68,18 @@ onMount(async () => {
     })
 
     window.api.receive('remote-file-added', async (data) => {
-
-        if (data.chat === $user.activeChat.chat) {
+        const activeConv = getActiveConv()
+        if (!activeConv) return
+        if (data.conversation === activeConv) {
             messageList = sortMessages(messageList)
         }
     })
 
     window.api.receive('user-joined-voice-channel', async (data) => {
         await sleep(200)
-        if (data.address === $user.activeChat.chat) {
+        const activeConv = getActiveConv()
+        if (!activeConv) return
+        if (data.address === activeConv) {
             messageList = sortMessages(messageList)
         }
     })
@@ -81,7 +87,9 @@ onMount(async () => {
 
 
     window.api.receive('privateMsg', async (data) => {
-        if (data.chat === $user.activeChat.chat) {
+        const activeConv = getActiveConv()
+        if (!activeConv) return
+        if (data.conversation === activeConv) {
             scrollDown()
         }
     })
@@ -90,7 +98,7 @@ onMount(async () => {
         const ts = data?.timestamp
         let failed = ts
             ? messageList.find(a => parseInt(a.timestamp) === parseInt(ts))
-            : messageList.find(a => a.msg === data.message)
+            : messageList.find(a => a.message === data.message)
         if (!failed) return
         failed.error = true
         messageList = messageList
@@ -104,7 +112,7 @@ onDestroy(() => {
 
 const isFile = (data) => {
     const findit = (arr) => {
-        return arr.find(a => parseInt(data.timestamp) === parseInt(a.time))
+        return arr.find(a => parseInt(data.timestamp) === parseInt(a.timestamp || a.time))
     }
     let file = findit($files)
     if (file) {
@@ -119,13 +127,24 @@ const isFile = (data) => {
 }
 
 function sortMessages(arr) {
+    const activeConv = getActiveConv()
+    if (!activeConv) return removeDuplicates(arr)
     return removeDuplicates(
-    [ ...arr,...$messages.filter((x) => x.chat === $user.activeChat.chat)]
+    [ ...arr,...$messages.filter((x) => x.conversation === activeConv)]
     .sort((a, b) => b.timestamp - a.timestamp))
 
 }
+
+function getActiveReceiver() {
+    const activeConv = getActiveConv()
+    if (!activeConv) return ''
+    const activeKey = $user.activeChat?.key || ''
+    return activeConv + activeKey
+}
 async function loadMessages() {
-    const dbMessages = await window.api.getConversation($user.activeChat.chat, 0)
+    const activeConv = getActiveConv()
+    if (!activeConv) return []
+    const dbMessages = await window.api.getConversation(activeConv, 0)
     return sortMessages(dbMessages)
     
 }
@@ -141,16 +160,24 @@ function getActiveChat(chat) {
 
 //Prints conversation from active contact
 const printConversation = async (active) => {
+    if (!active) return
     messageList = []
     $keyboard.input = ''
-    const active_chat = { chat: active.chat, key: active.key, name: active.name }
+    const activeConv = active.conversation || active.address || active.chat || ''
+    const active_chat = {
+        address: activeConv,
+        chat: activeConv,
+        conversation: activeConv,
+        key: active.key || '',
+        name: active.name || active.nickname || 'Unknown'
+    }
     $user.activeChat = active_chat
-    await window.api.markMessagesReadByChat(active.chat)
-    const clear = $notify.unread.filter(unread => unread.chat !== active.chat)
+    await window.api.markMessagesReadByChat(activeConv)
+    const clear = $notify.unread.filter(unread => (unread.chat || unread.conversation || unread.address) !== activeConv)
     $notify.unread = clear
-    active_contact = active.chat + active.key
+    active_contact = activeConv + (active.key || '')
 
-    const inChat = getActiveChat(active.chat)
+    const inChat = getActiveChat(activeConv)
     if (inChat) $keyboard.input = inChat.text
     $keyboard = $keyboard
     
@@ -169,15 +196,14 @@ const printConversation = async (active) => {
 //Chat to add
 const handleAddChat = (e) => {
     let addContact = e.chat + e.key
-    //Send contact to backend and to saveContact()
     window.api.addChat(addContact, e.name, true)
-    //Add input to message arr
-    let newMessage = e
-
-    // saveToStore(newMessage)
-    //Prepare send function and filter
-    printConversation(newMessage)
-    //Close popup
+    printConversation({
+        conversation: e.chat,
+        address: e.chat,
+        chat: e.chat,
+        key: e.key,
+        name: e.name,
+    })
     wantToAdd = false
 }
 //Update messages live if users keep chat mounted
@@ -220,10 +246,16 @@ const sendMsg = (e) => {
       offChain = true;
     }
 
+    const receiver = getActiveReceiver() || active_contact
+    if (!receiver || receiver.length !== 163) {
+        window.api.errorMessage(t('noActiveChat') || 'No active chat selected.')
+        return
+    }
+
     const timestamp = Date.now()
     let myMessage = {
-        chat: $user.activeChat.chat,
-        msg: msg,
+        conversation: getActiveConv(),
+        message: msg,
         sent: true,
         timestamp,
         beam: beam
@@ -232,7 +264,7 @@ const sendMsg = (e) => {
     $keyboard.input = ''
 
     printMessage(myMessage)
-    window.api.sendMsg(msg, active_contact, offChain, false, beam, false, timestamp)
+    window.api.sendMsg(msg, receiver, offChain, false, beam, false, timestamp)
     //printMessage(myMessage)
     console.log('Message sent')
 }
@@ -281,7 +313,8 @@ async function dropFile(e) {
     let filename = acceptedFiles[0].name
     let path = acceptedFiles[0].path
     let size = acceptedFiles[0].size
-    let toHuginAddress = $user.activeChat.chat + $user.activeChat.key
+    const activeConv = getActiveConv()
+    let toHuginAddress = activeConv + ($user.activeChat?.key || '')
     let time = Date.now()
     let offchain = false
     const hash = await window.api.createGroup()
@@ -289,7 +322,7 @@ async function dropFile(e) {
 
     acceptedFiles[0].fileName = filename
     acceptedFiles[0].time = time
-    acceptedFiles[0].chat = $user.activeChat.chat
+    acceptedFiles[0].conversation = activeConv
     acceptedFiles[0].saved = true
     
     if (fileRejections.length) {
@@ -298,16 +331,15 @@ async function dropFile(e) {
     }
 
     let message = {
-        chat: $user.activeChat.chat,
-        msg: '',
+        conversation: activeConv,
+        message: '',
         sent: true,
         timestamp: time,
         file: acceptedFiles[0],
     }
     printMessage(message)
-    // saveToStore(message)
 
-    window.api.groupUpload(filename, path, $user.activeChat.chat, size, time, hash, !beam)
+    window.api.groupUpload(filename, path, activeConv, size, time, hash, !beam)
 }
 
 function drag() {
@@ -337,7 +369,7 @@ const noLoad = () => {
 
 async function loadMoreMessages() {
     pageNum++
-    const more = await window.api.getConversation($user.activeChat.chat, pageNum)
+    const more = await window.api.getConversation(getActiveConv(), pageNum)
     messageList = sortMessages([...messageList, ...more])
     if (more.length === 0) {noLoad(); return}
 }
@@ -363,15 +395,22 @@ $effect(() => {
   
 
   const contact = $user.contacts.find(
-    c => c.chat === contactId
+    c => (c.chat || c.conversation || c.address) === contactId
   );
 
   if (!contact) {
-    console.log('No contact found', )
-  };
+    console.log('No contact found')
+    return
+  }
 
   lastContactFromUrl = contactId;
-  const active_chat = { address: contactId, chat: contactId, key: contact.key, name: $page.url.searchParams.get('name') }
+  const active_chat = {
+    address: contactId,
+    chat: contactId,
+    conversation: contactId,
+    key: contact.key || '',
+    name: contact.name || contact.nickname || 'Anon'
+  }
   printConversation(active_chat);
 });
 
@@ -477,8 +516,8 @@ const handlePaste = async (e) => {
             <div class="fade"></div>
             {#each messageList as message, i (message.timestamp)}
             {@const nextMessage = i < messageList.length - 1 ? messageList[i + 1] : null}
-            {@const currentSender = message.sent ? $user.myAddress : message.chat}
-            {@const nextSender = nextMessage ? (nextMessage.sent ? $user.myAddress : nextMessage.chat) : null}
+            {@const currentSender = message.sent ? $user.myAddress : (message.conversation || message.chat)}
+            {@const nextSender = nextMessage ? (nextMessage.sent ? $user.myAddress : (nextMessage.conversation || nextMessage.chat)) : null}
             {@const currentTs = parseInt(message.timestamp)}
             {@const nextTs = nextMessage ? parseInt(nextMessage.timestamp) : null}
             {@const isGrouped = nextMessage && 
@@ -488,11 +527,11 @@ const handlePaste = async (e) => {
                 (currentTs - nextTs) < 300000}
             <div animate:flip="{{duration: 100}}">
                 <ChatBubble
-                    on:download="{() => download(message.msg)}"
+                    on:download="{() => download(message.message)}"
                     files="{message.file}"
-                    message="{message.msg}"
+                    message="{message.message}"
                     ownMsg="{message.sent}"
-                    msgFrom="{message.chat}"
+                    msgFrom="{message.conversation}"
                     timestamp="{message.timestamp}"
                     beamMsg="{message.beam}"
                     error="{message?.error}"

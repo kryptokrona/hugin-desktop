@@ -63,7 +63,6 @@ let tip = false;
 let thisreply = ''
 let openEmoji  = $state(false)
 let messageContainer = $state()
-let emojiPicker = $state()
 let has_reaction = $state(false)
 let reactions = $state([])
 let react = false
@@ -103,12 +102,6 @@ const nameColor = getColorFromHash(message.address)
 
 
 onMount( async () => {
-    emojiPicker.addEventListener('emoji-click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            openEmoji = false
-            reactTo(e)
-        })
         if (message.reply.length === 64) 
         {
         thisReply = await checkreply(message.reply)
@@ -122,7 +115,6 @@ onMount( async () => {
 })
 
 onDestroy(() => {
-    window.api.removeAllListeners("emoji-click")
 })
 
 function checkMessage() {
@@ -401,7 +393,9 @@ run(() => {
                 <div class="actions">
                     <div style="display: flex;">
                         <div class="emojiContainer" onclick={(e) => {e.stopPropagation}}>
-                            <emoji-picker bind:this={emojiPicker}></emoji-picker>
+                            {#if openEmoji}
+                              <emoji-picker onemoji-click={(e) => { e.stopPropagation(); e.preventDefault(); openEmoji = false; reactTo(e) }}></emoji-picker>
+                            {/if}
                         </div>
                         <button alt="React with emoji" class="emoji-button" onclick={(e) => { e.stopPropagation(); openEmoji = !openEmoji }}>
                             <Emoji size="20px" stroke={"var(--text-color)"}/>

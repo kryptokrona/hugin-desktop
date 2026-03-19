@@ -2,6 +2,7 @@
     import { onMount} from 'svelte'
     import {swarm, user} from '$lib/stores/user.js'
     import { videoSettings, video } from '$lib/stores/mediasettings'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
 
     let {
         onPrintChannel
@@ -28,13 +29,7 @@
         endTone.play()
         const my_address = $user.myAddress
         if (!reconnect) $swarm.showVideoGrid = false
-            //Leave any active first, check if my own address is active in some channel
-            //Remove my own address from swarm active voice channel list in UI
-            $swarm.active.forEach(joined => {
-                if (joined.voice_channel.has(my_address)) {
-                joined.voice_channel.delete(my_address)
-                }
-            })
+            peers.leaveVoice(my_address)
 
             if ($swarm.myStream) {
                 try {
