@@ -98,20 +98,20 @@ function toggleActions() {
     {/if}
    
     <div style="display: flex; padding-bottom: 10px">
-        <h3 title={roomName} class:asian style="font-size: 17px; padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" onclick={() => copyThis(room)}>{roomName}</h3>
-    <div style="display: inline-block; margin-left: auto">
+        <h3 title={roomName} class:asian class="no-drag" style="font-size: 17px; padding-bottom: 2px; max-width: 200px; cursor: pointer; display: inline-block; overflow: hidden; text-overflow: ellipsis" onclick={() => copyThis(room)}>{roomName}</h3>
+    <div class="no-drag" style="display: inline-block; margin-left: auto">
         
-        <div style="cursor: pointer; display: inline-block; width: 25px;" onclick={() => showQR = true}>
+        <div class="action-button" style="display: inline-block; width: 25px;" onclick={() => showQR = true}>
             <QRIcon size="22" />
         </div>
 
         <Tooltip title={t('inviteKey')}>
-            <div onclick={() => copyThis(room)}>
+            <div class="action-button" onclick={() => copyThis(room)}>
         <AddToCall />
             </div>
         </Tooltip>
           
-        <div style="cursor: pointer; display: inline-block; width: 25px;" onclick={toggleNotification}>
+        <div class="action-button" style="display: inline-block; width: 25px;" onclick={toggleNotification}>
             {#if !muteGroup}
                 <Bell active={true}/>
             {:else}
@@ -119,7 +119,7 @@ function toggleActions() {
             {/if}
         </div>
 
-        <div style="cursor: pointer; display: inline-block; width: 25px;" onclick={toggleSyncImages}>
+        <div class="action-button" style="display: inline-block; width: 25px;" onclick={toggleSyncImages}>
             <FileSync sync={syncImages} />
         </div>
 
@@ -131,4 +131,24 @@ function toggleActions() {
         </div> -->
     </div>
 </div>
+
+<style lang="scss">
+    .top {
+        -webkit-app-region: drag;
+        user-select: none;
+    }
+
+    .no-drag,
+    .top button,
+    .top input,
+    .top a,
+    .top [role='button'] {
+        -webkit-app-region: no-drag;
+    }
+
+    .action-button {
+        cursor: pointer;
+        -webkit-app-region: no-drag;
+    }
+</style>
 </div>

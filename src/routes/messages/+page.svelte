@@ -32,6 +32,7 @@ let toggleRename = $state(false)
 let wantToAdd = $state(false)
 let windowHeight = $state()
 let windowChat
+let messageFadeReady = $state(false)
 
 const getActiveConv = () => $user.activeChat?.conversation || $user.activeChat?.address || ''
 let thisSwarm = $derived($swarm.active.find(a => a.chat === getActiveConv()))
@@ -161,6 +162,7 @@ function getActiveChat(chat) {
 //Prints conversation from active contact
 const printConversation = async (active) => {
     if (!active) return
+    messageFadeReady = false
     messageList = []
     $keyboard.input = ''
     const activeConv = active.conversation || active.address || active.chat || ''
@@ -190,6 +192,8 @@ const printConversation = async (active) => {
         updated.push(a)
     }
     messageList = removeDuplicates(updated)
+    await tick()
+    messageFadeReady = true
     scrollDown()
 }
 
@@ -513,7 +517,9 @@ const handlePaste = async (e) => {
 
     <div class="right_side" out:fade|global="{{ duration: 100 }}">
         <div class="outer" id="chat_window" in:fly|global="{{ y: 50 }}" bind:this={windowChat} bind:clientHeight={windowHeight}>
+            {#if messageFadeReady}
             <div class="fade"></div>
+            {/if}
             {#each messageList as message, i (message.timestamp)}
             {@const nextMessage = i < messageList.length - 1 ? messageList[i + 1] : null}
             {@const currentSender = message.sent ? $user.myAddress : (message.conversation || message.chat)}

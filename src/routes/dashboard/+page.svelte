@@ -53,11 +53,11 @@
 {/if}
 
 <div class="header" in:fly|global="{{ y: 100 }}">
-    <div style="display: flex; align-items: center; gap: 0.5rem">
+    <div class="no-drag" style="display: flex; align-items: center; gap: 0.5rem">
         <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
         <EditName/>
     </div>
-    <div class="button_wrapper">
+    <div class="button_wrapper no-drag">
             <!-- <FillButton
                 text="{upgraded}"
 
@@ -90,12 +90,22 @@
     align-items: center;
     height: 80px;
     padding: 1rem 2rem;
+    -webkit-app-region: drag;
+    user-select: none;
   }
 
   .button_wrapper {
     display: flex;
     gap: 1rem;
     margin-right: -13px;
+  }
+
+  .no-drag,
+  .header button,
+  .header input,
+  .header a,
+  .header [role='button'] {
+    -webkit-app-region: no-drag;
   }
   
 </style>

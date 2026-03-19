@@ -296,7 +296,7 @@
 		flex-direction: column;
 		gap: 8px;
 		padding: 16px;
-		background: rgba(0, 0, 0, 0.2);
+		background: transparent;
 		border-radius: 10px;
 		border: 1px solid var(--border-color, #2a2a2a);
 	}
@@ -380,7 +380,7 @@
 		grid-template-columns: repeat(2, 1fr);
 		gap: 12px;
 		padding: 4px;
-		background: rgba(0, 0, 0, 0.2);
+		background: transparent;
 		border-radius: 10px;
 		border: 1px solid var(--border-color, #2a2a2a);
 	}
@@ -431,7 +431,7 @@
 		font-size: 14px;
 		font-family: 'RobotoMono', monospace;
 		color: var(--text-color);
-		background: rgba(0, 0, 0, 0.2);
+		background: transparent;
 		border: 2px solid var(--border-color, #2a2a2a);
 		border-radius: 10px;
 		outline: none;
@@ -453,7 +453,7 @@
 		flex-direction: column;
 		gap: 8px;
 		padding: 16px;
-		background: rgba(0, 0, 0, 0.2);
+		background: transparent;
 		border-radius: 10px;
 		border: 1px solid var(--border-color, #2a2a2a);
 		flex: 1;

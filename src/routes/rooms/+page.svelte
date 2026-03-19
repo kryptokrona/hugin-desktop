@@ -10,7 +10,7 @@ import ChatInput from '$lib/components/chat/ChatInput.svelte'
 import {roomMessages} from '$lib/stores/roommsgs.js'
 import GroupMessage from '$lib/components/chat/GroupMessage.svelte'
 import {notify, user, swarm, rooms, misc, files, transactions, keyboard} from '$lib/stores/user.js'
-import {onDestroy, onMount} from 'svelte'
+import {onDestroy, onMount, tick} from 'svelte'
 import AddGroup from '$lib/components/chat/AddGroup.svelte'
 import {page} from '$app/stores'
 import BlockContact from '$lib/components/chat/BlockContact.svelte'
@@ -46,6 +46,7 @@ let admin = $derived(!!peers.activeSwarm?.admin)
 const welcomeAddress = $misc.welcomeAddress
 let someoneTyping = $state(null);
 let usersTyping = $state(0);
+let roomFadeReady = $state(false);
 
 const filteredUsers = () => { 
     return $rooms.typingUsers.filter(a => a.topic === $rooms.thisRoom?.topic)
@@ -375,6 +376,7 @@ function getActiveRoom(room) {
 //Print chosen group. SQL query to backend and then set result in Svelte store, then updates thisRoom.
 async function printRoom(room, create = false) {
     console.log("print room", room)
+    roomFadeReady = false
     $keyboard.input = ''
     loadMore = true
     pageNum = 0
@@ -401,6 +403,8 @@ async function printRoom(room, create = false) {
     console.log("messages", messages)
     checkReactions(messages, false)
     replyExit()
+    await tick()
+    roomFadeReady = true
     scrollDown()
     loader = false
 }
@@ -724,7 +728,9 @@ const handlePaste = async (e) => {
                     <Loader/>
                 </div>
             {/if}
+             {#if roomFadeReady}
              <div class="fade"></div>
+             {/if}
             {#each fixedRooms as message, i (message.hash)}
             {@const nextMessage = i < fixedRooms.length - 1 ? fixedRooms[i + 1] : null}
             {@const isGrouped = nextMessage && 
