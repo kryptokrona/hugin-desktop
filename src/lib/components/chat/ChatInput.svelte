@@ -4,6 +4,7 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import SendIcon from '$lib/components/icons/SendIcon.svelte'
   import {boards, webRTC, groups, beam, swarm, keyboard, rooms} from '$lib/stores/user.js'
+  import { peers } from '$lib/stores/swarm-state.svelte.js'
   import {page} from '$app/stores'
   import {user} from '$lib/stores/user.js'
   import Emoji from "$lib/components/icons/Emoji.svelte";
@@ -19,7 +20,8 @@
   let messageField = $state()
   let off_chain = $state()
   let mount = $state(false)
-  let activeBeam = $state(false)
+  let activeBeamChat = $derived($user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address || '')
+  let activeBeam = $derived(activeBeamChat ? peers.isDmOnline(activeBeamChat) : false)
   let to = $state("")
   let inrooms = $state(false)
   let inmessages = $state(false)
@@ -219,16 +221,6 @@
       fieldFocus()
     }
   })
-  run(() => {
-    if ($swarm.active.length) {
-      const activeChat = $user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address || ''
-      activeBeam = activeChat
-        ? $swarm.active.some(a => a.chat === activeChat && a.connections.some(a => a.address === activeChat))
-        : false
-    } else {
-      activeBeam = false
-    }
-  });
   run(() => {
     if ($swarm.active.length) {
       activeSwarm = $swarm.active.some(a => a.key == $groups.thisGroup.key && $swarm.showVideoGrid);

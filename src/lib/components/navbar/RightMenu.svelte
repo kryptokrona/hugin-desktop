@@ -4,6 +4,7 @@
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
 import { boards, groups, transactions, user, webRTC, beam, swarm, rooms } from '$lib/stores/user.js'
+import { peers } from '$lib/stores/swarm-state.svelte.js'
 import { remoteFiles, localFiles } from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import PayIcon from '$lib/components/icons/PayIcon.svelte'
@@ -31,13 +32,17 @@ let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
 let video = false
 let videoInput = $state()
-let thisSwarm = $state(false)
-let in_voice = $state(false)
 let thisChat = $derived($user.activeChat || {})
 let thisChatAddr = $derived(thisChat.chat || thisChat.conversation || thisChat.address || '')
 let thisChatKey = $derived(thisChat.key || '')
 let thisChatName = $derived(thisChat.name || thisChat.nickname || 'Unknown')
-let activeBeam = $derived(thisChatAddr ? $swarm.active.some(a => a.chat === thisChatAddr) : false)
+let activeBeam = $derived(thisChatAddr ? peers.swarms.some(s => s.chat === thisChatAddr) : false)
+let thisSwarm = $derived(activeBeam ? peers.swarms.find(s => s.chat === thisChatAddr) || false : false)
+let in_voice = $derived(
+    thisSwarm
+        ? (() => { const me = thisSwarm.voice_channel?.get($user.myAddress); return !!(me && me.key === thisSwarm.key) })()
+        : false
+)
 run(() => {
       if ($mediaSettings.devices.length) {
        videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
@@ -59,25 +64,7 @@ run(() => {
 
 //Beam reactive button states
 
-let connectedBeam = $derived(
-    thisChatAddr
-        ? $swarm.active.some(a => a.chat === thisChatAddr && a.connections.some(a => a.address === thisChatAddr))
-        : false
-)
-run(() => {
-      if (activeBeam) {
-      thisSwarm = $swarm.active.find(a => a.chat === thisChatAddr)
-   }
-   });
-
-run(() => {
-    if (thisSwarm) {
-        const me = thisSwarm.voice_channel.get($user.myAddress)
-        if (me && me.key === thisSwarm.key) {
-        in_voice = true
-        } else in_voice = false
-   }
-   });
+let connectedBeam = $derived(thisChatAddr ? peers.isDmOnline(thisChatAddr) : false)
 
 //Starts any call
 const startCall = async () => {
@@ -153,12 +140,8 @@ const join_voice_channel = async (video = false, screen) => {
         startTone.play()
         console.log("Want to Join new voice")
         const address = $user.myAddress
-        thisSwarm.voice_channel.set(address, {address, name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = thisSwarm.voice_channel
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare}) 
-        $swarm.voice = thisSwarm
-        console.log("this swarm ", thisSwarm)
-        $swarm.active = $swarm.active
+        peers.onVoiceStatus({ key: thisSwarm.key, address, name: $user.username, voice: true })
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
     }
 
 
