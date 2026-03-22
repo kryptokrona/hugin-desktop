@@ -3,6 +3,7 @@
 
     import MyVideo from '$lib/components/webrtc/MyVideo.svelte'
     import { pushToTalk, rooms, swarm } from '$lib/stores/user.js'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
     import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
     import { fade, fly } from 'svelte/transition'
@@ -15,17 +16,12 @@
     import { t } from '$lib/utils/translation.js'
 	import { onMount } from 'svelte';
     
-    let in_voice = $state(false)
     const my_address = $user.myAddress
+    let thisSwarm = $derived(peers.swarms.find(s => s.voice_channel?.has(my_address)) || null)
     let active = $derived(thisSwarm)
-    let thisSwarm = $derived($swarm.voice)
+    let in_voice = $derived(thisSwarm != null)
     let talkOn = new Audio('/audio/talk.mp3')
     let talkOff = new Audio('/audio/notalk.mp3')
-    $effect(() => {
-        if ($swarm.voice_channel.has(my_address)) {
-            in_voice = true
-        } else in_voice = false
-    })
 
     onMount(async () => {
         $videoGrid.showChat = false

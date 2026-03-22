@@ -21,8 +21,13 @@
 
 onMount(async () => {
     chatList = await getConversations()
-    if ($user.activeChat) return
-    sendConversation(chatList[0])
+    console.log("chatList", chatList)
+    const active = $user.activeChat
+    if (active?.chat || active?.conversation || active?.address) {
+        sendConversation(active)
+    } else if (chatList.length) {
+        sendConversation(chatList[0])
+    }
 })
 
 onDestroy(() => {
@@ -44,12 +49,22 @@ window.api.receive('newMsg', () => {
 //Listen for sent message to update conversation list
 window.api.receive('saved-addr', async (addr) => {
     await printConversations()
-    let sender = chatList.find((a) => a.chat === addr)
+    let sender = chatList.find((a) => (a.chat || a.conversation || a.address) === addr)
     sendConversation(sender)
 })
 
 const getConversations = async () => {
-    return await window.api.getConversations()
+    const raw = await window.api.getConversations()
+    if (!Array.isArray(raw)) return []
+
+    return raw.map((message, index) => ({
+        ...message,
+        chat: message.chat || message.conversation || message.address || '',
+        key: message.key || message.msgkey || '',
+        name: message.name || message.nickname || 'Unknown',
+        msg: message.msg || message.message || '',
+        __idx: index
+    }))
 }
 
 //Print our conversations from DBs
@@ -61,22 +76,26 @@ const printConversations = async () => {
 
 //Dispatches the clicked conversation to parent
 const sendConversation = (message) => {
+    console.log("send conv", message)
+    if (!message) return
     readMessage(message)
-    let chat = message.chat
-    let msgkey = message.key
-    let name = message.name
-    let active_chat = { chat: chat, key: msgkey, name: name }
+    let chat = message.chat || message.conversation || message.address || ''
+    if (!chat) return
+    let msgkey = message.key || message.msgkey || ''
+    let name = message.name || message.nickname || 'Anon'
+    let active_chat = { address: chat, conversation: chat, chat: chat, key: msgkey, name: name }
     user.update((user) => {
         return {
             ...user,
             activeChat: active_chat,
         }
     })
-     onConversation(active_chat)
+    onConversation(active_chat)
     printConversations()
 }
 
 const readMessage = (e) => {
+    if (!e?.chat) return
     
     const clear = $notify.unread.filter(unread => unread.chat !== e.chat)
     $notify.unread = clear
@@ -95,7 +114,7 @@ run(() => {
         <AddCircle on:click="{() => onOpen()}" />
     </div>
     <div class="list-wrapper" in:fly|global="{{ y: 50 }}">
-        {#each chatList as message (message.chat)}
+        {#each chatList as message, index (message.chat || `${message.key || 'unknown'}-${message.__idx ?? index}`)}
             <div animate:flip="{{duration: 250}}">
             <Contact
                 OpenRename="{() => OpenRename()}"

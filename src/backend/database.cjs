@@ -8,7 +8,12 @@ const {sleep, containsOnlyEmojis} = require('./utils.cjs')
 const { Hugin } = require('./account.cjs')
 
 const closeDB = async () => {
-    database.close();    
+    if (!database) return
+    try {
+      database.close()
+    } catch (e) {
+      // Ignore shutdown close errors on partially initialized startup.
+    }
 }
 
 let database
@@ -41,8 +46,9 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
     const removeAfter = parseInt(Date.now()) - store.get('delete.after') * 86400000
 
     createTables()
+    migrateSchema()
     try {
-    const welcome = database.prepare('SELECT msg FROM messages WHERE timestamp = 1650919475320').get()
+    const welcome = database.prepare('SELECT message FROM messages WHERE timestamp = 1650919475320').get()
     // If the message doesnt already exist, create it
     if(!welcome) {
         
@@ -58,8 +64,10 @@ const loadDB = async (userDataDir, dbPath, privKey) => {
     }
     if(store.get('delete.after') !== 0) {
     
-     database.prepare(`DELETE FROM groupmessages WHERE time < ?`).run(removeAfter)
+     database.prepare(`DELETE FROM groupmessages WHERE timestamp < ?`).run(removeAfter)
     }
+
+    markMessagesReadByChat(welcomeAddress)
 }
 
 
@@ -77,6 +85,30 @@ const createTables = () => {
     roomKeysTable()
     roomUserTable()
     feedMessageTable()
+    friendRequestsTable()
+}
+
+const migrateSchema = () => {
+    try {
+        const info = database.prepare('PRAGMA table_info(groupmessages)').all()
+        const hasGrp = info.some(c => c.name === 'grp')
+        if (hasGrp) {
+            database.prepare('ALTER TABLE groupmessages RENAME COLUMN grp TO room').run()
+            database.prepare('ALTER TABLE groupmessages RENAME COLUMN time TO timestamp').run()
+        }
+    } catch (e) {}
+    try {
+        const info = database.prepare('PRAGMA table_info(messages)').all()
+        const hasMsg = info.some(c => c.name === 'msg')
+        if (hasMsg) {
+            database.prepare('ALTER TABLE messages RENAME COLUMN msg TO message').run()
+            database.prepare('ALTER TABLE messages RENAME COLUMN chat TO conversation').run()
+        }
+    } catch (e) {}
+    try { database.prepare('ALTER TABLE messages ADD COLUMN hash TEXT').run() } catch (e) {}
+    try { database.prepare('ALTER TABLE messages ADD COLUMN reply TEXT DEFAULT ""').run() } catch (e) {}
+    try { database.prepare('ALTER TABLE messages ADD COLUMN tip TEXT').run() } catch (e) {}
+    try { database.prepare('ALTER TABLE messages ADD COLUMN status TEXT DEFAULT "success"').run() } catch (e) {}
 }
 
 const welcomeAddress =
@@ -120,11 +152,15 @@ const knownTxsTable = () => {
 function messagesTable() {
     const messageTable = `
                 CREATE TABLE IF NOT EXISTS messages (
-                   msg TEXT,
-                   chat TEXT,
+                   message TEXT,
+                   conversation TEXT,
                    sent BOOLEAN,
                    timestamp TEXT,
                    read INTEGER DEFAULT 0,
+                   hash TEXT,
+                   reply TEXT DEFAULT '',
+                   tip TEXT,
+                   status TEXT DEFAULT 'success',
                    UNIQUE (timestamp)
                )`
     return new Promise(
@@ -180,8 +216,8 @@ const groupMessageTable = () => {
               message TEXT,
               address TEXT,
               signature TEXT,
-              grp TEXT,
-              time TEXT,
+              room TEXT,
+              timestamp TEXT,
               name TEXT,
               thread TEXT,
               reply TEXT,
@@ -260,8 +296,8 @@ const groupChannelsMessagesTable = () => {
 }
 
 const welcomeMessage = () => {
-    const huginMessage = `INSERT INTO messages (msg, chat, sent, timestamp, read)
-                          VALUES (?, ?, ?, ?, 0)`
+    const huginMessage = `INSERT INTO messages (message, conversation, sent, timestamp, read)
+                          VALUES (?, ?, ?, ?, 1)`
     return new Promise(
         (resolve, reject) => {
             database.prepare(huginMessage).run(
@@ -272,6 +308,7 @@ const welcomeMessage = () => {
         () => {
             resolve()
         }
+        
     )
 }
 
@@ -487,8 +524,8 @@ const getLatestList = async (list) => {
         const getThis = `
             SELECT *
             FROM groupmessages
-            WHERE grp = ?
-            ORDER BY time
+            WHERE room = ?
+            ORDER BY timestamp
             DESC
             LIMIT 1
         `
@@ -496,9 +533,9 @@ const getLatestList = async (list) => {
         if (group === undefined) continue 
             const newRow = {
             name: chat.name,
-            msg: group.message,
-            chat: group.grp,
-            timestamp: group.time,
+            message: group.message,
+            room: group.room,
+            timestamp: group.timestamp,
             sent: group.sent,
             key: chat.key,
             hash: group.hash,
@@ -524,7 +561,7 @@ async function saveFeedMessage(msg) {
 
 const saveGroupMsg = async (msg, offchain, channels = false) => {
     
-    if (await groupMessageExists(msg.time)) return false
+    if (await groupMessageExists(msg.timestamp)) return false
    
     let channel = false
 
@@ -551,8 +588,8 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     message,
     address,
     signature,
-    grp,
-    time,
+    room,
+    timestamp,
     name,
     reply,
     hash,
@@ -563,7 +600,7 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
        VALUES
            (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(msg.message, msg.address, '', msg.group, msg.time, msg.name, msg.reply, msg.hash, msg.sent, tip, msg.sent)
+    ).run(msg.message, msg.address, '', msg.room, msg.timestamp, msg.name, msg.reply, msg.hash, msg.sent, tip, msg.sent)
 
         } catch(a) {
             console.log("Sql lite", a)
@@ -594,15 +631,14 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
     //Save to DB
         database.prepare(
             `REPLACE INTO messages
-                (msg, chat, sent, timestamp, read)
+                (message, conversation, sent, timestamp, read)
             VALUES
                 (?, ?, ?, ?, ?)`
         ).run([message, addr, sent, timestamp, sent])
     
-        
     let newMsg = {
-        msg: message,
-        chat: addr,
+        message: message,
+        conversation: addr,
         sent: sent,
         timestamp: timestamp,
         offchain: offchain,
@@ -648,12 +684,16 @@ const saveChannelMessage = (hsh, timestamp, chnl, grp) => {
 
 const addGroup = (group) => {
     console.log('adding', group)
+    const key = group?.key
+    const name = group?.name
+    if (typeof key !== 'string' || key.length === 0) return
+    if (typeof name !== 'string' || name.length === 0) return
     database.prepare(
         `REPLACE INTO pgroups
       (key, name)
         VALUES
           (?, ?)`
-    ).run([group.k, group.n])
+    ).run([key, name])
 
     console.log('saved group', group)
 }
@@ -677,12 +717,16 @@ const removeGroup = (group) => {
 
 const addRoom = (room) => {
     console.log('adding', room)
+    const key = room?.key
+    const name = room?.name
+    if (typeof key !== 'string' || key.length === 0) return
+    if (typeof name !== 'string' || name.length === 0) return
     database.prepare(
         `REPLACE INTO rooms
       (key, name)
         VALUES
           (?, ?)`
-    ).run([room.k, room.n])
+    ).run([key, name])
 
     console.log('saved room', room)
 }
@@ -726,7 +770,7 @@ const removeMessages = (contact) => {
         `DELETE FROM
         messages
       WHERE
-        chat = ?`
+        conversation = ?`
     ).run([contact])
 }
 
@@ -768,10 +812,9 @@ const getMessages = () => {
 //Get one message from every unique user sorted by latest timestmap.
 const getConversations = async () => {
     let contacts = await getContacts()
-    //Remove Hugin welcome message and contact if new contact was added.
     if (contacts.length > 1 && contacts.some((a) => a.address === welcomeAddress)) {
         removeContact(welcomeAddress)
-       // removeMessages(welcomeAddress)
+        removeMessages(welcomeAddress)
     }
     let row
     const myConversations = []
@@ -780,16 +823,17 @@ const getConversations = async () => {
         const getThis = `
             SELECT *
             FROM messages
-            WHERE chat = ?
+            WHERE conversation = ?
             ORDER BY timestamp
             DESC
             LIMIT 1
         `
-        const conv = database.prepare(getThis).get(chat.address)
+        const conv = database.prepare(getThis).get(chat.conversation)
+        if (conv === undefined) continue
         row = {
             name: chat.name,
-            msg: conv.msg,
-            chat: conv.chat,
+            message: conv.message,
+            conversation: conv.conversation,
             timestamp: conv.timestamp,
             sent: conv.sent,
             key: chat.key,
@@ -809,13 +853,15 @@ const getConversation = async (chat, page) => {
     const thisConversation = []
     return new Promise((resolve, reject) => {
         const getChat = `SELECT
-            msg,
-            chat,
+            message,
+            conversation,
             sent,
-            timestamp
+            timestamp,
+            hash,
+            reply
         FROM
             messages
-        WHERE chat = ?
+        WHERE conversation = ?
         ORDER BY
             timestamp
         DESC
@@ -835,7 +881,7 @@ const getUnreadMessages = () => {
 }
 
 const getUnreadGroupMessages = () => {
-    return database.prepare("SELECT * FROM groupmessages WHERE read = 0 AND (reply IS NULL OR reply = '') ORDER BY time DESC").all()
+    return database.prepare("SELECT * FROM groupmessages WHERE read = 0 AND (reply IS NULL OR reply = '') ORDER BY timestamp DESC").all()
 }
 
 const getUnreadFeedMessages = () => {
@@ -864,11 +910,11 @@ const markFeedMessageRead = (hash) => {
 }
 
 const markMessagesReadByChat = (chat) => {
-    database.prepare('UPDATE messages SET read = 1 WHERE chat = ?').run(chat)
+    database.prepare('UPDATE messages SET read = 1 WHERE conversation = ?').run(chat)
 }
 
 const markGroupMessagesReadByGroup = (grp) => {
-    database.prepare('UPDATE groupmessages SET read = 1 WHERE grp = ?').run(grp)
+    database.prepare('UPDATE groupmessages SET read = 1 WHERE room = ?').run(grp)
 }
 
 const markAllFeedMessagesRead = () => {
@@ -946,7 +992,6 @@ const printFeed = async (page=0, sync=false) => {
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
 
-    //const channels = await getChannels()
     let limit = 50
     let offset = 0
     if (page !== 0) offset = page * limit
@@ -956,8 +1001,8 @@ const printGroup = async (group, page) => {
           message,
           address,
           signature,
-          grp,
-          time,
+          room,
+          timestamp,
           name,
           reply,
           hash,
@@ -965,15 +1010,15 @@ const printGroup = async (group, page) => {
           tip
         FROM
             groupmessages
-        WHERE grp = ?
+        WHERE room = ?
         ORDER BY
-            time
+            timestamp
         DESC
         LIMIT ${offset}, ${limit}`
         const stmt = database.prepare(getGroup)
 
         for(const row of stmt.iterate(group)) {
-            if (row.address.length === 0) row.address = row.grp
+            if (row.address.length === 0) row.address = row.room
                     
                 thisGroup.push(row)
         }
@@ -1005,8 +1050,8 @@ const getGroupReply = async (reply) => {
              message,
              address,
              signature,
-             grp,
-             time,
+             room,
+             timestamp,
              name,
              reply,
              hash,
@@ -1015,7 +1060,7 @@ const getGroupReply = async (reply) => {
       FROM groupmessages
       WHERE hash = ?
       ORDER BY
-          time
+          timestamp
       ASC`
         thisReply = database.prepare(sql).get(reply)
 
@@ -1035,7 +1080,7 @@ const getContacts = async () => {
         for(const contact of contacts) {
             if (contact === undefined) continue
             let newRow = contact
-                newRow.chat = contact.address
+                newRow.conversation = contact.address
                 myContactList.push(newRow)
         }
         resolve(myContactList)
@@ -1075,13 +1120,13 @@ const messageExists = async (time) => {
     })
 }
 
-const groupMessageExists = async (time) => {
+const groupMessageExists = async (timestamp) => {
     let exists = false
     return new Promise((resolve, reject) => {
         const groupMessageExists = 
         `SELECT *
         FROM groupmessages
-        WHERE time = '${time}'
+        WHERE timestamp = '${timestamp}'
         `
         const row = database.prepare(groupMessageExists).get()
         if(row) {
@@ -1131,9 +1176,9 @@ const getLatestRoomHashes = async (key) => {
         const latestRoomHashes = 
         `SELECT *
         FROM groupmessages
-        WHERE grp = ?
+        WHERE room = ?
         ORDER BY
-            time
+            timestamp
         DESC
         LIMIT ${offset}, ${limit}`
 
@@ -1152,6 +1197,8 @@ const getLatestRoomHashes = async (key) => {
 
 const saveThisContact = async (addr, key, name) => {
 
+    console.log("SAVDE THIS contact")
+
     let contacts = await getContacts()
     //Remove the old contact key if we have the address saved, we assume the new key is valid since the message is signed.
     if (contacts.some((a) => a.address === addr && a.key !== key)) {
@@ -1166,9 +1213,44 @@ const saveThisContact = async (addr, key, name) => {
     ).run([addr, key, name])
 }
 
+const friendRequestsTable = () => {
+    database.prepare(`
+        CREATE TABLE IF NOT EXISTS friend_requests (
+            address TEXT,
+            hugin TEXT,
+            name TEXT,
+            room TEXT,
+            room_name TEXT DEFAULT '',
+            timestamp INTEGER,
+            UNIQUE (address)
+        )
+    `).run()
+    try { database.prepare(`ALTER TABLE friend_requests ADD COLUMN room_name TEXT DEFAULT ''`).run() } catch (e) {}
+}
+
+const saveFriendRequest = async (req) => {
+    database.prepare(
+        `REPLACE INTO friend_requests (address, hugin, name, room, room_name, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?)`
+    ).run([req.address, req.hugin, req.name, req.room || '', req.roomName || '', req.timestamp])
+}
+
+const getFriendRequests = async () => {
+    return database.prepare('SELECT * FROM friend_requests ORDER BY timestamp DESC').all()
+}
+
+const removeFriendRequest = async (address) => {
+    database.prepare('DELETE FROM friend_requests WHERE address = ?').run(address)
+}
+
 const deleteMessage = async (hash) => {
     console.log("Deleting message", hash)
     database.prepare(`DELETE FROM groupmessages WHERE hash = ?`).run(hash)
+}
+
+const deletePrivateMessage = (timestamp) => {
+    if (timestamp === undefined || timestamp === null) return
+    database.prepare(`DELETE FROM messages WHERE timestamp = ?`).run(String(timestamp))
 }
 
 process.on('exit', async () => await closeDB());
@@ -1177,4 +1259,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getUnreadMessages, getUnreadGroupMessages, getUnreadChannelMessages, getUnreadFeedMessages, markMessageRead, markGroupMessageRead, markChannelMessageRead, markFeedMessageRead, markMessagesReadByChat, markGroupMessagesReadByGroup, markAllFeedMessagesRead, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, addRoom}
+module.exports = {getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getUnreadMessages, getUnreadGroupMessages, getUnreadChannelMessages, getUnreadFeedMessages, markMessageRead, markGroupMessageRead, markChannelMessageRead, markFeedMessageRead, markMessagesReadByChat, markGroupMessagesReadByGroup, markAllFeedMessagesRead, getGroupReply, printGroup, saveMsg, saveThisContact, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, deletePrivateMessage, addRoom, saveFriendRequest, getFriendRequests, removeFriendRequest}

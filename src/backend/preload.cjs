@@ -16,8 +16,8 @@ const WINDOW_API = {
         ipcRenderer.send('add-chat', hugin, name, first)
     },
     // HANDLE MESSAGES
-    sendMsg: (msg, address, offChain, grp = false, beam, call) => {
-        ipcRenderer.send('send-msg', msg, address, offChain, grp, beam, call)
+    sendMsg: (msg, address, offChain, grp = false, beam, call, timestamp) => {
+        ipcRenderer.send('send-msg', msg, address, offChain, grp, beam, call, timestamp)
     },
     sendGroupMessage: (msg, offchain, swarm) => {
         ipcRenderer.send('send-group-message', msg, offchain, swarm)
@@ -147,6 +147,9 @@ const WINDOW_API = {
     getNodes: async () => {
         ipcRenderer.send('get-nodes')
     },
+    getHuginNode: async () => {
+        return await ipcRenderer.invoke('get-hugin-node')
+    },
     switchNode: (node) => {
         ipcRenderer.send('switch-node', node)
     },
@@ -227,6 +230,18 @@ const WINDOW_API = {
         ipcRenderer.send('fetch-group-history', settings)
     },
 
+    getFriendRequests: async () => {
+        return await ipcRenderer.invoke('get-friend-requests')
+    },
+    acceptFriendRequest: (address) => {
+        ipcRenderer.send('accept-friend-request', address)
+    },
+    rejectFriendRequest: (address) => {
+        ipcRenderer.send('reject-friend-request', address)
+    },
+    sendFriendRequest: (address, roomKey) => {
+        ipcRenderer.send('send-friend-request', address, roomKey)
+    },
     removeContact: async (contact) => {
         ipcRenderer.send('remove-contact', contact)
     },

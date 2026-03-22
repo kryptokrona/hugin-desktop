@@ -133,7 +133,6 @@
   "connecting": "Connecting",
   "syncingBlocks": "Syncing blocks",
   "addressFormatNotCorrect": "Address format is not correct.",
-  "notSet": "Not set",
   "messageNode": "Message Node",
   "publicNode": "Public Node",
   "public": "Public",
@@ -346,5 +345,7 @@
   "autoSelectBestNode": "Select node automatically",
   "noNodesFound": "No XKR nodes available",
   "clickToSelectNode": "Click to select node manually",
-  "couldNotConnectToNode": "Could not connect to node"
+  "couldNotConnectToNode": "Could not connect to node",
+  "connected": "Connected",
+  "disconnected": "Disconnected"
 }

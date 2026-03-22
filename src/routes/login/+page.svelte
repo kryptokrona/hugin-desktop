@@ -158,6 +158,8 @@
     height: 100vh;
     width: 100%;
     color: var(--text-color);
+    -webkit-app-region: drag;
+    user-select: none;
   }
 
   .login-wrapper {
@@ -205,6 +207,8 @@
       background-color: transparent;
       border: none;
       font-size: 1.1rem;
+      -webkit-app-region: no-drag;
+      user-select: text;
 
       &:focus {
         outline: none;
@@ -223,6 +227,7 @@
       cursor: pointer;
       transition: 100ms ease-in-out;
       border: 1px solid transaparent;
+      -webkit-app-region: no-drag;
       &:hover {
         background: var(--success-color);
       }
@@ -264,5 +269,17 @@
 .flip-word {
   position: absolute;
   display: inline-block;
+}
+
+/* Keep popups and any explicit interactive zones clickable */
+:global(.no-drag),
+:global(button),
+:global(input),
+:global(textarea),
+:global(select),
+:global(a),
+:global([role='button']),
+:global([data-no-drag='true']) {
+  -webkit-app-region: no-drag;
 }
 </style>

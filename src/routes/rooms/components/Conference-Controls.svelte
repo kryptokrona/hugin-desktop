@@ -1,7 +1,5 @@
 <script>
-    import { run } from 'svelte/legacy';
-
-    import VideoIcon from '$lib/components/icons/VideoIcon.svelte'
+import VideoIcon from '$lib/components/icons/VideoIcon.svelte'
     import VideoSlash from '$lib/components/icons/VideoSlash.svelte'
     import MicIcon from '$lib/components/icons/MicIcon.svelte'
     import MuteIcon from '$lib/components/icons/MuteIcon.svelte'
@@ -9,6 +7,7 @@
     import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
     import { swarm, user, groups, rtc_groups, rooms, pushToTalk } from '$lib/stores/user.js'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
     import VideoSources from '$lib/components/webrtc/VideoSources.svelte'
     import { onDestroy, onMount } from 'svelte'
     import { calcTime, sleep } from '$lib/utils/utils.js'
@@ -23,24 +22,14 @@
     let timer
 
     let startTone = new Audio('/audio/startcall.mp3')
-    let channels = $state([])
-    let voice_channel = $state([])
     let loading = $state(false)
-    let topic = $state("")
     const my_address = $user.myAddress
 
-    let thisSwarm = $derived($swarm.voice)
+    let thisSwarm = $derived(peers.swarms.find(s => s.voice_channel?.has(my_address)) || null)
+    let voice_channel = $derived(thisSwarm?.voice_channel ?? new Map())
+    let channels = $derived(thisSwarm?.channels ?? [])
+    let topic = $derived(thisSwarm?.topic ?? '')
     let in_voice = $derived(voice_channel.has(my_address))
-
-    run(() => {
-        if (thisSwarm) channels = thisSwarm.channels
-    });
-    run(() => {
-        if (thisSwarm) topic = thisSwarm.topic
-    });
-    run(() => {
-        if (thisSwarm) voice_channel = thisSwarm.voice_channel
-    });
 
     onMount(() => {
         timer = setInterval(() => {

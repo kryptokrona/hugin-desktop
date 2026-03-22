@@ -1,8 +1,47 @@
 const nacl = require('tweetnacl')
 const sanitizeHtml = require('sanitize-html')
 const { Crypto, Keys } = require('kryptokrona-utils')
+const { getNonceOffset } = require('hugin-utils')
 const {ipcMain, dialog} = require('electron')
 const crypto = new Crypto()
+//PoW defaults (tuned for desktop app)
+const pow_config = {
+    DEBUG: true,
+    HASHES_PER_SECOND: 800,
+    TIME_BUDGET_MS: 90000,
+    SHARES: 1,
+    BOOST_HASHES_PER_SECOND: 600,
+    BOOST_TIME_BUDGET_MS: 90000,
+    MAX_JOB_TIME_MS: 90000,
+    MAX_BLOB_HEX_BYTES: 1024
+}
+//Unified PoW logging toggle
+const logPow = (...args) => {
+    if (pow_config.DEBUG) {
+        console.log('[pow]', ...args)
+    }
+}
+
+//Basic hex guard for incoming job data
+function is_hex_string(value) {
+    return typeof value === 'string' && /^[0-9a-f]+$/i.test(value)
+}
+
+
+//Sanitize PoW job from decentralized nodes
+function validate_pow_job(job) {
+    if (!job || typeof job !== 'object') return { ok: false, reason: 'invalid_job' }
+    // pool job_id is typically a numeric string; only enforce type/length
+    if (typeof job.job_id !== 'string' || job.job_id.length > 32) return { ok: false, reason: 'invalid_job_id' }
+    if (!is_hex_string(job.blob)) return { ok: false, reason: 'invalid_blob' }
+    if (job.blob.length % 2 !== 0) return { ok: false, reason: 'invalid_blob_len' }
+    if ((job.blob.length / 2) > pow_config.MAX_BLOB_HEX_BYTES) return { ok: false, reason: 'blob_too_large' }
+    if (!is_hex_string(job.target) || job.target.length !== 8) return { ok: false, reason: 'invalid_target' }
+    const offset = getNonceOffset(job.blob)
+    if (typeof offset !== 'number' || offset < 0) return { ok: false, reason: 'invalid_nonce_offset' }
+    if ((offset + 4) * 2 > job.blob.length) return { ok: false, reason: 'nonce_out_of_bounds' }
+    return { ok: true }
+}
 const {createReadStream} = require("fs");
 const MEDIA_TYPES = [
     { file: '.png', type: 'image' },
@@ -172,17 +211,17 @@ function check_hash(hash) {
 
 const sanitize_pm_message = (msg) => {
     let sent = msg.sent
-    let addr = msg.sent ? sanitizeHtml(msg.chat) : sanitizeHtml(msg.from)
-    let timestamp = sanitizeHtml(msg.t)
-    let key = sanitizeHtml(msg.k)
-    let message = sanitizeHtml(msg.msg)
-    if (message?.length > 777 || msg.msg === undefined) return [false]
+    let addr = msg.sent ? sanitizeHtml(msg.conversation || msg.chat) : sanitizeHtml(msg.from)
+    let timestamp = sanitizeHtml(msg.t ?? msg.timestamp)
+    let key = sanitizeHtml(msg.k ?? msg.key)
+    let message = sanitizeHtml(msg.msg || msg.message)
+    if (message?.length > 777 || (msg.msg === undefined && msg.message === undefined)) return [false]
     if (addr?.length > 99 || addr === undefined) return [false]
     if (typeof sent !== 'boolean') return [false]
     if (timestamp?.length > 25) return [false]
     if (key?.length > 64) return [false]
 
-    return [message, addr, key, timestamp, sent]
+    return { message, conversation: addr, key, timestamp, sent }
 }
 
 const sanitize_join_swarm_data = (data) => {
@@ -286,14 +325,13 @@ const sanitize_join_swarm_data = (data) => {
       message: text,
       address: addr,
       signature: sig,
-      group: room,
-      time: timestamp,
+      room,
+      timestamp,
       name: nick,
       reply: reply,
       hash: txHash,
       sent: sent,
       channel: 'channel',
-      hash: txHash,
       tip
     };
   
@@ -548,4 +586,4 @@ function toBrowbroserKey(rawCode) {
 
  
 
-module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sanitize_typing_message, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES}
+module.exports = {isLatin, toBrowbroserKey, containsOnlyEmojis, sanitize_typing_message, sleep, check_hash, trimExtra, fromHex, nonceFromTimestamp, randomKey, hexToUint, toHex, sanitize_join_swarm_data,sanitize_feed_message, sanitize_voice_status_data, hash, sanitize_pm_message, sanitize_file_message, sanitize_group_message, check_if_media, MEDIA_TYPES, pow_config, logPow, validate_pow_job}

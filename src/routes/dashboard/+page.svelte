@@ -52,21 +52,13 @@
   <QR data={showQR} onClose={() => (showQR = "")}/>
 {/if}
 
-<div class="dashboard-layout">
-    <div class="header" in:fly|global="{{ y: 100 }}">
-        <div style="display: flex; align-items: center; gap: 0.5rem">
-            <h1>{greet}{$user.username ? ", "+$user.username : ""}!</h1>
-            <EditName/>
-        </div>
-        <div class="button_wrapper">
-                <FillButton
-                    text="{upgraded}"
-
-                        rgb="{true}"
-                        on:click="{() => upgrade = true}"/>
-                    
-            <Share onShowQR={(value) => (showQR = value)} />
-        </div>
+<div class="header" in:fly|global="{{ y: 100 }}">
+    <div class="no-drag" style="display: flex; align-items: center; gap: 0.5rem">
+        <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
+        <EditName/>
+    </div>
+    <div class="button_wrapper no-drag">
+        <Share onShowQR={(value) => (showQR = value)} />
     </div>
 
     <Funds/>
@@ -100,12 +92,22 @@
     align-items: center;
     height: 80px;
     padding: 1rem 2rem;
+    -webkit-app-region: drag;
+    user-select: none;
   }
 
   .button_wrapper {
     display: flex;
     gap: 1rem;
     margin-right: -13px;
+  }
+
+  .no-drag,
+  .header button,
+  .header input,
+  .header a,
+  .header [role='button'] {
+    -webkit-app-region: no-drag;
   }
   
 </style>

@@ -2,7 +2,7 @@
 import { run } from 'svelte/legacy';
 import { t } from '$lib/utils/translation.js';
 
-import { misc, user, userAvatar, swarm, webRTC, rooms, theme, feed } from '$lib/stores/user.js'
+import { misc, user, userAvatar, swarm, webRTC, rooms, theme, feed, friendRequests } from '$lib/stores/user.js'
 import { goto } from '$app/navigation'
 import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
 import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
@@ -17,6 +17,7 @@ import { layoutState } from '$lib/stores/layout-state.js'
 import Logout from '$lib/components/icons/Logout.svelte'
 import Home from '../icons/Home.svelte'
 import Tooltip from "$lib/components/popups/Tooltip.svelte"
+import FriendRequests from "$lib/components/popups/FriendRequests.svelte"
 import { onMount } from 'svelte'
 
 
@@ -25,6 +26,7 @@ let avatar = $state()
 let in_voice = $state(false)
 let fileList = $state()
 let files = $state()
+let showFriendRequests = $state(false)
 
 onMount(async () => {
 //    const profile = await window.api.getProfile()
@@ -133,15 +135,18 @@ run(() => {
         onchange={() => selectAvatar()}
         style="width: 0; height: 0;"
       />
-        <!-- <Tooltip title="Avatar"> -->
-            <div style="cursor: pointer;" class="button myavatar" onclick={() => changeProfilePic()}>
+        <div class="avatar-wrapper">
+            <div style="cursor: pointer;" class="button myavatar" onclick={() => $friendRequests.length ? (showFriendRequests = !showFriendRequests) : changeProfilePic()}>
                 {#if !$user.customAvatar}
                 <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
                 {:else}
                 <img class="avatar custom" src={$user.customAvatar} alt="" />
                 {/if}
+                {#if $friendRequests.length > 0}
+                    <span class="fr-badge">{$friendRequests.length}</span>
+                {/if}
             </div>
-        <!-- </Tooltip> -->
+        </div>
         <Tooltip title={t('dashboard') || 'Dashboard'}>
             <div onclick={() => goto('/dashboard')} class="button">
                 <Home />
@@ -198,6 +203,10 @@ run(() => {
     </div>
 </div>
 
+{#if showFriendRequests}
+    <FriendRequests onClose={() => showFriendRequests = false} />
+{/if}
+
 <style lang="scss">
 .leftMenu {
     height: 100vh;
@@ -246,9 +255,32 @@ run(() => {
     opacity: 100%;
 }
 
+.avatar-wrapper {
+    position: relative;
+}
+
 .myavatar {
     margin-bottom: 10px;
     margin-top: -15px;
+    position: relative;
+}
+
+.fr-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--background-color, #111);
+    pointer-events: none;
 }
 
 .avatar {

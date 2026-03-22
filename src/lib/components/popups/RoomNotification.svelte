@@ -10,8 +10,9 @@ let timer
     let { error, message, success, Hide } = $props();
 
 const find_room = () => {
+    const roomKey = message.room
     const findit = (arr) => {
-       return arr.find(a => a.key === message.group)
+       return arr.find(a => a.key === roomKey)
     }
     const room = findit($rooms.roomArray)
     return room
@@ -69,7 +70,7 @@ const check_avatar = (address) => {
                 />
                 {/if}
                 {/await}
-                <h4 class="name">{message.name}</h4>
+                <h4 class="name">{message.name || message.nickname || 'Unknown'}</h4>
                 <p>in {room.name}</p>
             </div>
             <p class="message">{message.message}</p>

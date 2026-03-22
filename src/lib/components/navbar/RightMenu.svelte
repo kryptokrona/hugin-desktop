@@ -4,6 +4,7 @@
 import { fade } from 'svelte/transition'
 import { page } from '$app/stores'
 import { boards, groups, transactions, user, webRTC, beam, swarm, rooms } from '$lib/stores/user.js'
+import { peers } from '$lib/stores/swarm-state.svelte.js'
 import { remoteFiles, localFiles } from '$lib/stores/files.js'
 import { get_avatar, get_board_icon } from '$lib/utils/hugin-utils.js'
 import PayIcon from '$lib/components/icons/PayIcon.svelte'
@@ -31,16 +32,17 @@ let endTone = new Audio('/audio/endcall.mp3')
 let thisCall = false
 let video = false
 let videoInput = $state()
-let thisSwarm = $state(false)
-let in_voice = $state(false)
-let activeBeam = $derived( $swarm.active.some(a => a.chat === thisChat.chat))
-
-
-
-$effect(() => {
-   activeBeam = $swarm.active.some(a => a.chat === thisChat.chat)
-})
-
+let thisChat = $derived($user.activeChat || {})
+let thisChatAddr = $derived(thisChat.chat || thisChat.conversation || thisChat.address || '')
+let thisChatKey = $derived(thisChat.key || '')
+let thisChatName = $derived(thisChat.name || thisChat.nickname || 'Unknown')
+let activeBeam = $derived(thisChatAddr ? peers.swarms.some(s => s.chat === thisChatAddr) : false)
+let thisSwarm = $derived(activeBeam ? peers.swarms.find(s => s.chat === thisChatAddr) || false : false)
+let in_voice = $derived(
+    thisSwarm
+        ? (() => { const me = thisSwarm.voice_channel?.get($user.myAddress); return !!(me && me.key === thisSwarm.key) })()
+        : false
+)
 run(() => {
       if ($mediaSettings.devices.length) {
        videoInput = $mediaSettings.devices.some((a) => a.kind == 'videoinput')
@@ -50,34 +52,19 @@ run(() => {
 run(() => {
     if ($user.activeChat) {
         active_contact = $user.activeChat
-        contact = $user.activeChat.chat + $user.activeChat.key
-        basicAvatar = get_avatar(active_contact.chat)
+        const chat = $user.activeChat.chat || $user.activeChat.conversation || $user.activeChat.address || ''
+        const key = $user.activeChat.key || ''
+        contact = chat + key
+        basicAvatar = get_avatar(chat)
     } else {
         $user.activeChat = $user.contacts[0]
         active_contact = $user.activeChat
     }
 });
 
-//This chat
-let thisChat = $derived($user.activeChat)
-
 //Beam reactive button states
 
-let connectedBeam = $derived($swarm.active.some(a => a.chat === thisChat.chat && a.connections.some(a => a.address === thisChat.chat)))
-run(() => {
-      if (activeBeam) {
-      thisSwarm = $swarm.active.find(a => a.chat === thisChat.chat)
-   }
-   });
-
-run(() => {
-    if (thisSwarm) {
-        const me = thisSwarm.voice_channel.get($user.myAddress)
-        if (me && me.key === thisSwarm.key) {
-        in_voice = true
-        } else in_voice = false
-   }
-   });
+let connectedBeam = $derived(thisChatAddr ? peers.isDmOnline(thisChatAddr) : false)
 
 //Starts any call
 const startCall = async () => {
@@ -103,8 +90,8 @@ const endCall = () => {
 const sendMoney = () => {
     $transactions.tip = true
     $transactions.send = {
-        to: $user.activeChat.chat,
-        name: $user.activeChat.name,
+        to: thisChatAddr,
+        name: thisChatName,
     }
 }
 
@@ -125,9 +112,9 @@ function copyThis(copy) {
     if (copy.length > 64) {
         //Notification
         msg = 'You copied a Hugin address'
-        name = $user.activeChat.name
+        name = thisChatName
         //Avatar in notification
-        key = $user.activeChat.chat
+        key = thisChatAddr
     }
 
     window.api.successMessage(msg)
@@ -136,7 +123,7 @@ function copyThis(copy) {
 
 
 function newBeam() {
-    window.api.createBeam($user.activeChat.chat + $user.activeChat.key)
+    window.api.createBeam(thisChatAddr + thisChatKey)
 }
 
 const join_voice_channel = async (video = false, screen) => {
@@ -150,15 +137,11 @@ const join_voice_channel = async (video = false, screen) => {
             disconnect_from_active_voice()
             //We already have an active call.
         }
-        startTone.play()
+        startTone.play().catch(() => {})
         console.log("Want to Join new voice")
         const address = $user.myAddress
-        thisSwarm.voice_channel.set(address, {address, name: $user.username, key: thisSwarm.key })
-        $swarm.voice_channel = thisSwarm.voice_channel
-        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare}) 
-        $swarm.voice = thisSwarm
-        console.log("this swarm ", thisSwarm)
-        $swarm.active = $swarm.active
+        peers.onVoiceStatus({ key: thisSwarm.key, address, name: $user.username, voice: true })
+        window.api.send("join-voice", {key: thisSwarm.key, video: $videoSettings.myVideo, videoMute: !$videoSettings.myVideo, audioMute: !$swarm.audio, screenshare: $videoSettings.screenshare})
     }
 
 
@@ -166,7 +149,7 @@ let incoming_file = $state(false)
 let shared_files = $state(false)
 
 run(() => {
-      if ($remoteFiles.some(a => a.chat === $user.activeChat.chat)) {
+      if ($remoteFiles.some(a => a.chat === thisChatAddr)) {
        incoming_file = true
    } else {
        incoming_file = false
@@ -174,7 +157,7 @@ run(() => {
    });
 
 run(() => {
-      if ($localFiles.some(a => a.chat === $user.activeChat.chat)) {
+      if ($localFiles.some(a => a.chat === thisChatAddr)) {
        shared_files = true
    } else {
        shared_files = false
@@ -194,7 +177,7 @@ run(() => {
     {#if $page.url.pathname === '/messages'}
         <div class="nav">
 
-            {#await check_avatar($user.activeChat.chat)}
+            {#await check_avatar(thisChatAddr)}
             {:then avatar}
             {#if avatar}
                 <img
@@ -202,14 +185,14 @@ run(() => {
                     class="avatar custom"
                     src="{avatar}"
                     alt=""
-                     onclick={() => copyThis($user.activeChat.chat + $user.activeChat.key)}
+                     onclick={() => copyThis(thisChatAddr + thisChatKey)}
                 />
             {:else}
             <img
                 class="avatar"
                 src="data:image/png;base64,{basicAvatar}"
                 alt=""
-                onclick={() => copyThis($user.activeChat.chat + $user.activeChat.key)}
+                onclick={() => copyThis(thisChatAddr + thisChatKey)}
                 />
             {/if}
             {/await}
@@ -217,7 +200,7 @@ run(() => {
             <Tooltip title="P2P Chat" leftAlign={true}>
                 <div class="button" onclick={() => {
                     if (connectedBeam || activeBeam) {
-                        window.api.send('end-beam', $user.activeChat.chat)
+                        window.api.send('end-beam', thisChatAddr)
                     }   else newBeam()}}>
                 
                     <Lightning connected={connectedBeam} connecting={activeBeam && !connectedBeam} />

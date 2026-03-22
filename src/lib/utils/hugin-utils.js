@@ -3,6 +3,9 @@ import intToRGB from 'int-to-rgb'
 import { hashPadding } from './utils'
 
 export function get_avatar(hash, format = 'png', big = false) {
+    if (!hash || typeof hash !== 'string') {
+        hash = hashPadding() + '13333333337'
+    }
     // Get custom color scheme based on address
     if (hash.length < 20) hash = hashPadding() + '13333333337'
     let rgb = intToRGB(hashCode(hash))

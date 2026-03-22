@@ -4,22 +4,27 @@
 import { onMount} from 'svelte'
 import {fade} from 'svelte/transition'
 import {get_avatar, getColorFromHash} from '$lib/utils/hugin-utils.js'
-import {notify, user, webRTC, beam, swarm, rooms} from '$lib/stores/user.js'
+import {notify, user, webRTC, beam, rooms} from '$lib/stores/user.js'
 import { isLatin } from '$lib/utils/utils'
 import { t } from '$lib/utils/translation.js'
+import { peers } from '$lib/stores/swarm-state.svelte.js'
 
   /** @type {{contact: any, ThisContact: any, OpenRename: any, Rename: any}} */
 let { contact = $bindable(), ThisContact, OpenRename } = $props();
 let thisCall = $state(false)
 let beamInvite = $state(false)
 let asian = $state(false)
-let online = $derived($swarm.active.some(a => a.chat == contact.chat && a.connections.some(a => a.address === contact.chat)))
+let safeChat = $derived(contact?.chat || contact?.conversation || contact?.address || '')
+let safeMsg = $derived(contact?.msg || contact?.message || '')
+let safeName = $derived(contact?.name || contact?.nickname || 'Unknown')
+let online = $derived(peers.isDmOnline(safeChat))
 
 
 onMount(async () => {
-    const inswarm = $swarm.active.find(a => a.chat == contact.chat )
-    if (!inswarm) return
-    const users = await window.api.getRoomUsers(inswarm.key)
+    if (!safeChat) return
+    const swm = peers.swarms.find(s => s.chat === safeChat)
+    if (!swm) return
+    const users = await window.api.getRoomUsers(swm.key)
     for (const u of users) {
         make_avatar(u.avatar, u.address)
     }
@@ -35,26 +40,29 @@ const make_avatar = (data, address) => {
     $rooms.avatars = $rooms.avatars
 }
 
-let counter = $derived($notify.unread.filter(a => a.type === 'message' && contact.chat === a.chat).length)
+let counter = $derived($notify.unread.filter(a => a.type === 'message' && safeChat === a.chat).length)
 run(() => {
-    if (contact.msg.substring(0,7) === "BEAM://") {
+    if (safeMsg.substring(0,7) === "BEAM://") {
       beamInvite = true
+  } else {
+      beamInvite = false
   }
   });
 
 run(() => {
-    if (!isLatin(contact.name)) asian = true
+    if (!isLatin(safeName)) asian = true
+    else asian = false
   });
 
 run(() => {
-    if (contact.msg.substring(0,11) === "BEAMFILE://") { 
+    if (safeMsg.substring(0,11) === "BEAMFILE://") { 
       contact.msg = t('fileShared') || 'File shared ⚡️'
   }
   });
 
 run(() => {
     if ($webRTC.active) {
-      thisCall = $webRTC.call.some((a) => a.chat === contact.chat)
+      thisCall = $webRTC.call.some((a) => a.chat === safeChat)
   } else {
       thisCall = false
   }
@@ -88,11 +96,11 @@ const rename = () => {
     in:fade|global
     out:fade|global
     class:rgb="{thisCall}"
-    class:active="{contact.chat === $user.activeChat.chat}"
+    class:active="{safeChat && safeChat === ($user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address)}"
     onclick={() => printThis(contact)} >
     
     <div class="avatar-wrapper">
-    {#await check_avatar(contact.chat)}
+    {#await check_avatar(safeChat)}
     {:then avatar}
     {#if avatar}
         <img
@@ -105,7 +113,7 @@ const rename = () => {
         <img
         class="avatar"
         onclick={() => rename(contact)}
-        src="data:image/png;base64,{get_avatar(contact.chat)}"
+        src="data:image/png;base64,{get_avatar(safeChat)}"
         alt=""
         />
     {/if}
@@ -117,10 +125,10 @@ const rename = () => {
    
     <div class="content">
 
-        <h4 class:asian class:big={asian} style="color: {getColorFromHash(contact.chat)}">{contact.name}</h4>
+        <h4 class:asian class:big={asian} style="color: {getColorFromHash(safeChat)}">{safeName}</h4>
         
         {#if !beamInvite}
-        <p>{contact.msg}</p>
+        <p>{safeMsg}</p>
         {:else if beamInvite}
         <p>{t('startedBeam') || 'Started a beam ⚡️'}</p>
         {/if}

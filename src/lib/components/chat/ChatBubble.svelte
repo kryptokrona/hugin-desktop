@@ -26,6 +26,10 @@
     error = false,
     grouped = false
   } = $props();
+    const activeChatAddr = () => $user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address || ''
+    const activeChatKey = () => $user.activeChat?.key || ''
+    const activeChatName = () => $user.activeChat?.name || $user.activeChat?.nickname || 'Unknown'
+    const safeMessage = () => (typeof message === 'string' ? message : '')
     
     let torrent = false
     let oldInvite = $state(false)
@@ -65,22 +69,22 @@
 
         if (files) return
 
-        if (message?.match(geturl)) {
+        if (safeMessage().match(geturl)) {
             link = true
-            messageLink = message?.match(geturl)
-            messageText = message?.replace(messageLink,'')
+            messageLink = safeMessage().match(geturl)
+            messageText = safeMessage().replace(messageLink,'')
             //Todo handle many links in one message? an each loop in the link if block? We need to check if there is any text aswell.
             messageLink = messageLink[0]
         }
 
-        if (link && message?.match(/youtube.com/) || message?.match(/youtu.be/)) {
-            if (message?.match(/youtu.be/)) youtube_shared_link_type = true
+        if (link && safeMessage().match(/youtube.com/) || safeMessage().match(/youtu.be/)) {
+            if (safeMessage().match(/youtu.be/)) youtube_shared_link_type = true
             youtubeLink = true
             if (ownMsg) checkLink()
             return
         }
 
-        if (message.substring(0,7) === "BEAM://") {
+        if (safeMessage().substring(0,7) === "BEAM://") {
             if (Date.now() - timestamp >= 1000 * 1000) {
                 oldInvite = true
             }
@@ -88,7 +92,7 @@
             return
         }
 
-        if (message.substring(0,11) === "BEAMFILE://") {
+        if (safeMessage().substring(0,11) === "BEAMFILE://") {
             if (Date.now() - timestamp >= 1000 * 1000) {
                 oldInvite = true
             }
@@ -105,25 +109,25 @@
         return
         }
 
-        if (!isLatin($user.activeChat.name)) {
+        if (!isLatin(activeChatName())) {
             asian = true
         }
     }
 
     run(() => {
         if (beamInvite) {
-         beam_key = beamFile ? message.substring(11,63) : message.substring(7,59)
+         beam_key = beamFile ? safeMessage().substring(11,63) : safeMessage().substring(7,59)
         }
     });
 
 
     const joinBeam = () => {
         clicked = true
-        window.api.createBeam($user.activeChat.chat + $user.activeChat.key)
+        window.api.createBeam(activeChatAddr() + activeChatKey())
         $beam.active.push({
-            chat: $user.activeChat.chat,
+            chat: activeChatAddr(),
             connected: false,
-            key: key
+            key: activeChatKey()
         })
         $beam.active = $beam.active
     }
@@ -163,12 +167,12 @@
 
     //Replace call info with message
     run(() => {
-        switch (message.substring(0, 1)) {
+        switch (safeMessage().substring(0, 1)) {
             case 'Δ':
             // Fall through
             case 'Λ':
                 // Call offer
-                message = t('callStarted', { type: message.substring(0, 1) == 'Δ' ? t('video') || 'Video' : t('audio') || 'Audio' }) || `${message.substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
+                message = t('callStarted', { type: safeMessage().substring(0, 1) == 'Δ' ? t('video') || 'Video' : t('audio') || 'Audio' }) || `${safeMessage().substring(0, 1) == 'Δ' ? 'Video' : 'Audio'} call started`
                 break
         }
     });
@@ -274,7 +278,7 @@
                 {#if !grouped}
                 <div style="display: flex; gap: 1rem; justify-content: space-between; align-items: center">
                     <p class:asian class="nickname" style="color: {getColorFromHash(msgFrom)}">
-                        {$user.activeChat.name}
+                        {activeChatName()}
                         <span class="time">
                             | <Time live={30 * 1_000} format={timeformat} timestamp="{parseInt(timestamp)}"/></span
                         >
@@ -293,11 +297,11 @@
                     {:else if beamInvite && !oldInvite && !beamConnected}
                         <div style="margin-top: 1rem">
                             {#if beamFile && !clicked}
-                            <p class="message">{t('userSharingFiles', { name: $user.activeChat.name }) || `${$user.activeChat.name} is sharing files with you.`}</p>
+                            <p class="message">{t('userSharingFiles', { name: activeChatName() }) || `${activeChatName()} is sharing files with you.`}</p>
                             <br>
                             <FillButton text={t('connect') || "⚡️ Connect"} disabled={false} on:click={joinBeam}/>
                             {:else if !beamFile && !clicked}
-                            <p class="message">{t('userStartedP2PChat', { name: $user.activeChat.name }) || `${$user.activeChat.name} has started a p2p chat.`}</p>
+                            <p class="message">{t('userStartedP2PChat', { name: activeChatName() }) || `${activeChatName()} has started a p2p chat.`}</p>
                             <br>
                             <FillButton text={t('join') || "⚡️ Join"} disabled={false} on:click={joinBeam}/>
                             {:else if clicked}
