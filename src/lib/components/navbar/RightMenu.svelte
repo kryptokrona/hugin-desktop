@@ -137,7 +137,7 @@ const join_voice_channel = async (video = false, screen) => {
             disconnect_from_active_voice()
             //We already have an active call.
         }
-        startTone.play()
+        startTone.play().catch(() => {})
         console.log("Want to Join new voice")
         const address = $user.myAddress
         peers.onVoiceStatus({ key: thisSwarm.key, address, name: $user.username, voice: true })

@@ -7,6 +7,7 @@
     import { cubicIn, cubicOut } from 'svelte/easing'
     import { onDestroy, onMount } from 'svelte'
     import { pushToTalk, swarm, user } from '$lib/stores/user.js'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
     import ShowVideoMenu from '$lib/components/icons/ShowVideoMenu.svelte'
     import { calcTime } from '$lib/utils/utils.js'
     import CallSlash from '$lib/components/icons/CallSlash.svelte'
@@ -23,7 +24,8 @@
     let startTime = Date.now()
     let time = $state('0:00:00')
     let timer
-    let thisSwarm = $derived($swarm.voice)
+    let thisSwarm = $derived(peers.swarms.find(s => s.voice_channel?.has($user.myAddress)) || null)
+    let activeVoiceChannel = $derived(thisSwarm?.voice_channel ?? new Map())
 
     onMount(() => {
         timer = setInterval(() => {
@@ -39,9 +41,8 @@
     
     //End call with all peers
     const endCall = () => {
-       $swarm.voice.voice_channel.delete($user.myAddress)
-       window.api.exitVoiceChannel()
-        //We pause the ringtone and destroy the popup
+        peers.leaveVoice($user.myAddress)
+        window.api.exitVoiceChannel()
     }
     
     //As a precaution we pause the ringtone again when destroyed
@@ -79,7 +80,7 @@
                 <p>{time}</p>
             </div>
             <div class="caller">
-                {#each [...$swarm.voice_channel.entries()].slice(-3) as [key, call]}
+                {#each [...activeVoiceChannel.entries()].slice(-3) as [key, call]}
                     <InCallAvatar call={call} />
                 {/each}
             </div>

@@ -334,11 +334,6 @@ ipcMain.on("active-video", async (e, chat) => {
     mainWindow.webContents.send('activate-video')
 });
 
-ipcMain.on('exit-voice-channel', async (e, key) => {
-    mainWindow.webContents.send('leave-active-voice-channel')
-})
-
-
 //TOAST NOTIFY
 ipcMain.on('error-notify-message-main', async (e, error) => {
     mainWindow.webContents.send('error-notify-message', error)

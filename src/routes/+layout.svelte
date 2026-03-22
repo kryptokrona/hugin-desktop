@@ -11,6 +11,7 @@
 
     //Stores
     import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds, friendRequests} from '$lib/stores/user.js'
+import { peers } from '$lib/stores/swarm-state.svelte.js'
     import { themes } from '$lib/theme/themes.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
@@ -700,7 +701,7 @@
 
     {#if $swarm.active.length}
             <Conference />
-            {#if $swarm.voice_channel.has($user.myAddress)}
+            {#if peers.swarms.some(s => s.voice_channel?.has($user.myAddress))}
                 <ConferenceFloater />
             {/if}
     {/if}
