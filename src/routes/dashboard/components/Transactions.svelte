@@ -1,7 +1,7 @@
 <script>
     import { run } from 'svelte/legacy';
 
-    import {user} from '$lib/stores/user.js'
+    import {user, transactionList} from '$lib/stores/user.js'
     import {fade} from 'svelte/transition'
     import {onMount} from 'svelte'
     import Forward from '$lib/components/icons/Forward.svelte'
@@ -10,9 +10,13 @@
     import { t } from '$lib/utils/translation.js'
 
     let pageNum = $state(0)
-    let pages = $state()
-    let txList = $state([])
+    
+    // Subscribe to store
+    let pages = $derived($transactionList.pages)
+    let txList = $derived($transactionList.txs)
+
     onMount(() => {
+        // Initial fetch if empty or just to be sure we are up to date on mount
         getTransactions(pageNum)
     })
 
@@ -22,18 +26,16 @@
       if (num === 0) startIndex = num;
 
         let transactions = await window.api.getTransactions(startIndex)
-        $user.transactions = transactions.pageTx
-        pages = transactions.pages
-        txList = $user.transactions
-        console.log(transactions)
+        
+        // Update the global store
+        transactionList.set({
+            txs: transactions.pageTx,
+            pages: transactions.pages
+        })
+        
+
     }
 
-    run(() => {
-        pageNum
-    });
-    run(() => {
-        txList
-    });
     let page = $derived(pageNum + 1)
 </script>
 
@@ -44,16 +46,16 @@
         <div style="display: flex; align-items: center; gap: 1rem">
             <p>{page}/{pages}</p>
             <div>
-                {#if pageNum > 0}
+                <span style="{pageNum === 0 ? 'opacity: 0.5; pointer-events: none;' : ''}">
                     <Backward on:click="{() => getTransactions(pageNum - 1)}"/>
-                {/if}
-                {#if pages >= page + 1}
+                </span>
+                <span style="{pages < page + 1 ? 'opacity: 0.5; pointer-events: none;' : ''}">
                     <Forward on:click="{() => getTransactions(pageNum + 1)}"/>
-                {/if}
+                </span>
             </div>
         </div>
     </div>
-    {#if $user.transactions.length > 0}
+    {#if txList.length > 0}
         <div class="transactions">
             {#each txList as tx}
                 <div class="row">
@@ -80,7 +82,10 @@
 <style lang="scss">
   .wrapper {
     grid-column: span 6 / span 6;
-    height: calc(60% - 70px);
+    height: 100%; /* Changed to fill container */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 
     .header {
       display: flex;
@@ -88,17 +93,19 @@
       border-bottom: 1px solid var(--border-color);
       padding: 0.75rem 2rem;
       height: 50px;
+      flex-shrink: 0;
     }
 
     .transactions {
-      height: 100%;
+      flex: 1; /* Fill remaining space */
       width: 100%;
-      overflow: scroll;
+      overflow-y: auto; /* Scroll internally */
       box-sizing: border-box;
       --scrollbarBG: transparent;
       --thumbBG: #3337;
       scrollbar-width: thin;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+      padding-bottom: 10px;
     }
 
     .transactions::-webkit-scrollbar {
@@ -137,14 +144,15 @@
 
   .notx {
     display: flex;
-    height: 80vh;
+    flex: 1; /* Fill remaining space */
+    height: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
   }
 
   .sent {
-    color: var(--success-color) !important;
+    color: var(--text-color) !important;
   }
 
   .tx {

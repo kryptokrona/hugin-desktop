@@ -10,9 +10,9 @@
     import '$lib/window-api/node.js'
 
     //Stores
-    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds, friendRequests} from '$lib/stores/user.js'
-import { peers } from '$lib/stores/swarm-state.svelte.js'
-    import { themes } from '$lib/theme/themes.js'
+    import {boards, groups, notify, user, webRTC, messageWallet, beam, misc, swarm, rooms, files, theme, HuginNode, feed, sounds, friendRequests, transactionList} from '$lib/stores/user.js'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
+    import { themes, generateMonochromaticColorTheme } from '$lib/theme/themes.js'
     import StoreFunctions from '$lib/stores/storeFunctions.svelte'
     import {remoteFiles, localFiles, upload, download} from '$lib/stores/files.js'
     import {messages} from '$lib/stores/messages.js'
@@ -40,6 +40,8 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
     import { goto } from '$app/navigation'
     import RoomNotification from '$lib/components/popups/RoomNotification.svelte'
     import { setLanguage } from '$lib/utils/translation.js'
+    import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
+    import { layoutState } from '$lib/stores/layout-state.js';
   /** @type {{children?: import('svelte').Snippet}} */
     let { children } = $props();
     let ready = $state(false)
@@ -67,12 +69,16 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
         // Initialize theme
         const savedThemeName = localStorage.getItem('themeName') || 'aesir';
         const savedMode = localStorage.getItem('themes') || 'dark';
+        const customColor = localStorage.getItem('customThemeColor');
         
         // Ensure proper classes and vars are set
-        // We need to import applyTheme or reimplement it here. 
-        // Re-implementing briefly for robustness in layout to ensure no FOUC
-        
-        let initialTheme = themes[savedThemeName] ? themes[savedThemeName][savedMode] : themes['neutral']['dark'];
+        let initialTheme;
+        if (savedMode === 'color' && customColor) {
+            initialTheme = generateMonochromaticColorTheme(customColor);
+        } else {
+            initialTheme = themes[savedThemeName] ? themes[savedThemeName][savedMode] : themes['neutral']['dark'];
+        }
+
         const root = document.documentElement;
         
         if (initialTheme) {
@@ -82,23 +88,54 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
              root.style.setProperty('--border-color', initialTheme.border);
              root.style.setProperty('--card-border', initialTheme.border);
              root.style.setProperty('--primary-color', initialTheme.primary);
+             root.style.setProperty('--primary-foreground-color', initialTheme.primaryForeground || '#fff');
              root.style.setProperty('--text-color', initialTheme.foreground);
              root.style.setProperty('--title-color', initialTheme.foreground);
              root.style.setProperty('--input-background', initialTheme.input);
-        }
-
-        if (savedMode === 'light') {
-            root.classList.remove('dark', 'blue');
-            root.classList.add('light');
-             $theme = 'light'
-        } else if (savedMode === 'dark') {
-            root.classList.remove('light', 'blue');
-            root.classList.add('dark');
-             $theme = 'dark'
-        } else {
-             root.classList.remove('light', 'dark');
-             root.classList.add('blue'); 
-             $theme = 'color'
+             // Set mode-specific variables
+             if (savedMode === 'color') {
+                 root.style.setProperty('--input-placeholder', 'var(--text-color)');
+                 root.style.setProperty('--input-border', 'rgba(255, 255, 255, 0.15)');
+                 root.style.setProperty('--success-color', '#ffffff');
+                 root.style.setProperty('--warn-color', '#ffffff');
+                 root.style.setProperty('--info-color', '#ffffff');
+                 root.style.setProperty('--alert-color', '#ffffff');
+                 root.style.setProperty('--nav-backgound-color', initialTheme.background);
+                 root.style.setProperty('--fade-color', initialTheme.background);
+                 root.style.setProperty('--fade-to-color', 'transparent');
+                 root.classList.remove('light', 'dark');
+                 root.classList.add('blue');
+                 $theme = 'color'
+             } else if (savedMode === 'light') {
+                 root.style.setProperty('--input-placeholder', 'var(--text-color)');
+                 root.style.setProperty('--input-border', 'rgba(90, 88, 88, 0.9)');
+                 root.style.setProperty('--success-color', initialTheme.primary);
+                 root.style.setProperty('--warn-color', '#f25f61');
+                 root.style.setProperty('--info-color', initialTheme.primary);
+                 root.style.setProperty('--alert-color', '#f2cb5f');
+                 root.style.setProperty('--nav-backgound-color', 'rgba(224, 224, 224, 0.9)');
+                 root.style.setProperty('--fade-color', '#fdfdfd');
+                 root.style.setProperty('--fade-to-color', '#fdfdfd04');
+                 root.classList.remove('dark', 'blue');
+                 root.classList.add('light');
+                 $theme = 'light'
+             } else {
+                 root.style.setProperty('--input-placeholder', 'var(--text-color)');
+                 root.style.setProperty('--input-border', 'rgba(255, 255, 255, 0.15)');
+                 root.style.setProperty('--success-color', initialTheme.primary);
+                 root.style.setProperty('--warn-color', '#f25f61');
+                 root.style.setProperty('--info-color', initialTheme.primary);
+                 root.style.setProperty('--alert-color', '#f2cb5f');
+                 root.style.setProperty('--nav-backgound-color', 'rgba(32, 32, 32, 0.9)');
+                 root.style.setProperty('--fade-color', '#121212');
+                 root.style.setProperty('--fade-to-color', '#12121200');
+                 root.classList.remove('light', 'blue');
+                 root.classList.add('dark');
+                 $theme = 'dark'
+             }
+             
+             root.style.setProperty('--logo-color', '#ffffff');
+             root.style.setProperty('--backdrop-color', 'rgba(0, 0, 0, 0.5)');
         }
 
 
@@ -289,6 +326,22 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
                 huginAddress: huginAddr,
             }
         })
+    })
+
+    // Listen for real-time wallet updates (transactions)
+    window.api.onWalletUpdate(async (data) => {
+        console.log('Global wallet update:', data)
+        
+        // Update Transactions (fetch page 0)
+        const transactions = await window.api.getTransactions(0)
+        transactionList.set({
+            txs: transactions.pageTx,
+            pages: transactions.pages
+        })
+
+        // Update Balance
+        const balance = await window.api.getBalance()
+        $misc.balance = balance
     })
 
     window.api.receive('user-joined-voice-channel', data => {
@@ -595,7 +648,7 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
     })
 
     run(() => {
-    if ($user.idleTime >= $user.idleLimit) {
+    if ($user.idleLimit > 0 && $user.idleTime >= $user.idleLimit) {
           if ($webRTC.call.length === 0 && !$swarm.voice && !$beam.active.length) {
           $user.loggedIn = false
           goto('/login');
@@ -693,6 +746,19 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
 <TrafficLights/>
 <Toaster/>
 
+{#if $layoutState.showNodeSelector}
+    <div class="backdrop">
+        <NodeSelector
+            goBack={() => ($layoutState.showNodeSelector = false)}
+            onConnect={(e) => {
+                $layoutState.showNodeSelector = false;
+                $misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) };
+                window.api.switchNode(e.node);
+            }}
+        />
+    </div>
+{/if}
+
 {#if ready}
     <StoreFunctions/>
     {#if startAnimation}
@@ -738,7 +804,7 @@ import { peers } from '$lib/stores/swarm-state.svelte.js'
 
     {#if $user.loggedIn}
         <LeftMenu/>
-        {#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard' && $page.url.pathname !== '/feed'}
+        {#if $page.url.pathname !== '/boards' && $page.url.pathname !== '/dashboard' && $page.url.pathname !== '/feed' && $page.url.pathname !== '/wallet'}
             <RightMenu/>
         {/if}
     {/if}
@@ -780,6 +846,19 @@ main {
         top: 20px;
         right: 20px;
         height: 100%;
+    }
+
+    .backdrop {
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--backgound-color, rgba(0, 0, 0, 0.5));
+        z-index: 9999;
     }
 
 </style>

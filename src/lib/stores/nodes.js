@@ -233,17 +233,30 @@ const standard = {
     ]
 }
 
+const fetchWithTimeout = async (resource, options = {}, timeout = 2000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    const response = await fetch(resource, {
+        ...options,
+        signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+};
+
 const fetchNodes = async () => {
     try {
     const response = await fetch(uri)
     const result = await response.json()
     if (result.nodes.length === 0) {
         nodelist.set(standard)
-        return
+        return standard.nodes;
     }
     nodelist.set(result)
+    return result.nodes;
     } catch(e) {
         nodelist.set(standard)
+        return standard.nodes;
     }
 }
 
@@ -270,46 +283,33 @@ export async function getBestApi() {
     return false
   }
 
-  export const getBestNode = async (ssl=true) => {
+export const randomNode = async (ssl = true) => {
 
-    let recommended_node = undefined;
-    let ssl_nodes =[];
-    if (ssl) {
-        ssl_nodes = get(nodelist).nodes.filter(node => {return node.ssl});
-    } else {
-        ssl_nodes =  get(nodelist).nodes.filter(node => {return !node.ssl});
-    }
-  
-    ssl_nodes = ssl_nodes.sort((a, b) => 0.5 - Math.random());
+  const nodeList = await fetchNodes();
 
-  
-    let i = 0;
-  
-    while (i < ssl_nodes.length) {
-  
-  
-      let this_node = ssl_nodes[i];
-  
-      let nodeURL = `${this_node.ssl ? 'https://' : 'http://'}${this_node.url}:${this_node.port}/info`;
-      try {
-        const resp = await fetch(nodeURL, {
-          method: 'GET',
-        }, 2000);
-  
-      if (resp.ok) {
-  
-        recommended_node = `${this_node.url}:${this_node.port}`;
-        console.log("resp ok!", recommended_node)
-        return recommended_node;
+  const filteredNodes = nodeList.filter((node) => node.ssl === ssl);
+  const shuffledNodes = filteredNodes.sort(() => Math.random() - 0.5);
+
+  for (const node of shuffledNodes) {
+    const nodeURL = `${node.ssl ? 'https://' : 'http://'}${node.url}:${
+      node.port
+    }/info`;
+    try {
+      const response = await fetchWithTimeout(nodeURL, { method: 'GET' });
+      if (response?.ok) {
+        return `${node.url}:${node.port}`;
       }
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error(error);
     }
-    i++;
-    }
-    
-    return false
-  
-    }
+  }
+
+  if (ssl) {
+    return await randomNode(false); // Retry with non-SSL nodes
+  }
+
+  console.log('No nodes online..');
+  return null;
+};
 
 fetchNodes()

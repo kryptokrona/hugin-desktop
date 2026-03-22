@@ -1,6 +1,6 @@
 <script>
   import FillButton from '$lib/components/buttons/FillButton.svelte'
-  import {getBestNode, nodelist} from '$lib/stores/nodes.js'
+  import {randomNode, nodelist} from '$lib/stores/nodes.js'
   import {fade} from 'svelte/transition'
   import {misc} from "$lib/stores/user.js";
 
@@ -19,16 +19,16 @@
 
   const auto = async () => {
     loading = true
-    const randomNode = await getBestNode();
+    const bestNode = await randomNode();
 
-    if (!randomNode) {
+    if (!bestNode) {
         window.api.errorMessage('Auto node did not load')
         return
     }
 
     loading = false
 
-    nodeInput = randomNode
+    nodeInput = bestNode
   }
 
   const connectTo = () => {

@@ -7,7 +7,7 @@
     import FillButton from '$lib/components/buttons/FillButton.svelte'
     import {goto} from '$app/navigation'
     import NodeSelector from '$lib/components/popups/NodeSelector.svelte'
-    import { getBestNode } from '$lib/stores/nodes'
+    import { randomNode } from '$lib/stores/nodes'
     let mnemonic = $state('')
     let blockHeight = $state()
     let password = $state('')
@@ -56,11 +56,14 @@
 
     const autoNode = async () => {
         loading = true
-        const node = await getBestNode()
+        const node = await randomNode()
         if (!node) {
+            loading = false
             window.api.errorMessage(t('autoNodeDidNotLoad') || 'Auto node did not load')
             return
         }
+        $misc.autoSelectNode = true
+        window.localStorage.setItem('autoSelectNode', 'true')
         const event = {node: node}
         
         console.log("Event node!", event)
@@ -169,16 +172,15 @@
         </div>
     {:else if step === 3}
     <div in:fade|global class="wrapper">
-        <h1>{t('node') || 'Node'}</h1>
-        <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
-        <div class="nodes" class:show={showNodes}>
+        {#if showNodes}
             <NodeSelector goBack="{() => (showNodes = false)}" onConnect="{(e) => handleLogin(e)}"/>
-        </div>
-            <FillButton disabled="{false}" text={t('custom') || "Custom"} on:click="{() => (showNodes = true)}"/>
-
-            <FillButton disabled="{false}" info={true} loading={loading} text={t('auto') || "Auto"} on:click="{async () => await autoNode()}"/>
-
-        </div>
+        {:else}
+            <h1>{t('node') || 'Node'}</h1>
+            <div style="display: flex; gap:1rem; width: 100%; justify-content: center">
+                <FillButton disabled="{false}" text={t('custom') || "Custom"} on:click="{() => (showNodes = true)}"/>
+                <FillButton disabled="{false}" info={true} loading={loading} text={t('auto') || "Auto"} on:click="{async () => await autoNode()}"/>
+            </div>
+        {/if}
     </div>
     {/if}
         </div>
@@ -228,12 +230,4 @@
     justify-content: center;
   }
 
-  .nodes {
-    display: none;
-
-  }
-
-  .show {
-    display: flex;
-  }
 </style>

@@ -58,26 +58,28 @@
         <EditName/>
     </div>
     <div class="button_wrapper no-drag">
-            <!-- <FillButton
-                text="{upgraded}"
-
-                    rgb="{true}"
-                    on:click="{() => upgrade = true}"/> -->
-                
         <Share onShowQR={(value) => (showQR = value)} />
+    </div>
+
+    <Funds/>
+    <div class="grid"  in:fly|global="{{ y: 100 }}">
+        <Notifications/> 
+        <Transactions/>
+        <!-- <CreateRoom/> -->
     </div>
 </div>
 
-<Funds/>
-<div class="grid"  in:fly|global="{{ y: 100 }}">
-    <Notifications/> 
-    <Transactions/>
-    <!-- <CreateRoom/> -->
-</div>
-
 <style lang="scss">
-  .grid {
+  .dashboard-layout {
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    overflow: hidden;
+  }
+
+  .grid {
+    flex: 1;
+    min-height: 0;
     width: 100%;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));

@@ -3,8 +3,11 @@ import toast from "svelte-5-french-toast";
 import {layoutState} from "$lib/stores/layout-state.js";
 import { checkWait, sleep } from "$lib/utils/utils";
 let success = new Audio('/audio/success.mp3')
-import {sounds} from '$lib/stores/user.js'
+import {sounds, misc} from '$lib/stores/user.js'
 import { get } from 'svelte/store';
+import { randomNode } from '$lib/stores/nodes.js';
+import { t } from '$lib/utils/translation.js';
+import NodeErrorToast from '$lib/components/custom-toasts/NodeErrorToast.svelte';
 
 if (browser) {
 
@@ -16,17 +19,29 @@ if (browser) {
         })
     })
 
-    window.api.receive('node-not-ok', () => {
-        toast.error('Could not connect to node', {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
-        layoutState.update(current => {
-            return {
-                ...current,
-                showNodeSelector: true,
+    window.api.receive('node-not-ok', async () => {
+        const currentMisc = get(misc);
+        if (currentMisc.autoSelectNode) {
+            const newNode = await randomNode();
+            if (newNode) {
+                misc.update(m => {
+                    m.node = newNode;
+                    return m;
+                });
+                window.api.switchNode(newNode);
+                return;
+            } else {
+                toast.error(NodeErrorToast, {
+                    position: 'top-right',
+                    style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+                });
             }
-        })
+        } else {
+            toast.error(NodeErrorToast, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            });
+        }
     })
 
     window.api.receive('sent_tx', async (data) => {

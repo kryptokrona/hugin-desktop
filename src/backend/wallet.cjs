@@ -112,7 +112,13 @@ async function startHugin(walletName, password, node) {
 
     js_wallet.on('createdtx', async (tx) => {
         console.log('***** outgoing *****', tx)
+        incomingTx(tx)
         await saveWallet(js_wallet, walletName, password)
+    })
+
+    js_wallet.on('transaction', (transaction) => {
+        console.log('Transaction event received:', transaction)
+        sender('transaction-update', transaction)
     })
 
     //Wallet heightchange event with funtion that saves wallet only if we are synced
@@ -320,7 +326,7 @@ const getSyncStatus = () => {
 }
 
 const getTransactions = async (startIndex, all = false) => {
-        const showPerPage = 10
+        const showPerPage = 20
         let txs = []
         const allTx = await js_wallet.getTransactions()
         const pages = Math.ceil(allTx.length / showPerPage)
@@ -369,6 +375,7 @@ function incomingTx(transaction) {
         console.log(`Incoming transaction of ${transaction.totalAmount()} received!`)
         console.log('transaction', transaction)
         sender('new-message', transaction.toJSON())
+        sender('transaction-update', transaction)
 
 }
 
@@ -486,3 +493,28 @@ async function sendTx(tx) {
 
 module.exports = {loadDaemon, loadWallet, createAccount, createWallet, saveWallet, saveWalletToFile, pickNode,loadAccount, loadHugin, createMessageSubWallet, loadMiscData }
 
+// Validation Handlers
+ipcMain.handle('validate-address', async (event, address) => {
+    try {
+        console.log('Validating address:', address)
+        const isValid = WB.validateAddress(address, true)
+        console.log('Valid?', isValid)
+        return isValid
+    } catch (error) {
+        console.error('Address validation error:', error)
+        return false
+    }
+})
+
+ipcMain.handle('validate-payment-id', async (event, paymentId) => {
+    try {
+        if (!paymentId) return true // Empty payment ID is valid (optional)
+        console.log('Validating payment ID:', paymentId)
+        const isValid = WB.validatePaymentID(paymentId, true)
+        console.log('Valid?', isValid)
+        return isValid.errorCode === 0 
+    } catch (error) {
+        console.error('Payment ID validation error:', error)
+        return false
+    }
+})
