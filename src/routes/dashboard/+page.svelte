@@ -52,18 +52,20 @@
   <QR data={showQR} onClose={() => (showQR = "")}/>
 {/if}
 
-<div class="header" in:fly|global="{{ y: 100 }}">
-    <div class="no-drag" style="display: flex; align-items: center; gap: 0.5rem">
-        <h1>{greet}{$user.username ? ","+$user.username : ""}!</h1>
-        <EditName/>
-    </div>
-    <div class="button_wrapper no-drag">
-        <Share onShowQR={(value) => (showQR = value)} />
+<div class="dashboard-layout">
+    <div class="header" in:fly|global="{{ y: 100 }}">
+        <div class="no-drag" style="display: flex; align-items: center; gap: 0.5rem">
+            <h1>{greet}{$user.username ? ", "+$user.username : ""}!</h1>
+            <EditName/>
+        </div>
+        <div class="button_wrapper no-drag">
+            <Share onShowQR={(value) => (showQR = value)} />
+        </div>
     </div>
 
     <Funds/>
-    <div class="grid"  in:fly|global="{{ y: 100 }}">
-        <Notifications/> 
+    <div class="grid" in:fly|global="{{ y: 100 }}">
+        <Notifications/>
         <Transactions/>
         <!-- <CreateRoom/> -->
     </div>
@@ -109,5 +111,5 @@
   .header [role='button'] {
     -webkit-app-region: no-drag;
   }
-  
+
 </style>

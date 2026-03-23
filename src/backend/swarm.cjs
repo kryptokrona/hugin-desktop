@@ -13,7 +13,8 @@ const {
 	sanitize_feed_message,
 	sanitize_typing_message,
 	logPow,
-	validate_pow_job
+	validate_pow_job,
+	mini_message
 } = require('./utils.cjs');
 const {
 	saveGroupMsg,
@@ -305,7 +306,6 @@ class NodeConnection extends EventEmitter {
 		while (this.connection === null) {
 			if (i % 20 === 0) {
 				console.log(`Reconnecting to node... (attempt ${i})`);
-				Hugin.send('hugin-node-connection', false);
 			}
 			if (this.discovery) {
 				this.discovery.refresh({ client: true, server: false });
@@ -1650,8 +1650,8 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
 		decrpyt_beam_message(data.toString(), active.chat.substring(99, 163));
 		return;
 	}
-	const message = sanitize_group_message(JSON.parse(data), false);
-	console.log('Got incoming message!', data.toString());
+	const message = sanitize_group_message(mini_message(inc), false);
+	console.log('Got incoming message!', message);
 	if (!message) return;
 	const msg = await saveGroupMsg(message, false, true);
 	if (!msg) return;

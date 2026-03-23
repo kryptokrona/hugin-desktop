@@ -7,6 +7,7 @@
 	import { slide } from 'svelte/transition';
 	import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
 	import { t } from '$lib/utils/translation.js';
+	import { randomNode } from '$lib/stores/nodes.js';
 
 	let synced = $state(false);
 	let networkHeight = $state();
@@ -94,6 +95,22 @@
 
 	const truncateAddress = (addr) =>
 		addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : t('disconnected');
+
+	const handleAutoSelectChange = async () => {
+		window.localStorage.setItem('autoSelectNode', $misc.autoSelectNode ? 'true' : 'false');
+		if ($misc.autoSelectNode && !synced) {
+			connecting = true;
+			const newNode = await randomNode();
+			if (newNode) {
+				$misc.node = newNode;
+				changeNode();
+				window.api.switchNode(newNode);
+			} else {
+				connecting = false;
+				window.api.errorMessage(t('noNodesFound') || 'No nodes found');
+			}
+		}
+	};
 </script>
 
 <div class="settings-container">
@@ -179,6 +196,10 @@
 		</div>
 
 		<div class="info-grid">
+			<div class="info-item" style="grid-column: span 2; display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+				<span class="info-label">{t('autoSelectBestNode') || 'Auto-select best node on disconnect'}</span>
+				<input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--accent-color, #4CAF50); cursor: pointer;" bind:checked={$misc.autoSelectNode} onchange={handleAutoSelectChange} />
+			</div>
 			<div class="info-item">
 				<span class="info-label">{t('status') || 'Status'}</span>
 				<div class="status-indicator {synced ? 'connected' : 'syncing'}">
