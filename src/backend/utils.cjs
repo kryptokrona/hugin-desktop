@@ -493,19 +493,23 @@ const sanitize_typing_message = (data) => {
 };
 
 const mini_message = () => {
-	const raw = JSON.parse(data);
-	const parsed = {
-		m: raw?.message,
-		k: raw?.address,
-		s: raw?.signature,
-		t: raw?.timestamp,
-		g: raw?.room,
-		r: raw?.reply,
-		n: raw?.name ?? raw?.nickname,
-		hash: raw?.hash,
-		tip: raw?.tip
-	};
-	return parsed;
+	try {
+		const parsed = JSON.parse(data);
+		const message = {
+			m: raw?.message,
+			k: raw?.address,
+			s: raw?.signature,
+			t: raw?.timestamp,
+			g: raw?.room,
+			r: raw?.reply,
+			n: raw?.name ?? raw?.nickname,
+			hash: raw?.hash,
+			tip: raw?.tip
+		};
+		return message;
+	} catch (e) {
+		return false;
+	}
 };
 
 const isLatin = (text) => {

@@ -1650,7 +1650,7 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
 		decrpyt_beam_message(data.toString(), active.chat.substring(99, 163));
 		return;
 	}
-	const message = sanitize_group_message(mini_message(inc), false);
+	const message = sanitize_group_message(mini_message(data), false);
 	console.log('Got incoming message!', message);
 	if (!message) return;
 	const msg = await saveGroupMsg(message, false, true);
@@ -1862,26 +1862,19 @@ const send_peer_message = (address, topic, message) => {
 		error_message('Swarm is not active');
 		return;
 	}
-	const candidates = active.connections.filter((a) => a.address === address);
-	if (!candidates.length) {
+	const conn = active.connections.find((a) => a.address === address);
+	if (!conn) {
 		error_message('Connection is closed');
 		return;
 	}
 	console.log('Sending peer message');
-	const ordered = candidates.sort((a, b) => {
-		const aScore = (a.joined ? 2 : 0) + (is_connection_healthy(a.connection) ? 1 : 0);
-		const bScore = (b.joined ? 2 : 0) + (is_connection_healthy(b.connection) ? 1 : 0);
-		return bScore - aScore;
-	});
-	for (const con of ordered) {
-		try {
-			con.connection.write(JSON.stringify(message));
-			return;
-		} catch (e) {
-			continue;
-		}
+	try {
+		conn.write(JSON.stringify(message));
+		return;
+	} catch (e) {
+		console.log('Peer is offline');
+		//connection_closed(conn, topic, 'Connection not active');
 	}
-	error_message('Connection write failed');
 };
 
 const share_file = (file) => {
