@@ -28,6 +28,7 @@
   let infeed = $state(false)
   let messageInput = $state($keyboard.input)
   let shiftKey
+  let typingTimeout = null
 
   run(() => {
     messageInput = $keyboard.input
@@ -41,6 +42,7 @@
   })
 
   onDestroy(() => {
+    clearTimeout(typingTimeout)
   })
 
 
@@ -198,9 +200,14 @@
   //Checks if input is empty
   run(() => {
     enableSend = !!messageInput
-    if (enableSend) onTyping({typing: true})
-    else onTyping({typing: false})
-
+    if (enableSend) {
+      onTyping({typing: true})
+      clearTimeout(typingTimeout)
+      typingTimeout = setTimeout(() => onTyping({typing: false}), 10000)
+    } else {
+      clearTimeout(typingTimeout)
+      onTyping({typing: false})
+    }
   });
   run(() => {
     if (messageInput.length < 2) resetInputHeight()
