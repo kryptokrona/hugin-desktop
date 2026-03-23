@@ -492,9 +492,9 @@ const sanitize_typing_message = (data) => {
 	return [data?.typing, true];
 };
 
-const mini_message = () => {
+const mini_message = (data) => {
 	try {
-		const parsed = JSON.parse(data);
+		const raw = JSON.parse(data);
 		const message = {
 			m: raw?.message,
 			k: raw?.address,
@@ -508,6 +508,7 @@ const mini_message = () => {
 		};
 		return message;
 	} catch (e) {
+		consol.log('err', e);
 		return false;
 	}
 };
