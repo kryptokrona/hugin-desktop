@@ -318,16 +318,18 @@ done(file, topic, room, dm) {
     const message = {
       message: file.fileName,
       address: file.address,
-      group: room,
+      room: room,
       topic,
-      time: file.time.toString(),
-      name:  file.name,
+      timestamp: file.time,
+      time: file.time,
+      name: file.name,
       reply: '',
       hash: file.hash,
       sent: false,
-      channel: 'Room',
+      channel: 'channel',
       file: true,
       tip: false,
+      signature: '',
     }
     Hugin.send('roomMsg', message)
     saveGroupMsg(message, false, false)

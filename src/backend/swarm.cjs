@@ -1915,11 +1915,13 @@ const save_file_info = (data, topic, address, time, sent, name) => {
 		message: data.fileName,
 		address: address,
 		name: name,
-		time: time,
-		group: active.key,
+		timestamp: time,
+		room: active.key,
 		hash: data.hash,
 		reply: '',
-		sent: sent
+		sent: sent,
+		tip: false,
+		signature: ''
 	};
 	Hugin.roomFiles.push(message.hash);
 	saveGroupMsg(message);
