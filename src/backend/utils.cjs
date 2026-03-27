@@ -293,24 +293,24 @@ const sanitize_join_swarm_data = (data) => {
 };
 
 const sanitize_group_message = (data, sent = false) => {
-	let timestamp = sanitizeHtml(data.t);
+	let timestamp = sanitizeHtml(data.timestamp);
 	if (parseInt(timestamp) > Date.now()) timestamp = Date.now();
-	if (timestamp?.length > 20 || data.t === undefined) return false;
-	let room = sanitizeHtml(data.g);
-	if (room?.length > 128 || data.g === undefined) return false;
-	let text = sanitizeHtml(data.m);
-	if (text?.length > 777 || data.m === undefined) return false;
-	let addr = sanitizeHtml(data.k);
-	if (addr?.length > 128 || data.k === undefined) return false;
-	if (data.r === undefined) {
-		data.r = '';
+	if (timestamp?.length > 20 || data.timestamp === undefined) return false;
+	let room = sanitizeHtml(data.room);
+	if (room?.length > 128 || data.room === undefined) return false;
+	let text = sanitizeHtml(data.message);
+	if (text?.length > 777 || data.message === undefined) return false;
+	let addr = sanitizeHtml(data.address);
+	if (addr?.length > 128 || data.address === undefined) return false;
+	if (data.reply === undefined) {
+		data.reply = '';
 	}
-	let reply = sanitizeHtml(data.r);
+	let reply = sanitizeHtml(data.reply);
 	if (reply?.length > 64) return false;
-	let sig = sanitizeHtml(data.s);
+	let sig = sanitizeHtml(data.signature);
 	if (sig?.length > 200) return false;
-	let nick = sanitizeHtml(data.n);
-	if (nick?.length > 50 || data.n === undefined) return false;
+	let nick = sanitizeHtml(data.name ?? data.nickname);
+	if (nick?.length > 50 || nick === undefined) return false;
 	let txHash = sanitizeHtml(data.hash);
 	if (txHash?.length > 128 || data.hash === undefined) return false;
 

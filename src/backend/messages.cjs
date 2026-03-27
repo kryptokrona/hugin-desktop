@@ -140,13 +140,13 @@ ipcMain.on('add-group', async (e, grp) => {
 	addGroup(grp);
 	const timestamp = Date.now();
 	const message = sanitize_group_message({
-		t: String(timestamp),
-		g: grp.key,
-		m: 'Joined group',
-		k: Hugin.address,
-		r: '',
-		s: '',
-		n: Hugin.nickname,
+		timestamp: String(timestamp),
+		room: grp.key,
+		message: 'Joined group',
+		address: Hugin.address,
+		reply: '',
+		signature: '',
+		name: Hugin.nickname,
 		hash: randomKey(),
 		tip: false
 	});
@@ -160,13 +160,13 @@ ipcMain.on('add-room', async (e, room, admin) => {
 	addRoom(room);
 	const timestamp = Date.now();
 	const message = sanitize_group_message({
-		t: String(timestamp),
-		g: room.key,
-		m: 'Joined room',
-		k: Hugin.address,
-		r: '',
-		s: '',
-		n: Hugin.nickname,
+		timestamp: String(timestamp),
+		room: room.key,
+		message: 'Joined room',
+		address: Hugin.address,
+		reply: '',
+		signature: '',
+		name: Hugin.nickname,
 		hash: room.hash || randomKey(),
 		tip: false
 	});
@@ -977,10 +977,17 @@ async function send_group_message(message, offchain = false, swarm = false) {
 		);
 
 		if (result.success) {
-			message_json.sent = true;
-			message_json.t = timestamp;
-			message_json.hash = result.transactionHash;
-			const send = sanitize_group_message(message_json);
+			const send = sanitize_group_message({
+				message: message_json.m,
+				address: message_json.k,
+				signature: message_json.s,
+				room: message_json.g,
+				name: message_json.n,
+				reply: message_json.r || '',
+				timestamp: String(timestamp),
+				hash: result.transactionHash,
+				tip: message.tip || false
+			});
 			if (!send) return;
 			send.sent = true;
 			send.hash = result.transactionHash;
@@ -1006,15 +1013,23 @@ async function send_group_message(message, offchain = false, swarm = false) {
 		//Generate a random hash
 		let hash = message.h;
 		let rtcMessage = Buffer.from(payload_encrypted_hex, 'hex');
-		message_json.t = timestamp;
-		let swarmMessage = JSON.stringify(message_json);
+		const swarm_msg = {
+			message: message_json.m,
+			address: message_json.k,
+			signature: message_json.s,
+			room: message_json.g,
+			name: message_json.n,
+			reply: message_json.r || '',
+			timestamp: String(timestamp),
+			hash: hash,
+			sent: true,
+			tip: message.tip || false
+		};
 		let webRTCmessage = random_key + '99' + rtcMessage;
-		//Swarm message is already encrypted over the connection
-		message_json.sent = true;
 		if (swarm) {
-			console.log('Send to swarm!', message_json);
-			send_swarm_message(swarmMessage, group);
-			save_group_message(message_json, hash, timestamp, false, true, false);
+			console.log('Send to swarm!', swarm_msg);
+			send_swarm_message(JSON.stringify(swarm_msg), group);
+			save_group_message(swarm_msg, hash, timestamp, false, true, false);
 			Hugin.send('sent_rtc_group', {
 				hash: hash,
 				time: message.t

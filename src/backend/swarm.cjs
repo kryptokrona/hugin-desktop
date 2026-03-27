@@ -1517,19 +1517,8 @@ const process_request = async (messages, key, live = false) => {
 		for (const m of messages) {
 			if (m?.address === Hugin.address) continue;
 			if (!check_hash(m?.hash)) continue;
-			const inc = {
-				m: m?.message,
-				k: m?.address,
-				s: m?.signature,
-				t: m?.timestamp,
-				g: m?.room,
-				r: m?.reply,
-				n: m?.name ? m?.name : m?.nickname,
-				hash: m?.hash,
-				tip: m?.tip
-			};
-			if (await roomMessageExists(inc.hash)) continue;
-			const message = sanitize_group_message(inc, false);
+			if (await roomMessageExists(m.hash)) continue;
+			const message = sanitize_group_message(m, false);
 			if (!message) continue;
 			await saveGroupMsg(message, false, true);
 			if (live) missing.push(message);
@@ -1650,7 +1639,8 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
 		decrpyt_beam_message(data.toString(), active.chat.substring(99, 163));
 		return;
 	}
-	const message = sanitize_group_message(mini_message(data), false);
+
+	const message = sanitize_group_message(JSON.parse(data.toString()), false);
 	console.log('Got incoming message!', message);
 	if (!message) return;
 	const msg = await saveGroupMsg(message, false, true);
