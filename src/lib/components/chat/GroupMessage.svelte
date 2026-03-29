@@ -3,7 +3,7 @@
 
 import { fade } from 'svelte/transition'
 import { get_avatar, getColorFromHash } from '$lib/utils/hugin-utils.js'
-import {  onMount, onDestroy } from 'svelte'
+import {  onMount, onDestroy, tick } from 'svelte'
 import { groups, rtc_groups, webRTC, user, rooms, transactions, swarm } from '$lib/stores/user.js'
 import Reaction from '$lib/components/chat/Reaction.svelte'
 import Time from 'svelte-time'
@@ -60,6 +60,12 @@ let tipMessage = $state("");
 let thisreply = ''
 let openEmoji  = $state(false)
 let messageContainer = $state()
+
+$effect(() => {
+    if (openEmoji) {
+        tick().then(() => positionEmojiContainer(true));
+    }
+});
 let has_reaction = $state(false)
 let reactions = $state([])
 let react = false
@@ -206,29 +212,26 @@ const reactTo = (e) => {
 }
 
 const positionEmojiContainer = (open) => {
+    if (!open) return;
     let emojiContainer = messageContainer?.querySelector(".emojiContainer");
+    let emojiButton = messageContainer?.querySelector(".emoji-button");
+    if (!emojiContainer || !emojiButton) return;
 
-    if(!open) {
-        if(emojiContainer) emojiContainer.style.display = "none";
-        return;
-    } 
-    
-    emojiContainer.style.display = "block";
-    let emojiButton = messageContainer.querySelector(".emoji-button");
     let buttonRect = emojiButton.getBoundingClientRect();
     let popupRect = emojiContainer.getBoundingClientRect();
-    let initialTop = buttonRect.top + buttonRect.height;
 
-    if (initialTop + popupRect.height > window.innerHeight && buttonRect.top - popupRect.height < 0) {
-        // If any part of the popup would be out of sight both above and below the button, position it in the middle vertically
-        emojiContainer.style.top = (window.innerHeight - popupRect.height) / 2 + 'px';
-    } else if (initialTop + popupRect.height > window.innerHeight) {
-        // If the popup would be out of sight below the button, position it above the button
-        emojiContainer.style.top = (buttonRect.top - popupRect.height) + 'px';
-    } else {
-        // Otherwise, position it below the button
-        emojiContainer.style.top = initialTop + 'px';
+    // Horizontal: align right edge of picker with right edge of button
+    let left = buttonRect.right - popupRect.width;
+    if (left < 0) left = 0;
+    emojiContainer.style.left = left + 'px';
+
+    // Vertical: open above button if not enough room below
+    let top = buttonRect.bottom;
+    if (top + popupRect.height > window.innerHeight) {
+        top = buttonRect.top - popupRect.height;
     }
+    if (top < 0) top = (window.innerHeight - popupRect.height) / 2;
+    emojiContainer.style.top = top + 'px';
 }
 
 
@@ -442,11 +445,11 @@ run(() => {
                 {#if !grouped}
                 <div class="actions">
                     <div style="display: flex;">
+                        {#if openEmoji}
                         <div class="emojiContainer">
-                            {#if openEmoji}
-                              <emoji-picker onemoji-click={(e) => { openEmoji = false; reactTo(e) }}></emoji-picker>
-                            {/if}
+                            <emoji-picker onemoji-click={(e) => { openEmoji = false; reactTo(e) }}></emoji-picker>
                         </div>
+                        {/if}
                          {#if !rtc}
                         <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
                             <Emoji size="16px" stroke={"var(--text-color)"}/>
@@ -507,11 +510,11 @@ run(() => {
             {#if grouped}
             <div class="actions grouped-actions">
                 <div style="display: flex;">
+                    {#if openEmoji}
                     <div class="emojiContainer">
-                        {#if openEmoji}
-                          <emoji-picker onemoji-click={(e) => { openEmoji = false; reactTo(e) }}></emoji-picker>
-                        {/if}
+                        <emoji-picker onemoji-click={(e) => { openEmoji = false; reactTo(e) }}></emoji-picker>
                     </div>
+                    {/if}
                      {#if !rtc}
                     <button alt="React with emoji" class="emoji-button" onclick={() => { openEmoji = !openEmoji }}>
                         <Emoji size="16px" stroke={"var(--text-color)"}/>
@@ -746,10 +749,8 @@ p {
 }
 
 .emojiContainer {
-   position: absolute;
-   right: 7rem;
-   display: none;
-   z-index: 3;
+   position: fixed;
+   z-index: 9999;
 }
 
 .joined {
