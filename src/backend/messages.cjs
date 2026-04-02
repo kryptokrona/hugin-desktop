@@ -378,6 +378,8 @@ ipcMain.on('end-swarm', async (e, key) => {
 });
 
 const peer_dms = async () => {
+	//Add a small delay before we start our dm p2p connections during startup.
+	await sleep(5555)
 	const contacts = await getConversations();
 	for (const c of contacts) {
 		if (c.conversation?.length !== 99) continue;

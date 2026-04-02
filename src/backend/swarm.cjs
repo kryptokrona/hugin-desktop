@@ -846,23 +846,17 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
 		connection_closed(connection, topic);
 		return;
 	}
+
+	if (beam) {
+	console.log('*****************************************');
+	console.log('***********NEW BEAM CONNECTION!**********');
+	console.log('*****************************************');
+	} else {
 	console.log('*****************************************');
 	console.log('***********NEW CONNECTION!***************');
 	console.log('*****************************************');
-	const incomingPublicKey = peer.publicKey.toString('hex');
-	const duplicateByPublicKey = active.connections.find(
-		(a) => a.connection !== connection && a.publicKey === incomingPublicKey
-	);
-	if (duplicateByPublicKey) {
-		if (duplicateByPublicKey.joined && is_connection_healthy(duplicateByPublicKey.connection)) {
-			try {
-				connection.end();
-				connection.destroy();
-			} catch (e) {}
-			return;
-		}
-		connection_closed(duplicateByPublicKey.connection, topic, true);
 	}
+
 	active.connections.push({
 		connection,
 		topic: topic,
@@ -873,8 +867,9 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
 		peer,
 		request: false,
 		knownHashes: [],
-		publicKey: incomingPublicKey
+		publicKey: connection.remotePublicKey.toString('hex')
 	});
+
 	send_joined_message(topic, dht_keys, connection).catch((error) => {
 		console.log('Failed to send joined message', error);
 		connection_closed(connection, topic, true);
@@ -1150,12 +1145,6 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
 			con.admin = admin;
 			con.video = joined.video;
 			con.request = true;
-			close_duplicate_peer_connections(
-				active,
-				con.connection,
-				(entry) => !!entry.address && entry.address === joined.address,
-				topic
-			);
 			active.peers.push(peer.publicKey.toString('hex'));
 			let uniq = {};
 			const peers = active.peers.filter((obj) => !uniq[obj] && (uniq[obj] = true));
@@ -1174,8 +1163,10 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
 			if (parseInt(active.time) > time && active.requests < 3) {
 				request_history(joined.address, topic, active.files);
 				active.requests++;
+			}	
+			if (!beam) {
+				request_feed(joined.address, topic);
 			}
-			request_feed(joined.address, topic);
 			console.log('=======================================');
 			console.log('--USER:', con.name, 'JOINED THE ROOM--');
 			console.log('=======================================');
@@ -1641,7 +1632,6 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
 	}
 
 	const message = sanitize_group_message(JSON.parse(data.toString()), false);
-	console.log('Got incoming message!', message);
 	if (!message) return;
 	const msg = await saveGroupMsg(message, false, true);
 	if (!msg) return;
