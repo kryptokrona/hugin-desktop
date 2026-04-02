@@ -64,7 +64,12 @@ run(() => {
 
 //Beam reactive button states
 
-let connectedBeam = $derived(thisChatAddr ? peers.isDmOnline(thisChatAddr) : false)
+let connectedBeam = $state(false)
+
+$effect(() => {
+    console.log("checking connected beam")
+    connectedBeam = thisChatAddr ? peers.isDmOnline(thisChatAddr) : false
+})
 
 //Starts any call
 const startCall = async () => {
