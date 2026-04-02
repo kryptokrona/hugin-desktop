@@ -29,13 +29,22 @@ let room = $derived(peers.activeRoomKey || $rooms.thisRoom?.key || '')
 let thisSwarm = $derived(peers.activeSwarm || false)
 let voice_channel = $derived(peers.activeVoiceUsers)
 let knownUsers = $derived.by(() => {
+    const roomKey = peers.activeRoomKey
+    const knownByRoom = peers.knownUsersByRoom
+    const active = roomKey ? peers.swarms.find((s) => s.key === roomKey) : null
+    const connected = (active?.connections ?? []).map((u) => ({
+        address: u.address,
+        room: roomKey,
+        name: u.name || 'Anon'
+    }))
+    const merged = normalizeUsers([...connected, ...(knownByRoom[roomKey] ?? [])])
     const seen = new Set()
     const result = []
     if (me.address) {
         seen.add(me.address)
         result.push(me)
     }
-    for (const u of peers.activeKnownUsers) {
+    for (const u of merged) {
         if (!u?.address || seen.has(u.address)) continue
         seen.add(u.address)
         result.push(u)
