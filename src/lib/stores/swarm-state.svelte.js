@@ -172,10 +172,11 @@ class Peers {
 		const peer = parsePeer(payload);
 		console.log('peer', peer);
 		if (!peer) return;
-		const swm = this.swarms.find(
+		const idx = this.swarms.findIndex(
 			(s) => (peer.topic && s.topic === peer.topic) || (peer.key && s.key === peer.key)
 		);
-		if (!swm) return;
+		if (idx < 0) return;
+		const swm = this.swarms[idx];
 		if (swm.connections.some((c) => c.address === peer.address)) return;
 
 		const nextPeer = {
@@ -192,7 +193,7 @@ class Peers {
 		};
 
 		console.log('Peer push', nextPeer);
-		swm.connections.push(nextPeer);
+		this.swarms[idx] = { ...swm, connections: [...swm.connections, nextPeer] };
 		this._addKnownUser(peer.key || swm.key, nextPeer);
 		if (peer.key && !this.activeRoomKey) this.activeRoomKey = peer.key;
 		this._syncLegacy();
