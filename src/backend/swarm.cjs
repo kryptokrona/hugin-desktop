@@ -751,21 +751,6 @@ const create_swarm = async (data, beam, chat) => {
 
 	const startTime = Date.now().toString();
 
-	Hugin.send(
-		'swarm-connected',
-		JSON.stringify({
-			topic: topicHash,
-			key: invite,
-			channels: [],
-			voice_channel: new Map(),
-			connections: [],
-			time: startTime,
-			admin,
-			beam,
-			chat: beam ? chat.substring(0, 99) : ''
-		})
-	);
-
 	//The topic is public so lets use the pubkey from the new base keypair
 
 	active_swarms.push({
@@ -786,6 +771,22 @@ const create_swarm = async (data, beam, chat) => {
 		beam,
 		chat
 	});
+
+	Hugin.send(
+		'swarm-connected',
+		JSON.stringify({
+			topic: topicHash,
+			key: invite,
+			channels: [],
+			voice_channel: new Map(),
+			connections: [],
+			time: startTime,
+			admin,
+			beam,
+			chat: beam ? chat.substring(0, 99) : ''
+		})
+	);
+
 
 	Hugin.send('set-channels');
 
@@ -1159,13 +1160,15 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
 				join_voice_channel(active.key, topic, joined.address);
 			}
 
-			//Request message history from peer connected before us.
-			if (parseInt(active.time) > time && active.requests < 3) {
-				request_history(joined.address, topic, active.files);
-				active.requests++;
-			}	
 			if (!beam) {
-				request_feed(joined.address, topic);
+			    //Request message history from peer connected before us.
+				if (parseInt(active.time) > time && active.requests < 3) {
+					request_history(joined.address, topic, active.files);
+					active.requests++;
+				}	
+				if (!beam) {
+					request_feed(joined.address, topic);
+				}
 			}
 			console.log('=======================================');
 			console.log('--USER:', con.name, 'JOINED THE ROOM--');
