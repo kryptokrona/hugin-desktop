@@ -104,9 +104,12 @@ const join_voice_channel = async (video = false, screen) => {
             return
         }
         console.log("Joining!")
-        if ($swarm.voice_channel.size) {
-            console.log("Still in voice")
+        // Check if we are already in a *different* swarm's voice channel
+        const inOtherVoice = peers.swarms.some(s => s.key !== thisSwarm.key && s.voice_channel?.has($user.myAddress))
+        if (inOtherVoice) {
+            console.log("Still in voice (different channel)")
             window.api.errorMessage(t('alreadyInVoiceChannel'))
+            loading = false
             return
         }
         startTone.play()

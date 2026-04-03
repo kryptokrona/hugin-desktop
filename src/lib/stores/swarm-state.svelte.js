@@ -193,7 +193,12 @@ class Peers {
 		};
 
 		console.log('Peer push', nextPeer);
-		this.swarms[idx] = { ...swm, connections: [...swm.connections, nextPeer] };
+		let vc = swm.voice_channel;
+		if (nextPeer.voice && !vc.has(nextPeer.address)) {
+			vc = new Map(vc);
+			vc.set(nextPeer.address, nextPeer);
+		}
+		this.swarms[idx] = { ...swm, connections: [...swm.connections, nextPeer], voice_channel: vc };
 		this._addKnownUser(peer.key || swm.key, nextPeer);
 		if (peer.key && !this.activeRoomKey) this.activeRoomKey = peer.key;
 		this._syncLegacy();
