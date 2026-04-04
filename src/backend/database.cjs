@@ -423,7 +423,7 @@ const loadRoomUsers = async (key) => {
         SELECT *
         FROM roomusers
         WHERE room = ?
-`
+    `
     const users = database.prepare(getAllUsers)
     for(const user of users.iterate(key)) {
         const avatar = Buffer.from(user.avatar, 'base64')
@@ -601,7 +601,12 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
            (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
     ).run(msg.message, msg.address, '', msg.room, msg.timestamp, msg.name, msg.reply, msg.hash, msg.sent, tip, msg.sent)
-
+    saveRoomUser({
+        name: msg.name,
+        address: msg.address,
+        room: msg.room,
+        avatar: '',
+      });
         } catch(a) {
             console.log("Sql lite", a)
         }
