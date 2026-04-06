@@ -975,13 +975,22 @@ const send_voice_channel_status = async (joined, status, update = false) => {
 		active_voice.forEach(async function (user) {
 			await sleep(100);
 			//Call to VoiceChannel.svelte
-			join_voice_channel(status.key, active.topic, user.address);
+			join_voice_channel(status.key, active.topic, user);
 		});
 	}
 };
 
-const join_voice_channel = (key, topic, address) => {
-	Hugin.send('join-voice-channel', { key, topic, address });
+const join_voice_channel = (key, topic, user) => {
+	Hugin.send('join-voice-channel', { 
+		key, 
+		topic, 
+		address: user.address, 
+		name: user.name,
+		audioMute: user.audioMute,
+		videoMute: user.videoMute,
+		screenshare: user.screenshare,
+		video: user.video 
+	});
 };
 
 const admin_ban_user = async (address, key) => {

@@ -241,9 +241,6 @@
         console.log('Joining voice channel... in VoiceChannel.svelte')
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
-        // Ensure the joining peer appears in the voice channel list immediately,
-        // without relying on a separate voice-channel-status event from the backend
-        peers.onVoiceStatus({ address: data.address, voice: true, key: data.key, topic: data.topic, name: data.name || 'Anon' })
         let video = $videoSettings.myVideo
         if ($mediaSettings.cameraId === "none") video = false
         
