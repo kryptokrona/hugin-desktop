@@ -132,7 +132,6 @@ const join_voice_channel = async (video = false, screen) => {
     function disconnect_from_active_voice() {
         window.api.exitVoiceChannel()
         peers.leaveVoice($user.myAddress)
-        $swarm.voice_channel = new Map()
         $swarm.voice = false
         $swarm = $swarm
     }

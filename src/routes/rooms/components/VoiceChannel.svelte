@@ -523,7 +523,11 @@ async function play_video() {
         $swarm.myStream = stream
 
         const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-        const source = audioContext.createMediaStreamSource(stream)
+        
+        let analyserStream = stream.clone()
+        analyserStream.getTracks().forEach(t => t.enabled = true)
+        
+        const source = audioContext.createMediaStreamSource(analyserStream)
         const analyser = audioContext.createAnalyser()
         analyser.fftSize = 32
         source.connect(analyser);
@@ -613,6 +617,7 @@ async function play_video() {
             } else {
                 clearInterval(interval)
                 if (silenceTimeout) clearTimeout(silenceTimeout)
+                analyserStream.getTracks().forEach(t => t.stop())
                 $audioLevel.meTalking = false
                 console.log('[Voice Activation] Stream ended, interval cleared')
             }
@@ -709,10 +714,6 @@ async function play_video() {
     
         $swarm.call = filter
 
-        // Remove the disconnected peer from the voice channel map
-        if (contact !== undefined) {
-            peers.leaveVoice(contact)
-        }
 
         const in_voice = $swarm.voice_channel.has($user.myAddress)
 

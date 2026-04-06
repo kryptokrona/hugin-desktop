@@ -44,7 +44,6 @@
             window.api.send("exit-voice", $swarm.voice.key)
             //Remove from the active voice channel we have
             console.log("Want to exit old voice")
-            $swarm.voice_channel = new Map()
 
             $swarm.voice = false
         
