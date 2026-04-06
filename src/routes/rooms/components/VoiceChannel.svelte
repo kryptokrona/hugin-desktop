@@ -7,6 +7,10 @@
     import { mediaSettings, videoSettings, audioSettings, video, voiceActivation } from '$lib/stores/mediasettings'
     import { peers } from '$lib/stores/swarm-state.svelte.js'
 
+    let volumeInterval = null;
+    let myAudioContext = null;
+    let hasInitializedVolumeCheck = false;
+
     onMount(() => {
         checkSources()
     })
@@ -501,7 +505,9 @@ async function play_video() {
     }
     
     async function checkMyVolume(stream) {
-        let interval
+        if (hasInitializedVolumeCheck) return;
+        hasInitializedVolumeCheck = true;
+
         let silenceTimeout = null
         let currentlyTransmitting = false
         let logCounter = 0 // Log every 10th check to avoid spam
@@ -519,22 +525,22 @@ async function play_video() {
         }
         $swarm.myStream = stream
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        myAudioContext = new (window.AudioContext || window.webkitAudioContext)()
         
         let analyserStream = stream.clone()
         analyserStream.getTracks().forEach(t => t.enabled = true)
         
-        const source = audioContext.createMediaStreamSource(analyserStream)
-        const analyser = audioContext.createAnalyser()
+        const source = myAudioContext.createMediaStreamSource(analyserStream)
+        const analyser = myAudioContext.createAnalyser()
         analyser.fftSize = 32
         source.connect(analyser);
 
-        interval = setInterval(checkAudioPresence, 100)
+        volumeInterval = setInterval(checkAudioPresence, 100)
 
         function checkAudioPresence() {
             // Resume AudioContext if it was suspended by the browser during inactivity
-            if (audioContext.state === 'suspended') {
-                audioContext.resume()
+            if (myAudioContext.state === 'suspended') {
+                myAudioContext.resume()
                 return
             }
             const dataArray = new Uint8Array(analyser.frequencyBinCount)
@@ -612,7 +618,13 @@ async function play_video() {
                     }
                 }
             } else {
-                clearInterval(interval)
+                clearInterval(volumeInterval)
+                hasInitializedVolumeCheck = false;
+                if (myAudioContext) {
+                    try { myAudioContext.close(); } catch(e) {}
+                    myAudioContext = null;
+                }
+                $audioLevel.meTalking = false
                 if (silenceTimeout) clearTimeout(silenceTimeout)
                 analyserStream.getTracks().forEach(t => t.stop())
                 $audioLevel.meTalking = false
@@ -720,10 +732,21 @@ async function play_video() {
         }
         
         //Not active anymore, stop all tracks here.
-        $swarm.myStream.getTracks().forEach(function (track) {
-            console.log('track stopped')
-            track.stop()
-        })
+        if ($swarm.myStream) {
+            $swarm.myStream.getTracks().forEach(function (track) {
+                console.log('track stopped')
+                track.stop()
+            })
+        }
+        if (volumeInterval) {
+            clearInterval(volumeInterval);
+        }
+        if (myAudioContext) {
+            try { myAudioContext.close(); } catch(e) {}
+            myAudioContext = null;
+        }
+        hasInitializedVolumeCheck = false;
+        
         //
         $swarm.initiator = false
         $videoSettings.myVideo = false
