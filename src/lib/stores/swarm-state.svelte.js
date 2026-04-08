@@ -193,7 +193,12 @@ class Peers {
 		};
 
 		console.log('Peer push', nextPeer);
-		this.swarms[idx] = { ...swm, connections: [...swm.connections, nextPeer] };
+		let vc = swm.voice_channel;
+		if (nextPeer.voice && !vc.has(nextPeer.address)) {
+			vc = new Map(vc);
+			vc.set(nextPeer.address, nextPeer);
+		}
+		this.swarms[idx] = { ...swm, connections: [...swm.connections, nextPeer], voice_channel: vc };
 		this._addKnownUser(peer.key || swm.key, nextPeer);
 		if (peer.key && !this.activeRoomKey) this.activeRoomKey = peer.key;
 		this._syncLegacy();
@@ -297,6 +302,50 @@ class Peers {
 			...prevRooms,
 			activeHugins: this.activeKnownUsers
 		});
+	}
+
+	async loadUsersFromDB() {
+		console.log('[swarm-state.svelte.js] Loading users from DB')
+		try {
+			const allRooms = await window.api.getRooms();
+			console.log('[swarm-state.svelte.js] allRooms', allRooms)
+			if (allRooms && Array.isArray(allRooms)) {
+				let hasChanges = false;
+				const updates = {};
+				for (const room of allRooms) {
+					if (room.key) {
+						console.log('[swarm-state.svelte.js] Loading users for room', room.name)
+						const users = await window.api.getRoomUsers(room.room);
+						console.log('[swarm-state.svelte.js] users', users)
+
+						if (users && Array.isArray(users) && users.length > 0) {
+							const currentKnown = this.knownUsersByRoom[room.key] || [];
+							const dbUsers = users.map((user) => ({
+								address: user.address,
+								room: room.key,
+								name: user.name || 'Anon'
+							}));
+							// Merge to prevent overwriting new users that joined during load
+							const combined = [...currentKnown];
+							for (const u of dbUsers) {
+								if (!combined.some(c => c.address === u.address)) {
+									combined.push(u);
+								}
+							}
+							updates[room.key] = combined;
+							console.log('[swarm-state.svelte.js] loaded users from db:', combined);
+							hasChanges = true;
+						}
+					}
+				}
+				if (hasChanges) {
+					this.knownUsersByRoom = { ...this.knownUsersByRoom, ...updates };
+					this._syncLegacy();
+				}
+			}
+		} catch (e) {
+			console.error('Failed to load known room users on startup:', e);
+		}
 	}
 }
 

@@ -5,6 +5,11 @@
     import { onMount } from 'svelte'
     import { sleep } from '$lib/utils/utils'
     import { mediaSettings, videoSettings, audioSettings, video, voiceActivation } from '$lib/stores/mediasettings'
+    import { peers } from '$lib/stores/swarm-state.svelte.js'
+
+    let volumeInterval = null;
+    let myAudioContext = null;
+    let hasInitializedVolumeCheck = false;
 
     onMount(() => {
         checkSources()
@@ -336,12 +341,14 @@
     }
     
     const answer_voice_channel = (data) => {
-        
+
         let contact = data.address
         let msg = data.data
         let video = $videoSettings.myVideo
         $swarm.call.push({chat: data.address, topic: data.topic, connected: false})
         $swarm.call = $swarm.call
+        // Ensure the answering peer appears in the voice channel list
+        peers.onVoiceStatus({ address: data.address, voice: true, key: data.key, topic: data.topic, name: data.name || 'Anon' })
         // get video/voice stream
         
         if ($swarm.myStream) {
@@ -498,7 +505,9 @@ async function play_video() {
     }
     
     async function checkMyVolume(stream) {
-        let interval
+        if (hasInitializedVolumeCheck) return;
+        hasInitializedVolumeCheck = true;
+
         let silenceTimeout = null
         let currentlyTransmitting = false
         let logCounter = 0 // Log every 10th check to avoid spam
@@ -516,15 +525,24 @@ async function play_video() {
         }
         $swarm.myStream = stream
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-        const source = audioContext.createMediaStreamSource(stream)
-        const analyser = audioContext.createAnalyser()
+        myAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+        
+        let analyserStream = stream.clone()
+        analyserStream.getTracks().forEach(t => t.enabled = true)
+        
+        const source = myAudioContext.createMediaStreamSource(analyserStream)
+        const analyser = myAudioContext.createAnalyser()
         analyser.fftSize = 32
         source.connect(analyser);
 
-        interval = setInterval(checkAudioPresence, 100)
+        volumeInterval = setInterval(checkAudioPresence, 100)
 
         function checkAudioPresence() {
+            // Resume AudioContext if it was suspended by the browser during inactivity
+            if (myAudioContext.state === 'suspended') {
+                myAudioContext.resume()
+                return
+            }
             const dataArray = new Uint8Array(analyser.frequencyBinCount)
             if ($swarm.myStream) {
                 analyser.getByteFrequencyData(dataArray);
@@ -536,10 +554,14 @@ async function play_video() {
                 
                 const maxValue = Math.max(...dataArray)
                 const isSpeaking = dataArray.some(value => value > threshold)
-                
+
                 // Log every 10th check (once per second) or when state changes
                 const previouslyTalking = $audioLevel.meTalking
-                $audioLevel.meTalking = isSpeaking
+                // Only drive meTalking from audio levels in voice-activation mode;
+                // in PTT mode it is controlled by Conference.svelte's talk()/notalk()
+                if (!$pushToTalk.on) {
+                    $audioLevel.meTalking = isSpeaking
+                }
                 
                 logCounter++
                 if (logCounter >= 10 || (isSpeaking !== previouslyTalking)) {
@@ -596,8 +618,15 @@ async function play_video() {
                     }
                 }
             } else {
-                clearInterval(interval)
+                clearInterval(volumeInterval)
+                hasInitializedVolumeCheck = false;
+                if (myAudioContext) {
+                    try { myAudioContext.close(); } catch(e) {}
+                    myAudioContext = null;
+                }
+                $audioLevel.meTalking = false
                 if (silenceTimeout) clearTimeout(silenceTimeout)
+                analyserStream.getTracks().forEach(t => t.stop())
                 $audioLevel.meTalking = false
                 console.log('[Voice Activation] Stream ended, interval cleared')
             }
@@ -694,6 +723,7 @@ async function play_video() {
     
         $swarm.call = filter
 
+
         const in_voice = $swarm.voice_channel.has($user.myAddress)
 
         if (in_voice) {
@@ -702,10 +732,21 @@ async function play_video() {
         }
         
         //Not active anymore, stop all tracks here.
-        $swarm.myStream.getTracks().forEach(function (track) {
-            console.log('track stopped')
-            track.stop()
-        })
+        if ($swarm.myStream) {
+            $swarm.myStream.getTracks().forEach(function (track) {
+                console.log('track stopped')
+                track.stop()
+            })
+        }
+        if (volumeInterval) {
+            clearInterval(volumeInterval);
+        }
+        if (myAudioContext) {
+            try { myAudioContext.close(); } catch(e) {}
+            myAudioContext = null;
+        }
+        hasInitializedVolumeCheck = false;
+        
         //
         $swarm.initiator = false
         $videoSettings.myVideo = false

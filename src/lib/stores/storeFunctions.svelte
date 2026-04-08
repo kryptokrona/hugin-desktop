@@ -11,6 +11,7 @@
         { channel: 'peer-connected', handler: (data) => peers.onPeerConnected(data) },
         { channel: 'voice-channel-status', handler: (data) => peers.onVoiceStatus(data) },
         { channel: 'channel-created', handler: (data) => peers.onChannelCreated(data) },
+        { channel: 'wallet-started', handler: () => peers.loadUsersFromDB() },
         { channel: 'leave-active-voice-channel', handler: () => {
             const usr = get(user)
             if (usr?.myAddress) peers.leaveVoice(usr.myAddress)

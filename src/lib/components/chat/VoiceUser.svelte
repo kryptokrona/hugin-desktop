@@ -25,12 +25,6 @@
       }
   });
 
-  $effect(()=> {
-    console.log("voice_user", voice_user)
-     console.log("voice_user", voice_user)
-      console.log("voice_user", voice_user)
-       console.log("voice_user", voice_user)
-  })
   
     const check_avatar = (address) => {
        const found = $rooms.avatars.find(a => a.address === address)

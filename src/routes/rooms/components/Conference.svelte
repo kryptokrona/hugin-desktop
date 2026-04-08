@@ -2,7 +2,7 @@
    import { run, preventDefault } from 'svelte/legacy';
 
     import MyVideo from '$lib/components/webrtc/MyVideo.svelte'
-    import { pushToTalk, rooms, swarm } from '$lib/stores/user.js'
+    import { audioLevel, pushToTalk, rooms, swarm } from '$lib/stores/user.js'
     import { peers } from '$lib/stores/swarm-state.svelte.js'
     import PeerVideo from '$lib/components/webrtc/PeerVideo.svelte'
     import { videoGrid } from '$lib/stores/layout-state.js'
@@ -90,14 +90,16 @@
     talkOn.play()
     pressed = true
     setAudio(true)
+    $audioLevel.meTalking = true
     console.log("Talking.....")
    }
-   
-   
+
+
    function notalk(e) {
     if (!check(e)) return
     pressed = false
     setAudio(false)
+    $audioLevel.meTalking = false
     talkOff.play()
     console.log("No Talking.....")
    }
