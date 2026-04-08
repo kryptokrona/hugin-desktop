@@ -1854,7 +1854,7 @@ const send_peer_message = (address, topic, message) => {
 		error_message('Swarm is not active');
 		return;
 	}
-	const conn = active.connections.find((a) => a.address === address);
+	const conn = active.connections.find((a) => a.address === address).connection;
 	if (!conn) {
 		error_message('Connection is closed');
 		return;
@@ -1940,6 +1940,7 @@ const check_file_message = async (data, topic, address, con, beam) => {
 				type: data.type,
 				info: data.info
 			};
+			console.log('[swarm.cjs] Want to request file shared: ', file);
 			request_file(address, topic, file, active.key, beam);
 			return;
 		} else {
