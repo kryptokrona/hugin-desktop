@@ -99,7 +99,10 @@
 
 	const isFile = (data) => {
 		const findit = (arr) => {
-			return arr.find((a) => parseInt(data.time) === parseInt(a.time));
+			return arr.find((a) =>
+				(data.hash && a.hash === data.hash) ||
+				parseInt(data.time || data.timestamp) === parseInt(a.time)
+			);
 		};
 		const local = findit($localFiles);
 		if (local) return local;

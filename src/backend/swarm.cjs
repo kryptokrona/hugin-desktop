@@ -53,26 +53,19 @@ const LOCAL_VOICE_STATUS_OFFLINE = {
 	screenshare: false
 };
 
-const {
-	add_local_file,
-	start_download,
-	add_remote_file,
-	send_file,
-	update_remote_file
-} = require('./beam.cjs');
 const { Hugin } = require('./account.cjs');
 const { Storage } = require('./storage.cjs');
 const { createChallenge } = require('hugin-utils/challenge');
 const RPC = require('bare-rpc');
 const b4a = require('b4a');
+const Protomux = require('protomux');
+const c = require('compact-encoding');
 
 const MISSING_MESSAGES = 'missing-messages';
 const REQUEST_MESSAGES = 'request-messages';
 const REQUEST_HISTORY = 'request-history';
 const SEND_HISTORY = 'send-history';
-const REQUEST_FILE = 'request-file';
 const PING_SYNC = 'Ping';
-const DOWNLOAD_REQUEST = 'download-request';
 const REQUEST_FEED = 'request-feed';
 const SEND_FEED_HISTORY = 'send-feed-history';
 
@@ -83,10 +76,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const EventEmitter = require('bare-events');
 
 let localFiles = [];
-let remoteFiles = [];
 let active_swarms = [];
-let downloading = [];
-let uploading = [];
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE;
 
 const POW_MAX_JOB_TIME_MS = 90000;
@@ -858,7 +848,7 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
 	console.log('*****************************************');
 	}
 
-	active.connections.push({
+	const connEntry = {
 		connection,
 		topic: topic,
 		voice: false,
@@ -868,21 +858,41 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
 		peer,
 		request: false,
 		knownHashes: [],
-		publicKey: connection.remotePublicKey.toString('hex')
+		publicKey: connection.remotePublicKey.toString('hex'),
+		driveKey: null,
+		msgType: null,
+		write(data) {
+			const str = typeof data === 'string' ? data : JSON.stringify(data);
+			if (this.msgType) {
+				try { this.msgType.send(str); } catch(e) {}
+			} else {
+				try { this.connection.write(str); } catch(e) {}
+			}
+		}
+	};
+
+	active.connections.push(connEntry);
+
+	const mux = Protomux.from(connection);
+	const channel = mux.createChannel({ protocol: 'hugin-messages' });
+	const msgType = channel.addMessage({
+		encoding: c.string,
+		onmessage: async (data) => {
+			try {
+				await incoming_message(data, topic, connection, peer, beam);
+			} catch (error) {
+				console.log('Incoming message handler failed', error);
+				connection_closed(connection, topic, true);
+			}
+		}
 	});
+	channel.open();
+	connEntry.msgType = msgType;
+	Storage.replicate(connection, topic);
 
 	send_joined_message(topic, dht_keys, connection).catch((error) => {
 		console.log('Failed to send joined message', error);
 		connection_closed(connection, topic, true);
-	});
-	//checkIfOnline(hash)
-	connection.on('data', async (data) => {
-		try {
-			await incoming_message(data, topic, connection, peer, beam);
-		} catch (error) {
-			console.log('Incoming message handler failed', error);
-			connection_closed(connection, topic, true);
-		}
 	});
 
 	connection.on('close', () => {
@@ -930,9 +940,7 @@ async function send_voice_channel_sdp(data) {
 	if (!con) return;
 	//We switch data address because in this case, it is from, we can change this
 	data.address = Hugin.address;
-	try {
-		con.connection.write(JSON.stringify(data));
-	} catch (e) {}
+	con.write(data);
 }
 
 const send_voice_channel_status = async (joined, status, update = false) => {
@@ -1174,10 +1182,14 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
 				if (parseInt(active.time) > time && active.requests < 3) {
 					request_history(joined.address, topic, active.files);
 					active.requests++;
-				}	
-				if (!beam) {
-					request_feed(joined.address, topic);
 				}
+				request_feed(joined.address, topic);
+
+				}
+
+			if (joined.driveKey) {
+				con.driveKey = joined.driveKey;
+				Storage.add_peer_drive(topic, joined.driveKey, active.key, beam);
 			}
 			console.log('=======================================');
 			console.log('--USER:', con.name, 'JOINED THE ROOM--');
@@ -1277,16 +1289,6 @@ const check_data_message = async (data, connection, topic, peer, beam) => {
 				active.search = false;
 				con.request = false;
 				process_request(data.messages, active.key, true);
-			} else if (data.type === REQUEST_FILE) {
-				const file = sanitize_file_message(data.file);
-				console.log('Got request file message', file);
-				if (!file) return 'Error';
-				console.log('Starting beam, requesting fle');
-				try {
-					await Storage.start_beam(true, file.key, file, topic, active.key, beam);
-				} catch (e) {
-					console.log('Error starting file transfer.');
-				}
 			}
 			return true;
 		}
@@ -1364,7 +1366,7 @@ const send_feed_message = async (message, reply = '', tip) => {
 const forward_feed_message = (payload) => {
 	for (const swarm of active_swarms) {
 		for (const peer of swarm.connections) {
-			peer.connection.write(JSON.stringify(payload));
+			peer.write(payload);
 		}
 	}
 };
@@ -1469,46 +1471,20 @@ const send_history = async (address, topic, key, files) => {
 	send_peer_message(address, topic, history);
 };
 
-const request_file = async (address, topic, file, room, beam = false) => {
-	//request a missing file, open a hugin beam
-	console.log('-----------------------------');
-	console.log('*** WANT TO REQUEST FILE  ***');
-	console.log('-----------------------------');
-	downloading.push(file.hash);
-	const verify = await verifySignature(
-		file.hash + file.size.toString() + file.time.toString() + file.fileName,
-		file.address,
-		file.signature
-	);
-	if (!verify) return;
-	const key = randomKey();
-	try {
-		await Storage.start_beam(false, key, file, topic, room, beam);
-	} catch (e) {
-		console.log('Error starting file transfer.');
-	}
-	file.key = key;
-	const message = {
-		file,
-		type: REQUEST_FILE
-	};
-	await sleep(200);
-	send_peer_message(address, topic, message);
-};
 
 const process_files = async (data, active, con, topic) => {
 	//Check if the latest 10 files are in sync
 	if (Hugin.syncImages.some((a) => a === topic)) {
 		if (!Array.isArray(data.files)) return 'Ban';
 		if (data.files.length > 10) return 'Ban';
+		if (!con.driveKey) return;
 		for (const file of data.files) {
 			const old = Date.now() - file.time > ONE_DAY;
 			if (old) continue;
 			if (!check_hash(file.hash)) continue;
-			if (downloading.some((a) => a === file.hash)) continue;
 			if (Hugin.get_files().some((a) => a.time === file.time)) continue;
 			await sleep(50);
-			request_file(con.address, topic, file, active.key);
+			Storage.save_from_peer(topic, file, con.driveKey, active.key);
 		}
 	}
 };
@@ -1617,11 +1593,15 @@ const send_joined_message = async (topic, dht_keys, connection) => {
 		audioMute,
 		videoMute,
 		screenshare,
-		messages
+		messages,
+		driveKey: Storage.get_drive_key(topic)
 	});
-	try {
-		connection.write(data);
-	} catch (e) {}
+	const con = active.connections.find(a => a.connection === connection);
+	if (con) {
+		con.write(data);
+	} else {
+		try { connection.write(data); } catch(e) {}
+	}
 };
 
 const incoming_message = async (data, topic, connection, peer, beam) => {
@@ -1657,13 +1637,8 @@ const send_swarm_message = (message, key, beam = false) => {
 	if (beam) active = get_beam(key);
 	if (!active) return;
 	for (const chat of active.connections) {
-		try {
-			console.log('Writing to channel');
-			if (!chat.joined) continue;
-			chat.connection.write(message);
-		} catch (e) {
-			continue;
-		}
+		if (!chat.joined) continue;
+		chat.write(message);
 	}
 
 	console.log('Swarm msg sent!', message);
@@ -1713,28 +1688,6 @@ const check_online_state = async (topic) => {
 	}
 };
 
-const upload_ready = async (file, topic, address) => {
-	const beam_key = await add_local_file(
-		file.fileName,
-		file.path,
-		address,
-		file.size,
-		file.time,
-		true
-	);
-	const info = {
-		fileName: file.fileName,
-		address,
-		topic,
-		info: 'file',
-		type: 'upload-ready',
-		size: file.size,
-		time: file.time,
-		key: beam_key
-	};
-	send_peer_message(address, topic, info);
-	return beam_key;
-};
 
 ipcMain.on('ban-user', (e, data) => {
 	admin_ban_user(data.address, data.key);
@@ -1745,7 +1698,14 @@ ipcMain.on('update-voice-channel-status', (e, status) => {
 });
 
 ipcMain.on('group-download', (e, download) => {
-	request_download(download);
+	if (!download.driveKey) return;
+	// For rooms: download.key is the topic; for DMs: download.topic is set directly
+	const active = download.topic
+		? get_active_topic(download.topic)
+		: get_active_topic(download.key);
+	if (!active) return;
+	const isDm = !!active.beam;
+	Storage.save_from_peer(active.topic, download, download.driveKey, active.key, isDm);
 });
 
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
@@ -1775,24 +1735,24 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 		name: Hugin.nickname
 	};
 	console.log('Upload this file to group', upload);
-	const [media, type] = check_if_media(path, size);
-	if (media) {
-		await Storage.save(
-			topic,
-			Hugin.address,
-			Hugin.nickname,
-			hash,
-			size,
-			time,
-			fileName,
-			path,
-			signature,
-			'file-shared',
-			'file'
-		);
-	}
+	await Storage.save(
+		topic,
+		Hugin.address,
+		Hugin.nickname,
+		hash,
+		size,
+		time,
+		fileName,
+		path,
+		signature,
+		'file-shared',
+		'file'
+	);
 	share_file(upload);
-	if (room) save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname);
+	if (room) {
+		Hugin.file_info({ fileName, time, size, path: 'storage', hash, topic });
+		save_file_info(upload, topic, Hugin.address, time, true, Hugin.nickname);
+	}
 });
 
 const get_active = (key) => {
@@ -1831,22 +1791,6 @@ const is_room_admin = (invite) => {
 	return [isAdmin, adminkeys];
 };
 
-const request_download = (download) => {
-	const active = get_active_topic(download.key);
-	const address = download.chat;
-	const topic = active.topic;
-	const info = {
-		fileName: download.fileName,
-		address: Hugin.address,
-		topic: topic,
-		info: 'file',
-		type: 'download-request',
-		size: download.size,
-		time: download.time,
-		key: download.key
-	};
-	send_peer_message(address, topic, info);
-};
 
 const send_peer_message = (address, topic, message) => {
 	const active = get_active_topic(topic);
@@ -1854,19 +1798,13 @@ const send_peer_message = (address, topic, message) => {
 		error_message('Swarm is not active');
 		return;
 	}
-	const conn = active.connections.find((a) => a.address === address).connection;
-	if (!conn) {
+	const con = active.connections.find((a) => a.address === address);
+	if (!con) {
 		error_message('Connection is closed');
 		return;
 	}
 	console.log('Sending peer message');
-	try {
-		conn.write(JSON.stringify(message));
-		return;
-	} catch (e) {
-		console.log('Peer is offline');
-		//connection_closed(conn, topic, 'Connection not active');
-	}
+	con.write(message);
 };
 
 const share_file = (file) => {
@@ -1881,7 +1819,8 @@ const share_file = (file) => {
 		size: file.size,
 		time: file.time,
 		hash: file.hash,
-		signature: file.signature
+		signature: file.signature,
+		driveKey: Storage.get_drive_key(file.topic)
 	};
 	const info = JSON.stringify(fileInfo);
 	localFiles.push(file);
@@ -1890,16 +1829,6 @@ const share_file = (file) => {
 	send_swarm_message(info, active.key);
 };
 
-const start_upload = async (file, topic) => {
-	const sendFile = localFiles.find(
-		(a) => a.fileName === file.fileName && file.topic === topic && a.time === file.time
-	);
-	if (!sendFile) {
-		error_message('File not found');
-		return;
-	}
-	return await upload_ready(sendFile, topic, file.address);
-};
 
 const save_file_info = (data, topic, address, time, sent, name) => {
 	const active = get_active_topic(topic);
@@ -1908,6 +1837,7 @@ const save_file_info = (data, topic, address, time, sent, name) => {
 		address: address,
 		name: name,
 		timestamp: time,
+		time: time,
 		room: active.key,
 		hash: data.hash,
 		reply: '',
@@ -1917,65 +1847,58 @@ const save_file_info = (data, topic, address, time, sent, name) => {
 	};
 	Hugin.roomFiles.push(message.hash);
 	saveGroupMsg(message);
+	Hugin.send('roomMsg', message);
 };
 
 const check_file_message = async (data, topic, address, con, beam) => {
 	const active = get_active_topic(topic);
 	if (!active) return;
 	if (data.info === 'file-shared') {
+		const file = {
+			address,
+			topic,
+			name: data.name,
+			time: data.time,
+			hash: data.hash,
+			size: data.size,
+			fileName: data.fileName,
+			signature: data.sig,
+			type: data.type,
+			info: data.info
+		};
 		const [media, type] = check_if_media(data.fileName, data.size, true);
-		if (media && (Hugin.syncImages.some((a) => a === topic) || beam)) {
-			console.log('Want to request file shared');
-			//A file is shared and we have auto sync images on.
-			//Request to download the file
-			const file = {
-				address,
-				topic,
-				name: data.name,
-				time: data.time,
-				hash: data.hash,
-				size: data.size,
-				fileName: data.fileName,
-				signature: data.sig,
-				type: data.type,
-				info: data.info
-			};
-			console.log('[swarm.cjs] Want to request file shared: ', file);
-			request_file(address, topic, file, active.key, beam);
+
+		if (con.driveKey && media && (Hugin.syncImages.some((a) => a === topic) || beam)) {
+			console.log('[swarm.cjs] Auto-syncing file via Hyperdrive:', file.fileName);
+			Storage.save_from_peer(topic, file, con.driveKey, active.key, beam);
 			return;
+		}
+
+		// Non-auto-synced file: show download button in frontend
+		console.log('Got file incoming!', data);
+		const remoteFile = {
+			fileName: data.fileName,
+			address,
+			size: data.size,
+			topic,
+			key: beam ? address : topic,
+			chat: address,
+			hash: data.hash,
+			name: con.name,
+			time: data.time,
+			driveKey: con.driveKey
+		};
+		if (beam) {
+			// DM: use the per-contact event so the layout handler shows the correct notification
+			Hugin.send('remote-file-added', { chat: address, remoteFiles: [remoteFile] });
 		} else {
-			console.log('Got file incoming!', data);
-			const added = await add_remote_file(
-				data.fileName,
-				address,
-				data.size,
-				topic,
-				!beam,
-				data.hash,
-				active.key,
-				con.name,
-				data.time
-			);
-			if (!beam) save_file_info(data, topic, address, added, false, con.name);
+			// Room: use the group event so rooms get the correct notification
+			save_file_info(data, topic, address, data.time, false, con.name);
+			Hugin.send('group-remote-file-added', { chat: active.key, remoteFiles: [remoteFile] });
 		}
 	}
 
-	if (data.type === 'download-request') {
-		const key = await start_upload(data, topic);
-		console.log('Got download request, starting upload:', data);
-		send_file(data.fileName, data.size, address, key, true, beam);
-	}
-
-	if (data.type === 'upload-ready') {
-		if (data.info === 'file') {
-			console.log('Upload ready!');
-			update_remote_file(data.fileName, address, data.size, data.key, data.time);
-			start_download(Hugin.downloadDir, data.fileName, address, data.key, beam);
-			return;
-		}
-	}
-
-	if (data.type === 'file-removed') console.log("'file removed", data); //TODO REMOVE FROM remoteFiles
+	if (data.type === 'file-removed') console.log('file removed', data);
 };
 
 // Small helper to centralize error notifications to the UI process.

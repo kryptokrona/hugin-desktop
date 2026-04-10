@@ -6,7 +6,7 @@
     import Button from "../buttons/Button.svelte"
     import VideoPlayer from "$lib/components/chat/VideoPlayer.svelte"
     import { fade } from "svelte/transition"
-    import { groups, user } from '$lib/stores/user.js'
+    import { groups, user, files } from '$lib/stores/user.js'
     import Progress from "$lib/components/chat/Progress.svelte"
     import { sleep } from "$lib/utils/utils"
     import AudioPlayer from "./AudioPlayer.svelte"
@@ -102,6 +102,13 @@
            awaitLoad(file)
        }
    });
+    run(() => {
+        const found = $files.find(a => a.time === file.time || a.hash === file.hash)
+        if (found && !saved) {
+            saved = true
+            awaitLoad({ ...file, path: 'storage' })
+        }
+    });
 </script>
 
 <div class="file" class:group in:fade|global="{{ duration: 150 }}">

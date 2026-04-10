@@ -230,6 +230,8 @@ ipcMain.on('app', (data) => {
     mainWindow.webContents.send('getPath', userDataDir)
     mainWindow.webContents.send('version', app.getVersion())
     mainWindow.webContents.send('os-arch', {os: process.platform, arch: process.arch})
+    const persistedFiles = Hugin.get_files()
+    if (persistedFiles.length) mainWindow.webContents.send('files', persistedFiles)
     
     console.log('App version update timestamp',store.get('db.versionDate'));
 
