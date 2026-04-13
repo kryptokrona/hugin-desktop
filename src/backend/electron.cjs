@@ -308,12 +308,17 @@ const startCheck = async () => {
 }
 
 ipcMain.handle('load-stored-file', async (e, hash, topic) => {
-   const file = await Storage.load(hash, topic)
-   const info = Hugin.get_files().find(a => a.hash === hash)
-   if (!info) return
-   const [media ,type] = check_if_media(info.fileName, info.size, true)
-   return [file, type]
-
+   try {
+     const file = await Storage.load(hash, topic)
+     if (!file) return ['File not found']
+     const info = Hugin.get_files().find(a => a.hash === hash)
+     if (!info) return ['File not found']
+     const [media ,type] = check_if_media(info.fileName, info.size, true)
+     return [file, type]
+   } catch (err) {
+     console.log('load-stored-file error:', err)
+     return ['File not found']
+   }
 })
 
 async function shareScreen(start, conference) {

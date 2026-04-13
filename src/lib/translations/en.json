@@ -311,6 +311,8 @@
   "clickJoinCall": "Click join call to enter...",
   "fileNotFound": "File not found",
   "file": "File",
+  "syncingFileFromPeers": "Syncing file…",
+  "saveToDownloads": "Save",
   "downloadFile": "Download file",
   "startDownloading": "Start downloading...",
   "downloading": "Downloading",

@@ -1,3 +1,7 @@
+<script module>
+    const _blobCache = new Map()
+</script>
+
 <script>
    import { run } from 'svelte/legacy';
 
@@ -33,6 +37,8 @@
 
     const NOT_FOUND = t('fileNotFound') || "File not found"
     const OTHER = t('file') || "File"
+
+    let loadError = $state(false)
 
     onMount(async () => {
         if (file.saved) saved = true
@@ -80,18 +86,54 @@
         $fileViewer.topic = file.topic
     }
 
-    async function loadFile(file) {
-        let load = []
-        if (file.path === "storage") {
-            load = await window.api.loadStoredFile(file.hash, file.topic)
-        } else {
-            load = await window.api.loadFile(file.path, file.size)
+    function cacheKey(f) {
+        return f.hash || f.path || `${f.fileName}-${f.time}`
+    }
+
+    async function loadFile(f) {
+        const key = cacheKey(f)
+        const cached = _blobCache.get(key)
+        if (cached) {
+            if (cached.error) {
+                data = cached.errorType
+                loadError = true
+            } else {
+                data = cached.url
+                checkType(cached.type)
+                loadError = false
+            }
+            return
         }
-        const [arr, type] = load
-        if (!found(arr)) return
-        let blob = new Blob( [ arr ]);
-        data = URL.createObjectURL( blob );
-        checkType(type)
+        try {
+            let load = []
+            if (f.path === "storage") {
+                load = await window.api.loadStoredFile(f.hash, f.topic)
+            } else {
+                load = await window.api.loadFile(f.path, f.size)
+            }
+            if (!load || !Array.isArray(load)) {
+                _blobCache.set(key, { error: true, errorType: NOT_FOUND })
+                data = NOT_FOUND
+                loadError = true
+                return
+            }
+            const [arr, type] = load
+            if (!found(arr)) {
+                _blobCache.set(key, { error: true, errorType: data })
+                return
+            }
+            let blob = new Blob( [ arr ]);
+            const url = URL.createObjectURL( blob );
+            _blobCache.set(key, { url, type })
+            data = url
+            loadError = false
+            checkType(type)
+        } catch (e) {
+            console.log('DownloadFile loadFile error:', e)
+            _blobCache.set(key, { error: true, errorType: NOT_FOUND })
+            data = NOT_FOUND
+            loadError = true
+        }
     }
 
     const found = (file) => {
@@ -117,6 +159,7 @@
     };
 
     run(() => {
+        if (!group) return
         const r = $remoteFiles.find(
             (a) =>
                 a.hash === file.hash ||
@@ -128,6 +171,8 @@
 
     run(() => {
         waitingPeer =
+            group &&
+            !data &&
             !saved &&
             !downloading &&
             !downloadDone &&
@@ -145,6 +190,7 @@
     })
 
     run(() => {
+        if (!group) return
         const wasDownloading = downloading
         downloading = $download.some(a => file.hash === a.hash || file.time === a.time)
         downloadDone = downloading && $download.some(a => (file.hash === a.hash || file.time === a.time) && a.progress === 100)
@@ -155,14 +201,16 @@
     });
 
     run(() => {
+      if (!group) return
       if (downloadDone) {
            awaitLoad(file)
        }
    });
 
     run(() => {
+        if (saved) return
         const found = $files.find(a => a.time === file.time || a.hash === file.hash)
-        if (found && !saved) {
+        if (found) {
             saved = true
             awaitLoad({ ...file, path: 'storage' })
         }

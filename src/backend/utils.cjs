@@ -116,23 +116,22 @@ async function load_file(path, size) {
 	let imgArray = [];
 	const [media, type] = check_if_media(path, size);
 	if (media) {
-		//Read the file as an image
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			try {
 				const stream = createReadStream(path);
 
 				stream.on('data', (data) => {
 					imgArray.push(data);
 				});
-				stream.on('error', (data) => {
-					return ['File not found'];
+				stream.on('error', () => {
+					resolve(['File not found']);
 				});
 
 				stream.on('end', () => {
 					resolve([Buffer.concat(imgArray), type]);
 				});
 			} catch {
-				return ['File not found'];
+				resolve(['File not found']);
 			}
 		});
 	} else {
