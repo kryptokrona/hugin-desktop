@@ -22,9 +22,23 @@ const MEDIA_TYPES = [
   { file: '.wav', type: 'audio' },
 ];
 const userDataDir = app.getPath('userData')
+const path = require('path');
 const { Hugin } = require('./account.cjs');
 const { saveGroupMsg, saveMsg } = require('./database.cjs');
 const { sleep } = require('./utils.cjs');
+
+function uniqueFilePath(dir, fileName) {
+  let dest = path.join(dir, fileName);
+  if (!fs.existsSync(dest)) return dest;
+  const ext = path.extname(fileName);
+  const base = path.basename(fileName, ext);
+  let n = 1;
+  while (fs.existsSync(dest)) {
+    dest = path.join(dir, `${base} (${n})${ext}`);
+    n++;
+  }
+  return dest;
+}
 
 
 class HyperStorage {
@@ -180,11 +194,24 @@ async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
         type: 'file'
       }
     })
+    // Write non-media files to the user's download directory
+    const isMedia = MEDIA_TYPES.some(t => file.fileName?.toLowerCase().endsWith(t.file))
+    let savedPath = 'storage'
+    if (!isMedia && Hugin.downloadDir) {
+      try {
+        const dest = uniqueFilePath(Hugin.downloadDir, file.fileName)
+        fs.writeFileSync(dest, buf)
+        savedPath = dest
+        console.log('[storage.cjs] File written to downloads:', dest)
+      } catch (e) {
+        console.log('[storage.cjs] Could not write to downloads dir:', e)
+      }
+    }
     this.downloading.delete(file.hash)
-    Hugin.file_info({ fileName: file.fileName, time: file.time, size: file.size, path: 'storage', hash: file.hash, topic })
+    Hugin.file_info({ fileName: file.fileName, time: file.time, size: file.size, path: savedPath, hash: file.hash, topic })
     Hugin.send('download-file-progress', { fileName: file.fileName, chat: file.address, time: file.time, progress: 100 })
     Hugin.send('file-downloaded', JSON.stringify(file), false)
-    this.done(file, topic, roomKey, dm)
+    this.done(file, topic, roomKey, dm, savedPath)
     console.log("File saved from peer:", file.fileName)
   } catch(e) {
     this.downloading.delete(file.hash)
@@ -270,18 +297,15 @@ check(size, buf, name) {
   return [false];
 }
 
-done(file, topic, room, dm) {
+done(file, topic, room, dm, savedPath = 'storage') {
   if (dm) {
-    file.path = 'storage'
+    file.path = savedPath
     file.saved = true
     saveMsg(`Downloaded ${file.fileName}`, file.address, false, file.time)
     Hugin.send('remote-file-added', { chat: file.address, remoteFiles: [file] })
     return
   }
 
-  // Room auto-sync: file-downloaded (sent just before) already updated $files store.
-  // Now send the message so isFile() attaches the $files entry → GroupMessage renders
-  // DownloadFile with saved=true → loads and displays the image/audio/video.
   const mediaEntry = MEDIA_TYPES.find(t => file.fileName?.toLowerCase().endsWith(t.file))
   const fileType = mediaEntry ? mediaEntry.type : 'file'
   const message = {
@@ -298,7 +322,7 @@ done(file, topic, room, dm) {
     channel: 'channel',
     file: {
       fileName: file.fileName,
-      path: 'storage',
+      path: savedPath,
       hash: file.hash,
       time: file.time,
       saved: true,
