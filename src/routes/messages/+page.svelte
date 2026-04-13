@@ -116,8 +116,6 @@
 		window.api.removeAllListeners('newMsg');
 	});
 
-	const LIKELY_FILE_OFFER = /^[^\n\r/\\]+\.[A-Za-z0-9]{1,12}$/;
-
 	const isFile = (data) => {
 		const findit = (arr) => {
 			return arr.find(
@@ -135,21 +133,6 @@
 		if (remote) return remote;
 		const local = findit($localFiles);
 		if (local) return local;
-
-		const msg = String(data?.message ?? '').trim();
-		if (
-			data?.hash &&
-			String(data.hash).length === 64 &&
-			LIKELY_FILE_OFFER.test(msg)
-		) {
-			return {
-				hash: data.hash,
-				fileName: msg,
-				time: data.timestamp,
-				timestamp: data.timestamp,
-				chat: data.conversation || data.address
-			};
-		}
 		return false;
 	};
 

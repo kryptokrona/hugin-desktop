@@ -1473,40 +1473,37 @@ const send_history = async (address, topic, key, files) => {
 
 
 const process_files = async (data, active, con, topic) => {
-	//Check if the latest 10 files are in sync
-	if (Hugin.syncImages.some((a) => a === topic)) {
-		if (!Array.isArray(data.files)) return 'Ban';
-		if (data.files.length > 10) return 'Ban';
-		if (!con.driveKey) return;
-		for (const file of data.files) {
-			const old = Date.now() - file.time > ONE_DAY;
-			if (old) continue;
-			if (!check_hash(file.hash)) continue;
-			if (Hugin.get_files().some((a) => a.time === file.time)) continue;
-			const [isMedia] = check_if_media(file.fileName, file.size, true);
-			await sleep(50);
-			if (isMedia) {
-				await Storage.save_from_peer(topic, file, con.driveKey, active.key);
-				continue;
-			}
-			// Non-media: same manual-download path as live file-shared (after history / reconnect).
-			const fromAddr = file.address || con.address;
-			const remoteFile = {
-				fileName: file.fileName,
-				address: fromAddr,
-				size: file.size,
-				topic,
-				key: topic,
-				chat: fromAddr,
-				hash: file.hash,
-				name: file.name || con.name,
-				time: file.time,
-				driveKey: con.driveKey
-			};
-			Hugin.send('group-remote-file-added', { chat: active.key, remoteFiles: [remoteFile] });
-			if (!(await roomMessageExists(file.hash))) {
-				save_file_info(file, topic, fromAddr, file.time, false, con.name);
-			}
+	if (!Array.isArray(data.files)) return 'Ban';
+	if (data.files.length > 10) return 'Ban';
+	const syncEnabled = Hugin.syncImages.some((a) => a === topic);
+	for (const file of data.files) {
+		const old = Date.now() - file.time > ONE_DAY;
+		if (old) continue;
+		if (!check_hash(file.hash)) continue;
+		if (Hugin.get_files().some((a) => a.time === file.time)) continue;
+		const [isMedia] = check_if_media(file.fileName, file.size, true);
+		await sleep(50);
+		if (isMedia && syncEnabled && con.driveKey) {
+			await Storage.save_from_peer(topic, file, con.driveKey, active.key);
+			continue;
+		}
+		if (!con.driveKey) continue;
+		const fromAddr = file.address || con.address;
+		const remoteFile = {
+			fileName: file.fileName,
+			address: fromAddr,
+			size: file.size,
+			topic,
+			key: topic,
+			chat: fromAddr,
+			hash: file.hash,
+			name: file.name || con.name,
+			time: file.time,
+			driveKey: con.driveKey
+		};
+		Hugin.send('group-remote-file-added', { chat: active.key, remoteFiles: [remoteFile] });
+		if (!(await roomMessageExists(file.hash))) {
+			save_file_info(file, topic, fromAddr, file.time, false, con.name);
 		}
 	}
 };
