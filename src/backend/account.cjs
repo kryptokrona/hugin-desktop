@@ -7,7 +7,7 @@ const file = join(userDataDir, 'misc.db')
 const adapter = new JSONFile(file)
 const db = new Low(adapter)
 const dbPath = userDataDir + '/SQLmessages.db'
-const { getGroups, loadBlockList, loadKeys, loadDB, saveRoomUser, loadRoomUsers } = require('./database.cjs')
+const { getGroups, getRooms, loadBlockList, loadKeys, loadDB, saveRoomUser, loadRoomUsers } = require('./database.cjs')
 const fs = require('fs')
 const Store = require('electron-store')
 const { hash } = require('crypto')
@@ -165,7 +165,9 @@ class Account {
     this.downloadDir = store.get('download.dir') ?? downloadDir
     this.address = wallet.getPrimaryAddress()
     this.avatar = get_avatar()
-    this.syncImages = store.get('syncImages') ?? []
+    const savedSync = store.get('syncImages')
+    this.syncImages = savedSync ?? []
+    this._syncDefault = savedSync === undefined
     this.huginNode = store.get('huginNode') ?? { address: '', pub: true}
     console.log("HuginNode", this.huginNode);
     if (!store.get('pool.checked')) {
@@ -196,6 +198,15 @@ class Account {
     const pushToTalk = store.get('pushToTalk') ?? { key: null, on: false, name: '' }
     const sounds = store.get('sounds') ?? true
     const voiceActivation = store.get('voiceActivation') ?? { enabled: true, sensitivity: 160 }
+
+    if (this._syncDefault) {
+      const my_rooms = await getRooms()
+      const allTopics = [...my_groups, ...my_rooms].map(g => g.topic || g.key).filter(Boolean)
+      if (allTopics.length > 0) {
+        this.syncImages = allTopics
+        store.set({ syncImages: this.syncImages })
+      }
+    }
 
     if (pushToTalk.on) {
       push_to_talk(pushToTalk)

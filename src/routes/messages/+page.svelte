@@ -77,11 +77,19 @@
 		});
 
 		window.api.receive('remote-file-added', async (data) => {
+			// newMsg fires before this (from done() in storage.cjs) and handles the
+			// active-chat case. This handler covers the edge case where newMsg arrived
+			// before $files was populated (unlikely but possible) — re-scan and attach.
 			const activeConv = getActiveConv();
 			if (!activeConv) return;
-			if (data.conversation === activeConv) {
-				messageList = sortMessages(messageList);
-			}
+			if (data.chat !== activeConv) return;
+			messageList = messageList.map((msg) => {
+				if (!msg.file) {
+					const f = isFile(msg);
+					if (f) return { ...msg, file: f };
+				}
+				return msg;
+			});
 		});
 
 		window.api.receive('user-joined-voice-channel', async (data) => {

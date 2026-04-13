@@ -170,6 +170,7 @@ class NodeConnection extends EventEmitter {
 			if (data) this.handle_node_packet(data);
 			req.reply(JSON.stringify({ ok: true, data: null, error: null }));
 		});
+		this.emit('connected');
 		Hugin.send('hugin-node-connection', true);
 		conn.on('error', (error) => {
 			if (error?.code === 'ETIMEDOUT') {
@@ -1481,9 +1482,8 @@ const process_files = async (data, active, con, topic) => {
 		if (old) continue;
 		if (!check_hash(file.hash)) continue;
 		if (Hugin.get_files().some((a) => a.time === file.time)) continue;
-		const [isMedia] = check_if_media(file.fileName, file.size, true);
 		await sleep(50);
-		if (isMedia && syncEnabled && con.driveKey) {
+		if (syncEnabled && con.driveKey) {
 			await Storage.save_from_peer(topic, file, con.driveKey, active.key);
 			continue;
 		}
@@ -1727,6 +1727,15 @@ ipcMain.on('group-download', (e, download) => {
 	Storage.save_from_peer(active.topic, download, download.driveKey, active.key, isDm);
 });
 
+ipcMain.on('save-to-downloads', async (e, { hash, fileName, topic }) => {
+	const result = await Storage.save_to_downloads(hash, fileName, topic);
+	if (result.success) {
+		Hugin.send('file-saved-to-downloads', { hash, filePath: result.filePath, fileName });
+	} else {
+		error_message(result.error || 'Failed to save file');
+	}
+});
+
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
 	let active = get_active(key);
 	if (!room) {
@@ -1830,6 +1839,10 @@ const send_peer_message = (address, topic, message) => {
 
 const share_file = (file) => {
 	const active = get_active_topic(file.topic);
+	if (!active) {
+		error_message('Room not connected');
+		return;
+	}
 	const fileInfo = {
 		fileName: file.fileName,
 		address: Hugin.address,
@@ -1875,8 +1888,7 @@ const check_file_message = async (data, topic, address, con, beam) => {
 	const active = get_active_topic(topic);
 	if (!active) return;
 	if (data.info === 'file-shared') {
-		const [isMedia] = check_if_media(data.fileName, data.size, true);
-		const autoSync = con.driveKey && isMedia && (Hugin.syncImages.some((a) => a === topic) || beam);
+		const autoSync = con.driveKey && (Hugin.syncImages.some((a) => a === topic) || beam);
 
 		if (autoSync) {
 			// Watcher in storage.cjs handles download; done() will create the message after

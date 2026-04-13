@@ -158,6 +158,10 @@ ipcMain.on('add-group', async (e, grp) => {
 ipcMain.on('add-room', async (e, room, admin) => {
 	if (!room?.key || !room?.name) return;
 	addRoom(room);
+	if (!Hugin.syncImages.includes(room.key)) {
+		Hugin.syncImages.push(room.key);
+		store.set({ syncImages: Hugin.syncImages });
+	}
 	const timestamp = Date.now();
 	const message = sanitize_group_message({
 		timestamp: String(timestamp),
@@ -407,6 +411,14 @@ const start_message_syncer = async () => {
 	//Load knownTxsIds to backgroundSyncMessages on startup
 	peer_dms();
 	console.log('Hugin.huginNode', Hugin.huginNode);
+	Nodes.on('connected', () => {
+		console.log('Node connected, resetting message syncer');
+		background_sync_runs = 0;
+		const lastChecked = store.get('pool.checked');
+		if (lastChecked) {
+			store.set({ pool: { checked: lastChecked - 30000 } });
+		}
+	});
 	Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub);
 	await sleep(5000);
 	known_keys = Hugin.known_keys;

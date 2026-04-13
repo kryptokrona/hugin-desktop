@@ -112,6 +112,10 @@
         window.api.send('group-download', thisFile)
     };
 
+    const saveToDownloads = () => {
+        window.api.send('save-to-downloads', { hash: file.hash, fileName: file.fileName, topic: file.topic })
+    };
+
     run(() => {
         const r = $remoteFiles.find(
             (a) =>
@@ -167,7 +171,7 @@
 
 <div class="file" class:group in:fade|global="{{ duration: 150 }}">
     {#if waitingPeer}
-        <p class="message loading blink_me" in:fade|global>{t('syncingFileFromPeers') || 'Syncing file from peers…'}</p>
+        <p class="message loading blink_me" in:fade|global>{t('syncingFileFromPeers') || 'Syncing file…'}</p>
         <p class="message">{file.fileName}</p>
         <div class="progress-wrap" in:fade|global>
             <div class="progress-bar" style="width: {fakeProgress}%"></div>
@@ -192,8 +196,9 @@
     {#if downloadDone || saved}
         {#if !video}
             {#if data === OTHER}
-                <p class="message done">{t('fileDownloaded') || 'File downloaded!'}</p>
-                <p class="message">{file.fileName}</p>
+                <div class="cursor-pointer" onclick={saveToDownloads}>
+                    <Button text={'💾 ' + (t('saveToDownloads') || 'Save') + ' — ' + file.fileName}/>
+                </div>
             {:else if data === NOT_FOUND}
                 <p class="message error">{NOT_FOUND}</p>
             {:else if image}

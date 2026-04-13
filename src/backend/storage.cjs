@@ -44,9 +44,11 @@ function uniqueFilePath(dir, fileName) {
 class HyperStorage {
   constructor() {
     this.drives = []
-    this.limit = 10000000000 //10 gb per session
+    this.limit = 100000000000 //100 gb per session
     this.saved = 0
-    this.downloading = new Set() // prevents concurrent downloads of same hash
+    this.downloading = new Set()
+    this.savedFiles = new Set()
+    this._purgeStarted = false
   }
 
 async load_drive(topic) {
@@ -57,6 +59,10 @@ async load_drive(topic) {
   await drive.ready()
   console.log("Drive loaded for topic", topic)
   this.drives.push({ drive, topic, store, peerDrives: new Map(), notifiedFiles: new Set() })
+  if (!this._purgeStarted) {
+    this._purgeStarted = true
+    this.startPurgeInterval()
+  }
 }
 
 loaded(topic) {
@@ -136,12 +142,11 @@ async process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room) {
   if (Hugin.get_files().some(a => a.hash === meta.hash)) return
   if (this.downloading.has(meta.hash)) return
 
-  const isMedia = MEDIA_TYPES.some(t => meta.fileName?.toLowerCase().endsWith(t.file))
-  const autoSync = isMedia && (dm || Hugin.syncImages.some(a => a === topic))
+  const autoSync = dm || Hugin.syncImages.some(a => a === topic)
 
   if (autoSync) {
     console.log('[storage.cjs] Auto-syncing:', meta.fileName)
-    await this.save_from_peer(topic, meta, peerDriveKeyHex, roomKey, dm)
+    await this.save_from_peer(topic, meta, peerDriveKeyHex, roomKey, dm, true)
   } else if (!room.notifiedFiles.has(meta.hash)) {
     room.notifiedFiles.add(meta.hash)
     const remoteFile = {
@@ -157,14 +162,14 @@ async process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room) {
       driveKey: peerDriveKeyHex,
     }
     if (dm) {
-      Hugin.send('remote-file-added', { chat: meta.address, remoteFiles: [remoteFile] })
+      Hugin.send('remote-file-added', { chat: meta.address, remoteFiles: [remoteFile], silent: true })
     } else {
-      Hugin.send('group-remote-file-added', { chat: roomKey, remoteFiles: [remoteFile] })
+      Hugin.send('group-remote-file-added', { chat: roomKey, remoteFiles: [remoteFile], silent: true })
     }
   }
 }
 
-async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
+async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false, silent = false) {
   if (Hugin.get_files().some(a => a.hash === file.hash)) return
   if (this.downloading.has(file.hash)) return
   this.downloading.add(file.hash)
@@ -172,8 +177,9 @@ async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
   if (!room) { this.downloading.delete(file.hash); return }
   const peerDrive = room.peerDrives.get(peerDriveKeyHex)
   if (!peerDrive) { this.downloading.delete(file.hash); return }
-  // Notify frontend so it can show progress bar
-  Hugin.send('downloading', { fileName: file.fileName, chat: file.address, time: file.time, size: file.size, hash: file.hash })
+  if (!silent) {
+    Hugin.send('downloading', { fileName: file.fileName, chat: file.address, time: file.time, size: file.size, hash: file.hash })
+  }
   try {
     console.log("Fetching file from peer drive:", file.fileName)
     const buf = await peerDrive.get(file.hash, { timeout: 30000 })
@@ -191,27 +197,17 @@ async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
         address: file.address,
         signature: file.signature,
         info: 'file-shared',
-        type: 'file'
+        type: 'file',
+        syncedAt: Date.now()
       }
     })
-    // Write non-media files to the user's download directory
-    const isMedia = MEDIA_TYPES.some(t => file.fileName?.toLowerCase().endsWith(t.file))
-    let savedPath = 'storage'
-    if (!isMedia && Hugin.downloadDir) {
-      try {
-        const dest = uniqueFilePath(Hugin.downloadDir, file.fileName)
-        fs.writeFileSync(dest, buf)
-        savedPath = dest
-        console.log('[storage.cjs] File written to downloads:', dest)
-      } catch (e) {
-        console.log('[storage.cjs] Could not write to downloads dir:', e)
-      }
-    }
     this.downloading.delete(file.hash)
-    Hugin.file_info({ fileName: file.fileName, time: file.time, size: file.size, path: savedPath, hash: file.hash, topic })
-    Hugin.send('download-file-progress', { fileName: file.fileName, chat: file.address, time: file.time, progress: 100 })
+    Hugin.file_info({ fileName: file.fileName, time: file.time, size: file.size, path: 'storage', hash: file.hash, topic })
+    if (!silent) {
+      Hugin.send('download-file-progress', { fileName: file.fileName, chat: file.address, time: file.time, progress: 100 })
+    }
     Hugin.send('file-downloaded', JSON.stringify(file), false)
-    this.done(file, topic, roomKey, dm, savedPath)
+    this.done(file, topic, roomKey, dm, 'storage')
     console.log("File saved from peer:", file.fileName)
   } catch(e) {
     this.downloading.delete(file.hash)
@@ -219,10 +215,77 @@ async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
   }
 }
 
+async save_to_downloads(hash, fileName, topic) {
+  const room = this.get_room(topic)
+  if (!room) return { success: false, error: 'Room not found' }
+  try {
+    const buf = await room.drive.get(hash)
+    if (!buf) return { success: false, error: 'File not found in storage' }
+    const filePath = uniqueFilePath(Hugin.downloadDir, fileName)
+    fs.writeFileSync(filePath, buf)
+    this.savedFiles.add(hash)
+    return { success: true, filePath }
+  } catch (e) {
+    console.log('[storage.cjs] Error saving to downloads:', e)
+    return { success: false, error: e.message }
+  }
+}
+
 async purge() {
   for(const a of this.drives) {
     await a.drive.purge()
   }
+}
+
+async purgeOldFiles() {
+  const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
+  const MAX_STORAGE = 1024 * 1024 * 1024 // 1 GB
+  const now = Date.now()
+  let purged = 0
+  const allEntries = []
+
+  for (const room of this.drives) {
+    try {
+      for await (const entry of room.drive.entries()) {
+        const meta = entry.value?.metadata
+        if (!meta?.hash) continue
+        const size = parseInt(meta.size) || 0
+        const syncedAt = meta.syncedAt || meta.time || 0
+        allEntries.push({ hash: meta.hash, size, syncedAt, drive: room.drive })
+      }
+    } catch (e) {
+      console.log('[storage.cjs] Purge scan error:', e)
+    }
+  }
+
+  // Pass 1: purge unsaved files older than 1 week
+  for (const entry of allEntries) {
+    if (this.savedFiles.has(entry.hash)) continue
+    if (now - entry.syncedAt > ONE_WEEK) {
+      try { await entry.drive.del(entry.hash); purged++; entry.deleted = true } catch (e) {}
+    }
+  }
+
+  // Pass 2: if still over storage cap, remove oldest unsaved files first
+  const remaining = allEntries.filter(e => !e.deleted)
+  const totalSize = remaining.reduce((sum, e) => sum + e.size, 0)
+  if (totalSize > MAX_STORAGE) {
+    const purgeable = remaining.filter(e => !this.savedFiles.has(e.hash))
+    purgeable.sort((a, b) => a.syncedAt - b.syncedAt)
+    let freed = 0
+    const excess = totalSize - MAX_STORAGE
+    for (const entry of purgeable) {
+      if (freed >= excess) break
+      try { await entry.drive.del(entry.hash); purged++; freed += entry.size } catch (e) {}
+    }
+  }
+
+  if (purged > 0) console.log(`[storage.cjs] Purged ${purged} files`)
+}
+
+startPurgeInterval() {
+  this.purgeOldFiles()
+  setInterval(() => this.purgeOldFiles(), 60 * 60 * 1000)
 }
 
 async load_files(topic) {
@@ -297,11 +360,16 @@ check(size, buf, name) {
   return [false];
 }
 
-done(file, topic, room, dm, savedPath = 'storage') {
+async done(file, topic, room, dm, savedPath = 'storage') {
   if (dm) {
     file.path = savedPath
     file.saved = true
-    saveMsg(`Downloaded ${file.fileName}`, file.address, false, file.time)
+    const newMsg = await saveMsg(`Downloaded ${file.fileName}`, file.address, false, file.time)
+    // Emit newMsg so ChatList refreshes its contact preview and +page.svelte's
+    // newMsg handler fires — isFile() will find the file in $files (already pushed
+    // by file-downloaded) and attach it, rendering the image/audio inline.
+    Hugin.send('newMsg', newMsg)
+    Hugin.send('privateMsg', newMsg)
     Hugin.send('remote-file-added', { chat: file.address, remoteFiles: [file] })
     return
   }

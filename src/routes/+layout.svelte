@@ -240,6 +240,7 @@
             add = payload.add ?? false
         }
         if (!data) return
+        if (data.file) return
         console.log("room notification", data)
 
 
@@ -566,8 +567,6 @@
 	});
 
     window.api.receive('remote-file-added', (data, update)  => {
-        console.log('Remote file added', data)
-        let from = $user.contacts.find(a => a.chat === data.chat)
         let newFile = data.remoteFiles[0]
         let incomingFile = {
             chat: data.chat,
@@ -580,24 +579,27 @@
         saveToStore(incomingFile)
         $remoteFiles.push(data.remoteFiles[0])
         $remoteFiles = $remoteFiles
-        toast.success(`New file shared by ${from.name}`, {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
+        if (!data.silent) {
+            let from = $user.contacts.find(a => a.chat === data.chat)
+            toast.success(`New file shared by ${from?.name || 'Unknown'}`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+        }
     })
 
     window.api.receive('group-remote-file-added', (data)  => {
-        console.log("Group file!")
         for (const f of data.remoteFiles) {
             if (!$remoteFiles.some(a => a.hash === f.hash)) $remoteFiles.push(f)
         }
         $remoteFiles = $remoteFiles
-        const file = data.remoteFiles[0]
-        console.log("File shared", file)
-        toast.success(`${file.fileName} shared in room`, {
-            position: 'top-right',
-            style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-        })
+        if (!data.silent) {
+            const file = data.remoteFiles[0]
+            toast.success(`${file.fileName} shared in room`, {
+                position: 'top-right',
+                style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
+            })
+        }
     }) 
 
     window.api.receive('remote-files', (data)  => {
