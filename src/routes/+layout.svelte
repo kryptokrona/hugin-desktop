@@ -588,7 +588,10 @@
 
     window.api.receive('group-remote-file-added', (data)  => {
         console.log("Group file!")
-        $remoteFiles = data.remoteFiles
+        for (const f of data.remoteFiles) {
+            if (!$remoteFiles.some(a => a.hash === f.hash)) $remoteFiles.push(f)
+        }
+        $remoteFiles = $remoteFiles
         const file = data.remoteFiles[0]
         console.log("File shared", file)
         toast.success(`${file.fileName} shared in room`, {
@@ -707,7 +710,10 @@
     }
 
     const setDownloadStatus = (data) => {
-        let file = $remoteFiles.find(a => a.fileName === data.fileName && a.chat === data.chat)
+        // For manual downloads, look up from remoteFiles. For auto-sync (Hyperdrive watcher),
+        // the file may not be in $remoteFiles, so fall back to using data directly.
+        let file = $remoteFiles.find(a => a.hash === data.hash || (a.fileName === data.fileName && a.chat === data.chat))
+        if (!file) file = { ...data }
         file.progress = 0
         $download.unshift(file)
         $download =  $download
@@ -724,6 +730,7 @@
 
     const setUploadStatus = (data) => {
         let file = $localFiles.find(a => a.fileName === data.fileName && a.chat === data.chat && data.time === a.time)
+        if (!file) file = { ...data }
         file.progress = 0
         $upload.unshift(file)
         $upload =  $upload

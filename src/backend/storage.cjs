@@ -30,8 +30,9 @@ const { sleep } = require('./utils.cjs');
 class HyperStorage {
   constructor() {
     this.drives = []
-    this.limit = 100000000 //100 mb per session
+    this.limit = 10000000000 //10 gb per session
     this.saved = 0
+    this.downloading = new Set() // prevents concurrent downloads of same hash
   }
 
 async load_drive(topic) {
@@ -41,7 +42,7 @@ async load_drive(topic) {
   const drive = new Hyperdrive(store)
   await drive.ready()
   console.log("Drive loaded for topic", topic)
-  this.drives.push({ drive, topic, store, peerDrives: new Map() })
+  this.drives.push({ drive, topic, store, peerDrives: new Map(), notifiedFiles: new Set() })
 }
 
 loaded(topic) {
@@ -86,19 +87,27 @@ async add_peer_drive(topic, peerDriveKeyHex, roomKey, dm = false) {
     console.log("Peer drive added:", peerDriveKeyHex.slice(0, 8))
 
     const self = this
+
+    // Startup scan: process entries already replicated from previous sessions
+    ;(async () => {
+      try {
+        for await (const entry of peerDrive.entries()) {
+          const meta = entry.value.metadata
+          await self.process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room)
+        }
+      } catch (e) {
+        console.log('[storage.cjs] Startup scan error:', e)
+      }
+    })()
+
+    // Live sync: watch for new entries as they replicate
     ;(async () => {
       try {
         for await (const [current, previous] of peerDrive.watch('/')) {
           for await (const entry of current.diff(previous.version, '/')) {
             if (!entry.left) continue
             const meta = entry.left.value.metadata
-            if (!meta || !meta.hash) continue
-            if (Hugin.roomFiles.includes(meta.hash)) continue
-            const isMedia = MEDIA_TYPES.some(t => meta.fileName?.toLowerCase().endsWith(t.file))
-            if (!isMedia) continue
-            if (!dm && !Hugin.syncImages.some(a => a === topic)) continue
-            console.log('[storage.cjs] Watch triggered download:', meta.fileName)
-            await self.save_from_peer(topic, meta, peerDriveKeyHex, roomKey, dm)
+            await self.process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room)
           }
         }
       } catch {}
@@ -108,17 +117,54 @@ async add_peer_drive(topic, peerDriveKeyHex, roomKey, dm = false) {
   }
 }
 
+async process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room) {
+  if (!meta || !meta.hash) return
+  if (Hugin.get_files().some(a => a.hash === meta.hash)) return
+  if (this.downloading.has(meta.hash)) return
+
+  const isMedia = MEDIA_TYPES.some(t => meta.fileName?.toLowerCase().endsWith(t.file))
+  const autoSync = isMedia && (dm || Hugin.syncImages.some(a => a === topic))
+
+  if (autoSync) {
+    console.log('[storage.cjs] Auto-syncing:', meta.fileName)
+    await this.save_from_peer(topic, meta, peerDriveKeyHex, roomKey, dm)
+  } else if (!room.notifiedFiles.has(meta.hash)) {
+    room.notifiedFiles.add(meta.hash)
+    const remoteFile = {
+      fileName: meta.fileName,
+      address: meta.address,
+      size: meta.size,
+      topic,
+      key: dm ? meta.address : topic,
+      chat: meta.address,
+      hash: meta.hash,
+      name: meta.name,
+      time: meta.time,
+      driveKey: peerDriveKeyHex,
+    }
+    if (dm) {
+      Hugin.send('remote-file-added', { chat: meta.address, remoteFiles: [remoteFile] })
+    } else {
+      Hugin.send('group-remote-file-added', { chat: roomKey, remoteFiles: [remoteFile] })
+    }
+  }
+}
+
 async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
   if (Hugin.get_files().some(a => a.hash === file.hash)) return
+  if (this.downloading.has(file.hash)) return
+  this.downloading.add(file.hash)
   const room = this.get_room(topic)
-  if (!room) return
+  if (!room) { this.downloading.delete(file.hash); return }
   const peerDrive = room.peerDrives.get(peerDriveKeyHex)
-  if (!peerDrive) return
+  if (!peerDrive) { this.downloading.delete(file.hash); return }
+  // Notify frontend so it can show progress bar
+  Hugin.send('downloading', { fileName: file.fileName, chat: file.address, time: file.time, size: file.size, hash: file.hash })
   try {
     console.log("Fetching file from peer drive:", file.fileName)
     const buf = await peerDrive.get(file.hash, { timeout: 30000 })
-    if (!buf) return
-    if (this.saved + file.size > this.limit) return
+    if (!buf) { this.downloading.delete(file.hash); return }
+    if (this.saved + file.size > this.limit) { this.downloading.delete(file.hash); return }
     this.saved += file.size
     await room.drive.put(file.hash, buf, {
       metadata: {
@@ -134,11 +180,14 @@ async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false) {
         type: 'file'
       }
     })
+    this.downloading.delete(file.hash)
     Hugin.file_info({ fileName: file.fileName, time: file.time, size: file.size, path: 'storage', hash: file.hash, topic })
+    Hugin.send('download-file-progress', { fileName: file.fileName, chat: file.address, time: file.time, progress: 100 })
     Hugin.send('file-downloaded', JSON.stringify(file), false)
     this.done(file, topic, roomKey, dm)
     console.log("File saved from peer:", file.fileName)
   } catch(e) {
+    this.downloading.delete(file.hash)
     console.log("Error saving file from peer:", e)
   }
 }
@@ -222,33 +271,45 @@ check(size, buf, name) {
 }
 
 done(file, topic, room, dm) {
-  if (!dm) {
-    const message = {
-      message: file.fileName,
-      address: file.address,
-      room: room,
-      topic,
-      timestamp: file.time,
-      time: file.time,
-      name: file.name,
-      reply: '',
-      hash: file.hash,
-      sent: false,
-      channel: 'channel',
-      file: true,
-      tip: false,
-      signature: '',
-    }
-    Hugin.send('roomMsg', message)
-    saveGroupMsg(message, false, false)
-
-  } else {
+  if (dm) {
     file.path = 'storage'
     file.saved = true
-    let data = {chat: file.address, remoteFiles: [file]}
-    Hugin.send('remote-file-added', data)
-    const msg = saveMsg(`Downloaded ${file.fileName}`, file.address, false, file.time)
+    saveMsg(`Downloaded ${file.fileName}`, file.address, false, file.time)
+    Hugin.send('remote-file-added', { chat: file.address, remoteFiles: [file] })
+    return
   }
+
+  // Room auto-sync: file-downloaded (sent just before) already updated $files store.
+  // Now send the message so isFile() attaches the $files entry → GroupMessage renders
+  // DownloadFile with saved=true → loads and displays the image/audio/video.
+  const mediaEntry = MEDIA_TYPES.find(t => file.fileName?.toLowerCase().endsWith(t.file))
+  const fileType = mediaEntry ? mediaEntry.type : 'file'
+  const message = {
+    message: file.fileName,
+    address: file.address,
+    room,
+    topic,
+    timestamp: file.time,
+    time: file.time,
+    name: file.name,
+    reply: '',
+    hash: file.hash,
+    sent: false,
+    channel: 'channel',
+    file: {
+      fileName: file.fileName,
+      path: 'storage',
+      hash: file.hash,
+      time: file.time,
+      saved: true,
+      topic,
+      type: fileType,
+    },
+    tip: false,
+    signature: '',
+  }
+  saveGroupMsg(message, false, false)
+  Hugin.send('roomMsg', message)
 }
 
 

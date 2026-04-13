@@ -1483,8 +1483,30 @@ const process_files = async (data, active, con, topic) => {
 			if (old) continue;
 			if (!check_hash(file.hash)) continue;
 			if (Hugin.get_files().some((a) => a.time === file.time)) continue;
+			const [isMedia] = check_if_media(file.fileName, file.size, true);
 			await sleep(50);
-			Storage.save_from_peer(topic, file, con.driveKey, active.key);
+			if (isMedia) {
+				await Storage.save_from_peer(topic, file, con.driveKey, active.key);
+				continue;
+			}
+			// Non-media: same manual-download path as live file-shared (after history / reconnect).
+			const fromAddr = file.address || con.address;
+			const remoteFile = {
+				fileName: file.fileName,
+				address: fromAddr,
+				size: file.size,
+				topic,
+				key: topic,
+				chat: fromAddr,
+				hash: file.hash,
+				name: file.name || con.name,
+				time: file.time,
+				driveKey: con.driveKey
+			};
+			Hugin.send('group-remote-file-added', { chat: active.key, remoteFiles: [remoteFile] });
+			if (!(await roomMessageExists(file.hash))) {
+				save_file_info(file, topic, fromAddr, file.time, false, con.name);
+			}
 		}
 	}
 };
@@ -1735,6 +1757,7 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 		name: Hugin.nickname
 	};
 	console.log('Upload this file to group', upload);
+	Hugin.send('uploading', { fileName, chat: Hugin.address, size, time, group: !!room });
 	await Storage.save(
 		topic,
 		Hugin.address,
@@ -1748,6 +1771,7 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 		'file-shared',
 		'file'
 	);
+	Hugin.send('upload-file-progress', { fileName, chat: Hugin.address, time, progress: 100 });
 	share_file(upload);
 	if (room) {
 		Hugin.file_info({ fileName, time, size, path: 'storage', hash, topic });
@@ -1854,28 +1878,18 @@ const check_file_message = async (data, topic, address, con, beam) => {
 	const active = get_active_topic(topic);
 	if (!active) return;
 	if (data.info === 'file-shared') {
-		const file = {
-			address,
-			topic,
-			name: data.name,
-			time: data.time,
-			hash: data.hash,
-			size: data.size,
-			fileName: data.fileName,
-			signature: data.sig,
-			type: data.type,
-			info: data.info
-		};
-		const [media, type] = check_if_media(data.fileName, data.size, true);
+		const [isMedia] = check_if_media(data.fileName, data.size, true);
+		const autoSync = con.driveKey && isMedia && (Hugin.syncImages.some((a) => a === topic) || beam);
 
-		if (con.driveKey && media && (Hugin.syncImages.some((a) => a === topic) || beam)) {
-			console.log('[swarm.cjs] Auto-syncing file via Hyperdrive:', file.fileName);
-			Storage.save_from_peer(topic, file, con.driveKey, active.key, beam);
+		if (autoSync) {
+			// Watcher in storage.cjs handles download; done() will create the message after
 			return;
 		}
 
-		// Non-auto-synced file: show download button in frontend
-		console.log('Got file incoming!', data);
+		// Non-auto-sync: show a download button in the chat.
+		// For rooms: send group-remote-file-added FIRST so $remoteFiles is populated
+		// before the roomMsg arrives, ensuring isFile() attaches the remote file and
+		// GroupMessage renders DownloadFile (not plain text).
 		const remoteFile = {
 			fileName: data.fileName,
 			address,
@@ -1889,12 +1903,10 @@ const check_file_message = async (data, topic, address, con, beam) => {
 			driveKey: con.driveKey
 		};
 		if (beam) {
-			// DM: use the per-contact event so the layout handler shows the correct notification
 			Hugin.send('remote-file-added', { chat: address, remoteFiles: [remoteFile] });
 		} else {
-			// Room: use the group event so rooms get the correct notification
-			save_file_info(data, topic, address, data.time, false, con.name);
 			Hugin.send('group-remote-file-added', { chat: active.key, remoteFiles: [remoteFile] });
+			save_file_info(data, topic, address, data.time, false, con.name);
 		}
 	}
 
