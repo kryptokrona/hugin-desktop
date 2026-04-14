@@ -132,10 +132,22 @@
         $beam.active = $beam.active
     }
 
+    const extractVideoId = (url) => {
+        const short = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)
+        if (short) return short[1]
+        const long = url.match(/[?&]v=([A-Za-z0-9_-]{11})/)
+        if (long) return long[1]
+        return null
+    }
+
+    const setEmbedCode = () => {
+        const id = extractVideoId(messageLink)
+        if (!id) return
+        embed_code = id
+        youtube = true
+    }
+
     const openEmbed = () => {
-        if (messageLink.includes('&amp;list')) {
-            messageLink = messageLink.split('&amp;list')[0]
-        }
         setEmbedCode()
     }
 
@@ -143,21 +155,8 @@
         openURL(url)
     }
 
-  
     const checkLink = () => {
-        if (messageLink.includes('&list')) {
-            messageLink = messageLink.split('&list')[0]
-        }
         setEmbedCode()
-    }
-
-    const setEmbedCode = () => {
-        if (!youtube_shared_link_type) { 
-            embed_code = messageLink.split('watch?v=')[1];
-        } else {
-            embed_code = messageLink.split('youtu.be/')[1]
-        }
-        youtube = true
     }
 
     

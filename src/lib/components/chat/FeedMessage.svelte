@@ -76,7 +76,6 @@ let openLink = $state(false)
 let link = $state(false)
 let messageText = $state()
 let messageLink = $state("")
-let youtube_shared_link_type = false
 let asian = $state(false)
 let showMenu = $state(false)
 let isInvite = $state(false)
@@ -128,7 +127,7 @@ function checkMessage() {
     }
 
     if (link && message.message.match(/youtube.com/) || message.message.match(/youtu.be/)) {
-        if (message.message.match(/youtu.be/)) youtube_shared_link_type = true
+
         youtubeLink = true
         //if (myMsg) checkLink()
         return
@@ -250,19 +249,22 @@ const deleteMsg = (e) => {
 
 
 
+const extractVideoId = (url) => {
+    const short = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)
+    if (short) return short[1]
+    const long = url.match(/[?&]v=([A-Za-z0-9_-]{11})/)
+    if (long) return long[1]
+    return null
+}
+
 const checkLink = () => {
-        if (messageLink.includes('&list')) {
-            messageLink = messageLink.split('&list')[0]
-        }
-        setEmbedCode()
+    setEmbedCode()
 }
 
 const setEmbedCode = () => {
-    if (!youtube_shared_link_type) { 
-            embed_code = messageLink.split('watch?v=')[1];
-        } else {
-            embed_code = messageLink.split('youtu.be/')[1]
-        }
+    const id = extractVideoId(messageLink)
+    if (!id) return
+    embed_code = id
     youtube = true
 }
 
@@ -351,13 +353,10 @@ run(() => {
     });
 //Open youtube links and check embed code
 run(() => {
-        if (openLink) {
-        if (messageLink.includes('&amp;list')) {
-            messageLink = messageLink.split('&amp;list')[0]
-        }
+    if (openLink) {
         setEmbedCode()
     }
-    });
+});
 </script>
 
 
