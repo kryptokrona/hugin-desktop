@@ -103,7 +103,7 @@ ipcMain.handle('save-clipboard-image', async (e, base64Data, filename) => {
 //Check if it is an image or video with allowed type
 function check_if_media(path, size, check = false) {
 	if (path === undefined && !check) return [false];
-	if (size >= 10000000) return [false];
+	if (size >= 50000000) return [false];
 	for (const a of MEDIA_TYPES) {
 		if (path.toLowerCase().endsWith(a.file)) {
 			return [true, a.type];
