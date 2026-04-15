@@ -167,10 +167,11 @@ async function checkreply(reply) {
     let group_reply
     
     if (offchain) {
-        //Search in rtc messages
         group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
-        group_reply.hash + hashPadding()
-        if (group_reply) return group_reply
+        if (group_reply) {
+            group_reply.hash = group_reply.hash + hashPadding()
+            return group_reply
+        }
     }
     //Check in local chat if we can find it
     let local = $roomMessages.find(a => a.hash === reply)

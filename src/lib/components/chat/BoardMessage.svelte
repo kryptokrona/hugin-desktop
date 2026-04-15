@@ -38,7 +38,7 @@ const dispatch = createEventDispatcher()
 
 async function checkreply(reply) {
     thisreply = await window.api.getReply(reply)
-    //Add extra number to avoid collision for keys in Svelte each loop
+    if (!thisreply) return false
     thisreply.hash = thisreply.hash + Date.now().toString() + Math.floor(Math.random() * 1000).toString()
     return thisreply
 }
