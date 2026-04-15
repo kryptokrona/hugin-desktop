@@ -99,7 +99,6 @@ async function filterActiveHugins() {
     }
     // Avoid wiping the sidebar due to transient empty reads.
     if (all.length === 0 && $rooms.activeHugins.length > 0) return
-    console.log("Updated hugins")
     peers.setRoomUsers(activeKey, all)
 }
 

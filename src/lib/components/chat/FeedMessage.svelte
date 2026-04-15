@@ -404,7 +404,7 @@ run(() => {
                 </div>
             </div>
             {#if youtube}
-                <Youtube id={embed_code} />
+                <Youtube id={embed_code} altThumb={true} />
                 <p style="user-select: text;">{messageText}</p>
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />

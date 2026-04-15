@@ -21,10 +21,12 @@ function onPlay() { playing = true }
 function onPause() { playing = false }
 
 function onTimeUpdate() {
+    if (!audio) return
     currentTime = audio.currentTime
 }
 
 function onLoadedMetadata() {
+    if (!audio) return
     duration = audio.duration
 }
 

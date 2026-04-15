@@ -237,7 +237,7 @@
                         <p in:fade|global class="message blink_me finish">{t('beamConnected') || 'Beam connected ⚡️'}</p>
                     {:else if youtube}
                         <p class="message">{messageText}</p>
-                        <Youtube id={embed_code} />
+                        <Youtube id={embed_code} altThumb={true} />
                     {:else if link}
                         <p class="message" style="user-select: text; font-weight: bold; cursor: pointer;" onclick={openLinkMessage(messageLink)}>{messageLink}</p>
                         <p class="message" style="user-select: text;">{messageText}</p>
@@ -313,7 +313,7 @@
                         <p class="message blink_me finish" in:fade|global>{t('beamConnected') || 'Beam connected ⚡️'}</p>
                     {:else if youtube}
                         <p class="message">{messageText}</p>
-                        <Youtube id={embed_code} />
+                        <Youtube id={embed_code} altThumb={true} />
                     {:else if youtubeLink}
                         <Button disabled="{false}" text={t('openYoutube') || "Open Youtube"} on:click={() => openEmbed()} />
                     {:else if link}

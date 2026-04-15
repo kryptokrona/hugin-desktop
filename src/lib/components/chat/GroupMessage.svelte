@@ -478,7 +478,7 @@ run(() => {
             </div>
             <div class="message-content" class:grouped>
             {#if youtube}
-                <Youtube id={embed_code} />
+                <Youtube id={embed_code} altThumb={true} />
                 <p class:rtc style="user-select: text;">{messageText}</p>
             {:else if youtubeLink}
                 <Button disabled="{false}" text={"Open Youtube"} on:click={() => openEmbed()} />
