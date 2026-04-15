@@ -292,7 +292,7 @@
                     />
                 </div>
             {:else if audio}
-                <AudioPlayer src={data} />
+                <AudioPlayer src={data} fileName={file.fileName} />
             {/if}
         {:else if video}
             <VideoPlayer src={file} />

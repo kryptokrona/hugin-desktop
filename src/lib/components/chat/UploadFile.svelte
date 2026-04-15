@@ -119,7 +119,7 @@
                 />
             </div>
         {:else if audio}
-            <AudioPlayer src={data} />
+            <AudioPlayer src={data} fileName={file.fileName} />
         {:else if uploadDone || (saved && !shared)}
             <p class="message done" in:fade|global>Uploaded!</p>
             <p in:fade|global class="message">{file.fileName}</p>
