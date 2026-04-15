@@ -699,13 +699,6 @@
 		});
 
 		$download = $download;
-
-		if (data.progress === 100) {
-			toast.success(`${thisFile} finished downloading`, {
-				position: 'top-right',
-				style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;'
-			});
-		}
 	};
 
 	const setDownloadStatus = (data) => {

@@ -29,7 +29,8 @@ const {
 	saveMsg,
 	saveFeedMessage,
 	printFeed,
-	feedMessageExists
+	feedMessageExists,
+	saveRoomUser
 } = require('./database.cjs');
 const { app, ipcMain } = require('electron');
 const {
@@ -763,6 +764,13 @@ const create_swarm = async (data, beam, chat) => {
 		chat
 	});
 
+	if (beam && !Hugin.syncImages.some(a => a === topicHash)) {
+		Hugin.syncImages = [...Hugin.syncImages, topicHash];
+		const Store = require('electron-store');
+		const store = new Store();
+		store.set({ syncImages: Hugin.syncImages });
+	}
+
 	Hugin.send(
 		'swarm-connected',
 		JSON.stringify({
@@ -1316,6 +1324,13 @@ function connection_joined(joined, topic, admin) {
 		screenshare: joined.screenshare
 	};
 
+	saveRoomUser({
+		name: joined.name,
+		address: joined.address,
+		room: topic,
+		avatar: joined.avatar,
+	});
+
 	//TODO set svelte rune states?
 	Hugin.send('peer-connected', connected);
 }
@@ -1727,13 +1742,12 @@ ipcMain.on('group-download', (e, download) => {
 	Storage.save_from_peer(active.topic, download, download.driveKey, active.key, isDm);
 });
 
-ipcMain.on('save-to-downloads', async (e, { hash, fileName, topic }) => {
+ipcMain.handle('save-to-downloads', async (e, { hash, fileName, topic }) => {
 	const result = await Storage.save_to_downloads(hash, fileName, topic);
-	if (result.success) {
-		Hugin.send('file-saved-to-downloads', { hash, filePath: result.filePath, fileName });
-	} else {
+	if (!result.success) {
 		error_message(result.error || 'Failed to save file');
 	}
+	return result;
 });
 
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
@@ -2007,4 +2021,14 @@ function get_sdp(data) {
 	send_voice_channel_sdp(sendMessage);
 }
 
-module.exports = { send_feed_message, new_swarm, send_swarm_message, end_swarm, Nodes };
+function get_topic_key_map() {
+	const map = {};
+	for (const s of active_swarms) {
+		if (s.topic && s.key) {
+			map[s.topic] = { key: s.key, beam: !!s.beam, chat: s.chat || null };
+		}
+	}
+	return map;
+}
+
+module.exports = { send_feed_message, new_swarm, send_swarm_message, end_swarm, Nodes, get_topic_key_map };

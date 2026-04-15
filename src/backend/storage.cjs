@@ -23,6 +23,8 @@ const MEDIA_TYPES = [
 ];
 const userDataDir = app.getPath('userData')
 const path = require('path');
+const Store = require('electron-store');
+const settingsStore = new Store();
 const { Hugin } = require('./account.cjs');
 const { saveGroupMsg, saveMsg } = require('./database.cjs');
 const { sleep } = require('./utils.cjs');
@@ -44,7 +46,7 @@ function uniqueFilePath(dir, fileName) {
 class HyperStorage {
   constructor() {
     this.drives = []
-    this.limit = 100000000000 //100 gb per session
+    this.limit = settingsStore.get('storageLimit') || 100000000000
     this.saved = 0
     this.downloading = new Set()
     this.savedFiles = new Set()
@@ -142,7 +144,8 @@ async process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room) {
   if (Hugin.get_files().some(a => a.hash === meta.hash)) return
   if (this.downloading.has(meta.hash)) return
 
-  const autoSync = dm || Hugin.syncImages.some(a => a === topic)
+  const dmSyncDisabled = dm && Hugin.syncImages !== null && !Hugin.syncImages.some(a => a === topic)
+  const autoSync = dmSyncDisabled ? false : (dm || Hugin.syncImages.some(a => a === topic))
 
   if (autoSync) {
     console.log('[storage.cjs] Auto-syncing:', meta.fileName)
@@ -358,6 +361,79 @@ check(size, buf, name) {
     }
   }
   return [false];
+}
+
+set_limit(bytes) {
+  this.limit = bytes
+  settingsStore.set('storageLimit', bytes)
+}
+
+async get_storage_stats() {
+  const rooms = []
+  let totalSize = 0
+  let totalFiles = 0
+
+  for (const room of this.drives) {
+    let roomSize = 0
+    let roomFiles = 0
+    const fileList = []
+    try {
+      for await (const entry of room.drive.entries()) {
+        const meta = entry.value?.metadata
+        if (!meta?.hash) continue
+        const size = parseInt(meta.size) || 0
+        roomSize += size
+        roomFiles++
+        fileList.push({
+          hash: meta.hash,
+          fileName: meta.fileName || 'unknown',
+          size,
+          time: meta.time || meta.syncedAt || 0,
+          savedToDisk: this.savedFiles.has(meta.hash),
+        })
+      }
+    } catch (e) {
+      console.log('[storage.cjs] Stats scan error:', e)
+    }
+    fileList.sort((a, b) => b.time - a.time)
+    totalSize += roomSize
+    totalFiles += roomFiles
+    rooms.push({ topic: room.topic, size: roomSize, fileCount: roomFiles, files: fileList })
+  }
+
+  return { totalSize, totalFiles, limit: this.limit, rooms }
+}
+
+async purge_room(topic) {
+  const room = this.get_room(topic)
+  if (!room) return 0
+  let purged = 0
+  try {
+    const hashes = []
+    for await (const entry of room.drive.entries()) {
+      const meta = entry.value?.metadata
+      if (meta?.hash) hashes.push(meta.hash)
+    }
+    for (const hash of hashes) {
+      try { await room.drive.del(hash); purged++ } catch (e) {}
+    }
+  } catch (e) {
+    console.log('[storage.cjs] Purge room error:', e)
+  }
+  return purged
+}
+
+async delete_file(hash, topic) {
+  const room = this.get_room(topic)
+  if (!room) return false
+  try {
+    await room.drive.del(hash)
+    this.savedFiles.delete(hash)
+    return true
+  } catch (e) {
+    console.log('[storage.cjs] Delete file error:', e)
+    return false
+  }
 }
 
 async done(file, topic, room, dm, savedPath = 'storage') {

@@ -21,6 +21,8 @@
     let downloadDone = $state(false)
     let downloading = $state(false)
     let clicked = $state(false)
+    let savingToDownloads = $state(false)
+    let savedToDownloads = $state(false)
 
     let video = $state(false)
     let audio = $state(false)
@@ -84,6 +86,7 @@
         $fileViewer.size = file.size
         $fileViewer.hash = file.hash
         $fileViewer.topic = file.topic
+        $fileViewer.fileName = file.fileName
     }
 
     function cacheKey(f) {
@@ -122,6 +125,13 @@
                 _blobCache.set(key, { error: true, errorType: data })
                 return
             }
+            if (!type) {
+                // Non-media file: offer save to downloads rather than creating a blob URL
+                _blobCache.set(key, { url: OTHER, type: 'file' })
+                data = OTHER
+                loadError = false
+                return
+            }
             let blob = new Blob( [ arr ]);
             const url = URL.createObjectURL( blob );
             _blobCache.set(key, { url, type })
@@ -149,13 +159,26 @@
     }
 
     const downloadFile = (file) => {
-        const thisFile = $remoteFiles.find(a => a.hash === file.hash || (a.fileName === file.fileName && parseInt(a.time) === parseInt(file.time)))
+        const thisFile = $remoteFiles.find(a => a.hash === file.hash || (a.fileName === file.fileName && parseInt(a.time) === parseInt(file.time))) || file
         if (!thisFile?.driveKey) return
+        startFakeProgress()
         window.api.send('group-download', thisFile)
     };
 
-    const saveToDownloads = () => {
-        window.api.send('save-to-downloads', { hash: file.hash, fileName: file.fileName, topic: file.topic })
+    const saveToDownloads = async () => {
+        if (savingToDownloads) return
+        savingToDownloads = true
+        startFakeProgress()
+        try {
+            await window.api.saveToDownloads({ hash: file.hash, fileName: file.fileName, topic: file.topic })
+            stopFakeProgress(true)
+            savedToDownloads = true
+        } catch (e) {
+            stopFakeProgress(false)
+            console.log('saveToDownloads error:', e)
+        } finally {
+            savingToDownloads = false
+        }
     };
 
     run(() => {
@@ -237,16 +260,23 @@
         <div class="progress-wrap" in:fade|global>
             <div class="progress-bar" style="width: {fakeProgress}%"></div>
         </div>
-    {:else if !downloading && !downloadDone && !saved && data === (OTHER || NOT_FOUND)}
-        <p class="message" in:fade|global>{file.fileName}</p>
     {/if}
 
     {#if downloadDone || saved}
         {#if !video}
             {#if data === OTHER}
+                {#if savedToDownloads}
+                    <p class="message done" in:fade|global>{file.fileName} ✓</p>
+                {:else if savingToDownloads}
+                    <p class="message downloading blink_me" in:fade|global>{t('saving') || 'Saving'} {file.fileName}</p>
+                    <div class="progress-wrap" in:fade|global>
+                        <div class="progress-bar" style="width: {fakeProgress}%"></div>
+                    </div>
+                {:else}
                 <div class="cursor-pointer" onclick={saveToDownloads}>
-                    <Button text={'💾 ' + (t('saveToDownloads') || 'Save') + ' — ' + file.fileName}/>
+                    <Button disabled={false} text={'💾 ' + (t('saveToDownloads') || 'Save') + ' — ' + file.fileName}/>
                 </div>
+                {/if}
             {:else if data === NOT_FOUND}
                 <p class="message error">{NOT_FOUND}</p>
             {:else if image}

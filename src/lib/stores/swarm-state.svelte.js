@@ -202,6 +202,15 @@ class Peers {
 		this._addKnownUser(peer.key || swm.key, nextPeer);
 		if (peer.key && !this.activeRoomKey) this.activeRoomKey = peer.key;
 		this._syncLegacy();
+
+		if (nextPeer.avatar && nextPeer.avatar.length > 0) {
+			const blob = new Blob([nextPeer.avatar]);
+			const imageUrl = URL.createObjectURL(blob);
+			rooms.update((r) => ({
+				...r,
+				avatars: [...r.avatars.filter((a) => a.address !== nextPeer.address), { address: nextPeer.address, avatar: imageUrl }]
+			}));
+		}
 	}
 
 	onPeerDisconnected(payload) {

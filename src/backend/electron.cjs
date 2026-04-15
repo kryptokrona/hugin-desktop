@@ -28,6 +28,7 @@ const { loadHugin, loadWallet } = require('./wallet.cjs')
 const { Hugin } = require('./account.cjs')
 const { Storage } = require('./storage.cjs')
 const { check_if_media } = require('./utils.cjs')
+const { getRooms, getContacts } = require('./database.cjs')
 
 let mainWindow
 
@@ -319,6 +320,93 @@ ipcMain.handle('load-stored-file', async (e, hash, topic) => {
      console.log('load-stored-file error:', err)
      return ['File not found']
    }
+})
+
+ipcMain.handle('get-storage-stats', async () => {
+  try {
+    const stats = await Storage.get_storage_stats()
+    const { get_topic_key_map } = require('./swarm.cjs')
+    const topicKeyMap = get_topic_key_map()
+    const allRooms = await getRooms()
+    const allContacts = await getContacts()
+    for (const room of stats.rooms) {
+      const info = topicKeyMap[room.topic]
+      if (info) {
+        room.roomKey = info.key
+        if (info.beam && info.chat) {
+          const chatAddr = info.chat.substring(0, 99)
+          const contact = allContacts.find(c => c.address === chatAddr)
+          room.name = contact?.name || chatAddr.slice(0, 12) + '…'
+          room.isDM = true
+        } else {
+          const dbRoom = allRooms.find(r => r.key === info.key)
+          room.name = dbRoom?.name || info.key.slice(0, 12) + '…'
+        }
+      }
+    }
+    return stats
+  } catch (e) {
+    console.log('get-storage-stats error:', e)
+    return { totalSize: 0, totalFiles: 0, limit: Storage.limit, rooms: [] }
+  }
+})
+
+ipcMain.handle('purge-room-files', async (e, topic) => {
+  try {
+    const purged = await Storage.purge_room(topic)
+    const files = Hugin.get_files().filter(f => f.topic !== topic)
+    store.set({ files })
+    mainWindow.webContents.send('files', files)
+    return { success: true, purged }
+  } catch (err) {
+    console.log('purge-room-files error:', err)
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('purge-all-files', async () => {
+  try {
+    for (const room of Storage.drives) {
+      const hashes = []
+      for await (const entry of room.drive.entries()) {
+        const meta = entry.value?.metadata
+        if (meta?.hash) hashes.push(meta.hash)
+      }
+      for (const hash of hashes) {
+        try { await room.drive.del(hash) } catch (e) {}
+      }
+    }
+    store.set({ files: [] })
+    mainWindow.webContents.send('files', [])
+    return { success: true }
+  } catch (err) {
+    console.log('purge-all-files error:', err)
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('delete-stored-file', async (e, hash, topic) => {
+  try {
+    const ok = await Storage.delete_file(hash, topic)
+    if (ok) {
+      const files = Hugin.get_files().filter(f => f.hash !== hash)
+      store.set({ files })
+      mainWindow.webContents.send('files', files)
+    }
+    return { success: ok }
+  } catch (err) {
+    console.log('delete-stored-file error:', err)
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('set-storage-limit', async (e, bytes) => {
+  try {
+    Storage.set_limit(bytes)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
 })
 
 async function shareScreen(start, conference) {

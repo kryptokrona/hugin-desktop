@@ -436,8 +436,14 @@ const loadRoomUsers = async (key) => {
 const saveRoomUser = (user) => {
     console.log("Save this user", user.name)
     try {
-        database.prepare('REPLACE INTO roomusers (name, address, room, avatar, lastseen) VALUES (?, ?, ?, ?, ?)')
-        .run(user.name, user.address, user.room, Buffer.from(user.avatar).toString('base64'), Date.now())
+        const avatarBase64 = Buffer.from(user.avatar).toString('base64')
+        database.prepare(`
+            INSERT INTO roomusers (name, address, room, avatar, lastseen) VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(address, room) DO UPDATE SET
+                name=excluded.name,
+                lastseen=excluded.lastseen,
+                avatar=CASE WHEN excluded.avatar = '' OR excluded.avatar IS NULL THEN roomusers.avatar ELSE excluded.avatar END
+        `).run(user.name, user.address, user.room, avatarBase64, Date.now())
     }catch (e) {
         console.log("Error saving user:", e)
     }

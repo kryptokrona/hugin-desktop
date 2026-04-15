@@ -143,6 +143,25 @@ const WINDOW_API = {
     loadStoredFile: async (hash, topic) => {
         return await ipcRenderer.invoke('load-stored-file', hash, topic)
     },
+
+    saveToDownloads: async (data) => {
+        return await ipcRenderer.invoke('save-to-downloads', data)
+    },
+    getStorageStats: async () => {
+        return await ipcRenderer.invoke('get-storage-stats')
+    },
+    purgeRoomFiles: async (topic) => {
+        return await ipcRenderer.invoke('purge-room-files', topic)
+    },
+    purgeAllFiles: async () => {
+        return await ipcRenderer.invoke('purge-all-files')
+    },
+    deleteStoredFile: async (hash, topic) => {
+        return await ipcRenderer.invoke('delete-stored-file', hash, topic)
+    },
+    setStorageLimit: async (bytes) => {
+        return await ipcRenderer.invoke('set-storage-limit', bytes)
+    },
     //HANDLE NODES
     getNodes: async () => {
         ipcRenderer.send('get-nodes')

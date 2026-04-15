@@ -69,6 +69,16 @@ const refreshKnownUsers = async (roomKey = room) => {
     if (!roomKey) return
     const users = await window.api.getRoomUsers(roomKey)
     if (!Array.isArray(users)) return
+    let avatarsChanged = false
+    for (const u of users) {
+        if (u.avatar && u.avatar.length > 0 && !$rooms.avatars.some(a => a.address === u.address)) {
+            const blob = new Blob([u.avatar])
+            const url = URL.createObjectURL(blob)
+            $rooms.avatars.push({ address: u.address, avatar: url })
+            avatarsChanged = true
+        }
+    }
+    if (avatarsChanged) $rooms.avatars = $rooms.avatars
     const normalized = normalizeUsers(users)
     if (normalized.length === 0 && peers.activeKnownUsers.length > 0) return
     peers.setRoomUsers(roomKey, normalized)

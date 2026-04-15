@@ -17,5 +17,6 @@ export const fileViewer = writable({
     enhanceImage: false,
     size: 0,
     hash: "",
-    topic: ""
+    topic: "",
+    fileName: ""
 })

@@ -3,11 +3,14 @@
 
 import { fileViewer } from '$lib/stores/files'
 import {onMount} from 'svelte'
-//To handle true and false, or in this case show and hide.
 import { fade, fly } from 'svelte/transition'
 
 let image = $state()
 let path = $fileViewer.focusImage
+let saving = $state(false)
+let saved = $state(false)
+
+let canSave = $derived($fileViewer.hash.length === 64)
 
 onMount(() => {
     getImage(path)
@@ -18,6 +21,7 @@ const close = () => {
     $fileViewer.focusImage = ""
     $fileViewer.hash = ""
     $fileViewer.topic = ""
+    $fileViewer.fileName = ""
 }
 
 async function getImage(path) {
@@ -32,6 +36,20 @@ async function getImage(path) {
     image = URL.createObjectURL( blob );
 }
 
+async function saveToDownloads(e) {
+    e.stopPropagation()
+    if (saving || saved) return
+    saving = true
+    try {
+        await window.api.saveToDownloads({ hash: $fileViewer.hash, fileName: $fileViewer.fileName, topic: $fileViewer.topic })
+        saved = true
+    } catch (err) {
+        console.log('BigImage saveToDownloads error:', err)
+    } finally {
+        saving = false
+    }
+}
+
 </script>
 
 <div
@@ -40,39 +58,64 @@ async function getImage(path) {
     out:fade|global="{{ duration: 100 }}"
     class="backdrop"
 >
-    <div onclick={close} in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
+    <div in:fly|global="{{ y: 20 }}" out:fly|global="{{ y: -50 }}" class="field">
         <img
+            onclick={close}
             in:fade|global="{{ duration: 150 }}"
             src="{image}"
             alt=""
         />
+        {#if canSave}
+            <button class="save-btn" onclick={saveToDownloads} disabled={saving || saved}>
+                {#if saved}
+                    ✓
+                {:else if saving}
+                    …
+                {:else}
+                    💾
+                {/if}
+            </button>
+        {/if}
     </div>
 </div>
 
 <style lang="scss">
 .field {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     position: absolute;
     padding: 0 10px;
     border-radius: 0.4rem;
-
-    .btn {
-        color: var(--text-color);
-        height: 100%;
-        border-left: 1px solid var(--card-border);
-        cursor: pointer;
-
-        &:hover {
-            background-color: var(--card-border);
-        }
-    }
+    gap: 10px;
 }
 
 img {
     max-width: 600px;
-    max-height: 100vh;
+    max-height: 90vh;
+    cursor: pointer;
+}
+
+.save-btn {
+    background: var(--button-background);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: var(--title-color);
+    font-size: 18px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: 200ms ease-in-out;
+
+    &:hover:not(:disabled) {
+        border-color: var(--success-color);
+        opacity: 0.85;
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.6;
+    }
 }
 
 .backdrop {

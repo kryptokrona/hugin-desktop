@@ -48,15 +48,16 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     padding: 10%;
     margin-left: -1.5%
     }
     
     .outer {
     display: flex;
-    flex-direction: column-reverse;
-    overflow: scroll;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100vh;
     
     &::-webkit-scrollbar {
         display: none;
