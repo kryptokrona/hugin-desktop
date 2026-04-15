@@ -1,6 +1,21 @@
 const nacl = require('tweetnacl');
-const sanitizeHtml = require('sanitize-html');
+const _sanitize = require('sanitize-html');
 const { Crypto, Keys } = require('kryptokrona-utils');
+
+const sanitizeHtml = (input) => {
+	if (typeof input !== 'string') return input;
+	const clean = _sanitize(input, {
+		allowedTags: [],
+		allowedAttributes: {},
+	});
+	return clean
+		.replace(/&amp;/g, '&')
+		.replace(/&gt;/g, '>')
+		.replace(/&lt;/g, '<')
+		.replace(/&quot;/g, '"')
+		.replace(/&#x27;/g, "'")
+		.replace(/&#x2F;/g, '/');
+};
 const { getNonceOffset } = require('hugin-utils');
 const { ipcMain, dialog } = require('electron');
 const crypto = new Crypto();
@@ -614,6 +629,7 @@ module.exports = {
 	toBrowbroserKey,
 	containsOnlyEmojis,
 	sanitize_typing_message,
+	sanitizeHtml,
 	sleep,
 	check_hash,
 	trimExtra,
