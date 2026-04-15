@@ -44,6 +44,8 @@
 
     onMount(async () => {
         if (file.saved) saved = true
+        const known = $files.find(a => a.hash === file.hash || a.time === file.time)
+        if (known?.savedToDisk) savedToDownloads = true
         await loadFile(file)
     })
 
@@ -231,11 +233,13 @@
    });
 
     run(() => {
-        if (saved) return
         const found = $files.find(a => a.time === file.time || a.hash === file.hash)
         if (found) {
-            saved = true
-            awaitLoad({ ...file, path: 'storage' })
+            if (!saved) {
+                saved = true
+                awaitLoad({ ...file, path: 'storage' })
+            }
+            if (found.savedToDisk && !savedToDownloads) savedToDownloads = true
         }
     });
 </script>

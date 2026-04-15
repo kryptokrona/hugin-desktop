@@ -227,10 +227,23 @@ async save_to_downloads(hash, fileName, topic) {
     const filePath = uniqueFilePath(Hugin.downloadDir, fileName)
     fs.writeFileSync(filePath, buf)
     this.savedFiles.add(hash)
+    this.mark_saved_to_disk(hash)
     return { success: true, filePath }
   } catch (e) {
     console.log('[storage.cjs] Error saving to downloads:', e)
     return { success: false, error: e.message }
+  }
+}
+
+mark_saved_to_disk(hash) {
+  const files = Hugin.get_files()
+  const file = files.find(f => f.hash === hash)
+  if (file && !file.savedToDisk) {
+    file.savedToDisk = true
+    const Store = require('electron-store')
+    const store = new Store()
+    store.set({ files })
+    Hugin.send('files', files)
   }
 }
 
