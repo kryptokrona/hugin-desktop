@@ -19,6 +19,9 @@ Bugs:
     ✔ Sometimes DM messages change sender in the view (i.e. when you send a message, it looks like it was written by other person) @done(26-04-14 22:22)
     ✔ New group messages do not appear instantly, but needs a rerender @done(26-04-02 13:14)
     ☐ Close and minimize buttons don't work on login screen
+    ☐ Reactions can be clicked multiple times to add more reactions (only one per person should be possible)
+    ☐ Notifications stop working on macOS after a while
+    ☐ Excessive "file has finished downloading" notifications on login
 
 Feed:
     ✔ Add "x new message - click to load" button @done(25-04-15 13:25)
