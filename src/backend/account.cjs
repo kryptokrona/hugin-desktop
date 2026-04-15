@@ -261,6 +261,29 @@ class Account {
 		return store.get('files') ?? [];
 	}
 
+	get_deleted_hashes() {
+		return store.get('deletedFileHashes') ?? [];
+	}
+
+	is_deleted(hash) {
+		return this.get_deleted_hashes().includes(hash);
+	}
+
+	add_deleted_hashes(hashes) {
+		const list = this.get_deleted_hashes();
+		const newHashes = hashes.filter(h => !list.includes(h));
+		if (newHashes.length === 0) return;
+		const updated = [...list, ...newHashes];
+		store.set({ deletedFileHashes: updated });
+	}
+
+	clear_deleted_hashes_for_topic(topic) {
+		const files = this.get_files();
+		const topicHashes = new Set(files.filter(f => f.topic === topic).map(f => f.hash));
+		const list = this.get_deleted_hashes().filter(h => !topicHashes.has(h));
+		store.set({ deletedFileHashes: list });
+	}
+
 	ipc() {
 		ipcMain.on('sync-images', (e, list) => {
 			store.set({

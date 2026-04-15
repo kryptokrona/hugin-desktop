@@ -366,6 +366,7 @@ ipcMain.handle('purge-room-files', async (e, topic) => {
 
 ipcMain.handle('purge-all-files', async () => {
   try {
+    const allPurged = []
     for (const room of Storage.drives) {
       const hashes = []
       for await (const entry of room.drive.entries()) {
@@ -373,9 +374,10 @@ ipcMain.handle('purge-all-files', async () => {
         if (meta?.hash) hashes.push(meta.hash)
       }
       for (const hash of hashes) {
-        try { await room.drive.del(hash) } catch (e) {}
+        try { await room.drive.del(hash); allPurged.push(hash) } catch (e) {}
       }
     }
+    if (allPurged.length) Hugin.add_deleted_hashes(allPurged)
     store.set({ files: [] })
     mainWindow.webContents.send('files', [])
     return { success: true }

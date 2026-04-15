@@ -143,6 +143,7 @@ async process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room) {
   if (!meta || !meta.hash) return
   if (Hugin.get_files().some(a => a.hash === meta.hash)) return
   if (this.downloading.has(meta.hash)) return
+  if (Hugin.is_deleted(meta.hash)) return
 
   const dmSyncDisabled = dm && Hugin.syncImages !== null && !Hugin.syncImages.some(a => a === topic)
   const autoSync = dmSyncDisabled ? false : (dm || Hugin.syncImages.some(a => a === topic))
@@ -175,6 +176,7 @@ async process_entry(meta, topic, peerDriveKeyHex, roomKey, dm, room) {
 async save_from_peer(topic, file, peerDriveKeyHex, roomKey, dm = false, silent = false) {
   if (Hugin.get_files().some(a => a.hash === file.hash)) return
   if (this.downloading.has(file.hash)) return
+  if (Hugin.is_deleted(file.hash)) return
   this.downloading.add(file.hash)
   const room = this.get_room(topic)
   if (!room) { this.downloading.delete(file.hash); return }
@@ -421,6 +423,7 @@ async purge_room(topic) {
   const room = this.get_room(topic)
   if (!room) return 0
   let purged = 0
+  const purgedHashes = []
   try {
     const hashes = []
     for await (const entry of room.drive.entries()) {
@@ -428,8 +431,9 @@ async purge_room(topic) {
       if (meta?.hash) hashes.push(meta.hash)
     }
     for (const hash of hashes) {
-      try { await room.drive.del(hash); purged++ } catch (e) {}
+      try { await room.drive.del(hash); purged++; purgedHashes.push(hash) } catch (e) {}
     }
+    if (purgedHashes.length) Hugin.add_deleted_hashes(purgedHashes)
   } catch (e) {
     console.log('[storage.cjs] Purge room error:', e)
   }
@@ -442,6 +446,7 @@ async delete_file(hash, topic) {
   try {
     await room.drive.del(hash)
     this.savedFiles.delete(hash)
+    Hugin.add_deleted_hashes([hash])
     return true
   } catch (e) {
     console.log('[storage.cjs] Delete file error:', e)
