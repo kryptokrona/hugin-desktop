@@ -650,13 +650,22 @@ async function sync_from_node(node) {
 	if (Nodes.connection === null) return [];
 	const lastChecked = store.get('pool.checked');
 
-	const resp = await Nodes.sync({
-		request: true,
-		type: 'some',
-		timestamp: lastChecked
-	});
-
-	return resp;
+	try {
+		const resp = await Promise.race([
+			Nodes.sync({
+				request: true,
+				type: 'some',
+				timestamp: lastChecked
+			}),
+			new Promise((_, reject) =>
+				setTimeout(() => reject(new Error('Sync timed out')), 10000)
+			)
+		]);
+		return resp;
+	} catch (err) {
+		console.log('sync_from_node error:', err.message);
+		return [];
+	}
 }
 
 async function fetch_hugin_messages() {

@@ -528,6 +528,7 @@ class NodeConnection extends EventEmitter {
 		if (
 			reason.includes('pool_reject') ||
 			reason.includes('invalid_share') ||
+			reason.includes('invalid pow') ||
 			reason.includes('stale') ||
 			reason.includes('job')
 		) {
@@ -552,11 +553,10 @@ class NodeConnection extends EventEmitter {
 
 		const start = Date.now();
 		const shares = [];
+		let miningJob = null;
 
-		if (!challenge.hasJob()) {
-			const res = await this.request_job();
-			if (res && res.job) this.set_job(res.job);
-		}
+		const freshJob = await this.request_job();
+		if (freshJob && freshJob.job) this.set_job(freshJob.job);
 
 		while (Date.now() - start < POW_MAX_JOB_TIME_MS && shares.length < POW_REQUIRED_SHARES) {
 			if (!challenge.hasJob()) {
@@ -567,9 +567,11 @@ class NodeConnection extends EventEmitter {
 			const remaining = POW_MAX_JOB_TIME_MS - (Date.now() - start);
 			if (remaining <= 0) break;
 
+			const jobSnapshot = { ...challenge.currentJob };
 			const share = await challenge.findShare(Math.min(remaining, 30000));
 
 			if (share) {
+				miningJob = jobSnapshot;
 				shares.push({
 					job_id: String(share.job_id),
 					nonce: share.nonce.toLowerCase(),
@@ -581,8 +583,8 @@ class NodeConnection extends EventEmitter {
 			}
 		}
 
-		if (shares.length >= POW_REQUIRED_SHARES) {
-			return { job: challenge.currentJob, shares };
+		if (shares.length >= POW_REQUIRED_SHARES && miningJob) {
+			return { job: miningJob, shares };
 		}
 		return null;
 	}
