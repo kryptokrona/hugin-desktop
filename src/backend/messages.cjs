@@ -79,8 +79,7 @@ let block_list = [];
 let incoming_messages = [];
 let incoming_pm_que = [];
 let incoming_group_que = [];
-let background_sync_runs = 0;
-const MAX_BACKGROUND_SYNC_RUNS = 10;
+const BACKGROUND_SYNC_INTERVAL = 1000 * 15;
 //IPC MAIN LISTENERS
 //MISC
 
@@ -413,7 +412,6 @@ const start_message_syncer = async () => {
 	console.log('Hugin.huginNode', Hugin.huginNode);
 	Nodes.on('connected', () => {
 		console.log('Node connected, resetting message syncer');
-		background_sync_runs = 0;
 		const lastChecked = store.get('pool.checked');
 		if (lastChecked) {
 			store.set({ pool: { checked: lastChecked - 30000 } });
@@ -427,7 +425,7 @@ const start_message_syncer = async () => {
 	while (true) {
 		try {
 			//Start syncing
-			await sleep(1000 * 7);
+			await sleep(BACKGROUND_SYNC_INTERVAL);
 			await background_sync_messages();
 
 			const idle = powerMonitor.getSystemIdleTime();
@@ -465,12 +463,6 @@ const start_message_syncer = async () => {
 };
 
 async function background_sync_messages(checkedTxs = false) {
-	if (!checkedTxs) {
-		if (background_sync_runs >= MAX_BACKGROUND_SYNC_RUNS) return;
-		background_sync_runs++;
-	} else {
-		background_sync_runs = 0;
-	}
 	console.log('Background syncing...');
 	const incoming = incoming_messages.length > 0 ? true : false;
 	//First start, set known pool txs
