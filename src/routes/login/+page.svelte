@@ -1,285 +1,301 @@
 <script>
-  import { run, preventDefault } from 'svelte/legacy';
-  import { fade, fly } from 'svelte/transition';
-  import { misc, notify, user } from '$lib/stores/user.js';
-  import { t } from '$lib/utils/translation.js';
-  import { Moon } from "svelte-loading-spinners";
-  import ArrowRight from "$lib/components/icons/ArrowRight.svelte";
-  import { goto } from '$app/navigation';
-  import { getContext, onDestroy, onMount, setContext } from 'svelte';
-  import toast from 'svelte-5-french-toast';
-  import NodeSelector from "$lib/components/popups/NodeSelector.svelte";
-  import { layoutState } from "$lib/stores/layout-state.js";
-  import { sleep } from '$lib/utils/utils';
-  import { page } from '$app/state';
+	import { run, preventDefault } from 'svelte/legacy';
+	import { fade, fly } from 'svelte/transition';
+	import { misc, notify, user } from '$lib/stores/user.js';
+	import { t } from '$lib/utils/translation.js';
+	import { Moon } from 'svelte-loading-spinners';
+	import ArrowRight from '$lib/components/icons/ArrowRight.svelte';
+	import { goto } from '$app/navigation';
+	import { getContext, onDestroy, onMount, setContext } from 'svelte';
+	import toast from 'svelte-5-french-toast';
+	import NodeSelector from '$lib/components/popups/NodeSelector.svelte';
+	import { layoutState } from '$lib/stores/layout-state.js';
+	import { sleep } from '$lib/utils/utils';
+	import { page } from '$app/state';
 
-  let myPassword = $state("");
-  let enableLogin = $state(false);
-  let loadSpin = $state(false);
-  let errNode = $state(false);
-  let passwordField = $state();
-  let started = $derived($user.started);
+	let myPassword = $state('');
+	let enableLogin = $state(false);
+	let loadSpin = $state(false);
+	let errNode = $state(false);
+	let passwordField = $state();
+	let started = $derived($user.started);
 
-  // Word flip logic
-  const words = [
-    t('encrypted') || "encrypted",
-    t('private') || "private",
-    t('secure') || "secure",
-    t('decentralized') || "decentralized"
-  ];
-  
-  let currentIndex = $state(0);
-  let currentWord = $state(words[currentIndex]);
-  let intervalId;
+	// Word flip logic
+	const words = [
+		t('encrypted') || 'encrypted',
+		t('private') || 'private',
+		t('secure') || 'secure',
+		t('decentralized') || 'decentralized'
+	];
 
-  onMount(() => {
-    $misc.loading = false;
-    sleep(200).then(() => passwordField.focus());
+	let currentIndex = $state(0);
+	let currentWord = $state(words[currentIndex]);
+	let intervalId;
 
-    intervalId = setInterval(() => {
-      currentIndex = (currentIndex + 1) % words.length;
-      currentWord = words[currentIndex];
-    }, 2000); // Change every 2s
-  });
+	onMount(() => {
+		$misc.loading = false;
+		sleep(200).then(() => passwordField.focus());
 
-  onDestroy(() => {
-    clearInterval(intervalId);
-    window.api.removeAllListeners('login-failed');
-  });
+		intervalId = setInterval(() => {
+			currentIndex = (currentIndex + 1) % words.length;
+			currentWord = words[currentIndex];
+		}, 2000); // Change every 2s
+	});
 
-  $effect(() => {
-    enableLogin = myPassword.length > 1;
-  });
+	onDestroy(() => {
+		clearInterval(intervalId);
+		window.api.removeAllListeners('login-failed');
+	});
 
-  const enter = async (e) => {
-    if (enableLogin && e.key === 'Enter') {
-      if ($user.started) {
-        await checkPass();
-        return;
-      }
-      handleLogin(e);
-      enableLogin = false;
-    }
-  };
+	$effect(() => {
+		enableLogin = myPassword.length > 1;
+	});
 
-  const checkPass = async () => {
-    $user.idleTime = 0;
-    loadSpin = true;
-    const verify = await window.api.verifyPass(myPassword);
-    if (!verify) {
-      window.api.errorMessage(t('wrongPassword') || 'Wrong password');
-      $misc.loading = false;
-      loadSpin = false;
-    } else {
-      loadSpin = false;
-      $layoutState.showNodeSelector = false;
-      $misc.loading = false;
-      goto("/dashboard");
-      $user.loggedIn = true;
-    }
-  };
+	const enter = async (e) => {
+		if (enableLogin && e.key === 'Enter') {
+			if ($user.started) {
+				await checkPass();
+				return;
+			}
+			handleLogin(e);
+			enableLogin = false;
+		}
+	};
 
-  const handleLogin = async (e) => {
-    if ($user.started) {
-      checkPass();
-      return;
-    }
+	const checkPass = async () => {
+		$user.idleTime = 0;
+		loadSpin = true;
+		const verify = await window.api.verifyPass(myPassword);
+		if (!verify) {
+			window.api.errorMessage(t('wrongPassword') || 'Wrong password');
+			$misc.loading = false;
+			loadSpin = false;
+		} else {
+			loadSpin = false;
+			$layoutState.showNodeSelector = false;
+			$misc.loading = false;
+			const path = $misc.latestPath ?? '/dashboard';
+			goto(path);
+			$user.loggedIn = true;
+		}
+	};
 
-    let node = $misc.node.node;
-    let port = $misc.node.port;
-    loadSpin = true;
+	const handleLogin = async (e) => {
+		if ($user.started) {
+			checkPass();
+			return;
+		}
 
-    if (e.node) {
-      node = e.node.split(':')[0];
-      port = parseInt(e.node.split(':')[1]);
-    }
+		let node = $misc.node.node;
+		let port = $misc.node.port;
+		loadSpin = true;
 
-    $user.idleTime = 0;
+		if (e.node) {
+			node = e.node.split(':')[0];
+			port = parseInt(e.node.split(':')[1]);
+		}
 
-    if (!$user.started) {
-      $misc.loading = true;
-    }
+		$user.idleTime = 0;
 
-    let accountData = {
-      node,
-      port,
-      thisWallet: $user.thisWallet,
-      myPassword
-    };
+		if (!$user.started) {
+			$misc.loading = true;
+		}
 
-    window.api.send('login', accountData);
-  };
+		let accountData = {
+			node,
+			port,
+			thisWallet: $user.thisWallet,
+			myPassword
+		};
 
-  window.api.receive('login-failed', async () => {
-    toast.error(t('wrongPassword') || 'Wrong password', {
-      position: 'top-right',
-      style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;',
-    });
-    $layoutState.showNodeSelector = false;
-    $misc.loading = false;
-    loadSpin = false;
-  });
+		window.api.send('login', accountData);
+	};
+
+	window.api.receive('login-failed', async () => {
+		toast.error(t('wrongPassword') || 'Wrong password', {
+			position: 'top-right',
+			style: 'border-radius: 5px; background: #171717; border: 1px solid #252525; color: #fff;'
+		});
+		$layoutState.showNodeSelector = false;
+		$misc.loading = false;
+		loadSpin = false;
+	});
 </script>
 
 <svelte:window onkeyup={enter} />
 
-<div class="wrapper" in:fly|global={{ delay: 300, duration: 300, y: 50 }} out:fly|global={{ delay: 100, duration: 100, y: -50 }}>
-  <div class="login-wrapper" class:hide={$layoutState.showNodeSelector}>
-    <h1>Hugin</h1>
-      <span class="word-container">
-        {#key currentWord}
-          <span class="flip-word" in:fly={{ duration: 500, y: 30 }} out:fly={{ duration: 100, y: -20 }}>
-            {currentWord}
-          </span>
-        {/key}
-      </span>
+<div
+	class="wrapper"
+	in:fly|global={{ delay: 300, duration: 300, y: 50 }}
+	out:fly|global={{ delay: 100, duration: 100, y: -50 }}
+>
+	<div class="login-wrapper" class:hide={$layoutState.showNodeSelector}>
+		<h1>Hugin</h1>
+		<span class="word-container">
+			{#key currentWord}
+				<span
+					class="flip-word"
+					in:fly={{ duration: 500, y: 30 }}
+					out:fly={{ duration: 100, y: -20 }}
+				>
+					{currentWord}
+				</span>
+			{/key}
+		</span>
 
-    <div class="field">
-      <input placeholder={t('password') || "Password..."} type="password" bind:this={passwordField} bind:value={myPassword} />
-      <button onclick={handleLogin} disabled={loadSpin && !enableLogin} class:enableLogin={enableLogin === true}>
-        {#if loadSpin}
-          <Moon color="var(--text-color)" size="20" unit="px" />
-        {:else}
-          <ArrowRight />
-        {/if}
-      </button>
-    </div>
-    <p style="color: var(--text-color); opacity: 30%">v{$misc.version}</p>
-  </div>
+		<div class="field">
+			<input
+				placeholder={t('password') || 'Password...'}
+				type="password"
+				bind:this={passwordField}
+				bind:value={myPassword}
+			/>
+			<button
+				onclick={handleLogin}
+				disabled={loadSpin && !enableLogin}
+				class:enableLogin={enableLogin === true}
+			>
+				{#if loadSpin}
+					<Moon color="var(--text-color)" size="20" unit="px" />
+				{:else}
+					<ArrowRight />
+				{/if}
+			</button>
+		</div>
+		<p style="color: var(--text-color); opacity: 30%">v{$misc.version}</p>
+	</div>
 </div>
 
 <style lang="scss">
+	.wrapper {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+		width: 100%;
+		color: var(--text-color);
+		-webkit-app-region: drag;
+		user-select: none;
+	}
 
-  
-.wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100%;
-    color: var(--text-color);
-    -webkit-app-region: drag;
-    user-select: none;
-  }
+	.login-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		justify-content: center;
+		align-items: center;
+	}
 
-  .login-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    justify-content: center;
-    align-items: center;
-  }
+	.init {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		gap: 2rem;
 
-  .init {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
+		div {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+		}
+	}
 
-    div {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-  }
+	.field {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0 6px 0 10px;
+		background-color: var(--card-background);
+		border: 1px solid var(--card-border);
+		border-radius: 8px;
+		transition: 100ms ease-in-out;
 
-  .field {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 6px 0 10px;
-    background-color: var(--card-background);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    transition: 100ms ease-in-out;
+		&:focus-within {
+			border: 1px solid #404040;
+		}
 
-    &:focus-within {
-      border: 1px solid #404040;
-    }
+		input {
+			margin: 0 auto;
+			width: 200px;
+			height: 48px;
+			transition: 200ms ease-in-out;
+			color: var(--text-color);
+			background-color: transparent;
+			border: none;
+			font-size: 1.1rem;
+			-webkit-app-region: no-drag;
+			user-select: text;
 
-    input {
-      margin: 0 auto;
-      width: 200px;
-      height: 48px;
-      transition: 200ms ease-in-out;
-      color: var(--text-color);
-      background-color: transparent;
-      border: none;
-      font-size: 1.1rem;
-      -webkit-app-region: no-drag;
-      user-select: text;
+			&:focus {
+				outline: none;
+			}
+		}
 
-      &:focus {
-        outline: none;
-      }
-    }
+		button {
+			border: none;
+			background-color: var(--border-color);
+			height: 36px;
+			width: 48px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: 100ms ease-in-out;
+			border: 1px solid transaparent;
+			-webkit-app-region: no-drag;
+			&:hover {
+				background: var(--success-color);
+			}
+		}
+	}
 
-    button {
-      border: none;
-      background-color: var(--border-color);
-      height: 36px;
-      width: 48px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: 100ms ease-in-out;
-      border: 1px solid transaparent;
-      -webkit-app-region: no-drag;
-      &:hover {
-        background: var(--success-color);
-      }
-    }
-  }
+	.enableLogin {
+		background-color: #3fd782 !important;
+	}
 
-  .enableLogin {
-    background-color: #3fd782 !important;
-  }
+	.backdrop {
+		position: fixed;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		background-color: var(--backgound-color);
+		z-index: 103;
+	}
 
-  .backdrop {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--backgound-color);
-    z-index: 103;
-  }
+	.hide {
+		display: none;
+	}
 
-  .hide {
-    display: none;
-  }
+	.word-container {
+		font-family: 'Montserrat';
+		display: flex;
+		position: relative;
+		justify-content: center;
+		align-items: center;
+		color: var(--success-color);
+		width: 205px;
+		text-align: center;
+	}
 
-.word-container {
-    font-family: "Montserrat";
-    display: flex;
-    position: relative;
-    justify-content: center;
-    align-items: center;
-    color: var(--success-color);
-    width: 205px;
-    text-align: center;
-}
+	.flip-word {
+		position: absolute;
+		display: inline-block;
+	}
 
-.flip-word {
-  position: absolute;
-  display: inline-block;
-}
-
-/* Keep popups and any explicit interactive zones clickable */
-:global(.no-drag),
-:global(button),
-:global(input),
-:global(textarea),
-:global(select),
-:global(a),
-:global([role='button']),
-:global([data-no-drag='true']) {
-  -webkit-app-region: no-drag;
-}
+	/* Keep popups and any explicit interactive zones clickable */
+	:global(.no-drag),
+	:global(button),
+	:global(input),
+	:global(textarea),
+	:global(select),
+	:global(a),
+	:global([role='button']),
+	:global([data-no-drag='true']) {
+		-webkit-app-region: no-drag;
+	}
 </style>

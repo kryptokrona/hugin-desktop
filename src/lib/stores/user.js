@@ -1,194 +1,201 @@
-import { derived, writable } from 'svelte/store'
-import { get_avatar } from '$lib/utils/hugin-utils.js'
+import { derived, writable } from 'svelte/store';
+import { get_avatar } from '$lib/utils/hugin-utils.js';
 
 //Default values
 export const user = writable({
-    loggedIn: false,
-    username: 'Anon',
-    activeChat: false,
-    huginAddress: '',
-    myAddress: '',
-    callerMenu: false,
-    contacts: [],
-    addChat: false,
-    rename: false,
-    transactions: [],
-    block: false,
-    started: false,
-    downloadPath: "",
-    customAvatar: false,
-    idleTime: 0,
-    idleLimit: 300,
-})
+	loggedIn: false,
+	username: 'Anon',
+	activeChat: false,
+	huginAddress: '',
+	myAddress: '',
+	callerMenu: false,
+	contacts: [],
+	addChat: false,
+	rename: false,
+	transactions: [],
+	block: false,
+	started: false,
+	downloadPath: '',
+	customAvatar: false,
+	idleTime: 0,
+	idleLimit: 300
+});
 
 export const boards = writable({
-    addBoard: false,
-    replyTo: { reply: false },
-    thisBoard: "",
-    boardsArray: ['Home'],
-    newBoards: [],
-})
+	addBoard: false,
+	replyTo: { reply: false },
+	thisBoard: '',
+	boardsArray: ['Home'],
+	newBoards: []
+});
 
 export const groups = writable({
-    addGroup: false,
-    replyTo: { reply: false },
-    thisGroup: { key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false },
-    groupArray: [],
-    blockList: [],
-    activeHugins: [],
-    historyTimeframe: 0,
-    autoDeleteAfter: 0,
-    settings: false,
-    fileList: []
-})
+	addGroup: false,
+	replyTo: { reply: false },
+	thisGroup: {
+		key: 'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
+		chat: false
+	},
+	groupArray: [],
+	blockList: [],
+	activeHugins: [],
+	historyTimeframe: 0,
+	autoDeleteAfter: 0,
+	settings: false,
+	fileList: []
+});
 
 export const rtc_groups = writable({
-    addGroup: false,
-    replyTo: { reply: false },
-    unread: []
-})
+	addGroup: false,
+	replyTo: { reply: false },
+	unread: []
+});
 
 export const feed = writable({
-    new: []
-})
+	new: []
+});
 
 export const misc = writable({
-    syncState: 'Syncing',
-    walletBlockCount: null,
-    localDaemonBlockCount: null,
-    networkBlockCount: null,
-    balance: [0, 0],
-    node: '',
-    version: '',
-    os: '',
-    loading: false,
-    syncStatus: false,
-    deleteAfter: undefined,
-    focus: false,
-    welcomeAddress: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1",
-    syncImages: [],
-    autoSelectNode: localStorage.getItem('autoSelectNode') === 'true'
-})
+	syncState: 'Syncing',
+	walletBlockCount: null,
+	localDaemonBlockCount: null,
+	networkBlockCount: null,
+	balance: [0, 0],
+	node: '',
+	version: '',
+	os: '',
+	loading: false,
+	syncStatus: false,
+	deleteAfter: undefined,
+	focus: false,
+	latestPath: '/dashboard',
+	welcomeAddress:
+		'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
+	syncImages: [],
+	autoSelectNode: localStorage.getItem('autoSelectNode') === 'true'
+});
 
 export const HuginNode = writable({
-    connected: false,
-    public: true,
-    address: '',
-    inputAddress: ''
-})
+	connected: false,
+	public: true,
+	address: '',
+	inputAddress: ''
+});
 
 export const webRTC = writable({
-    stream: false,
-    peer: false,
-    myVideo: false,
-    peerVideo: false,
-    myStream: false,
-    peerStream: false,
-    screen: false,
-    call: [],
-    connected: false,
-    videoSources: [],
-    incoming: [],
-    groupCall: false,
-    invited: false,
-    initiator: false,
-    devices: [],
-    cameraId: false,
-    audio: true
-})
+	stream: false,
+	peer: false,
+	myVideo: false,
+	peerVideo: false,
+	myStream: false,
+	peerStream: false,
+	screen: false,
+	call: [],
+	connected: false,
+	videoSources: [],
+	incoming: [],
+	groupCall: false,
+	invited: false,
+	initiator: false,
+	devices: [],
+	cameraId: false,
+	audio: true
+});
 
 export const audioLevel = writable({
-    call: [],
-})
+	call: []
+});
 
 export const notify = writable({
-    new: [],
-    errors: [],
-    success: [],
-    unread: [],
-    update: [],
-    notifications: [],
-    off: [],
-    que: false
-})
+	new: [],
+	errors: [],
+	success: [],
+	unread: [],
+	update: [],
+	notifications: [],
+	off: [],
+	que: false
+});
 
 export const transactions = writable({
-    tip: false,
-    send: false,
-})
+	tip: false,
+	send: false
+});
 
 export const transactionList = writable({
-    txs: [],
-    pages: 0
-})
+	txs: [],
+	pages: 0
+});
 
 export const messageWallet = writable({
-    optimized: false
-})
+	optimized: false
+});
 
 export const beam = writable({
-    active: []
-})
+	active: []
+});
 
 export const swarm = writable({
-    active: [],
-    activeSwarm: false,
-    myVideo: false,
-    voice_channel: new Map(),
-    call: [],
-    newChannel: false,
-    activeChannel: { name: "" },
-    activeChannelMessages: [],
-    audio: true,
-    showVideoGrid: false,
-    myStream: false,
-    screenshare: false,
-    showInfo: true,
-    voice: false
-})
-
+	active: [],
+	activeSwarm: false,
+	myVideo: false,
+	voice_channel: new Map(),
+	call: [],
+	newChannel: false,
+	activeChannel: { name: '' },
+	activeChannelMessages: [],
+	audio: true,
+	showVideoGrid: false,
+	myStream: false,
+	screenshare: false,
+	showInfo: true,
+	voice: false
+});
 
 export const rooms = writable({
-    addRoom: false,
-    replyTo: { reply: false },
-    thisRoom: { key: "SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1", chat: false },
-    roomArray: [],
-    blockList: [],
-    activeHugins: [],
-    settings: false,
-    showUserInfo: false,
-    banned: [],
-    ban: {},
-    avatars: [],
-    params: null,
-    typingUsers: [],
-    openingLink: false
-})
+	addRoom: false,
+	replyTo: { reply: false },
+	thisRoom: {
+		key: 'SEKReYU57DLLvUjNzmjVhaK7jqc8SdZZ3cyKJS5f4gWXK4NQQYChzKUUwzCGhgqUPkWQypeR94rqpgMPjXWG9ijnZKNw2LWXnZU1',
+		chat: false
+	},
+	roomArray: [],
+	blockList: [],
+	activeHugins: [],
+	settings: false,
+	showUserInfo: false,
+	banned: [],
+	ban: {},
+	avatars: [],
+	params: null,
+	typingUsers: [],
+	openingLink: false
+});
 
-export const friendRequests = writable([])
+export const friendRequests = writable([]);
 
 export const pushToTalk = writable({
-    key: null,
-    on: false
-})
+	key: null,
+	on: false
+});
 
 export const sounds = writable({
-    on: true,
-})
+	on: true
+});
 
-export const files = writable([])
+export const files = writable([]);
 
-export const theme = writable(localStorage.getItem("themes") ?? 'dark');
+export const theme = writable(localStorage.getItem('themes') ?? 'dark');
 
 export const keyboard = writable({
-    room: new Map(),
-    messages: new Map(),
-    feed: [],
-    input: ''
-})
+	room: new Map(),
+	messages: new Map(),
+	feed: [],
+	input: ''
+});
 
 export const userAvatar = derived(user, ($user) => {
-    if ($user.huginAddress.length > 15) {
-        return get_avatar($user.myAddress)
-    }
-})
+	if ($user.huginAddress.length > 15) {
+		return get_avatar($user.myAddress);
+	}
+});

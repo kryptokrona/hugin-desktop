@@ -1,298 +1,306 @@
 <script>
-import { run } from 'svelte/legacy';
-import { t } from '$lib/utils/translation.js';
+	import { run } from 'svelte/legacy';
+	import { t } from '$lib/utils/translation.js';
 
-import { misc, user, userAvatar, swarm, webRTC, rooms, theme, feed, friendRequests } from '$lib/stores/user.js'
-import { goto } from '$app/navigation'
-import GroupIcon from '$lib/components/icons/GroupIcon.svelte'
-import MessageIcon from '$lib/components/icons/MessageIcon.svelte'
-import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte'
-import RoomIcon from '$lib/components/icons/RoomIcon.svelte'
-import FeedIcon from '$lib/components/icons/FeedIcon.svelte'
-import WalletIcon from '$lib/components/icons/WalletIcon.svelte'
-import XkrLogo from '$lib/components/icons/XkrLogo.svelte'
-import { openURL } from '$lib/utils/utils.js'
-import { page } from '$app/stores'
-import { layoutState } from '$lib/stores/layout-state.js'
-import Logout from '$lib/components/icons/Logout.svelte'
-import Home from '../icons/Home.svelte'
-import Tooltip from "$lib/components/popups/Tooltip.svelte"
-import FriendRequests from "$lib/components/popups/FriendRequests.svelte"
-import { onMount } from 'svelte'
+	import {
+		misc,
+		user,
+		userAvatar,
+		swarm,
+		webRTC,
+		rooms,
+		theme,
+		feed,
+		friendRequests
+	} from '$lib/stores/user.js';
+	import { goto } from '$app/navigation';
+	import GroupIcon from '$lib/components/icons/GroupIcon.svelte';
+	import MessageIcon from '$lib/components/icons/MessageIcon.svelte';
+	import SettingsIcon from '$lib/components/icons/SettingsIcon.svelte';
+	import RoomIcon from '$lib/components/icons/RoomIcon.svelte';
+	import FeedIcon from '$lib/components/icons/FeedIcon.svelte';
+	import WalletIcon from '$lib/components/icons/WalletIcon.svelte';
+	import XkrLogo from '$lib/components/icons/XkrLogo.svelte';
+	import { openURL } from '$lib/utils/utils.js';
+	import { page } from '$app/stores';
+	import { layoutState } from '$lib/stores/layout-state.js';
+	import Logout from '$lib/components/icons/Logout.svelte';
+	import Home from '../icons/Home.svelte';
+	import Tooltip from '$lib/components/popups/Tooltip.svelte';
+	import FriendRequests from '$lib/components/popups/FriendRequests.svelte';
+	import { onMount } from 'svelte';
 
+	let sync = $derived($misc.syncState);
+	let avatar = $state();
+	let in_voice = $state(false);
+	let fileList = $state();
+	let files = $state();
+	let showFriendRequests = $state(false);
 
-let sync = $derived($misc.syncState)
-let avatar = $state()
-let in_voice = $state(false)
-let fileList = $state()
-let files = $state()
-let showFriendRequests = $state(false)
+	onMount(async () => {
+		//    const profile = await window.api.getProfile()
+		//    console.log("Got profile info!", profile)
+	});
 
-onMount(async () => {
-//    const profile = await window.api.getProfile()
-//    console.log("Got profile info!", profile)
-})
+	run(() => {
+		if (!$user.customAvatar) {
+			userAvatar.subscribe((output) => {
+				avatar = output;
+			});
+		} else {
+			avatar = $user.customAvatar;
+		}
+	});
+	run(() => {
+		avatar;
+	});
 
+	const handleLogout = () => {
+		$user.loggedIn = false;
+		goto('/login');
+	};
 
-run(() => {
-    if (!$user.customAvatar) {
-      userAvatar.subscribe((output) => {
-          avatar = output
-      })
-  } else {
-      avatar = $user.customAvatar
-  }
-  });
-run(() => {
-    avatar
-  });
+	const messagesRouteAndMenu = () => {
+		if ($page.url.pathname === '/messages') {
+			$layoutState.hideChatList = !$layoutState.hideChatList;
+		} else {
+			setTimeout(() => {
+				$layoutState.hideChatList = false;
+			}, 300);
+			$misc.latestPath = '/messages';
+			goto('/messages');
+		}
+	};
 
-const handleLogout = () => { 
-    $user.loggedIn = false
-    goto("/login")
-}
+	const groupRouteAndMenu = () => {
+		if ($page.url.pathname === '/groups') {
+			$layoutState.hideGroupList = !$layoutState.hideGroupList;
+		} else {
+			setTimeout(() => {
+				$layoutState.hideGroupList = false;
+			}, 300);
+			goto('/groups');
+		}
+	};
 
-const messagesRouteAndMenu = () => {
-    if ($page.url.pathname === '/messages') {
-        $layoutState.hideChatList = !$layoutState.hideChatList
-    } else {
-        setTimeout(() => {
-            $layoutState.hideChatList = false
-        }, 300)
-        goto('/messages')
-    }
-}
+	const roomRouteAndMenu = () => {
+		if ($page.url.pathname === '/room') {
+			// $layoutState.hideGroupList = !$layoutState.hideGroupList
+		} else {
+			setTimeout(() => {
+				$layoutState.hideGroupList = false;
+			}, 300);
+			$misc.latestPath = '/rooms';
+			goto('/rooms');
+		}
+	};
 
-const groupRouteAndMenu = () => {
-    if ($page.url.pathname === '/groups') {
-        $layoutState.hideGroupList = !$layoutState.hideGroupList
-    } else {
-        setTimeout(() => {
-            $layoutState.hideGroupList = false
-        }, 300)
-        goto('/groups')
-    }
-}
+	const feedRouteAndMenu = () => {
+		if ($page.url.pathname === '/feed') {
+		} else {
+			setTimeout(() => {}, 300);
+			$misc.latestPath = '/feed';
+			goto('/feed');
+		}
+	};
 
-const roomRouteAndMenu = () => {
-    if ($page.url.pathname === '/room') {
-        // $layoutState.hideGroupList = !$layoutState.hideGroupList
-    } else {
-        setTimeout(() => {
-            $layoutState.hideGroupList = false
-        }, 300)
-        goto('/rooms')
-    }
-}
+	const changeProfilePic = () => {
+		fileList.click();
+	};
 
-const feedRouteAndMenu = () => {
-    if ($page.url.pathname === '/feed') {
-    } else {
-        setTimeout(() => {
-        }, 300)
-        goto('/feed')
-    }
-}
+	const selectAvatar = async () => {
+		console.log('Selected', files[0]);
+		const file = files[0];
+		if (file.size > 200000) {
+			window.api.errorMessage(t('avatarFileSizeTooBig') || 'Avatar file size is too big');
+			return;
+		}
+		const [arr, type] = await window.api.loadFile(file.path, file.size);
+		window.api.send('set-avatar', arr);
+		const blob = new Blob([arr]);
 
+		const imageUrl = URL.createObjectURL(blob);
+		$user.customAvatar = imageUrl;
+		$rooms.avatars.push({ address: $user.myAddress, avatar: imageUrl });
+	};
 
-const changeProfilePic = () => {
-   fileList.click()
-}
-
-const selectAvatar = async () => {
-    console.log('Selected', files[0]);
-    const file = files[0];
-    if (file.size > 200000) {
-        window.api.errorMessage(t('avatarFileSizeTooBig') || 'Avatar file size is too big')
-        return
-    }
-    const [arr, type] = await window.api.loadFile(file.path, file.size)
-    window.api.send('set-avatar', arr)
-    const blob = new Blob( [ arr ]);
- 
-    const imageUrl = URL.createObjectURL( blob );
-    $user.customAvatar = imageUrl
-    $rooms.avatars.push({address: $user.myAddress, avatar: imageUrl})
-  };
-
-run(() => {
-    if ($webRTC.call.length || $swarm.voice_channel.has($user.myAddress)) {
-      in_voice = true
-  } else in_voice = false
-  });
-
-
-
+	run(() => {
+		if ($webRTC.call.length || $swarm.voice_channel.has($user.myAddress)) {
+			in_voice = true;
+		} else in_voice = false;
+	});
 </script>
 
 <div class="leftMenu">
-    <div class="nav">
-        <input
-        bind:this={fileList}
-        bind:files
-        class="open"
-        type="file"
-        onchange={() => selectAvatar()}
-        style="width: 0; height: 0;"
-      />
-        <div class="avatar-wrapper">
-            <div style="cursor: pointer;" class="button myavatar" onclick={() => $friendRequests.length ? (showFriendRequests = !showFriendRequests) : changeProfilePic()}>
-                {#if !$user.customAvatar}
-                <img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
-                {:else}
-                <img class="avatar custom" src={$user.customAvatar} alt="" />
-                {/if}
-                {#if $friendRequests.length > 0}
-                    <span class="fr-badge">{$friendRequests.length}</span>
-                {/if}
-            </div>
-        </div>
-        <Tooltip title={t('dashboard') || 'Dashboard'}>
-            <div onclick={() => goto('/dashboard')} class="button">
-                <Home />
-            </div>
-        </Tooltip>
-        <Tooltip title={t('messages') || 'Messages'}>
-            <div onclick={messagesRouteAndMenu} class="button">
-                <MessageIcon />
-            </div>
-        </Tooltip>
-        <!-- <Tooltip title="Groups">
+	<div class="nav">
+		<input
+			bind:this={fileList}
+			bind:files
+			class="open"
+			type="file"
+			onchange={() => selectAvatar()}
+			style="width: 0; height: 0;"
+		/>
+		<div class="avatar-wrapper">
+			<div
+				style="cursor: pointer;"
+				class="button myavatar"
+				onclick={() =>
+					$friendRequests.length ? (showFriendRequests = !showFriendRequests) : changeProfilePic()}
+			>
+				{#if !$user.customAvatar}
+					<img class="avatar" src="data:image/png;base64,{avatar}" alt="" />
+				{:else}
+					<img class="avatar custom" src={$user.customAvatar} alt="" />
+				{/if}
+				{#if $friendRequests.length > 0}
+					<span class="fr-badge">{$friendRequests.length}</span>
+				{/if}
+			</div>
+		</div>
+		<Tooltip title={t('dashboard') || 'Dashboard'}>
+			<div onclick={() => goto('/dashboard')} class="button">
+				<Home />
+			</div>
+		</Tooltip>
+		<Tooltip title={t('messages') || 'Messages'}>
+			<div onclick={messagesRouteAndMenu} class="button">
+				<MessageIcon />
+			</div>
+		</Tooltip>
+		<!-- <Tooltip title="Groups">
             <div onclick={groupRouteAndMenu} class="button">
                 <GroupIcon />
             </div>
         </Tooltip>  -->
-        <Tooltip title={t('rooms') || 'Rooms'}>
-            <div onclick={roomRouteAndMenu} class="button">
-                <RoomIcon />
-            </div>
-        </Tooltip>
+		<Tooltip title={t('rooms') || 'Rooms'}>
+			<div onclick={roomRouteAndMenu} class="button">
+				<RoomIcon />
+			</div>
+		</Tooltip>
 
-        <Tooltip title={t('feed') || 'Feed'}>
-            <div onclick={feedRouteAndMenu} class="button">
-                <FeedIcon />
-            </div>
-        </Tooltip>
+		<Tooltip title={t('feed') || 'Feed'}>
+			<div onclick={feedRouteAndMenu} class="button">
+				<FeedIcon />
+			</div>
+		</Tooltip>
 
-        <Tooltip title="Wallet">
-            <div onclick={() => goto('/wallet')} class="button">
-                <WalletIcon />
-            </div>
-        </Tooltip>
+		<Tooltip title="Wallet">
+			<div onclick={() => goto('/wallet')} class="button">
+				<WalletIcon />
+			</div>
+		</Tooltip>
 
-        <!-- <div on:click={() => goto("/boards")} class="button">
+		<!-- <div on:click={() => goto("/boards")} class="button">
             <BoardIcon/>
         </div> -->
-        <!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
-    </div>
-    <div class="draggable"></div>
-    <div class="nav">
-
-
-        <Tooltip title={t('settings') || 'Settings'}>
-            <div onclick={() => goto('/settings/node')} class="button">
-                <SettingsIcon />
-            </div>
-        </Tooltip>
-        <Tooltip title={t('logout') || 'Logout'}>
-            <div class='button' onclick={handleLogout}>
-                <Logout/>
-            </div>
-        </Tooltip>      
-        <XkrLogo grey="{true}" />
-    </div>
+		<!-- <a class='button' href="/webrtc"><img class="icon" src={financeIcon} alt="finance"></a> -->
+	</div>
+	<div class="draggable"></div>
+	<div class="nav">
+		<Tooltip title={t('settings') || 'Settings'}>
+			<div onclick={() => goto('/settings/node')} class="button">
+				<SettingsIcon />
+			</div>
+		</Tooltip>
+		<Tooltip title={t('logout') || 'Logout'}>
+			<div class="button" onclick={handleLogout}>
+				<Logout />
+			</div>
+		</Tooltip>
+		<XkrLogo grey={true} />
+	</div>
 </div>
 
 {#if showFriendRequests}
-    <FriendRequests onClose={() => showFriendRequests = false} />
+	<FriendRequests onClose={() => (showFriendRequests = false)} />
 {/if}
 
 <style lang="scss">
-.leftMenu {
-    height: 100vh;
-    width: 85px;
-    border-right: 1px solid var(--border-color);
-    box-sizing: border-box;
-    padding-bottom: 1rem;
-    padding-top: 3rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    z-index: 100;
-}
+	.leftMenu {
+		height: 100vh;
+		width: 85px;
+		border-right: 1px solid var(--border-color);
+		box-sizing: border-box;
+		padding-bottom: 1rem;
+		padding-top: 3rem;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: center;
+		position: fixed;
+		z-index: 100;
+	}
 
-.nav {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    -webkit-app-region: no-drag;
-}
+	.nav {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		-webkit-app-region: no-drag;
+	}
 
-.button {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-    border-radius: 5px;
-    transition: 250ms ease-in-out;
-    cursor: pointer;
-}
+	.button {
+		width: 40px;
+		height: 40px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 5px;
+		border-radius: 5px;
+		transition: 250ms ease-in-out;
+		cursor: pointer;
+	}
 
-.icon {
-    opacity: 80%;
-    transition: 250ms ease-in-out;
-}
+	.icon {
+		opacity: 80%;
+		transition: 250ms ease-in-out;
+	}
 
-.button:hover,
-.button:hover > .icon {
-    background-color: var(--border-color);
-    opacity: 100%;
-}
+	.button:hover,
+	.button:hover > .icon {
+		background-color: var(--border-color);
+		opacity: 100%;
+	}
 
-.avatar-wrapper {
-    position: relative;
-}
+	.avatar-wrapper {
+		position: relative;
+	}
 
-.myavatar {
-    margin-bottom: 10px;
-    margin-top: -15px;
-    position: relative;
-}
+	.myavatar {
+		margin-bottom: 10px;
+		margin-top: -15px;
+		position: relative;
+	}
 
-.fr-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: #e74c3c;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--background-color, #111);
-    pointer-events: none;
-}
+	.fr-badge {
+		position: absolute;
+		top: -4px;
+		right: -4px;
+		background: #e74c3c;
+		color: #fff;
+		font-size: 10px;
+		font-weight: 700;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 2px solid var(--background-color, #111);
+		pointer-events: none;
+	}
 
-.avatar {
-    height: 55px;
-    object-fit: cover;
-}
+	.avatar {
+		height: 55px;
+		object-fit: cover;
+	}
 
-.custom {
-    height: 40px !important;
-    border-radius: 5px;
-    max-width: 40px;
-    object-fit: cover;
-
-}
+	.custom {
+		height: 40px !important;
+		border-radius: 5px;
+		max-width: 40px;
+		object-fit: cover;
+	}
 </style>
