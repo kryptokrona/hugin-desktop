@@ -748,24 +748,15 @@
 		<TrafficLights />
 		<Toaster />
 
-		{#if $layoutState.showNodeSelector}
-			<div class="backdrop">
-				<NodeSelector
-					goBack={() => ($layoutState.showNodeSelector = false)}
-					onConnect={(e) => {
-						$layoutState.showNodeSelector = false;
-						$misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) };
-						window.api.switchNode(e.node);
-					}}
-				/>
-			</div>
-		{/if}
+
 
 		{#if ready}
 			<StoreFunctions />
 			{#if startAnimation}
 				<div class="shine"></div>
 			{/if}
+
+			{@render children?.()}
 
 			{#if $swarm.active.length}
 				<Conference />
@@ -814,7 +805,18 @@
 				<Updater />
 			{/if}
 
-			{@render children?.()}
+			{#if $layoutState.showNodeSelector}
+				<div class="backdrop">
+					<NodeSelector
+						goBack={() => ($layoutState.showNodeSelector = false)}
+						onConnect={(e) => {
+							$layoutState.showNodeSelector = false;
+							$misc.node = { node: e.node.split(':')[0], port: parseInt(e.node.split(':')[1]) };
+							window.api.switchNode(e.node);
+						}}
+					/>
+				</div>
+			{/if}
 		{/if}
 
 		<VoiceChannel />
@@ -857,5 +859,6 @@
 		width: 100%;
 		background-color: var(--backgound-color, rgba(0, 0, 0, 0.5));
 		z-index: 9999;
+		-webkit-app-region: no-drag;
 	}
 </style>

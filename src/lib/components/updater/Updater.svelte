@@ -131,6 +131,7 @@ run(() => {
     padding: 2rem;
     background-color: var(--card-background);
     border-left: 1px solid var(--border-color);
+    -webkit-app-region: no-drag;
 }
 
 .close {
@@ -152,6 +153,7 @@ run(() => {
     justify-content: space-between;
     width: 100%;
     height: 100%;
+    -webkit-app-region: no-drag;
 
     p {
         margin-bottom: 1rem;
@@ -162,6 +164,7 @@ run(() => {
     display: inline-flex;
     gap: 1rem;
     width: 100%;
+    -webkit-app-region: no-drag;
 }
 
 .goal {
@@ -196,14 +199,14 @@ run(() => {
     position: fixed;
     display: flex;
     justify-content: end;
-
     top: 0;
     bottom: 0;
     left: 0;
     width: 100%;
     background-color: var(--backdrop-color);
     backdrop-filter: blur(4px);
-    z-index: 103;
+    z-index: 9999999;
     border-radius: 15px;
+    -webkit-app-region: no-drag;
 }
 </style>

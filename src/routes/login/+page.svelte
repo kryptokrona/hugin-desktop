@@ -289,6 +289,7 @@
 
 	/* Keep popups and any explicit interactive zones clickable */
 	:global(.no-drag),
+	:global(.backdrop),
 	:global(button),
 	:global(input),
 	:global(textarea),
