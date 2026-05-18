@@ -230,6 +230,7 @@
 		align-items: center;
 		position: fixed;
 		z-index: 100;
+		top: 0;
 	}
 
 	.nav {
