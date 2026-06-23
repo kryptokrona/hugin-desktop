@@ -510,7 +510,7 @@ async function decrypt_hugin_messages(list, que = false) {
 	for (const message of list) {
 		try {
 			const thisHash = message.hash;
-			const thisExtra = '99' + thisHash + message.cipher;
+			const thisExtra = message.cipher;
 
 			if (!validate_extra(thisExtra, thisHash, que)) continue;
 			if (thisExtra !== undefined && thisExtra.length > 200) {
@@ -534,6 +534,7 @@ async function decrypt_hugin_messages(list, que = false) {
 
 //Try decrypt extra data
 async function check_for_pm_message(thisExtra, que = false) {
+
 	let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair());
 	if (!message) return false;
 	if (message.type === 'sealedbox' || 'box') {
@@ -810,7 +811,7 @@ async function encrypt_hugin_message(
 	const viewTag = hashDerivation.substring(0, 2);
 	const call = roomCall ? await key_derivation_hash(toAddr) : false;
 
-	if (sealed) {
+	if (sealed) {		
 		let signature = await xkrUtils.signMessage(message, xkr_private_key);
 		let payload_json = {
 			from: my_address,
@@ -821,13 +822,11 @@ async function encrypt_hugin_message(
 			call
 		};
 		let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-		box = new naclSealed.sealedbox(
-			payload_json_decoded,
-			nonceFromTimestamp(timestamp),
-			hexToUint(messageKey)
-		);
+
+		box = nacl.secretbox(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(outDerivation));
 
 		if (roomCall) {
+			// todo not sure
 			box = encrypt_sealed_box(messageKey, payload_json_decoded);
 		}
 	} else if (!sealed) {
@@ -1058,56 +1057,6 @@ async function send_group_message(message, offchain = false, swarm = false) {
 			time: message.t
 		});
 	}
-}
-
-async function decryptRtcMessage(message) {
-	let hash = message.substring(0, 64);
-	let newMsg = await extraDataToMessage(message, known_keys, keychain.getXKRKeypair());
-
-	if (newMsg) {
-		newMsg.sent = false;
-	}
-
-	let group = newMsg.msg.msg;
-
-	if (group && 'key' in group) {
-		if (group.key === undefined) return;
-		let invite_key = sanitizeHtml(group.key);
-		if (invite_key.length !== 64) return;
-
-		Hugin.send('group-call', { invite_key, group });
-
-		if (group.type == 'invite') {
-			console.log('Group invite, thanks.');
-			return;
-		}
-
-		sleep(100);
-
-		let video = false;
-		if (group.type === true) {
-			video = true;
-		}
-
-		let invite = true;
-		group.invite.forEach((call) => {
-			let contact = sanitizeHtml(call);
-			if (contact.length !== 163) {
-				Hugin.send('error-notify-message', 'Error reading invite address');
-			}
-			console.log('Invited to call, joining...');
-			Hugin.send('start-call', contact, video, invite);
-			sleep(1500);
-		});
-
-		return;
-	} else {
-		console.log('Not an invite');
-	}
-
-	if (!newMsg) return;
-
-	save_message(newMsg, true);
 }
 
 const check_balance = async () => {
