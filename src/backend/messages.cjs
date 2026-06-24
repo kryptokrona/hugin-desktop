@@ -811,36 +811,25 @@ async function encrypt_hugin_message(
 	const viewTag = hashDerivation.substring(0, 2);
 	const call = roomCall ? await key_derivation_hash(toAddr) : false;
 
-	if (sealed) {		
-		let signature = await xkrUtils.signMessage(message, xkr_private_key);
-		let payload_json = {
-			from: my_address,
-			k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
-			msg: message,
-			s: signature,
-			name: Hugin.nickname,
-			call
-		};
-		let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
+	// if (sealed) {		
+	let signature = await xkrUtils.signMessage(message, xkr_private_key);
+	let payload_json = {
+		from: my_address,
+		k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
+		msg: message,
+		s: signature,
+		name: Hugin.nickname,
+		call
+	};
+	let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
 
-		box = nacl.secretbox(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(outDerivation));
+	box = nacl.secretbox(payload_json_decoded, nonceFromTimestamp(timestamp), hexToUint(outDerivation));
 
-		if (roomCall) {
-			// todo not sure
-			box = encrypt_sealed_box(messageKey, payload_json_decoded);
-		}
-	} else if (!sealed) {
-		console.log('Has history, not using sealedbox');
-		let payload_json = { from: my_address, msg: message };
-		let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-
-		box = nacl.box(
-			payload_json_decoded,
-			nonceFromTimestamp(timestamp),
-			hexToUint(messageKey),
-			keychain.getKeyPair().secretKey
-		);
+	if (roomCall) {
+		// todo not sure
+		box = encrypt_sealed_box(messageKey, payload_json_decoded);
 	}
+	
 	//Box object
 	let payload_box = {
 		box: Buffer.from(box).toString('hex'),
