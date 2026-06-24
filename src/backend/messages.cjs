@@ -778,7 +778,7 @@ async function send_message(
 		//Offchain messages
 		let random_key = randomKey();
 		let sentMsg = Buffer.from(payload_hex, 'hex');
-		let sendMsg = random_key + '99' + sentMsg;
+		let sendMsg = sentMsg;
 		if (beam_this) {
 			send_swarm_message(sendMsg, address, true);
 		}
@@ -1028,7 +1028,7 @@ async function send_group_message(message, offchain = false, swarm = false) {
 			sent: true,
 			tip: message.tip || false
 		};
-		let webRTCmessage = random_key + '99' + rtcMessage;
+		let webRTCmessage = rtcMessage;
 		if (swarm) {
 			console.log('Send to swarm!', swarm_msg);
 			send_swarm_message(JSON.stringify(swarm_msg), group);
