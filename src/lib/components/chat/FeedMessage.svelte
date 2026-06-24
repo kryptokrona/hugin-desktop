@@ -88,7 +88,7 @@ let geturl = new RegExp(
             ,"g"
         );
 
-let offchain = $state(false)
+let p2p = $state(false)
 let thisReply = $state(false)
 let replyError = $state(false)
 let timeformat = $state("HH:mm")
@@ -155,7 +155,7 @@ function checkMessage() {
 async function checkreply(reply) {
     let group_reply
     
-    if (offchain) {
+    if (p2p) {
         group_reply = $rtcgroupMessages.find((a) => a.hash == reply)
         if (group_reply) {
             group_reply.hash = group_reply.hash + hashPadding()

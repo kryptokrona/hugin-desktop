@@ -6,7 +6,6 @@ export const user = writable({
 	loggedIn: false,
 	username: 'Anon',
 	activeChat: false,
-	huginAddress: '',
 	myAddress: '',
 	callerMenu: false,
 	contacts: [],
@@ -195,7 +194,7 @@ export const keyboard = writable({
 });
 
 export const userAvatar = derived(user, ($user) => {
-	if ($user.huginAddress.length > 15) {
+	if ($user.myAddress.length > 15) {
 		return get_avatar($user.myAddress);
 	}
 });

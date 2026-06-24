@@ -15,7 +15,6 @@ let nicknameField
 let enableButton = $state(false)
 let nickname = $state('')
 let addr = $state()
-let pubkey = $state()
 let text = $state('')
 let myAddress
 let avatar = $state()
@@ -48,9 +47,8 @@ onDestroy(() => {
 
 run(() => {
     if (text.length > 98) {
-        // spilt input to addr and pubkey
+        // xkr address is 99 chars; ignore any legacy nacl-key suffix
         addr = text.substring(0, 99)
-        pubkey = text.substring(99, 163)
         text = addr
 
         avatar = get_avatar(addr)
@@ -62,7 +60,7 @@ const handleAdd = () => {
     AddChat({
         name: nickname,
         chat: addr,
-        key: pubkey,
+        key: '',
         msg: t('newFriendAdded') || 'New friend added!',
         sent: true,
         timestamp: Date.now().toString(),
@@ -79,12 +77,11 @@ const close = () => {
 
 run(() => {
     //Handle state of the button, disabled by default, when enabled RGB class will be added.
-    enableButton = !!(addr && pubkey)
+    enableButton = !!(addr && addr.length === 99)
 
     ///Empty fields if input is empty
     if (!text) {
         addr = ''
-        pubkey = ''
     }
 });
 
@@ -103,7 +100,7 @@ run(() => {
 <div onclick={self(bubble('click'))} in:fade|global="{{ duration: 70 }}" out:fade|global="{{ duration: 100 }}" class="backdrop">
     <div in:fly|global="{{ y: 20 }}" out:fade|global class="field">
         {#if step === 1}
-            {#if pubkey}
+            {#if addr}
                 <img
                     in:fade|global
                     style="margin-left: -5px"
@@ -132,9 +129,9 @@ run(() => {
         {/if}
     </div>
 
-    {#if pubkey && step === 2}
+    {#if addr && step === 2}
         <div in:fade|global class="field">
-            {#if pubkey}
+            {#if addr}
                 <img
                     style="margin-left: -5px"
                     class="avatar"

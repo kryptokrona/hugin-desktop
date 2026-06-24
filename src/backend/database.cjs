@@ -624,7 +624,11 @@ const changeBool = (b) => {
     return b ? 1 : 0
 }
 
-const saveMsg = async (message, addr, sent, timestamp, offchain) => {
+// p2p === true  → message came via the swarm/beam channel.
+// p2p === false → message came via the push node relay.
+// Note: the value is echoed back on the returned object for the UI; it is
+// NOT persisted (no `p2p`/`offchain` column on the messages table).
+const saveMsg = async (message, addr, sent, timestamp, p2p) => {
 
     //Call offer message
     switch (message.substring(0, 1)) {
@@ -638,7 +642,7 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
     }
 
     sent = changeBool(sent)
-    
+
     //Save to DB
         database.prepare(
             `REPLACE INTO messages
@@ -646,13 +650,13 @@ const saveMsg = async (message, addr, sent, timestamp, offchain) => {
             VALUES
                 (?, ?, ?, ?, ?)`
         ).run([message, addr, sent, timestamp, sent])
-    
+
     let newMsg = {
         message: message,
         conversation: addr,
         sent: sent,
         timestamp: timestamp,
-        offchain: offchain,
+        p2p: p2p,
     }
 
     return newMsg

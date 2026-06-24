@@ -1,4 +1,4 @@
-const { keychain, encrypt_sealed_box } = require('./crypto.cjs');
+const { keychain } = require('./crypto.cjs');
 const {
 	loadKnownTxs,
 	saveHash,
@@ -58,11 +58,9 @@ const {
 } = require('./swarm.cjs');
 
 const { Address, Crypto, CryptoNote } = require('kryptokrona-utils');
-const { extraDataToMessage } = require('hugin-crypto');
+const hc = require('hugin-crypto');
 const { default: fetch } = require('electron-fetch');
-const naclUtil = require('tweetnacl-util');
-const nacl = require('tweetnacl');
-const naclSealed = require('tweetnacl-sealed-box');
+const sodium = require('sodium-native');
 const { sanitizeHtml } = require('./utils.cjs');
 const crypto = new Crypto();
 const xkrUtils = new CryptoNote();
@@ -74,7 +72,6 @@ const store = new Store();
 const { Notification } = require('electron');
 
 let known_pool_txs = [];
-let known_keys = [];
 let block_list = [];
 let incoming_messages = [];
 let incoming_pm_que = [];
@@ -105,10 +102,6 @@ ipcMain.on('notify-dm', (e, data) => {
 		icon: 'src/static/icon.png'
 	});
 	notification.show();
-});
-
-ipcMain.on('send-group-message', (e, msg, offchain, swarm) => {
-	send_group_message(msg, offchain, swarm);
 });
 
 ipcMain.on('send-room-message', (e, m) => {
@@ -259,23 +252,21 @@ ipcMain.handle('get-messages', async (data) => {
 	return await getMessages();
 });
 
-ipcMain.on('send-msg', (e, msg, receiver, off_chain, grp, beam, call, timestamp) => {
-	send_message(msg, receiver, off_chain, grp, beam, call, timestamp);
+ipcMain.on('send-msg', (e, msg, receiver, p2p, grp, beam, call, timestamp) => {
+	send_message(msg, receiver, p2p, grp, beam, call, timestamp);
 });
 
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
-	console.log('add-chat', hugin_address.length);
-	console.log('hugin_address', hugin_address);
-	if (typeof hugin_address !== 'string' || hugin_address.length !== 163) {
+	//The contact id is the 99-char xkr address (tolerate a legacy 163 string).
+	const chat = typeof hugin_address === 'string' ? hugin_address.substring(0, 99) : '';
+	if (chat.length !== 99) {
 		Hugin.send('error-notify-message', 'Invalid contact length');
 		return;
 	}
-	save_contact(hugin_address, nickname, first);
-	const chat = hugin_address.substring(0, 99);
+	save_contact(chat, nickname, first);
 	const key = await key_derivation_hash(chat);
-	console.log('hugin_address', hugin_address);
-	new_swarm({ key }, true, hugin_address);
+	new_swarm({ key }, true, chat);
 });
 
 // ipcMain.handle('get-friend-requests', async () => {
@@ -322,28 +313,10 @@ ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
 // })
 
 ipcMain.on('remove-contact', async (e, contact) => {
-	const contacts = await getContacts();
-	const removedKeys = contacts
-		.filter((entry) => entry && entry.address === contact)
-		.map((entry) => entry.key);
 	removeContact(contact);
 	removeMessages(contact);
 	end_swarm(contact, true);
-	if (removedKeys.length) {
-		known_keys = known_keys.filter((key) => !removedKeys.includes(key));
-		Hugin.known_keys = Hugin.known_keys.filter((key) => !removedKeys.includes(key));
-	}
 	Hugin.send('sent');
-});
-
-//WEBRTC MESSAGES
-
-ipcMain.on('decrypt_message', async (e, message) => {
-	decryptRtcMessage(message);
-});
-
-ipcMain.on('decrypt_rtc_group_message', async (e, message, key) => {
-	decryptGroupRtcMessage(message, key);
 });
 
 ipcMain.on('get-sdp', (e, data) => {
@@ -368,7 +341,6 @@ ipcMain.on('beam', async (e, chat) => {
 	let beamMessage = new_swarm({ key }, true, chat);
 	if (beamMessage === 'Error') return;
 	if (!beamMessage) return;
-	// if (beam) send_message(beamMessage.msg, beamMessage.chat, offchain)
 });
 
 //SWARM
@@ -419,7 +391,6 @@ const start_message_syncer = async () => {
 	});
 	Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub);
 	await sleep(5000);
-	known_keys = Hugin.known_keys;
 	block_list = Hugin.block_list;
 	await background_sync_messages(await load_checked_txs());
 	while (true) {
@@ -515,13 +486,8 @@ async function decrypt_hugin_messages(list, que = false) {
 			if (!validate_extra(thisExtra, thisHash, que)) continue;
 			if (thisExtra !== undefined && thisExtra.length > 200) {
 				if (!saveHash(thisHash)) continue;
-				//Check for viewtag
-
-				if (await check_for_viewtag(thisExtra)) {
-					await check_for_pm_message(thisExtra, que);
-					continue;
-				}
-				//Check for private message //TODO remove this when viewtags are active
+				//Check for private message (ephemeral friend-request box; the
+				//view tag is matched against our view key inside the decrypt).
 				if (await check_for_pm_message(thisExtra, que)) continue;
 				//Check for group message
 				if (await check_for_group_message(thisExtra, thisHash, que)) continue;
@@ -532,19 +498,27 @@ async function decrypt_hugin_messages(list, que = false) {
 	}
 }
 
-//Try decrypt extra data
+//Try decrypt extra data as an ephemeral, signed PM box (hugin-crypto)
 async function check_for_pm_message(thisExtra, que = false) {
-	let message = await extraDataToMessage(thisExtra, known_keys, keychain.getXKRKeypair());
-	if (!message) return false;
-	if (message.type === 'sealedbox' || 'box') {
-		message.sent = false;
-		if (que) {
-			incoming_pm_que.push(message);
-			return true;
-		}
-		await save_message(message);
+	const wire = hc.decodeExtra(thisExtra);
+	if (!wire || !wire.vt || !wire.txKey) return false;
+	const [, privateViewKey] = keychain.getPrivKeys();
+	const decrypted = await hc.openFriendRequest(wire, { privateViewKey });
+	if (!decrypted) return false;
+	const message = {
+		from: decrypted.from,
+		msg: decrypted.msg,
+		name: decrypted.name,
+		t: decrypted.t,
+		type: 'sealedbox',
+		sent: false
+	};
+	if (que) {
+		incoming_pm_que.push(message);
 		return true;
 	}
+	await save_message(message);
+	return true;
 }
 
 async function clear_pm_que() {
@@ -561,25 +535,6 @@ async function clear_group_que() {
 		await decrypt_group_message(message, message.hash);
 	}
 	incoming_group_que = [];
-}
-//Checks the message for a view tag
-async function check_for_viewtag(extra) {
-	try {
-		const rawExtra = trimExtra(extra);
-		const parsed_box = JSON.parse(rawExtra);
-		if (parsed_box.vt) {
-			const [privateSpendKey, privateViewKey] = keychain.getPrivKeys();
-			const derivation = await crypto.generateKeyDerivation(parsed_box.txKey, privateViewKey);
-			const hashDerivation = await crypto.cn_fast_hash(derivation);
-			const possibleTag = hashDerivation.substring(0, 2);
-			const view_tag = parsed_box.vt;
-			if (possibleTag === view_tag) {
-				console.log('**** FOUND VIEWTAG ****');
-				return true;
-			}
-		}
-	} catch (err) {}
-	return false;
 }
 
 //Checks if hugin message is from a group
@@ -700,27 +655,27 @@ async function generate_push_view_tag(address, call) {
 	return call ? hash : hash.substring(0, 3);
 }
 
+// Routing for a private message:
+//   p2p === false  → relay via the hugin push node (default).
+//   p2p === true   → direct over the swarm/beam channel (no node).
 async function send_message(
 	message,
 	receiver,
-	off_chain = false,
+	p2p = false,
 	group = false,
 	beam_this = false,
 	call = false,
 	forced_timestamp = false
 ) {
-	//Assert address length
-	if (receiver.length !== 163) {
-		return;
-	}
 	if (message.length === 0) {
 		return;
 	}
 
-	//Split address and check history
-	let address = receiver.substring(0, 99);
-	let messageKey = receiver.substring(99, 163);
-	let has_history = await check_history(messageKey, address);
+	//xkr address only — tolerate a legacy 163-char string by taking the address part.
+	const address = typeof receiver === 'string' ? receiver.substring(0, 99) : '';
+	if (address.length !== 99) {
+		return;
+	}
 
 	let timestamp = Date.now();
 	if (forced_timestamp !== false && forced_timestamp !== undefined && forced_timestamp !== null) {
@@ -729,17 +684,13 @@ async function send_message(
 			timestamp = parsed;
 		}
 	}
-	let payload_hex;
-	let seal = has_history ? false : true;
-	if (!off_chain) seal = true;
-
-	payload_hex = await encrypt_hugin_message(message, messageKey, seal, address, call);
+	const payload_hex = await encrypt_hugin_message(message, address);
 	//Choose subwallet with message inputs
 	const viewtag = await generate_push_view_tag(address, call);
 
 	const saveThisMessage = {
 		message,
-		key: messageKey,
+		key: '',
 		sent: true,
 		timestamp: String(timestamp),
 		conversation: address,
@@ -747,11 +698,12 @@ async function send_message(
 		tip: ''
 	};
 
-	if (!off_chain) {
-		// Save immediately so the message isn't lost if the app closes mid-send.
+	if (!p2p) {
+		// Node-relayed: save immediately so the message isn't lost if the app
+		// closes mid-send.
 		await save_message(saveThisMessage, true);
 
-		// Send to node. If it fails, remove from DB
+		// Send to push node. If it fails, remove from DB
 		const sent = await Promise.race([
 			Nodes.message(payload_hex, viewtag, call ? 'call' : 'dm'),
 			sleep(200000).then(() => ({ success: false, reason: 'Timeout' }))
@@ -773,85 +725,30 @@ async function send_message(
 			}
 			return;
 		}
-	} else if (off_chain) {
-		//Offchain messages
-		let random_key = randomKey();
-		let sentMsg = Buffer.from(payload_hex, 'hex');
-		let sendMsg = random_key + '99' + sentMsg;
+	} else if (p2p) {
+		// P2P (swarm/beam): ship the cipher as-is. The deterministic
+		// content-addressed id (hc.messageHash) lets both sides identify the
+		// message without a randomKey prefix riding along on the wire.
 		if (beam_this) {
-			send_swarm_message(sendMsg, address, true);
+			send_swarm_message(payload_hex, address, true);
 		}
-	}
-	if (!has_history) {
-		known_keys.push(messageKey);
 	}
 	save_message(saveThisMessage, true);
 }
 
-async function encrypt_hugin_message(
-	message,
-	messageKey,
-	sealed = false,
-	toAddr,
-	roomCall = false
-) {
-	let timestamp = Date.now();
-	let my_address = Hugin.wallet.getPrimaryAddress();
-	const addr = await Address.fromAddress(toAddr);
-	const [privateSpendKey, privateViewKey] = keychain.getPrivKeys();
-	let xkr_private_key = privateSpendKey;
-	let box;
-
-	//Create the view tag using a one time private key and the receiver view key
-	const keys = await crypto.generateKeys();
-	const toKey = addr.m_keys.m_viewKeys.m_publicKey;
-	const outDerivation = await crypto.generateKeyDerivation(toKey, keys.private_key);
-	const hashDerivation = await crypto.cn_fast_hash(outDerivation);
-	const viewTag = hashDerivation.substring(0, 2);
-	const call = roomCall ? await key_derivation_hash(toAddr) : false;
-
-	if (sealed) {
-		let signature = await xkrUtils.signMessage(message, xkr_private_key);
-		let payload_json = {
-			from: my_address,
-			k: Buffer.from(keychain.getKeyPair().publicKey).toString('hex'),
-			msg: message,
-			s: signature,
-			name: Hugin.nickname,
-			call
-		};
-		let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-		box = new naclSealed.sealedbox(
-			payload_json_decoded,
-			nonceFromTimestamp(timestamp),
-			hexToUint(messageKey)
-		);
-
-		if (roomCall) {
-			box = encrypt_sealed_box(messageKey, payload_json_decoded);
-		}
-	} else if (!sealed) {
-		console.log('Has history, not using sealedbox');
-		let payload_json = { from: my_address, msg: message };
-		let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-
-		box = nacl.box(
-			payload_json_decoded,
-			nonceFromTimestamp(timestamp),
-			hexToUint(messageKey),
-			keychain.getKeyPair().secretKey
-		);
-	}
-	//Box object
-	let payload_box = {
-		box: Buffer.from(box).toString('hex'),
-		t: timestamp,
-		txKey: keys.public_key,
-		vt: viewTag
-	};
-	// Convert json to hex
-	let payload_hex = toHex(JSON.stringify(payload_box));
-	return payload_hex;
+async function encrypt_hugin_message(message, toAddr) {
+	// Every PM is an ephemeral, signed friend-request-style box: a fresh one-time
+	// key derives the secret from the recipient's view key, so each message has a
+	// unique view tag (unlinkable on-chain) and is authenticated by our signature.
+	const my_address = Hugin.wallet.getPrimaryAddress();
+	const [privateSpendKey] = keychain.getPrivKeys();
+	const wire = await hc.createFriendRequest({
+		message,
+		sender: { address: my_address, privateSpendKey },
+		toAddress: toAddr,
+		name: Hugin.nickname
+	});
+	return hc.encodeExtra(wire);
 }
 
 async function send_room_message(message) {
@@ -874,9 +771,10 @@ async function generate_room_view_tag(room) {
 async function send_room_message_push(message) {
 	try {
 		const roomKey = message.room.substring(0, 64);
-		const secretKey = keychain.getNaclKeys(roomKey).secretKey;
+		// secretbox key = the 32-byte room key itself.
+		const key = Buffer.from(hexToUint(roomKey));
 
-		let payload_message = {
+		const payload_message = {
 			message: message.message,
 			reply: message.reply,
 			tip: message.tip || '',
@@ -884,30 +782,33 @@ async function send_room_message_push(message) {
 			name: message.name,
 			address: message.address
 		};
-
-		let payload_message_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_message));
+		const payload_bytes = Buffer.from(JSON.stringify(payload_message));
 
 		const timestamp = message.timestamp;
-		const nonce = nonceFromTimestamp(timestamp);
+		const nonce = Buffer.from(nonceFromTimestamp(timestamp));
 
-		let secretbox = nacl.secretbox(payload_message_decoded, nonce, secretKey);
+		// inner: libsodium secretbox keyed by the room key
+		const inner = Buffer.alloc(payload_bytes.length + sodium.crypto_secretbox_MACBYTES);
+		sodium.crypto_secretbox_easy(inner, payload_bytes, nonce, key);
 
-		let payload_json = {
-			box: Buffer.from(secretbox).toString('hex'),
+		const payload_json = {
+			box: inner.toString('hex'),
 			viewTag: await generate_room_view_tag(message.room)
 		};
+		const payload_json_bytes = Buffer.from(JSON.stringify(payload_json));
 
-		let payload_json_decoded = naclUtil.decodeUTF8(JSON.stringify(payload_json));
-
-		let box = new naclSealed.sealedbox(
-			payload_json_decoded,
-			nonceFromTimestamp(timestamp),
-			hexToUint('6e18d19b3c94f7c2c4da5dc6f17305f8ab6da33f8beb18e63a0f048d2a21c345')
+		// outer: libsodium anonymous sealed box (never opened client-side; the
+		// node routes the push by the plaintext viewTag arg below).
+		const fixedPub = Buffer.from(
+			'6e18d19b3c94f7c2c4da5dc6f17305f8ab6da33f8beb18e63a0f048d2a21c345',
+			'hex'
 		);
+		const sealed = Buffer.alloc(payload_json_bytes.length + sodium.crypto_box_SEALBYTES);
+		sodium.crypto_box_seal(sealed, payload_json_bytes, fixedPub);
 
 		//Box object
 		let payload_box = {
-			box: Buffer.from(box).toString('hex'),
+			box: sealed.toString('hex'),
 			t: timestamp
 		};
 		// Convert json to hex
@@ -927,187 +828,6 @@ async function send_room_message_push(message) {
 	} catch (e) {
 		console.log('❌ Error sending push:', e);
 	}
-}
-
-async function send_group_message(message, offchain = false, swarm = false) {
-	console.log('Sending group msg!');
-	if (message.m.length === 0) return;
-	const my_address = Hugin.wallet.getPrimaryAddress();
-	const [privateSpendKey, privateViewKey] = keychain.getPrivKeys();
-	const signature = await xkrUtils.signMessage(message.m, privateSpendKey);
-	const timestamp = message.t;
-	const group = message.g;
-	const nonce = nonceFromTimestamp(timestamp);
-	let reply = '';
-
-	if (group === undefined) return;
-	if (group.length !== 64) {
-		return;
-	}
-
-	if (!offchain) {
-		const balance = await check_balance();
-		if (!balance) return;
-	}
-
-	let message_json = {
-		m: message.m,
-		k: my_address,
-		s: signature,
-		g: group,
-		n: Hugin.nickname,
-		r: reply
-	};
-
-	if (message.r) {
-		message_json.r = message.r;
-	}
-
-	if (message.c) {
-		message_json.c = message.c;
-	}
-
-	let [mainWallet, subWallet, messageSubWallet] = Hugin.wallet.getAddresses();
-	const payload_unencrypted = naclUtil.decodeUTF8(JSON.stringify(message_json));
-	const secretbox = nacl.secretbox(payload_unencrypted, nonce, hexToUint(group));
-
-	const payload_encrypted = {
-		sb: Buffer.from(secretbox).toString('hex'),
-		t: timestamp
-	};
-
-	const payload_encrypted_hex = toHex(JSON.stringify(payload_encrypted));
-
-	if (!offchain) {
-		let result = await Hugin.wallet.sendTransactionAdvanced(
-			[[messageSubWallet, 1000]], // destinations,
-			3, // mixin
-			{ fixedFee: 1000, isFixedFee: true }, // fee
-			undefined, //paymentID
-			[subWallet, messageSubWallet], // subWalletsToTakeFrom
-			undefined, // changeAddress
-			true, // relayToNetwork
-			false, // sneedAll
-			Buffer.from(payload_encrypted_hex, 'hex')
-		);
-
-		if (result.success) {
-			const send = sanitize_group_message({
-				message: message_json.m,
-				address: message_json.k,
-				signature: message_json.s,
-				room: message_json.g,
-				name: message_json.n,
-				reply: message_json.r || '',
-				timestamp: String(timestamp),
-				hash: result.transactionHash,
-				tip: message.tip || false
-			});
-			if (!send) return;
-			send.sent = true;
-			send.hash = result.transactionHash;
-			await save_group_message(send, result.transactionHash, timestamp, false, false, false);
-			Hugin.send('sent_group', {
-				hash: result.transactionHash,
-				time: timestamp
-			});
-			known_pool_txs.push(result.transactionHash);
-			saveHash(result.transactionHash);
-		} else {
-			let error = {
-				message: 'Failed to send, please wait a couple of minutes.',
-				name: 'Error',
-				hash: Date.now()
-			};
-			Hugin.send('group-send-error', { message: message.m, group });
-			Hugin.send('error_msg', error);
-
-			console.log(`Failed to send transaction: ${result.error.toString()}`);
-		}
-	} else if (offchain) {
-		//Generate a random hash
-		let hash = message.h;
-		let rtcMessage = Buffer.from(payload_encrypted_hex, 'hex');
-		const swarm_msg = {
-			message: message_json.m,
-			address: message_json.k,
-			signature: message_json.s,
-			room: message_json.g,
-			name: message_json.n,
-			reply: message_json.r || '',
-			timestamp: String(timestamp),
-			hash: hash,
-			sent: true,
-			tip: message.tip || false
-		};
-		let webRTCmessage = random_key + '99' + rtcMessage;
-		if (swarm) {
-			console.log('Send to swarm!', swarm_msg);
-			send_swarm_message(JSON.stringify(swarm_msg), group);
-			save_group_message(swarm_msg, hash, timestamp, false, true, false);
-			Hugin.send('sent_rtc_group', {
-				hash: hash,
-				time: message.t
-			});
-			return;
-		}
-		let messageArray = [webRTCmessage];
-		Hugin.send('rtc_message', [messageArray, true]);
-		Hugin.send('sent_rtc_group', {
-			hash: random_key,
-			time: message.t
-		});
-	}
-}
-
-async function decryptRtcMessage(message) {
-	let hash = message.substring(0, 64);
-	let newMsg = await extraDataToMessage(message, known_keys, keychain.getXKRKeypair());
-
-	if (newMsg) {
-		newMsg.sent = false;
-	}
-
-	let group = newMsg.msg.msg;
-
-	if (group && 'key' in group) {
-		if (group.key === undefined) return;
-		let invite_key = sanitizeHtml(group.key);
-		if (invite_key.length !== 64) return;
-
-		Hugin.send('group-call', { invite_key, group });
-
-		if (group.type == 'invite') {
-			console.log('Group invite, thanks.');
-			return;
-		}
-
-		sleep(100);
-
-		let video = false;
-		if (group.type === true) {
-			video = true;
-		}
-
-		let invite = true;
-		group.invite.forEach((call) => {
-			let contact = sanitizeHtml(call);
-			if (contact.length !== 163) {
-				Hugin.send('error-notify-message', 'Error reading invite address');
-			}
-			console.log('Invited to call, joining...');
-			Hugin.send('start-call', contact, video, invite);
-			sleep(1500);
-		});
-
-		return;
-	} else {
-		console.log('Not an invite');
-	}
-
-	if (!newMsg) return;
-
-	save_message(newMsg, true);
 }
 
 const check_balance = async () => {
@@ -1151,8 +871,10 @@ async function save_group_message(
 	}
 }
 
-//Saves private message
-async function save_message(msg, offchain = false) {
+// Saves a private message.
+//   p2p === true  → delivered via the swarm/beam channel.
+//   p2p === false → delivered via the push node relay.
+async function save_message(msg, p2p = false) {
 	const result = sanitize_pm_message(msg);
 	if (!result.message) return;
 
@@ -1164,14 +886,18 @@ async function save_message(msg, offchain = false) {
 		conversation = msg.conversation;
 	}
 
-	if (msg.type === 'sealedbox' && !sent) {
-		let hugin = conversation + key;
-		await save_contact(hugin);
-		const hash = await key_derivation_hash(conversation);
-		new_swarm({ key: hash }, true, conversation + key);
+	// First message from an unknown sender: save them as a contact and open the
+	// direct (beam) channel. The xkr address is the whole identity now.
+	if (!sent) {
+		const known = (await getContacts()).some((c) => c.address === conversation);
+		if (!known) {
+			await save_contact(conversation, msg.name);
+			const hash = await key_derivation_hash(conversation);
+			new_swarm({ key: hash }, true, conversation);
+		}
 	}
 
-	let newMsg = await saveMsg(message, conversation, sent, timestamp, offchain);
+	let newMsg = await saveMsg(message, conversation, sent, timestamp, p2p);
 	if (sent) {
 		Hugin.send('sent', newMsg);
 		return;
@@ -1180,42 +906,23 @@ async function save_message(msg, offchain = false) {
 	Hugin.send('privateMsg', newMsg);
 }
 
-//Saves contact and nickname to db.
-async function save_contact(hugin_address, nickname = false, first = false) {
-	let name;
-	if (!nickname) {
-		name = 'Anon';
-	} else {
-		name = nickname;
-	}
-	let addr = hugin_address.substring(0, 99);
-	let key = hugin_address.substring(99, 163);
+//Saves contact and nickname to db. Accepts a 99-char xkr address (tolerates a
+//legacy 163-char string by taking the address part).
+async function save_contact(address, nickname = false, first = false) {
+	const name = nickname || 'Anon';
+	const addr = address.substring(0, 99);
 
-	if (known_keys.indexOf(key) == -1) {
-		known_keys.push(key);
-	}
-
-	await saveThisContact(addr, key, name);
+	await saveThisContact(addr, '', name);
 	Hugin.send('saved-addr', addr);
 
 	if (first) {
 		await save_message({
 			message: 'New friend added!',
-			key,
+			key: '',
 			conversation: addr,
 			sent: true,
 			timestamp: Date.now()
 		});
-		known_keys = known_keys.filter((known) => known !== key);
-	}
-}
-
-async function check_history(messageKey, addr) {
-	//Check history
-	if (known_keys.indexOf(messageKey) > -1) {
-		return true;
-	} else {
-		return false;
 	}
 }
 
@@ -1239,7 +946,6 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
 });
 
 module.exports = {
-	check_history,
 	save_message,
 	start_message_syncer,
 	send_message,

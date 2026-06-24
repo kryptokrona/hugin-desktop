@@ -1,6 +1,5 @@
 const { sleep, hexToUint, nonceFromTimestamp, trimExtra, randomKey, parse_call, sanitize_pm_message } = require('./utils.cjs');
-const naclUtil = require('tweetnacl-util')
-const nacl = require('tweetnacl')
+const { createHash } = require('crypto')
 const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
 const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
@@ -9,7 +8,7 @@ const DHT = require('hyperdht')
 const Keychains = require('keypear');
 const { ipcMain } = require('electron');
 const { saveMsg } = require('./database.cjs');
-const { extraDataToMessage } = require('hugin-crypto');
+const hc = require('hugin-crypto');
 const sodium = require('sodium-native')
 
 ipcMain.handle('get-room-invite', async () => {
@@ -20,45 +19,6 @@ ipcMain.handle('message-keypair', async () => {
     return await keychain.messageKeyPair()
 })
 
-const decryptSwarmMessage = async (tx, hash, group_key) => {
-
-    try {
-    let json = JSON.parse(trimExtra(tx))
-    let decryptBox = false
-    let key
-
-        let possibleKey = group_key
-
-        try {
-            decryptBox = nacl.secretbox.open(
-                hexToUint(json.sb),
-                nonceFromTimestamp(json.t),
-                hexToUint(possibleKey)
-            )
-
-        } catch (err) {
-            console.log(err)
-        }
-
-    if (!decryptBox) {
-        return [false]
-    }
-
-    const message_dec = naclUtil.encodeUTF8(decryptBox)
-    const payload_json = JSON.parse(message_dec)
-    const from = payload_json.k
-
-    const verified = await verifySignature(payload_json.m, from, payload_json.s)
-    if (!verified) return [false]
-
-    payload_json.sent = false
-
-    return [payload_json, json.t, hash]
-
-    } catch {
-        return [false]
-    }
-}
 
 const verifySignature = async (message, addr, signature) => {
     try {
@@ -84,29 +44,13 @@ const signMessage = async (message, privateSpendKey) => {
 
 const keychain =  {
 
-    getNaclKeys(privateSpendKey) {
-        const secretKey = hexToUint(privateSpendKey)
-        const keyPair = nacl.box.keyPair.fromSecretKey(secretKey)
-        return keyPair
-    },
-
     getXKRKeypair() {
         const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
         return { privateSpendKey, privateViewKey }
     },
-    
+
     getPrivKeys() {
         return Hugin.wallet.getPrimaryAddressPrivateKeys()
-    },
-    
-    getKeyPair() {
-        const [privateSpendKey, privateViewKey] = keychain.getPrivKeys()
-        return keychain.getNaclKeys(privateSpendKey)
-    },
-    
-    getMsgKey() {
-        const naclPubKey = keychain.getKeyPair().publicKey
-        return Buffer.from(naclPubKey).toString('hex')
     },
 
    async generateDeterministicSubwalletKeys(spendKey, index) {
@@ -124,14 +68,7 @@ const keychain =  {
     
 }
 
-function encrypt_sealed_box(pk, m) {
-  const pub = Buffer.from(pk, 'hex')
-  const cipher = Buffer.alloc(m.length + sodium.crypto_box_SEALBYTES)
-  sodium.crypto_box_seal(cipher, m, pub)
-  return cipher
-}
-
-function create_peer_base_keys(buf) { 
+function create_peer_base_keys(buf) {
     const keypair = DHT.keyPair(buf)
     const keys = Keychains.from(keypair) 
     return keys
@@ -160,8 +97,9 @@ function create_room_invite() {
     return [rand + admin.get().publicKey.toString('hex'), seed]
 }
 
+// SHA-512 (same digest tweetnacl's nacl.hash produced), now via node crypto.
 function naclHash(val) {
-    return nacl.hash(hexToUint(val))
+    return createHash('sha512').update(Buffer.from(hexToUint(val))).digest()
 }
 
 function verify_signature(message, signature, pub) {
@@ -182,12 +120,14 @@ const sign_joined_message = (dht_keys) => {
     return [keys.get().sign(dht_keys.get().publicKey).toString('hex'), keys.publicKey.toString('hex')]
 }
 
-const decrpyt_beam_message = async (str, msgKey) => {
-    let decrypted_message = await extraDataToMessage(str, [msgKey], keychain.getXKRKeypair())
-    decrypted_message.k = msgKey
-    decrypted_message.sent = false
+const decrpyt_beam_message = async (str) => {
+    const wire = hc.decodeExtra(str)
+    if (!wire) return
+    const [, privateViewKey] = keychain.getPrivKeys()
+    const decrypted = await hc.openFriendRequest(wire, { privateViewKey })
+    if (!decrypted) return
 
-    const result = sanitize_pm_message(decrypted_message)
+    const result = sanitize_pm_message({ from: decrypted.from, msg: decrypted.msg, t: decrypted.t, sent: false })
     if (!result.message) return
     
     const newMsg = {
@@ -195,7 +135,7 @@ const decrpyt_beam_message = async (str, msgKey) => {
         conversation: result.conversation,
         sent: false,
         timestamp: result.timestamp,
-        offchain: true,
+        p2p: true,
         beam: true,
     }
 
@@ -205,4 +145,4 @@ const decrpyt_beam_message = async (str, msgKey) => {
 }
 
 
-module.exports = {encrypt_sealed_box, decrpyt_beam_message, sign_admin_message, sign_joined_message, verify_signature, decryptSwarmMessage, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}
+module.exports = {decrpyt_beam_message, sign_admin_message, sign_joined_message, verify_signature, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}

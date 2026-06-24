@@ -38,14 +38,6 @@ let { onShowQR } = $props();
                     <QRIcon />
                 </div>
             </span>
-            <span>
-                <div onclick={() => copyThis($user.huginAddress)}>
-                    <h5>{t('hugin') || 'Hugin'}</h5>
-                </div>
-                <div onclick={() => onShowQR($user.huginAddress)}>
-                    <QRIcon />
-                </div>
-            </span>
         </div>
     {/if}
 </div>

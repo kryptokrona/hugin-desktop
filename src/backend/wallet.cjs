@@ -203,11 +203,9 @@ const startWallet = async (walletName, password) => {
 
 
 const fuseHuginAddress = async () => {
-    //Get primary address and fuse it with our message key to create our hugin address
+    //Our hugin address is just the xkr address now (no nacl message key suffix).
     const address = await js_wallet.getPrimaryAddress()
-    const key = keychain.getMsgKey()
-    const huginAddress = address + key
-    sender('addr', huginAddress)
+    sender('addr', address)
 }
 
 const login = async (walletName, password) => {

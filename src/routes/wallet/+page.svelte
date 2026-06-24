@@ -123,7 +123,7 @@
 
         sending = true;
         const tx = {
-            to: address.substring(0, 99), // Take only the wallet address part
+            to: address,
             amount: Math.floor(parseFloat(amount) * 100000), // Convert to atomic units
             paymentID: paymentId || undefined
         };

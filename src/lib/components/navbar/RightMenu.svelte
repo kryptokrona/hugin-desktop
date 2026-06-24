@@ -53,8 +53,7 @@ run(() => {
     if ($user.activeChat) {
         active_contact = $user.activeChat
         const chat = $user.activeChat.chat || $user.activeChat.conversation || $user.activeChat.address || ''
-        const key = $user.activeChat.key || ''
-        contact = chat + key
+        contact = chat
         basicAvatar = get_avatar(chat)
     } else {
         $user.activeChat = $user.contacts[0]

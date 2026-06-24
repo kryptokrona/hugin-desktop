@@ -1,4 +1,4 @@
-const nacl = require('tweetnacl');
+const { randomBytes } = require('crypto');
 const _sanitize = require('sanitize-html');
 const { Crypto, Keys } = require('kryptokrona-utils');
 
@@ -158,7 +158,7 @@ const hexToUint = (hexString) =>
 	new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
 
 function randomKey() {
-	return Buffer.from(nacl.randomBytes(32)).toString('hex');
+	return randomBytes(32).toString('hex');
 }
 
 async function hash(text) {
@@ -183,7 +183,7 @@ function toHex(str, hex) {
 function nonceFromTimestamp(tmstmp) {
 	let nonce = hexToUint(String(tmstmp));
 
-	while (nonce.length < nacl.box.nonceLength) {
+	while (nonce.length < 24) {
 		let tmp_nonce = Array.from(nonce);
 
 		tmp_nonce.push(0);

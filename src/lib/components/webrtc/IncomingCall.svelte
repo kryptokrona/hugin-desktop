@@ -43,11 +43,11 @@ const handleAnswer = async () => {
     //Variable to activate visual feedback
     answered = true
     let caller = $user.contacts.find((a) => a.chat === thisCall.chat)
-    let offchain = false
+    let p2p = false
     let msg = thisCall.msg
 
     if ($webRTC.groupCall) {
-        offchain = true
+        p2p = true
     }
 
     if ($swarm.voice_channel.size) window.api.exitVoiceChannel()
@@ -60,7 +60,7 @@ const handleAnswer = async () => {
         msg = thisCall.msg.replace("Δ", "Λ")
     }
     //We delay the answerCall for routing purposes
-    window.api.answerCall(msg, thisCall.chat, caller.key, offchain)
+    window.api.answerCall(msg, thisCall.chat, caller.key, p2p)
 
     //We pause the ringtone and destroy the popup
     ringtone.pause()
