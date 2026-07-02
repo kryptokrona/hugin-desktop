@@ -59,6 +59,7 @@ const {
 
 const { Address, Crypto, CryptoNote } = require('kryptokrona-utils');
 const hc = require('hugin-crypto');
+const identity = require('./identity.cjs');
 const { default: fetch } = require('electron-fetch');
 const sodium = require('sodium-native');
 const { sanitizeHtml } = require('./utils.cjs');
@@ -488,7 +489,7 @@ async function decrypt_hugin_messages(list, que = false) {
 				if (!saveHash(thisHash)) continue;
 				//Check for private message (ephemeral friend-request box; the
 				//view tag is matched against our view key inside the decrypt).
-				if (await check_for_pm_message(thisExtra, que)) continue;
+				if (await check_for_pm_message(thisExtra, thisHash, que)) continue;
 				//Check for group message
 				if (await check_for_group_message(thisExtra, thisHash, que)) continue;
 			}
@@ -498,20 +499,58 @@ async function decrypt_hugin_messages(list, que = false) {
 	}
 }
 
-//Try decrypt extra data as an ephemeral, signed PM box (hugin-crypto)
-async function check_for_pm_message(thisExtra, que = false) {
+//Try decrypt extra data as an ephemeral, signed PM box (hugin-crypto v0.2).
+//
+// Two interesting things happen here vs. the pre-PQ version:
+//  1) We hand `openFriendRequest` a `getMessageKey` resolver so it can open
+//     inner-encrypted messages from contacts we already share a secret with.
+//  2) We pass our identity ML-KEM secret as a third arg so hugin-crypto can
+//     auto-decapsulate any kem_ct we find in the outer plaintext.
+// After a successful decrypt, the `handshake` field tells us what to persist:
+//  - peerKemPub  → peer's initial; we encapsulate + stash their messageKey
+//                  and the capsule we owe them on our next send.
+//  - sharedSecret → peer's first reply; hugin-crypto already decapsulated,
+//                   we just store the secret as their messageKey.
+// On-chain receive path. `txHash` is the blockchain tx id from the pool
+// fetch — use it as the message id when present (mirrors mobile's
+// `hashHint || messageHash(extraOrWire)` in syncer.js). Falls back to
+// hugin-crypto's content-addressed messageHash when missing.
+async function check_for_pm_message(thisExtra, txHash, que = false) {
 	const wire = hc.decodeExtra(thisExtra);
 	if (!wire || !wire.vt || !wire.txKey) return false;
 	const [, privateViewKey] = keychain.getPrivKeys();
-	const decrypted = await hc.openFriendRequest(wire, { privateViewKey });
+	const decrypted = await hc.openFriendRequest(
+		wire,
+		{
+			privateViewKey,
+			getMessageKey: async (from) => {
+				const c = await identity.getContactCrypto(from);
+				return c.messageKey || null;
+			},
+		},
+		identity.identitySecretKeyBytes(),
+	);
 	if (!decrypted) return false;
+
+	// Persist handshake progress BEFORE saving so a later outgoing send picks
+	// up the new state.
+	if (decrypted.handshake?.peerKemPub) {
+		identity.onReceivedPeerKemPub(decrypted.from, decrypted.handshake.peerKemPub);
+	} else if (decrypted.handshake?.sharedSecret) {
+		identity.onReceivedKemCapsule(decrypted.from, decrypted.handshake.sharedSecret);
+	}
+
 	const message = {
 		from: decrypted.from,
 		msg: decrypted.msg,
 		name: decrypted.name,
 		t: decrypted.t,
+		// Prefer the blockchain tx hash when we have it (matches mobile
+		// syncer's `hashHint || messageHash(extraOrWire)` policy). Both
+		// clients persist the SAME id for the same on-chain message.
+		hash: txHash || hc.messageHash(thisExtra),
 		type: 'sealedbox',
-		sent: false
+		sent: false,
 	};
 	if (que) {
 		incoming_pm_que.push(message);
@@ -685,6 +724,10 @@ async function send_message(
 		}
 	}
 	const payload_hex = await encrypt_hugin_message(message, address);
+	// Content-addressed message id. Same scheme mobile uses (hugin-crypto
+	// SHA-256 over the wire bytes), so sender + receiver derive identical
+	// ids without coordinating, and dedup is hash-keyed everywhere.
+	const hash = hc.messageHash(payload_hex);
 	//Choose subwallet with message inputs
 	const viewtag = await generate_push_view_tag(address, call);
 
@@ -694,6 +737,7 @@ async function send_message(
 		sent: true,
 		timestamp: String(timestamp),
 		conversation: address,
+		hash,
 		reply: '',
 		tip: ''
 	};
@@ -725,29 +769,52 @@ async function send_message(
 			}
 			return;
 		}
+		// Capsule (if any) is now in the peer's hands — clear it so the next
+		// message doesn't re-ship the same handshake material.
+		identity.markKemCapsuleDelivered(address);
 	} else if (p2p) {
 		// P2P (swarm/beam): ship the cipher as-is. The deterministic
 		// content-addressed id (hc.messageHash) lets both sides identify the
 		// message without a randomKey prefix riding along on the wire.
 		if (beam_this) {
 			send_swarm_message(payload_hex, address, true);
+			// Best-effort delivery — clear the capsule once we've handed it
+			// to the swarm. If the peer never receives it, our local state
+			// stays in "handshake done" anyway; their re-initial would just
+			// trigger a fresh handshake.
+			identity.markKemCapsuleDelivered(address);
 		}
 	}
 	save_message(saveThisMessage, true);
 }
 
 async function encrypt_hugin_message(message, toAddr) {
-	// Every PM is an ephemeral, signed friend-request-style box: a fresh one-time
-	// key derives the secret from the recipient's view key, so each message has a
-	// unique view tag (unlinkable on-chain) and is authenticated by our signature.
+	// Every PM is an ephemeral, signed friend-request-style box (fresh one-time
+	// key → unlinkable view tag per message). Three states layered on top:
+	//   - no shared secret yet         → INITIAL: include our ML-KEM pub
+	//   - have secret + owe a capsule  → FIRST REPLY: include the capsule
+	//                                    AND inner-encrypt with the secret
+	//   - have secret only             → ESTABLISHED: inner-encrypt only
 	const my_address = Hugin.wallet.getPrimaryAddress();
 	const [privateSpendKey] = keychain.getPrivKeys();
-	const wire = await hc.createFriendRequest({
+	const opts = {
 		message,
 		sender: { address: my_address, privateSpendKey },
 		toAddress: toAddr,
-		name: Hugin.nickname
-	});
+		name: Hugin.nickname,
+	};
+	const contactState = await identity.getContactCrypto(toAddr);
+	if (contactState.messageKey) {
+		opts.messageKey = contactState.messageKey;
+		if (contactState.pendingKemCapsule) {
+			opts.kemCiphertext = contactState.pendingKemCapsule;
+		}
+	} else {
+		// Pre-handshake — always include our identity pub so peers that lost
+		// our previous attempt can still close out the handshake.
+		opts.myKemPub = identity.identityPublicKeyBytes();
+	}
+	const wire = await hc.createFriendRequest(opts);
 	return hc.encodeExtra(wire);
 }
 
@@ -878,9 +945,12 @@ async function save_message(msg, p2p = false) {
 	const result = sanitize_pm_message(msg);
 	if (!result.message) return;
 
-	let { message, conversation, key, timestamp, sent } = result;
+	let { message, conversation, key, timestamp, sent, hash } = result;
 
-	if (await messageExists(timestamp)) return;
+	// Dedup on the content-addressed message hash (sender + receiver agree
+	// on it via hugin-crypto). Falls back to timestamp lookup inside
+	// messageExists when hash is missing (synthetic messages / older rows).
+	if (await messageExists(hash || timestamp)) return;
 
 	if (msg.conversation && sent) {
 		conversation = msg.conversation;
@@ -892,12 +962,14 @@ async function save_message(msg, p2p = false) {
 		const known = (await getContacts()).some((c) => c.address === conversation);
 		if (!known) {
 			await save_contact(conversation, msg.name);
-			const hash = await key_derivation_hash(conversation);
-			new_swarm({ key: hash }, true, conversation);
+			// `swarmTopicKey` — not to be confused with the message-id `hash`;
+			// this is the per-conversation derivation that seeds the beam topic.
+			const swarmTopicKey = await key_derivation_hash(conversation);
+			new_swarm({ key: swarmTopicKey }, true, conversation);
 		}
 	}
 
-	let newMsg = await saveMsg(message, conversation, sent, timestamp, p2p);
+	let newMsg = await saveMsg(message, conversation, sent, timestamp, p2p, hash);
 	if (sent) {
 		Hugin.send('sent', newMsg);
 		return;

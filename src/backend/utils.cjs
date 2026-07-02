@@ -229,13 +229,18 @@ const sanitize_pm_message = (msg) => {
 	let timestamp = sanitizeHtml(msg.t ?? msg.timestamp);
 	let key = sanitizeHtml(msg.k ?? msg.key);
 	let message = sanitizeHtml(msg.msg || msg.message);
+	// hugin-crypto messageHash (SHA-256) — 64 lowercase hex chars. Stays ''
+	// when the message arrived from a path that doesn't carry the wire bytes
+	// (legacy paths / synthetic messages); save_message tolerates the empty.
+	let hash = typeof msg.hash === 'string' ? sanitizeHtml(msg.hash) : '';
 	if (message?.length > 777 || (msg.msg === undefined && msg.message === undefined)) return [false];
 	if (addr?.length > 99 || addr === undefined) return [false];
 	if (typeof sent !== 'boolean') return [false];
 	if (timestamp?.length > 25) return [false];
 	if (key?.length > 64) return [false];
+	if (hash.length > 64) return [false];
 
-	return { message, conversation: addr, key, timestamp, sent };
+	return { message, conversation: addr, key, timestamp, sent, hash };
 };
 
 const sanitize_join_swarm_data = (data) => {
