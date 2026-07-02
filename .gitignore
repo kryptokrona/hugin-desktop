@@ -263,3 +263,6 @@ fabric.properties
 .DS_Store
 
 package-lock.json
+
+# direnv / nix dev shell
+.direnv/
