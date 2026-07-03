@@ -110,6 +110,33 @@ const migrateSchema = () => {
     try { database.prepare('ALTER TABLE messages ADD COLUMN reply TEXT DEFAULT ""').run() } catch (e) {}
     try { database.prepare('ALTER TABLE messages ADD COLUMN tip TEXT').run() } catch (e) {}
     try { database.prepare('ALTER TABLE messages ADD COLUMN status TEXT DEFAULT "success"').run() } catch (e) {}
+    // Restore any contact row that was silently wiped by the pre-fix
+    // saveThisContact -> REPLACE INTO / UNIQUE(key) collision path. If we
+    // have message history for an address but no contacts row for it, mint
+    // a stub row so the DM shows up in the sidebar again. Name will be
+    // 'Anon' — the peer will get their real name back the next time they
+    // send a message (check_for_pm_message updates it via save_contact).
+    try {
+        const orphans = database.prepare(`
+            SELECT DISTINCT conversation AS address
+            FROM messages
+            WHERE conversation IS NOT NULL
+              AND length(conversation) = 99
+              AND conversation NOT IN (SELECT address FROM contacts WHERE address IS NOT NULL)
+        `).all()
+        for (const row of orphans) {
+            try {
+                database.prepare(
+                    'INSERT INTO contacts (address, key, name) VALUES (?, NULL, ?)'
+                ).run([row.address, 'Anon'])
+                console.log(`[db] Backfilled orphaned conversation as contact: ${row.address}`)
+            } catch (err) {
+                console.log(`[db] Backfill failed for ${row.address}:`, err)
+            }
+        }
+    } catch (err) {
+        console.log('[db] Orphaned-contact backfill migration failed:', err)
+    }
 }
 
 const welcomeAddress =
@@ -1285,21 +1312,35 @@ const getLatestRoomHashes = async (key) => {
 
 
 const saveThisContact = async (addr, key, name) => {
-
-    console.log("SAVDE THIS contact")
-
-    let contacts = await getContacts()
-    //Remove the old contact key if we have the address saved, we assume the new key is valid since the message is signed.
-    if (contacts.some((a) => a.address === addr && a.key !== key)) {
-        removeContact(addr)
+    // Never REPLACE INTO on `contacts` — the UNIQUE(key) constraint on the
+    // key column causes REPLACE to DELETE any other row whose `key` matches
+    // what we're inserting. With every fresh contact being seeded with
+    // key='' (or key=NULL) that path silently wiped existing pre-handshake
+    // chats each time a new contact arrived.
+    //
+    // Semantics now:
+    //   - Row exists for `addr` → UPDATE the display name only. The `key`
+    //     column (ML-KEM shared secret) and other KEM columns are owned by
+    //     updateContactKemState; nothing on this path should touch them.
+    //   - Row does NOT exist → INSERT with key=NULL (multiple NULL keys are
+    //     allowed under UNIQUE(key), whereas '' would collide across
+    //     concurrent pre-handshake contacts). updateContactKemState will
+    //     fill in the real shared secret once the handshake completes.
+    //
+    // The `key` parameter is preserved in the signature for backwards
+    // compatibility with any external caller, but it is deliberately not
+    // written — the sole existing caller (save_contact in messages.cjs)
+    // always passes '' anyway.
+    const existing = database
+        .prepare('SELECT 1 FROM contacts WHERE address = ? LIMIT 1')
+        .get(addr)
+    if (existing) {
+        database.prepare('UPDATE contacts SET name = ? WHERE address = ?').run([name, addr])
+        return
     }
-
     database.prepare(
-        `REPLACE INTO contacts
-         (address, key, name)
-      VALUES
-          (?, ?, ?)`
-    ).run([addr, key, name])
+        'INSERT INTO contacts (address, key, name) VALUES (?, NULL, ?)'
+    ).run([addr, name])
 }
 
 /**
