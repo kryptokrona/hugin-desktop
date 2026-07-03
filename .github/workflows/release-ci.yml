@@ -125,6 +125,15 @@ jobs:
                   node-version: 20
                   cache: pnpm
 
+            - name: Install a fresh node-gyp
+              # electron-rebuild's postinstall shells out to node-gyp. The npm
+              # bundled with Node 20 ships a node-gyp too old to find VS 2022
+              # via the registry on windows-latest runners, so install a modern
+              # one globally before pnpm install. Same pattern the pre-pnpm
+              # workflows used (`npm i node-gyp` before install).
+              run: npm install -g node-gyp@latest
+              shell: bash
+
             - name: Install dependencies
               # --frozen-lockfile: fail if pnpm-lock.yaml drifts from package.json.
               # Releases especially must use the exact lockfile that was reviewed.
