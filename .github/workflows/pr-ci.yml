@@ -2,6 +2,12 @@ name: Hugin Desktop Pull Request Pipeline
 
 on: [pull_request]
 
+env:
+    # Explicit hint for node-gyp on Windows so it doesn't fall back to
+    # registry-detection guesswork inside electron-rebuild's postinstall.
+    # Harmless on Linux/macOS (they ignore it).
+    GYP_MSVS_VERSION: '2022'
+
 concurrency:
   # Cancel any in-flight run on the same PR when a new commit lands.
   group: pr-ci-${{ github.event.pull_request.number }}
@@ -69,14 +75,17 @@ jobs:
                   node-version: 20
                   cache: pnpm
 
-            - name: Install a fresh node-gyp
-              # electron-rebuild's postinstall shells out to node-gyp. The npm
-              # bundled with Node 20 ships a node-gyp too old to find VS 2022
-              # via the registry on windows-latest runners, so we install a
-              # modern one globally before pnpm install. Same pattern the
-              # pre-pnpm workflows used (`npm i node-gyp` before install).
-              run: npm install -g node-gyp@latest
-              shell: bash
+            - name: Set up MSBuild (Windows)
+              # electron-rebuild's postinstall shells out to node-gyp, which
+              # locates a Visual Studio installation via vswhere. On
+              # windows-latest, VS 2022 is installed but node-gyp doesn't
+              # always find MSBuild from a plain shell — this Microsoft-
+              # maintained action puts MSBuild.exe on PATH so the discovery
+              # completes. Paired with `GYP_MSVS_VERSION: 2022` at the
+              # workflow env level to explicitly tell node-gyp which toolset
+              # to look for, removing any registry-detection guesswork.
+              if: matrix.config.os == 'windows-latest'
+              uses: microsoft/setup-msbuild@v2
 
             - name: Install dependencies
               # --frozen-lockfile means "fail if pnpm-lock.yaml is out of sync
