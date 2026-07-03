@@ -205,11 +205,21 @@ function fromHex(hex, str) {
 }
 
 function trimExtra(extra) {
+	// Off-chain (beam/swarm/push-node): the whole string is already bare hex of
+	// JSON — no prefix to strip. Try that first so we don't corrupt payloads
+	// that were never wrapped in a tx-extra prefix.
+	try {
+		let payload = fromHex(extra);
+		JSON.parse(payload);
+		return payload;
+	} catch (e) {}
+	// On-chain: 66-char tx-extra prefix (kryptokrona-service shape).
 	try {
 		let payload = fromHex(extra.substring(66));
-		let payload_json = JSON.parse(payload);
-		return fromHex(extra.substring(66));
+		JSON.parse(payload);
+		return payload;
 	} catch (e) {
+		// On-chain: 78-char prefix (wallet-backend shape).
 		return fromHex(Buffer.from(extra.substring(78)).toString());
 	}
 }

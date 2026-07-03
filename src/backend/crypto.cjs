@@ -143,7 +143,7 @@ const decrpyt_beam_message = async (str) => {
     if (!decrypted) return
 
     if (decrypted.handshake?.peerKemPub) {
-        identity.onReceivedPeerKemPub(decrypted.from, decrypted.handshake.peerKemPub)
+        await identity.onReceivedPeerKemPub(decrypted.from, decrypted.handshake.peerKemPub)
     } else if (decrypted.handshake?.sharedSecret) {
         identity.onReceivedKemCapsule(decrypted.from, decrypted.handshake.sharedSecret)
     }

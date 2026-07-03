@@ -482,7 +482,13 @@ async function decrypt_hugin_messages(list, que = false) {
 	for (const message of list) {
 		try {
 			const thisHash = message.hash;
-			const thisExtra = '99' + thisHash + message.cipher;
+			// hugin-crypto's encodeExtra emits bare hex(JSON) with no prefix —
+			// no need to reconstruct the old on-chain-style '99'+hash prefix
+			// just to have trimExtra() strip it back off. Passing the cipher
+			// straight through also fixes the fallback hc.messageHash(thisExtra)
+			// (used when the relay doesn't supply a hash) matching what the
+			// sender actually hashed (hc.messageHash(payload_hex), unprefixed).
+			const thisExtra = message.cipher;
 
 			if (!validate_extra(thisExtra, thisHash, que)) continue;
 			if (thisExtra !== undefined && thisExtra.length > 200) {
@@ -532,10 +538,23 @@ async function check_for_pm_message(thisExtra, txHash, que = false) {
 	);
 	if (!decrypted) return false;
 
+	// A friend request is the first message we ever see from this address, so
+	// the contacts row doesn't exist yet. Create it now (same bootstrap
+	// save_message does for unknown senders below) BEFORE persisting KEM
+	// state — otherwise onReceivedPeerKemPub/onReceivedKemCapsule below would
+	// UPDATE a non-existent row (silently a no-op) and the derived secret
+	// would be lost the moment save_message inserts the contact afterward.
+	const known = (await getContacts()).some((c) => c.address === decrypted.from);
+	if (!known) {
+		await save_contact(decrypted.from, decrypted.name);
+		const swarmTopicKey = await key_derivation_hash(decrypted.from);
+		new_swarm({ key: swarmTopicKey }, true, decrypted.from);
+	}
+
 	// Persist handshake progress BEFORE saving so a later outgoing send picks
 	// up the new state.
 	if (decrypted.handshake?.peerKemPub) {
-		identity.onReceivedPeerKemPub(decrypted.from, decrypted.handshake.peerKemPub);
+		await identity.onReceivedPeerKemPub(decrypted.from, decrypted.handshake.peerKemPub);
 	} else if (decrypted.handshake?.sharedSecret) {
 		identity.onReceivedKemCapsule(decrypted.from, decrypted.handshake.sharedSecret);
 	}
@@ -806,12 +825,16 @@ async function encrypt_hugin_message(message, toAddr) {
 	const contactState = await identity.getContactCrypto(toAddr);
 	if (contactState.messageKey) {
 		opts.messageKey = contactState.messageKey;
+		console.log(`[ml-kem] Message to ${toAddr} is quantum-encrypted (ML-KEM shared secret).`);
 		if (contactState.pendingKemCapsule) {
 			opts.kemCiphertext = contactState.pendingKemCapsule;
 		}
 	} else {
 		// Pre-handshake — always include our identity pub so peers that lost
-		// our previous attempt can still close out the handshake.
+		// our previous attempt (or haven't replied yet) can still close out
+		// the handshake. Sent on every message until we hold a confirmed
+		// messageKey; onReceivedPeerKemPub on the receiving end is idempotent
+		// once established, so redundant sends are safe.
 		opts.myKemPub = identity.identityPublicKeyBytes();
 	}
 	const wire = await hc.createFriendRequest(opts);

@@ -128,15 +128,29 @@ const contactsTable = () => {
                        -- that, check the "key" column (presence ≡ shared
                        -- secret established).
                        pending_kem_capsule TEXT DEFAULT '',
+                       -- Hex of the peer's ML-KEM public key, as seen the last
+                       -- time we processed a handshake with them. Compared
+                       -- against every incoming kem_pub so that a peer who
+                       -- restored/reinstalled (fresh keypair) triggers a
+                       -- re-encapsulation instead of being silently ignored as
+                       -- a redundant announcement.
+                       peer_kem_pub TEXT DEFAULT '',
                        UNIQUE (key)
                    )`
     return new Promise(
         (resolve, reject) => {
            database.prepare(contactsTable).run()
-           // Idempotent migration for installs created before the column.
+           // Idempotent migrations for installs created before the columns.
            try {
              database.prepare(
                "ALTER TABLE contacts ADD COLUMN pending_kem_capsule TEXT DEFAULT ''"
+             ).run()
+           } catch (_) {
+             // Column already exists.
+           }
+           try {
+             database.prepare(
+               "ALTER TABLE contacts ADD COLUMN peer_kem_pub TEXT DEFAULT ''"
              ).run()
            } catch (_) {
              // Column already exists.
@@ -1305,7 +1319,19 @@ const updateContactKemState = (address, patch) => {
         sets.push('pending_kem_capsule = ?')
         vals.push(patch.pending_kem_capsule)
     }
+    if (patch.peer_kem_pub !== undefined) {
+        sets.push('peer_kem_pub = ?')
+        vals.push(patch.peer_kem_pub)
+    }
     if (sets.length === 0) return
+    // A friend request is the first message we ever see from `address`, so
+    // there's no contacts row yet at this point (save_contact only runs
+    // later, after this handshake state would otherwise be discarded as a
+    // no-op UPDATE). Seed it with key=NULL (not '') so it doesn't collide
+    // with the UNIQUE(key) constraint against other pending contacts.
+    database.prepare(
+        `INSERT OR IGNORE INTO contacts (address, key, name) VALUES (?, NULL, '')`
+    ).run(address)
     vals.push(address)
     try {
         database.prepare(

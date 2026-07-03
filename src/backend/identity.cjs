@@ -70,19 +70,45 @@ async function getContactCrypto(address) {
     if (c.pending_kem_capsule && typeof c.pending_kem_capsule === 'string' && c.pending_kem_capsule.length > 0) {
         out.pendingKemCapsule = hc.hexToUint(c.pending_kem_capsule);
     }
+    // Kept as hex so equality comparison against a fresh incoming pub is a
+    // cheap string compare rather than a byte-by-byte scan.
+    if (c.peer_kem_pub && typeof c.peer_kem_pub === 'string' && c.peer_kem_pub.length > 0) {
+        out.peerKemPubHex = c.peer_kem_pub;
+    }
     return out;
 }
 
 /**
- * Bob's path: received Alice's `kem_pub`. Immediately encapsulate, persist
- * both halves on the contact row, stash the capsule to ship on the next
- * outgoing send.
+ * Bob's path: received Alice's `kem_pub`. Three cases, distinguished by
+ * comparing the incoming pub against the one we cached on their contact row:
+ *
+ *   1. First time we see this contact              → encapsulate + persist.
+ *   2. Pub identical to what we already stored     → in-flight duplicate
+ *      (Alice re-sends her pub on every message until she gets our reply);
+ *      keep the existing messageKey to avoid silently desyncing.
+ *   3. Pub differs from what we stored             → Alice restored or
+ *      reinstalled and has a fresh ML-KEM keypair. Discard the old shared
+ *      secret and re-encapsulate against the new pub — otherwise our
+ *      inner-encrypted replies would use a stale key her new install
+ *      cannot decapsulate.
  */
-function onReceivedPeerKemPub(address, peerKemPub) {
+async function onReceivedPeerKemPub(address, peerKemPub) {
+    const incomingHex = hc.uintToHex(peerKemPub);
+    const existing = await getContactCrypto(address);
+    if (existing.messageKey && existing.peerKemPubHex === incomingHex) {
+        console.log(`[ml-kem] Received public key from ${address}, but a shared secret is already established — ignoring redundant handshake.`);
+        return { messageKey: existing.messageKey, pendingKemCapsule: existing.pendingKemCapsule };
+    }
+    if (existing.messageKey) {
+        console.log(`[ml-kem] Received a NEW public key from ${address}; peer likely restored their account. Rekeying.`);
+    } else {
+        console.log(`[ml-kem] Received public key from ${address}; deriving shared secret.`);
+    }
     const { ciphertext, sharedSecret } = hc.encapsulate(peerKemPub);
     updateContactKemState(address, {
         key: hc.uintToHex(sharedSecret),
         pending_kem_capsule: hc.uintToHex(ciphertext),
+        peer_kem_pub: incomingHex,
     });
     return { messageKey: sharedSecret, pendingKemCapsule: ciphertext };
 }
@@ -92,6 +118,7 @@ function onReceivedPeerKemPub(address, peerKemPub) {
  * back the shared secret. Persist as the contact's messageKey.
  */
 function onReceivedKemCapsule(address, sharedSecret) {
+    console.log(`[ml-kem] Received capsule from ${address}; shared secret established.`);
     updateContactKemState(address, { key: hc.uintToHex(sharedSecret) });
 }
 
