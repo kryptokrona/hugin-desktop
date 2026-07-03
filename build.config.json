@@ -5,6 +5,7 @@
     "directories": {
         "output": "dist"
     },
+    "npmRebuild": false,
     "mac": {
         "target": {
             "target": "default"
