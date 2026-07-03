@@ -120,6 +120,7 @@
 		"node-mac-permissions": "2.5.0"
 	},
 	"devDependencies": {
+		"@electron/rebuild": "4.1.0",
 		"@sveltejs/adapter-static": "3.0.10",
 		"@sveltejs/kit": "2.67.0",
 		"@sveltejs/vite-plugin-svelte": "3.1.2",
@@ -131,7 +132,6 @@
 		"electron-builder": "24.13.3",
 		"electron-connect": "0.6.3",
 		"electron-packager": "17.1.2",
-		"electron-rebuild": "3.2.9",
 		"electron-updater": "5.3.0",
 		"eslint": "8.57.1",
 		"eslint-config-prettier": "9.1.2",
