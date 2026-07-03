@@ -46,7 +46,10 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - [Development Resources](#development-resources)
 - [Technologies](#technologies)
 - [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Install & run](#install--run)
   - [Build](#build)
+- [Linux development (NixOS + sfw)](#linux-development-nixos--sfw)
 - [CI/CD](#cicd)
 - [Contribute](#contribute)
   - [Pull Request](#pull-request)
@@ -60,7 +63,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 # Technologies
 
-- Node 16 (18.17+ currently)
+- Node 20 (LTS)
 - Electron
 - Svelte
 - WebRTC
@@ -68,24 +71,120 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 
 # Getting Started
 
-> \*Feel free to substitute `npm` with `pnpm` or `yarn`.
+## Prerequisites
 
-|         |                   |
-| ------- | ----------------- |
-| Install | · `npm install`   |
-| Develop | · `npm run dev`   |
+- **Node 20** (LTS).
+- **pnpm** — pinned to the version in the `packageManager` field of `package.json`. Any modern Node ships with corepack, which will pick that version automatically:
+
+  ```sh
+  corepack enable
+  ```
+
+Why pnpm and not npm? Two things live in the repo that assume pnpm:
+
+- **`pnpm-lock.yaml`** is the source of truth for the dependency graph. Both PR and main CI run `pnpm install --frozen-lockfile`, so an install that resolves any other way won't merge.
+- **`.npmrc`** carries `node-linker=hoisted`. Electron + native modules (`better-sqlite3-multiple-ciphers`, `uiohook-napi`, `@koush/wrtc`) need a flat, real `node_modules` — pnpm's default symlinked layout breaks `electron-builder`, `electron-rebuild`, and `node-gyp`. The `.npmrc` also pins exact versions on `pnpm add` (`save-exact=true`) so `package.json` never drifts from the lockfile.
+
+## Install & run
+
+|         |                    |
+| ------- | ------------------ |
+| Install | · `pnpm install`   |
+| Develop | · `pnpm run dev`   |
 
 
 ## Build
-To build a target we have the following options:
 
+|                          |                              |
+|--------------------------|------------------------------|
+| macOS Apple Silicon (M1) | · `pnpm run build:mac-arm64` |
+| macOS Intel (x64)        | · `pnpm run build:mac-x64`   |
+| Windows                  | · `pnpm run build`           |
+| Linux                    | · `pnpm run build:linux-x64` |
 
-|                          |                             |
-|--------------------------|-----------------------------|
-| macOS Apple Silicon (M1) | · `npm run build:mac-arm64` |
-| macOS Intel (x64)        | · `npm run build:mac-x64`   |
-| Windows                  | · `npm run build`           |
-| Linux                    | · `npm run build:linux-x64` |
+# Linux development (NixOS + sfw)
+
+This section is only relevant if you're developing on **NixOS** or already use
+**Socket Firewall** ("sfw") to sandbox your installs. Everyone else can skip it
+— a plain `pnpm install` on Ubuntu / Debian / Fedora / macOS / Windows works
+without any of the below.
+
+## The pieces
+
+The repo ships three optional files that wire things together automatically:
+
+| File | What it does |
+|-|-|
+| `flake.nix` | Nix dev shell — pins Python 3.11 (for `node-gyp`), pulls in the X11 / libudev / libxkbcommon / libusb / libxz headers the native modules need, and provides `patch-sfw`. |
+| `.envrc` | direnv config — `use flake` loads the dev shell, `PATH_add ./.bin` puts the local pnpm shim first. |
+| `.bin/pnpm` | Bash shim that routes every `pnpm` call through `sfw` for install-time network filtering. |
+
+## Why sfw
+
+Socket Firewall inspects each network call an installer makes and blocks anything
+outside an allowlist. That catches the common supply-chain patterns — a compromised
+transitive dep exfiltrating env vars from a `postinstall`, a typosquat pulling
+down a second-stage payload, and so on — without preventing legitimate downloads
+of Electron's prebuilt binaries. It's a **workstation** protection; it is
+deliberately **not** enabled in CI (runners are ephemeral and CI only runs
+`--frozen-lockfile`, so no ad-hoc resolutions can slip in there).
+
+## Setup
+
+1. Install [direnv](https://direnv.net/) and hook it into your shell.
+2. Install `sfw` globally so it lives on your user PATH:
+
+   ```sh
+   npm i -g --prefix ~/.npm-global @socketsecurity/sfw
+   ```
+
+3. From the project root, allow the direnv config once:
+
+   ```sh
+   direnv allow
+   ```
+
+   direnv now enters the Nix flake dev shell on every `cd` into the repo. That
+   shell exports `PYTHON=<python 3.11>` (so `node-gyp` finds distutils), puts
+   sfw on `PATH`, and runs `patch-sfw` on first use.
+
+4. Just use pnpm normally:
+
+   ```sh
+   pnpm install
+   pnpm run dev
+   ```
+
+   Every `pnpm` invocation goes through `.bin/pnpm`, which strips the shim
+   directory from `PATH` (to avoid infinite recursion), calls `patch-sfw` (no-op
+   after the first time), then `exec sfw pnpm "$@"`. You'll see sfw's summary
+   after each install.
+
+## About `patch-sfw`
+
+sfw ships a generic dynamically-linked Linux binary. On stock distributions the
+loader lives at `/lib64/ld-linux-x86-64.so.2` and it Just Works. NixOS doesn't
+have that path, so the flake provides a small `patch-sfw` script that runs
+`patchelf` to repoint the loader at the Nix glibc. It's idempotent — it detects
+whether the binary needs patching and self-heals whenever sfw pulls down a new
+version.
+
+## Non-Nix Linux with sfw
+
+You don't need the Nix flake to use sfw. On Ubuntu / Debian etc. the loader is
+already in place, so:
+
+- Skip installing direnv and skip `.envrc`.
+- Install sfw globally (`npm i -g @socketsecurity/sfw`).
+- Prepend `sfw ` in front of your pnpm calls yourself, or symlink the `.bin/pnpm`
+  shim into a directory you already put on PATH.
+
+## Opting out entirely
+
+None of this is required to contribute. If you'd rather skip sfw and the Nix
+flake, don't run `direnv allow` and don't put `.bin/` on your PATH — `pnpm`
+resolves to the real binary and everything works. `.envrc`, `.bin/`, and
+`flake.nix` are inert unless you opt in.
 
 # CI/CD
 

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Socket Firewall shim: every `pnpm` call made inside this project is routed
+# through `sfw` so install-time network traffic is filtered.
+#
+# direnv puts this directory first on PATH (PATH_add ./.bin), so plain `pnpm`
+# resolves here. We strip this shim's own directory from PATH before calling
+# sfw, otherwise sfw (and pnpm itself) would resolve back to this wrapper and
+# recurse forever. With it removed, `pnpm` resolves to the real binary.
+set -euo pipefail
+
+self="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+clean=":$PATH:"
+clean="${clean//:$self:/:}"
+clean="${clean#:}"
+clean="${clean%:}"
+
+# Keep sfw's prebuilt binary NixOS-runnable (provided by the flake dev shell;
+# no-op once patched). Safe to skip if the dev shell isn't loaded.
+if command -v patch-sfw >/dev/null 2>&1; then
+  patch-sfw >/dev/null 2>&1 || true
+fi
+
+exec env PATH="$clean" sfw pnpm "$@"
