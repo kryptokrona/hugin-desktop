@@ -14,6 +14,11 @@ on:
             - '.run/**'
             - '.github/ISSUE_TEMPLATE/**'
 
+concurrency:
+    # Only one main build at a time — later pushes cancel the in-flight one.
+    group: main-ci
+    cancel-in-progress: false
+
 jobs:
     build:
         name: 'Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}'
@@ -25,69 +30,63 @@ jobs:
                 config:
                     - { name: 'Windows Latest', os: windows-latest, platform: x64 }
                     - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
-                    - { name: 'macOS-11', os: macos-latest, platform: x64 }
-                    - { name: 'macOS Latest', os: macos-latest, platform: arm64 }
+                    - { name: 'macOS x64', os: macos-13, platform: x64 }
+                    - { name: 'macOS arm64', os: macos-latest, platform: arm64 }
 
         env:
             PLATFORM: ${{ matrix.config.platform }}
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v1
+              uses: actions/checkout@v4
 
             - name: Set up Python
-              uses: actions/setup-python@v3
+              uses: actions/setup-python@v5
               with:
-                  python-version: 3.11
+                  python-version: '3.11'
 
-            - name: Update package list
-              if: matrix.config.os == 'ubuntu-latest'
-              run: sudo apt-get update
-
-            - name: install libudev
+            - name: Install libudev + X11 headers
               if: matrix.config.os == 'ubuntu-latest'
               run: |
+                  sudo apt-get update
                   sudo apt-get install -y \
-                  build-essential \
-                  libx11-dev \
-                  libxt-dev \
-                  libxtst-dev \
-                  libxkbfile-dev \
-                  libxrandr-dev \
-                  libxi-dev \
-                  libxinerama-dev \
-                  libxcursor-dev \
-                  libudev-dev
+                      build-essential \
+                      libx11-dev \
+                      libxt-dev \
+                      libxtst-dev \
+                      libxkbfile-dev \
+                      libxrandr-dev \
+                      libxi-dev \
+                      libxinerama-dev \
+                      libxcursor-dev \
+                      libudev-dev
 
-            - name: Install Node.js, NPM and Yarn
-              uses: actions/setup-node@v1
+            - name: Install pnpm
+              # Uses the version declared via `packageManager` in package.json.
+              uses: pnpm/action-setup@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
               with:
-                  node-version: 18.20.0
-
-            - name: Clean node_modules and package-lock.json
-              run: |
-                if [ "${{ matrix.config.os }}" = "macos-latest" ] || [ "${{ matrix.config.os }}" = "ubuntu-latest" ]; then rm -rf node_modules package-lock.json; fi
-                if [ "${{ matrix.config.os }}" = "windows-latest" ]; then rm -rf node_modules package-lock.json 2>/dev/null || true; fi
-              shell: bash
+                  node-version: 20
+                  cache: pnpm
 
             - name: Install dependencies
-              run: npm i node-gyp && npm install --quiet
+              # --frozen-lockfile: fail if pnpm-lock.yaml drifts from package.json.
+              # `.npmrc`'s node-linker=hoisted gives us the flat tree Electron needs.
+              run: pnpm install --frozen-lockfile
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'windows-latest'
-              run: npm run build:win-${{ matrix.config.platform }}
+              run: pnpm run build:win-${{ matrix.config.platform }}
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'ubuntu-latest'
-              run: npm run build:linux-${{ matrix.config.platform }}
+              run: pnpm run build:linux-${{ matrix.config.platform }}
 
             - name: Build ${{ matrix.config.name }}
-              if: matrix.config.name == 'macOS-11'
-              run: npm run build:mac-${{ matrix.config.platform }}
-
-            - name: Build ${{ matrix.config.name }}
-              if: matrix.config.name == 'macOS Latest'
-              run: npm run build:mac-${{ matrix.config.platform }}
+              if: startsWith(matrix.config.os, 'macos')
+              run: pnpm run build:mac-${{ matrix.config.platform }}
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
               uses: actions/upload-artifact@v4
@@ -115,16 +114,16 @@ jobs:
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
               uses: actions/upload-artifact@v4
-              if: matrix.config.name == 'macOS-11'
+              if: matrix.config.name == 'macOS x64'
               with:
-                  name: macos-11
+                  name: macos-x64
                   path: |
                       dist/*.dmg
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
               uses: actions/upload-artifact@v4
-              if: matrix.config.name == 'macOS Latest'
+              if: matrix.config.name == 'macOS arm64'
               with:
-                  name: macos-latest
+                  name: macos-arm64
                   path: |
                       dist/*.dmg

@@ -12,18 +12,21 @@ jobs:
         name: Create GitHub Release
         runs-on: ubuntu-latest
         outputs:
-            upload_url: ${{steps.create_release.outputs.upload_url}}
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
 
         if: startsWith(github.ref, 'refs/tags/')
         steps:
             - name: Create Release
               id: create_release
-              uses: actions/create-release@v1
+              # actions/create-release@v1 is archived. softprops/action-gh-release
+              # is the community-standard drop-in replacement and stays
+              # compatible with the same outputs (upload_url etc).
+              uses: softprops/action-gh-release@v2
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                  tag_name: ${{ github.ref }}
-                  release_name: Release ${{ github.ref }}
+                  tag_name: ${{ github.ref_name }}
+                  name: Release ${{ github.ref_name }}
                   draft: true
                   prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-rc') || contains(github.ref, '-alpha') }}
 
@@ -47,46 +50,34 @@ jobs:
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v1
+              uses: actions/checkout@v4
 
             - name: Set up Python
-              uses: actions/setup-python@v3
+              uses: actions/setup-python@v5
               with:
-                  python-version: 3.11
-
-            - name: Install Node.js, NPM and Yarn
-              uses: actions/setup-node@v1
-              with:
-                  node-version: 18.20.7
-
-            - name: Clean node_modules and package-lock.json
-              run: |
-                if [ "${{ matrix.config.os }}" = "macos-latest" ] || [ "${{ matrix.config.os }}" = "ubuntu-latest" ]; then rm -rf node_modules package-lock.json; fi
-                if [ "${{ matrix.config.os }}" = "windows-latest" ]; then rm -rf node_modules package-lock.json 2>/dev/null || true; fi
-              shell: bash
+                  python-version: '3.11'
 
             - name: Install python-setuptools on macOS
-              if: matrix.config.os == 'macos-11' || matrix.config.os == 'macos-latest'
+              # Python 3.12 dropped distutils; some node-gyp scripts still ask
+              # for it via setuptools. Cheap install, safe on all macOS runners.
+              if: startsWith(matrix.config.os, 'macos')
               run: brew install python-setuptools
 
-            - name: Update package list
-              if: matrix.config.os == 'ubuntu-latest'
-              run: sudo apt-get update
-
-            - name: Install libudev on Linux
+            - name: Install libudev + X11 headers
               if: matrix.config.os == 'ubuntu-latest'
               run: |
+                  sudo apt-get update
                   sudo apt-get install -y \
-                  build-essential \
-                  libx11-dev \
-                  libxt-dev \
-                  libxtst-dev \
-                  libxkbfile-dev \
-                  libxrandr-dev \
-                  libxi-dev \
-                  libxinerama-dev \
-                  libxcursor-dev \
-                  libudev-dev
+                      build-essential \
+                      libx11-dev \
+                      libxt-dev \
+                      libxtst-dev \
+                      libxkbfile-dev \
+                      libxrandr-dev \
+                      libxi-dev \
+                      libxinerama-dev \
+                      libxcursor-dev \
+                      libudev-dev
 
             - name: Install the Apple certificate and provisioning profile
               if: matrix.config.os == 'macos-latest'
@@ -125,16 +116,27 @@ jobs:
                   ls bin
                   security find-identity -p codesigning -v
 
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
             - name: Install dependencies
-              run: npm i node-gyp && npm install --quiet
+              # --frozen-lockfile: fail if pnpm-lock.yaml drifts from package.json.
+              # Releases especially must use the exact lockfile that was reviewed.
+              run: pnpm install --frozen-lockfile
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'windows-latest'
-              run: npm run build:win-x64-gh
+              run: pnpm run build:win-x64-gh
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'ubuntu-latest'
-              run: npm run build:linux-x64-gh
+              run: pnpm run build:linux-x64-gh
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'macos-latest'
@@ -142,4 +144,4 @@ jobs:
                   appleId: ${{ secrets.APPLE_ID }}
                   appleIdPassword: ${{ secrets.APP_SPECIFIC_PASSWORD }}
                   teamId: ${{ secrets.TEAM_ID }}
-              run: npm run build:mac-$PLATFORM-gh
+              run: pnpm run build:mac-$PLATFORM-gh

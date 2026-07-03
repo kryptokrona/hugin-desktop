@@ -2,6 +2,11 @@ name: Hugin Desktop Pull Request Pipeline
 
 on: [pull_request]
 
+concurrency:
+  # Cancel any in-flight run on the same PR when a new commit lands.
+  group: pr-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
     build:
         name: 'Build: ${{ matrix.config.name }} / ${{ matrix.config.platform }}'
@@ -13,56 +18,76 @@ jobs:
                 config:
                     - { name: 'Windows Latest', os: windows-latest, platform: x64 }
                     - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
-                    - { name: 'macOS-11', os: macos-latest, platform: x64 }
-                    - { name: 'macOS Latest', os: macos-latest, platform: arm64 }
+                    - { name: 'macOS x64', os: macos-13, platform: x64 }
+                    - { name: 'macOS arm64', os: macos-latest, platform: arm64 }
 
         env:
             PLATFORM: ${{ matrix.config.platform }}
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v1
+              uses: actions/checkout@v4
 
             - name: Set up Python
-              uses: actions/setup-python@v3
+              # Some node-gyp builds (better-sqlite3-multiple-ciphers, uiohook-napi)
+              # still need Python at install time.
+              uses: actions/setup-python@v5
               with:
-                  python-version: 3.11
+                  python-version: '3.11'
 
-            - name: Update package list
-              if: matrix.config.os == 'ubuntu-latest'
-              run: sudo apt-get update
-
-            - name: 'Install libudev'
+            - name: Install libudev + X11 headers
+              # Keep this list in sync with main-ci.yml and release-ci.yml —
+              # PRs and main must compile from the same system-library set,
+              # otherwise a PR can pass CI while main breaks (or vice versa).
+              # These are what the native modules (uiohook-napi, wrtc,
+              # better-sqlite3-multiple-ciphers) need on Linux.
               if: matrix.config.os == 'ubuntu-latest'
               run: |
-                  sudo apt-get install libudev-dev
+                  sudo apt-get update
+                  sudo apt-get install -y \
+                      build-essential \
+                      libx11-dev \
+                      libxt-dev \
+                      libxtst-dev \
+                      libxkbfile-dev \
+                      libxrandr-dev \
+                      libxi-dev \
+                      libxinerama-dev \
+                      libxcursor-dev \
+                      libudev-dev
 
-            - name: Install Node.js, NPM and Yarn
-              uses: actions/setup-node@v1
+            - name: Install pnpm
+              # Reads `packageManager: "pnpm@10.33.4"` from package.json and
+              # installs that exact version — dev and CI always use the same one.
+              uses: pnpm/action-setup@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
               with:
-                  node-version: 18.20.7
-
-            - name: Clean node_modules and package-lock.json
-              run: |
-                if [ "${{ matrix.config.os }}" = "macos-latest" ] || [ "${{ matrix.config.os }}" = "ubuntu-latest" ]; then rm -rf node_modules package-lock.json; fi
-                if [ "${{ matrix.config.os }}" = "windows-latest" ]; then rm -rf node_modules package-lock.json 2>/dev/null || true; fi
-              shell: bash
+                  # Should match your local Node major. Bump when you upgrade
+                  # dev machines.
+                  node-version: 20
+                  cache: pnpm
 
             - name: Install dependencies
-              run: npm i node-gyp && npm install --quiet
+              # --frozen-lockfile means "fail if pnpm-lock.yaml is out of sync
+              # with package.json" — the review-time guarantee that CI validates
+              # the exact resolution devs have on disk. `.npmrc` in the repo
+              # (`node-linker=hoisted`) gives us the flat layout Electron needs.
+              run: pnpm install --frozen-lockfile
 
+            # All three build steps use the non-`-gh` variants (electron-builder
+            # `-p never`) so PRs only validate the build — they never attempt to
+            # publish a release. The `-gh` variants are reserved for
+            # release-ci.yml which is what actually publishes to GitHub Releases.
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'windows-latest'
-              run: npm run build:win-${{ matrix.config.platform }}-gh
+              run: pnpm run build:win-${{ matrix.config.platform }}
 
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'ubuntu-latest'
-              run: npm run build:linux-${{ matrix.config.platform }}
+              run: pnpm run build:linux-${{ matrix.config.platform }}
 
             - name: Build ${{ matrix.config.name }}
-              if: matrix.config.name == 'macOS-11'
-              run: npm run build:mac-${{ matrix.config.platform }}-gh
-
-            - name: Build ${{ matrix.config.name }}
-              if: matrix.config.name == 'macOS Latest'
-              run: npm run build:mac-${{ matrix.config.platform }}-gh
+              if: startsWith(matrix.config.os, 'macos')
+              run: pnpm run build:mac-${{ matrix.config.platform }}
