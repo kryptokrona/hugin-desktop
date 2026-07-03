@@ -8,6 +8,9 @@ env:
     # registry-detection guesswork inside electron-rebuild's postinstall.
     # Harmless on Linux/macOS (they ignore it).
     GYP_MSVS_VERSION: '2022'
+    # See pr-ci.yml — Electron 30's v8 headers need C++17 and gyp defaults
+    # to something older. Safe globally (MSVC ignores CXXFLAGS).
+    CXXFLAGS: '-std=gnu++17'
 
 on:
     push:

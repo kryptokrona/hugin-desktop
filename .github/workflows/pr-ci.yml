@@ -7,6 +7,12 @@ env:
     # registry-detection guesswork inside electron-rebuild's postinstall.
     # Harmless on Linux/macOS (they ignore it).
     GYP_MSVS_VERSION: '2022'
+    # Electron 30's v8 headers use C++17 features (std::void_t,
+    # std::string_view, std::is_void_v, etc.) but gyp / node-gyp default
+    # to a pre-C++17 standard for the native module builds. Force gnu++17
+    # so the rebuild step compiles cleanly. Ignored by MSVC on Windows
+    # (which reads CXXFLAGS not-at-all), so this is safe globally.
+    CXXFLAGS: '-std=gnu++17'
 
 concurrency:
   # Cancel any in-flight run on the same PR when a new commit lands.
