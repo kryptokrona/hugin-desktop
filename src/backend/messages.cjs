@@ -490,15 +490,20 @@ async function decrypt_hugin_messages(list, que = false) {
 			// sender actually hashed (hc.messageHash(payload_hex), unprefixed).
 			const thisExtra = message.cipher;
 
-			if (!validate_extra(thisExtra, thisHash, que)) continue;
-			if (thisExtra !== undefined && thisExtra.length > 200) {
-				if (!saveHash(thisHash)) continue;
-				//Check for private message (ephemeral friend-request box; the
-				//view tag is matched against our view key inside the decrypt).
-				if (await check_for_pm_message(thisExtra, thisHash, que)) continue;
-				//Check for group message
-				if (await check_for_group_message(thisExtra, thisHash, que)) continue;
+			if (!validate_extra(thisExtra, thisHash, que)) {
+				console.log(`[decrypt] skipped ${thisHash?.slice(0, 8)}: validate_extra rejected (known/malformed/too-long)`);
+				continue;
 			}
+			if (thisExtra === undefined || thisExtra.length <= 200) {
+				console.log(`[decrypt] skipped ${thisHash?.slice(0, 8)}: cipher length ${thisExtra?.length} (need > 200)`);
+				continue;
+			}
+			if (!saveHash(thisHash)) continue;
+			//Check for private message (ephemeral friend-request box; the
+			//view tag is matched against our view key inside the decrypt).
+			if (await check_for_pm_message(thisExtra, thisHash, que)) continue;
+			//Check for group message
+			if (await check_for_group_message(thisExtra, thisHash, que)) continue;
 		} catch (err) {
 			console.log(err);
 		}
@@ -523,7 +528,13 @@ async function decrypt_hugin_messages(list, que = false) {
 // hugin-crypto's content-addressed messageHash when missing.
 async function check_for_pm_message(thisExtra, txHash, que = false) {
 	const wire = hc.decodeExtra(thisExtra);
-	if (!wire || !wire.vt || !wire.txKey) return false;
+	if (!wire || !wire.vt || !wire.txKey) {
+		// Not a DM wire shape. Usually just a non-DM extra (group message,
+		// legacy tx-extra) — log at DEBUG-ish only to avoid noise, but leave
+		// a breadcrumb so the "nothing decrypted" case can be diagnosed.
+		console.log('[pm] decodeExtra rejected wire (missing vt/txKey) — falling through');
+		return false;
+	}
 	const [, privateViewKey] = keychain.getPrivKeys();
 	const decrypted = await hc.openFriendRequest(
 		wire,
@@ -536,7 +547,15 @@ async function check_for_pm_message(thisExtra, txHash, que = false) {
 		},
 		identity.identitySecretKeyBytes(),
 	);
-	if (!decrypted) return false;
+	if (!decrypted) {
+		// View-tag miss (the message wasn't addressed to us), signature
+		// failed, or inner-decrypt failed. First case is the common one —
+		// every online client sees every wire message and only its
+		// intended recipient's view tag matches. Log so we can distinguish
+		// "not for us" from "silent bug".
+		console.log('[pm] openFriendRequest returned false (view-tag miss or decrypt failure)');
+		return false;
+	}
 
 	// A friend request is the first message we ever see from this address, so
 	// the contacts row doesn't exist yet. Create it now (same bootstrap
@@ -557,6 +576,20 @@ async function check_for_pm_message(thisExtra, txHash, que = false) {
 		await identity.onReceivedPeerKemPub(decrypted.from, decrypted.handshake.peerKemPub);
 	} else if (decrypted.handshake?.sharedSecret) {
 		identity.onReceivedKemCapsule(decrypted.from, decrypted.handshake.sharedSecret);
+	}
+
+	// Symmetric to the outgoing "[ml-kem] Message to <addr> is quantum-encrypted"
+	// log — when this branch fires, we successfully opened an inner box that
+	// was encrypted with the ML-KEM-derived shared secret. `decrypted.type ===
+	// 'message'` is set by hugin-crypto only when the outer wire carried a
+	// nested `box` that we then inner-decrypted; the plaintext friend-request
+	// path returns type === 'friend-request' instead. Handshake replies land
+	// here too (sharedSecret just got derived above), so we log those the same
+	// way — they're the first message that used the fresh key.
+	if (decrypted.type === 'message') {
+		console.log(`[ml-kem] Message from ${decrypted.from} was quantum-decrypted (ML-KEM shared secret).`);
+	} else {
+		console.log(`[pm] Decrypted plaintext friend-request from ${decrypted.from}.`);
 	}
 
 	const message = {
@@ -613,12 +646,19 @@ async function check_for_group_message(thisExtra, thisHash, que = false) {
 	return false;
 }
 
+// Max wire size (in hex characters) we'll accept from the push node before
+// treating the extra as garbage / spam. Bumped from 7000 to 9000 once ML-KEM
+// friend requests + inner-encrypted bodies pushed some legitimate wires past
+// the old ceiling. Bump again here if you see [decrypt] skipped … reject
+// lines for messages you know are valid.
+const MAX_EXTRA_LENGTH = 9000;
+
 //Validate extradata, here we can add more conditions
 function validate_extra(thisExtra, thisHash, que) {
 	if (typeof thisExtra !== 'string') return false;
 	if (typeof thisHash !== 'string') return false;
 	//Extra too long
-	if (thisExtra.length > 7000) {
+	if (thisExtra.length > MAX_EXTRA_LENGTH) {
 		known_pool_txs.push(thisHash);
 		if (!saveHash(thisHash)) return false;
 		return false;
