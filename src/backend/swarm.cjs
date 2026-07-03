@@ -1404,7 +1404,7 @@ const send_friend_request = (address, key) => {
 	if (!active) return;
 
 	const message = {
-		hugin: Hugin.address + keychain.getMsgKey(),
+		hugin: Hugin.address,
 		type: 'friend'
 	};
 	send_peer_message(address, active.topic, message);
@@ -1655,7 +1655,7 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
 
 	const active = get_active_topic(topic);
 	if (active.beam) {
-		decrpyt_beam_message(data.toString(), active.chat.substring(99, 163));
+		decrpyt_beam_message(data.toString());
 		return;
 	}
 

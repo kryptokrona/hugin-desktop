@@ -1,6 +1,5 @@
 
 const Huginbeam = require('huginbeam')
-const { extraDataToMessage } = require('hugin-crypto')
 const { saveMsg } = require('./database.cjs')
 const { sanitizeHtml } = require('./utils.cjs')
 const progress = require("progress-stream");

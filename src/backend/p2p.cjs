@@ -89,7 +89,6 @@ function buildAdapter() {
         address: Hugin.address,
         name: Hugin.nickname,
         avatar: Hugin.avatar,
-        msgKey: keychain.getMsgKey(),
         rooms: roomCache,
         bannedList: store.get('bannedUsers') || [],
         blockedList: Hugin.block_list || [],

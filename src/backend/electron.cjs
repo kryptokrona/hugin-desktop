@@ -443,9 +443,9 @@ ipcMain.on('success-notify-message-main', async (e, notify, sound) => {
 
 //CALLS
 
-ipcMain.on('answer-call', (e, msg, contact, key, offchain = false) => {
-    console.log('Answer call', msg, contact, key, offchain)
-    mainWindow.webContents.send('answer-call', msg, contact, key, offchain)
+ipcMain.on('answer-call', (e, msg, contact, key, p2p = false) => {
+    console.log('Answer call', msg, contact, key, p2p)
+    mainWindow.webContents.send('answer-call', msg, contact, key, p2p)
 })
 
 ipcMain.on('end-call', async (e, peer, stream, contact) => {

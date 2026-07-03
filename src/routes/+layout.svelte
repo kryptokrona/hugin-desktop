@@ -334,12 +334,12 @@
 		console.log('unread', $notify.unread);
 	});
 
-	window.api.receive('addr', (huginAddr) => {
+	window.api.receive('addr', (addr) => {
 		console.log('Addr incoming');
 		user.update((data) => {
 			return {
 				...data,
-				huginAddress: huginAddr
+				myAddress: addr
 			};
 		});
 	});
@@ -406,24 +406,6 @@
 
 	window.api.receive('group_invited_contact', (data) => {
 		console.log('***** GROUP INVITED ****', data);
-		let name;
-		let key;
-		if (
-			$user.contacts.some((a) => (a.chat || a.conversation || a.address) == data.substring(0, 99))
-		) {
-			let contact = $user.contacts.find(
-				(a) => (a.chat || a.conversation || a.address) == data.substring(0, 99)
-			);
-			name = contact.name;
-			key = contact.key;
-		} else {
-			//Add prompt to add unknown contact
-			name = 'Anon';
-			key = data.substring(99, 163);
-			//Todo?
-			console.log('**** DONT KNOW THIS CONTACT. ADD ?? ****');
-		}
-
 		window.api.successMessage('A new friend was invited to call');
 		$webRTC.joining = data.key;
 	});

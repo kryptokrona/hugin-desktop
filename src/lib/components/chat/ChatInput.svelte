@@ -18,7 +18,7 @@
 
   let openEmoji = $state();
   let messageField = $state()
-  let off_chain = $state()
+  let p2p = $state()
   let mount = $state(false)
   let activeBeamChat = $derived($user.activeChat?.chat || $user.activeChat?.conversation || $user.activeChat?.address || '')
   let activeBeam = $derived(activeBeamChat ? peers.isDmOnline(activeBeamChat) : false)
@@ -156,7 +156,7 @@
     let msg = messageInput.trim()
     onMessage({
       text: msg,
-      offChain: off_chain,
+      p2p: p2p,
       beam: activeBeam,
       swarm: activeSwarm
     })
@@ -215,7 +215,7 @@
   run(() => {
     if ($user.activeChat) {
       const activeChat = $user.activeChat.chat || $user.activeChat.conversation || $user.activeChat.address || ''
-      off_chain = $webRTC.call.some((a) => a.chat == activeChat && a.connected)
+      p2p = $webRTC.call.some((a) => a.chat == activeChat && a.connected)
     }
   });
   run(() => {

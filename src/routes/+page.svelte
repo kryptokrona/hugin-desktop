@@ -173,9 +173,8 @@
 	};
 
 	//Sets our own address in svelte store
-	window.api.receive('addr', async (huginAddr) => {
-		$user.huginAddress = huginAddr;
-		$user.myAddress = huginAddr.substring(0, 99);
+	window.api.receive('addr', async (addr) => {
+		$user.myAddress = addr;
 	});
 
 	const loginSuccess = async () => {

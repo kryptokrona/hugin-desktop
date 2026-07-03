@@ -39,7 +39,7 @@ function invite(contact) {
     $webRTC.call.unshift(call)
 
     //Start call
-    window.api.startCall(contact.chat + contact.key, video)
+    window.api.startCall(contact.chat, video)
 }
 
 const buttonGlow = () => {

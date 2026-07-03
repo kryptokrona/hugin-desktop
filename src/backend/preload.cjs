@@ -16,8 +16,8 @@ const WINDOW_API = {
         ipcRenderer.send('add-chat', hugin, name, first)
     },
     // HANDLE MESSAGES
-    sendMsg: (msg, address, offChain, grp = false, beam, call, timestamp) => {
-        ipcRenderer.send('send-msg', msg, address, offChain, grp, beam, call, timestamp)
+    sendMsg: (msg, address, p2p, grp = false, beam, call, timestamp) => {
+        ipcRenderer.send('send-msg', msg, address, p2p, grp, beam, call, timestamp)
     },
     sendGroupMessage: (msg, offchain, swarm) => {
         ipcRenderer.send('send-group-message', msg, offchain, swarm)
@@ -27,13 +27,6 @@ const WINDOW_API = {
     },
     sendFeedMessage: async (msg) => {
         return await ipcRenderer.invoke('send-feed-message', msg)
-    },
-    decryptMessage: (msg) => {
-        ipcRenderer.send('decrypt_message', msg)
-    },
-    decryptGroupMessage: (msg, key) => {
-        console.log('key', key)
-        ipcRenderer.send('decrypt_rtc_group_message', msg, key)
     },
     deleteMessage: async(hash) => {
         ipcRenderer.send('delete-message', hash)
@@ -108,8 +101,8 @@ const WINDOW_API = {
         ipcRenderer.send('start-call', contact, calltype)
     },
 
-    answerCall: async (msg, contact, key, offchain) => {
-        ipcRenderer.send('answer-call', msg, contact, key, offchain)
+    answerCall: async (msg, contact, key, p2p) => {
+        ipcRenderer.send('answer-call', msg, contact, key, p2p)
     },
 
     endCall: async (peer, stream, contact) => {

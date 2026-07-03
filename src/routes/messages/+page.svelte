@@ -155,10 +155,8 @@
 	}
 
 	function getActiveReceiver() {
-		const activeConv = getActiveConv();
-		if (!activeConv) return '';
-		const activeKey = $user.activeChat?.key || '';
-		return activeConv + activeKey;
+		// The 99-char xkr address is the whole receiver now (no message-key suffix).
+		return getActiveConv();
 	}
 	async function loadMessages() {
 		const activeConv = getActiveConv();
@@ -197,7 +195,7 @@
 			(unread) => (unread.chat || unread.conversation || unread.address) !== activeConv
 		);
 		$notify.unread = clear;
-		active_contact = activeConv + (active.key || '');
+		active_contact = activeConv;
 
 		const inChat = getActiveChat(activeConv);
 		if (inChat) $keyboard.input = inChat.text;
@@ -218,7 +216,7 @@
 
 	//Chat to add
 	const handleAddChat = (e) => {
-		let addContact = e.chat + e.key;
+		let addContact = e.chat;
 		window.api.addChat(addContact, e.name, true);
 		printConversation({
 			conversation: e.chat,
@@ -250,7 +248,7 @@
 
 	//Send message to store and DB
 	const sendMsg = (e) => {
-		let offChain = false;
+		let p2p = false;
 		let beam = false;
 		let msg = e.text;
 		let error = checkErr(e);
@@ -258,17 +256,17 @@
 
 		console.log('Sending message');
 
-		if (e.offChain) {
-			offChain = true;
+		if (e.p2p) {
+			p2p = true;
 		}
 
 		if (e.beam) {
 			beam = true;
-			offChain = true;
+			p2p = true;
 		}
 
-		const receiver = getActiveReceiver() || active_contact;
-		if (!receiver || receiver.length !== 163) {
+		const receiver = (getActiveReceiver() || active_contact || '').substring(0, 99);
+		if (receiver.length !== 99) {
 			window.api.errorMessage(t('noActiveChat') || 'No active chat selected.');
 			return;
 		}
@@ -285,7 +283,7 @@
 		$keyboard.input = '';
 
 		printMessage(myMessage);
-		window.api.sendMsg(msg, receiver, offChain, false, beam, false, timestamp);
+		window.api.sendMsg(msg, receiver, p2p, false, beam, false, timestamp);
 		//printMessage(myMessage)
 		console.log('Message sent');
 	};
@@ -310,7 +308,7 @@
 	};
 
 	function renameContact(e) {
-		let thisContact = $user.rename.chat + $user.rename.key;
+		let thisContact = $user.rename.chat;
 		//Send contact to backend and overwrite our old contact
 		window.api.addChat(thisContact, e.text, false);
 		toggleRename = false;
@@ -339,7 +337,6 @@
 		const activeConv = getActiveConv();
 		let toHuginAddress = activeConv + ($user.activeChat?.key || '');
 		let time = Date.now();
-		let offchain = false;
 		const hash = await window.api.createGroup();
 		const beam = true;
 

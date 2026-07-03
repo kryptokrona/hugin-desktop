@@ -1,4 +1,4 @@
-const nacl = require('tweetnacl');
+const { randomBytes } = require('crypto');
 const _sanitize = require('sanitize-html');
 const { Crypto, Keys } = require('kryptokrona-utils');
 
@@ -158,7 +158,7 @@ const hexToUint = (hexString) =>
 	new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
 
 function randomKey() {
-	return Buffer.from(nacl.randomBytes(32)).toString('hex');
+	return randomBytes(32).toString('hex');
 }
 
 async function hash(text) {
@@ -183,7 +183,7 @@ function toHex(str, hex) {
 function nonceFromTimestamp(tmstmp) {
 	let nonce = hexToUint(String(tmstmp));
 
-	while (nonce.length < nacl.box.nonceLength) {
+	while (nonce.length < 24) {
 		let tmp_nonce = Array.from(nonce);
 
 		tmp_nonce.push(0);
@@ -205,11 +205,21 @@ function fromHex(hex, str) {
 }
 
 function trimExtra(extra) {
+	// Off-chain (beam/swarm/push-node): the whole string is already bare hex of
+	// JSON — no prefix to strip. Try that first so we don't corrupt payloads
+	// that were never wrapped in a tx-extra prefix.
+	try {
+		let payload = fromHex(extra);
+		JSON.parse(payload);
+		return payload;
+	} catch (e) {}
+	// On-chain: 66-char tx-extra prefix (kryptokrona-service shape).
 	try {
 		let payload = fromHex(extra.substring(66));
-		let payload_json = JSON.parse(payload);
-		return fromHex(extra.substring(66));
+		JSON.parse(payload);
+		return payload;
 	} catch (e) {
+		// On-chain: 78-char prefix (wallet-backend shape).
 		return fromHex(Buffer.from(extra.substring(78)).toString());
 	}
 }
@@ -229,13 +239,18 @@ const sanitize_pm_message = (msg) => {
 	let timestamp = sanitizeHtml(msg.t ?? msg.timestamp);
 	let key = sanitizeHtml(msg.k ?? msg.key);
 	let message = sanitizeHtml(msg.msg || msg.message);
+	// hugin-crypto messageHash (SHA-256) — 64 lowercase hex chars. Stays ''
+	// when the message arrived from a path that doesn't carry the wire bytes
+	// (legacy paths / synthetic messages); save_message tolerates the empty.
+	let hash = typeof msg.hash === 'string' ? sanitizeHtml(msg.hash) : '';
 	if (message?.length > 777 || (msg.msg === undefined && msg.message === undefined)) return [false];
 	if (addr?.length > 99 || addr === undefined) return [false];
 	if (typeof sent !== 'boolean') return [false];
 	if (timestamp?.length > 25) return [false];
 	if (key?.length > 64) return [false];
+	if (hash.length > 64) return [false];
 
-	return { message, conversation: addr, key, timestamp, sent };
+	return { message, conversation: addr, key, timestamp, sent, hash };
 };
 
 const sanitize_join_swarm_data = (data) => {
