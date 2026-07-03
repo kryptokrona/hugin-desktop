@@ -114,9 +114,6 @@
 		"svelte-highlight": "^7.8.3",
 		"svelte-infinite-scroll": "^2.0.1",
 		"svelte-loading-spinners": "^0.1.7",
-		"tweetnacl": "^1.0.3",
-		"tweetnacl-sealed-box": "^1.0.5",
-		"tweetnacl-util": "^0.15.1",
 		"uiohook-napi": "^1.5.5"
 	},
 	"optionalDependencies": {
