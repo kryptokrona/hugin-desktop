@@ -1324,14 +1324,50 @@ const updateContactKemState = (address, patch) => {
         vals.push(patch.peer_kem_pub)
     }
     if (sets.length === 0) return
+    // Self-heal duplicates left over from an earlier iteration of this code
+    // that used INSERT OR IGNORE (which never fires here since contacts only
+    // has UNIQUE(key), not UNIQUE(address) — so it silently produced a second
+    // row for the same address). If we find more than one row for this
+    // contact, keep the "most progressed" one (real 64-hex key > NULL >
+    // empty) and delete the rest, so the UPDATE below is unambiguous.
+    try {
+        const rows = database
+            .prepare('SELECT rowid, key FROM contacts WHERE address = ?')
+            .all(address)
+        if (rows.length > 1) {
+            console.log(`[db] Deduping ${rows.length - 1} extra contact row(s) for ${address}`)
+            const score = (r) => (r.key && typeof r.key === 'string' && r.key.length === 64 ? 2 : r.key === null ? 1 : 0)
+            const keep = rows.reduce((a, b) => (score(a) >= score(b) ? a : b))
+            for (const r of rows) {
+                if (r.rowid !== keep.rowid) {
+                    database.prepare('DELETE FROM contacts WHERE rowid = ?').run(r.rowid)
+                }
+            }
+        }
+    } catch (err) {
+        console.log('Contact dedup failed:', err)
+    }
     // A friend request is the first message we ever see from `address`, so
-    // there's no contacts row yet at this point (save_contact only runs
+    // there may be no contacts row yet at this point (save_contact only runs
     // later, after this handshake state would otherwise be discarded as a
-    // no-op UPDATE). Seed it with key=NULL (not '') so it doesn't collide
-    // with the UNIQUE(key) constraint against other pending contacts.
-    database.prepare(
-        `INSERT OR IGNORE INTO contacts (address, key, name) VALUES (?, NULL, '')`
-    ).run(address)
+    // no-op UPDATE). Seed it with key=NULL if — and ONLY if — the address
+    // isn't present yet. `INSERT OR IGNORE` can't be used here because the
+    // table's only UNIQUE constraint is on `key`, not `address`, so an
+    // unconditional insert would silently produce a second row for the same
+    // contact and the UPDATE below would try to give both rows the same key
+    // (which then trips UNIQUE(key)).
+    const exists = database
+        .prepare('SELECT 1 FROM contacts WHERE address = ? LIMIT 1')
+        .get(address)
+    if (!exists) {
+        try {
+            database.prepare(
+                `INSERT INTO contacts (address, key, name) VALUES (?, NULL, '')`
+            ).run(address)
+        } catch (err) {
+            console.log('Failed to seed contact row for KEM state:', err)
+        }
+    }
     vals.push(address)
     try {
         database.prepare(
