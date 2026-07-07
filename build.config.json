@@ -44,6 +44,7 @@
         "src/backend/account.cjs",
         "src/backend/storage.cjs",
         "src/backend/p2p.cjs",
+        "src/backend/identity.cjs",
         {
             "from": "build",
             "to": ""
