@@ -3,7 +3,7 @@
 	"author": "Kryptokrona Developers <info@kryptokrona.org>",
 	"email": "info@kryptokrona.org",
 	"productName": "Hugin Messenger",
-	"version": "2.0.0-alpha",
+	"version": "2.0.0",
 	"private": true,
 	"packageManager": "pnpm@10.33.4",
 	"description": "A messenger app built on top of the kryptokrona blockchain",
