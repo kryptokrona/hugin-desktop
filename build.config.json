@@ -15,7 +15,7 @@
         "gatekeeperAssess": false,
         "entitlements": "bin/entitlements.mac.plist",
         "entitlementsInherit": "bin/entitlements.mac.inherit.plist",
-        "identity": "Developer ID Application: Harry Eriksson (JPZ73847LL)",
+        "identity": "Harry Eriksson (JPZ73847LL)",
         "type": "distribution",
         "mergeASARs": false,
         "extendInfo": {
