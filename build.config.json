@@ -15,9 +15,8 @@
         "gatekeeperAssess": false,
         "entitlements": "bin/entitlements.mac.plist",
         "entitlementsInherit": "bin/entitlements.mac.inherit.plist",
-        "identity": "Lukas Nyberg (YT27J42JQ8)",
-        "provisioningProfile": "61be0696-8d71-4a17-8f96-53c50b8c6fdd.provisionprofile",
-        "type": "development",
+        "identity": "Developer ID Application: Harry Eriksson (JPZ73847LL)",
+        "type": "distribution",
         "mergeASARs": false,
         "extendInfo": {
             "NSMicrophoneUsageDescription": "Please give us access to your microphone",
