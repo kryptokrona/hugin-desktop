@@ -215,13 +215,16 @@
 	};
 
 	//Chat to add
-	const handleAddChat = (e) => {
-		let addContact = e.chat;
+	const handleAddChat = async (e) => {
+		// Resolve to the canonical SEKR identity so the UI conversation is keyed
+		// the same way the backend stores it, even if an Xkr address was pasted.
+		const forms = await window.api.addressForms(e.chat);
+		const addContact = forms?.sekr || e.chat;
 		window.api.addChat(addContact, e.name, true);
 		printConversation({
-			conversation: e.chat,
-			address: e.chat,
-			chat: e.chat,
+			conversation: addContact,
+			address: addContact,
+			chat: addContact,
 			key: e.key,
 			name: e.name
 		});

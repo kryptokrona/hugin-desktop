@@ -7,22 +7,55 @@ import WalletIcon from '$lib/components/icons/WalletIcon.svelte'
 let { onShowQR } = $props();
 
 let hovered = $state(false)
-let copied = $state(false)
+let copiedKind = $state('') // '' | 'primary' | 'legacy'
+
+// Both prefix forms of our address. The new Xkr form is promoted as the primary
+// address to share; the legacy SEKR form stays reachable via the "…" button for
+// third parties that only understand the old prefix. Resolved in the main
+// process (the renderer can't decode addresses).
+let forms = $state({ sekr: '', xkr: '' })
+
+$effect(() => {
+    const me = $user.myAddress
+    if (!me) return
+    window.api.addressForms(me)
+        .then((res) => { if (res) forms = res })
+        .catch(() => { /* fall back to SEKR below */ })
+})
+
+let address = $derived(forms.xkr || forms.sekr || $user.myAddress || '')
+let legacy = $derived(forms.sekr || $user.myAddress || '')
 
 // SEKR…1337 style clip — take enough of the head to keep the prefix
 // recognizable and the tail to look like a signature.
-let address = $derived($user.myAddress || '')
 let clipped = $derived(
     address.length > 10
         ? `${address.slice(0, 4)}…${address.slice(-4)}`
         : address
 )
 
+let copyLabel = $derived(
+    copiedKind === 'legacy' ? (t('legacyCopied') || 'Legacy copied')
+    : copiedKind === 'primary' ? (t('copied') || 'Copied')
+    : (t('address') || 'Address')
+)
+
+function flash(kind) {
+    copiedKind = kind
+    setTimeout(() => { copiedKind = '' }, 1200)
+}
+
 function copy() {
     if (!address) return
     navigator.clipboard.writeText(address)
-    copied = true
-    setTimeout(() => { copied = false }, 1200)
+    flash('primary')
+}
+
+function copyLegacy(e) {
+    e.stopPropagation()
+    if (!legacy) return
+    navigator.clipboard.writeText(legacy)
+    flash('legacy')
 }
 
 function showQR(e) {
@@ -44,11 +77,11 @@ function showQR(e) {
     type="button"
     class="share"
     class:hovered
-    class:copied
+    class:copied={copiedKind}
     onmouseenter={() => (hovered = true)}
     onmouseleave={() => (hovered = false)}
     onclick={copy}
-    aria-label={copied ? (t('copied') || 'Copied') : (t('address') || 'Address')}
+    aria-label={copyLabel}
 >
     <span class="icon">
         <WalletIcon size={16} />
@@ -56,11 +89,23 @@ function showQR(e) {
 
     <span class="labels">
         <span class="label collapsed">
-            {copied ? (t('copied') || 'Copied') : (t('address') || 'Address')}
+            {copiedKind ? copyLabel : (t('address') || 'Address')}
         </span>
         <span class="label expanded" aria-hidden="true">
-            {copied ? (t('copied') || 'Copied') : clipped}
+            {copiedKind ? copyLabel : clipped}
         </span>
+    </span>
+
+    <span
+        class="more"
+        role="button"
+        tabindex="0"
+        aria-label="Copy legacy (SEKR) address"
+        title="Copy legacy (SEKR) address"
+        onclick={copyLegacy}
+        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && copyLegacy(e)}
+    >
+        …
     </span>
 
     <span
@@ -120,7 +165,7 @@ function showQR(e) {
         }
 
         &.hovered {
-            width: 240px;
+            width: 270px;
         }
 
         &.copied {
@@ -213,6 +258,37 @@ function showQR(e) {
     }
     .share.hovered .qr {
         width: 24px;
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    // "…" legacy-address button — same reveal-on-hover behaviour as the QR
+    // slot, sitting just before it. Clicking copies the old SEKR form.
+    .more {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 0;
+        height: 100%;
+        opacity: 0;
+        transform: translateX(12px);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+        color: var(--title-color);
+        transition:
+            width 320ms cubic-bezier(0.22, 1, 0.36, 1) 40ms,
+            opacity 220ms ease 100ms,
+            transform 320ms cubic-bezier(0.22, 1, 0.36, 1) 40ms,
+            background-color 200ms ease;
+    }
+    .more:hover {
+        background-color: var(--card-border);
+    }
+    .share.hovered .more {
+        width: 22px;
         opacity: 1;
         transform: translateX(0);
     }

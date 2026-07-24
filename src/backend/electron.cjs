@@ -27,7 +27,7 @@ const dev = !app.isPackaged
 const { loadHugin, loadWallet } = require('./wallet.cjs')
 const { Hugin } = require('./account.cjs')
 const { Storage } = require('./storage.cjs')
-const { check_if_media } = require('./utils.cjs')
+const { check_if_media, canonicalAddress, displayAddress } = require('./utils.cjs')
 const { getRooms, getContacts } = require('./database.cjs')
 
 let mainWindow
@@ -320,6 +320,17 @@ ipcMain.handle('load-stored-file', async (e, hash, topic) => {
      console.log('load-stored-file error:', err)
      return ['File not found']
    }
+})
+
+// Returns both prefix forms of an address for the share/copy UI. `sekr` is the
+// canonical (legacy) form used everywhere internally; `xkr` is the new-prefix
+// form to promote for sharing. `xkr` is '' when conversion isn't available
+// (older utils), so the UI can fall back to SEKR.
+ipcMain.handle('address-forms', async (e, address) => {
+  const sekr = await canonicalAddress(address)
+  if (!sekr) return { sekr: '', xkr: '' }
+  const xkr = await displayAddress(sekr)
+  return { sekr, xkr }
 })
 
 ipcMain.handle('get-storage-stats', async () => {

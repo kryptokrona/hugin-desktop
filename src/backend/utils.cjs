@@ -1,6 +1,6 @@
 const { randomBytes } = require('crypto');
 const _sanitize = require('sanitize-html');
-const { Crypto, Keys } = require('kryptokrona-utils');
+const { Crypto, Keys, Address } = require('kryptokrona-utils');
 
 const sanitizeHtml = (input) => {
 	if (typeof input !== 'string') return input;
@@ -638,6 +638,63 @@ function toBrowbroserKey(rawCode) {
 	return rawToBrowserKeyCode[rawCode] || 0; // 0 = unknown
 }
 
+// ---------------------------------------------------------------------------
+// Address prefix handling
+//
+// Hugin's messaging identity and wire format are the 99-char default-prefix
+// (SEKR) address, hardcoded in many places. The new Xkr prefix encodes the same
+// keys but is a character shorter (98 chars). To let users share/enter the new
+// form without touching the messaging protocol, we keep the SEKR form as the
+// single canonical internal identity and only ever convert at the boundaries:
+//   - canonicalAddress(): any prefix (or legacy compound) -> canonical SEKR.
+//   - displayAddress():   canonical SEKR -> Xkr, for sharing/display.
+// Both prefixes therefore resolve to the SAME identity rather than fragmenting
+// contacts. displayAddress()/Xkr-decoding require kryptokrona-utils with
+// alternateAddress(); until that is published these gracefully return '' and
+// Hugin behaves exactly as before (SEKR only).
+// ---------------------------------------------------------------------------
+
+// Normalise any accepted address form to the canonical 99-char SEKR address.
+// Accepts a SEKR address, an Xkr address, or a legacy compound (address + key
+// suffix). Returns '' if it cannot be parsed.
+async function canonicalAddress(input) {
+	if (typeof input !== 'string') return '';
+	// SEKR is 99 chars, Xkr is 98 -- try the longer split first so a SEKR
+	// address (or a compound with a SEKR prefix) is matched before Xkr.
+	for (const len of [99, 98]) {
+		if (input.length < len) continue;
+		const candidate = input.substring(0, len);
+		try {
+			if (!candidate.startsWith('Xkr')) {
+				// Default-prefix (SEKR) address: valid as-is, no conversion needed
+				// (works even without alternateAddress support).
+				await Address.fromAddress(candidate);
+				if (candidate.length === 99) return candidate;
+				continue;
+			}
+			// Xkr address: convert to its SEKR twin (needs updated utils).
+			const decoded = await Address.fromAddress(candidate);
+			const sekr = await decoded.alternateAddress();
+			if (sekr && sekr.length === 99) return sekr;
+		} catch (e) {
+			/* not this length; try the next */
+		}
+	}
+	return '';
+}
+
+// The Xkr (new-prefix) form of a canonical SEKR address, for sharing/display.
+// Returns '' if it can't be converted (e.g. utils without alternateAddress).
+async function displayAddress(sekr) {
+	try {
+		const decoded = await Address.fromAddress(sekr);
+		const xkr = await decoded.alternateAddress();
+		return xkr || '';
+	} catch (e) {
+		return '';
+	}
+}
+
 module.exports = {
 	isLatin,
 	mini_message,
@@ -664,5 +721,7 @@ module.exports = {
 	MEDIA_TYPES,
 	pow_config,
 	logPow,
-	validate_pow_job
+	validate_pow_job,
+	canonicalAddress,
+	displayAddress
 };

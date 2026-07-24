@@ -46,8 +46,10 @@ onDestroy(() => {
 })
 
 run(() => {
-    if (text.length > 98) {
-        // xkr address is 99 chars; ignore any legacy nacl-key suffix
+    // SEKR addresses are 99 chars, the new Xkr addresses are 98. Accept either
+    // (and ignore any legacy nacl-key suffix); the backend canonicalises the
+    // pasted address to the internal SEKR identity when the contact is saved.
+    if (text.length >= 98) {
         addr = text.substring(0, 99)
         text = addr
 
@@ -77,7 +79,8 @@ const close = () => {
 
 run(() => {
     //Handle state of the button, disabled by default, when enabled RGB class will be added.
-    enableButton = !!(addr && addr.length === 99)
+    //Accept both prefixes: SEKR (99 chars) and Xkr (98 chars).
+    enableButton = !!(addr && (addr.length === 98 || addr.length === 99))
 
     ///Empty fields if input is empty
     if (!text) {

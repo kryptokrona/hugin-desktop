@@ -92,6 +92,9 @@ const WINDOW_API = {
     getMnemonic: async (data) => {
         return await ipcRenderer.invoke('get-mnemonic')
     },
+    addressForms: async (address) => {
+        return await ipcRenderer.invoke('address-forms', address)
+    },
     createInvite: async () => {
         return await ipcRenderer.invoke('get-room-invite')
     },

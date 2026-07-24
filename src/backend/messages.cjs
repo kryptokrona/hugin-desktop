@@ -45,7 +45,8 @@ const {
 	hexToUint,
 	randomKey,
 	nonceFromTimestamp,
-	toHex
+	toHex,
+	canonicalAddress
 } = require('./utils.cjs');
 const { sanitize_group_message } = require('hugin-p2p/utils');
 
@@ -259,10 +260,13 @@ ipcMain.on('send-msg', (e, msg, receiver, p2p, grp, beam, call, timestamp) => {
 
 //Listens for event from frontend and saves contact and nickname.
 ipcMain.on('add-chat', async (e, hugin_address, nickname, first) => {
-	//The contact id is the 99-char xkr address (tolerate a legacy 163 string).
-	const chat = typeof hugin_address === 'string' ? hugin_address.substring(0, 99) : '';
+	// The contact id is the canonical 99-char SEKR address. Accept either prefix
+	// (SEKR or Xkr) or a legacy compound string; both prefixes resolve to the
+	// same canonical identity so a contact added via Xkr matches one added via
+	// SEKR.
+	const chat = await canonicalAddress(hugin_address);
 	if (chat.length !== 99) {
-		Hugin.send('error-notify-message', 'Invalid contact length');
+		Hugin.send('error-notify-message', 'Invalid contact address');
 		return;
 	}
 	save_contact(chat, nickname, first);
@@ -1041,11 +1045,14 @@ async function save_message(msg, p2p = false) {
 	Hugin.send('privateMsg', newMsg);
 }
 
-//Saves contact and nickname to db. Accepts a 99-char xkr address (tolerates a
-//legacy 163-char string by taking the address part).
+//Saves contact and nickname to db. Accepts either prefix (SEKR/Xkr) or a legacy
+//compound string, and stores the canonical 99-char SEKR address so every code
+//path keys contacts by the same identity.
 async function save_contact(address, nickname = false, first = false) {
 	const name = nickname || 'Anon';
-	const addr = address.substring(0, 99);
+	// Canonicalise to SEKR; fall back to the raw 99-char slice if canonicalisation
+	// is unavailable (e.g. utils without alternateAddress) so SEKR still works.
+	const addr = (await canonicalAddress(address)) || address.substring(0, 99);
 
 	await saveThisContact(addr, '', name);
 	Hugin.send('saved-addr', addr);
