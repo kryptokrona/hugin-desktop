@@ -98,8 +98,8 @@
 		"int-to-rgb": "^1.0.0",
 		"keypear": "^1.1.1",
 		"kryptokrona-crypto": "^1.0.3",
-		"kryptokrona-utils": "^1.3.7",
-		"kryptokrona-wallet-backend-js": "^2.5.6",
+		"kryptokrona-utils": "github:kryptokrona/kryptokrona-utils#new-prefix",
+		"kryptokrona-wallet-backend-js": "github:kryptokrona/kryptokrona-wallet-backend-js#new-prefix",
 		"node-notifier": "^10.0.1",
 		"node-pre-gyp": "^0.17.0",
 		"patch-package": "^6.5.0",
@@ -145,5 +145,8 @@
 		"svelte-youtube-embed": "0.4.6",
 		"typescript": "5.9.3",
 		"vite": "5.4.21"
+	},
+	"overrides": {
+		"kryptokrona-utils": "github:kryptokrona/kryptokrona-utils#new-prefix"
 	}
 }
