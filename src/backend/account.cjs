@@ -19,7 +19,7 @@ const {
 const fs = require('fs');
 const Store = require('electron-store');
 const { hash } = require('crypto');
-const { toBrowbroserKey } = require('./utils.cjs');
+const { toBrowbroserKey, is_picked_directory } = require('./utils.cjs');
 const store = new Store();
 const { uIOhook } = require('uiohook-napi');
 
@@ -60,6 +60,7 @@ const get_avatar = () => {
 };
 
 ipcMain.on('change-download-dir', (e, dir) => {
+	if (!is_picked_directory(dir)) return;
 	store.set({
 		download: {
 			dir: dir

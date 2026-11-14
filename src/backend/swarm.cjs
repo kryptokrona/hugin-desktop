@@ -17,7 +17,8 @@ const {
 	randomKey,
 	check_if_media,
 	logPow,
-	mini_message
+	mini_message,
+	register_user_file
 } = require('./utils.cjs');
 const {
 	saveGroupMsg,
@@ -1641,6 +1642,7 @@ ipcMain.handle('save-to-downloads', async (e, { hash, fileName, topic }) => {
 });
 
 ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room = true) => {
+	register_user_file(path);
 	let active = get_active(key);
 	if (!room) {
 		active = get_beam(key);

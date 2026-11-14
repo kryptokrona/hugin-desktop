@@ -4,6 +4,7 @@ const sqlite3 = require('better-sqlite3-multiple-ciphers')
 const Store = require('electron-store')
 const store = new Store()
 const {sleep, containsOnlyEmojis} = require('./utils.cjs')
+const { isHex64 } = require('./validate.cjs')
 const { Hugin } = require('./account.cjs')
 
 const closeDB = async () => {
@@ -136,6 +137,65 @@ const migrateSchema = () => {
     } catch (err) {
         console.log('[db] Orphaned-contact backfill migration failed:', err)
     }
+    migrateMessagesUniqueHash()
+}
+
+// Messages are unique on their hash. Rows without a hash (local notices) are not covered by
+// the index; saveMsg dedupes those itself.
+const createMessageHashIndex = () => {
+    try {
+        database.prepare(
+            `CREATE UNIQUE INDEX IF NOT EXISTS messages_hash_unique
+             ON messages (hash) WHERE hash IS NOT NULL AND hash != ''`
+        ).run()
+    } catch (e) {
+        console.log('[db] messages hash index not created:', e.message)
+    }
+}
+
+// Tables created by earlier versions carry UNIQUE(timestamp). Rebuild them once without it
+// (keeping the first row per hash), then add the hash index.
+const migrateMessagesUniqueHash = () => {
+    try {
+        const uniqueOnTimestamp = database.prepare('PRAGMA index_list(messages)').all()
+            .filter((ix) => ix.unique && ix.origin === 'u')
+            .some((ix) => {
+                const cols = database.prepare('SELECT name FROM pragma_index_info(?)').all(ix.name)
+                return cols.length === 1 && cols[0].name === 'timestamp'
+            })
+        if (!uniqueOnTimestamp) {
+            createMessageHashIndex()
+            return
+        }
+        database.transaction(() => {
+            database.prepare(`
+                CREATE TABLE messages_rebuild (
+                   message TEXT,
+                   conversation TEXT,
+                   sent BOOLEAN,
+                   timestamp TEXT,
+                   read INTEGER DEFAULT 0,
+                   hash TEXT,
+                   reply TEXT DEFAULT '',
+                   tip TEXT,
+                   status TEXT DEFAULT 'success'
+                )`).run()
+            database.prepare(`
+                INSERT INTO messages_rebuild
+                    (message, conversation, sent, timestamp, read, hash, reply, tip, status)
+                SELECT message, conversation, sent, timestamp, read, hash, reply, tip, status
+                FROM messages
+                WHERE hash IS NULL OR hash = '' OR rowid IN (
+                    SELECT min(rowid) FROM messages WHERE hash IS NOT NULL AND hash != '' GROUP BY hash
+                )`).run()
+            database.prepare('DROP TABLE messages').run()
+            database.prepare('ALTER TABLE messages_rebuild RENAME TO messages').run()
+            createMessageHashIndex()
+        })()
+        console.log('[db] messages table rebuilt with a unique hash index')
+    } catch (err) {
+        console.log('[db] messages table rebuild failed:', err)
+    }
 }
 
 const welcomeAddress =
@@ -250,8 +310,7 @@ function messagesTable() {
                    hash TEXT,
                    reply TEXT DEFAULT '',
                    tip TEXT,
-                   status TEXT DEFAULT 'success',
-                   UNIQUE (timestamp)
+                   status TEXT DEFAULT 'success'
                )`
     return new Promise(
         (resolve, reject) => {
@@ -259,6 +318,7 @@ function messagesTable() {
            try {
                database.prepare('ALTER TABLE messages ADD COLUMN read INTEGER DEFAULT 0').run()
            } catch (e) {}
+           createMessageHashIndex()
         },
         () => {
             resolve()
@@ -646,7 +706,7 @@ async function saveFeedMessage(msg) {
     if (await feedMessageExists(msg.hash)) return;
     try {
     database.prepare(
-        'REPLACE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash, read) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
+        'INSERT OR IGNORE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash, read) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
     ).run(msg.address, msg.message, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash)
 
     } catch(a) {
@@ -656,8 +716,11 @@ async function saveFeedMessage(msg) {
   }
 
 const saveGroupMsg = async (msg, offchain, channels = false) => {
-    
-    if (await groupMessageExists(msg.timestamp)) return false
+    if (!msg || typeof msg !== 'object') return false
+    // Room messages are unique on their hash (INSERT OR IGNORE below). Rows without a hash fall
+    // back to a timestamp check.
+    const hasHash = typeof msg.hash === 'string' && msg.hash.length > 0
+    if (!hasHash && await groupMessageExists(msg.timestamp)) return false
    
     let channel = false
 
@@ -679,8 +742,8 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     msg.sent = changeBool(msg.sent)
     
     try {
-    database.prepare(
-        `REPLACE INTO groupmessages  (
+    const result = database.prepare(
+        `INSERT OR IGNORE INTO groupmessages  (
     message,
     address,
     signature,
@@ -696,7 +759,8 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
        VALUES
            (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(msg.message, msg.address, '', msg.room, msg.timestamp, msg.name, msg.reply, msg.hash, msg.sent, tip, msg.sent)
+    ).run(msg.message, msg.address, '', msg.room, msg.timestamp, msg.name, msg.reply, hasHash ? msg.hash : null, msg.sent, tip, msg.sent)
+    if (result.changes === 0) return false
     saveRoomUser({
         name: msg.name,
         address: msg.address,
@@ -705,6 +769,7 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
       });
         } catch(a) {
             console.log("Sql lite", a)
+            return false
         }
     
     return msg
@@ -712,6 +777,13 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
 
 const changeBool = (b) => {
     return b ? 1 : 0
+}
+
+// Page number from the renderer -> row offset (a non-negative integer).
+const pageOffset = (page, limit) => {
+    const n = Number(page)
+    if (!Number.isSafeInteger(n) || n <= 0) return 0
+    return n * limit
 }
 
 // p2p === true  → message came via the swarm/beam channel.
@@ -737,14 +809,32 @@ const saveMsg = async (message, addr, sent, timestamp, p2p, hash = '') => {
     }
 
     sent = changeBool(sent)
+    if (typeof hash !== 'string') hash = ''
 
-    //Save to DB
+    //Save to DB. Messages are unique on their hash, so a row is never replaced by a later
+    //message; rows without a hash are deduped on conversation and timestamp.
+    if (hash === '') {
+        const existing = database.prepare(
+            `SELECT 1 FROM messages
+             WHERE conversation = ? AND timestamp = ? AND (hash IS NULL OR hash = '')
+             LIMIT 1`
+        ).get([addr, String(timestamp)])
+        if (!existing) {
+            database.prepare(
+                `INSERT INTO messages
+                    (message, conversation, sent, timestamp, read, hash)
+                VALUES
+                    (?, ?, ?, ?, ?, ?)`
+            ).run([message, addr, sent, timestamp, sent, hash])
+        }
+    } else {
         database.prepare(
-            `REPLACE INTO messages
+            `INSERT OR IGNORE INTO messages
                 (message, conversation, sent, timestamp, read, hash)
             VALUES
                 (?, ?, ?, ?, ?, ?)`
         ).run([message, addr, sent, timestamp, sent, hash])
+    }
 
     let newMsg = {
         message: message,
@@ -759,21 +849,18 @@ const saveMsg = async (message, addr, sent, timestamp, p2p, hash = '') => {
 }
 
 //Saves txHash as checked to avoid syncing old messages from mempool in Munin upgrade.
+//Returns true when the hash was new and is now stored, false otherwise (never throws).
 const saveHash = async (txHash) => {
-
-    if (await knownTxExists(txHash)) return false
-    if (txHash == undefined) return false
-    if (txHash.length !== 64) return false
-
-    database.prepare(
-        `REPLACE INTO knownTxs (
-                 hash
-               )
-               VALUES
-                   ( ? )`
-    ).run([txHash])
-
-    return true
+    if (!isHex64(txHash)) return false
+    try {
+        const result = database.prepare(
+            `INSERT OR IGNORE INTO knownTxs (hash) VALUES (?)`
+        ).run([txHash])
+        return result.changes > 0
+    } catch (err) {
+        console.log('[db] saveHash failed:', err.message)
+        return false
+    }
 }
 
 const saveChannelMessage = (hsh, timestamp, chnl, grp) => {
@@ -957,9 +1044,8 @@ const getConversations = async () => {
 
 //Get a chosen conversation from the reciepients xkr address.
 const getConversation = async (chat, page) => {
-    let limit = 100
-    let offset = 0
-    if (page !== 0) offset = page * limit
+    const limit = 100
+    const offset = pageOffset(page, limit)
     
     const thisConversation = []
     return new Promise((resolve, reject) => {
@@ -976,10 +1062,10 @@ const getConversation = async (chat, page) => {
         ORDER BY
             timestamp
         DESC
-        LIMIT ${offset}, ${limit}`
+        LIMIT ? OFFSET ?`
         
         const stmt = database.prepare(getChat)
-        for(const row of stmt.iterate(chat)) {
+        for(const row of stmt.iterate(chat, limit, offset)) {
             if (row === undefined) continue
             thisConversation.push(row)
         }
@@ -1070,9 +1156,8 @@ const getFeedMessageReplies = async (hash) => {
 }
 
 const printFeed = async (page=0, sync=false) => {
-    let limit = 50
-    let offset = 0
-    if (page !== 0) offset = page * limit
+    const limit = 50
+    const offset = pageOffset(page, limit)
     const thisFeed = []
     return new Promise(async (resolve, reject) => {
         const feed = `SELECT
@@ -1083,11 +1168,11 @@ const printFeed = async (page=0, sync=false) => {
         ORDER BY
             timestamp
         DESC
-        LIMIT ${offset}, ${limit}`
+        LIMIT ? OFFSET ?`
 
         const stmt = database.prepare(feed)
 
-        for (const row of stmt.iterate()) {
+        for (const row of stmt.iterate(limit, offset)) {
             if (!sync) {
                 const {replies, reactions} = await getFeedMessageReplies(row.hash);
                 row.replies = replies;
@@ -1103,9 +1188,8 @@ const printFeed = async (page=0, sync=false) => {
 //Print a chosen group from the shared key.
 const printGroup = async (group, page) => {
 
-    let limit = 50
-    let offset = 0
-    if (page !== 0) offset = page * limit
+    const limit = 50
+    const offset = pageOffset(page, limit)
     const thisGroup = []
     return new Promise((resolve, reject) => {
         const getGroup = `SELECT
@@ -1125,10 +1209,10 @@ const printGroup = async (group, page) => {
         ORDER BY
             timestamp
         DESC
-        LIMIT ${offset}, ${limit}`
+        LIMIT ? OFFSET ?`
         const stmt = database.prepare(getGroup)
 
-        for(const row of stmt.iterate(group)) {
+        for(const row of stmt.iterate(group, limit, offset)) {
             if (row.address.length === 0) row.address = row.room
                     
                 thisGroup.push(row)
@@ -1199,20 +1283,19 @@ const getContacts = async () => {
 }
 
 
+// The *Exists helpers use bound parameters and resolve false on any error.
+const rowExists = (sql, value) => {
+    if (typeof value !== 'string' && typeof value !== 'number') return false
+    try {
+        return !!database.prepare(sql).get(String(value))
+    } catch (err) {
+        console.log('[db] lookup failed:', err.message)
+        return false
+    }
+}
+
 const knownTxExists = async (hash) => {
-    let exists = false
-    return new Promise((resolve, reject) => {
-        const hashExists = 
-        `SELECT *
-        FROM knownTxs
-        WHERE hash = '${hash}'
-        `
-        const row = database.prepare(hashExists).get()
-        if(row) {
-            exists = true
-        }
-        resolve(exists)
-    })
+    return rowExists('SELECT 1 FROM knownTxs WHERE hash = ? LIMIT 1', hash)
 }
 
 // Dedup by the content-addressed message hash (hc.messageHash(wireHex)) so
@@ -1236,51 +1319,15 @@ const messageExists = async (hashOrTime) => {
 }
 
 const groupMessageExists = async (timestamp) => {
-    let exists = false
-    return new Promise((resolve, reject) => {
-        const groupMessageExists = 
-        `SELECT *
-        FROM groupmessages
-        WHERE timestamp = '${timestamp}'
-        `
-        const row = database.prepare(groupMessageExists).get()
-        if(row) {
-            exists = true
-        }
-        resolve(exists)
-    })
+    return rowExists('SELECT 1 FROM groupmessages WHERE timestamp = ? LIMIT 1', timestamp)
 }
 
 const feedMessageExists = async (hash) => {
-    let exists = false
-    return new Promise((resolve, reject) => {
-        const hashExists = 
-        `SELECT *
-        FROM feedmessages
-        WHERE hash = '${hash}'
-        `
-        const row = database.prepare(hashExists).get()
-        if(row) {
-            exists = true
-        }
-        resolve(exists)
-    })
+    return rowExists('SELECT 1 FROM feedmessages WHERE hash = ? LIMIT 1', hash)
 }
 
 const roomMessageExists = async (hash) => {
-    let exists = false
-    return new Promise((resolve, reject) => {
-        const hashExists = 
-        `SELECT *
-        FROM groupmessages
-        WHERE hash = '${hash}'
-        `
-        const row = database.prepare(hashExists).get()
-        if(row) {
-            exists = true
-        }
-        resolve(exists)
-    })
+    return rowExists('SELECT 1 FROM groupmessages WHERE hash = ? LIMIT 1', hash)
 }
 
 const getLatestRoomHashes = async (key) => {
@@ -1295,10 +1342,10 @@ const getLatestRoomHashes = async (key) => {
         ORDER BY
             timestamp
         DESC
-        LIMIT ${offset}, ${limit}`
+        LIMIT ? OFFSET ?`
 
         const hashList = database.prepare(latestRoomHashes)
-        for(const row of hashList.iterate(key)) {
+        for(const row of hashList.iterate(key, limit, offset)) {
             if(row) {
                 if (row.message === "Joined room") continue
                 hashes.push(row.hash)

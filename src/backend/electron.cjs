@@ -28,6 +28,7 @@ const { loadHugin, loadWallet } = require('./wallet.cjs')
 const { Hugin } = require('./account.cjs')
 const { Storage } = require('./storage.cjs')
 const { check_if_media } = require('./utils.cjs')
+const { externalUrl } = require('./validate.cjs')
 const { getRooms, getContacts } = require('./database.cjs')
 
 let mainWindow
@@ -113,6 +114,19 @@ function createWindow() {
     
     }
 
+    // New windows are never created; http(s) links go to the system browser.
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        open_external(url)
+        return { action: 'deny' }
+    })
+
+    // The window only navigates within the app itself.
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        if (is_app_url(url)) return
+        event.preventDefault()
+        open_external(url)
+    })
+
     mainWindow.setMenu(null)
     
     //Disable windows animations because of flash in window.show()
@@ -122,6 +136,29 @@ function createWindow() {
 
 
     return mainWindow
+}
+
+// Validates the URL scheme (http: and https: only) before handing a link to the OS.
+function open_external(url) {
+    const safe = externalUrl(url)
+    if (!safe) {
+        console.log('openLink: refused a URL outside the allowed schemes')
+        return
+    }
+    const { shell } = require('electron')
+    shell.openExternal(safe).catch((err) => console.log('openExternal failed:', err))
+}
+
+// The app's own origin: the Vite dev server in development, electron-serve's app:// otherwise.
+function is_app_url(url) {
+    let parsed
+    try {
+        parsed = new URL(url)
+    } catch {
+        return false
+    }
+    if (dev) return parsed.origin === `http://localhost:${port}`
+    return parsed.protocol === 'app:' && parsed.host === '-'
 }
 
 contextMenu({
@@ -507,9 +544,7 @@ ipcMain.on('check-srcs', async (e, src) => {
 
 
 ipcMain.on('openLink', (e, url) => {
-    const {shell} = require('electron')
-    console.log('url', url)
-    shell.openExternal(url)
+    open_external(url)
 })
 
 ipcMain.on('open-download-folder', (e) => {

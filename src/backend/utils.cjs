@@ -46,35 +46,108 @@ const MEDIA_TYPES = [
 ];
 
 ipcMain.handle('load-file', async (e, path, size) => {
+	if (!is_loadable_path(path)) return ['File not found'];
 	return await load_file(path, size);
 });
 
-ipcMain.handle('select-directory', () => {
-	let dir = dialog.showOpenDialog({
+// load-file serves files from the app's own directories (user data, the download directory,
+// the clipboard image directory), files the app has recorded in its file list, and files the
+// user picked for upload in this session.
+const nodePath = require('path');
+const fs = require('fs');
+const { isPathInside } = require('./validate.cjs');
+const userPickedFiles = new Set();
+
+function clipboard_dir() {
+	const { app } = require('electron');
+	return nodePath.join(app.getPath('temp'), 'hugin-clipboard');
+}
+
+function register_user_file(p) {
+	if (typeof p !== 'string' || p.length === 0) return;
+	userPickedFiles.add(nodePath.resolve(p));
+}
+
+function real_path(p) {
+	try {
+		return fs.realpathSync(p);
+	} catch {
+		return null;
+	}
+}
+
+function is_loadable_path(p) {
+	if (typeof p !== 'string' || p.length === 0 || p.includes('\0')) return false;
+	const real = real_path(p);
+	if (!real) return false;
+	if (userPickedFiles.has(nodePath.resolve(p)) || userPickedFiles.has(real)) return true;
+	// Required here, not at load time: account.cjs requires this module.
+	const { app } = require('electron');
+	const { Hugin } = require('./account.cjs');
+	try {
+		const files = Hugin.get_files();
+		if (Array.isArray(files) && files.some((f) => f && f.path === p)) return true;
+	} catch {}
+	const roots = [app.getPath('userData'), Hugin.downloadDir, clipboard_dir()];
+	return roots.some((root) => {
+		if (typeof root !== 'string' || root.length === 0) return false;
+		return isPathInside(real_path(root) ?? root, real);
+	});
+}
+
+// Directories the user chose in the directory dialog; change-download-dir accepts only these.
+const pickedDirectories = new Set();
+
+ipcMain.handle('select-directory', async () => {
+	const dir = await dialog.showOpenDialog({
 		properties: ['openDirectory']
 	});
+	if (dir && Array.isArray(dir.filePaths)) {
+		for (const p of dir.filePaths) pickedDirectories.add(p);
+	}
 	return dir;
 });
 
-ipcMain.handle('save-clipboard-image', async (e, base64Data, filename) => {
-	const { app } = require('electron');
-	const path = require('path');
-	const fs = require('fs');
+function is_picked_directory(p) {
+	return typeof p === 'string' && pickedDirectories.has(p);
+}
 
-	// Create temp directory if it doesn't exist
-	const tempDir = path.join(app.getPath('temp'), 'hugin-clipboard');
+const CLIPBOARD_IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+const MAX_CLIPBOARD_BASE64 = 70000000;
+
+// The file name is reduced to a plain base name with an image extension, and the result must
+// stay inside the clipboard image directory.
+function clipboard_file_name(filename) {
+	const base = nodePath.basename(typeof filename === 'string' ? filename : '');
+	const dot = base.lastIndexOf('.');
+	let ext = dot > 0 ? base.slice(dot + 1).toLowerCase() : '';
+	if (!CLIPBOARD_IMAGE_EXTENSIONS.includes(ext)) ext = 'png';
+	let stem = (dot > 0 ? base.slice(0, dot) : base).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+	if (stem.length === 0) stem = 'image';
+	return `${stem}.${ext}`;
+}
+
+ipcMain.handle('save-clipboard-image', async (e, base64Data, filename) => {
+	if (typeof base64Data !== 'string' || base64Data.length > MAX_CLIPBOARD_BASE64) return null;
+
+	const tempDir = clipboard_dir();
 	if (!fs.existsSync(tempDir)) {
 		fs.mkdirSync(tempDir, { recursive: true });
 	}
 
-	// Generate unique filename
-	const uniqueFilename = `${Date.now()}-${filename}`;
-	const filePath = path.join(tempDir, uniqueFilename);
+	const uniqueFilename = `${Date.now()}-${randomBytes(4).toString('hex')}-${clipboard_file_name(filename)}`;
+	const filePath = nodePath.join(tempDir, uniqueFilename);
+	if (!isPathInside(tempDir, filePath)) return null;
 
-	// Convert base64 to buffer and write to file
+	// Convert base64 to buffer and write to a new file
 	const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, '');
 	const buffer = Buffer.from(base64Content, 'base64');
-	fs.writeFileSync(filePath, buffer);
+	try {
+		fs.writeFileSync(filePath, buffer, { flag: 'wx' });
+	} catch (err) {
+		console.log('save-clipboard-image failed:', err.message);
+		return null;
+	}
 
 	return { path: filePath, size: buffer.length };
 });
@@ -311,6 +384,10 @@ function toBrowbroserKey(rawCode) {
 }
 
 module.exports = {
+	register_user_file,
+	is_picked_directory,
+	is_loadable_path,
+	clipboard_file_name,
 	isLatin,
 	mini_message,
 	toBrowbroserKey,

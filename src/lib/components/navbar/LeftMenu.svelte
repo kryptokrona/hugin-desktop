@@ -115,7 +115,12 @@
 			window.api.errorMessage(t('avatarFileSizeTooBig') || 'Avatar file size is too big');
 			return;
 		}
-		const [arr, type] = await window.api.loadFile(file.path, file.size);
+		// Read the picked file in the renderer (load-file only serves the app's own files).
+		const isImage =
+			file?.type?.startsWith('image/') ||
+			/\.(png|jpe?g|gif|webp|jfif)$/i.test(file?.name ?? '');
+		if (!isImage) return;
+		const arr = new Uint8Array(await file.arrayBuffer());
 		window.api.send('set-avatar', arr);
 		const blob = new Blob([arr]);
 

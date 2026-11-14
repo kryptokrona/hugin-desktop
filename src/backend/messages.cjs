@@ -64,6 +64,7 @@ const { Hugin } = require('./account.cjs');
 const { expand_sdp_offer, parse_sdp } = require('./sdp.cjs');
 const store = new Store();
 const { Notification } = require('electron');
+const { isHex64, notificationTitle, notificationBody } = require('./validate.cjs');
 
 let known_pool_txs = [];
 let block_list = [];
@@ -79,23 +80,29 @@ const BACKGROUND_SYNC_INTERVAL = 1000 * 15;
 // })
 //GROUPS MESSAGES
 
+// Notification text is plain text: markup is removed, and the body is escaped where the
+// notification server interprets markup (see validate.cjs).
+const show_notification = (title, body) => {
+	try {
+		const notification = new Notification({
+			title: notificationTitle(title),
+			body: notificationBody(body),
+			icon: 'src/static/icon.png'
+		});
+		notification.show();
+	} catch (err) {
+		console.log('Notification failed:', err);
+	}
+};
+
 ipcMain.on('notify-room', (e, data) => {
-	console.log('Send notification', data);
-	const notification = new Notification({
-		title: data.name + ' in ' + data.roomName,
-		body: data.message,
-		icon: 'src/static/icon.png'
-	});
-	notification.show();
+	if (!data || typeof data !== 'object') return;
+	show_notification(notificationTitle(data.name) + ' in ' + notificationTitle(data.roomName), data.message);
 });
 
 ipcMain.on('notify-dm', (e, data) => {
-	const notification = new Notification({
-		title: data.name,
-		body: data.message,
-		icon: 'src/static/icon.png'
-	});
-	notification.show();
+	if (!data || typeof data !== 'object') return;
+	show_notification(data.name, data.message);
 });
 
 ipcMain.on('send-room-message', (e, m) => {
@@ -233,8 +240,9 @@ ipcMain.on('hugin-node', (e, { address, pub }) => {
 });
 
 Nodes.on('new-message', (messages) => {
+	if (!Array.isArray(messages)) return;
 	console.log('New messages from node', messages.length);
-	decrypt_hugin_messages(messages);
+	decrypt_hugin_messages(messages).catch((err) => console.log('decrypt_hugin_messages:', err));
 });
 
 ipcMain.handle('get-conversations', async (e) => {
@@ -386,7 +394,11 @@ const start_message_syncer = async () => {
 	Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub);
 	await sleep(5000);
 	block_list = Hugin.block_list;
-	await background_sync_messages(await load_checked_txs());
+	try {
+		await background_sync_messages(await load_checked_txs());
+	} catch (err) {
+		console.log(err);
+	}
 	while (true) {
 		try {
 			//Start syncing
@@ -446,7 +458,7 @@ async function background_sync_messages(checkedTxs = false) {
 	}
 
 	if (incoming_pm_que.length) {
-		clear_pm_que();
+		clear_pm_que().catch((err) => console.log('clear_pm_que:', err));
 	}
 
 	if (incoming || large_batch) {
@@ -460,7 +472,9 @@ async function background_sync_messages(checkedTxs = false) {
 
 	if (transactions.length < 5) Hugin.send('incoming-que', false);
 	console.log('Incoming transactions', transactions.length);
-	decrypt_hugin_messages(transactions, false);
+	decrypt_hugin_messages(transactions, false).catch((err) =>
+		console.log('decrypt_hugin_messages:', err)
+	);
 }
 
 function update_que() {
@@ -471,9 +485,11 @@ function update_que() {
 }
 
 async function decrypt_hugin_messages(list, que = false) {
+	if (!Array.isArray(list)) return;
 	console.log('Checking nr of txs:', list.length);
 	for (const message of list) {
 		try {
+			if (!message || typeof message !== 'object') continue;
 			const thisHash = message.hash;
 			// hugin-crypto's encodeExtra emits bare hex(JSON) with no prefix —
 			// no need to reconstruct the old on-chain-style '99'+hash prefix
@@ -491,7 +507,7 @@ async function decrypt_hugin_messages(list, que = false) {
 				console.log(`[decrypt] skipped ${thisHash?.slice(0, 8)}: cipher length ${thisExtra?.length} (need > 200)`);
 				continue;
 			}
-			if (!saveHash(thisHash)) continue;
+			if (!(await saveHash(thisHash))) continue;
 			//Check for private message (ephemeral friend-request box; the
 			//view tag is matched against our view key inside the decrypt).
 			if (await check_for_pm_message(thisExtra, thisHash, que)) continue;
@@ -649,11 +665,12 @@ const MAX_EXTRA_LENGTH = 9000;
 //Validate extradata, here we can add more conditions
 function validate_extra(thisExtra, thisHash, que) {
 	if (typeof thisExtra !== 'string') return false;
-	if (typeof thisHash !== 'string') return false;
+	// Hashes are 64 hex characters.
+	if (!isHex64(thisHash)) return false;
 	//Extra too long
 	if (thisExtra.length > MAX_EXTRA_LENGTH) {
 		known_pool_txs.push(thisHash);
-		if (!saveHash(thisHash)) return false;
+		saveHash(thisHash).catch((err) => console.log('saveHash:', err));
 		return false;
 	}
 	//Check if known tx, if que is true we already know it but should check anyway
@@ -720,7 +737,7 @@ async function fetch_hugin_messages() {
 	//Latest version, fetch more messages with last checked timestamp
 	const list = await sync_from_node(node);
 
-	if (list.length === 0) {
+	if (!Array.isArray(list) || list.length === 0) {
 		console.log('No incoming messages...');
 		return false;
 	}
@@ -1031,7 +1048,11 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
 	if (settings.key === undefined) settings.key = false;
 	//Clear known pool txs to look through messages we already marked as known
 	known_pool_txs = [];
-	await sync_group_history(timeframe, settings.recommended_api, settings.key);
+	try {
+		await sync_group_history(timeframe, settings.recommended_api, settings.key);
+	} catch (err) {
+		console.log('fetch-group-history:', err);
+	}
 });
 
 module.exports = {

@@ -1,15 +1,55 @@
 // preload.cjs
 const { contextBridge, ipcRenderer } = require('electron')
 
+// The generic send/receive calls accept only the channels the renderer uses. Every other main
+// process handler is reached through a named method below.
+const SEND_CHANNELS = new Set([
+    'active-video', 'app', 'ban-user', 'block', 'check-new-release', 'close', 'create-account',
+    'download-update', 'end-beam', 'exit-voice', 'expand-voice-channel-sdp',
+    'get-sdp-voice-channel', 'group-download', 'group-notifications', 'hugin-node',
+    'install-update', 'join-voice', 'login', 'min', 'new-channel', 'new-swarm', 'notify-dm',
+    'notify-room', 'openLink', 'optimize', 'pick-screen-source', 'push-to-talk', 'rescan',
+    'right-click', 'room-banned', 'set-avatar', 'set-nickname', 'sounds', 'sync-images',
+    'typing', 'unblock', 'voice-activation',
+])
+
+const RECEIVE_CHANNELS = new Set([
+    'activate-video', 'addr', 'answer-voice-channel', 'banned', 'beam-connected', 'blur',
+    'channel-created', 'checked', 'close-voice-channel-with-peer', 'download-file-progress',
+    'downloading', 'download-request', 'endCall', 'error_msg', 'error-notify-message',
+    'feed-message', 'file-downloaded', 'files', 'focus', 'friend-request',
+    'friend-requests-updated', 'got-answer-voice-channel', 'got-expanded-voice-channel',
+    'group-change-source', 'group_invited_contact', 'groupMsg', 'group-remote-file-added',
+    'group-screen-share', 'history-update', 'hugin-node-address', 'hugin-node-connection',
+    'idle', 'incoming-que', 'join-voice-channel', 'joined-room', 'key-event',
+    'leave-active-voice-channel', 'leave-voice-channel', 'local-files', 'login-failed',
+    'login-success', 'new-beam', 'newBoard', 'newMsg', 'node', 'node-not-ok', 'node-sync-data',
+    'notification-room-click', 'optimized', 'os-arch', 'peer-connected', 'peer-disconnected',
+    'pm-send-error', 'privateMsg', 'rec-off', 'remote-file-added', 'remote-files',
+    'remote-file-saved', 'roomMsg', 'room-notification', 'rtc_message', 'saved-addr',
+    'screen-share-sources', 'sent', 'sent_group', 'sent_room', 'sent_tx', 'set-audio-input',
+    'set-audio-input-group', 'set-channels', 'stop-beam', 'success-notify-message',
+    'swarm-connected', 'swarm-disconnected', 'switch-node', 'sync', 'torrent-shared',
+    'transaction-update', 'typing', 'update-blocklist', 'update-progress', 'updater',
+    'upload-file-progress', 'uploading', 'user-joined-voice-channel', 'version',
+    'voice-channel-status', 'wallet-exist', 'wallet-started',
+])
+
+const allowed = (set, channel, kind) => {
+    if (typeof channel === 'string' && set.has(channel)) return true
+    console.warn(`preload: ${kind} on channel ${String(channel)} is not allowed`)
+    return false
+}
+
 const WINDOW_API = {
     //GENERAL API CALLS
     send: (channel, data) => {
+        if (!allowed(SEND_CHANNELS, channel, 'send')) return
         ipcRenderer.send(channel, data)
     },
-    sendSync: (channel, data) => {
-        ipcRenderer.sendSync(channel, data)
-    },
     receive: (channel, func) => {
+        if (!allowed(RECEIVE_CHANNELS, channel, 'receive')) return
+        if (typeof func !== 'function') return
         ipcRenderer.on(channel, (event, ...args) => func(...args))
     },
     addChat: (hugin, name, first) => {
@@ -259,6 +299,7 @@ const WINDOW_API = {
     },
     
     removeAllListeners: (channel) => {
+        if (!allowed(RECEIVE_CHANNELS, channel, 'removeAllListeners')) return
         ipcRenderer.removeAllListeners(channel)
     },
     
