@@ -38,16 +38,11 @@ const {
 	getFriendRequests,
 	removeFriendRequest
 } = require('./database.cjs');
-const {
-	trimExtra,
-	sanitize_pm_message,
-	sleep,
-	hexToUint,
-	randomKey,
-	nonceFromTimestamp,
-	toHex
-} = require('./utils.cjs');
-const { sanitize_group_message } = require('hugin-p2p/utils');
+const { trimExtra, sanitize_pm_message, sleep, randomKey } = require('./utils.cjs');
+// Room messages this app creates are validated and normalized like received ones.
+const { roomMessageIn, roomMessageOut } = require('./p2p-wire.cjs');
+// hugin-node packets, push payloads and view tags.
+const push = require('hugin-p2p/push');
 
 const {
 	send_swarm_message,
@@ -61,8 +56,6 @@ const { Address, Crypto, CryptoNote } = require('kryptokrona-utils');
 const hc = require('hugin-crypto');
 const identity = require('./identity.cjs');
 const { default: fetch } = require('electron-fetch');
-const sodium = require('sodium-native');
-const { sanitizeHtml } = require('./utils.cjs');
 const crypto = new Crypto();
 const xkrUtils = new CryptoNote();
 const { ipcMain, powerMonitor } = require('electron');
@@ -132,7 +125,7 @@ ipcMain.on('add-group', async (e, grp) => {
 	if (!grp?.key || !grp?.name) return;
 	addGroup(grp);
 	const timestamp = Date.now();
-	const message = sanitize_group_message({
+	const message = roomMessageIn({
 		timestamp: String(timestamp),
 		room: grp.key,
 		message: 'Joined group',
@@ -156,7 +149,7 @@ ipcMain.on('add-room', async (e, room, admin) => {
 		store.set({ syncImages: Hugin.syncImages });
 	}
 	const timestamp = Date.now();
-	const message = sanitize_group_message({
+	const message = roomMessageIn({
 		timestamp: String(timestamp),
 		room: room.key,
 		message: 'Joined room',
@@ -704,12 +697,9 @@ async function sync_from_node(node) {
 	const lastChecked = store.get('pool.checked');
 
 	try {
+		// Always a numeric timestamp (0 before the first sync): hugin-node refuses a sync without one.
 		const resp = await Promise.race([
-			Nodes.sync({
-				request: true,
-				type: 'some',
-				timestamp: lastChecked
-			}),
+			Nodes.sync(push.syncRequest({ since: lastChecked })),
 			new Promise((_, reject) =>
 				setTimeout(() => reject(new Error('Sync timed out')), 10000)
 			)
@@ -744,13 +734,11 @@ async function fetch_hugin_messages() {
 	return list;
 }
 
+// cn_fast_hash(hex(viewPublicKey + week number)): the first 3 hex characters, all 64 for calls.
 async function generate_push_view_tag(address, call) {
 	const myAddr = await Address.fromAddress(address);
 	const pubKey = myAddr.m_keys.m_viewKeys.m_publicKey;
-	const weeklyTimestamp = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7));
-	const hashInput = toHex(String(pubKey) + String(weeklyTimestamp));
-	const hash = await crypto.cn_fast_hash(hashInput);
-	return call ? hash : hash.substring(0, 3);
+	return push.dmViewTag(pubKey, { long: !!call });
 }
 
 // Routing for a private message:
@@ -883,70 +871,36 @@ async function encrypt_hugin_message(message, toAddr) {
 
 async function send_room_message(message) {
 	console.log('Send this!', message);
-	const normalized = sanitize_group_message(message);
+	const normalized = roomMessageIn(message, { sent: true });
 	if (!normalized) return;
-	normalized.sent = true;
-	const swarmMessage = JSON.stringify(normalized);
+	let swarmMessage;
+	try {
+		swarmMessage = roomMessageOut(normalized);
+	} catch (e) {
+		console.log('Room message not sent:', e.message);
+		return;
+	}
 	//Swarm message is already encrypted over the connection
 	send_swarm_message(swarmMessage, normalized.room);
 	save_group_message(normalized, normalized.hash, normalized.timestamp, false, true, false, true);
 	await send_room_message_push(normalized);
 }
 
-async function generate_room_view_tag(room) {
-	const hash = await crypto.cn_fast_hash(room);
-	return hash.substring(0, 5);
-}
-
+// Room push through hugin-node (`kind: 'room'`): the room message as sent on the swarm, in a
+// secretbox keyed by the room key (nonce from the timestamp), sealed to the push server's key,
+// routed by the room view tag (cn_fast_hash(invite), 5 hex characters).
 async function send_room_message_push(message) {
 	try {
-		const roomKey = message.room.substring(0, 64);
-		// secretbox key = the 32-byte room key itself.
-		const key = Buffer.from(hexToUint(roomKey));
-
-		const payload_message = {
-			message: message.message,
-			reply: message.reply,
-			tip: message.tip || '',
-			hash: message.hash,
-			name: message.name,
-			address: message.address
-		};
-		const payload_bytes = Buffer.from(JSON.stringify(payload_message));
-
-		const timestamp = message.timestamp;
-		const nonce = Buffer.from(nonceFromTimestamp(timestamp));
-
-		// inner: libsodium secretbox keyed by the room key
-		const inner = Buffer.alloc(payload_bytes.length + sodium.crypto_secretbox_MACBYTES);
-		sodium.crypto_secretbox_easy(inner, payload_bytes, nonce, key);
-
-		const payload_json = {
-			box: inner.toString('hex'),
-			viewTag: await generate_room_view_tag(message.room)
-		};
-		const payload_json_bytes = Buffer.from(JSON.stringify(payload_json));
-
-		// outer: libsodium anonymous sealed box (never opened client-side; the
-		// node routes the push by the plaintext viewTag arg below).
-		const fixedPub = Buffer.from(
-			'6e18d19b3c94f7c2c4da5dc6f17305f8ab6da33f8beb18e63a0f048d2a21c345',
-			'hex'
-		);
-		const sealed = Buffer.alloc(payload_json_bytes.length + sodium.crypto_box_SEALBYTES);
-		sodium.crypto_box_seal(sealed, payload_json_bytes, fixedPub);
-
-		//Box object
-		let payload_box = {
-			box: sealed.toString('hex'),
-			t: timestamp
-		};
-		// Convert json to hex
-		let payload_hex = toHex(JSON.stringify(payload_box));
+		const timestamp = Number(message.timestamp);
+		const payload_hex = push.sealRoomPush({
+			invite: message.room,
+			payload: push.roomPushPayload({ ...message, timestamp }),
+			timestamp
+		});
 
 		const sent = await Nodes.message(
 			payload_hex,
-			await generate_room_view_tag(message.room),
+			push.roomViewTag(message.room),
 			'room',
 			message.hash
 		);

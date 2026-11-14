@@ -1,21 +1,22 @@
 // Upstream hyperswarm/hyperdht with the Hugin `mid` in the Noise handshake (signed with the
-// topic base key, verified both ways; peers without a valid mid are refused), see hugin-mid.
+// topic base key, verified both ways; peers without a valid mid are refused), see
+// hugin-p2p/swarm.
 const { createHuginSwarm } = require('hugin-p2p/swarm');
+// Swarm keys, admin signatures and the idSig check (hugin-p2p/keys), PoW for hugin-node
+// (hugin-p2p/pow) and hugin-node packets (hugin-p2p/push).
+const keys = require('hugin-p2p/keys');
+const pow = require('hugin-p2p/pow');
+const push = require('hugin-p2p/push');
+// Validation and building of hugin-messages traffic (hugin-p2p/sanitize + hugin-p2p/wire),
+// mapped to the shapes the renderer and the database expect.
+const P2PWire = require('./p2p-wire.cjs');
 
 const {
 	sleep,
-	sanitize_join_swarm_data,
-	sanitize_voice_status_data,
-	sanitize_file_message,
-	sanitize_group_message,
 	check_hash,
-	toHex,
 	randomKey,
 	check_if_media,
-	sanitize_feed_message,
-	sanitize_typing_message,
 	logPow,
-	validate_pow_job,
 	mini_message
 } = require('./utils.cjs');
 const {
@@ -35,17 +36,7 @@ const {
 	saveRoomUser
 } = require('./database.cjs');
 const { app, ipcMain } = require('electron');
-const {
-	keychain,
-	get_new_peer_keys,
-	naclHash,
-	verify_signature,
-	sign_admin_message,
-	signMessage,
-	sign_joined_message,
-	verifySignature,
-	decrpyt_beam_message
-} = require('./crypto.cjs');
+const { keychain, signMessage, verifySignature, decrpyt_beam_message } = require('./crypto.cjs');
 
 const LOCAL_VOICE_STATUS_OFFLINE = {
 	voice: false,
@@ -58,19 +49,14 @@ const LOCAL_VOICE_STATUS_OFFLINE = {
 
 const { Hugin } = require('./account.cjs');
 const { Storage } = require('./storage.cjs');
+// The nonce search runs in hugin-utils' worker processes (several cores, off the Electron main
+// thread). Found shares are checked with hugin-p2p/pow `verifyShare` before they are posted.
 const { createChallenge } = require('hugin-utils/challenge');
+const { Crypto } = require('kryptokrona-utils');
 const RPC = require('bare-rpc');
 const b4a = require('b4a');
 const Protomux = require('protomux');
 const c = require('compact-encoding');
-
-const MISSING_MESSAGES = 'missing-messages';
-const REQUEST_MESSAGES = 'request-messages';
-const REQUEST_HISTORY = 'request-history';
-const SEND_HISTORY = 'send-history';
-const PING_SYNC = 'Ping';
-const REQUEST_FEED = 'request-feed';
-const SEND_FEED_HISTORY = 'send-feed-history';
 
 let started = false;
 
@@ -82,9 +68,14 @@ let localFiles = [];
 let active_swarms = [];
 let active_voice_channel = LOCAL_VOICE_STATUS_OFFLINE;
 
-const POW_MAX_JOB_TIME_MS = 90000;
-const POW_REQUIRED_SHARES = 1;
 const challenge = createChallenge();
+// CN-Turtle-Lite v2, the hash hook of hugin-p2p/pow (the same function the workers run).
+const xkrCrypto = new Crypto();
+const powHash = async (blobHex) => String(await xkrCrypto.cn_turtle_lite_slow_hash_v2(blobHex)).toLowerCase();
+
+// A DM swarm admits one peer (maxPeers 1). A connection that has not proven to be the contact
+// (verified idSig of the contact's address in `joined`) within this time is closed.
+const DM_JOIN_TIMEOUT_MS = 30000;
 
 const RPC_COMMANDS = Object.freeze({
 	PACKET: 1
@@ -116,29 +107,23 @@ class NodeConnection extends EventEmitter {
 	async connect(address, pub) {
 		//If we choose the public option. We connect to the first responding node.
 		//in the public network.
-		const key = pub ? this.public : address;
-		const [, , , peer] = get_new_peer_keys(key);
+		const node = { address, pub };
+		const key = keys.nodeSwarmKey(node);
 		const { swarm, topic } = createHuginSwarm({
 			key,
-			keyPair: peer.keyPair,
+			keyPair: keys.newPeerKeys(key).keyPair,
 			maxPeers: 1,
 			firewall(remotePublicKey) {
 				console.log('remotePublicKey', remotePublicKey.toString('hex'));
-
-				//If we are connecting to a public node. Allow connection.
-				if (pub) return false;
-
-				//We verify if the private node has the correct public key.
-				if (remotePublicKey.toString('hex') !== address.slice(-64)) {
-					return true;
-				}
-				return false;
+				//Any node on the public network; a private node only with the public key in the
+				//last 64 characters of its address.
+				return !keys.isAllowedNodePeer(remotePublicKey, node);
 			}
 		});
 		this.node = swarm;
 
 		this.listen();
-		// Buffer.alloc(32).fill(hex(base public key)), derived by hugin-mid.
+		// Buffer.alloc(32).fill(hex(base public key)), derived by hugin-p2p/swarm.
 		this.topic = topic;
 		this.discovery = this.node.join(topic, { server: false, client: true });
 	}
@@ -189,67 +174,60 @@ class NodeConnection extends EventEmitter {
 
 	handle_node_packet(data) {
 		console.log('Data from node', data);
-		if (data.type === 'new-message' && Array.isArray(data.messages)) {
-			Nodes.emit('new-message', data.messages);
+		const packet = push.parseNodePacket(data);
+		if (packet.kind === 'invalid') return;
+
+		if (packet.kind === 'messages') {
+			Nodes.emit('new-message', packet.messages);
 			return;
 		}
 
-		if ('address' in data) {
-			if (typeof data.address !== 'string') return;
-			if (data.address.length !== 99) return;
-			this.address = data.address;
-			Hugin.send('hugin-node-address', data.address);
+		if (packet.kind === 'address') {
+			this.address = packet.address;
+			Hugin.send('hugin-node-address', packet.address);
 			return;
 		}
+		// An address that is not 99 characters is ignored.
+		if (packet.kind === 'ignored' && packet.reason === 'address') return;
+
+		const pending = this.requests.get(data.id);
 
 		// Unsolicited job push (no pending request id)
-		if (data.type === 'job' && data.job && !this.requests.has(data.id)) {
+		if (packet.kind === 'job' && !pending) {
 			logPow('job_push', { type: data.type, jobId: data.job?.job_id });
-			const validation = validate_pow_job(data.job);
-			if (validation.ok) {
-				this.set_job(data.job);
-			} else {
-				logPow('job_reject', { reason: validation.reason });
-			}
+			this.accept_job(packet);
 			return;
 		}
 
-		if (this.requests.has(data.id)) {
-			const { resolve } = this.requests.get(data.id);
-			if ('chunks' in data) {
-				this.pending.push(data.response);
-				return;
-			}
-			if ('done' in data) {
-				resolve(this.pending);
-				this.requests.delete(data.id);
-				return;
-			}
+		if (!pending) return;
+		const { resolve } = pending;
 
-			if ('success' in data) {
-				resolve(data);
-				this.requests.delete(data.id);
-				return;
-			}
+		if (packet.kind === 'chunk') {
+			this.pending.push(packet.response);
+			return;
+		}
 
-			// Handle job response from node
-			if (data.type === 'job' || data.type === 'job_pending') {
-				logPow('job_response', { id: data.id, type: data.type, jobId: data.job?.job_id });
-				if (data.job) {
-					const validation = validate_pow_job(data.job);
-					if (validation.ok) {
-						this.set_job(data.job);
-					} else {
-						logPow('job_reject', { reason: validation.reason });
-					}
-				}
-				resolve(data);
-				this.requests.delete(data.id);
-				return;
-			}
-
+		if (packet.kind === 'done') {
+			resolve(this.pending);
+		} else if (packet.kind === 'result') {
+			resolve(data);
+		} else if (packet.kind === 'job' || packet.kind === 'job_pending') {
+			// Job response from node
+			logPow('job_response', { id: data.id, type: data.type, jobId: data.job?.job_id });
+			if (packet.kind === 'job') this.accept_job(packet);
+			resolve(data);
+		} else {
 			resolve(data.response);
-			this.requests.delete(data.id);
+		}
+		this.requests.delete(data.id);
+	}
+
+	// A job is used only if it passes hugin-p2p/pow `validatePowJob` (parseNodePacket ran it).
+	accept_job(packet) {
+		if (packet.valid) {
+			this.set_job(packet.job);
+		} else {
+			logPow('job_reject', { reason: packet.reason });
 		}
 	}
 
@@ -310,8 +288,10 @@ class NodeConnection extends EventEmitter {
 	send_packet(packet) {
 		if (!this.rpc) return false;
 		try {
+			// encodePacket refuses bodies above 9000 bytes (hugin-node bans the sender of one).
+			const body = push.encodePacket(packet);
 			const req = this.rpc.request(RPC_COMMANDS.PACKET);
-			req.send(JSON.stringify(packet));
+			req.send(body);
 			req.reply().catch(() => {});
 			return true;
 		} catch (e) {
@@ -324,10 +304,13 @@ class NodeConnection extends EventEmitter {
 		return new Promise((resolve, reject) => {
 			// If the node response is dropped (stream parsing), don't hang the background sync loop forever.
 			this.pending = [];
+			// push.syncRequest sets id = timestamp; anything else gets one here.
 			const id =
-				data && data.timestamp !== undefined && data.timestamp !== null
-					? data.timestamp
-					: Date.now();
+				data.id !== undefined && data.id !== null
+					? data.id
+					: data.timestamp !== undefined && data.timestamp !== null
+						? data.timestamp
+						: Date.now();
 			data.id = id;
 			this.requests.set(id, { resolve, reject });
 			if (!this.send_packet(data)) {
@@ -360,110 +343,13 @@ class NodeConnection extends EventEmitter {
 
 			const request_id = Date.now();
 			const message_hash = randomKey();
-			const max_attempts = 3;
-
-			const should_retry = (res) => {
-				if (!res) return true;
-				if (res.success === true) return false;
-				return !!res.reason;
-			};
-			const compute_pow = async () => {
-				let pow = null;
-				try {
-					pow = await this.challenge(message_hash);
-					if (pow && pow.shares) {
-						logPow('pow_register_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
-					}
-				} catch (e) {
-					logPow('pow_error', { message: e && e.message });
-				}
-				return pow;
-			};
-
-			const send_register = async (payload) => {
-				if (!this.connection) {
-					this.reconnect();
-					await sleep(5000);
-				}
-				return await new Promise((resolve, reject) => {
-					this.requests.set(request_id, { resolve, reject });
-					if (!this.send_packet(payload)) {
-						this.requests.delete(request_id);
-						resolve({ success: false, reason: 'write_failed' });
-						return;
-					}
-					setTimeout(() => {
-						if (!this.requests.has(request_id)) return;
-						this.requests.delete(request_id);
-						resolve({ success: false, reason: 'timeout' });
-					}, 60000);
-				});
-			};
-
-			const build_register = (pow) => ({
-				register: true,
-				data,
-				timestamp: request_id,
-				id: request_id,
-				hash: message_hash,
-				pow: {
-					version: 2,
-					job: pow.job,
-					shares: pow.shares,
-					auth: pow.auth
-				}
+			return await this.post_with_pow('register', {
+				message_hash,
+				request_id,
+				context: pow.registerAuthContext(data),
+				build: (powField) =>
+					push.registerPacket({ data, timestamp: request_id, hash: message_hash, pow: powField })
 			});
-
-			let last_res = { success: false, reason: 'unknown' };
-			let stale_share_retries = 0;
-			const max_stale_share_retries = 3;
-			for (let attempt = 1; attempt <= max_attempts; attempt++) {
-				let pow = await compute_pow();
-				if (!pow || !pow.shares || pow.shares.length === 0) {
-					logPow('pow_register_retry', { attempt, reason: 'no_shares' });
-					this.currentJob = null;
-					const jobResponse = await this.request_job();
-					if (jobResponse && jobResponse.job) this.set_job(jobResponse.job);
-					last_res = { success: false, reason: 'PoW required' };
-					continue;
-				}
-
-				const auth = this.build_pow_auth(message_hash, request_id, pow.shares, String(data || ''));
-				if (!auth) {
-					logPow('pow_register_retry', { attempt, reason: 'pow_auth_failed' });
-					await sleep(100);
-					continue;
-				}
-				const res = await send_register(build_register({ ...pow, auth }));
-				if (res && res.success === true) return res;
-
-				last_res = res || { success: false, reason: 'unknown' };
-				if (!should_retry(last_res)) break;
-
-				const recalc = this.should_recalc_share(last_res);
-				if (recalc && stale_share_retries < max_stale_share_retries) {
-					stale_share_retries++;
-					logPow('pow_register_recalc', {
-						attempt,
-						stale_share_retries,
-						reason: last_res.reason,
-						jobId: pow && pow.job && pow.job.job_id
-					});
-					attempt--;
-				}
-
-				logPow('pow_register_retry', {
-					attempt,
-					reason: last_res.reason,
-					jobId: pow && pow.job && pow.job.job_id
-				});
-				this.currentJob = null;
-				const jobResponse = await this.request_job();
-				if (jobResponse && jobResponse.job) this.set_job(jobResponse.job);
-				await sleep(recalc ? 25 : 100);
-			}
-
-			return last_res;
 		} catch (e) {
 			logPow('pow_register_error', { message: e && e.message });
 			return { success: false, reason: 'register_exception' };
@@ -484,10 +370,7 @@ class NodeConnection extends EventEmitter {
 		return new Promise((resolve, reject) => {
 			const id = randomKey();
 			this.requests.set(id, { resolve, reject });
-			const sent = this.send_packet({
-				type: 'job_request',
-				id
-			});
+			const sent = this.send_packet(push.jobRequest(id));
 			if (!sent) {
 				this.requests.delete(id);
 				resolve(null);
@@ -505,48 +388,111 @@ class NodeConnection extends EventEmitter {
 		});
 	}
 
-	build_pow_auth(message_hash, timestamp, shares, context = '') {
-		if (!Array.isArray(shares) || !shares.length) return null;
-		const share = shares[0];
-		const [, oneTimeKeys] = get_new_peer_keys(randomKey());
-		const signer = oneTimeKeys && oneTimeKeys.get ? oneTimeKeys.get() : null;
-		if (!signer || !signer.sign || !signer.publicKey) return null;
-		const payload = `powsig:v2:${String(message_hash || '')}:${timestamp}:${String(share.job_id || '')}:${String(share.nonce || '').toLowerCase()}:${String(share.result || '').toLowerCase()}:${String(context || '')}`;
-		const sig = signer.sign(Buffer.from(payload));
-		if (!sig) return null;
-		return {
-			pub: Buffer.from(signer.publicKey).toString('hex'),
-			sig: Buffer.from(sig).toString('hex'),
-			nonce: String(share.nonce || '').toLowerCase()
-		};
-	}
-
-	should_recalc_share(res) {
-		if (!res || typeof res !== 'object') return false;
-		const reason = typeof res.reason === 'string' ? res.reason.toLowerCase() : '';
-		if (
-			reason.includes('pool_reject') ||
-			reason.includes('invalid_share') ||
-			reason.includes('invalid pow') ||
-			reason.includes('stale') ||
-			reason.includes('job')
-		) {
-			return true;
+	// Sends a post/registration and waits up to 60 s for the node's answer.
+	async send_request(request_id, packet) {
+		if (!this.connection) {
+			this.reconnect();
+			await sleep(5000);
 		}
-		if (!Array.isArray(res.rejects)) return false;
-		return res.rejects.some((entry) => {
-			if (!entry) return false;
-			const txt =
-				typeof entry === 'string' ? entry.toLowerCase() : JSON.stringify(entry).toLowerCase();
-			return (
-				txt.includes('invalid') ||
-				txt.includes('stale') ||
-				txt.includes('low') ||
-				txt.includes('job')
-			);
+		return await new Promise((resolve, reject) => {
+			this.requests.set(request_id, { resolve, reject });
+			if (!this.send_packet(packet)) {
+				this.requests.delete(request_id);
+				resolve({ success: false, reason: 'write_failed' });
+				return;
+			}
+			setTimeout(() => {
+				if (!this.requests.has(request_id)) return;
+				this.requests.delete(request_id);
+				resolve({ success: false, reason: 'timeout' });
+			}, 60000);
 		});
 	}
 
+	// Posts a packet that carries proof of work: up to three attempts, plus up to three more when
+	// the node refused the share itself (a new share is searched for). Which answers are worth
+	// another attempt, which need a new share and how long to wait (1 s after `cooldown` or
+	// `rate_limit`) is hugin-p2p/pow's policy. `build(powField)` returns the packet.
+	async post_with_pow(label, { message_hash, request_id, context, build }) {
+		const max_attempts = 3;
+		const max_stale_share_retries = 3;
+		let last_res = { success: false, reason: 'unknown' };
+		let stale_share_retries = 0;
+		for (let attempt = 1; attempt <= max_attempts; attempt++) {
+			let found = null;
+			try {
+				found = await this.challenge(message_hash);
+				if (found && found.shares) {
+					logPow(`pow_${label}_ready`, { jobId: found.job?.job_id, shares: found.shares.length });
+				}
+			} catch (e) {
+				logPow('pow_error', { message: e && e.message });
+			}
+			if (!found || !found.shares || found.shares.length === 0) {
+				logPow(`pow_${label}_retry`, { attempt, reason: 'no_shares' });
+				this.currentJob = null;
+				const jobResponse = await this.request_job();
+				if (jobResponse && jobResponse.job) this.set_job(jobResponse.job);
+				last_res = { success: false, reason: 'PoW required' };
+				continue;
+			}
+
+			// powsig:v2 auth over shares[0], signed with a one-time ed25519 key.
+			const auth = pow.buildPowAuth({
+				hash: message_hash,
+				timestamp: request_id,
+				shares: found.shares,
+				context
+			});
+			if (!auth) {
+				logPow(`pow_${label}_retry`, { attempt, reason: 'pow_auth_failed' });
+				await sleep(100);
+				continue;
+			}
+
+			let packet;
+			try {
+				packet = build(pow.powField({ job: found.job, shares: found.shares, auth }));
+				push.encodePacket(packet);
+			} catch (e) {
+				logPow(`pow_${label}_error`, { message: e && e.message });
+				return { success: false, reason: e && e.field === 'size' ? 'packet_too_large' : 'invalid_packet' };
+			}
+
+			const res = await this.send_request(request_id, packet);
+			if (res && res.success === true) return res;
+
+			last_res = res || { success: false, reason: 'unknown' };
+			if (!pow.shouldRetry(last_res)) break;
+
+			const recalc = pow.shouldRecalcShare(last_res);
+			if (recalc && stale_share_retries < max_stale_share_retries) {
+				stale_share_retries++;
+				logPow(`pow_${label}_recalc`, {
+					attempt,
+					stale_share_retries,
+					reason: last_res.reason,
+					jobId: found.job && found.job.job_id
+				});
+				attempt--;
+			}
+
+			logPow(`pow_${label}_retry`, {
+				attempt,
+				reason: last_res.reason,
+				jobId: found.job && found.job.job_id
+			});
+			this.currentJob = null;
+			const jobResponse = await this.request_job();
+			if (jobResponse && jobResponse.job) this.set_job(jobResponse.job);
+			await sleep(pow.retryDelayMs(last_res));
+		}
+		return last_res;
+	}
+
+	// Finds one share for the current job. The search runs in hugin-utils' worker processes; a
+	// share they report is checked with hugin-p2p/pow `verifyShare` (CN-Turtle-Lite v2 of the
+	// blob with the nonce must equal the result and meet the target) before it is used.
 	async challenge(message_hash) {
 		if (!this.connection) return null;
 
@@ -557,35 +503,44 @@ class NodeConnection extends EventEmitter {
 		const freshJob = await this.request_job();
 		if (freshJob && freshJob.job) this.set_job(freshJob.job);
 
-		while (Date.now() - start < POW_MAX_JOB_TIME_MS && shares.length < POW_REQUIRED_SHARES) {
+		while (Date.now() - start < pow.POW_MAX_JOB_TIME_MS && shares.length < pow.POW_REQUIRED_SHARES) {
 			if (!challenge.hasJob()) {
 				await sleep(250);
 				continue;
 			}
 
-			const remaining = POW_MAX_JOB_TIME_MS - (Date.now() - start);
+			const remaining = pow.POW_MAX_JOB_TIME_MS - (Date.now() - start);
 			if (remaining <= 0) break;
 
 			const jobSnapshot = { ...challenge.currentJob };
-			const share = await challenge.findShare(Math.min(remaining, 30000));
+			const share = pow.normalizeShare(await challenge.findShare(Math.min(remaining, 30000)));
 
-			if (share) {
+			if (share && (await this.share_verifies(jobSnapshot, share))) {
 				miningJob = jobSnapshot;
-				shares.push({
-					job_id: String(share.job_id),
-					nonce: share.nonce.toLowerCase(),
-					result: share.result.toLowerCase()
-				});
+				shares.push(share);
 			} else {
 				const res = await this.request_job();
 				if (res && res.job) this.set_job(res.job);
 			}
 		}
 
-		if (shares.length >= POW_REQUIRED_SHARES && miningJob) {
+		if (shares.length >= pow.POW_REQUIRED_SHARES && miningJob) {
 			return { job: miningJob, shares };
 		}
 		return null;
+	}
+
+	async share_verifies(job, share) {
+		try {
+			if (await pow.verifyShare(job, share.nonce, share.result, powHash)) return true;
+			logPow('share_rejected', { jobId: job.job_id, nonce: share.nonce });
+			return false;
+		} catch (e) {
+			// The hash itself failed in this process: keep the share as found by the workers
+			// (the node checks it anyway) instead of blocking every post.
+			logPow('share_check_error', { message: e && e.message });
+			return true;
+		}
 	}
 
 	async message(payload, viewtag, kind = 'dm', hash = randomKey()) {
@@ -596,124 +551,23 @@ class NodeConnection extends EventEmitter {
 			}
 
 			const request_id = Date.now();
-			const max_attempts = 3;
-
 			// Keep hash stable across retries to avoid duplicates.
 			const message_hash = hash;
-
-			const baseMessage = {
-				cipher: payload,
-				timestamp: request_id,
-				hash: message_hash,
-				id: request_id,
-				push: true,
-				viewtag,
-				kind
-			};
-
-			const should_retry = (res) => {
-				if (!res) return true;
-				if (res.success === true) return false;
-				return !!res.reason;
-			};
-			const send_post = async (postData) => {
-				if (!this.connection) {
-					this.reconnect();
-					await sleep(5000);
-				}
-				return await new Promise((resolve, reject) => {
-					this.requests.set(request_id, { resolve, reject });
-					if (!this.send_packet(postData)) {
-						this.requests.delete(request_id);
-						resolve({ success: false, reason: 'write_failed' });
-						return;
-					}
-					setTimeout(() => {
-						if (!this.requests.has(request_id)) return;
-						this.requests.delete(request_id);
-						resolve({ success: false, reason: 'timeout' });
-					}, 60000);
-				});
-			};
-
-			const compute_pow = async () => {
-				let pow = null;
-				try {
-					pow = await this.challenge(message_hash);
-					if (pow && pow.shares) {
-						logPow('pow_message_ready', { jobId: pow.job?.job_id, shares: pow.shares.length });
-					}
-				} catch (e) {
-					logPow('pow_error', { message: e && e.message });
-				}
-				return pow;
-			};
-
-			const build_post = (pow) => ({
-				type: 'post',
-				message: {
-					...baseMessage,
-					pow: {
-						version: 2,
-						job: pow.job,
-						shares: pow.shares,
-						auth: pow.auth
-					}
-				}
-			});
-
-			let last_res = { success: false, reason: 'unknown' };
-			let stale_share_retries = 0;
-			const max_stale_share_retries = 3;
-			for (let attempt = 1; attempt <= max_attempts; attempt++) {
-				let pow = await compute_pow();
-				if (!pow || !pow.shares || pow.shares.length === 0) {
-					logPow('pow_message_retry', { attempt, reason: 'no_shares' });
-					this.currentJob = null;
-					const jobResponse = await this.request_job();
-					if (jobResponse && jobResponse.job) this.set_job(jobResponse.job);
-					last_res = { success: false, reason: 'PoW required' };
-					continue;
-				}
-
-				const authContext = kind
-					? `${kind}:${String(baseMessage.cipher || '')}`
-					: String(baseMessage.cipher || '');
-				const auth = this.build_pow_auth(message_hash, request_id, pow.shares, authContext);
-				if (!auth) {
-					logPow('pow_message_retry', { attempt, reason: 'pow_auth_failed' });
-					await sleep(100);
-					continue;
-				}
-				const res = await send_post(build_post({ ...pow, auth }));
-				if (res && res.success === true) return res;
-
-				last_res = res || { success: false, reason: 'unknown' };
-				if (!should_retry(last_res)) break;
-
-				const recalc = this.should_recalc_share(last_res);
-				if (recalc && stale_share_retries < max_stale_share_retries) {
-					stale_share_retries++;
-					logPow('pow_message_recalc', {
-						attempt,
-						stale_share_retries,
-						reason: last_res.reason,
-						jobId: pow && pow.job && pow.job.job_id
-					});
-					attempt--;
-				}
-
-				logPow('pow_message_retry', {
-					attempt,
-					reason: last_res.reason,
-					jobId: pow && pow.job && pow.job.job_id
-				});
-				this.currentJob = null;
-				const jobResponse = await this.request_job();
-				if (jobResponse && jobResponse.job) this.set_job(jobResponse.job);
-				await sleep(recalc ? 25 : 100);
+			const post = { cipher: payload, hash: message_hash, viewtag, kind, timestamp: request_id };
+			try {
+				// Checked before any PoW is spent (hex cipher of at most 9000 characters, hash, kind).
+				push.postMessage(post);
+			} catch (e) {
+				logPow('pow_message_error', { message: e && e.message });
+				return { success: false, reason: 'invalid_message' };
 			}
-			return last_res;
+
+			return await this.post_with_pow('message', {
+				message_hash,
+				request_id,
+				context: pow.postAuthContext(kind, payload),
+				build: (powField) => push.postPacket({ ...post, pow: powField })
+			});
 		} catch (e) {
 			logPow('pow_message_error', { message: e && e.message });
 			return { success: false, reason: 'message_exception' };
@@ -725,20 +579,33 @@ const Nodes = new NodeConnection();
 const create_swarm = async (data, beam, chat) => {
 	let discovery;
 	let swarm;
-	const key = naclHash(data.key);
+	//SHA-512 of the hex bytes: rooms hash the invite, DMs the key derivation hash.
+	const key = beam ? keys.dmSwarmKey(data.key) : keys.roomSwarmKey(data.key);
 	const invite = data.key;
 	const [admin] = is_room_admin(data.key);
-	const [base_keys, dht_keys, , peer] = get_new_peer_keys(key);
-	const topicHash = base_keys.publicKey.toString('hex');
+	//A fresh DHT key pair for this swarm and the topic of the key.
+	const peerKeys = keys.newPeerKeys(key);
+	const topicHash = b4a.toString(peerKeys.basePublicKey, 'hex');
 	if (active_swarms.some((a) => a.topic === topicHash)) return true;
 	await Storage.load_drive(topicHash);
 	const files = await Storage.load_meta(topicHash);
 	const peers = beam ? 1 : 100;
-	//The swarm uses the dht key pair; hugin-mid sends its mid (signed with the topic base key)
-	//in every handshake and refuses peers whose mid does not verify.
+	//A DM swarm has one slot (maxPeers 1) and admits only the contact. Everyone who knows the
+	//key derivation hash (the contact's devices and our own other devices) passes the Hugin
+	//`mid` check, and the DHT key of a peer is random per swarm, so the firewall cannot tell the
+	//contact from anyone else before connecting. The identity is checked when `joined` arrives
+	//(verified idSig of the contact's address); a peer that fails it is refused here from then
+	//on, see check_joined.
+	const contact = beam ? String(chat).substring(0, 99) : null;
+	const refused = new Set();
+	const firewall = beam
+		? (remotePublicKey) => refused.has(b4a.toString(remotePublicKey, 'hex'))
+		: undefined;
+	//The swarm uses the dht key pair; hugin-p2p/swarm sends its mid (signed with the topic base
+	//key) in every handshake and refuses peers whose mid does not verify.
 	let topic;
 	try {
-		({ swarm, topic } = createHuginSwarm({ key, keyPair: peer.keyPair, maxPeers: peers }));
+		({ swarm, topic } = createHuginSwarm({ key, keyPair: peerKeys.keyPair, maxPeers: peers, firewall }));
 	} catch (e) {
 		console.log('Error starting swarm', e);
 		return false;
@@ -764,7 +631,9 @@ const create_swarm = async (data, beam, chat) => {
 		peers: [],
 		files,
 		beam,
-		chat
+		chat,
+		contact,
+		refused
 	});
 
 	if (beam && !Hugin.syncImages.some(a => a === topicHash)) {
@@ -794,7 +663,7 @@ const create_swarm = async (data, beam, chat) => {
 
 	swarm.on('connection', (connection, information) => {
 		try {
-			new_connection(connection, topicHash, dht_keys, information, beam);
+			new_connection(connection, topicHash, peerKeys.keyPair, information, beam);
 		} catch (error) {
 			console.log('Failed to initialize swarm connection', error);
 			connection_closed(connection, topicHash, true);
@@ -808,7 +677,7 @@ const create_swarm = async (data, beam, chat) => {
 		swarm.destroy();
 		setTimeout(() => process.exit(), 2000);
 	});
-	// topic = Buffer.alloc(32).fill(topicHash), derived by hugin-mid.
+	// topic = Buffer.alloc(32).fill(topicHash), derived by hugin-p2p/swarm.
 	discovery = swarm.join(topic, { server: true, client: true });
 	await discovery.flushed();
 	check_online_state(topicHash);
@@ -825,12 +694,15 @@ const end_swarm = async (key, beam = false) => {
 		update_local_voice_channel_status(LOCAL_VOICE_STATUS_OFFLINE);
 	}
 
-	active.connections.forEach((chat) => {
-		try {
-			chat.connection.write(JSON.stringify({ type: 'disconnected' }));
-		} catch (e) {}
-		connection_closed(chat.connection, topic);
-	});
+	//Through the hugin-messages channel (a raw write on the stream is not read by peers), with a
+	//short pause so the message can leave before the connections close.
+	const connections = active.connections.slice();
+	if (connections.length) {
+		const bye = P2PWire.disconnectedOut();
+		for (const chat of connections) chat.write(bye);
+		await sleep(200);
+	}
+	connections.forEach((chat) => connection_closed(chat.connection, topic));
 
 	await active.swarm.leave(Buffer.from(topic));
 	await active.swarm.destroy();
@@ -840,7 +712,7 @@ const end_swarm = async (key, beam = false) => {
 	console.log('***** Ended swarm *****');
 };
 
-const new_connection = (connection, topic, dht_keys, peer, beam) => {
+const new_connection = (connection, topic, keyPair, peer, beam) => {
 	console.log('New connection incoming');
 	let active = get_active_topic(topic);
 
@@ -873,17 +745,31 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
 		publicKey: connection.remotePublicKey.toString('hex'),
 		driveKey: null,
 		msgType: null,
+		//Set once `joined` passed the idSig check (and, in a DM swarm, is the contact).
+		identityVerified: false,
+		joining: null,
+		joinTimer: null,
+		//Everything goes through the hugin-messages channel; objects are encoded with the 2 MiB guard.
 		write(data) {
-			const str = typeof data === 'string' ? data : JSON.stringify(data);
-			if (this.msgType) {
-				try { this.msgType.send(str); } catch(e) {}
-			} else {
-				try { this.connection.write(str); } catch(e) {}
+			if (!this.msgType) return;
+			try {
+				const str = typeof data === 'string' ? data : P2PWire.encode(data);
+				this.msgType.send(str);
+			} catch (e) {
+				console.log('Could not send to peer', e && e.message);
 			}
 		}
 	};
 
 	active.connections.push(connEntry);
+
+	if (beam) {
+		connEntry.joinTimer = setTimeout(() => {
+			if (connEntry.identityVerified) return;
+			console.log('DM peer did not identify as the contact in time, closing');
+			connection_closed(connection, topic);
+		}, DM_JOIN_TIMEOUT_MS);
+	}
 
 	const mux = Protomux.from(connection);
 	const channel = mux.createChannel({ protocol: 'hugin-messages' });
@@ -902,7 +788,7 @@ const new_connection = (connection, topic, dht_keys, peer, beam) => {
 	connEntry.msgType = msgType;
 	Storage.replicate(connection, topic);
 
-	send_joined_message(topic, dht_keys, connection).catch((error) => {
+	send_joined_message(topic, keyPair, connection).catch((error) => {
 		console.log('Failed to send joined message', error);
 		connection_closed(connection, topic, true);
 	});
@@ -934,6 +820,7 @@ const connection_closed = (conn, topic, error = false) => {
 	}
 	const user = active.connections.find((a) => a.connection === conn);
 	if (!user) return;
+	if (user.joinTimer) clearTimeout(user.joinTimer);
 	Hugin.send('close-voice-channel-with-peer', user.address);
 	Hugin.send('peer-disconnected', { address: user.address, topic });
 	const connection = active.connections.find((a) => a.connection === conn);
@@ -945,34 +832,46 @@ const connection_closed = (conn, topic, error = false) => {
 	active.connections = still_active;
 };
 
-async function send_voice_channel_sdp(data) {
-	const active = active_swarms.find((a) => a.topic === data.topic);
+//`to` is the peer the SDP is for; the message carries our own address as the sender.
+async function send_voice_channel_sdp({ to, data, offer, topic, retry }) {
+	const active = active_swarms.find((a) => a.topic === topic);
 	if (!active) return;
-	const con = active.connections.find((a) => a.address === data.address);
+	const con = active.connections.find((a) => a.address === to);
 	if (!con) return;
-	//We switch data address because in this case, it is from, we can change this
-	data.address = Hugin.address;
-	con.write(data);
+	let message;
+	try {
+		message = P2PWire.sdpOut({ data, offer, address: Hugin.address, topic, retry });
+	} catch (e) {
+		console.log('SDP not sent:', e.message);
+		return;
+	}
+	con.write(message);
 }
 
 const send_voice_channel_status = async (joined, status, update = false) => {
 	let active = active_swarms.find((a) => a.key === status.key);
 	if (!active) return;
-	const msg = active.topic;
-	const sig = await signMessage(msg, keychain.getXKRKeypair().privateSpendKey);
-	const data = JSON.stringify({
-		address: Hugin.address,
-		avatar: Hugin.avatar,
-		signature: sig,
-		message: msg,
-		voice: joined,
-		topic: active.topic,
-		name: Hugin.nickname,
-		video: status.video,
-		audioMute: status.audioMute,
-		videoMute: status.videoMute,
-		screenshare: status.screenshare
-	});
+	const sig = await signMessage(
+		P2PWire.voiceSigningPayload(active.topic),
+		keychain.getXKRKeypair().privateSpendKey
+	);
+	let data = null;
+	try {
+		data = P2PWire.voiceStatusOut({
+			address: Hugin.address,
+			avatar: Hugin.avatar,
+			signature: sig,
+			voice: joined,
+			topic: active.topic,
+			name: Hugin.nickname,
+			video: status.video,
+			audioMute: status.audioMute,
+			videoMute: status.videoMute,
+			screenshare: status.screenshare
+		});
+	} catch (e) {
+		console.log('Voice status not sent:', e.message);
+	}
 	update_local_voice_channel_status({
 		topic: active.topic,
 		voice: joined,
@@ -983,7 +882,7 @@ const send_voice_channel_status = async (joined, status, update = false) => {
 	});
 
 	//Send voice channel status to others in the group
-	send_swarm_message(data, status.key);
+	if (data) send_swarm_message(data, status.key);
 
 	if (update) return;
 	//If we joined the voice channel, make a call to those already announced their joined_voice_status
@@ -1016,9 +915,13 @@ const join_voice_channel = (key, topic, user) => {
 const admin_ban_user = async (address, key) => {
 	const active = get_active(key);
 	if (!active) return;
-	active.connections.forEach((chat) => {
-		chat.connection.write(JSON.stringify({ type: 'ban', address }));
-	});
+	try {
+		const message = P2PWire.banOut(address);
+		//Through the hugin-messages channel (a raw write on the stream is not read by peers).
+		active.connections.forEach((chat) => chat.write(message));
+	} catch (e) {
+		console.log('Ban not sent:', e.message);
+	}
 	await sleep(200);
 	ban_user(address, active.topic);
 };
@@ -1050,265 +953,294 @@ const get_active_topic = (topic) => {
 	return active;
 };
 
+//Validates (hugin-p2p `wire.decode`) and dispatches one message from a peer. Returns 'Ban' (ban
+//the peer in this swarm and close the connection), 'Error' (close it) or anything else
+//(handled or ignored). Whether a malformed message is a reason to ban comes from the library.
 const check_data_message = async (data, connection, topic, peer, beam) => {
-	try {
-		data = JSON.parse(data);
-	} catch (e) {
-		if (beam) return false;
-		else return 'Ban';
-	}
+	const decoded = P2PWire.decode(data, { dm: beam });
 
 	//Check if active in this topic
 	const active = get_active_topic(topic);
 	if (!active) return 'Error';
 
 	//Check if this connection is still in our list
-	let con = active.connections.find((a) => a.connection === connection);
+	const con = active.connections.find((a) => a.connection === connection);
 	if (!con) return 'Error';
 
-	//If the connections send us disconnect message, return. **todo double check closed connection
-	if ('type' in data) {
-		if (data.type === 'disconnected') {
+	//Unknown types, newer wire versions, oversized frames.
+	if (decoded.type === 'ignored') return true;
+
+	if (decoded.type === 'invalid') {
+		//A JSON value that is not an object (null, a number, an array).
+		if (decoded.reason === 'not_object') return 'Error';
+		//Typed messages are only looked at once the peer has joined.
+		if (decoded.kind && !P2PWire.PRE_JOIN_KINDS.includes(decoded.kind) && !con.joined) return true;
+		if (beam && !con.identityVerified && decoded.kind !== 'joined') return true;
+		return decoded.ban ? 'Ban' : true;
+	}
+
+	const kind = decoded.type;
+	const value = decoded.value;
+
+	//In a DM swarm nothing but `joined` and `disconnected` is accepted before the peer has proven
+	//to be the contact. A DM payload that arrives while that check runs waits for its result.
+	if (beam && !con.identityVerified && kind !== 'joined' && kind !== 'disconnected') {
+		if (kind !== 'dm' || !con.joining) return true;
+		await con.joining.catch(() => {});
+		if (!con.identityVerified) return true;
+	}
+
+	switch (kind) {
+		case 'disconnected':
 			connection_closed(connection, active.topic);
 			return true;
-		}
-	}
-
-	if ('typing' in data) {
-		const [typing, checked] = sanitize_typing_message(data);
-		if (!checked) return;
-		if (!con.address) return;
-		Hugin.send('typing', { typing, key: active.key, address: con.address });
-	}
-
-	// If feed message
-	if ('type' in data) {
-		if (data.type === 'feed') {
-			const message = sanitize_feed_message(data);
-			if (!message) return 'Ban';
-			const exists = await feedMessageExists(message.hash);
-			if (exists) return;
-			const verify = await verifySignature(
-				message.message + message.hash,
-				message.address,
-				message.signature
-			);
-			if (!verify) return 'Ban';
-			await saveFeedMessage(message);
-			message.type = 'feed';
-			forward_feed_message(message);
-			Hugin.send('feed-message', message);
-			return;
-		}
-	}
-
-	if ('info' in data) {
-		const fileData = sanitize_file_message(data);
-		if (!fileData) return 'Ban';
-		check_file_message(fileData, topic, con.address, con, beam);
-		return true;
-	}
-
-	//Double check if connection is joined voice?
-	if ('offer' in data) {
-		//Check if this connection has voice status activated.
-		if (active.connections.some((a) => a.connection === connection && a.voice === true)) {
-			const [voice, video] = get_local_voice_status(topic);
-			if ((!voice && !video) || !voice) {
-				//We are not connected to a voice channel
-				//Return true bc we do not need to check it again
-				return true;
+		case 'feed':
+			return await check_feed_message(value);
+		case 'typing':
+			if (con.address) {
+				Hugin.send('typing', { typing: value.typing, key: active.key, address: con.address });
 			}
-
-			//There are too many in the voice call
-			const users = active.connections.filter((a) => a.voice === true);
-			if (users.length > 9) return true;
-
-			//Joining == offer
-			if (data.offer === true) {
-				if ('retry' in data) {
-					if (data.retry === true) {
-						Hugin.send('got-expanded-voice-channel', [data.data, data.address]);
-						return;
-					}
-				}
-				answer_call(data);
-			} else {
-				got_answer(data);
-			}
-		}
-		return true;
-	}
-
-	if (typeof data === 'object') {
-		if ('joined' in data) {
-			const joined = sanitize_join_swarm_data(data);
-			if (!joined) {
-				return 'Ban';
-			}
-
-			if (Hugin.banned(data.address, topic)) {
-				if (active.admin) admin_ban_user(data.address, active.key);
-				else ban_user(data.address, topic);
-			}
-			//Check admin signature
-			const admin = verify_signature(
-				connection.remotePublicKey,
-				Buffer.from(data.signature, 'hex'),
-				Buffer.from(active.key.slice(-64), 'hex')
-			);
-
-			const verified = verifySignature(
-				connection.remotePublicKey.toString('hex'),
-				data.address,
-				data.idSig
-			);
-
-			if (!verified) {
-				return 'Ban';
-			}
-
-			con.joined = true;
-			con.address = joined.address;
-			con.name = joined.name;
-			con.voice = joined.voice;
-			con.admin = admin;
-			con.video = joined.video;
-			con.request = true;
-			active.peers.push(peer.publicKey.toString('hex'));
-			let uniq = {};
-			const peers = active.peers.filter((obj) => !uniq[obj] && (uniq[obj] = true));
-			active.peers = peers;
-			const time = parseInt(joined.time);
-
-			process_request(joined.messages, active.key, false);
-
-			//If our new connection is also in voice, check who was connected first to decide who creates the offer
-			const [in_voice, video] = get_local_voice_status(topic);
-			if (con.voice && in_voice && parseInt(active.time) > time) {
-				join_voice_channel(active.key, topic, joined.address);
-			}
-
-			if (!beam) {
-			    //Request message history from peer connected before us.
-				if (parseInt(active.time) > time && active.requests < 3) {
-					request_history(joined.address, topic, active.files);
-					active.requests++;
-				}
-				request_feed(joined.address, topic);
-
-				}
-
-			if (joined.driveKey) {
-				con.driveKey = joined.driveKey;
-				Storage.add_peer_drive(topic, joined.driveKey, active.key, beam);
-			}
-			console.log('=======================================');
-			console.log('--USER:', con.name, 'JOINED THE ROOM--');
-			console.log('=======================================');
-
-			connection_joined(joined, topic, admin);
-
+			return true;
+		case 'file': {
+			const fileData = P2PWire.fileMessageIn(value);
+			if (!fileData) return 'Ban';
+			check_file_message(fileData, topic, con.address, con, beam);
 			return true;
 		}
-
-		if ('voice' in data) {
-			const voice_status = check_peer_voice_status(data, con);
-			if (!voice_status) return 'Ban';
-		}
+		case 'sdp':
+			check_sdp(value, active, connection, topic);
+			return true;
+		case 'joined':
+			con.joining = check_joined(value, active, con, connection, topic, peer, beam);
+			return await con.joining;
+		case 'voice':
+			return check_peer_voice_status(value, con) ? true : 'Ban';
 	}
 
 	if (!con.joined) return true;
 
-	if ('type' in data) {
-		const type = typeof data.type === 'string';
-		if (!type) return 'Ban';
-
-		if (data.type === 'ban') {
-			if (data.address === Hugin.address && con.admin) {
-				Hugin.send('banned', active.key);
-				removeRoom(active.key);
-				await sleep(777);
-				end_swarm(active.key);
-				return;
-			}
-			if (con.admin) ban_user(data.address, topic);
-			else return 'Error';
-			return true;
-		} else {
-			//Dont handle requests from blocked users
-			if (Hugin.blocked(con.address)) return true;
-			// History requests
-
-			if (data.type === REQUEST_FEED) {
-				console.log('Got feed request');
-				send_feed_history(con.address, topic);
-				return true;
-			}
-
-			if (data.type === SEND_FEED_HISTORY) {
-				save_feed_history(data.messages, con.address, topic);
-				return true;
-			}
-
-			//Start-up history sync
-			if (data.type === REQUEST_HISTORY && con.request) {
-				console.log('Want to send history file info:');
-				send_history(con.address, topic, active.key, active.files);
-				return true;
-			} else if (data.type === SEND_HISTORY && con.request) {
-				// process_request(data.messages, active.key, false)
-				con.request = false;
-				if ('files' in data) {
-					process_files(data, active, con, topic);
-				}
-				return true;
-			}
-
-			//Live syncing from other peers who might have connections to others not established yet by us.
-
-			const INC_HASHES = data.hashes?.length !== undefined || 0;
-			const INC_MESSAGES = data.messages?.length !== undefined || 0;
-			const INC_PEERS = data.peers?.length !== undefined || 0;
-			//Check if payload is too big
-			if (INC_HASHES) {
-				if (data.hashes?.length > 25) return 'Ban';
-			}
-
-			if (data.type === PING_SYNC && active.search && INC_HASHES) {
-				if ('files' in data && !beam) {
-					process_files(data, active, con, topic);
-				}
-
-				if (con.knownHashes.toString() === data.hashes.toString()) {
-					con.request = false;
-					return true;
-				}
-				if (INC_PEERS && active.peers.toString() !== data?.peers.toString()) {
-					if (data.peers?.length > 100) return 'Ban';
-					find_missing_peers(active, data?.peers);
-				}
-				const missing = await check_missed_messages(data.hashes, con.address, topic);
-				con.knownHashes = data.hashes;
-				if (!missing) return true;
-				con.request = true;
-				active.search = false;
-				request_missed_messages(missing, con.address, topic);
-				//Updated knownHashes from this connection
-			} else if (data.type === REQUEST_MESSAGES && INC_HASHES) {
-				send_missing_messages(data.hashes, con.address, topic);
-			} else if (data.type === MISSING_MESSAGES && INC_MESSAGES && con.request) {
-				active.search = false;
-				con.request = false;
-				process_request(data.messages, active.key, true);
-			}
-			return true;
-		}
+	//A DM payload (hugin-crypto encodeExtra hex) from the contact.
+	if (kind === 'dm') {
+		decrpyt_beam_message(value);
+		return true;
 	}
-	//Dont display messages from blocked users
+
+	if (kind === 'ban') return await check_ban(value, active, con, topic);
+
+	//Dont handle requests or messages from blocked users
 	if (Hugin.blocked(con.address)) return true;
 
-	return false;
+	switch (kind) {
+		case 'request-feed':
+			console.log('Got feed request');
+			send_feed_history(con.address, topic);
+			return true;
+		case 'send-feed-history':
+			save_feed_history(value.messages);
+			return true;
+		//Start-up history sync
+		case 'request-history':
+			if (con.request) {
+				console.log('Want to send history file info:');
+				send_history(con.address, topic, active.key, active.files);
+			}
+			return true;
+		case 'send-history':
+			if (con.request) {
+				// process_request(value.messages, active.key, false)
+				con.request = false;
+				process_files(value, active, con, topic);
+			}
+			return true;
+		//Live syncing from other peers who might have connections to others not established yet by us.
+		case 'ping':
+			return await check_ping(value, active, con, topic, beam);
+		case 'request-messages':
+			send_missing_messages(value.hashes, con.address, topic);
+			return true;
+		case 'missing-messages':
+			if (con.request) {
+				active.search = false;
+				con.request = false;
+				process_request(value.messages, active.key, true);
+			}
+			return true;
+		case 'room-message':
+			await save_room_message(value);
+			return true;
+	}
+	return true;
+};
+
+//`joined`: admin flag, awaited idSig check, and in a DM swarm the contact check.
+const check_joined = async (value, active, con, connection, topic, peer, beam) => {
+	const joined = P2PWire.joinedIn(value);
+	if (!joined) return 'Ban';
+
+	if (Hugin.banned(joined.address, topic)) {
+		if (active.admin) admin_ban_user(joined.address, active.key);
+		else ban_user(joined.address, topic);
+	}
+	//Admin flag: the room's admin key (end of the invite) signed this connection's DHT key.
+	const admin = keys.verifyAdmin(connection.remotePublicKey, value.signature, active.key);
+
+	//idSig: the sender's XKR spend key signed this connection's DHT key. Awaited, so a peer is
+	//admitted only with a verified address.
+	const verified = await keys.verifyIdSig(
+		{ dhtPublicKey: connection.remotePublicKey, address: value.address, idSig: value.idSig },
+		verifySignature
+	);
+	if (!verified) return 'Ban';
+
+	if (beam && value.address !== active.contact) {
+		//A verified Hugin user who is not the contact (for example our own other device): this
+		//DM swarm refuses its DHT key from now on (firewall), so the one slot stays free.
+		console.log('DM swarm: peer is not the contact, refusing it');
+		active.refused.add(con.publicKey);
+		return 'Ban';
+	}
+
+	con.identityVerified = true;
+	if (con.joinTimer) {
+		clearTimeout(con.joinTimer);
+		con.joinTimer = null;
+	}
+	con.joined = true;
+	con.address = joined.address;
+	con.name = joined.name;
+	con.voice = joined.voice;
+	con.admin = admin;
+	con.video = joined.video;
+	con.request = true;
+	active.peers.push(peer.publicKey.toString('hex'));
+	let uniq = {};
+	const peers = active.peers.filter((obj) => !uniq[obj] && (uniq[obj] = true));
+	active.peers = peers;
+	const time = parseInt(joined.time);
+
+	//Room history in `joined` (DM peers send none).
+	if (!beam) process_request(joined.messages, active.key, false);
+
+	//If our new connection is also in voice, check who was connected first to decide who creates the offer
+	const [in_voice, video] = get_local_voice_status(topic);
+	if (con.voice && in_voice && parseInt(active.time) > time) {
+		join_voice_channel(active.key, topic, joined.address);
+	}
+
+	if (!beam) {
+		//Request message history from peer connected before us.
+		if (parseInt(active.time) > time && active.requests < 3) {
+			request_history(joined.address, topic, active.files);
+			active.requests++;
+		}
+		request_feed(joined.address, topic);
+	}
+
+	if (joined.driveKey) {
+		con.driveKey = joined.driveKey;
+		Storage.add_peer_drive(topic, joined.driveKey, active.key, beam);
+	}
+	console.log('=======================================');
+	console.log('--USER:', con.name, 'JOINED THE ROOM--');
+	console.log('=======================================');
+
+	connection_joined(joined, topic, admin);
+
+	return true;
+};
+
+const check_feed_message = async (value) => {
+	const message = P2PWire.feedMessageIn(value);
+	if (!message) return 'Ban';
+	const exists = await feedMessageExists(message.hash);
+	if (exists) return true;
+	//The signature covers the text as it was sent (message + hash).
+	const verify = await verifySignature(
+		P2PWire.feedSigningPayload(value.message, value.hash),
+		value.address,
+		value.signature
+	);
+	if (!verify) return 'Ban';
+	await saveFeedMessage(message);
+	message.type = 'feed';
+	//Forward it as it was signed, so the next peer can verify it too.
+	try {
+		forward_feed_message(P2PWire.feedOut(value));
+	} catch (e) {
+		console.log('Feed message not forwarded:', e.message);
+	}
+	Hugin.send('feed-message', message);
+	return true;
+};
+
+const check_sdp = (value, active, connection, topic) => {
+	//Check if this connection has voice status activated.
+	if (!active.connections.some((a) => a.connection === connection && a.voice === true)) return;
+	const [voice] = get_local_voice_status(topic);
+	//We are not connected to a voice channel
+	if (!voice) return;
+
+	//There are too many in the voice call
+	const users = active.connections.filter((a) => a.voice === true);
+	if (users.length > 9) return;
+
+	//Joining == offer
+	if (value.offer === true) {
+		if (value.retry === true) {
+			Hugin.send('got-expanded-voice-channel', [value.data, value.address]);
+			return;
+		}
+		answer_call(value);
+	} else {
+		got_answer(value);
+	}
+};
+
+const check_ban = async (value, active, con, topic) => {
+	if (value.address === Hugin.address && con.admin) {
+		Hugin.send('banned', active.key);
+		removeRoom(active.key);
+		await sleep(777);
+		end_swarm(active.key);
+		return true;
+	}
+	if (con.admin) ban_user(value.address, topic);
+	else return 'Error';
+	return true;
+};
+
+const check_ping = async (value, active, con, topic, beam) => {
+	//A Ping without hashes, or while we are already fetching missing messages, is not used.
+	if (!active.search || value.hashes === null) return true;
+	if (!beam) {
+		process_files(value, active, con, topic);
+	}
+
+	if (con.knownHashes.toString() === value.hashes.toString()) {
+		con.request = false;
+		return true;
+	}
+	if (active.peers.toString() !== value.peers.toString()) {
+		find_missing_peers(active, value.peers);
+	}
+	const missing = await check_missed_messages(value.hashes, con.address, topic);
+	//Updated knownHashes from this connection
+	con.knownHashes = value.hashes;
+	if (!missing) return true;
+	con.request = true;
+	active.search = false;
+	request_missed_messages(missing, con.address, topic);
+	return true;
+};
+
+const save_room_message = async (value) => {
+	const message = P2PWire.roomMessageIn(value);
+	if (!message) return;
+	const msg = await saveGroupMsg(message, false, true);
+	if (!msg) return;
+	//Send new board message to frontend.
+	Hugin.send('roomMsg', message);
+	Hugin.send('room-notification', [message, false]);
 };
 
 function connection_joined(joined, topic, admin) {
@@ -1340,25 +1272,18 @@ function connection_joined(joined, topic, admin) {
 
 const request_feed = (address, topic) => {
 	console.log('Requsting feed..');
-	const message = {
-		type: REQUEST_FEED
-	};
-	send_peer_message(address, topic, message);
+	send_peer_message(address, topic, P2PWire.requestFeedOut());
 };
 
 const send_feed_history = async (address, topic) => {
 	const messages = await printFeed(0, true);
-	const history = {
-		type: SEND_FEED_HISTORY,
-		messages
-	};
-	send_peer_message(address, topic, history);
+	send_peer_message(address, topic, P2PWire.sendFeedHistoryOut(messages));
 };
 
 const save_feed_history = async (messages) => {
 	if (!Array.isArray(messages)) return;
 	for (const data of messages) {
-		const message = sanitize_feed_message(data);
+		const message = P2PWire.feedMessageIn(data);
 		if (!message) continue;
 		await saveFeedMessage(message);
 	}
@@ -1366,7 +1291,10 @@ const save_feed_history = async (messages) => {
 
 const send_feed_message = async (message, reply = '', tip) => {
 	const hash = randomKey();
-	const signature = await signMessage(message + hash, keychain.getXKRKeypair().privateSpendKey);
+	const signature = await signMessage(
+		P2PWire.feedSigningPayload(message, hash),
+		keychain.getXKRKeypair().privateSpendKey
+	);
 	const payload = {
 		type: 'feed',
 		message,
@@ -1378,10 +1306,15 @@ const send_feed_message = async (message, reply = '', tip) => {
 		timestamp: Date.now(),
 		signature
 	};
-	forward_feed_message(payload);
+	try {
+		forward_feed_message(P2PWire.feedOut(payload));
+	} catch (e) {
+		console.log('Feed message not sent:', e.message);
+	}
 	return payload;
 };
 
+//`payload` is an encoded feed message; it goes to every connection of every swarm.
 const forward_feed_message = (payload) => {
 	for (const swarm of active_swarms) {
 		for (const peer of swarm.connections) {
@@ -1444,11 +1377,7 @@ const check_missed_messages = async (hashes) => {
 };
 
 const request_missed_messages = (hashes, address, topic) => {
-	const message = {
-		type: REQUEST_MESSAGES,
-		hashes
-	};
-	send_peer_message(address, topic, message);
+	send_peer_message(address, topic, P2PWire.requestMessagesOut(hashes));
 };
 
 const send_missing_messages = async (hashes, address, topic) => {
@@ -1462,32 +1391,19 @@ const send_missing_messages = async (hashes, address, topic) => {
 		if (found) messages.push(found);
 	}
 	if (messages.length > 0) {
-		const message = {
-			type: MISSING_MESSAGES,
-			messages
-		};
-		send_peer_message(address, topic, message);
+		send_peer_message(address, topic, P2PWire.missingMessagesOut(messages));
 	}
 };
 
 const request_history = (address, topic, files) => {
 	console.log('Reqeust history from another peer');
-	const message = {
-		type: REQUEST_HISTORY,
-		files
-	};
-	send_peer_message(address, topic, message);
+	send_peer_message(address, topic, P2PWire.requestHistoryOut(files));
 };
 
 const send_history = async (address, topic, key, files) => {
 	const messages = await printGroup(key, 0);
 	console.log('Sending:', messages.length, 'messages');
-	const history = {
-		type: SEND_HISTORY,
-		messages,
-		files
-	};
-	send_peer_message(address, topic, history);
+	send_peer_message(address, topic, P2PWire.sendHistoryOut({ messages, files }));
 };
 
 
@@ -1534,7 +1450,7 @@ const process_request = async (messages, key, live = false) => {
 			if (m?.address === Hugin.address) continue;
 			if (!check_hash(m?.hash)) continue;
 			if (await roomMessageExists(m.hash)) continue;
-			const message = sanitize_group_message(m, false);
+			const message = P2PWire.roomMessageIn(m);
 			if (!message) continue;
 			await saveGroupMsg(message, false, true);
 			if (live) missing.push(message);
@@ -1549,7 +1465,7 @@ const process_request = async (messages, key, live = false) => {
 };
 
 const check_peer_voice_status = (data, con) => {
-	const voice_data = sanitize_voice_status_data(data);
+	const voice_data = P2PWire.voiceStatusIn(data);
 	if (!voice_data) return false;
 	const updated = update_voice_channel_status(voice_data, con);
 	if (!updated) return false;
@@ -1595,50 +1511,41 @@ const get_my_channels = async (key) => {
 	});
 };
 
-const send_joined_message = async (topic, dht_keys, connection) => {
-	let sig = '';
+const send_joined_message = async (topic, keyPair, connection) => {
 	const active = get_active_topic(topic);
 	if (!active) return;
+	const con = active.connections.find((a) => a.connection === connection);
+	if (!con) return;
 	const key = active.key;
-	const [isAdmin, adminkeys] = is_room_admin(active.key);
-	if (isAdmin) {
-		//Sign our joined message with this
-		sig = sign_admin_message(dht_keys, active.key, adminkeys);
-	}
-	const signature = await signMessage(
-		dht_keys.get().publicKey.toString('hex'),
-		keychain.getXKRKeypair().privateSpendKey
+	const [isAdmin] = is_room_admin(active.key);
+	//Admin flag: our DHT public key signed with the room's admin key.
+	const signature = isAdmin ? b4a.toString(keys.signAdmin(isAdmin.priv, keyPair.publicKey), 'hex') : '';
+	//idSig: our DHT public key (hex) signed with the XKR spend key.
+	const idSig = await keys.signIdSig(keyPair.publicKey, (message) =>
+		signMessage(message, keychain.getXKRKeypair().privateSpendKey)
 	);
-	const messages = await printGroup(key, 0);
+	//Room history for rooms; DM swarms send none.
+	const messages = active.beam ? [] : await printGroup(key, 0);
 
 	let [voice, video, audioMute, videoMute, screenshare] = get_local_voice_status(topic);
-	if (video) voice = true;
 
-	const data = JSON.stringify({
+	const data = P2PWire.joinedOut({
 		address: Hugin.address,
-		signature: sig.toString('hex'),
+		signature,
 		avatar: Hugin.avatar,
-		message: key,
-		joined: true,
 		topic: topic,
 		name: Hugin.nickname,
-		voice: voice,
-		channels: [],
-		video: video,
+		voice,
+		video,
 		time: active.time,
-		idSig: signature,
+		idSig,
 		audioMute,
 		videoMute,
 		screenshare,
 		messages,
 		driveKey: Storage.get_drive_key(topic)
 	});
-	const con = active.connections.find(a => a.connection === connection);
-	if (con) {
-		con.write(data);
-	} else {
-		try { connection.write(data); } catch(e) {}
-	}
+	con.write(data);
 };
 
 const incoming_message = async (data, topic, connection, peer, beam) => {
@@ -1650,23 +1557,7 @@ const incoming_message = async (data, topic, connection, peer, beam) => {
 	}
 	if (check === 'Error') {
 		connection_closed(connection, topic);
-		return;
 	}
-	if (check) return;
-
-	const active = get_active_topic(topic);
-	if (active.beam) {
-		decrpyt_beam_message(data.toString());
-		return;
-	}
-
-	const message = sanitize_group_message(JSON.parse(data.toString()), false);
-	if (!message) return;
-	const msg = await saveGroupMsg(message, false, true);
-	if (!msg) return;
-	//Send new board message to frontend.
-	Hugin.send('roomMsg', message);
-	Hugin.send('room-notification', [message, false]);
 };
 
 const send_swarm_message = (message, key, beam = false) => {
@@ -1681,20 +1572,18 @@ const send_swarm_message = (message, key, beam = false) => {
 	console.log('Swarm msg sent!', message);
 };
 
-const get_room_state = async (key) => {
-	const hashes = await getLatestRoomHashes(key);
-	return Buffer.from(naclHash(toHex(hashes))).toString('hex');
-};
-
 const check_online_state = async (topic) => {
 	await sleep(10000);
 	let interval = setInterval(ping, 10 * 1000);
 	let a = 0;
 	async function ping() {
 		const active = get_active_topic(topic);
+		if (!active) {
+			clearInterval(interval);
+			return;
+		}
 		const allFiles = await Storage.load_meta(topic);
 		const hashes = await getLatestRoomHashes(active.key);
-		const files = allFiles.sort((a, b) => a.time - b.time).slice(-10);
 		let peers = [];
 		//Send peer info on the first three pings. Then every 10 times.
 		if (a < 3 || a % 10 === 0) {
@@ -1702,25 +1591,23 @@ const check_online_state = async (topic) => {
 			a++;
 		}
 		//TODO ** change from hash list to hash state.
-		// const state = await get_room_state(active.key)
-		if (!active) {
-			clearInterval(interval);
+		active.search = true;
+		//Through the hugin-messages channel (a raw write on the stream is not read by peers).
+		//Connections after the fifth get the hashes only every other time.
+		let full;
+		let light;
+		try {
+			full = P2PWire.pingOut({ peers, files: allFiles, hashes });
+			light = P2PWire.pingOut({ peers, files: allFiles, hashes: [] });
+		} catch (e) {
+			console.log('Ping not sent:', e.message);
 			return;
-		} else {
-			active.search = true;
-			let i = 0;
-			const data = { type: 'Ping', peers, files: files };
-			for (const conn of active.connections) {
-				if (!conn.joined) continue;
-				data.hashes = hashes;
-				if (i > 4) {
-					if (i % 2 === 0) data.hashes = [];
-				}
-				try {
-					conn.connection.write(JSON.stringify(data));
-				} catch (e) {}
-				i++;
-			}
+		}
+		let i = 0;
+		for (const conn of active.connections) {
+			if (!conn.joined) continue;
+			conn.write(i > 4 && i % 2 === 0 ? light : full);
+			i++;
 		}
 	}
 };
@@ -1765,7 +1652,7 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 	}
 	const topic = active.topic;
 	const signature = await signMessage(
-		hash + size.toString() + time.toString() + fileName,
+		P2PWire.fileSigningPayload({ hash, size, time, fileName }),
 		keychain.getXKRKeypair().privateSpendKey
 	);
 	const upload = {
@@ -1860,20 +1747,23 @@ const share_file = (file) => {
 		error_message('Room not connected');
 		return;
 	}
-	const fileInfo = {
-		fileName: file.fileName,
-		address: Hugin.address,
-		name: Hugin.nickname,
-		topic: file.topic,
-		info: 'file-shared',
-		type: 'file',
-		size: file.size,
-		time: file.time,
-		hash: file.hash,
-		signature: file.signature,
-		driveKey: Storage.get_drive_key(file.topic)
-	};
-	const info = JSON.stringify(fileInfo);
+	//Without driveKey: receivers use the one from our `joined`.
+	let info;
+	try {
+		info = P2PWire.fileSharedOut({
+			fileName: file.fileName,
+			address: Hugin.address,
+			name: Hugin.nickname,
+			topic: file.topic,
+			size: file.size,
+			time: file.time,
+			hash: file.hash,
+			signature: file.signature
+		});
+	} catch (e) {
+		console.log('File info not sent:', e.message);
+		return;
+	}
 	localFiles.push(file);
 	//File shared, send info to peers
 	console.log('Send file info!', info);
@@ -1946,10 +1836,13 @@ const error_message = (message) => {
 };
 
 ipcMain.on('typing', (e, data, beam = false) => {
-	const send = {
-		typing: data.typing
-	};
-	send_swarm_message(JSON.stringify(send), data.key, beam);
+	let message;
+	try {
+		message = P2PWire.typingOut(data.typing);
+	} catch (e) {
+		return;
+	}
+	send_swarm_message(message, data.key, beam);
 });
 
 ipcMain.on('join-voice', async (e, data) => {
@@ -1996,32 +1889,11 @@ ipcMain.on('expand-voice-channel-sdp', async (e, expand) => {
 	Hugin.send('got-expanded-voice-channel', expanded_data);
 });
 
+//SDP from the renderer to the peer at `data.address`: an answer or a renegotiation is not an
+//offer, `retry: true` asks the peer to expand it.
 function get_sdp(data) {
-	let sendMessage;
-	let offer = true;
-	let reconnect = false;
-
-	if ('retry' in data) {
-		if (data.retry === true) reconnect = true;
-	}
-
-	if (data.type == 'answer') {
-		offer = false;
-	}
-
-	if ('renegotiate' in data.data) {
-		offer = false;
-	}
-
-	sendMessage = {
-		data: data.data,
-		offer: offer,
-		address: data.address,
-		topic: data.topic,
-		retry: reconnect
-	};
-
-	send_voice_channel_sdp(sendMessage);
+	const { offer, retry } = P2PWire.sdpFlags(data);
+	send_voice_channel_sdp({ to: data.address, data: data.data, offer, topic: data.topic, retry });
 }
 
 function get_topic_key_map() {

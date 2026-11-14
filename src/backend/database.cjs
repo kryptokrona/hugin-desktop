@@ -1,7 +1,6 @@
 const { ipcMain } = require('electron')
 
 const sqlite3 = require('better-sqlite3-multiple-ciphers')
-const { sanitizeHtml } = require('./utils.cjs')
 const Store = require('electron-store')
 const store = new Store()
 const {sleep, containsOnlyEmojis} = require('./utils.cjs')
@@ -663,7 +662,7 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     let channel = false
 
     // if (channels) {
-    //     channel = sanitizeHtml(msg.c)
+    //     channel = sanitizeText(msg.c)
     //     saveChannelMessage(txHash, timestamp, channel, group) 
     // }
 

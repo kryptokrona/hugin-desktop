@@ -87,17 +87,27 @@ Why pnpm and not npm? Two things live in the repo that assume pnpm:
 
 ## Install & run
 
-`hugin-p2p/swarm` (the Hugin `mid` on upstream hyperswarm/hyperdht) is linked from a sibling checkout
-(`"hugin-p2p": "link:../hugin-p2p"`) until it is published. Clone it next to this repo and
-install it first (`cd ../hugin-p2p && pnpm install`); with `link:` pnpm does not install the
-linked package's dependencies, so it loads `hyperswarm`/`hyperdht` from `../hugin-p2p/node_modules`.
-Both repos pin `hyperswarm` 4.17.2 and `hyperdht` 6.36.0 (`pnpm.overrides` here), and the app
-itself only reaches hyperdht through `hugin-p2p/swarm`, so one hyperdht copy is loaded at runtime.
+The P2P layer shared with hugin-native, `hugin-p2p` 3 (`3.0.0-alpha`), is linked from a sibling
+checkout (`"hugin-p2p": "link:../hugin-p2p"`) until it is published. The backend uses its modules
+`hugin-p2p/swarm` (the Hugin `mid` on upstream hyperswarm/hyperdht), `/keys` (swarm keys, room
+invites, admin and idSig signatures), `/sanitize` (validation of everything peers send, and the
+text sanitiser that replaces `sanitize-html`), `/wire` (the hugin-messages builders and decoder),
+`/pow` (PoW auth and share checks for hugin-node) and `/push` (hugin-node packets, push payloads,
+view tags); `src/backend/p2p-wire.cjs` maps them to the shapes the renderer and the database use.
+Clone it next to this repo and install it first (`cd ../hugin-p2p && pnpm install`); with `link:`
+pnpm does not install the linked package's dependencies, so they load from
+`../hugin-p2p/node_modules`. Both repos pin `hyperswarm` 4.17.2 and `hyperdht` 6.36.0
+(`pnpm.overrides` here), and the app itself only reaches hyperdht through `hugin-p2p/swarm`, so
+one hyperdht copy is loaded at runtime.
 
-|         |                    |
-| ------- | ------------------ |
-| Install | · `pnpm install`   |
-| Develop | · `pnpm run dev`   |
+|               |                           |
+| ------------- | ------------------------- |
+| Install       | · `pnpm install`          |
+| Develop       | · `pnpm run dev`          |
+| Backend tests | · `pnpm run test:backend` |
+
+The backend tests (`tests/backend/*.test.cjs`, `node:test`, no network, no Electron) cover the
+adapter between `hugin-p2p` and this backend.
 
 
 ## Build

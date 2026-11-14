@@ -1,20 +1,21 @@
-const { sleep, hexToUint, nonceFromTimestamp, trimExtra, randomKey, parse_call, sanitize_pm_message } = require('./utils.cjs');
-const { createHash } = require('crypto')
+const { sanitize_pm_message } = require('./utils.cjs');
 const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
 const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
 const crypto = new Crypto()
-// Key pairs, topics and the Hugin `mid` come from hugin-mid (upstream hyperdht underneath),
-// so this file never loads hyperdht itself and only one hyperdht copy is in the process.
-const { keyPairFromSeed, getNewPeerKeys } = require('hugin-p2p/swarm')
-const Keychains = require('keypear');
+// Swarm keys, topics, room invites and admin signatures come from `hugin-p2p/keys` (topic
+// derivation and the Hugin `mid` from `hugin-p2p/swarm` underneath), so this file never loads
+// hyperdht itself and only one hyperdht copy is in the process.
+const { createRoomInvite } = require('hugin-p2p/keys')
 const { ipcMain } = require('electron');
 const { saveMsg } = require('./database.cjs');
 const hc = require('hugin-crypto');
-const sodium = require('sodium-native')
 
+// [invite, admin seed]: invite = 64 random hex + hex(admin public key), where the admin key
+// pair is keyPair(fill32(admin seed)), the same pair `keys.signAdmin` signs with.
 ipcMain.handle('get-room-invite', async () => {
-    return create_room_invite()
+    const { invite, adminSeed } = createRoomInvite()
+    return [invite, adminSeed]
 })
 
 ipcMain.handle('message-keypair', async () => {
@@ -68,64 +69,6 @@ const keychain =  {
         return [signKey, pub]
     }
     
-}
-
-function create_peer_base_keys(buf) {
-    // Same as hyperdht's DHT.keyPair(seed): crypto_sign_seed_keypair over the 32-byte seed.
-    const keypair = keyPairFromSeed(buf)
-    const keys = Keychains.from(keypair) 
-    return keys
-}
-
-// Returns [base_keys, dht_keys, signature, peer]:
-//   base_keys  keypear Keychain of the topic base key pair, keyPair(fill32(key))
-//   dht_keys   keypear Keychain of a fresh random DHT key pair for this swarm
-//   signature  the Hugin mid: the dht public key signed with the base secret key
-//   peer       hugin-mid getNewPeerKeys() result: { topic, keyPair, sig, base, basePublicKey }
-//              (peer.keyPair is the plain { publicKey, secretKey } a Hyperswarm/DHT needs)
-function get_new_peer_keys(key) {
-    const seed = randomKey()
-    const dhtKeyPair = keyPairFromSeed(Buffer.alloc(32).fill(seed))
-    const peer = getNewPeerKeys(key, dhtKeyPair)
-    const base_keys = Keychains.from(peer.base)
-    const dht_keys = Keychains.from(peer.keyPair)
-    return [base_keys, dht_keys, peer.sig, peer]
-}
-
-function create_keys_from_seed(seed) {
-    const random_key = Buffer.alloc(32).fill(seed)
-    return create_peer_base_keys(random_key)
-}
-
-function create_room_invite() {
-    const seed = randomKey()
-    const rand = randomKey()
-    const admin = create_keys_from_seed(seed)
-    //[invite, admin seed]
-    return [rand + admin.get().publicKey.toString('hex'), seed]
-}
-
-// SHA-512 (same digest tweetnacl's nacl.hash produced), now via node crypto.
-function naclHash(val) {
-    return createHash('sha512').update(Buffer.from(hexToUint(val))).digest()
-}
-
-function verify_signature(message, signature, pub) {
-    if (signature.length !== 64) return false
-    return Keychains.verify(message, signature, pub)
-}
-
-const sign_admin_message = (dht_keys, invite, adminkeys) => {
-    const admin = adminkeys.find(a => a.invite === invite)
-    const keys = create_keys_from_seed(admin.priv)
-    return keys.get().sign(dht_keys.get().publicKey)
-}
-
-const sign_joined_message = (dht_keys) => {
-    const key = keychain.getXKRKeypair().privateSpendKey
-    const keys = create_keys_from_seed(key)
-    //return [signature, publickey]
-    return [keys.get().sign(dht_keys.get().publicKey).toString('hex'), keys.publicKey.toString('hex')]
 }
 
 const identity = require('./identity.cjs')
@@ -185,4 +128,4 @@ const decrpyt_beam_message = async (str) => {
 }
 
 
-module.exports = {decrpyt_beam_message, sign_admin_message, sign_joined_message, verify_signature, verifySignature, signMessage, keychain, verify_signature, naclHash, get_new_peer_keys, create_keys_from_seed}
+module.exports = {decrpyt_beam_message, verifySignature, signMessage, keychain}

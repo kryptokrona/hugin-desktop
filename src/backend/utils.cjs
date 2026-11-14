@@ -1,22 +1,9 @@
 const { randomBytes } = require('crypto');
-const _sanitize = require('sanitize-html');
+// Text sanitising is hugin-p2p's pure-JS implementation of desktop's sanitize-html policy
+// (no tags allowed, then un-escaped): the plain text content, markup removed, entities decoded.
+// Non-string values are returned unchanged.
+const { sanitizeText } = require('hugin-p2p/sanitize');
 const { Crypto, Keys } = require('kryptokrona-utils');
-
-const sanitizeHtml = (input) => {
-	if (typeof input !== 'string') return input;
-	const clean = _sanitize(input, {
-		allowedTags: [],
-		allowedAttributes: {},
-	});
-	return clean
-		.replace(/&amp;/g, '&')
-		.replace(/&gt;/g, '>')
-		.replace(/&lt;/g, '<')
-		.replace(/&quot;/g, '"')
-		.replace(/&#x27;/g, "'")
-		.replace(/&#x2F;/g, '/');
-};
-const { getNonceOffset } = require('hugin-utils');
 const { ipcMain, dialog } = require('electron');
 const crypto = new Crypto();
 //PoW defaults (tuned for desktop app)
@@ -37,29 +24,6 @@ const logPow = (...args) => {
 	}
 };
 
-//Basic hex guard for incoming job data
-function is_hex_string(value) {
-	return typeof value === 'string' && /^[0-9a-f]+$/i.test(value);
-}
-
-//Sanitize PoW job from decentralized nodes
-function validate_pow_job(job) {
-	if (!job || typeof job !== 'object') return { ok: false, reason: 'invalid_job' };
-	// pool job_id is typically a numeric string; only enforce type/length
-	if (typeof job.job_id !== 'string' || job.job_id.length > 32)
-		return { ok: false, reason: 'invalid_job_id' };
-	if (!is_hex_string(job.blob)) return { ok: false, reason: 'invalid_blob' };
-	if (job.blob.length % 2 !== 0) return { ok: false, reason: 'invalid_blob_len' };
-	if (job.blob.length / 2 > pow_config.MAX_BLOB_HEX_BYTES)
-		return { ok: false, reason: 'blob_too_large' };
-	if (!is_hex_string(job.target) || job.target.length !== 8)
-		return { ok: false, reason: 'invalid_target' };
-	const offset = getNonceOffset(job.blob);
-	if (typeof offset !== 'number' || offset < 0)
-		return { ok: false, reason: 'invalid_nonce_offset' };
-	if ((offset + 4) * 2 > job.blob.length) return { ok: false, reason: 'nonce_out_of_bounds' };
-	return { ok: true };
-}
 const { createReadStream } = require('fs');
 const MEDIA_TYPES = [
 	{ file: '.png', type: 'image' },
@@ -154,9 +118,6 @@ async function load_file(path, size) {
 	}
 }
 
-const hexToUint = (hexString) =>
-	new Uint8Array(hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-
 function randomKey() {
 	return randomBytes(32).toString('hex');
 }
@@ -178,20 +139,6 @@ function toHex(str, hex) {
 		//console.log('invalid text input: ' + str)
 	}
 	return hex;
-}
-
-function nonceFromTimestamp(tmstmp) {
-	let nonce = hexToUint(String(tmstmp));
-
-	while (nonce.length < 24) {
-		let tmp_nonce = Array.from(nonce);
-
-		tmp_nonce.push(0);
-
-		nonce = Uint8Array.from(tmp_nonce);
-	}
-
-	return nonce;
 }
 
 function fromHex(hex, str) {
@@ -235,14 +182,14 @@ function check_hash(hash) {
 
 const sanitize_pm_message = (msg) => {
 	let sent = msg.sent;
-	let addr = msg.sent ? sanitizeHtml(msg.conversation || msg.chat) : sanitizeHtml(msg.from);
-	let timestamp = sanitizeHtml(msg.t ?? msg.timestamp);
-	let key = sanitizeHtml(msg.k ?? msg.key);
-	let message = sanitizeHtml(msg.msg || msg.message);
+	let addr = msg.sent ? sanitizeText(msg.conversation || msg.chat) : sanitizeText(msg.from);
+	let timestamp = sanitizeText(msg.t ?? msg.timestamp);
+	let key = sanitizeText(msg.k ?? msg.key);
+	let message = sanitizeText(msg.msg || msg.message);
 	// hugin-crypto messageHash (SHA-256) — 64 lowercase hex chars. Stays ''
 	// when the message arrived from a path that doesn't carry the wire bytes
 	// (legacy paths / synthetic messages); save_message tolerates the empty.
-	let hash = typeof msg.hash === 'string' ? sanitizeHtml(msg.hash) : '';
+	let hash = typeof msg.hash === 'string' ? sanitizeText(msg.hash) : '';
 	if (message?.length > 777 || (msg.msg === undefined && msg.message === undefined)) return [false];
 	if (addr?.length > 99 || addr === undefined) return [false];
 	if (typeof sent !== 'boolean') return [false];
@@ -251,281 +198,6 @@ const sanitize_pm_message = (msg) => {
 	if (hash.length > 64) return [false];
 
 	return { message, conversation: addr, key, timestamp, sent, hash };
-};
-
-const sanitize_join_swarm_data = (data) => {
-	if (data?.address.length > 99 || data.address === undefined) return false;
-	const address = sanitizeHtml(data.address);
-	if (data?.message.length > 128 || data.message === undefined) return false;
-	const message = sanitizeHtml(data.message);
-	if (data?.signature.length > 128 || data.signature === undefined) return false;
-	const signature = sanitizeHtml(data.signature);
-	if (data?.topic.length !== 64 || data.topic === undefined) return false;
-	const topic = sanitizeHtml(data.topic);
-	if (data?.name.length > 50 || data.name === undefined) return false;
-	const name = sanitizeHtml(data.name);
-	if (data?.time.length > 50 || data.time === undefined) return false;
-	const time = sanitizeHtml(data.time);
-
-	if (data.voice === undefined) return false;
-	if (typeof data.voice !== 'boolean') return false;
-	const voice = data.voice;
-	if (typeof data.joined !== 'boolean') return false;
-	const joined = data.joined;
-	if (typeof data.video !== 'boolean') return false;
-	const video = data.video;
-
-	const idSig = data.idSig;
-	if (typeof idSig !== 'string' || idSig.length > 128) return false;
-	const audioMute = data?.audioMute;
-	if (typeof audioMute !== 'boolean') return false;
-	const videoMute = data?.videoMute;
-	if (typeof videoMute !== 'boolean') return false;
-	const screenshare = data?.screenshare;
-	if (typeof screenshare !== 'boolean') return false;
-	let messages = data?.messages;
-	if (!Array.isArray(data?.messages)) {
-		messages = [];
-	}
-
-	let avatar = '';
-	if (data.avatar !== undefined && data.avatar?.length > 0) {
-		avatar = Buffer.from(data.avatar, 'base64');
-		if (avatar.length > 200000) {
-			console.log('Avatar too big');
-			return false;
-		}
-	}
-
-	const channels = [];
-
-	let driveKey = null;
-	if (data.driveKey !== undefined) {
-		if (typeof data.driveKey !== 'string' || !/^[0-9a-f]{64}$/i.test(data.driveKey)) return false;
-		driveKey = data.driveKey;
-	}
-
-	const clean_object = {
-		address: address,
-		avatar: avatar,
-		message: message,
-		signature: signature,
-		topic: topic,
-		name: name,
-		voice: voice,
-		joined: joined,
-		channels: channels,
-		video: video,
-		time: time,
-		idSig,
-		audioMute,
-		videoMute,
-		screenshare,
-		messages,
-		driveKey
-	};
-
-	return clean_object;
-};
-
-const sanitize_group_message = (data, sent = false) => {
-	let timestamp = sanitizeHtml(data.timestamp);
-	if (parseInt(timestamp) > Date.now()) timestamp = Date.now();
-	if (timestamp?.length > 20 || data.timestamp === undefined) return false;
-	let room = sanitizeHtml(data.room);
-	if (room?.length > 128 || data.room === undefined) return false;
-	let text = sanitizeHtml(data.message);
-	if (text?.length > 777 || data.message === undefined) return false;
-	let addr = sanitizeHtml(data.address);
-	if (addr?.length > 128 || data.address === undefined) return false;
-	if (data.reply === undefined) {
-		data.reply = '';
-	}
-	let reply = sanitizeHtml(data.reply);
-	if (reply?.length > 64) return false;
-	let sig = sanitizeHtml(data.signature);
-	if (sig?.length > 200) return false;
-	let nick = sanitizeHtml(data.name ?? data.nickname);
-	if (nick?.length > 50 || nick === undefined) return false;
-	let txHash = sanitizeHtml(data.hash);
-	if (txHash?.length > 128 || data.hash === undefined) return false;
-
-	let tip = false;
-	if (data.tip && data.tip !== 'false') {
-		if (typeof data.tip.amount !== 'number' || data.tip.amount?.length > 100) return false;
-		if (typeof data.tip.receiver !== 'string' || data.tip.receiver?.length > 100) return false;
-		tip = { amount: data.tip.amount, receiver: sanitizeHtml(data.tip.receiver) };
-	}
-
-	const clean_object = {
-		message: text,
-		address: addr,
-		signature: sig,
-		room,
-		timestamp,
-		name: nick,
-		reply: reply,
-		hash: txHash,
-		sent: sent,
-		channel: 'channel',
-		tip
-	};
-
-	return clean_object;
-};
-
-const sanitize_voice_status_data = (data) => {
-	const address = sanitizeHtml(data?.address);
-	if (address?.length > 99 || data?.address === undefined) return false;
-	const message = sanitizeHtml(data?.message);
-	if (message?.length > 64 || data?.message === undefined) return false;
-	const signature = sanitizeHtml(data?.signature);
-	if (signature?.length > 128 || data?.signature === undefined) return false;
-	const topic = sanitizeHtml(data?.topic);
-	if (topic?.length !== 64 || data?.topic === undefined) return false;
-	const name = sanitizeHtml(data?.name);
-	if (name?.length > 50 || data?.name === undefined) return false;
-	const voice = data?.voice;
-	if (typeof voice !== 'boolean') return false;
-	const video = data?.video;
-	if (typeof video !== 'boolean') return false;
-
-	const audioMute = data?.audioMute;
-	if (typeof audioMute !== 'boolean') return false;
-	const videoMute = data?.videoMute;
-	if (typeof videoMute !== 'boolean') return false;
-	const screenshare = data?.screenshare;
-	if (typeof screenshare !== 'boolean') return false;
-
-	let avatar = '';
-	if (data.avatar !== undefined && data.avatar?.length > 0) {
-		const base64 = /^[A-Za-z0-9+/]+={0,2}$/;
-		if (!base64.test(data.avatar)) {
-			return false;
-		}
-		avatar = Buffer.from(sanitizeHtml(data.avatar), 'base64');
-		if (avatar.length > 200000) {
-			console.log('Avatar too big');
-			return false;
-		}
-	}
-
-	const clean_object = {
-		address,
-		avatar,
-		message,
-		signature,
-		topic,
-		name,
-		voice,
-		video,
-		videoMute,
-		audioMute,
-		screenshare
-	};
-
-	return clean_object;
-};
-
-const sanitize_file_message = (data) => {
-	//Check standard message
-	const fileName = sanitizeHtml(data?.fileName);
-	if (typeof data?.fileName !== 'string' || fileName.length > 100) return false;
-
-	const address = sanitizeHtml(data?.address);
-	if (typeof data?.address !== 'string' || address.length > 99) return false;
-
-	const topic = sanitizeHtml(data?.topic);
-	if (typeof data?.topic !== 'string' || topic.length > 64) return false;
-
-	const type = sanitizeHtml(data?.type);
-	if (typeof data?.type !== 'string' || type.length > 25) return false;
-
-	const info = sanitizeHtml(data?.info);
-	if (typeof data?.info !== 'string' || info.length > 25) return false;
-
-	const size = sanitizeHtml(data?.size);
-	if (size?.length > 20) return false;
-
-	const time = sanitizeHtml(data?.time);
-	if (time?.length > 25) return false;
-
-	const sig = sanitizeHtml(data?.signature);
-	if (sig?.length > 128) return false;
-
-	//Check optional
-	const key = sanitizeHtml(data?.key);
-	if (data?.key !== undefined) {
-		if (typeof data?.key !== 'string' || key.length > 128) return false;
-	}
-	const hash = sanitizeHtml(data?.hash);
-	if (data?.hash !== undefined) {
-		if (typeof hash !== 'string' || hash.length > 64) return false;
-	}
-
-	const name = sanitizeHtml(data?.name);
-	if (data?.name !== undefined) {
-		if (typeof name !== 'string' || name.length > 100) return false;
-	}
-
-	if (typeof data?.file === 'boolean') return false;
-
-	const object = {
-		fileName,
-		address,
-		name,
-		topic,
-		info,
-		type,
-		size: parseInt(size),
-		time: parseInt(time),
-		hash,
-		key: key,
-		sig
-	};
-
-	return object;
-};
-
-const sanitize_feed_message = (data) => {
-	const address = sanitizeHtml(data?.address);
-	if (address?.length > 99 || data?.address === undefined) return false;
-	const message = sanitizeHtml(data?.message);
-	if (message?.length > 777 || data?.message === undefined) return false;
-	const signature = sanitizeHtml(data?.signature);
-	if (signature?.length > 128) return false;
-	const nickname = sanitizeHtml(data?.nickname);
-	if (nickname?.length > 50 || data?.nickname === undefined) return false;
-	const hash = sanitizeHtml(data.hash);
-	if (typeof data.hash !== 'string' || hash.length > 64) return false;
-	const timestamp = sanitizeHtml(data?.timestamp);
-	if (timestamp?.length > 25) return false;
-	const reply = sanitizeHtml(data.reply);
-	if (reply?.length > 64) return false;
-
-	let tip = false;
-	if (data.tip && data.tip !== 'false') {
-		if (typeof data.tip.amount !== 'number' || data.tip.amount?.length > 100) return false;
-		if (typeof data.tip.receiver !== 'string' || data.tip.receiver?.length > 100) return false;
-		tip = { amount: data.tip.amount, receiver: sanitizeHtml(data.tip.receiver) };
-	}
-
-	const clean = {
-		message,
-		address,
-		nickname,
-		signature,
-		reply,
-		hash,
-		timestamp: parseInt(timestamp),
-		tip
-	};
-	return clean;
-};
-
-const sanitize_typing_message = (data) => {
-	if (typeof data?.typing !== 'boolean') return [false, false];
-	return [data?.typing, true];
 };
 
 const mini_message = (data) => {
@@ -643,26 +315,17 @@ module.exports = {
 	mini_message,
 	toBrowbroserKey,
 	containsOnlyEmojis,
-	sanitize_typing_message,
-	sanitizeHtml,
+	sanitizeText,
 	sleep,
 	check_hash,
 	trimExtra,
 	fromHex,
-	nonceFromTimestamp,
 	randomKey,
-	hexToUint,
 	toHex,
-	sanitize_join_swarm_data,
-	sanitize_feed_message,
-	sanitize_voice_status_data,
 	hash,
 	sanitize_pm_message,
-	sanitize_file_message,
-	sanitize_group_message,
 	check_if_media,
 	MEDIA_TYPES,
 	pow_config,
-	logPow,
-	validate_pow_job
+	logPow
 };

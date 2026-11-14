@@ -76,14 +76,11 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(encoding@0.1.13)
       hugin-p2p:
-        specifier: ^2.1.0
-        version: 2.1.0(bare-url@2.4.5)(encoding@0.1.13)
+        specifier: link:../hugin-p2p
+        version: link:../hugin-p2p
       hugin-utils:
         specifier: ^0.4.0
         version: 0.4.0(encoding@0.1.13)
-      huginbeam:
-        specifier: ^1.0.0
-        version: 1.0.0(bare-url@2.4.5)
       hyperbee:
         specifier: ^2.20.4
         version: 2.27.3
@@ -108,9 +105,6 @@ importers:
       int-to-rgb:
         specifier: ^1.0.0
         version: 1.0.0
-      keypear:
-        specifier: ^1.1.1
-        version: 1.2.2(bare-url@2.4.5)
       kryptokrona-crypto:
         specifier: ^1.0.3
         version: 1.0.3
@@ -135,9 +129,6 @@ importers:
       protomux:
         specifier: ^3.10.1
         version: 3.11.0
-      sanitize-html:
-        specifier: ^2.12.1
-        version: 2.17.5
       simple-peer:
         specifier: ^9.11.1
         version: 9.11.1
@@ -1655,9 +1646,6 @@ packages:
   devalue@5.8.1:
     resolution: {integrity: sha512-4CXDYRBGqN+57wVJkuXBYmpAVUSg3L6JAQa/DFqm238G73E1wuyc/JhGQJzN7vUf/CMphYau2zXbfWzDR5aTEw==}
 
-  dht-rpc@6.27.0:
-    resolution: {integrity: sha512-NsfgRlFDQnkA2+H+hJXMPLmBOn/TSIIc0cRMV8q42M4xc1uAXWtpvIIQsONF5tYcYC6px0bslrUGideN1h4S4A==}
-
   dht-rpc@6.28.0:
     resolution: {integrity: sha512-vOwuQKWbqvwRzxBJ+nwXXjI4d/4T0keKLDMjfq8C2KwM7xCBSToRIKYuwhrA9D5cV8Hxct1h1TLJ+O4e6Z+AgA==}
 
@@ -1677,25 +1665,12 @@ packages:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
     engines: {node: '>=6.0.0'}
 
-  dom-serializer@2.0.0:
-    resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
-
   dom-walk@0.1.2:
     resolution: {integrity: sha512-6QvTW9mrGeIegrFXdtQi9pk7O/nSK6lSdXW2eqUspN5LWD7UTji2Fqw5V2YLjBpHEoU9Xl/eUWNpDeZvoyOv2w==}
-
-  domelementtype@2.3.0:
-    resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
 
   domexception@1.0.1:
     resolution: {integrity: sha512-raigMkn7CJNNo6Ihro1fzG7wr3fHuYVytzquZKX5n0yizGsTcYgzdIUwj1X9pK0VvjeihV+XiclP+DjwbsSKug==}
     deprecated: Use your platform's native DOMException instead
-
-  domhandler@5.0.3:
-    resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
-    engines: {node: '>= 4'}
-
-  domutils@3.2.2:
-    resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
 
   dot-prop@6.0.1:
     resolution: {integrity: sha512-tE7ztYzXHIeyvc7N+hR3oi7FIbf/NIjVP9hmAt3yMXzrQ072/fpjGLx2GxNxGxUl5V73MEqYzioOMoVhGMJ5cA==}
@@ -1796,14 +1771,6 @@ packages:
 
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
-
-  entities@4.5.0:
-    resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
-    engines: {node: '>=0.12'}
-
-  entities@7.0.1:
-    resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
-    engines: {node: '>=0.12'}
 
   env-paths@2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
@@ -2280,9 +2247,6 @@ packages:
     resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==}
     engines: {node: '>=10'}
 
-  htmlparser2@10.1.0:
-    resolution: {integrity: sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ==}
-
   http-cache-semantics@4.2.0:
     resolution: {integrity: sha512-dTxcvPXqPvXBQpq5dUr6mEMJX4oIEFv6bwom3FDwKRDsuIjjJGANqhBuoAn9c1RQJIdAKav33ED65E2ys+87QQ==}
 
@@ -2305,15 +2269,8 @@ packages:
   hugin-crypto@1.0.0:
     resolution: {integrity: sha512-g2Sj9+bz+CXcgw4JHJALitI8CkqYMG2f2Y0OvZo5pN2n02WyCX1Z57FpFasvky4V3bADhdYTTeeoxIL2X6ZNpg==}
 
-  hugin-p2p@2.1.0:
-    resolution: {integrity: sha512-5s/uu56sN2n7HCiQHsWRXErdjgF8ONThRcCIUOstKBwBoZ8Y3ubWJ1gQx5aX2Y4JJQTae/En1Q/GicYNMcpuKQ==}
-
   hugin-utils@0.4.0:
     resolution: {integrity: sha512-8LaOXc/bbwc7g0E740mTqwEjugG1qx62rLYNIC6XXE5Met6JX4kwnzgpylGUUOkPeN/Ip4ED+mf4H9NzynC6LQ==}
-
-  huginbeam@1.0.0:
-    resolution: {integrity: sha512-oh3ns0UOox3H459wxARxn7PZee/hi4pf090C+5GZyP6UJqVJcbMmFChOC+edKFb3XT+KQIRe/rF4MHYre9I0Sg==}
-    hasBin: true
 
   hyperbee@2.27.3:
     resolution: {integrity: sha512-PXURH2U4juUZyJRKHTrY5z1zX851pmI1Q0jfv5F/hCIErDt/ND8jOZuxc3hfOLM9f0W3qJEDTMlV5AJBkVPy8w==}
@@ -2336,10 +2293,6 @@ packages:
   hyperdht-address@1.1.1:
     resolution: {integrity: sha512-Mu/+7SW2cwvHxMXswa5mOrhrS5BJyntViAuB25k8d8wNtA8eAPs4LaIq6TwN1SS/KQY02h1r+gM8cQeN/k360w==}
 
-  hyperdht-hugin@1.0.3:
-    resolution: {integrity: sha512-++EO+vSupNVeF7SRY/BHktiG1PAHn0KoMxHJWzXfNF6EEeDRPkX+8eyH6uTapBy0bYkSSpbKp8iGP+8KGW4VBg==}
-    hasBin: true
-
   hyperdht@6.36.0:
     resolution: {integrity: sha512-rVRXq8stFtR0fScIdJqtWvaO7x8G3voUdw6vRypU4iFk5r67XMu4ge2q8VxJZdYosPKuU+G9r5+7/y93QN+wNQ==}
     hasBin: true
@@ -2349,9 +2302,6 @@ packages:
 
   hyperschema@1.21.0:
     resolution: {integrity: sha512-lEnIbLTUQf7w6FU6X+R3yUJhBwCzF4ewRnAaYOrPdcVWe1rbOf94PzMiXb5pBKxroCXzlrPLxVujxAsTrrHc8g==}
-
-  hyperswarm-hugin@1.0.4:
-    resolution: {integrity: sha512-6pl+E308TW/o62GuNUZvkqeKa35JIBgd8XEtrmePG/PHJL9TfFC59gBRhIaBvHlz0LpPtvqj790Y+diuc7KwNA==}
 
   hyperswarm@4.17.2:
     resolution: {integrity: sha512-yKTNgHjijwrmSj5neC2Lu5JyKDvj9gZK/zkVLySP6J2M7nF+uvFMoxzRlWKKjdySfZVHZXPLfhk4xAnpqibm5A==}
@@ -2477,10 +2427,6 @@ packages:
     resolution: {integrity: sha512-yvkRyxmFKEOQ4pNXCmJG5AEQNlXJS5LaONXo5/cLdTZdWvsZ1ioJEonLGAosKlMWE8lwUy/bJzMjcw8az73+Fg==}
     engines: {node: '>=0.10.0'}
 
-  is-plain-object@5.0.0:
-    resolution: {integrity: sha512-VRSzKkbMm5jMDoKLbltAkFQ5Qr7VDiTFGXxYFXXowVj387GeGNOCsOH6Msy00SGZ3Fp84b1Naa1psqgcCIEP5Q==}
-    engines: {node: '>=0.10.0'}
-
   is-property@1.0.2:
     resolution: {integrity: sha512-Ks/IoX00TtClbGQr4TWXemAnktAQvYB7HzcCxDGqEZU6oCmb2INHuOoKxbtR+HFkmYWBKv/dOZtGRiAjDhj92g==}
 
@@ -2586,9 +2532,6 @@ packages:
   kademlia-routing-table@1.0.6:
     resolution: {integrity: sha512-Ve6jwIlUCYvUzBnXnzVRHDZCFgXURW9gmF3r7n05kZs/2rNbLHXwGdcq0qIaSwdmJCvtosgR4JensnVU65hzNQ==}
 
-  keypear@1.2.2:
-    resolution: {integrity: sha512-eOazQxaSandFJViR0C+8f9FwCxteRcXF+rz/2RpIAxgLtCV2lz7JwbxYWZezsrAfNWKAmV/kwFZdSxGCJCbr2A==}
-
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -2612,9 +2555,6 @@ packages:
 
   kryptokrona-wallet-backend-js@2.5.8:
     resolution: {integrity: sha512-ZR2VVNhLDkbj33mKGC/kGaKmG9D1hAvR/heXzIEVzf+nHNrGZ2BnvmZnQccUoOvg+Bh9CZ0sKWoZ5TstJI7Nkg==}
-
-  launder@1.7.1:
-    resolution: {integrity: sha512-mU6WRz5EusL9ZZuiZ5SO4Y6C0P9PAUR9iwdb6bzj4KDihm28DiHFw+/yk9DBH4f+Pv1wuzQ4e2jV3oQ7mkIqvw==}
 
   lazy-val@1.0.5:
     resolution: {integrity: sha512-0/BnGCCfyUMkBpeDgWihanIAF9JmZhHBgUhEqzvf+adhNGLoP6TaiI5oF8oyb3I45P+PcnrqihSf01M0l0G5+Q==}
@@ -3107,9 +3047,6 @@ packages:
     resolution: {integrity: sha512-QR/GGaKCkhwk1ePQNYDRKYZ3mwU9ypsKhB0XyFnLQdomyEqk3e8wpW3V5Jp88zbxK4n5ST1nqo+g9juTpownhQ==}
     engines: {node: '>=0.10.0'}
 
-  parse-srcset@1.0.2:
-    resolution: {integrity: sha512-/2qh0lav6CmI15FzA3i/2Bzk2zCgQhGMkvhOhKNcBVQ1ldgpbfiNTVslmooUmWJcADi1f1kIeynbDRVzNlfR6Q==}
-
   patch-package@6.5.1:
     resolution: {integrity: sha512-I/4Zsalfhc6bphmJTlrLoOcAF87jcxko4q0qsv4bGcurbr8IskEOtdnt9iCmsQVGL1B+iUhSQqweyTLJfCF9rA==}
     engines: {node: '>=10', npm: '>5'}
@@ -3530,9 +3467,6 @@ packages:
 
   sanitize-filename@1.6.4:
     resolution: {integrity: sha512-9ZyI08PsvdQl2r/bBIGubpVdR3RR9sY6RDiWFPreA21C/EFlQhmgo20UZlNjZMMZNubusLhAQozkA0Od5J21Eg==}
-
-  sanitize-html@2.17.5:
-    resolution: {integrity: sha512-ZmU1joGRrvoyctKIiuwUxqR6moLoU2Wk+2bMccN6f7UwhAmwYDvWziqPxRDDN2Qip62NqnIrVrT9akbL6Wretg==}
 
   sass@1.101.0:
     resolution: {integrity: sha512-OL3GoQyoUdDt843DpVmDO6y2k1sc5IhUDSpu8XucEI+35neq5QivZ1iuegnpraEVTJXlQGK1gl27zKcTLEPbQw==}
@@ -5811,27 +5745,6 @@ snapshots:
 
   devalue@5.8.1: {}
 
-  dht-rpc@6.27.0(bare-url@2.4.5):
-    dependencies:
-      adaptive-timeout: 1.0.1
-      b4a: 1.8.1
-      bare-events: 2.9.1
-      compact-encoding: 3.2.0
-      compact-encoding-net: 1.3.0
-      fast-fifo: 1.3.2
-      kademlia-routing-table: 1.0.6
-      nat-sampler: 1.0.1
-      sodium-universal: 5.0.1(bare-events@2.9.1)(bare-url@2.4.5)
-      streamx: 2.28.0
-      time-ordered-set: 2.0.1
-      udx-native: 1.20.7(bare-url@2.4.5)
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - bare-url
-      - react-native-b4a
-      - sodium-javascript
-
   dht-rpc@6.28.0(bare-url@2.4.5):
     dependencies:
       adaptive-timeout: 1.0.1
@@ -5888,30 +5801,12 @@ snapshots:
     dependencies:
       esutils: 2.0.3
 
-  dom-serializer@2.0.0:
-    dependencies:
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
-      entities: 4.5.0
-
   dom-walk@0.1.2: {}
-
-  domelementtype@2.3.0: {}
 
   domexception@1.0.1:
     dependencies:
       webidl-conversions: 4.0.2
     optional: true
-
-  domhandler@5.0.3:
-    dependencies:
-      domelementtype: 2.3.0
-
-  domutils@3.2.2:
-    dependencies:
-      dom-serializer: 2.0.0
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
 
   dot-prop@6.0.1:
     dependencies:
@@ -6086,10 +5981,6 @@ snapshots:
   end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
-
-  entities@4.5.0: {}
-
-  entities@7.0.1: {}
 
   env-paths@2.2.1: {}
 
@@ -6659,13 +6550,6 @@ snapshots:
     dependencies:
       lru-cache: 6.0.0
 
-  htmlparser2@10.1.0:
-    dependencies:
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
-      domutils: 3.2.2
-      entities: 7.0.1
-
   http-cache-semantics@4.2.0: {}
 
   http-proxy-agent@5.0.0:
@@ -6703,26 +6587,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  hugin-p2p@2.1.0(bare-url@2.4.5)(encoding@0.1.13):
-    dependencies:
-      b4a: 1.8.1
-      bare-events: 2.9.1
-      bare-rpc: 1.3.3(bare-events@2.9.1)
-      compact-encoding: 2.19.2
-      corestore: 6.18.4(bare-events@2.9.1)(bare-url@2.4.5)
-      hyperdrive: 11.13.4(bare-url@2.4.5)
-      hyperswarm-hugin: 1.0.4(bare-url@2.4.5)
-      protomux: 3.11.0
-    optionalDependencies:
-      hugin-utils: 0.4.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - bare-url
-      - encoding
-      - react-native-b4a
-      - sodium-javascript
-
   hugin-utils@0.4.0(encoding@0.1.13):
     dependencies:
       kryptokrona-utils: 1.3.9(encoding@0.1.13)
@@ -6730,18 +6594,6 @@ snapshots:
       node-gyp-build: 4.8.4
     transitivePeerDependencies:
       - encoding
-
-  huginbeam@1.0.0(bare-url@2.4.5):
-    dependencies:
-      hyperswarm-hugin: 1.0.4(bare-url@2.4.5)
-      queue-tick: 1.0.1
-      streamx: 2.28.0
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - bare-url
-      - react-native-b4a
-      - sodium-javascript
 
   hyperbee@2.27.3:
     dependencies:
@@ -6844,34 +6696,6 @@ snapshots:
       - bare-buffer
       - react-native-b4a
 
-  hyperdht-hugin@1.0.3(bare-url@2.4.5):
-    dependencies:
-      '@hyperswarm/secret-stream': 6.9.1(bare-events@2.9.1)(bare-url@2.4.5)
-      b4a: 1.8.1
-      bare-events: 2.9.1
-      blind-relay: 1.6.1(bare-url@2.4.5)
-      bogon: 1.3.0
-      compact-encoding: 2.19.2
-      compact-encoding-net: 1.3.0
-      dht-rpc: 6.27.0(bare-url@2.4.5)
-      hypercore-crypto: 3.7.0(bare-events@2.9.1)(bare-url@2.4.5)
-      hypercore-id-encoding: 1.3.0
-      noise-curve-ed: 2.1.0(bare-events@2.9.1)(bare-url@2.4.5)
-      noise-handshake: 4.2.0(bare-events@2.9.1)(bare-url@2.4.5)
-      record-cache: 1.2.0
-      safety-catch: 1.0.3
-      signal-promise: 1.0.3
-      sodium-universal: 5.0.1(bare-events@2.9.1)(bare-url@2.4.5)
-      streamx: 2.28.0
-      unslab: 1.3.0
-      xache: 1.2.1
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - bare-url
-      - react-native-b4a
-      - sodium-javascript
-
   hyperdht@6.36.0(bare-url@2.4.5):
     dependencies:
       '@hyperswarm/secret-stream': 6.9.1(bare-events@2.9.1)(bare-url@2.4.5)
@@ -6931,22 +6755,6 @@ snapshots:
       - bare-abort-controller
       - bare-buffer
       - react-native-b4a
-
-  hyperswarm-hugin@1.0.4(bare-url@2.4.5):
-    dependencies:
-      b4a: 1.8.1
-      bare-events: 2.9.1
-      hyperdht-hugin: 1.0.3(bare-url@2.4.5)
-      safety-catch: 1.0.3
-      shuffled-priority-queue: 2.1.0
-      streamx: 2.28.0
-      unslab: 1.3.0
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - bare-url
-      - react-native-b4a
-      - sodium-javascript
 
   hyperswarm@4.17.2(bare-url@2.4.5):
     dependencies:
@@ -7062,8 +6870,6 @@ snapshots:
 
   is-plain-obj@1.1.0: {}
 
-  is-plain-object@5.0.0: {}
-
   is-property@1.0.2: {}
 
   is-reference@3.0.3:
@@ -7157,14 +6963,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
 
-  keypear@1.2.2(bare-url@2.4.5):
-    dependencies:
-      b4a: 1.8.1
-      sodium-native: 4.3.3(bare-url@2.4.5)
-    transitivePeerDependencies:
-      - bare-url
-      - react-native-b4a
-
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -7219,10 +7017,6 @@ snapshots:
       - debug
       - encoding
       - supports-color
-
-  launder@1.7.1:
-    dependencies:
-      dayjs: 1.11.21
 
   lazy-val@1.0.5: {}
 
@@ -7731,8 +7525,6 @@ snapshots:
   parse-json@2.2.0:
     dependencies:
       error-ex: 1.3.4
-
-  parse-srcset@1.0.2: {}
 
   patch-package@6.5.1:
     dependencies:
@@ -8275,16 +8067,6 @@ snapshots:
   sanitize-filename@1.6.4:
     dependencies:
       truncate-utf8-bytes: 1.0.2
-
-  sanitize-html@2.17.5:
-    dependencies:
-      deepmerge: 4.3.1
-      escape-string-regexp: 4.0.0
-      htmlparser2: 10.1.0
-      is-plain-object: 5.0.0
-      launder: 1.7.1
-      parse-srcset: 1.0.2
-      postcss: 8.5.15
 
   sass@1.101.0:
     dependencies:
