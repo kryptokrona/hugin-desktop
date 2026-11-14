@@ -39,6 +39,9 @@ const {
 const { app, ipcMain } = require('electron');
 const { keychain, signMessage, verifySignature, decrpyt_beam_message } = require('./crypto.cjs');
 
+//Signs a hugin-p2p payload (idSig, room message, feed, file) with the wallet's spend key.
+const sign_with_spend_key = (message) => signMessage(message, keychain.getXKRKeypair().privateSpendKey);
+
 const LOCAL_VOICE_STATUS_OFFLINE = {
 	voice: false,
 	video: false,
@@ -852,16 +855,12 @@ async function send_voice_channel_sdp({ to, data, offer, topic, retry }) {
 const send_voice_channel_status = async (joined, status, update = false) => {
 	let active = active_swarms.find((a) => a.key === status.key);
 	if (!active) return;
-	const sig = await signMessage(
-		P2PWire.voiceSigningPayload(active.topic),
-		keychain.getXKRKeypair().privateSpendKey
-	);
+	//Not signed: receivers take a voice status from the joined peer whose address it carries.
 	let data = null;
 	try {
 		data = P2PWire.voiceStatusOut({
 			address: Hugin.address,
 			avatar: Hugin.avatar,
-			signature: sig,
 			voice: joined,
 			topic: active.topic,
 			name: Hugin.nickname,
@@ -1085,10 +1084,10 @@ const check_joined = async (value, active, con, connection, topic, peer, beam) =
 	//Admin flag: the room's admin key (end of the invite) signed this connection's DHT key.
 	const admin = keys.verifyAdmin(connection.remotePublicKey, value.signature, active.key);
 
-	//idSig: the sender's XKR spend key signed this connection's DHT key. Awaited, so a peer is
-	//admitted only with a verified address.
+	//idSig: the sender's XKR spend key signed this swarm's topic and this connection's DHT key.
+	//Awaited, so a peer is admitted only with a verified address.
 	const verified = await keys.verifyIdSig(
-		{ dhtPublicKey: connection.remotePublicKey, address: value.address, idSig: value.idSig },
+		{ dhtPublicKey: connection.remotePublicKey, topic, address: value.address, idSig: value.idSig },
 		verifySignature
 	);
 	if (!verified) return 'Ban';
@@ -1155,12 +1154,8 @@ const check_feed_message = async (value) => {
 	if (!message) return 'Ban';
 	const exists = await feedMessageExists(message.hash);
 	if (exists) return true;
-	//The signature covers the text as it was sent (message + hash).
-	const verify = await verifySignature(
-		P2PWire.feedSigningPayload(value.message, value.hash),
-		value.address,
-		value.signature
-	);
+	//The signature covers every field as sent (hugin-p2p/wire feedSigningPayload).
+	const verify = await P2PWire.verifyFeedMessage(value, verifySignature);
 	if (!verify) return 'Ban';
 	await saveFeedMessage(message);
 	message.type = 'feed';
@@ -1237,6 +1232,8 @@ const check_ping = async (value, active, con, topic, beam) => {
 const save_room_message = async (value) => {
 	const message = P2PWire.roomMessageIn(value);
 	if (!message) return;
+	//The author's signature over the message is checked before it is saved or shown.
+	if (!(await P2PWire.verifyRoomMessage(value, verifySignature))) return;
 	const msg = await saveGroupMsg(message, false, true);
 	if (!msg) return;
 	//Send new board message to frontend.
@@ -1291,26 +1288,17 @@ const save_feed_history = async (messages) => {
 };
 
 const send_feed_message = async (message, reply = '', tip) => {
-	const hash = randomKey();
-	const signature = await signMessage(
-		P2PWire.feedSigningPayload(message, hash),
-		keychain.getXKRKeypair().privateSpendKey
-	);
-	const payload = {
-		type: 'feed',
-		message,
-		nickname: Hugin.nickname,
-		address: Hugin.address,
-		reply,
-		tip,
-		hash,
-		timestamp: Date.now(),
-		signature
-	};
+	//hugin-p2p/wire feed: the hash is derived from the fields, the signature covers them all.
+	let payload;
 	try {
+		payload = await P2PWire.feedSign(
+			{ message, nickname: Hugin.nickname, address: Hugin.address, reply, tip, timestamp: Date.now() },
+			sign_with_spend_key
+		);
 		forward_feed_message(P2PWire.feedOut(payload));
 	} catch (e) {
 		console.log('Feed message not sent:', e.message);
+		return false;
 	}
 	return payload;
 };
@@ -1453,6 +1441,7 @@ const process_request = async (messages, key, live = false) => {
 			if (await roomMessageExists(m.hash)) continue;
 			const message = P2PWire.roomMessageIn(m);
 			if (!message) continue;
+			if (!(await P2PWire.verifyRoomMessage(m, verifySignature))) continue;
 			await saveGroupMsg(message, false, true);
 			if (live) missing.push(message);
 			Hugin.send('room-notification', [message, false]);
@@ -1521,10 +1510,8 @@ const send_joined_message = async (topic, keyPair, connection) => {
 	const [isAdmin] = is_room_admin(active.key);
 	//Admin flag: our DHT public key signed with the room's admin key.
 	const signature = isAdmin ? b4a.toString(keys.signAdmin(isAdmin.priv, keyPair.publicKey), 'hex') : '';
-	//idSig: our DHT public key (hex) signed with the XKR spend key.
-	const idSig = await keys.signIdSig(keyPair.publicKey, (message) =>
-		signMessage(message, keychain.getXKRKeypair().privateSpendKey)
-	);
+	//idSig: the swarm topic and our DHT public key signed with the XKR spend key.
+	const idSig = await keys.signIdSig({ dhtPublicKey: keyPair.publicKey, topic }, sign_with_spend_key);
 	//Room history for rooms; DM swarms send none.
 	const messages = active.beam ? [] : await printGroup(key, 0);
 
@@ -1653,9 +1640,8 @@ ipcMain.on('group-upload', async (e, fileName, path, key, size, time, hash, room
 		return;
 	}
 	const topic = active.topic;
-	const signature = await signMessage(
-		P2PWire.fileSigningPayload({ hash, size, time, fileName }),
-		keychain.getXKRKeypair().privateSpendKey
+	const signature = await sign_with_spend_key(
+		P2PWire.fileSigningPayload({ topic, hash, size, time, fileName, address: Hugin.address })
 	);
 	const upload = {
 		fileName,

@@ -1,4 +1,4 @@
-const { keychain } = require('./crypto.cjs');
+const { keychain, signMessage } = require('./crypto.cjs');
 const {
 	loadKnownTxs,
 	saveHash,
@@ -39,8 +39,22 @@ const {
 	removeFriendRequest
 } = require('./database.cjs');
 const { trimExtra, sanitize_pm_message, sleep, randomKey } = require('./utils.cjs');
-// Room messages this app creates are validated and normalized like received ones.
-const { roomMessageIn, roomMessageOut } = require('./p2p-wire.cjs');
+// Room messages this app creates get their derived hash and the wallet's signature
+// (p2p-wire.cjs roomMessageSign) and are normalized like received ones.
+const { roomMessageSign, roomMessageOut } = require('./p2p-wire.cjs');
+
+//Signs a hugin-p2p payload with the wallet's spend key (crypto.cjs signMessage).
+const sign_with_spend_key = (message) => signMessage(message, keychain.getXKRKeypair().privateSpendKey);
+
+//A room message this app creates: hash derived from the fields, signed; null when it cannot be built.
+async function own_room_message(fields) {
+	try {
+		return await roomMessageSign({ ...fields, address: Hugin.address, name: Hugin.nickname }, sign_with_spend_key);
+	} catch (e) {
+		console.log('Room message not built:', e.message);
+		return null;
+	}
+}
 // hugin-node packets, push payloads and view tags.
 const push = require('hugin-p2p/push');
 
@@ -131,20 +145,8 @@ ipcMain.handle('create-group', async () => {
 ipcMain.on('add-group', async (e, grp) => {
 	if (!grp?.key || !grp?.name) return;
 	addGroup(grp);
-	const timestamp = Date.now();
-	const message = roomMessageIn({
-		timestamp: String(timestamp),
-		room: grp.key,
-		message: 'Joined group',
-		address: Hugin.address,
-		reply: '',
-		signature: '',
-		name: Hugin.nickname,
-		hash: randomKey(),
-		tip: false
-	});
+	const message = await own_room_message({ timestamp: Date.now(), room: grp.key, message: 'Joined group', reply: '', tip: false });
 	if (!message) return;
-	message.sent = true;
 	save_group_message(message, message.hash, parseInt(message.timestamp), false, false, true);
 });
 
@@ -155,20 +157,8 @@ ipcMain.on('add-room', async (e, room, admin) => {
 		Hugin.syncImages.push(room.key);
 		store.set({ syncImages: Hugin.syncImages });
 	}
-	const timestamp = Date.now();
-	const message = roomMessageIn({
-		timestamp: String(timestamp),
-		room: room.key,
-		message: 'Joined room',
-		address: Hugin.address,
-		reply: '',
-		signature: '',
-		name: Hugin.nickname,
-		hash: room.hash || randomKey(),
-		tip: false
-	});
+	const message = await own_room_message({ timestamp: Date.now(), room: room.key, message: 'Joined room', reply: '', tip: false });
 	if (!message) return;
-	message.sent = true;
 	save_group_message(message, message.hash, parseInt(message.timestamp), false, false, true, true);
 	if (admin) addRoomKeys(room.key, admin);
 	new_swarm({ key: room.key });
@@ -888,7 +878,14 @@ async function encrypt_hugin_message(message, toAddr) {
 
 async function send_room_message(message) {
 	console.log('Send this!', message);
-	const normalized = roomMessageIn(message, { sent: true });
+	//The hash the renderer passes is replaced by the derived one; the message is signed here.
+	const normalized = await own_room_message({
+		timestamp: message?.timestamp || Date.now(),
+		room: message?.room,
+		message: message?.message,
+		reply: message?.reply,
+		tip: message?.tip
+	});
 	if (!normalized) return;
 	let swarmMessage;
 	try {
@@ -904,8 +901,9 @@ async function send_room_message(message) {
 }
 
 // Room push through hugin-node (`kind: 'room'`): the room message as sent on the swarm, in a
-// secretbox keyed by the room key (nonce from the timestamp), sealed to the push server's key,
-// routed by the room view tag (cn_fast_hash(invite), 5 hex characters).
+// secretbox keyed by the room key (hugin-p2p/push sealRoomPush: a random nonce in front of the
+// box), sealed to the push server's key, routed by the room view tag (cn_fast_hash(invite), 5
+// hex characters).
 async function send_room_message_push(message) {
 	try {
 		const timestamp = Number(message.timestamp);

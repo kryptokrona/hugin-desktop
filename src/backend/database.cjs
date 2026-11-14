@@ -759,7 +759,7 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
        VALUES
            (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(msg.message, msg.address, '', msg.room, msg.timestamp, msg.name, msg.reply, hasHash ? msg.hash : null, msg.sent, tip, msg.sent)
+    ).run(msg.message, msg.address, typeof msg.signature === 'string' ? msg.signature : '', msg.room, msg.timestamp, msg.name, msg.reply, hasHash ? msg.hash : null, msg.sent, tip, msg.sent)
     if (result.changes === 0) return false
     saveRoomUser({
         name: msg.name,

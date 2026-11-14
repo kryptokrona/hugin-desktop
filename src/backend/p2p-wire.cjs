@@ -10,11 +10,17 @@
 // are decoded bytes (a Buffer, or '' when there is none) and room message timestamps are
 // strings. They return `false` when the library refuses the input. Each adapter runs the
 // library validator itself, so it can be given raw data or a value `decode` already returned.
+// Room and feed messages carry a hash derived from their fields (`wire.roomMessageHash`,
+// `wire.feedMessageHash`) and the author's XKR signature over a domain-prefixed payload
+// (`wire.roomMessageSigningPayload`, `wire.feedSigningPayload`); `*In` refuses another hash and
+// `verifyRoomMessage` / `verifyFeedMessage` check the signature with the backend's verifier.
 //
 // Outbound: thin wrappers around the `hugin-p2p/wire` builders that return the JSON string for
 // the hugin-messages channel (`wire.encode`, which refuses anything above 2 MiB). The builders
-// throw a WireError for input an old peer would refuse or ban for; callers catch it and do not
-// send.
+// throw a WireError for input a peer would refuse or ban for; callers catch it and do not send.
+// `roomMessageSign` and `feedSign` build the messages this app creates: they derive the hash
+// and sign through the given `sign` function (the backend passes `crypto.cjs` `signMessage` with
+// the wallet's spend key). This file has no Electron or key access of its own.
 
 const S = require('hugin-p2p/sanitize');
 const W = require('hugin-p2p/wire');
@@ -47,15 +53,22 @@ function decode(input, { dm = false, now } = {}) {
 	return W.decode(input, opts);
 }
 
+/** The library-normalized room message (`sanitize.roomMessage`) whose hash is the derived one, or null. */
+function validRoomMessage(data) {
+	const r = S.roomMessage(data, { hexHash: true });
+	if (!r.ok || !W.isRoomMessageHash(r.value)) return null;
+	return r.value;
+}
+
 /**
  * Room message (live, history, or one this app creates) in desktop's shape:
  * `{ message, address, signature, room, timestamp (string), name, reply, hash, sent,
- *    channel: 'channel', tip }`, or false.
+ *    channel: 'channel', tip }`, or false. The hash must be the one derived from the fields and
+ * the signature 128 hex characters; the timestamp is kept as signed (no clamping).
  */
-function roomMessageIn(data, { sent = false, now } = {}) {
-	const r = S.roomMessage(data, now === undefined ? {} : { now });
-	if (!r.ok) return false;
-	const v = r.value;
+function roomMessageIn(data, { sent = false } = {}) {
+	const v = validRoomMessage(data);
+	if (!v) return false;
 	return {
 		message: text(v.message),
 		address: text(v.address),
@@ -97,7 +110,10 @@ function joinedIn(data) {
 	};
 }
 
-/** Voice channel status in desktop's shape (the `voice-channel-status` IPC payload). */
+/**
+ * Voice channel status in desktop's shape (the `voice-channel-status` IPC payload). Voice
+ * statuses are not signed (hugin-p2p 3.0); `signature` stays in the shape as ''.
+ */
 function voiceStatusIn(data) {
 	const r = S.voiceStatus(data);
 	if (!r.ok) return false;
@@ -106,7 +122,7 @@ function voiceStatusIn(data) {
 		address: text(v.address),
 		avatar: avatarBytes(v.avatar),
 		message: text(v.message),
-		signature: text(v.signature),
+		signature: '',
 		topic: text(v.topic),
 		name: text(v.name),
 		voice: v.voice,
@@ -137,11 +153,20 @@ function fileMessageIn(data) {
 	};
 }
 
-/** Feed message in desktop's shape (what `saveFeedMessage` and the `feed-message` IPC take). */
-function feedMessageIn(data) {
+/** The library-normalized feed message whose hash is the derived one, or null. */
+function validFeedMessage(data) {
 	const r = S.feedMessage(data);
-	if (!r.ok) return false;
-	const v = r.value;
+	if (!r.ok || !W.isFeedMessageHash(r.value)) return null;
+	return r.value;
+}
+
+/**
+ * Feed message in desktop's shape (what `saveFeedMessage` and the `feed-message` IPC take);
+ * false unless the hash is the one derived from the fields.
+ */
+function feedMessageIn(data) {
+	const v = validFeedMessage(data);
+	if (!v) return false;
 	return {
 		message: text(v.message),
 		address: text(v.address),
@@ -155,13 +180,121 @@ function feedMessageIn(data) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// signatures
+
+/**
+ * Awaited check of a room message's signature: `verify(payload, address, signature)` (the
+ * backend's `verifySignature`) must resolve to exactly `true` for the library-normalized
+ * message (text as sent, not sanitized). False for an invalid message, a wrong hash, a
+ * verifier that throws, or no verifier; never throws.
+ */
+async function verifyRoomMessage(data, verify) {
+	const v = validRoomMessage(data);
+	if (!v) return false;
+	return verifyWith(() => W.roomMessageSigningPayload(v), v, verify);
+}
+
+/** Like `verifyRoomMessage` for a feed message (`wire.feedSigningPayload`). */
+async function verifyFeedMessage(data, verify) {
+	const v = validFeedMessage(data);
+	if (!v) return false;
+	return verifyWith(() => W.feedSigningPayload(v), v, verify);
+}
+
+async function verifyWith(payloadOf, v, verify) {
+	if (typeof verify !== 'function') return false;
+	let payload;
+	try {
+		payload = payloadOf();
+	} catch (e) {
+		return false;
+	}
+	try {
+		return (await verify(payload, v.address, v.signature)) === true;
+	} catch (e) {
+		return false;
+	}
+}
+
+/** The host's signature (a non-empty string) of `payload`; throws when `sign` gives none. */
+async function signPayload(payload, sign) {
+	if (typeof sign !== 'function') throw new TypeError('sign must be a function');
+	const sig = await sign(payload);
+	if (typeof sig !== 'string' || sig.length === 0) throw new TypeError('sign() gave no signature');
+	return sig;
+}
+
+/**
+ * A room message this app creates, in desktop's shape with `sent: true`: the hash is derived
+ * from the fields (a `hash` in `o` is ignored) and `signature` is `sign(payload)` for the
+ * room message payload (`sign(message) -> Promise<string>`, the backend's `signMessage` with
+ * the spend key). Throws a WireError for a message a peer would refuse, or the signer's error.
+ */
+async function roomMessageSign(o, sign) {
+	const reply = o.reply === undefined || o.reply === null ? '' : o.reply;
+	const raw = {
+		hash: '',
+		room: o.room,
+		address: o.address,
+		message: o.message,
+		name: o.name,
+		reply,
+		signature: '',
+		timestamp: Number(o.timestamp),
+		tip: o.tip
+	};
+	raw.hash = W.roomMessageHash(raw);
+	raw.signature = await signPayload(W.roomMessageSigningPayload(raw), sign);
+	const built = W.roomMessage(raw);
+	const m = roomMessageIn(built, { sent: true });
+	if (!m) throw new W.WireError('room message: not valid after signing', 'signature');
+	return m;
+}
+
+/**
+ * A feed message this app creates (the object `feedOut` takes and `send_feed_message`
+ * returns): hash derived from the fields, `signature` = `sign(feed payload)`.
+ */
+async function feedSign(o, sign) {
+	const reply = o.reply === undefined || o.reply === null ? '' : o.reply;
+	const raw = {
+		type: 'feed',
+		message: o.message,
+		nickname: o.nickname,
+		address: o.address,
+		reply,
+		tip: o.tip,
+		hash: '',
+		timestamp: Number(o.timestamp),
+		signature: ''
+	};
+	raw.hash = W.feedMessageHash(raw);
+	raw.signature = await signPayload(W.feedSigningPayload(raw), sign);
+	return W.feed(raw);
+}
+
+/**
+ * Stored room messages that can be sent as history (`joined.messages`, `send-history`,
+ * `missing-messages`): valid rows with the derived hash and a stored 128-hex signature
+ * (`sanitize.roomHistory`). Rows without one are left out (receivers drop them anyway).
+ */
+function historyRows(messages) {
+	if (!Array.isArray(messages)) return [];
+	return S.roomHistory(messages, { hexHash: true }).filter(W.isRoomMessageHash);
+}
+
+// ---------------------------------------------------------------------------------------------
 // outbound (each returns the encoded JSON string)
 
-/** `joined`; voice/video/mute flags that are not `true` are sent as false. */
+/**
+ * `joined`; voice/video/mute flags that are not `true` are sent as false, and only history
+ * rows `historyRows` keeps are sent.
+ */
 function joinedOut(o) {
 	return W.encode(
 		W.joined({
 			...o,
+			messages: historyRows(o.messages),
 			voice: bool(o.voice),
 			video: bool(o.video),
 			audioMute: bool(o.audioMute),
@@ -171,7 +304,10 @@ function joinedOut(o) {
 	);
 }
 
-/** Room message from a desktop-shaped message (`roomMessageIn` output), in the shape native sends. */
+/**
+ * Room message from a desktop-shaped message (`roomMessageIn` / `roomMessageSign` output), in
+ * the shape native sends. The signature (128 hex characters) is required.
+ */
 function roomMessageOut(m) {
 	return W.encode(
 		W.roomMessage({
@@ -181,7 +317,7 @@ function roomMessageOut(m) {
 			message: m.message,
 			name: m.name,
 			reply: m.reply,
-			signature: m.signature === undefined || m.signature === null ? '' : m.signature,
+			signature: m.signature,
 			timestamp: Number(m.timestamp),
 			tip: m.tip
 		})
@@ -211,8 +347,9 @@ function requestMessagesOut(hashes) {
 	return W.encode(W.requestMessages(hashes));
 }
 
+/** missing-messages with the stored rows `historyRows` keeps. */
 function missingMessagesOut(messages) {
-	return W.encode(W.missingMessages(messages));
+	return W.encode(W.missingMessages(historyRows(messages)));
 }
 
 /** request-history with the 10 most recent files (receivers ignore longer lists). */
@@ -220,9 +357,9 @@ function requestHistoryOut(files = []) {
 	return W.encode(W.requestHistory(W.recentFiles(files, S.SEND.ping.files)));
 }
 
-/** send-history with the 10 most recent files (receivers ignore longer lists). */
+/** send-history with the rows `historyRows` keeps and the 10 most recent files (receivers ignore longer lists). */
 function sendHistoryOut({ messages = [], files = [] } = {}) {
-	return W.encode(W.sendHistory({ messages, files: W.recentFiles(files, S.SEND.ping.files) }));
+	return W.encode(W.sendHistory({ messages: historyRows(messages), files: W.recentFiles(files, S.SEND.ping.files) }));
 }
 
 function requestFeedOut() {
@@ -245,7 +382,7 @@ function disconnectedOut() {
 	return W.encode(W.disconnected());
 }
 
-/** Voice status; flags that are not `true` are sent as false. */
+/** Voice status (not signed); flags that are not `true` are sent as false. */
 function voiceStatusOut(o) {
 	return W.encode(
 		W.voiceStatus({
@@ -279,6 +416,16 @@ module.exports = {
 	voiceStatusIn,
 	fileMessageIn,
 	feedMessageIn,
+	verifyRoomMessage,
+	verifyFeedMessage,
+	roomMessageSign,
+	feedSign,
+	historyRows,
+	roomMessageHash: W.roomMessageHash,
+	roomMessageSigningPayload: W.roomMessageSigningPayload,
+	isRoomMessageHash: W.isRoomMessageHash,
+	feedMessageHash: W.feedMessageHash,
+	isFeedMessageHash: W.isFeedMessageHash,
 	joinedOut,
 	roomMessageOut,
 	typingOut,
@@ -297,6 +444,5 @@ module.exports = {
 	sdpFlags: W.sdpFlags,
 	fileSharedOut,
 	feedSigningPayload: W.feedSigningPayload,
-	voiceSigningPayload: W.voiceSigningPayload,
 	fileSigningPayload: W.fileSigningPayload
 };
