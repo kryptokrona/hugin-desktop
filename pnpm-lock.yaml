@@ -75,9 +75,6 @@ importers:
       hugin-crypto:
         specifier: ^1.0.0
         version: 1.0.0(encoding@0.1.13)
-      hugin-mid:
-        specifier: link:../hugin-mid
-        version: link:../hugin-mid
       hugin-p2p:
         specifier: ^2.1.0
         version: 2.1.0(bare-url@2.4.5)(encoding@0.1.13)

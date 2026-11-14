@@ -67,7 +67,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - Electron
 - Svelte
 - WebRTC
-- Hyperswarm (upstream `hyperswarm` + `hyperdht`, with the Hugin `mid` handshake from `hugin-mid`)
+- Hyperswarm (upstream `hyperswarm` + `hyperdht`, with the Hugin `mid` handshake from `hugin-p2p/swarm`)
 
 # Getting Started
 
@@ -87,12 +87,12 @@ Why pnpm and not npm? Two things live in the repo that assume pnpm:
 
 ## Install & run
 
-`hugin-mid` (the Hugin `mid` on upstream hyperswarm/hyperdht) is linked from a sibling checkout
-(`"hugin-mid": "link:../hugin-mid"`) until it is published. Clone it next to this repo and
-install it first (`cd ../hugin-mid && pnpm install`); with `link:` pnpm does not install the
-linked package's dependencies, so it loads `hyperswarm`/`hyperdht` from `../hugin-mid/node_modules`.
+`hugin-p2p/swarm` (the Hugin `mid` on upstream hyperswarm/hyperdht) is linked from a sibling checkout
+(`"hugin-p2p": "link:../hugin-p2p"`) until it is published. Clone it next to this repo and
+install it first (`cd ../hugin-p2p && pnpm install`); with `link:` pnpm does not install the
+linked package's dependencies, so it loads `hyperswarm`/`hyperdht` from `../hugin-p2p/node_modules`.
 Both repos pin `hyperswarm` 4.17.2 and `hyperdht` 6.36.0 (`pnpm.overrides` here), and the app
-itself only reaches hyperdht through `hugin-mid`, so one hyperdht copy is loaded at runtime.
+itself only reaches hyperdht through `hugin-p2p/swarm`, so one hyperdht copy is loaded at runtime.
 
 |         |                    |
 | ------- | ------------------ |

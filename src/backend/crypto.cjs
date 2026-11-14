@@ -6,7 +6,7 @@ const xkrUtils = new CryptoNote()
 const crypto = new Crypto()
 // Key pairs, topics and the Hugin `mid` come from hugin-mid (upstream hyperdht underneath),
 // so this file never loads hyperdht itself and only one hyperdht copy is in the process.
-const { keyPairFromSeed, getNewPeerKeys } = require('hugin-mid')
+const { keyPairFromSeed, getNewPeerKeys } = require('hugin-p2p/swarm')
 const Keychains = require('keypear');
 const { ipcMain } = require('electron');
 const { saveMsg } = require('./database.cjs');

@@ -88,7 +88,7 @@
 		"electron-window-state": "^5.0.3",
 		"emoji-picker-element": "^1.21.2",
 		"hugin-crypto": "^1.0.0",
-		"hugin-mid": "link:../hugin-mid",
+		"hugin-p2p": "link:../hugin-p2p",
 		"hugin-p2p": "^2.1.0",
 		"hugin-utils": "^0.4.0",
 		"huginbeam": "^1.0.0",

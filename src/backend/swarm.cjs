@@ -1,6 +1,6 @@
 // Upstream hyperswarm/hyperdht with the Hugin `mid` in the Noise handshake (signed with the
 // topic base key, verified both ways; peers without a valid mid are refused), see hugin-mid.
-const { createHuginSwarm } = require('hugin-mid');
+const { createHuginSwarm } = require('hugin-p2p/swarm');
 
 const {
 	sleep,
