@@ -225,19 +225,21 @@ async function signPayload(payload, sign) {
 }
 
 /**
- * A room message this app creates, in desktop's shape with `sent: true`: the hash is derived
- * from the fields (a `hash` in `o` is ignored) and `signature` is `sign(payload)` for the
- * room message payload (`sign(message) -> Promise<string>`, the backend's `signMessage` with
- * the spend key). Throws a WireError for a message a peer would refuse, or the signer's error.
+ * A room message this app creates, in desktop's shape with `sent: true`. The text fields are
+ * sanitized first (desktop has always sent its own messages in that form), so what is hashed,
+ * signed, sent and stored is the same text: the hash is derived from the fields (a `hash` in `o`
+ * is ignored) and `signature` is `sign(payload)` for the room message payload
+ * (`sign(message) -> Promise<string>`, the backend's `signMessage` with the spend key). Throws a
+ * WireError for a message a peer would refuse, or the signer's error.
  */
 async function roomMessageSign(o, sign) {
-	const reply = o.reply === undefined || o.reply === null ? '' : o.reply;
+	const reply = o.reply === undefined || o.reply === null ? '' : text(String(o.reply));
 	const raw = {
 		hash: '',
 		room: o.room,
 		address: o.address,
-		message: o.message,
-		name: o.name,
+		message: text(String(o.message === undefined || o.message === null ? '' : o.message)),
+		name: text(String(o.name === undefined || o.name === null ? '' : o.name)),
 		reply,
 		signature: '',
 		timestamp: Number(o.timestamp),

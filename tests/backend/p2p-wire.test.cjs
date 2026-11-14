@@ -165,6 +165,15 @@ test('roomMessageSign: the "Joined room" call site and the send path (derived ha
 	assert.equal(W.decode(JSON.stringify(out)).type, 'room-message');
 	assert.equal(await W.verifyRoomMessage(out, async (p, a, s) => p === sign.calls[0] && a === ADDRESS && s === SIG), true);
 
+	// own text is sanitized before it is hashed and signed, so the wire carries what was signed
+	const marked = await W.roomMessageSign({ timestamp: PAST, room: INVITE, message: '<b>bold</b> &amp; done', address: ADDRESS, name: '<i>nils</i>' }, sign);
+	assert.equal(marked.message, 'bold & done');
+	assert.equal(marked.name, 'nils');
+	const markedOut = JSON.parse(W.roomMessageOut(marked));
+	assert.equal(markedOut.message, 'bold & done');
+	assert.ok(W.isRoomMessageHash(markedOut), 'the sent text is the hashed text');
+	assert.equal(W.roomMessageIn(markedOut).message, 'bold & done');
+
 	await assert.rejects(W.roomMessageSign({ timestamp: PAST, room: INVITE, message: 'x', address: ADDRESS, name: 'n'.repeat(51) }, sign));
 	await assert.rejects(W.roomMessageSign({ timestamp: PAST, room: INVITE, message: 'x', address: ADDRESS, name: 'nils' }, async () => ''), /signature/);
 	await assert.rejects(W.roomMessageSign({ timestamp: PAST, room: INVITE, message: 'x', address: ADDRESS, name: 'nils' }, signer('short')), 'the signature must be 128 hex characters');
