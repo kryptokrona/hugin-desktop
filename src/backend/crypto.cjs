@@ -4,7 +4,9 @@ const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
 const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
 const crypto = new Crypto()
-const DHT = require('hyperdht')
+// Key pairs, topics and the Hugin `mid` come from hugin-mid (upstream hyperdht underneath),
+// so this file never loads hyperdht itself and only one hyperdht copy is in the process.
+const { keyPairFromSeed, getNewPeerKeys } = require('hugin-mid')
 const Keychains = require('keypear');
 const { ipcMain } = require('electron');
 const { saveMsg } = require('./database.cjs');
@@ -69,19 +71,25 @@ const keychain =  {
 }
 
 function create_peer_base_keys(buf) {
-    const keypair = DHT.keyPair(buf)
+    // Same as hyperdht's DHT.keyPair(seed): crypto_sign_seed_keypair over the 32-byte seed.
+    const keypair = keyPairFromSeed(buf)
     const keys = Keychains.from(keypair) 
     return keys
 }
 
+// Returns [base_keys, dht_keys, signature, peer]:
+//   base_keys  keypear Keychain of the topic base key pair, keyPair(fill32(key))
+//   dht_keys   keypear Keychain of a fresh random DHT key pair for this swarm
+//   signature  the Hugin mid: the dht public key signed with the base secret key
+//   peer       hugin-mid getNewPeerKeys() result: { topic, keyPair, sig, base, basePublicKey }
+//              (peer.keyPair is the plain { publicKey, secretKey } a Hyperswarm/DHT needs)
 function get_new_peer_keys(key) {
-    const secret = Buffer.alloc(32).fill(key)
-    const base_keys = create_peer_base_keys(secret)
     const seed = randomKey()
-    const dht_keys = create_keys_from_seed(seed)
-    //Sign the dht public key with our base_keys
-    const signature = base_keys.get().sign(dht_keys.get().publicKey)
-    return [base_keys, dht_keys, signature]
+    const dhtKeyPair = keyPairFromSeed(Buffer.alloc(32).fill(seed))
+    const peer = getNewPeerKeys(key, dhtKeyPair)
+    const base_keys = Keychains.from(peer.base)
+    const dht_keys = Keychains.from(peer.keyPair)
+    return [base_keys, dht_keys, peer.sig, peer]
 }
 
 function create_keys_from_seed(seed) {

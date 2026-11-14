@@ -67,7 +67,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - Electron
 - Svelte
 - WebRTC
-- Hyperswarm
+- Hyperswarm (upstream `hyperswarm` + `hyperdht`, with the Hugin `mid` handshake from `hugin-mid`)
 
 # Getting Started
 
@@ -86,6 +86,13 @@ Why pnpm and not npm? Two things live in the repo that assume pnpm:
 - **`.npmrc`** carries `node-linker=hoisted`. Electron + native modules (`better-sqlite3-multiple-ciphers`, `uiohook-napi`, `@koush/wrtc`) need a flat, real `node_modules` — pnpm's default symlinked layout breaks `electron-builder`, `electron-rebuild`, and `node-gyp`. The `.npmrc` also pins exact versions on `pnpm add` (`save-exact=true`) so `package.json` never drifts from the lockfile.
 
 ## Install & run
+
+`hugin-mid` (the Hugin `mid` on upstream hyperswarm/hyperdht) is linked from a sibling checkout
+(`"hugin-mid": "link:../hugin-mid"`) until it is published. Clone it next to this repo and
+install it first (`cd ../hugin-mid && pnpm install`); with `link:` pnpm does not install the
+linked package's dependencies, so it loads `hyperswarm`/`hyperdht` from `../hugin-mid/node_modules`.
+Both repos pin `hyperswarm` 4.17.2 and `hyperdht` 6.36.0 (`pnpm.overrides` here), and the app
+itself only reaches hyperdht through `hugin-mid`, so one hyperdht copy is loaded at runtime.
 
 |         |                    |
 | ------- | ------------------ |

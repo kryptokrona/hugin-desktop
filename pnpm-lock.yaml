@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  hyperdht: 6.36.0
+  hyperswarm: 4.17.2
+
 importers:
 
   .:
@@ -71,6 +75,9 @@ importers:
       hugin-crypto:
         specifier: ^1.0.0
         version: 1.0.0(encoding@0.1.13)
+      hugin-mid:
+        specifier: link:../hugin-mid
+        version: link:../hugin-mid
       hugin-p2p:
         specifier: ^2.1.0
         version: 2.1.0(bare-url@2.4.5)(encoding@0.1.13)
@@ -87,17 +94,14 @@ importers:
         specifier: ^10.37.25
         version: 10.38.2(bare-url@2.4.5)
       hyperdht:
-        specifier: ^6.19.0
-        version: 6.32.0(bare-url@2.4.5)
+        specifier: 6.36.0
+        version: 6.36.0(bare-url@2.4.5)
       hyperdrive:
         specifier: ^11.13.4
         version: 11.13.4(bare-url@2.4.5)
       hyperswarm:
-        specifier: ^4.8.4
-        version: 4.17.0(bare-url@2.4.5)
-      hyperswarm-hugin:
-        specifier: ^1.0.4
-        version: 1.0.4(bare-url@2.4.5)
+        specifier: 4.17.2
+        version: 4.17.2(bare-url@2.4.5)
       identicon.js:
         specifier: ^2.3.3
         version: 2.3.3
@@ -520,6 +524,7 @@ packages:
 
   '@ledgerhq/hw-transport-node-hid@5.51.1':
     resolution: {integrity: sha512-Y2eVCCdhVs2Lfr7N2x2cNb+ogcZ24ZATO4QxaQ7LogjiPwYmzmvuXFn8zFjMSrKUCn9CtbptXcuiu0NkGsjWlw==}
+    deprecated: This package is no longer maintained. Use @ledgerhq/device-transport-kit-node-hid instead.
 
   '@ledgerhq/hw-transport@5.51.1':
     resolution: {integrity: sha512-6wDYdbWrw9VwHIcoDnqWBaDFyviyjZWv6H9vz9Vyhe4Qd7TIFmbTl/eWs6hZvtZBza9K8y7zD8ChHwRI4s9tSw==}
@@ -1656,6 +1661,9 @@ packages:
   dht-rpc@6.27.0:
     resolution: {integrity: sha512-NsfgRlFDQnkA2+H+hJXMPLmBOn/TSIIc0cRMV8q42M4xc1uAXWtpvIIQsONF5tYcYC6px0bslrUGideN1h4S4A==}
 
+  dht-rpc@6.28.0:
+    resolution: {integrity: sha512-vOwuQKWbqvwRzxBJ+nwXXjI4d/4T0keKLDMjfq8C2KwM7xCBSToRIKYuwhrA9D5cV8Hxct1h1TLJ+O4e6Z+AgA==}
+
   dir-compare@3.3.0:
     resolution: {integrity: sha512-J7/et3WlGUCxjdnD3HAAzQ6nsnc0WL6DD7WcwJb7c39iH1+AWfg+9OqzJNaI6PkBwBvm1mhZNL9iY/nRiZXlPg==}
 
@@ -2335,8 +2343,8 @@ packages:
     resolution: {integrity: sha512-++EO+vSupNVeF7SRY/BHktiG1PAHn0KoMxHJWzXfNF6EEeDRPkX+8eyH6uTapBy0bYkSSpbKp8iGP+8KGW4VBg==}
     hasBin: true
 
-  hyperdht@6.32.0:
-    resolution: {integrity: sha512-Y/SibEN7wue0E8ydh8lx9IX7SOE9o00b6tufPA7hRxAafXsisWUBrW36fIHdyxg148T4Z3olrooOGZDZ89LYag==}
+  hyperdht@6.36.0:
+    resolution: {integrity: sha512-rVRXq8stFtR0fScIdJqtWvaO7x8G3voUdw6vRypU4iFk5r67XMu4ge2q8VxJZdYosPKuU+G9r5+7/y93QN+wNQ==}
     hasBin: true
 
   hyperdrive@11.13.4:
@@ -2348,8 +2356,8 @@ packages:
   hyperswarm-hugin@1.0.4:
     resolution: {integrity: sha512-6pl+E308TW/o62GuNUZvkqeKa35JIBgd8XEtrmePG/PHJL9TfFC59gBRhIaBvHlz0LpPtvqj790Y+diuc7KwNA==}
 
-  hyperswarm@4.17.0:
-    resolution: {integrity: sha512-oe86sK961Ueg7rvDN/veFwG8xH+Iv6vObPhGDkPJcDVxk/NduW41ZhAcVDnHzRbm7S0eLU7WaDUvehOYoKSpRQ==}
+  hyperswarm@4.17.2:
+    resolution: {integrity: sha512-yKTNgHjijwrmSj5neC2Lu5JyKDvj9gZK/zkVLySP6J2M7nF+uvFMoxzRlWKKjdySfZVHZXPLfhk4xAnpqibm5A==}
 
   iconv-corefoundation@1.1.7:
     resolution: {integrity: sha512-T10qvkw0zz4wnm560lOEg0PovVqUXuOFhhHAkixw8/sycy7TJt7v/RrkEKEQnAw2viPSJu6iAkErxnzR0g8PpQ==}
@@ -5827,6 +5835,27 @@ snapshots:
       - react-native-b4a
       - sodium-javascript
 
+  dht-rpc@6.28.0(bare-url@2.4.5):
+    dependencies:
+      adaptive-timeout: 1.0.1
+      b4a: 1.8.1
+      bare-events: 2.9.1
+      compact-encoding: 3.2.0
+      compact-encoding-net: 1.3.0
+      fast-fifo: 1.3.2
+      kademlia-routing-table: 1.0.6
+      nat-sampler: 1.0.1
+      sodium-universal: 5.0.1(bare-events@2.9.1)(bare-url@2.4.5)
+      streamx: 2.28.0
+      time-ordered-set: 2.0.1
+      udx-native: 1.20.7(bare-url@2.4.5)
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - bare-buffer
+      - bare-url
+      - react-native-b4a
+      - sodium-javascript
+
   dir-compare@3.3.0:
     dependencies:
       buffer-equal: 1.0.1
@@ -6846,7 +6875,7 @@ snapshots:
       - react-native-b4a
       - sodium-javascript
 
-  hyperdht@6.32.0(bare-url@2.4.5):
+  hyperdht@6.36.0(bare-url@2.4.5):
     dependencies:
       '@hyperswarm/secret-stream': 6.9.1(bare-events@2.9.1)(bare-url@2.4.5)
       b4a: 1.8.1
@@ -6854,7 +6883,7 @@ snapshots:
       blind-relay: 1.6.1(bare-url@2.4.5)
       bogon: 1.3.0
       compact-encoding: 3.2.0
-      dht-rpc: 6.27.0(bare-url@2.4.5)
+      dht-rpc: 6.28.0(bare-url@2.4.5)
       hypercore-crypto: 3.7.0(bare-events@2.9.1)(bare-url@2.4.5)
       hypercore-id-encoding: 1.3.0
       hyperdht-address: 1.1.1
@@ -6922,11 +6951,11 @@ snapshots:
       - react-native-b4a
       - sodium-javascript
 
-  hyperswarm@4.17.0(bare-url@2.4.5):
+  hyperswarm@4.17.2(bare-url@2.4.5):
     dependencies:
       b4a: 1.8.1
       bare-events: 2.9.1
-      hyperdht: 6.32.0(bare-url@2.4.5)
+      hyperdht: 6.36.0(bare-url@2.4.5)
       safety-catch: 1.0.3
       shuffled-priority-queue: 2.1.0
       streamx: 2.28.0

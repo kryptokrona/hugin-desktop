@@ -1,4 +1,6 @@
-const HyperSwarm = require('hyperswarm-hugin');
+// Upstream hyperswarm/hyperdht with the Hugin `mid` in the Noise handshake (signed with the
+// topic base key, verified both ways; peers without a valid mid are refused), see hugin-mid.
+const { createHuginSwarm } = require('hugin-mid');
 
 const {
 	sleep,
@@ -115,31 +117,28 @@ class NodeConnection extends EventEmitter {
 		//If we choose the public option. We connect to the first responding node.
 		//in the public network.
 		const key = pub ? this.public : address;
-		const [base_keys, dht_keys, sig] = get_new_peer_keys(key);
-		const topicHash = base_keys.publicKey.toString('hex');
-		this.node = new HyperSwarm(
-			{
-				maxPeers: 1,
-				firewall(remotePublicKey) {
-					console.log('remotePublicKey', remotePublicKey.toString('hex'));
+		const [, , , peer] = get_new_peer_keys(key);
+		const { swarm, topic } = createHuginSwarm({
+			key,
+			keyPair: peer.keyPair,
+			maxPeers: 1,
+			firewall(remotePublicKey) {
+				console.log('remotePublicKey', remotePublicKey.toString('hex'));
 
-					//If we are connecting to a public node. Allow connection.
-					if (pub) return false;
+				//If we are connecting to a public node. Allow connection.
+				if (pub) return false;
 
-					//We verify if the private node has the correct public key.
-					if (remotePublicKey.toString('hex') !== address.slice(-64)) {
-						return true;
-					}
-					return false;
+				//We verify if the private node has the correct public key.
+				if (remotePublicKey.toString('hex') !== address.slice(-64)) {
+					return true;
 				}
-			},
-			sig,
-			dht_keys,
-			base_keys
-		);
+				return false;
+			}
+		});
+		this.node = swarm;
 
 		this.listen();
-		const topic = Buffer.alloc(32).fill(topicHash);
+		// Buffer.alloc(32).fill(hex(base public key)), derived by hugin-mid.
 		this.topic = topic;
 		this.discovery = this.node.join(topic, { server: false, client: true });
 	}
@@ -729,15 +728,17 @@ const create_swarm = async (data, beam, chat) => {
 	const key = naclHash(data.key);
 	const invite = data.key;
 	const [admin] = is_room_admin(data.key);
-	const [base_keys, dht_keys, sig] = get_new_peer_keys(key);
+	const [base_keys, dht_keys, , peer] = get_new_peer_keys(key);
 	const topicHash = base_keys.publicKey.toString('hex');
 	if (active_swarms.some((a) => a.topic === topicHash)) return true;
 	await Storage.load_drive(topicHash);
 	const files = await Storage.load_meta(topicHash);
 	const peers = beam ? 1 : 100;
-	//We add sig, keys and keyPair is for custom firewall settings.
+	//The swarm uses the dht key pair; hugin-mid sends its mid (signed with the topic base key)
+	//in every handshake and refuses peers whose mid does not verify.
+	let topic;
 	try {
-		swarm = new HyperSwarm({ maxPeers: peers }, sig, dht_keys, base_keys);
+		({ swarm, topic } = createHuginSwarm({ key, keyPair: peer.keyPair, maxPeers: peers }));
 	} catch (e) {
 		console.log('Error starting swarm', e);
 		return false;
@@ -807,7 +808,7 @@ const create_swarm = async (data, beam, chat) => {
 		swarm.destroy();
 		setTimeout(() => process.exit(), 2000);
 	});
-	const topic = Buffer.alloc(32).fill(topicHash);
+	// topic = Buffer.alloc(32).fill(topicHash), derived by hugin-mid.
 	discovery = swarm.join(topic, { server: true, client: true });
 	await discovery.flushed();
 	check_online_state(topicHash);
