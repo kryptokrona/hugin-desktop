@@ -49,5 +49,9 @@
     ],
     "extraResources": [
         "bin/*"
+    ],
+    "asarUnpack": [
+        "**/*.node",
+        "**/prebuilds/**"
     ]
 }
