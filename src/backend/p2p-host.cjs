@@ -1,15 +1,15 @@
 'use strict';
 
-// hugin-desktop's host for hugin-p2p 3.0 (hugin-p2p-design DESIGN.md §2.3-2.6).
+// hugin-desktop's host for hugin-p2p 3.0 (hugin-p2p README, "Host hooks and events").
 //
 // Rooms, DM swarms, the feed, room calls, file storage and the hugin-node connection all run in
 // one `HuginP2P` from hugin-p2p. This file is everything desktop adds around it:
 //
-//   createHost(deps)    the host hooks (§2.5): the wallet's spend-key signatures, storage
+//   createHost(deps)    the host hooks: the wallet's spend-key signatures, storage
 //                       queries on database.cjs (bound parameters there), ban/block lists and
 //                       file settings from the account state, paths, the PoW backend, a logger;
 //   EVENT_MAP           every library event mapped to the IPC channels the renderer listens on
-//                       and the database saves desktop has always done (§2.4, desktop column);
+//                       and the database saves desktop has always done;
 //                       IGNORED_EVENTS lists the events desktop does not act on, with the reason;
 //   DesktopP2P          the instance the other backend modules call (join/leave, send, node,
 //                       files) and the ipcMain handlers for the renderer's room, voice and file
@@ -183,8 +183,9 @@ function voiceStatusForUi(e) {
 
 /**
  * A peer's file as the renderer lists it (`group-remote-file-added`, `remote-file-added`) and
- * hands it back to `group-download`. File name, signature and drive key stay as announced (a
- * download needs them unchanged); `key` is the topic for rooms and the sender for DMs.
+ * hands it back to `group-download`. File name, signature, content hash and drive key stay as
+ * announced (a download needs them unchanged); `key` is the topic for rooms and the sender for
+ * DMs.
  */
 function remoteFileForUi(f, { topic, dm }) {
 	return {
@@ -195,6 +196,7 @@ function remoteFileForUi(f, { topic, dm }) {
 		key: dm ? f.address : topic,
 		chat: f.address,
 		hash: f.hash,
+		contentHash: f.contentHash,
 		name: text(f.name || ''),
 		time: f.time,
 		signature: f.signature,
@@ -203,7 +205,7 @@ function remoteFileForUi(f, { topic, dm }) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// host hooks (DESIGN.md §2.5)
+// host hooks (hugin-p2p README, "Host hooks and events")
 
 /**
  * The host object hugin-p2p calls. `deps`:
@@ -280,7 +282,7 @@ function createPowBackend({ createChallenge, hash }) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// events (DESIGN.md §2.4): library event -> what desktop does with it
+// events (hugin-p2p README, "Host hooks and events"): library event -> what desktop does with it
 
 /**
  * `ipc`: the renderer channels the handler may send on; `db`: the database functions it calls;

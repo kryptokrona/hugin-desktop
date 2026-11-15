@@ -206,9 +206,29 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
 })
 
-// Leaves the swarms and closes the node connection and the drives when the app quits.
-app.on('before-quit', () => {
-    P2P.destroy().catch((err) => console.log('p2p not closed cleanly:', err))
+// Leaves the swarms and closes the node connection and the drives before the app quits. The
+// first quit is held back until p2p.destroy() has finished (at most P2P_CLOSE_TIMEOUT_MS, so a
+// hanging close cannot keep the app open), then the app quits again; later quits go through.
+const P2P_CLOSE_TIMEOUT_MS = 5000
+let p2pClosing = false
+app.on('before-quit', (event) => {
+    if (p2pClosing) return
+    p2pClosing = true
+    event.preventDefault()
+    let timer = null
+    const timeout = new Promise((resolve) => {
+        timer = setTimeout(() => {
+            console.log('p2p close took longer than ' + P2P_CLOSE_TIMEOUT_MS + ' ms, quitting')
+            resolve()
+        }, P2P_CLOSE_TIMEOUT_MS)
+    })
+    const closed = Promise.resolve()
+        .then(() => P2P.destroy())
+        .catch((err) => console.log('p2p not closed cleanly:', err))
+    Promise.race([closed, timeout]).then(() => {
+        clearTimeout(timer)
+        app.quit()
+    })
 })
 
 ipcMain.on('close', () => {

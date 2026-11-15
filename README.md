@@ -90,7 +90,8 @@ Why pnpm and not npm? Two things live in the repo that assume pnpm:
 The P2P layer shared with hugin-native, `hugin-p2p` 3 (`3.0.0-alpha`), is linked from a sibling
 checkout (`"hugin-p2p": "link:../hugin-p2p"`) until it is published. Rooms, DM swarms, the feed,
 room calls, file storage (corestore 7 / hyperdrive 13, under `userData/corestorage-v7`) and the
-hugin-node connection run in one `HuginP2P` from that package. `src/backend/p2p-host.cjs` is the
+hugin-node connection run in one `HuginP2P` from that package. The older `userData/corestorage`
+folder is no longer used (the app leaves it in place; it can be deleted). `src/backend/p2p-host.cjs` is the
 desktop side of it: the host hooks (wallet signatures, database queries, ban/block lists, file
 settings, paths, the PoW workers of `hugin-utils`), the table that maps every library event to
 the IPC channels the renderer listens on and to the database saves, and the `ipcMain` handlers

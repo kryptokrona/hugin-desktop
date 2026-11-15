@@ -353,7 +353,7 @@ test('file:remote: a room file is listed (key = topic) and shown as a message on
 	const { ctx, send, db } = make(t);
 	const { invite } = keys.createRoomInvite();
 	const topic = keys.roomTopic(invite).topic;
-	const file = { fileName: 'a.png', address: ADDRESS_2, size: 10, topic, key: invite, chat: ADDRESS_2, hash: HASH, name: 'bob', time: PAST, signature: 'f'.repeat(128), driveKey: DRIVE_KEY };
+	const file = { fileName: 'a.png', address: ADDRESS_2, size: 10, topic, key: invite, chat: ADDRESS_2, hash: HASH, contentHash: 'b6'.repeat(32), name: 'bob', time: PAST, signature: 'f'.repeat(128), driveKey: DRIVE_KEY };
 	await emit(ctx, E.FILE_REMOTE, { key: invite, topic, dm: false, file });
 	const [listed] = send.of('group-remote-file-added');
 	assert.equal(listed.chat, invite);
@@ -375,6 +375,7 @@ test('file:remote: a room file is listed (key = topic) and shown as a message on
 	assert.equal(dm.chat, ADDRESS_2);
 	assert.equal(dm.remoteFiles[0].key, ADDRESS_2);
 	assert.equal(dm.remoteFiles[0].driveKey, DRIVE_KEY);
+	assert.equal(dm.remoteFiles[0].contentHash, file.contentHash, 'the content hash goes back with the download');
 });
 
 test('file progress: auto-sync is silent, a download the user asked for reports downloading and progress', async (t) => {
