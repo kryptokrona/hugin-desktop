@@ -1,141 +1,135 @@
-// Long-lived ML-KEM-512 identity keypair + per-contact KEM state, desktop side.
+'use strict';
+
+// Direct messages: the wallet session's DmCrypto (hugin-p2p/dm) and the hooks desktop gives it.
 //
-// Mirror of hugin-native's src/services/hugin/identity.ts — same shape and
-// semantics, different storage. The keypair lives in the wallet's encrypted
-// SQLite (better-sqlite3-multiple-ciphers), so it inherits at-rest
-// encryption from the wallet passphrase. No separate OS-keystore call.
+// hugin-p2p/dm builds and opens the DM payloads and keeps the per-contact ML-KEM handshake;
+// desktop supplies the crypto provider (hugin-crypto), the wallet's key operations and storage:
 //
-// What this module owns:
-//   - Lazy load / first-launch generation of the identity keypair.
-//   - The per-contact handshake state lookup (messageKey + pendingKemCapsule).
-//   - The "received peer pub" / "received peer capsule" persistence hooks
-//     the message receive path fires after every successful decrypt.
+//   identity()                    the wallet's primary address and the nickname sent with DMs
+//   sign(message)                 the primary spend key signature (crypto.cjs signMessage)
+//   verify(message, address, sig) crypto.cjs verifySignature
+//   keyDerivation(publicKey)      generate_key_derivation(publicKey, primary private view key)
+//   load/saveContactCrypto        one JSON state per address in the dm_crypto table
+//   load/saveKemIdentity          the kem_identity row: the ML-KEM-512 key pair this install has
+//                                 used since it was first made (hex, both halves)
+//
+// createDmHost / createDmCrypto take every dependency as an argument, so they run under plain
+// Node (tests/backend). dm() is the app's instance: one DmCrypto per open wallet, made on first
+// use and seeded with the node pool hashes already handled (knownTxs).
 
-const hc = require('hugin-crypto');
-const {
-    loadKemIdentity,
-    saveKemIdentity,
-    getContacts,
-    updateContactKemState,
-} = require('./database.cjs');
+const { DmCrypto } = require('hugin-p2p/dm');
 
-let cached = null;
+/** Node pool hashes handed to a new DmCrypto (it remembers this many). */
+const KNOWN_POOL_HASHES = 1000;
+
+function consoleLog(level, msg, data) {
+    if (level === 'debug') return;
+    if (data === undefined) console.log('[dm]', level, msg);
+    else console.log('[dm]', level, msg, data);
+}
 
 /**
- * Load the device's long-lived ML-KEM identity keypair, generating it on
- * first launch. Call once at wallet start; cached in module scope so
- * per-message paths are cheap.
+ * The host hooks of hugin-p2p/dm. `deps`:
+ *   db        loadDmCrypto(address), saveDmCrypto(address, state), loadKemIdentity(),
+ *             saveKemIdentity({ publicKey, secretKey }) (database.cjs or a stub)
+ *   wallet    getPrimaryAddress(), getPrimaryAddressPrivateKeys() -> [privateSpendKey, privateViewKey]
+ *   name()    the display name sent with DMs
+ *   sign(message, privateSpendKey), verify(message, address, signature),
+ *   keyDerivation(publicKey, privateViewKey)   the wallet's key operations (kryptokrona-utils)
+ *   now(), log(level, msg, data)               optional
  */
-function loadOrCreateIdentity() {
-    if (cached) return cached;
-    const row = loadKemIdentity();
-    if (row && row.publicKey && row.secretKey) {
-        cached = {
-            publicKey: hc.hexToUint(row.publicKey),
-            secretKey: hc.hexToUint(row.secretKey),
-        };
-        return cached;
-    }
-    const kp = hc.generateKemKeypair();
-    saveKemIdentity({
-        publicKey: hc.uintToHex(kp.publicKey),
-        secretKey: hc.uintToHex(kp.secretKey),
+function createDmHost(deps) {
+    const { db, wallet } = deps;
+    const keys = () => wallet.getPrimaryAddressPrivateKeys();
+    const host = {
+        identity: () => {
+            const name = typeof deps.name === 'function' ? deps.name() : '';
+            return { address: wallet.getPrimaryAddress(), name: typeof name === 'string' ? name : '' };
+        },
+        sign: (message) => deps.sign(message, keys()[0]),
+        verify: async (message, address, signature) => {
+            try {
+                return (await deps.verify(message, address, signature)) === true;
+            } catch (err) {
+                return false;
+            }
+        },
+        keyDerivation: (publicKey) => deps.keyDerivation(publicKey, keys()[1]),
+        loadContactCrypto: (address) => db.loadDmCrypto(address),
+        saveContactCrypto: (address, state) => db.saveDmCrypto(address, state),
+        loadKemIdentity: async () => {
+            const row = await db.loadKemIdentity();
+            return row ? { publicKey: row.publicKey, secretKey: row.secretKey } : null;
+        },
+        saveKemIdentity: ({ publicKey, secretKey }) => db.saveKemIdentity({ publicKey, secretKey }),
+        log: typeof deps.log === 'function' ? deps.log : () => {}
+    };
+    if (typeof deps.now === 'function') host.now = deps.now;
+    return host;
+}
+
+/**
+ * A DmCrypto over createDmHost(deps). `deps.crypto`: the crypto provider (default hugin-crypto);
+ * `deps.knownPoolHashes`: node pool hashes already handled, oldest first.
+ */
+function createDmCrypto(deps) {
+    const known = Array.isArray(deps.knownPoolHashes) ? deps.knownPoolHashes.slice(-KNOWN_POOL_HASHES) : [];
+    return new DmCrypto({
+        crypto: deps.crypto || require('hugin-crypto'),
+        host: createDmHost(deps),
+        knownPoolHashes: known
     });
-    cached = kp;
-    return kp;
 }
 
-/** Raw public key bytes — what hugin-crypto wants. */
-function identityPublicKeyBytes() {
-    return loadOrCreateIdentity().publicKey;
-}
+// ---------------------------------------------------------------------------------------------
+// the app's instance
 
-/** Secret key bytes for decapsulation. Never expose outside the process. */
-function identitySecretKeyBytes() {
-    return loadOrCreateIdentity().secretKey;
-}
-
-// ---------------------------------------------------------------------------
-// Per-contact KEM state — read/write through the contacts row.
-// ---------------------------------------------------------------------------
-
-async function getContactCrypto(address) {
-    const contacts = await getContacts();
-    const c = contacts.find((x) => x.address === address);
-    if (!c) return {};
-    const out = {};
-    // `contacts.key` is 64 hex chars under both the legacy NACL scheme (peer
-    // pubkey) and ML-KEM (shared secret). `peer_kem_pub` is the disambiguator
-    // — onReceivedPeerKemPub writes it alongside a genuine ML-KEM key.
-    const hasPeerKemPub =
-        c.peer_kem_pub && typeof c.peer_kem_pub === 'string' && c.peer_kem_pub.length > 0;
-    if (hasPeerKemPub && c.key && typeof c.key === 'string' && c.key.length === 64) {
-        out.messageKey = hc.hexToUint(c.key);
-    }
-    if (c.pending_kem_capsule && typeof c.pending_kem_capsule === 'string' && c.pending_kem_capsule.length > 0) {
-        out.pendingKemCapsule = hc.hexToUint(c.pending_kem_capsule);
-    }
-    if (hasPeerKemPub) {
-        out.peerKemPubHex = c.peer_kem_pub;
-    }
-    return out;
-}
+let session = null;
 
 /**
- * Bob's path: received Alice's `kem_pub`. Three cases, distinguished by
- * comparing the incoming pub against the one we cached on their contact row:
- *
- *   1. First time we see this contact              → encapsulate + persist.
- *   2. Pub identical to what we already stored     → in-flight duplicate
- *      (Alice re-sends her pub on every message until she gets our reply);
- *      keep the existing messageKey to avoid silently desyncing.
- *   3. Pub differs from what we stored             → Alice restored or
- *      reinstalled and has a fresh ML-KEM keypair. Discard the old shared
- *      secret and re-encapsulate against the new pub — otherwise our
- *      inner-encrypted replies would use a stale key her new install
- *      cannot decapsulate.
+ * The DmCrypto of the open wallet (account.cjs `Hugin.wallet`), made on the first call after the
+ * wallet opened and the database loaded. Rejects while no wallet is open.
  */
-async function onReceivedPeerKemPub(address, peerKemPub) {
-    const incomingHex = hc.uintToHex(peerKemPub);
-    const existing = await getContactCrypto(address);
-    if (existing.messageKey && existing.peerKemPubHex === incomingHex) {
-        console.log(`[ml-kem] Received public key from ${address}, but a shared secret is already established — ignoring redundant handshake.`);
-        return { messageKey: existing.messageKey, pendingKemCapsule: existing.pendingKemCapsule };
-    }
-    if (existing.messageKey) {
-        console.log(`[ml-kem] Received a NEW public key from ${address}; peer likely restored their account. Rekeying.`);
-    } else {
-        console.log(`[ml-kem] Received public key from ${address}; deriving shared secret.`);
-    }
-    const { ciphertext, sharedSecret } = hc.encapsulate(peerKemPub);
-    updateContactKemState(address, {
-        key: hc.uintToHex(sharedSecret),
-        pending_kem_capsule: hc.uintToHex(ciphertext),
-        peer_kem_pub: incomingHex,
+function dm() {
+    const { Hugin } = require('./account.cjs');
+    const wallet = Hugin.wallet;
+    if (!wallet) return Promise.reject(new Error('no wallet is open'));
+    if (session && session.wallet === wallet) return session.dm;
+    const db = require('./database.cjs');
+    const { signMessage, verifySignature } = require('./crypto.cjs');
+    const { Crypto } = require('kryptokrona-utils');
+    const xkr = new Crypto();
+    const made = (async () => {
+        const known = await db.loadKnownTxs();
+        return createDmCrypto({
+            db,
+            wallet,
+            name: () => Hugin.nickname,
+            sign: signMessage,
+            verify: verifySignature,
+            keyDerivation: (publicKey, privateViewKey) => xkr.generateKeyDerivation(publicKey, privateViewKey),
+            knownPoolHashes: known.map((row) => row && row.hash).filter((h) => typeof h === 'string'),
+            log: consoleLog
+        });
+    })();
+    session = { wallet, dm: made };
+    made.catch(() => {
+        if (session && session.dm === made) session = null;
     });
-    return { messageKey: sharedSecret, pendingKemCapsule: ciphertext };
+    return made;
 }
 
 /**
- * Alice's path: hugin-crypto decapsulated Bob's capsule for us and handed
- * back the shared secret. Persist as the contact's messageKey.
+ * Loads the ML-KEM identity of the open wallet's install (made and saved on first launch), so
+ * the first DM does not wait for it.
  */
-function onReceivedKemCapsule(address, sharedSecret) {
-    console.log(`[ml-kem] Received capsule from ${address}; shared secret established.`);
-    updateContactKemState(address, { key: hc.uintToHex(sharedSecret) });
-}
-
-/** After we ship the kem capsule in an outgoing message, clear it. */
-function markKemCapsuleDelivered(address) {
-    updateContactKemState(address, { pending_kem_capsule: '' });
+async function loadOrCreateIdentity() {
+    return (await dm()).kemIdentity();
 }
 
 module.exports = {
-    loadOrCreateIdentity,
-    identityPublicKeyBytes,
-    identitySecretKeyBytes,
-    getContactCrypto,
-    onReceivedPeerKemPub,
-    onReceivedKemCapsule,
-    markKemCapsuleDelivered,
+    createDmHost,
+    createDmCrypto,
+    dm,
+    loadOrCreateIdentity
 };

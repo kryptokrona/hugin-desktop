@@ -7,6 +7,7 @@
 //                                `uiohook-napi` and `node-mac-permissions` (Module._load), so the real
 //                                database.cjs / account.cjs load and run on a node:sqlite database;
 //   memoryDb()                   the database.cjs functions p2p-host.cjs uses, in memory;
+//                                (DM parties with real keys: helpers/dm-parties.cjs)
 //   fakeHugin(), memoryStore()   the account state (account.cjs `Hugin`) and electron-store;
 //   fakeSign / fakeVerify        a stand-in for the XKR message signature (128 hex characters, only
 //                                "the holder" of an address produces it).
@@ -144,12 +145,14 @@ function memoryDb() {
 			record('removeRoom', [key]);
 		},
 		loadRoomKeys: () => roomKeys.slice(),
-		async saveMsg(message, addr, sent, timestamp) {
-			record('saveMsg', [message, addr, sent, timestamp]);
-			const row = { message, conversation: addr, sent, timestamp };
+		async saveMsg(...args) {
+			record('saveMsg', args);
+			const [message, addr, sent, timestamp, p2p, hash = ''] = args;
+			const row = { message, conversation: addr, sent, timestamp, p2p, hash };
 			pms.push(row);
 			return row;
-		}
+		},
+		messageExists: async (hash) => typeof hash === 'string' && hash !== '' && pms.some((r) => r.hash === hash)
 	};
 	return db;
 }

@@ -179,9 +179,10 @@ class Account {
 
 	async load() {
 		await loadDB(userDataDir, dbPath, this.wallet.getPrimaryAddressPrivateKeys());
-		// Pre-warm the ML-KEM identity keypair (generates + persists on first
-		// launch). Once cached in identity.cjs, every encrypt/decrypt is cheap.
-		require('./identity.cjs').loadOrCreateIdentity();
+		// The wallet's DM crypto and this install's ML-KEM identity (made and saved on first launch).
+		require('./identity.cjs')
+			.loadOrCreateIdentity()
+			.catch((err) => console.log('ML-KEM identity not loaded:', err && err.message));
 		const [my_contacts, keys] = await loadKeys(true);
 		const my_groups = await getGroups();
 		const block_list = await loadBlockList();

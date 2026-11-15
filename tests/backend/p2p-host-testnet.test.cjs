@@ -33,6 +33,7 @@ function make(testnet, address, nickname) {
 	const hugin = fakeHugin({ address, nickname, store });
 	const send = recorder();
 	const dms = [];
+	const froms = [];
 	const ctx = H.createDesktopP2P(
 		{
 			db,
@@ -41,14 +42,20 @@ function make(testnet, address, nickname) {
 			send,
 			sign: async (m) => fakeSign(address, m),
 			verify: fakeVerify,
-			decryptDm: async (w) => dms.push(w),
+			dm: {
+				open: async (wire, opts) => {
+					dms.push(wire);
+					froms.push(opts && opts.from);
+					return { status: 'not-dm' };
+				}
+			},
 			decryptNodeMessages: async () => {},
 			log: () => {}
 		},
 		{ bootstrap: testnet.bootstrap, files: false, rooms: { pingIntervalMs: 0, leaveFlushMs: 50, historyPickMs: 0 } }
 	);
 	const peerIn = (topic, other) => send.of('peer-connected').some((p) => p.topic === topic && p.address === other);
-	return { ctx, db, send, dms, address, peerIn };
+	return { ctx, db, send, dms, froms, address, peerIn };
 }
 
 test('two desktop hosts on a DHT testnet: room, messages both ways, DM swarm, leave', { timeout: TIMEOUT }, async (t) => {
@@ -106,6 +113,7 @@ test('two desktop hosts on a DHT testnet: room, messages both ways, DM swarm, le
 	await waitFor(() => A.peerIn(dmTopic, ADDRESS_2) && B.peerIn(dmTopic, ADDRESS), 'both admitted in the DM swarm', DHT_WAIT);
 	await waitFor(() => A.ctx.sendDm(ADDRESS_2, 'beef00') === 1, 'the DM swarm is writable');
 	await waitFor(() => B.dms.includes('beef00'), 'the DM payload reaches B');
+	assert.equal(B.froms[B.dms.indexOf('beef00')], ADDRESS, "opened as the contact's payload");
 	assert.equal(JSON.parse(A.send.of('swarm-connected').find((s) => JSON.parse(s).beam))['key'], DERIVATION);
 
 	// leave the room: B sees A go, A gets swarm-disconnected

@@ -30,6 +30,7 @@ const {
 	fakeSwarms,
 	fakeIpcMain
 } = require('./helpers/desktop-stubs.cjs');
+const { dmParty } = require('./helpers/dm-parties.cjs');
 
 const PAST = 1700000000000;
 const DERIVATION = 'cd'.repeat(32);
@@ -70,7 +71,13 @@ function make(t, { address = ADDRESS, nickname = 'nils', deps = {}, rooms = {} }
 			send,
 			sign: async (m) => fakeSign(hugin.address, m),
 			verify: fakeVerify,
-			decryptDm: async (w) => decrypted.dm.push(w),
+			// records what is handed to the wallet's DmCrypto; tests with real DMs pass their own `dm`
+			dm: {
+				open: async (wire, opts) => {
+					decrypted.dm.push([wire, opts]);
+					return { status: 'not-dm' };
+				}
+			},
 			decryptNodeMessages: async (list) => decrypted.node.push(list),
 			log: () => {},
 			...deps
@@ -265,15 +272,68 @@ test('room:message from history only notifies; room:history sends history-update
 	assert.deepEqual(send.channels(), []);
 });
 
-test('dm:wire goes to the DM decrypter; node:messages pushed by the node to the message decrypter (not a sync result)', async (t) => {
-	const { ctx, decrypted } = make(t);
+test('dm:wire is opened for the DM swarm\'s contact; node:messages pushed by the node go to the message decrypter (not a sync result)', async (t) => {
+	const { ctx, decrypted, db, send } = make(t);
 	await emit(ctx, E.DM_WIRE, { address: ADDRESS_2, topic: 'ab'.repeat(32), wire: 'beef' });
-	assert.deepEqual(decrypted.dm, ['beef']);
+	assert.deepEqual(decrypted.dm, [['beef', { from: ADDRESS_2 }]]);
+	assert.deepEqual(db.calledWith('saveMsg'), [], 'what does not open is not saved');
+	assert.deepEqual(send.channels(), []);
 	const messages = [{ hash: HASH, cipher: 'aa', timestamp: PAST }];
 	ctx.p2p.emit(E.NODE_MESSAGES, { messages, source: 'push' });
 	ctx.p2p.emit(E.NODE_MESSAGES, { messages, source: 'sync', since: PAST });
 	await sleep(20);
 	assert.deepEqual(decrypted.node, [messages]);
+});
+
+test('dm:wire: a DM from the contact is opened by the wallet\'s DmCrypto, saved once as plain text and shown; one from another address is refused', async (t) => {
+	const alice = await dmParty('alice');
+	const bob = await dmParty('bob');
+	const carol = await dmParty('carol');
+	const { ctx, db, send } = make(t, { address: bob.address, nickname: 'bob', deps: { dm: async () => bob.dm } });
+	const topic = 'ab'.repeat(32);
+
+	const m1 = await alice.dm.encrypt(bob.address, 'hi <b>bob</b>', { name: 'alice', timestamp: PAST });
+	assert.equal(m1.handshake, 'initial');
+	await emit(ctx, E.DM_WIRE, { address: alice.address, topic, wire: m1.payload });
+	assert.deepEqual(db.calledWith('saveMsg'), [['hi bob', alice.address, false, PAST, true, m1.hash]]);
+	const shown = { message: 'hi bob', conversation: alice.address, sent: false, timestamp: PAST, hash: m1.hash, p2p: true, beam: true };
+	assert.deepEqual(send.of('newMsg'), [shown]);
+	assert.deepEqual(send.of('privateMsg'), [shown]);
+	const state = bob.db.state(alice.address);
+	assert.equal(state.messageKey.length, 64, "bob made a message key from alice's ML-KEM key");
+	assert.equal(state.pendingKemCapsule.length, 1536);
+
+	send.clear();
+	await emit(ctx, E.DM_WIRE, { address: alice.address, topic, wire: m1.payload });
+	assert.equal(db.calledWith('saveMsg').length, 1, 'one row per content hash');
+	assert.deepEqual(send.channels(), []);
+
+	// written by alice, but it came in on carol's DM swarm
+	const m2 = await alice.dm.encrypt(bob.address, 'second', { name: 'alice', timestamp: PAST + 1000 });
+	await emit(ctx, E.DM_WIRE, { address: carol.address, topic, wire: m2.payload });
+	// not for bob
+	const m3 = await alice.dm.encrypt(carol.address, 'for carol', { name: 'alice', timestamp: PAST + 2000 });
+	await emit(ctx, E.DM_WIRE, { address: alice.address, topic, wire: m3.payload });
+	await emit(ctx, E.DM_WIRE, { address: alice.address, topic, wire: 'beef' });
+	assert.equal(db.calledWith('saveMsg').length, 1);
+	assert.deepEqual(send.channels(), []);
+
+	// the same payload from alice's swarm is taken
+	await emit(ctx, E.DM_WIRE, { address: alice.address, topic, wire: m2.payload });
+	assert.deepEqual(send.of('newMsg').map((m) => m.message), ['second']);
+});
+
+test('dm:wire without an open wallet: nothing is opened or saved', async (t) => {
+	const { ctx, db, send } = make(t, {
+		deps: {
+			dm: async () => {
+				throw new Error('no wallet is open');
+			}
+		}
+	});
+	await emit(ctx, E.DM_WIRE, { address: ADDRESS_2, topic: 'ab'.repeat(32), wire: 'beef' });
+	assert.deepEqual(db.calledWith('saveMsg'), []);
+	assert.deepEqual(send.channels(), []);
 });
 
 test('typing: the renderer key of the swarm (DM: the derivation hash)', async (t) => {

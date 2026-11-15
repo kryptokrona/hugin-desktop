@@ -31,6 +31,8 @@ const NODE_POW_REQUIRED = 'node:pow-required';
 
 const text = S.sanitizeText;
 const ADDRESS_LENGTH = 99;
+/** Longest DM text taken from a DM swarm (the limit messages.cjs applies to every DM). */
+const MAX_DM_TEXT = 777;
 const DEFAULT_STORAGE_LIMIT = 100000000000;
 const UNSIGNED = '0'.repeat(128);
 const UNHASHED = '0'.repeat(64);
@@ -143,6 +145,17 @@ function feedForUi(m) {
 		tip: tipOut(m.tip),
 		type: 'feed'
 	};
+}
+
+/**
+ * A DM opened from a DM swarm (hugin-p2p/dm `open` result `message`) as the renderer gets it
+ * (`newMsg`, `privateMsg`): plain text, the content hash as its id. null when the text is empty
+ * or longer than MAX_DM_TEXT.
+ */
+function dmMessageForUi(m) {
+	const message = text(m.message);
+	if (typeof message !== 'string' || message.length === 0 || message.length > MAX_DM_TEXT) return null;
+	return { message, conversation: m.from, sent: false, timestamp: m.timestamp, hash: m.hash, p2p: true, beam: true };
 }
 
 /** `peer-connected` payload (flat, avatar as bytes). */
@@ -354,10 +367,23 @@ const EVENT_MAP = Object.freeze({
 	},
 	[E.DM_WIRE]: {
 		ipc: ['newMsg', 'privateMsg'],
-		db: ['saveMsg'],
-		// crypto.cjs decrpyt_beam_message decrypts, saves and notifies
-		handle(ctx, e) {
-			return ctx.deps.decryptDm(e.wire);
+		db: ['messageExists', 'saveMsg'],
+		// opened by the wallet's DmCrypto, which refuses a payload another address wrote; saved
+		// once per content hash
+		async handle(ctx, e) {
+			const dm = await ctx.dmCrypto();
+			if (!dm) return;
+			const r = await dm.open(e.wire, { from: e.address });
+			if (r.status !== 'ok') {
+				ctx.log('debug', 'DM payload not taken', { status: r.status, reason: r.reason });
+				return;
+			}
+			const msg = dmMessageForUi(r.message);
+			if (!msg) return;
+			if (typeof ctx.db.messageExists === 'function' && (await ctx.db.messageExists(msg.hash))) return;
+			await ctx.db.saveMsg(msg.message, msg.conversation, false, msg.timestamp, true, msg.hash);
+			ctx.send('newMsg', msg);
+			ctx.send('privateMsg', msg);
 		}
 	},
 	[E.TYPING]: {
@@ -602,7 +628,8 @@ class DesktopP2P {
 	/**
 	 * @param {object} deps  see createHost, plus:
 	 *   send(channel, data)          to the renderer (Hugin.send)
-	 *   decryptDm(wire)              crypto.cjs decrpyt_beam_message
+	 *   dm                           the wallet's DmCrypto (hugin-p2p/dm), or a function returning
+	 *                                it (or a promise of it): opens DM swarm payloads
 	 *   decryptNodeMessages(list)    messages.cjs decrypt_hugin_messages
 	 *   registerUserFile(path)       utils.cjs register_user_file (optional)
 	 * @param {object} [opts]  `bootstrap` (DHT testnet in tests) and HuginP2P options (`rooms`,
@@ -634,6 +661,17 @@ class DesktopP2P {
 		try {
 			if (typeof this.deps.log === 'function') this.deps.log(level, msg, data);
 		} catch (err) {}
+	}
+
+	/** The wallet's DmCrypto, or null when there is none (no wallet open). */
+	async dmCrypto() {
+		const dm = this.deps.dm;
+		try {
+			return (typeof dm === 'function' ? await dm() : dm) || null;
+		} catch (err) {
+			this.log('warn', 'DM payload not opened', { message: err && err.message });
+			return null;
+		}
 	}
 
 	send(channel, data) {
@@ -848,7 +886,7 @@ class DesktopP2P {
 		}
 	}
 
-	/** A DM payload (hugin-crypto `encodeExtra` hex) over the DM swarm; returns the peers written to. */
+	/** A DM payload (hugin-p2p/dm, hex) over the DM swarm; returns the peers written to. */
 	sendDm(address, payload) {
 		if (typeof address !== 'string') return 0;
 		return this.p2p.rooms.sendDm(address.substring(0, ADDRESS_LENGTH), payload);
@@ -1132,7 +1170,7 @@ function instance() {
 	const store = new Store();
 	const db = require('./database.cjs');
 	const { Hugin } = require('./account.cjs');
-	const { keychain, signMessage, verifySignature, decrpyt_beam_message } = require('./crypto.cjs');
+	const { keychain, signMessage, verifySignature } = require('./crypto.cjs');
 	const { createChallenge } = require('hugin-utils/challenge');
 	const { Crypto } = require('kryptokrona-utils');
 	const xkrCrypto = new Crypto();
@@ -1153,7 +1191,7 @@ function instance() {
 		}),
 		// corestore 7 needs its own directory (the corestore 6 one stays unused)
 		paths: () => ({ storage: userDataDir + '/corestorage-v7', downloads: Hugin.downloadDir || app.getPath('downloads') }),
-		decryptDm: (wireHex) => decrpyt_beam_message(wireHex),
+		dm: () => require('./identity.cjs').dm(),
 		decryptNodeMessages: (messages) => require('./messages.cjs').decrypt_hugin_messages(messages),
 		registerUserFile: (p) => require('./utils.cjs').register_user_file(p),
 		log: consoleLog
@@ -1182,6 +1220,7 @@ module.exports = {
 	roomMessageRow,
 	feedRow,
 	feedForUi,
+	dmMessageForUi,
 	peerForUi,
 	voiceStatusForUi,
 	remoteFileForUi
