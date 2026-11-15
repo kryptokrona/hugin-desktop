@@ -54,11 +54,13 @@
           # Electron 30's v8 headers (~/.electron-gyp/30.5.1/include/node) use
           # C++17 features (std::string_view, std::optional, std::is_void_v,
           # std::void_t, etc.) but several binding.gyp files in our dep tree
-          # (usb, hugin-utils, kryptokrona-crypto) don't specify a C++ standard.
+          # (usb, hugin-utils) don't specify a C++ standard.
           # gyp then defaults to c++11/14 and the headers won't parse under
           # NixOS gcc 15+. Force c++17 globally so the rebuild step compiles
           # cleanly. `gnu++17` (over `c++17`) keeps GNU extensions enabled,
           # which some of these older binding.gyp files rely on.
+          # (kryptokrona-crypto 2.0 ships a prebuilt Node-API addon; it has no
+          # binding.gyp and is not rebuilt.)
           export CXXFLAGS="-std=gnu++17 ''${CXXFLAGS:-}"
 
           # Put the user-global sfw binary on PATH and make sure it is patched.

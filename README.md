@@ -103,13 +103,28 @@ install`); with `link:` pnpm does not install the linked package's dependencies,
 (`pnpm.overrides` here), and the app itself only reaches hyperdht through `hugin-p2p`, so one
 hyperdht copy is loaded at runtime.
 
+The wallet libraries come from sibling checkouts too (`file:` dependencies, next to
+`xkr-work/`): kryptokrona-crypto 2.0 (`../../kryptokrona-crypto`), kryptokrona-utils 1.5
+(`../../kryptokrona-utils`) and kryptokrona-wallet-backend-js 2.7
+(`../../kryptokrona-wallet-backend-js`), each with its `dist/` built. pnpm copies them into
+`node_modules` and installs their dependencies; the `pnpm.overrides` entries
+(`"$kryptokrona-crypto"` and so on) give every package in the tree (hugin-crypto, hugin-utils,
+the wallet backend, kryptokrona-utils) the same single copy. kryptokrona-crypto 2.0 is a
+Node-API addon built with napi-rs (`prebuilt/napi/kryptokrona-crypto.<platform>.node`): it loads
+in any Electron version without `electron-rebuild`, and `build.config.json` unpacks it from the
+asar archive. After rebuilding one of these libraries, reinstall it (`rm -rf
+node_modules/kryptokrona-crypto` and `pnpm install`). On start the backend checks that the
+loaded kryptokrona-crypto is 2.0.0 or later and runs on its Node-API addon
+(`src/backend/crypto-backend.cjs`); otherwise it shows the reason and starts no wallet.
+
 |               |                           |
 | ------------- | ------------------------- |
 | Install       | · `pnpm install`          |
 | Develop       | · `pnpm run dev`          |
 | Backend tests | · `pnpm run test:backend` |
 
-The backend tests (`tests/backend/*.test.cjs`, `node:test`, no Electron) cover `p2p-host.cjs`:
+The backend tests (`tests/backend/*.test.cjs`, `node:test`, no Electron) cover the
+kryptokrona-crypto check (`crypto-backend.test.cjs`: version, Node-API addon, one copy) and `p2p-host.cjs`:
 the host hooks on an in-memory database, the event table (every hugin-p2p event is mapped or
 listed as ignored), the IPC handlers, and two desktop hosts in one room on a local DHT testnet.
 

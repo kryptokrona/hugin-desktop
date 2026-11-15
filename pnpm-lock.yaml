@@ -7,6 +7,9 @@ settings:
 overrides:
   hyperdht: 6.36.0
   hyperswarm: 4.17.2
+  kryptokrona-crypto: file:../../kryptokrona-crypto
+  kryptokrona-utils: file:../../kryptokrona-utils
+  kryptokrona-wallet-backend-js: file:../../kryptokrona-wallet-backend-js
 
 importers:
 
@@ -88,14 +91,14 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       kryptokrona-crypto:
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: file:../../kryptokrona-crypto
+        version: file:../../kryptokrona-crypto
       kryptokrona-utils:
-        specifier: ^1.3.7
-        version: 1.3.9(encoding@0.1.13)
+        specifier: file:../../kryptokrona-utils
+        version: file:../../kryptokrona-utils(encoding@0.1.13)
       kryptokrona-wallet-backend-js:
-        specifier: ^2.5.6
-        version: 2.5.8(encoding@0.1.13)
+        specifier: file:../../kryptokrona-wallet-backend-js
+        version: file:../../kryptokrona-wallet-backend-js(encoding@0.1.13)
       node-notifier:
         specifier: ^10.0.1
         version: 10.0.1
@@ -482,12 +485,15 @@ packages:
 
   '@ledgerhq/errors@5.50.0':
     resolution: {integrity: sha512-gu6aJ/BHuRlpU7kgVpy2vcYk6atjB4iauP2ymF7Gk0ez0Y/6VSMVSJvubeEQN+IV60+OBK0JgeIZG7OiHaw8ow==}
+    deprecated: This package is no longer maintained and will not receive updates. Published versions remain available.
 
   '@ledgerhq/errors@6.36.0':
     resolution: {integrity: sha512-o2Q5hNvf2TzAzlH8ORAozppRbzixRPYDfmSQrP7FOcM997OEH7qDleXgp/uMpvRdxR/t3CJCG+n0i+bU/oYMKA==}
+    deprecated: This package is no longer maintained and will not receive updates. Published versions remain available.
 
   '@ledgerhq/hw-transport-node-hid-noevents@5.51.1':
     resolution: {integrity: sha512-9wFf1L8ZQplF7XOY2sQGEeOhpmBRzrn+4X43kghZ7FBDoltrcK+s/D7S+7ffg3j2OySyP6vIIIgloXylao5Scg==}
+    deprecated: This package is no longer maintained. Use @ledgerhq/device-transport-kit-node-hid instead.
 
   '@ledgerhq/hw-transport-node-hid@5.51.1':
     resolution: {integrity: sha512-Y2eVCCdhVs2Lfr7N2x2cNb+ogcZ24ZATO4QxaQ7LogjiPwYmzmvuXFn8zFjMSrKUCn9CtbptXcuiu0NkGsjWlw==}
@@ -2471,16 +2477,21 @@ packages:
   known-css-properties@0.35.0:
     resolution: {integrity: sha512-a/RAk2BfKk+WFGhhOCAYqSiFLc34k8Mt/6NWRI4joER0EYUzXIcFivjjnoD3+XU1DggLn/tZc3DOAgke7l8a4A==}
 
-  kryptokrona-crypto@1.0.3:
-    resolution: {integrity: sha512-/JPymDOG7DkjZXwjyJOjEFLk79g+tHU5/IpPxihQ6pluvqG0fjNOJWjsef0MwdGQK5kHspcRw0lMwXYzM0mXzA==}
+  kryptokrona-crypto@file:../../kryptokrona-crypto:
+    resolution: {directory: ../../kryptokrona-crypto, type: directory}
+    engines: {node: '>=12.17'}
+    peerDependencies:
+      react-native: '>=0.76'
+    peerDependenciesMeta:
+      react-native:
+        optional: true
+
+  kryptokrona-utils@file:../../kryptokrona-utils:
+    resolution: {directory: ../../kryptokrona-utils, type: directory}
     engines: {node: '>=10'}
 
-  kryptokrona-utils@1.3.9:
-    resolution: {integrity: sha512-SGX/3805U5GmfMBUE1T9d+XKxvFoxcZj3kxUwLA0A5cwcepz2OOg/6xnXEuAHE1nhQZ2prhDPBpFFBMeWJWmdw==}
-    engines: {node: '>=10'}
-
-  kryptokrona-wallet-backend-js@2.5.8:
-    resolution: {integrity: sha512-ZR2VVNhLDkbj33mKGC/kGaKmG9D1hAvR/heXzIEVzf+nHNrGZ2BnvmZnQccUoOvg+Bh9CZ0sKWoZ5TstJI7Nkg==}
+  kryptokrona-wallet-backend-js@file:../../kryptokrona-wallet-backend-js:
+    resolution: {directory: ../../kryptokrona-wallet-backend-js, type: directory}
 
   lazy-val@1.0.5:
     resolution: {integrity: sha512-0/BnGCCfyUMkBpeDgWihanIAF9JmZhHBgUhEqzvf+adhNGLoP6TaiI5oF8oyb3I45P+PcnrqihSf01M0l0G5+Q==}
@@ -2812,9 +2823,6 @@ packages:
   noise-handshake@4.2.0:
     resolution: {integrity: sha512-9O/VTNX/E2/AToyMTTDU0J/4WhaXMTdqc2DHs9vf+snoZ0cenSBq0dNYTVV1snYYEkmo6QeRrYMxtqtoYnY+LA==}
 
-  noop-logger@0.1.1:
-    resolution: {integrity: sha512-6kM8CLXvuW5crTxsAtva2YLrRrDaiTIkIePWs9moLHqbFWT94WpNFjwS/5dfLfECg5i/lkmw3aoqVidxt23TEQ==}
-
   nopt@4.0.3:
     resolution: {integrity: sha512-CvaGwVMztSMJLOeXPrez7fyfObdZqNUK1cPAEzLHrTybIua9pMdmmPR5YwtfNftIOMv3DPUhFaxsZMNTQO20Kg==}
     hasBin: true
@@ -3087,12 +3095,6 @@ packages:
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
-
-  prebuild-install@5.3.6:
-    resolution: {integrity: sha512-s8Aai8++QQGi4sSbs/M1Qku62PFK49Jm1CbgXklGz4nmHveDq0wzJkg7Na5QbnO1uNH8K7iqx2EQ/mV0MZEmOg==}
-    engines: {node: '>=6'}
-    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
-    hasBin: true
 
   prebuild-install@6.1.4:
     resolution: {integrity: sha512-Z4vpywnK1lBg+zdPCVCsKq0xO66eEV9rWo2zrROGGiRS4JtueBOdlB1FnY8lcy7JsUud/Q3ijUxyWN26Ika0vQ==}
@@ -3966,10 +3968,6 @@ packages:
 
   which-module@1.0.0:
     resolution: {integrity: sha512-F6+WgncZi/mJDrammbTuHe1q0R5hOXv/mBaiNA2TCNT/LTHusX0V+CJnj9XT8ki5ln2UZyyddDgHfCzyrOH7MQ==}
-
-  which-pm-runs@1.1.0:
-    resolution: {integrity: sha512-n1brCuqClxfFfq/Rb0ICg9giSZqCS+pLtccdag6C2HyufBrh3fBOiy9nb6ggRMvWOVH5GrdJskj5iGTZNxd7SA==}
-    engines: {node: '>=4'}
 
   which-runtime@1.4.0:
     resolution: {integrity: sha512-0ugbP4CJW4e2D20jvEcC4973dCgIaHI4Rw1PT+26U9zEve7FyYdWAIwUnoeOYvoCfn+wXHoHTKb1KhkYlb60Pw==}
@@ -5491,6 +5489,7 @@ snapshots:
   decompress-response@4.2.1:
     dependencies:
       mimic-response: 2.1.0
+    optional: true
 
   decompress-response@6.0.0:
     dependencies:
@@ -6359,17 +6358,19 @@ snapshots:
       '@noble/ciphers': 1.3.0
       '@noble/hashes': 1.8.0
       '@noble/post-quantum': 0.4.1
-      kryptokrona-utils: 1.3.9(encoding@0.1.13)
+      kryptokrona-utils: file:../../kryptokrona-utils(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
+      - react-native
 
   hugin-utils@0.4.0(encoding@0.1.13):
     dependencies:
-      kryptokrona-utils: 1.3.9(encoding@0.1.13)
+      kryptokrona-utils: file:../../kryptokrona-utils(encoding@0.1.13)
       node-addon-api: 8.8.0
       node-gyp-build: 4.8.4
     transitivePeerDependencies:
       - encoding
+      - react-native
 
   hypercore-crypto@3.7.0(bare-events@2.9.1)(bare-url@2.4.5):
     dependencies:
@@ -6652,14 +6653,11 @@ snapshots:
 
   known-css-properties@0.35.0: {}
 
-  kryptokrona-crypto@1.0.3:
+  kryptokrona-crypto@file:../../kryptokrona-crypto:
     dependencies:
-      bindings: 1.5.0
       js-sha3: 0.8.0
-      nan: 2.27.0
-      prebuild-install: 5.3.6
 
-  kryptokrona-utils@1.3.9(encoding@0.1.13):
+  kryptokrona-utils@file:../../kryptokrona-utils(encoding@0.1.13):
     dependencies:
       '@ledgerhq/hw-transport': 5.51.1
       '@turtlecoin/base58': 0.0.10
@@ -6670,7 +6668,7 @@ snapshots:
       aes-js: 3.1.2
       big-integer: 1.6.52
       get-random-values: 1.2.2
-      kryptokrona-crypto: 1.0.3
+      kryptokrona-crypto: file:../../kryptokrona-crypto
       node-fetch: 2.7.0(encoding@0.1.13)
       numeral: 2.0.6
       package-lock.json: 1.0.0
@@ -6679,12 +6677,14 @@ snapshots:
       '@ledgerhq/hw-transport-node-hid': 5.51.1
     transitivePeerDependencies:
       - encoding
+      - react-native
 
-  kryptokrona-wallet-backend-js@2.5.8(encoding@0.1.13):
+  kryptokrona-wallet-backend-js@file:../../kryptokrona-wallet-backend-js(encoding@0.1.13):
     dependencies:
       '@ledgerhq/hw-transport': 6.35.4
       axios: 1.18.1
-      kryptokrona-utils: 1.3.9(encoding@0.1.13)
+      kryptokrona-crypto: file:../../kryptokrona-crypto
+      kryptokrona-utils: file:../../kryptokrona-utils(encoding@0.1.13)
       lodash: 4.18.1
       object-sizeof: 1.6.3
       pbkdf2: 3.1.6
@@ -6693,6 +6693,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - encoding
+      - react-native
       - supports-color
 
   lazy-val@1.0.5: {}
@@ -6818,7 +6819,8 @@ snapshots:
 
   mimic-response@1.0.1: {}
 
-  mimic-response@2.1.0: {}
+  mimic-response@2.1.0:
+    optional: true
 
   mimic-response@3.1.0: {}
 
@@ -6892,7 +6894,8 @@ snapshots:
 
   nanoid@3.3.15: {}
 
-  napi-build-utils@1.0.2: {}
+  napi-build-utils@1.0.2:
+    optional: true
 
   napi-build-utils@2.0.0: {}
 
@@ -6913,6 +6916,7 @@ snapshots:
   node-abi@2.30.1:
     dependencies:
       semver: 5.7.2
+    optional: true
 
   node-abi@3.92.0:
     dependencies:
@@ -7028,8 +7032,6 @@ snapshots:
       - bare-url
       - react-native-b4a
       - sodium-javascript
-
-  noop-logger@0.1.1: {}
 
   nopt@4.0.3:
     dependencies:
@@ -7297,24 +7299,6 @@ snapshots:
       nanoid: 3.3.15
       picocolors: 1.1.1
       source-map-js: 1.2.1
-
-  prebuild-install@5.3.6:
-    dependencies:
-      detect-libc: 1.0.3
-      expand-template: 2.0.3
-      github-from-package: 0.0.0
-      minimist: 1.2.8
-      mkdirp-classic: 0.5.3
-      napi-build-utils: 1.0.2
-      node-abi: 2.30.1
-      noop-logger: 0.1.1
-      npmlog: 4.1.2
-      pump: 3.0.4
-      rc: 1.2.8
-      simple-get: 3.1.1
-      tar-fs: 2.1.4
-      tunnel-agent: 0.6.0
-      which-pm-runs: 1.1.0
 
   prebuild-install@6.1.4:
     dependencies:
@@ -7727,6 +7711,7 @@ snapshots:
       decompress-response: 4.2.1
       once: 1.4.0
       simple-concat: 1.0.1
+    optional: true
 
   simple-get@4.0.1:
     dependencies:
@@ -8306,8 +8291,6 @@ snapshots:
       webidl-conversions: 3.0.1
 
   which-module@1.0.0: {}
-
-  which-pm-runs@1.1.0: {}
 
   which-runtime@1.4.0: {}
 

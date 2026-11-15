@@ -18,6 +18,7 @@ const { keychain } = require('./crypto.cjs')
 const { start_message_syncer } = require('./messages.cjs')
 const { getRooms } = require('./database.cjs')
 const P2P = require('./p2p-host.cjs').instance()
+const { cryptoGate } = require('./crypto-backend.cjs')
 
 let js_wallet
 let daemon
@@ -83,7 +84,19 @@ const loadWallet = (ipc) => {
     sender = ipc
 }
 
+/**
+ * The kryptokrona-crypto check (crypto-backend.cjs: version 2.0.0 or later with its Node-API
+ * addon), made once. No wallet is created, imported or opened when it fails.
+ */
+const cryptoBackendReady = cryptoGate({
+    notify: (message) => {
+        if (typeof sender === 'function') sender('error-notify-message', message)
+    }
+})
+
 async function startHugin(walletName, password, node) {
+
+    if (!cryptoBackendReady()) return false
 
     if (!await login(walletName, password)) return false
     //Sleep 300ms
@@ -154,6 +167,7 @@ const join_rooms = async () => {
 
 //Create account
 async function createAccount(accountData) {
+    if (!cryptoBackendReady()) return false
     const walletName = accountData.walletName
     const myPassword = accountData.password
     const node = { node: accountData.node, port: accountData.port }
@@ -406,6 +420,8 @@ const saveNode = async (node) => {
    }
 
 async function loadHugin(send) {
+    // checked at startup; the wallet start paths check it again
+    cryptoBackendReady()
     const [node, walletName] = await loadMiscData()
     send.webContents.send('wallet-exist', true, walletName, node)
     loadDaemon(node.node, node.port)
@@ -489,7 +505,7 @@ async function sendTx(tx) {
 }
    
 
-module.exports = {loadDaemon, loadWallet, createAccount, createWallet, saveWallet, saveWalletToFile, pickNode,loadAccount, loadHugin, createMessageSubWallet, loadMiscData }
+module.exports = {cryptoBackendReady, loadDaemon, loadWallet, createAccount, createWallet, saveWallet, saveWalletToFile, pickNode,loadAccount, loadHugin, createMessageSubWallet, loadMiscData }
 
 // Validation Handlers
 ipcMain.handle('validate-address', async (event, address) => {

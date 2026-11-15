@@ -42,6 +42,7 @@
         "src/backend/account.cjs",
         "src/backend/validate.cjs",
         "src/backend/identity.cjs",
+        "src/backend/crypto-backend.cjs",
         {
             "from": "build",
             "to": ""
@@ -52,6 +53,7 @@
     ],
     "asarUnpack": [
         "**/*.node",
-        "**/prebuilds/**"
+        "**/prebuilds/**",
+        "**/node_modules/kryptokrona-crypto/prebuilt/napi/**"
     ]
 }
