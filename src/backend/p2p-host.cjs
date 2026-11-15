@@ -387,7 +387,8 @@ const EVENT_MAP = Object.freeze({
 			const m = e.message;
 			if (await ctx.db.feedMessageExists(m.hash)) return;
 			await ctx.db.saveFeedMessage(feedRow(m));
-			ctx.send('feed-message', feedForUi(m));
+			// history entries are stored; only live posts are shown as new
+			if (e.live !== false) ctx.send('feed-message', feedForUi(m));
 		}
 	},
 	[E.VOICE_STATUS]: {

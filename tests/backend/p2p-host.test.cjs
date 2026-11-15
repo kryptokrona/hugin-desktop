@@ -315,6 +315,14 @@ test('feed:message: stored as signed (tip included), shown as plain text with ty
 	assert.deepEqual(send.channels(), []);
 });
 
+test('feed:message from history is stored but not shown as a new post', async (t) => {
+	const { ctx, send, db } = make(t);
+	const f = signedFeed({ message: 'from history' });
+	await emit(ctx, E.FEED_MESSAGE, { message: f, live: false });
+	assert.equal(db.feed.get(f.hash).message, 'from history');
+	assert.deepEqual(send.of('feed-message'), []);
+});
+
 test('voice events: status with avatar bytes, call, offer, answer and retry payloads', async (t) => {
 	const { ctx, send } = make(t);
 	const topic = 'ab'.repeat(32);
