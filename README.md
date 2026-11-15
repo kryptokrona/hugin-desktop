@@ -88,17 +88,19 @@ Why pnpm and not npm? Two things live in the repo that assume pnpm:
 ## Install & run
 
 The P2P layer shared with hugin-native, `hugin-p2p` 3 (`3.0.0-alpha`), is linked from a sibling
-checkout (`"hugin-p2p": "link:../hugin-p2p"`) until it is published. The backend uses its modules
-`hugin-p2p/swarm` (the Hugin `mid` on upstream hyperswarm/hyperdht), `/keys` (swarm keys, room
-invites, admin and idSig signatures), `/sanitize` (validation of everything peers send, and the
-text sanitiser that replaces `sanitize-html`), `/wire` (the hugin-messages builders and decoder),
-`/pow` (PoW auth and share checks for hugin-node) and `/push` (hugin-node packets, push payloads,
-view tags); `src/backend/p2p-wire.cjs` maps them to the shapes the renderer and the database use.
-Clone it next to this repo and install it first (`cd ../hugin-p2p && pnpm install`); with `link:`
-pnpm does not install the linked package's dependencies, so they load from
+checkout (`"hugin-p2p": "link:../hugin-p2p"`) until it is published. Rooms, DM swarms, the feed,
+room calls, file storage (corestore 7 / hyperdrive 13, under `userData/corestorage-v7`) and the
+hugin-node connection run in one `HuginP2P` from that package. `src/backend/p2p-host.cjs` is the
+desktop side of it: the host hooks (wallet signatures, database queries, ban/block lists, file
+settings, paths, the PoW workers of `hugin-utils`), the table that maps every library event to
+the IPC channels the renderer listens on and to the database saves, and the `ipcMain` handlers
+for room, voice and file actions. The backend also uses `hugin-p2p/keys` (room invites),
+`/sanitize` (the text sanitiser that replaces `sanitize-html`) and `/push` (push payloads, view
+tags) directly. Clone it next to this repo and install it first (`cd ../hugin-p2p && npm
+install`); with `link:` pnpm does not install the linked package's dependencies, so they load from
 `../hugin-p2p/node_modules`. Both repos pin `hyperswarm` 4.17.2 and `hyperdht` 6.36.0
-(`pnpm.overrides` here), and the app itself only reaches hyperdht through `hugin-p2p/swarm`, so
-one hyperdht copy is loaded at runtime.
+(`pnpm.overrides` here), and the app itself only reaches hyperdht through `hugin-p2p`, so one
+hyperdht copy is loaded at runtime.
 
 |               |                           |
 | ------------- | ------------------------- |
@@ -106,8 +108,9 @@ one hyperdht copy is loaded at runtime.
 | Develop       | · `pnpm run dev`          |
 | Backend tests | · `pnpm run test:backend` |
 
-The backend tests (`tests/backend/*.test.cjs`, `node:test`, no network, no Electron) cover the
-adapter between `hugin-p2p` and this backend.
+The backend tests (`tests/backend/*.test.cjs`, `node:test`, no Electron) cover `p2p-host.cjs`:
+the host hooks on an in-memory database, the event table (every hugin-p2p event is mapped or
+listed as ignored), the IPC handlers, and two desktop hosts in one room on a local DHT testnet.
 
 
 ## Build

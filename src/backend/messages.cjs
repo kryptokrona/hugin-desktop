@@ -1,4 +1,4 @@
-const { keychain, signMessage } = require('./crypto.cjs');
+const { keychain } = require('./crypto.cjs');
 const {
 	loadKnownTxs,
 	saveHash,
@@ -39,32 +39,17 @@ const {
 	removeFriendRequest
 } = require('./database.cjs');
 const { trimExtra, sanitize_pm_message, sleep, randomKey } = require('./utils.cjs');
-// Room messages this app creates get their derived hash and the wallet's signature
-// (p2p-wire.cjs roomMessageSign) and are normalized like received ones.
-const { roomMessageSign, roomMessageOut } = require('./p2p-wire.cjs');
+// Rooms, DM swarms, the feed and the hugin-node connection (hugin-p2p's HuginP2P, p2p-host.cjs).
+const P2P = require('./p2p-host.cjs').instance();
 
-//Signs a hugin-p2p payload with the wallet's spend key (crypto.cjs signMessage).
-const sign_with_spend_key = (message) => signMessage(message, keychain.getXKRKeypair().privateSpendKey);
-
-//A room message this app creates: hash derived from the fields, signed; null when it cannot be built.
-async function own_room_message(fields) {
-	try {
-		return await roomMessageSign({ ...fields, address: Hugin.address, name: Hugin.nickname }, sign_with_spend_key);
-	} catch (e) {
-		console.log('Room message not built:', e.message);
-		return null;
-	}
-}
-// hugin-node packets, push payloads and view tags.
+//A room message this app creates and only saves: hash derived from the fields, signed with the
+//wallet's spend key; null when it cannot be built.
+const own_room_message = (fields) => P2P.ownRoomMessage(fields);
+// Push payloads and view tags.
 const push = require('hugin-p2p/push');
 
-const {
-	send_swarm_message,
-	new_swarm,
-	end_swarm,
-	Nodes,
-	send_feed_message
-} = require('./swarm.cjs');
+const new_swarm = (data, beam = false, chat = false) => P2P.newSwarm(data, beam, chat);
+const end_swarm = (key, beam = false) => P2P.endSwarm(key, beam);
 
 const { Address, Crypto, CryptoNote } = require('kryptokrona-utils');
 const hc = require('hugin-crypto');
@@ -124,8 +109,8 @@ ipcMain.on('send-room-message', (e, m) => {
 });
 
 ipcMain.handle('send-feed-message', async (e, m) => {
-	const sent = await send_feed_message(m.message, m.reply, false);
-	saveFeedMessage(sent);
+	const sent = await P2P.sendFeedMessage(m.message, m.reply, false);
+	if (sent) await saveFeedMessage(sent);
 	return sent;
 });
 
@@ -219,7 +204,7 @@ ipcMain.handle('mark-feed-message-read', async (e, hash) => markFeedMessageRead(
 //PRIVATE MESSAGES
 
 ipcMain.on('hugin-node', (e, { address, pub }) => {
-	Nodes.change(address, pub);
+	P2P.changeNode(address, pub);
 	store.set({
 		huginNode: {
 			address,
@@ -227,12 +212,6 @@ ipcMain.on('hugin-node', (e, { address, pub }) => {
 		}
 	});
 	Hugin.huginNode = { address, pub };
-});
-
-Nodes.on('new-message', (messages) => {
-	if (!Array.isArray(messages)) return;
-	console.log('New messages from node', messages.length);
-	decrypt_hugin_messages(messages).catch((err) => console.log('decrypt_hugin_messages:', err));
 });
 
 ipcMain.handle('get-conversations', async (e) => {
@@ -374,14 +353,14 @@ const start_message_syncer = async () => {
 	//Load knownTxsIds to backgroundSyncMessages on startup
 	peer_dms();
 	console.log('Hugin.huginNode', Hugin.huginNode);
-	Nodes.on('connected', () => {
+	P2P.p2p.on('node:connected', () => {
 		console.log('Node connected, resetting message syncer');
 		const lastChecked = store.get('pool.checked');
 		if (lastChecked) {
 			store.set({ pool: { checked: lastChecked - 30000 } });
 		}
 	});
-	Nodes.connect(Hugin.huginNode.address, Hugin.huginNode.pub);
+	P2P.connectNode(Hugin.huginNode.address, Hugin.huginNode.pub);
 	await sleep(5000);
 	block_list = Hugin.block_list;
 	try {
@@ -700,13 +679,13 @@ function set_known_pooltxs(checkedTxs) {
 }
 
 async function sync_from_node(node) {
-	if (Nodes.connection === null) return [];
+	if (!P2P.nodeConnected) return [];
 	const lastChecked = store.get('pool.checked');
 
 	try {
 		// Always a numeric timestamp (0 before the first sync): hugin-node refuses a sync without one.
 		const resp = await Promise.race([
-			Nodes.sync(push.syncRequest({ since: lastChecked })),
+			P2P.syncNode(lastChecked),
 			new Promise((_, reject) =>
 				setTimeout(() => reject(new Error('Sync timed out')), 10000)
 			)
@@ -803,7 +782,7 @@ async function send_message(
 
 		// Send to push node. If it fails, remove from DB
 		const sent = await Promise.race([
-			Nodes.message(payload_hex, viewtag, call ? 'call' : 'dm'),
+			P2P.postToNode(payload_hex, viewtag, call ? 'call' : 'dm'),
 			sleep(200000).then(() => ({ success: false, reason: 'Timeout' }))
 		]);
 
@@ -831,7 +810,7 @@ async function send_message(
 		// content-addressed id (hc.messageHash) lets both sides identify the
 		// message without a randomKey prefix riding along on the wire.
 		if (beam_this) {
-			send_swarm_message(payload_hex, address, true);
+			P2P.sendDm(address, payload_hex);
 			// Best-effort delivery — clear the capsule once we've handed it
 			// to the swarm. If the peer never receives it, our local state
 			// stays in "handshake done" anyway; their re-initial would just
@@ -877,9 +856,9 @@ async function encrypt_hugin_message(message, toAddr) {
 }
 
 async function send_room_message(message) {
-	console.log('Send this!', message);
-	//The hash the renderer passes is replaced by the derived one; the message is signed here.
-	const normalized = await own_room_message({
+	//The hash the renderer passes is replaced by the derived one; the message is signed and sent
+	//to the room's peers (hugin-p2p), then saved as signed.
+	const normalized = await P2P.sendRoomMessage({
 		timestamp: message?.timestamp || Date.now(),
 		room: message?.room,
 		message: message?.message,
@@ -887,16 +866,8 @@ async function send_room_message(message) {
 		tip: message?.tip
 	});
 	if (!normalized) return;
-	let swarmMessage;
-	try {
-		swarmMessage = roomMessageOut(normalized);
-	} catch (e) {
-		console.log('Room message not sent:', e.message);
-		return;
-	}
-	//Swarm message is already encrypted over the connection
-	send_swarm_message(swarmMessage, normalized.room);
-	save_group_message(normalized, normalized.hash, normalized.timestamp, false, true, false, true);
+	// a copy: saving marks `sent` and the name for the renderer, the push carries the signed fields
+	save_group_message({ ...normalized }, normalized.hash, normalized.timestamp, false, true, false, true);
 	await send_room_message_push(normalized);
 }
 
@@ -913,12 +884,7 @@ async function send_room_message_push(message) {
 			timestamp
 		});
 
-		const sent = await Nodes.message(
-			payload_hex,
-			push.roomViewTag(message.room),
-			'room',
-			message.hash
-		);
+		const sent = await P2P.postToNode(payload_hex, push.roomViewTag(message.room), 'room', message.hash);
 		if (!sent || sent.success !== true) {
 			const reason =
 				sent && typeof sent.reason === 'string' ? sent.reason : 'push_registration_failed';
@@ -1054,6 +1020,7 @@ ipcMain.on('fetch-group-history', async (e, settings) => {
 });
 
 module.exports = {
+	decrypt_hugin_messages,
 	save_message,
 	start_message_syncer,
 	send_message,

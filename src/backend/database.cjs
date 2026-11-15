@@ -6,6 +6,54 @@ const store = new Store()
 const {sleep, containsOnlyEmojis} = require('./utils.cjs')
 const { isHex64 } = require('./validate.cjs')
 const { Hugin } = require('./account.cjs')
+const { sanitizeText } = require('hugin-p2p/sanitize')
+
+// Room and feed rows keep the text as it was signed. What the renderer reads from them is plain
+// text (hugin-p2p `sanitizeText`, desktop's sanitize-html policy), with an empty room name shown
+// as 'Anonymous'.
+const displayText = (v) => (typeof v === 'string' ? sanitizeText(v) : v)
+const displayName = (v) => (v === '' || v === undefined || v === null ? 'Anonymous' : displayText(v))
+const displayRow = (row) => {
+    if (!row || typeof row !== 'object') return row
+    const out = { ...row }
+    for (const k of ['message', 'reply', 'nickname']) {
+        if (k in out) out[k] = displayText(out[k])
+    }
+    if ('name' in out) out.name = displayName(out.name)
+    return out
+}
+
+// A stored tip ('' / JSON) as hugin-p2p takes it: false or { amount, receiver }.
+const parseTip = (tip) => {
+    if (!tip) return false
+    if (typeof tip === 'object') return tip
+    try {
+        const t = JSON.parse(tip)
+        return t && typeof t === 'object' ? t : false
+    } catch (e) {
+        return false
+    }
+}
+
+// A room message row as hugin-p2p serves it to peers (joined.messages, send-history,
+// missing-messages): every signed field unchanged, the timestamp as the integer it was stored as.
+const hostRoomRow = (row) => {
+    if (!row || typeof row !== 'object') return null
+    const timestamp = typeof row.timestamp === 'number' ? row.timestamp : Number(row.timestamp)
+    return {
+        message: row.message,
+        address: row.address,
+        signature: row.signature,
+        room: row.room,
+        timestamp,
+        name: typeof row.name === 'string' ? row.name : '',
+        reply: typeof row.reply === 'string' ? row.reply : '',
+        hash: row.hash,
+        tip: parseTip(row.tip)
+    }
+}
+
+const ROOM_ROW_COLUMNS = 'message, address, signature, room, timestamp, name, reply, hash, tip'
 
 const closeDB = async () => {
     if (!database) return
@@ -538,6 +586,11 @@ const feedMessageTable = () => {
         try {
             database.prepare('ALTER TABLE feedmessages ADD COLUMN read INTEGER DEFAULT 0').run()
         } catch (e) {}
+        // The tip is part of what a feed post's signature covers, so it is stored with the
+        // post (JSON, '' for none) and served back unchanged in feed history.
+        try {
+            database.prepare('ALTER TABLE feedmessages ADD COLUMN tip TEXT').run()
+        } catch (e) {}
     })
 }
 
@@ -689,25 +742,29 @@ const getLatestList = async (list) => {
         if (group === undefined) continue 
             const newRow = {
             name: chat.name,
-            message: group.message,
+            message: displayText(group.message),
             room: group.room,
             timestamp: group.timestamp,
             sent: group.sent,
             key: chat.key,
             hash: group.hash,
-            nick: group.name,
+            nick: displayName(group.name),
         }
         myGroups.push(newRow)
     }  
     return myGroups.sort((a, b) => a.timestamp - b.timestamp)
 }
 
+// Feed posts are stored as they were signed (text as sent, tip as JSON), so they can be served
+// to peers in feed history and verify there.
 async function saveFeedMessage(msg) {
+    if (!msg || typeof msg !== 'object') return;
     if (await feedMessageExists(msg.hash)) return;
+    const tip = msg.tip ? JSON.stringify(msg.tip) : ''
     try {
     database.prepare(
-        'INSERT OR IGNORE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash, read) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
-    ).run(msg.address, msg.message, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash)
+        'INSERT OR IGNORE INTO feedmessages (address, message, reply, timestamp, nickname, signature, hash, tip, read) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)',
+    ).run(msg.address, msg.message, msg.reply, msg.timestamp, msg.nickname, msg.signature, msg.hash, tip)
 
     } catch(a) {
         console.log("Sql lite", a)
@@ -715,6 +772,9 @@ async function saveFeedMessage(msg) {
 
   }
 
+// Room messages are stored with every field as signed: text as sent, `name` as sent (also ''),
+// `signature`, and the integer timestamp unchanged. `getRoomHistoryRows` / `getRoomMessageRow`
+// hand them to hugin-p2p as they are; the renderer reads go through `displayRow`.
 const saveGroupMsg = async (msg, offchain, channels = false) => {
     if (!msg || typeof msg !== 'object') return false
     // Room messages are unique on their hash (INSERT OR IGNORE below). Rows without a hash fall
@@ -729,9 +789,7 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     //     saveChannelMessage(txHash, timestamp, channel, group) 
     // }
 
-    if (msg.name === '') {
-        msg.name = 'Anonymous'
-    }
+    if (typeof msg.name !== 'string') msg.name = ''
 
     let tip = ""
     
@@ -740,6 +798,9 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
     }
 
     msg.sent = changeBool(msg.sent)
+    // The timestamp column is TEXT: an integer goes in as its digits (a bound JS number would be
+    // stored as REAL text, '1700000000000.0').
+    const timestamp = typeof msg.timestamp === 'number' && Number.isSafeInteger(msg.timestamp) ? String(msg.timestamp) : msg.timestamp
     
     try {
     const result = database.prepare(
@@ -759,8 +820,10 @@ const saveGroupMsg = async (msg, offchain, channels = false) => {
        VALUES
            (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         
-    ).run(msg.message, msg.address, typeof msg.signature === 'string' ? msg.signature : '', msg.room, msg.timestamp, msg.name, msg.reply, hasHash ? msg.hash : null, msg.sent, tip, msg.sent)
+    ).run(msg.message, msg.address, typeof msg.signature === 'string' ? msg.signature : '', msg.room, timestamp, msg.name, msg.reply, hasHash ? msg.hash : null, msg.sent, tip, msg.sent)
     if (result.changes === 0) return false
+    // The returned object is what the renderer gets: an empty name is shown as 'Anonymous'.
+    msg.name = displayName(msg.name)
     saveRoomUser({
         name: msg.name,
         address: msg.address,
@@ -1140,7 +1203,8 @@ const getFeedMessageReplies = async (hash) => {
         `
         const stmt = database.prepare(feed)
 
-        for(const row of stmt.iterate(hash)) {
+        for(const stored of stmt.iterate(hash)) {
+            const row = displayRow(stored)
 
             if (containsOnlyEmojis(row.message) && row.message.length < 9) {
                 reactions.push(row);
@@ -1175,9 +1239,13 @@ const printFeed = async (page=0, sync=false) => {
         for (const row of stmt.iterate(limit, offset)) {
             if (!sync) {
                 const {replies, reactions} = await getFeedMessageReplies(row.hash);
-                row.replies = replies;
-                row.react = reactions;
+                const shown = displayRow(row)
+                shown.replies = replies;
+                shown.react = reactions;
+                thisFeed.push(shown)
+                continue
             }
+            // sync: the rows as signed, for feed history to peers
             thisFeed.push(row)
         }
 
@@ -1215,10 +1283,37 @@ const printGroup = async (group, page) => {
         for(const row of stmt.iterate(group, limit, offset)) {
             if (row.address.length === 0) row.address = row.room
                     
-                thisGroup.push(row)
+                thisGroup.push(displayRow(row))
         }
         resolve(thisGroup)
     })
+}
+
+// The newest room messages with a stored signature, as hugin-p2p sends them as history
+// (`host.getRoomHistory`).
+const getRoomHistoryRows = async (key, limit = 50) => {
+    if (typeof key !== 'string' || key.length === 0) return []
+    try {
+        const rows = database.prepare(
+            `SELECT ${ROOM_ROW_COLUMNS} FROM groupmessages WHERE room = ? AND length(signature) = 128 ORDER BY timestamp DESC LIMIT ?`
+        ).all(key, limit)
+        return rows.map(hostRoomRow).filter(Boolean)
+    } catch (err) {
+        console.log('[db] room history lookup failed:', err.message)
+        return []
+    }
+}
+
+// One stored room message by hash, as hugin-p2p answers `request-messages` (`host.getRoomMessage`).
+const getRoomMessageRow = async (hash) => {
+    if (!isHex64(hash)) return null
+    try {
+        const row = database.prepare(`SELECT ${ROOM_ROW_COLUMNS} FROM groupmessages WHERE hash = ? LIMIT 1`).get(hash)
+        return row ? hostRoomRow(row) : null
+    } catch (err) {
+        console.log('[db] room message lookup failed:', err.message)
+        return null
+    }
 }
 
 
@@ -1259,7 +1354,7 @@ const getGroupReply = async (reply) => {
       ASC`
         thisReply = database.prepare(sql).get(reply)
 
-        resolve(thisReply)
+        resolve(thisReply ? displayRow(thisReply) : thisReply)
     })
 }
 
@@ -1335,10 +1430,11 @@ const getLatestRoomHashes = async (key) => {
     const limit = 25
     const hashes = []
     return new Promise((resolve, reject) => {
+        // only messages that can be served to peers (stored with their signature)
         const latestRoomHashes = 
         `SELECT *
         FROM groupmessages
-        WHERE room = ?
+        WHERE room = ? AND length(signature) = 128
         ORDER BY
             timestamp
         DESC
@@ -1511,4 +1607,4 @@ process.on('SIGINT', async () => process.exit(128 + 2));
 process.on('SIGTERM', async () => process.exit(128 + 15));
 
 
-module.exports = {getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getUnreadMessages, getUnreadGroupMessages, getUnreadChannelMessages, getUnreadFeedMessages, markMessageRead, markGroupMessageRead, markChannelMessageRead, markFeedMessageRead, markMessagesReadByChat, markGroupMessagesReadByGroup, markAllFeedMessagesRead, getGroupReply, printGroup, saveMsg, saveThisContact, updateContactKemState, loadKemIdentity, saveKemIdentity, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, deletePrivateMessage, addRoom, saveFriendRequest, getFriendRequests, removeFriendRequest}
+module.exports = {getRoomHistoryRows, getRoomMessageRow, getFeedMessageReplies, feedMessageExists, loadRoomUsers, printFeed, saveFeedMessage, saveRoomUser, saveHash, roomMessageExists,  getLatestRoomHashes, loadRoomKeys, removeRoom, getRooms ,addRoomKeys, firstContact, welcomeMessage, loadDB, loadGroups, loadRooms, loadKeys, getGroups, saveGroupMsg, unBlockContact, blockContact, removeMessages, removeContact, removeGroup, addGroup, loadBlockList, getConversation, getConversations, loadKnownTxs, getMessages, getUnreadMessages, getUnreadGroupMessages, getUnreadChannelMessages, getUnreadFeedMessages, markMessageRead, markGroupMessageRead, markChannelMessageRead, markFeedMessageRead, markMessagesReadByChat, markGroupMessagesReadByGroup, markAllFeedMessagesRead, getGroupReply, printGroup, saveMsg, saveThisContact, updateContactKemState, loadKemIdentity, saveKemIdentity, groupMessageExists, messageExists, getContacts, getChannels, deleteMessage, deletePrivateMessage, addRoom, saveFriendRequest, getFriendRequests, removeFriendRequest}

@@ -17,7 +17,7 @@ const { Hugin } = require('./account.cjs')
 const { keychain } = require('./crypto.cjs')
 const { start_message_syncer } = require('./messages.cjs')
 const { getRooms } = require('./database.cjs')
-const { new_swarm, Nodes } = require('./swarm.cjs')
+const P2P = require('./p2p-host.cjs').instance()
 
 let js_wallet
 let daemon
@@ -147,7 +147,7 @@ async function startHugin(walletName, password, node) {
 const join_rooms = async () => {
     const rooms = await getRooms()
     for (const room of rooms) {
-        new_swarm({key: room.key})
+        P2P.joinRoom(room.key)
         await sleep(200)
     }
 }
@@ -453,7 +453,7 @@ async function checkNodeStatus (node) {
 
 
 async function sendTx(tx) {
-    const sendTo = tx.upgrade ? [[tx.to, 4900000 ], [Nodes.address, 5000000]] : [[tx.to, tx.amount]]
+    const sendTo = tx.upgrade ? [[tx.to, 4900000 ], [P2P.nodeAddress, 5000000]] : [[tx.to, tx.amount]]
     console.log(`✅ SENDING`, sendTo)
     let result = await js_wallet.sendTransactionAdvanced(
         sendTo, // destinations,

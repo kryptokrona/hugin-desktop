@@ -26,7 +26,7 @@ const port = process.env.PORT || 5173
 const dev = !app.isPackaged
 const { loadHugin, loadWallet } = require('./wallet.cjs')
 const { Hugin } = require('./account.cjs')
-const { Storage } = require('./storage.cjs')
+const P2P = require('./p2p-host.cjs').instance()
 const { check_if_media } = require('./utils.cjs')
 const { externalUrl } = require('./validate.cjs')
 const { getRooms, getContacts } = require('./database.cjs')
@@ -206,6 +206,11 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
 })
 
+// Leaves the swarms and closes the node connection and the drives when the app quits.
+app.on('before-quit', () => {
+    P2P.destroy().catch((err) => console.log('p2p not closed cleanly:', err))
+})
+
 ipcMain.on('close', () => {
     mainWindow.hide()
     if (process.platform === 'darwin') {
@@ -347,7 +352,7 @@ const startCheck = async () => {
 
 ipcMain.handle('load-stored-file', async (e, hash, topic) => {
    try {
-     const file = await Storage.load(hash, topic)
+     const file = await P2P.loadStoredFile(hash, topic)
      if (!file) return ['File not found']
      const info = Hugin.get_files().find(a => a.hash === hash)
      if (!info) return ['File not found']
@@ -361,9 +366,8 @@ ipcMain.handle('load-stored-file', async (e, hash, topic) => {
 
 ipcMain.handle('get-storage-stats', async () => {
   try {
-    const stats = await Storage.get_storage_stats()
-    const { get_topic_key_map } = require('./swarm.cjs')
-    const topicKeyMap = get_topic_key_map()
+    const stats = await P2P.storageStats()
+    const topicKeyMap = P2P.topicKeyMap()
     const allRooms = await getRooms()
     const allContacts = await getContacts()
     for (const room of stats.rooms) {
@@ -384,13 +388,13 @@ ipcMain.handle('get-storage-stats', async () => {
     return stats
   } catch (e) {
     console.log('get-storage-stats error:', e)
-    return { totalSize: 0, totalFiles: 0, limit: Storage.limit, rooms: [] }
+    return { totalSize: 0, totalFiles: 0, limit: P2P.storageLimit(), rooms: [] }
   }
 })
 
 ipcMain.handle('purge-room-files', async (e, topic) => {
   try {
-    const purged = await Storage.purge_room(topic)
+    const purged = await P2P.purgeRoom(topic)
     const files = Hugin.get_files().filter(f => f.topic !== topic)
     store.set({ files })
     mainWindow.webContents.send('files', files)
@@ -403,18 +407,8 @@ ipcMain.handle('purge-room-files', async (e, topic) => {
 
 ipcMain.handle('purge-all-files', async () => {
   try {
-    const allPurged = []
-    for (const room of Storage.drives) {
-      const hashes = []
-      for await (const entry of room.drive.entries()) {
-        const meta = entry.value?.metadata
-        if (meta?.hash) hashes.push(meta.hash)
-      }
-      for (const hash of hashes) {
-        try { await room.drive.del(hash); allPurged.push(hash) } catch (e) {}
-      }
-    }
-    if (allPurged.length) Hugin.add_deleted_hashes(allPurged)
+    // the removed hashes go to the deleted list through the `file:removed` events (p2p-host.cjs)
+    await P2P.purgeAll()
     store.set({ files: [] })
     mainWindow.webContents.send('files', [])
     return { success: true }
@@ -426,7 +420,7 @@ ipcMain.handle('purge-all-files', async () => {
 
 ipcMain.handle('delete-stored-file', async (e, hash, topic) => {
   try {
-    const ok = await Storage.delete_file(hash, topic)
+    const ok = await P2P.deleteFile(hash, topic)
     if (ok) {
       const files = Hugin.get_files().filter(f => f.hash !== hash)
       store.set({ files })
@@ -441,7 +435,7 @@ ipcMain.handle('delete-stored-file', async (e, hash, topic) => {
 
 ipcMain.handle('set-storage-limit', async (e, bytes) => {
   try {
-    Storage.set_limit(bytes)
+    P2P.setStorageLimit(bytes)
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }

@@ -237,6 +237,7 @@ class Account {
 
 	ban(address, topic) {
 		if (this.banned(address, topic)) return;
+		const list = store.get('bannedUsers') ?? [];
 		list.push({ address, topic });
 		store.set({
 			bannedUsers: list
