@@ -15,7 +15,7 @@
 const Module = require('module');
 const crypto = require('crypto');
 const EventEmitter = require('events');
-const keys = require('hugin-p2p/keys');
+const keys = require('hugin-network/keys');
 
 const ADDRESS = 'SEKR' + 'a'.repeat(95);
 const ADDRESS_2 = 'SEKR' + 'b'.repeat(95);

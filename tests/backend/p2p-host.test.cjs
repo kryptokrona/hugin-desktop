@@ -5,7 +5,7 @@
 // the database is in memory (helpers/desktop-stubs.cjs), and library events are emitted on the
 // HuginP2P instance directly to check what desktop does with each of them.
 //
-// - the event table: every name in hugin-p2p's `events.ALL` is mapped or listed as ignored, and
+// - the event table: every name in hugin-network's `events.ALL` is mapped or listed as ignored, and
 //   every renderer channel it sends on is one the preload lets the renderer receive;
 // - each mapping: the IPC payload shapes the renderer has always received and the database saves
 //   (room and feed messages stored as signed, shown as plain text);
@@ -16,7 +16,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { events: E, wire: W, keys, sanitize: S } = require('hugin-p2p');
+const { events: E, wire: W, keys, sanitize: S } = require('hugin-network');
 const H = require('../../src/backend/p2p-host.cjs');
 const {
 	ADDRESS,
@@ -107,7 +107,7 @@ function preloadChannels(name) {
 // =============================================================================================
 // the event table
 
-test('every hugin-p2p event is mapped or listed as ignored, never both', () => {
+test('every hugin-network event is mapped or listed as ignored, never both', () => {
 	const mapped = Object.keys(H.EVENT_MAP);
 	const ignored = Object.keys(H.IGNORED_EVENTS);
 	for (const name of E.ALL) {
@@ -119,7 +119,7 @@ test('every hugin-p2p event is mapped or listed as ignored, never both', () => {
 	// nothing in the table that the library does not emit (node:pow-required is forwarded by the
 	// facade under its own name)
 	const known = new Set([...E.ALL, 'node:pow-required']);
-	for (const name of [...mapped, ...ignored]) assert.ok(known.has(name), `${name} is not a hugin-p2p event`);
+	for (const name of [...mapped, ...ignored]) assert.ok(known.has(name), `${name} is not a hugin-network event`);
 	for (const [name, reason] of Object.entries(H.IGNORED_EVENTS)) {
 		assert.equal(typeof reason, 'string', name);
 		assert.ok(reason.length > 10, `${name} needs a reason`);
@@ -546,7 +546,7 @@ test('host hooks: identity, spend-key signing, an awaited verifier that only acc
 	assert.equal(await host.verify('m', ADDRESS, 'no'), false);
 	assert.equal(await host.verify('m', ADDRESS, 'yes'), false, 'a truthy answer is not true');
 	assert.equal(await host.verify('m', ADDRESS, 'throw'), false);
-	assert.equal(host.findShare, undefined, 'no PoW backend unless given');
+	assert.equal(host.powBackend, undefined, 'no PoW backend unless given');
 	assert.equal(host.paths, undefined, 'no file storage unless given');
 });
 
@@ -573,7 +573,7 @@ test('host hooks: storage queries go to the database unchanged', async () => {
 test('host hooks: bans per topic, blocks, per-topic file sync, known and deleted files, the storage limit', () => {
 	const store = memoryStore();
 	const hugin = fakeHugin({ store });
-	const host = H.createHost({ db: memoryDb(), hugin, store, sign: async () => '', verify: async () => false, findShare: async () => null, paths: () => ({ storage: '/s', downloads: '/d' }) });
+	const host = H.createHost({ db: memoryDb(), hugin, store, sign: async () => '', verify: async () => false, powBackend: { findShare: async () => null }, paths: () => ({ storage: '/s', downloads: '/d' }) });
 	const topic = 'ab'.repeat(32);
 	hugin.ban(ADDRESS_2, topic);
 	assert.equal(host.isBanned(ADDRESS_2, topic), true);
@@ -592,33 +592,43 @@ test('host hooks: bans per topic, blocks, per-topic file sync, known and deleted
 	assert.equal(host.storageLimit(), 100000000000);
 	store.set('storageLimit', 5000);
 	assert.equal(host.storageLimit(), 5000);
-	assert.equal(typeof host.findShare, 'function');
+	assert.equal(typeof host.powBackend.findShare, 'function');
 	assert.deepEqual(host.paths(), { storage: '/s', downloads: '/d' });
 });
 
-test('PoW backend: the job goes to the workers with the time budget; no share or an invalid job gives null', async () => {
-	const seen = [];
-	let share = null;
-	const challenge = {
-		setJob: (job) => seen.push(['job', job.job_id]),
-		findShare: async (ms) => {
-			seen.push(['ms', ms]);
-			return share;
-		}
-	};
-	let created = 0;
-	const findShare = H.createPowBackend({
-		createChallenge: () => {
-			created++;
-			return challenge;
+test('PoW backend: hugin-pow createHasher on the kryptokrona-crypto module, created once on first use, again after a failure', async () => {
+	const calls = [];
+	const requests = [];
+	const cryptoModule = { name: 'kryptokrona-crypto' };
+	let loads = 0;
+	let fail = true;
+	const backend = H.createPowBackend({
+		createHasher: async (opts) => {
+			calls.push(opts);
+			if (fail) throw new Error('no addon');
+			return {
+				findShare: async (req) => {
+					requests.push(req);
+					return { nonce: 'aabbccdd', result: '00'.repeat(32), hashes_performed: 1, threads: 1 };
+				},
+				hash: async (blobHex) => 'h:' + blobHex
+			};
 		},
-		hash: async () => '00'.repeat(32)
+		crypto: () => {
+			loads++;
+			return cryptoModule;
+		}
 	});
-	assert.equal(await findShare({ job: { job_id: 'j1' }, timeBudgetMs: 30000 }), null);
-	assert.deepEqual(seen, [['job', 'j1'], ['ms', 30000]]);
-	share = { nonce: 'AABBCCDD', result: 'AB'.repeat(32) };
-	assert.equal(await findShare({ job: { job_id: 'j2' }, timeBudgetMs: 10 }), null, 'a share for a job that does not validate is not used');
-	assert.equal(created, 1, 'one worker pool');
+	assert.equal(calls.length, 0, 'nothing loaded before the first proof of work');
+	await assert.rejects(backend.hash('ab'), /no addon/);
+	fail = false;
+	assert.equal(await backend.hash('ab'), 'h:ab', 'a failed start is tried again');
+	const req = { blobHex: 'ab', targetHex: 'ffffffff', startNonce: 1, maxAttempts: 840 };
+	assert.deepEqual(await backend.findShare(req), { nonce: 'aabbccdd', result: '00'.repeat(32), hashes_performed: 1, threads: 1 });
+	assert.deepEqual(requests, [req], 'the request goes to findPowShare unchanged');
+	assert.equal(calls.length, 2, 'one hasher after the failed start');
+	assert.equal(calls[1].crypto, cryptoModule, 'desktop passes its kryptokrona-crypto');
+	assert.equal(loads, 2);
 });
 
 // =============================================================================================

@@ -1,9 +1,9 @@
 'use strict';
 
-// hugin-desktop's host for hugin-p2p 3.0 (hugin-p2p README, "Host hooks and events").
+// hugin-desktop's host for hugin-network 3.0 (hugin-network README, "Host hooks and events").
 //
 // Rooms, DM swarms, the feed, room calls, file storage and the hugin-node connection all run in
-// one `HuginP2P` from hugin-p2p. This file is everything desktop adds around it:
+// one `HuginP2P` from hugin-network. This file is everything desktop adds around it:
 //
 //   createHost(deps)    the host hooks: the wallet's spend-key signatures, storage
 //                       queries on database.cjs (bound parameters there), ban/block lists and
@@ -19,12 +19,12 @@
 //                       loads under plain Node (tests/backend).
 //
 // Keys desktop uses towards the renderer: a room is its invite; a DM swarm is the key
-// derivation hash the swarm was joined with (hugin-p2p keys DM rooms by the contact address;
+// derivation hash the swarm was joined with (hugin-network keys DM rooms by the contact address;
 // `roomKey` / `desktopKey` translate). Text in IPC payloads is plain text (`sanitizeText`,
 // desktop's sanitize-html policy); the database keeps room and feed messages exactly as they
 // were signed, so they can be served to peers again.
 
-const { HuginP2P, events: E, sanitize: S, wire: W, keys, pow } = require('hugin-p2p');
+const { HuginP2P, events: E, sanitize: S, wire: W, keys } = require('hugin-network');
 
 /** NodeClient event the facade forwards under its own name (not in `events.ALL`). */
 const NODE_POW_REQUIRED = 'node:pow-required';
@@ -148,7 +148,7 @@ function feedForUi(m) {
 }
 
 /**
- * A DM opened from a DM swarm (hugin-p2p/dm `open` result `message`) as the renderer gets it
+ * A DM opened from a DM swarm (hugin-network/dm `open` result `message`) as the renderer gets it
  * (`newMsg`, `privateMsg`): plain text, the content hash as its id. null when the text is empty
  * or longer than MAX_DM_TEXT.
  */
@@ -218,16 +218,16 @@ function remoteFileForUi(f, { topic, dm }) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// host hooks (hugin-p2p README, "Host hooks and events")
+// host hooks (hugin-network README, "Host hooks and events")
 
 /**
- * The host object hugin-p2p calls. `deps`:
+ * The host object hugin-network calls. `deps`:
  *   db       database.cjs (or a stub with the same functions)
  *   hugin    the account state (account.cjs `Hugin`): address, nickname, avatar, syncImages,
  *            banned(), blocked(), get_files(), is_deleted()
  *   store    electron-store (`get`)
  *   sign(message) / verify(message, address, signature)   spend-key signatures (crypto.cjs)
- *   findShare  PoW backend (optional)
+ *   powBackend  hugin-pow backend for proof of work (optional; createPowBackend)
  *   paths    `{ storage, downloads }` or a function returning it (optional: no file storage)
  *   log(level, msg, data)
  */
@@ -266,36 +266,41 @@ function createHost(deps) {
 		},
 		log
 	};
-	if (typeof deps.findShare === 'function') host.findShare = (args) => deps.findShare(args);
+	if (deps.powBackend && typeof deps.powBackend === 'object') host.powBackend = deps.powBackend;
 	if (deps.paths) host.paths = deps.paths;
 	return host;
 }
 
 /**
- * PoW backend for `host.findShare`: hugin-utils' worker processes search the nonce (off the
- * Electron main thread, several cores) and the share is checked with hugin-p2p/pow
- * `verifyShare` (CN-Turtle-Lite v2) before it is used.
+ * PoW backend for `host.powBackend`: hugin-pow on kryptokrona-crypto's Node-API addon
+ * (`findPowShare` on up to 8 native threads, off the Electron main thread). The kryptokrona-crypto
+ * backend is created on first use (`createHasher`, which checks hugin-pow's reference vector);
+ * when that fails, the next proof of work tries again.
+ *   createHasher  hugin-pow/native `createHasher`
+ *   crypto        the kryptokrona-crypto module, or a function returning it (loaded on first use)
  */
-function createPowBackend({ createChallenge, hash }) {
-	let challenge = null;
-	return async ({ job, timeBudgetMs }) => {
-		if (!challenge) challenge = createChallenge();
-		challenge.setJob(job);
-		const share = pow.normalizeShare(await challenge.findShare(timeBudgetMs));
-		if (!share) return null;
-		const found = { job_id: job.job_id, nonce: share.nonce, result: share.result };
-		try {
-			return (await pow.verifyShare(job, found.nonce, found.result, hash)) ? found : null;
-		} catch (err) {
-			// the hash failed in this process: keep the share as the workers found it (the node
-			// checks it anyway)
-			return found;
+function createPowBackend({ createHasher, crypto }) {
+	let hasher = null;
+	const get = () => {
+		if (!hasher) {
+			const pending = Promise.resolve()
+				.then(() => (typeof crypto === 'function' ? crypto() : crypto))
+				.then((m) => createHasher(m ? { crypto: m } : {}));
+			pending.catch(() => {
+				if (hasher === pending) hasher = null;
+			});
+			hasher = pending;
 		}
+		return hasher;
+	};
+	return {
+		findShare: async (req) => (await get()).findShare(req),
+		hash: async (blobHex) => (await get()).hash(blobHex)
 	};
 }
 
 // ---------------------------------------------------------------------------------------------
-// events (hugin-p2p README, "Host hooks and events"): library event -> what desktop does with it
+// events (hugin-network README, "Host hooks and events"): library event -> what desktop does with it
 
 /**
  * `ipc`: the renderer channels the handler may send on; `db`: the database functions it calls;
@@ -395,7 +400,7 @@ const EVENT_MAP = Object.freeze({
 	[E.BAN_SELF]: {
 		ipc: ['banned'],
 		db: ['removeRoom'],
-		// hugin-p2p leaves the room itself (room:left follows)
+		// hugin-network leaves the room itself (room:left follows)
 		handle(ctx, e) {
 			ctx.send('banned', e.key);
 			ctx.db.removeRoom(e.key);
@@ -628,7 +633,7 @@ class DesktopP2P {
 	/**
 	 * @param {object} deps  see createHost, plus:
 	 *   send(channel, data)          to the renderer (Hugin.send)
-	 *   dm                           the wallet's DmCrypto (hugin-p2p/dm), or a function returning
+	 *   dm                           the wallet's DmCrypto (hugin-network/dm), or a function returning
 	 *                                it (or a promise of it): opens DM swarm payloads
 	 *   decryptNodeMessages(list)    messages.cjs decrypt_hugin_messages
 	 *   registerUserFile(path)       utils.cjs register_user_file (optional)
@@ -715,7 +720,7 @@ class DesktopP2P {
 	// -------------------------------------------------------------------------------------------
 	// keys
 
-	/** The key hugin-p2p uses for a key the renderer uses (DM: derivation hash -> contact address). */
+	/** The key hugin-network uses for a key the renderer uses (DM: derivation hash -> contact address). */
 	roomKey(key) {
 		if (typeof key !== 'string') return key;
 		if (this.dms.has(key)) return this.dms.get(key);
@@ -820,7 +825,7 @@ class DesktopP2P {
 	// sending
 
 	/**
-	 * Signs a room message of our own without sending it (hugin-p2p's room message format: hash
+	 * Signs a room message of our own without sending it (hugin-network's room message format: hash
 	 * derived from the fields, spend-key signature over `wire.roomMessageSigningPayload`).
 	 */
 	async signRoomMessage({ room, message, reply = '', tip = false, timestamp }) {
@@ -886,7 +891,7 @@ class DesktopP2P {
 		}
 	}
 
-	/** A DM payload (hugin-p2p/dm, hex) over the DM swarm; returns the peers written to. */
+	/** A DM payload (hugin-network/dm, hex) over the DM swarm; returns the peers written to. */
 	sendDm(address, payload) {
 		if (typeof address !== 'string') return 0;
 		return this.p2p.rooms.sendDm(address.substring(0, ADDRESS_LENGTH), payload);
@@ -1171,9 +1176,7 @@ function instance() {
 	const db = require('./database.cjs');
 	const { Hugin } = require('./account.cjs');
 	const { keychain, signMessage, verifySignature } = require('./crypto.cjs');
-	const { createChallenge } = require('hugin-utils/challenge');
-	const { Crypto } = require('kryptokrona-utils');
-	const xkrCrypto = new Crypto();
+	const { createHasher } = require('hugin-pow/native');
 	const userDataDir = app.getPath('userData');
 
 	appInstance = createDesktopP2P({
@@ -1185,10 +1188,9 @@ function instance() {
 		},
 		sign: (message) => signMessage(message, keychain.getXKRKeypair().privateSpendKey),
 		verify: verifySignature,
-		findShare: createPowBackend({
-			createChallenge,
-			hash: async (blobHex) => String(await xkrCrypto.cn_turtle_lite_slow_hash_v2(blobHex)).toLowerCase()
-		}),
+		// kryptokrona-crypto from desktop's own dependencies (hugin-pow is linked from a sibling
+		// checkout and would not find it from there)
+		powBackend: createPowBackend({ createHasher, crypto: () => require('kryptokrona-crypto') }),
 		// corestore 7 needs its own directory (the corestore 6 one stays unused)
 		paths: () => ({ storage: userDataDir + '/corestorage-v7', downloads: Hugin.downloadDir || app.getPath('downloads') }),
 		dm: () => require('./identity.cjs').dm(),

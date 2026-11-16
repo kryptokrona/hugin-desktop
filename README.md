@@ -67,7 +67,7 @@ Hugin also packs some powerful decentralized P2P encrypted features like **video
 - Electron
 - Svelte
 - WebRTC
-- Hyperswarm (upstream `hyperswarm` + `hyperdht`, with the Hugin `mid` handshake from `hugin-p2p/swarm`)
+- Hyperswarm (upstream `hyperswarm` + `hyperdht`, with the Hugin `mid` handshake from `hugin-network/swarm`)
 
 # Getting Started
 
@@ -87,28 +87,33 @@ Why pnpm and not npm? Two things live in the repo that assume pnpm:
 
 ## Install & run
 
-The P2P layer shared with hugin-native, `hugin-p2p` 3 (`3.0.0-alpha`), is linked from a sibling
-checkout (`"hugin-p2p": "link:../hugin-p2p"`) until it is published. Rooms, DM swarms, the feed,
+The P2P layer shared with hugin-native, `hugin-network` 3 (formerly published as hugin-p2p 2.x,
+a different code base), is linked from a sibling checkout (`"hugin-network":
+"link:../hugin-p2p"`) until it is published, and so is its proof of work, `hugin-pow`
+(`"hugin-pow": "link:../hugin-pow"`). Rooms, DM swarms, the feed,
 room calls, file storage (corestore 7 / hyperdrive 13, under `userData/corestorage-v7`) and the
 hugin-node connection run in one `HuginP2P` from that package. The older `userData/corestorage`
 folder is no longer used (the app leaves it in place; it can be deleted). `src/backend/p2p-host.cjs` is the
 desktop side of it: the host hooks (wallet signatures, database queries, ban/block lists, file
-settings, paths, the PoW workers of `hugin-utils`), the table that maps every library event to
+settings, paths, the proof-of-work backend: hugin-pow's `createHasher` on kryptokrona-crypto's
+`findPowShare`, which mines on up to 8 native threads off the main thread), the table that maps every library event to
 the IPC channels the renderer listens on and to the database saves, and the `ipcMain` handlers
-for room, voice and file actions. The backend also uses `hugin-p2p/keys` (room invites),
+for room, voice and file actions. The backend also uses `hugin-network/keys` (room invites),
 `/sanitize` (the text sanitiser that replaces `sanitize-html`) and `/push` (push payloads, view
-tags) directly. Clone it next to this repo and install it first (`cd ../hugin-p2p && npm
-install`); with `link:` pnpm does not install the linked package's dependencies, so they load from
-`../hugin-p2p/node_modules`. Both repos pin `hyperswarm` 4.17.2 and `hyperdht` 6.36.0
-(`pnpm.overrides` here), and the app itself only reaches hyperdht through `hugin-p2p`, so one
-hyperdht copy is loaded at runtime.
+tags) directly. Clone both next to this repo and install them first (`cd ../hugin-pow && npm
+install`, then `cd ../hugin-p2p && npm install`); with `link:` pnpm does not install the linked
+packages' dependencies, so they load from `../hugin-pow/node_modules` and
+`../hugin-p2p/node_modules`. hugin-pow gets kryptokrona-crypto from this app (`createHasher({
+crypto })` in `p2p-host.cjs`), so the one copy below is used for mining too. Both repos pin
+`hyperswarm` 4.17.2 and `hyperdht` 6.36.0 (`pnpm.overrides` here), and the app itself only
+reaches hyperdht through `hugin-network`, so one hyperdht copy is loaded at runtime.
 
 The wallet libraries come from sibling checkouts too (`file:` dependencies, next to
 `xkr-work/`): kryptokrona-crypto 2.0 (`../../kryptokrona-crypto`), kryptokrona-utils 1.5
 (`../../kryptokrona-utils`) and kryptokrona-wallet-backend-js 2.7
 (`../../kryptokrona-wallet-backend-js`), each with its `dist/` built. pnpm copies them into
 `node_modules` and installs their dependencies; the `pnpm.overrides` entries
-(`"$kryptokrona-crypto"` and so on) give every package in the tree (hugin-crypto, hugin-utils,
+(`"$kryptokrona-crypto"` and so on) give every package in the tree (hugin-crypto,
 the wallet backend, kryptokrona-utils) the same single copy. kryptokrona-crypto 2.0 is a
 Node-API addon built with napi-rs (`prebuilt/napi/kryptokrona-crypto.<platform>.node`): it loads
 in any Electron version without `electron-rebuild`, and `build.config.json` unpacks it from the
@@ -125,8 +130,8 @@ loaded kryptokrona-crypto is 2.0.0 or later and runs on its Node-API addon
 
 The backend tests (`tests/backend/*.test.cjs`, `node:test`, no Electron) cover the
 kryptokrona-crypto check (`crypto-backend.test.cjs`: version, Node-API addon, one copy) and `p2p-host.cjs`:
-the host hooks on an in-memory database, the event table (every hugin-p2p event is mapped or
-listed as ignored), the IPC handlers, and two desktop hosts in one room on a local DHT testnet.
+the host hooks on an in-memory database, the PoW backend, the event table (every hugin-network
+event is mapped or listed as ignored), the IPC handlers, and two desktop hosts in one room on a local DHT testnet.
 
 
 ## Build

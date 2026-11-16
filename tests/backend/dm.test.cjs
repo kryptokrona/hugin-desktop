@@ -1,6 +1,6 @@
 'use strict';
 
-// Direct messages on desktop: the DmCrypto of src/backend/identity.cjs (hugin-p2p/dm with the
+// Direct messages on desktop: the DmCrypto of src/backend/identity.cjs (hugin-network/dm with the
 // real hugin-crypto and kryptokrona-utils keys) and the backend paths that use it.
 //
 // - two DmCrypto instances with their stores in memory (helpers/dm-parties.cjs): the ML-KEM
@@ -17,8 +17,8 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const hc = require('hugin-crypto');
-const push = require('hugin-p2p/push');
-const { STATUS } = require('hugin-p2p/dm');
+const push = require('hugin-network/push');
+const { STATUS } = require('hugin-network/dm');
 const { hasNodeSqlite, installElectronStubs } = require('./helpers/desktop-stubs.cjs');
 const { dmParty, memoryDmStore, xkrWallet, xkr } = require('./helpers/dm-parties.cjs');
 

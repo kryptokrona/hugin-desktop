@@ -8,7 +8,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const createTestnet = require('hyperdht/testnet.js');
-const { keys, sanitize: S, wire: W } = require('hugin-p2p');
+const { keys, sanitize: S, wire: W } = require('hugin-network');
 const H = require('../../src/backend/p2p-host.cjs');
 const { ADDRESS, ADDRESS_2, fakeSign, fakeVerify, memoryDb, memoryStore, fakeHugin, recorder } = require('./helpers/desktop-stubs.cjs');
 

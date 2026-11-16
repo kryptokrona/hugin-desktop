@@ -6,10 +6,10 @@ const store = new Store()
 const {sleep, containsOnlyEmojis} = require('./utils.cjs')
 const { isHex64 } = require('./validate.cjs')
 const { Hugin } = require('./account.cjs')
-const { sanitizeText } = require('hugin-p2p/sanitize')
+const { sanitizeText } = require('hugin-network/sanitize')
 
 // Room and feed rows keep the text as it was signed. What the renderer reads from them is plain
-// text (hugin-p2p `sanitizeText`, desktop's sanitize-html policy), with an empty room name shown
+// text (hugin-network `sanitizeText`, desktop's sanitize-html policy), with an empty room name shown
 // as 'Anonymous'.
 const displayText = (v) => (typeof v === 'string' ? sanitizeText(v) : v)
 const displayName = (v) => (v === '' || v === undefined || v === null ? 'Anonymous' : displayText(v))
@@ -23,7 +23,7 @@ const displayRow = (row) => {
     return out
 }
 
-// A stored tip ('' / JSON) as hugin-p2p takes it: false or { amount, receiver }.
+// A stored tip ('' / JSON) as hugin-network takes it: false or { amount, receiver }.
 const parseTip = (tip) => {
     if (!tip) return false
     if (typeof tip === 'object') return tip
@@ -35,7 +35,7 @@ const parseTip = (tip) => {
     }
 }
 
-// A room message row as hugin-p2p serves it to peers (joined.messages, send-history,
+// A room message row as hugin-network serves it to peers (joined.messages, send-history,
 // missing-messages): every signed field unchanged, the timestamp as the integer it was stored as.
 const hostRoomRow = (row) => {
     if (!row || typeof row !== 'object') return null
@@ -189,7 +189,7 @@ const migrateSchema = () => {
     dmCryptoTable()
 }
 
-// The DM crypto state of each address (hugin-p2p/dm: message key, pending ML-KEM capsule, the
+// The DM crypto state of each address (hugin-network/dm: message key, pending ML-KEM capsule, the
 // contact's ML-KEM public key, handshake time, previous keys) as one JSON object. Kept apart from
 // `contacts`: a first message from an address that is not a contact yet has state too.
 const dmCryptoTable = () => {
@@ -803,7 +803,7 @@ async function saveFeedMessage(msg) {
 
 // Room messages are stored with every field as signed: text as sent, `name` as sent (also ''),
 // `signature`, and the integer timestamp unchanged. `getRoomHistoryRows` / `getRoomMessageRow`
-// hand them to hugin-p2p as they are; the renderer reads go through `displayRow`.
+// hand them to hugin-network as they are; the renderer reads go through `displayRow`.
 const saveGroupMsg = async (msg, offchain, channels = false) => {
     if (!msg || typeof msg !== 'object') return false
     // Room messages are unique on their hash (INSERT OR IGNORE below). Rows without a hash fall
@@ -1318,7 +1318,7 @@ const printGroup = async (group, page) => {
     })
 }
 
-// The newest room messages with a stored signature, as hugin-p2p sends them as history
+// The newest room messages with a stored signature, as hugin-network sends them as history
 // (`host.getRoomHistory`).
 const getRoomHistoryRows = async (key, limit = 50) => {
     if (typeof key !== 'string' || key.length === 0) return []
@@ -1333,7 +1333,7 @@ const getRoomHistoryRows = async (key, limit = 50) => {
     }
 }
 
-// One stored room message by hash, as hugin-p2p answers `request-messages` (`host.getRoomMessage`).
+// One stored room message by hash, as hugin-network answers `request-messages` (`host.getRoomMessage`).
 const getRoomMessageRow = async (hash) => {
     if (!isHex64(hash)) return null
     try {

@@ -38,19 +38,19 @@ const {
 	removeFriendRequest
 } = require('./database.cjs');
 const { trimExtra, sanitize_pm_message, sleep, randomKey } = require('./utils.cjs');
-// Rooms, DM swarms, the feed and the hugin-node connection (hugin-p2p's HuginP2P, p2p-host.cjs).
+// Rooms, DM swarms, the feed and the hugin-node connection (hugin-network's HuginP2P, p2p-host.cjs).
 const P2P = require('./p2p-host.cjs').instance();
 
 //A room message this app creates and only saves: hash derived from the fields, signed with the
 //wallet's spend key; null when it cannot be built.
 const own_room_message = (fields) => P2P.ownRoomMessage(fields);
 // Push payloads and view tags.
-const push = require('hugin-p2p/push');
+const push = require('hugin-network/push');
 
 const new_swarm = (data, beam = false, chat = false) => P2P.newSwarm(data, beam, chat);
 const end_swarm = (key, beam = false) => P2P.endSwarm(key, beam);
 
-// Direct messages: the wallet's DmCrypto (hugin-p2p/dm) builds and opens the DM payloads.
+// Direct messages: the wallet's DmCrypto (hugin-network/dm) builds and opens the DM payloads.
 const identity = require('./identity.cjs');
 const { default: fetch } = require('electron-fetch');
 const { ipcMain, powerMonitor } = require('electron');
@@ -492,7 +492,7 @@ async function check_for_pm_message(thisExtra, txHash, que = false) {
 	return true;
 }
 
-// An opened DM (hugin-p2p/dm `message`): saved, or queued with `que`. A first message from an
+// An opened DM (hugin-network/dm `message`): saved, or queued with `que`. A first message from an
 // address that is not a contact adds the contact (save_message).
 async function take_pm_message(m, que = false) {
 	console.log(m.type === 'message' ? '[dm] message under the ML-KEM key' : '[dm] message with an ML-KEM handshake');
@@ -592,7 +592,7 @@ async function fetch_hugin_messages() {
 //   p2p === false  → relay via the hugin push node (default); a payload too long for a node post
 //                    goes over the DM swarm only and fails when the contact is not connected.
 //   p2p === true   → direct over the swarm/beam channel (no node).
-// The payload is the wallet's DmCrypto's (hugin-p2p/dm): until we hold a message key for the
+// The payload is the wallet's DmCrypto's (hugin-network/dm): until we hold a message key for the
 // contact it carries our ML-KEM public key, then the capsule of the key we made for the contact
 // until the contact uses that key.
 async function send_message(
@@ -685,7 +685,7 @@ async function send_message(
 
 async function send_room_message(message) {
 	//The hash the renderer passes is replaced by the derived one; the message is signed and sent
-	//to the room's peers (hugin-p2p), then saved as signed.
+	//to the room's peers (hugin-network), then saved as signed.
 	const normalized = await P2P.sendRoomMessage({
 		timestamp: message?.timestamp || Date.now(),
 		room: message?.room,
@@ -700,7 +700,7 @@ async function send_room_message(message) {
 }
 
 // Room push through hugin-node (`kind: 'room'`): the room message as sent on the swarm, in a
-// secretbox keyed by the room key (hugin-p2p/push sealRoomPush: a random nonce in front of the
+// secretbox keyed by the room key (hugin-network/push sealRoomPush: a random nonce in front of the
 // box), sealed to the push server's key, routed by the room view tag (cn_fast_hash(invite), 5
 // hex characters).
 async function send_room_message_push(message) {

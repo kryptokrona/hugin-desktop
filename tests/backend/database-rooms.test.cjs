@@ -2,7 +2,7 @@
 
 // The real src/backend/database.cjs on a node:sqlite database (Node >= 22.13), with Electron,
 // electron-store and better-sqlite3 replaced as the hugin-interop harness does
-// (helpers/desktop-stubs.cjs). Room and feed messages must come back from the queries hugin-p2p
+// (helpers/desktop-stubs.cjs). Room and feed messages must come back from the queries hugin-network
 // uses exactly as they were signed (text, empty name, signature, integer timestamp, tip), so
 // peers can verify them when they are served as history; what the renderer reads is plain text.
 
@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
-const { wire: W, keys, sanitize: S } = require('hugin-p2p');
+const { wire: W, keys, sanitize: S } = require('hugin-network');
 const { ADDRESS, ADDRESS_2, fakeSign, fakeVerify, hasNodeSqlite, installElectronStubs } = require('./helpers/desktop-stubs.cjs');
 
 const PAST = 1700000000000;

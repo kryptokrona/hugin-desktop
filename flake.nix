@@ -54,7 +54,7 @@
           # Electron 30's v8 headers (~/.electron-gyp/30.5.1/include/node) use
           # C++17 features (std::string_view, std::optional, std::is_void_v,
           # std::void_t, etc.) but several binding.gyp files in our dep tree
-          # (usb, hugin-utils) don't specify a C++ standard.
+          # (usb) don't specify a C++ standard.
           # gyp then defaults to c++11/14 and the headers won't parse under
           # NixOS gcc 15+. Force c++17 globally so the rebuild step compiles
           # cleanly. `gnu++17` (over `c++17`) keeps GNU extensions enabled,

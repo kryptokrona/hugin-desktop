@@ -2,10 +2,10 @@ const {Address, Crypto, CryptoNote} = require('kryptokrona-utils');
 const { Hugin } = require('./account.cjs');
 const xkrUtils = new CryptoNote()
 const crypto = new Crypto()
-// Swarm keys, topics, room invites and admin signatures come from `hugin-p2p/keys` (topic
-// derivation and the Hugin `mid` from `hugin-p2p/swarm` underneath), so this file never loads
+// Swarm keys, topics, room invites and admin signatures come from `hugin-network/keys` (topic
+// derivation and the Hugin `mid` from `hugin-network/swarm` underneath), so this file never loads
 // hyperdht itself and only one hyperdht copy is in the process.
-const { createRoomInvite } = require('hugin-p2p/keys')
+const { createRoomInvite } = require('hugin-network/keys')
 const { ipcMain } = require('electron');
 
 // [invite, admin seed]: invite = 64 random hex + hex(admin public key), where the admin key

@@ -1,8 +1,8 @@
 const { randomBytes } = require('crypto');
-// Text sanitising is hugin-p2p's pure-JS implementation of desktop's sanitize-html policy
+// Text sanitising is hugin-network's pure-JS implementation of desktop's sanitize-html policy
 // (no tags allowed, then un-escaped): the plain text content, markup removed, entities decoded.
 // Non-string values are returned unchanged.
-const { sanitizeText } = require('hugin-p2p/sanitize');
+const { sanitizeText } = require('hugin-network/sanitize');
 const { Crypto, Keys } = require('kryptokrona-utils');
 const { ipcMain, dialog } = require('electron');
 const crypto = new Crypto();

@@ -9,7 +9,7 @@
 // - isPathInside: whether a path lies inside a directory.
 
 const path = require('path');
-const { sanitizeText } = require('hugin-p2p/sanitize');
+const { sanitizeText } = require('hugin-network/sanitize');
 
 const EXTERNAL_URL_PROTOCOLS = new Set(['https:', 'http:']);
 const MAX_URL_LENGTH = 4096;

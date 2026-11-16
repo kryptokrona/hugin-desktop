@@ -1,8 +1,8 @@
 'use strict';
 
-// Direct messages: the wallet session's DmCrypto (hugin-p2p/dm) and the hooks desktop gives it.
+// Direct messages: the wallet session's DmCrypto (hugin-network/dm) and the hooks desktop gives it.
 //
-// hugin-p2p/dm builds and opens the DM payloads and keeps the per-contact ML-KEM handshake;
+// hugin-network/dm builds and opens the DM payloads and keeps the per-contact ML-KEM handshake;
 // desktop supplies the crypto provider (hugin-crypto), the wallet's key operations and storage:
 //
 //   identity()                    the wallet's primary address and the nickname sent with DMs
@@ -17,7 +17,7 @@
 // Node (tests/backend). dm() is the app's instance: one DmCrypto per open wallet, made on first
 // use and seeded with the node pool hashes already handled (knownTxs).
 
-const { DmCrypto } = require('hugin-p2p/dm');
+const { DmCrypto } = require('hugin-network/dm');
 
 /** Node pool hashes handed to a new DmCrypto (it remembers this many). */
 const KNOWN_POOL_HASHES = 1000;
@@ -29,7 +29,7 @@ function consoleLog(level, msg, data) {
 }
 
 /**
- * The host hooks of hugin-p2p/dm. `deps`:
+ * The host hooks of hugin-network/dm. `deps`:
  *   db        loadDmCrypto(address), saveDmCrypto(address, state), loadKemIdentity(),
  *             saveKemIdentity({ publicKey, secretKey }) (database.cjs or a stub)
  *   wallet    getPrimaryAddress(), getPrimaryAddressPrivateKeys() -> [privateSpendKey, privateViewKey]

@@ -69,12 +69,12 @@ importers:
       hugin-crypto:
         specifier: ^1.0.0
         version: 1.0.0(encoding@0.1.13)
-      hugin-p2p:
+      hugin-network:
         specifier: link:../hugin-p2p
         version: link:../hugin-p2p
-      hugin-utils:
-        specifier: ^0.4.0
-        version: 0.4.0(encoding@0.1.13)
+      hugin-pow:
+        specifier: link:../hugin-pow
+        version: link:../hugin-pow
       hyperdht:
         specifier: 6.36.0
         version: 6.36.0(bare-url@2.4.5)
@@ -2219,9 +2219,6 @@ packages:
   hugin-crypto@1.0.0:
     resolution: {integrity: sha512-g2Sj9+bz+CXcgw4JHJALitI8CkqYMG2f2Y0OvZo5pN2n02WyCX1Z57FpFasvky4V3bADhdYTTeeoxIL2X6ZNpg==}
 
-  hugin-utils@0.4.0:
-    resolution: {integrity: sha512-8LaOXc/bbwc7g0E740mTqwEjugG1qx62rLYNIC6XXE5Met6JX4kwnzgpylGUUOkPeN/Ip4ED+mf4H9NzynC6LQ==}
-
   hypercore-crypto@3.7.0:
     resolution: {integrity: sha512-SWxobptQf2V/+ZLCCDRTXqFzGfTPIkNIuDyLKXpEMfcpJ1/ec94N9aWgylHcWOHmRt14ng/KR7z0BugebWHK9Q==}
 
@@ -2770,10 +2767,6 @@ packages:
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
-
-  node-addon-api@8.8.0:
-    resolution: {integrity: sha512-c5Ko1fZJIJmzhFIkhRN76WTq+fC6tWnGy9CXA0fA+XygsWZmEwG8vmbkNqxMyoaa0Tin4djul49NzdVcJJcjeA==}
-    engines: {node: ^18 || ^20 || >= 21}
 
   node-api-version@0.2.1:
     resolution: {integrity: sha512-2xP/IGGMmmSQpI1+O/k72jF/ykvZ89JeuKX3TLJAYPDVLUalrshrLHkeVcCCZqG/eEa635cr8IBYzgnDvM2O8Q==}
@@ -6363,15 +6356,6 @@ snapshots:
       - encoding
       - react-native
 
-  hugin-utils@0.4.0(encoding@0.1.13):
-    dependencies:
-      kryptokrona-utils: file:../../kryptokrona-utils(encoding@0.1.13)
-      node-addon-api: 8.8.0
-      node-gyp-build: 4.8.4
-    transitivePeerDependencies:
-      - encoding
-      - react-native
-
   hypercore-crypto@3.7.0(bare-events@2.9.1)(bare-url@2.4.5):
     dependencies:
       b4a: 1.8.1
@@ -6936,8 +6920,6 @@ snapshots:
 
   node-addon-api@7.1.1:
     optional: true
-
-  node-addon-api@8.8.0: {}
 
   node-api-version@0.2.1:
     dependencies:
