@@ -56,6 +56,7 @@
 		"overrides": {
 			"hyperdht": "6.36.0",
 			"hyperswarm": "4.17.2",
+			"hugin-crypto": "$hugin-crypto",
 			"kryptokrona-crypto": "$kryptokrona-crypto",
 			"kryptokrona-utils": "$kryptokrona-utils",
 			"kryptokrona-wallet-backend-js": "$kryptokrona-wallet-backend-js"
@@ -88,7 +89,7 @@
 		"electron-updater": "5.3.0",
 		"electron-window-state": "^5.0.3",
 		"emoji-picker-element": "^1.21.2",
-		"hugin-crypto": "^1.0.0",
+		"hugin-crypto": "file:../hugin-crypto",
 		"hugin-network": "link:../hugin-p2p",
 		"hugin-pow": "link:../hugin-pow",
 		"hyperdht": "6.36.0",

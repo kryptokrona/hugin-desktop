@@ -111,14 +111,15 @@ reaches hyperdht through `hugin-network`, so one hyperdht copy is loaded at runt
 The wallet libraries come from sibling checkouts too (`file:` dependencies, next to
 `xkr-work/`): kryptokrona-crypto 2.0 (`../../kryptokrona-crypto`), kryptokrona-utils 1.5
 (`../../kryptokrona-utils`) and kryptokrona-wallet-backend-js 2.7
-(`../../kryptokrona-wallet-backend-js`), each with its `dist/` built. pnpm copies them into
+(`../../kryptokrona-wallet-backend-js`), each with its `dist/` built, and hugin-crypto 1.1
+(`../hugin-crypto`, built with `npm run build`). pnpm copies them into
 `node_modules` and installs their dependencies; the `pnpm.overrides` entries
 (`"$kryptokrona-crypto"` and so on) give every package in the tree (hugin-crypto,
 the wallet backend, kryptokrona-utils) the same single copy. kryptokrona-crypto 2.0 is a
 Node-API addon built with napi-rs (`prebuilt/napi/kryptokrona-crypto.<platform>.node`): it loads
 in any Electron version without `electron-rebuild`, and `build.config.json` unpacks it from the
 asar archive. After rebuilding one of these libraries, reinstall it (`rm -rf
-node_modules/kryptokrona-crypto` and `pnpm install`). On start the backend checks that the
+node_modules/<package>` and `pnpm install`). On start the backend checks that the
 loaded kryptokrona-crypto is 2.0.0 or later and runs on its Node-API addon
 (`src/backend/crypto-backend.cjs`); otherwise it shows the reason and starts no wallet.
 
@@ -132,6 +133,15 @@ The backend tests (`tests/backend/*.test.cjs`, `node:test`, no Electron) cover t
 kryptokrona-crypto check (`crypto-backend.test.cjs`: version, Node-API addon, one copy) and `p2p-host.cjs`:
 the host hooks on an in-memory database, the PoW backend, the event table (every hugin-network
 event is mapped or listed as ignored), the IPC handlers, and two desktop hosts in one room on a local DHT testnet.
+`hugin-crypto.test.cjs` runs hugin-crypto's message API between two wallets (create, then open
+with the recipient's own address).
+
+### Release
+
+Before a release, switch the sibling checkouts to the published packages and make a fresh
+lockfile (`pnpm install`): kryptokrona-crypto `^2.0.0`, kryptokrona-utils `^1.5.0`,
+kryptokrona-wallet-backend-js `^2.7.0`, hugin-network `^3.0.0`, hugin-pow `^1.0.0` and
+hugin-crypto `^1.1.0`. Keep the `pnpm.overrides` entries, so the tree has one copy of each.
 
 
 ## Build
