@@ -8,12 +8,9 @@ on:
             - '*'
 
 env:
-    # Explicit hint for node-gyp on Windows so it doesn't fall back to
-    # registry-detection guesswork inside electron-rebuild's postinstall.
-    # Harmless on Linux/macOS (they ignore it).
+    # Visual Studio version node-gyp uses on Windows.
     GYP_MSVS_VERSION: '2022'
-    # See pr-ci.yml — Electron 30's v8 headers need C++17 and gyp defaults
-    # to something older. Safe globally (MSVC ignores CXXFLAGS).
+    # C++ standard for the native modules built against the Electron headers.
     CXXFLAGS: '-std=gnu++17'
 
 jobs:
@@ -27,10 +24,7 @@ jobs:
         steps:
             - name: Create Release
               id: create_release
-              # actions/create-release@v1 is archived. softprops/action-gh-release
-              # is the community-standard drop-in replacement and stays
-              # compatible with the same outputs (upload_url etc).
-              uses: softprops/action-gh-release@v2
+              uses: softprops/action-gh-release@v3
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
@@ -59,16 +53,15 @@ jobs:
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: '3.11'
 
             - name: Install python-setuptools on macOS
-              # Python 3.12 dropped distutils; some node-gyp scripts still ask
-              # for it via setuptools. Cheap install, safe on all macOS runners.
+              # Provides distutils for node-gyp.
               if: startsWith(matrix.config.os, 'macos')
               run: brew install python-setuptools
 
@@ -114,24 +107,21 @@ jobs:
                   security find-identity -p codesigning -v
 
             - name: Install pnpm
-              uses: pnpm/action-setup@v4
+              uses: pnpm/action-setup@v5
 
             - name: Set up Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: 20
                   cache: pnpm
 
             - name: Set up MSBuild (Windows)
-              # See pr-ci.yml for the reasoning. Microsoft-maintained action
-              # puts MSBuild.exe on PATH; GYP_MSVS_VERSION at workflow env
-              # level pins node-gyp to VS 2022.
+              # Puts MSBuild.exe on PATH for node-gyp.
               if: matrix.config.os == 'windows-latest'
-              uses: microsoft/setup-msbuild@v2
+              uses: microsoft/setup-msbuild@v3
 
             - name: Install dependencies
-              # --frozen-lockfile: fail if pnpm-lock.yaml drifts from package.json.
-              # Releases especially must use the exact lockfile that was reviewed.
+              # Installs exactly what pnpm-lock.yaml lists.
               run: pnpm install --frozen-lockfile
 
             - name: Build ${{ matrix.config.name }}

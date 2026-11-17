@@ -4,26 +4,24 @@ env:
     GITHUB_REGISTRY: 'ghcr.io'
     GITHUB_OWNER: 'kryptokrona'
     GH_TOKEN: ${{ secrets.HUGIN_DESKTOP_SECRET }}
-    # Explicit hint for node-gyp on Windows so it doesn't fall back to
-    # registry-detection guesswork inside electron-rebuild's postinstall.
-    # Harmless on Linux/macOS (they ignore it).
+    # Visual Studio version node-gyp uses on Windows.
     GYP_MSVS_VERSION: '2022'
-    # See pr-ci.yml — Electron 30's v8 headers need C++17 and gyp defaults
-    # to something older. Safe globally (MSVC ignores CXXFLAGS).
+    # C++ standard for the native modules built against the Electron headers.
     CXXFLAGS: '-std=gnu++17'
 
 on:
     push:
         branches:
             - main
+            - xkr-v2
         paths-ignore:
             - '*.md'
             - '.run/**'
             - '.github/ISSUE_TEMPLATE/**'
 
 concurrency:
-    # Only one main build at a time — later pushes cancel the in-flight one.
-    group: main-ci
+    # One main build per branch at a time.
+    group: main-ci-${{ github.ref_name }}
     cancel-in-progress: false
 
 jobs:
@@ -37,7 +35,7 @@ jobs:
                 config:
                     - { name: 'Windows Latest', os: windows-latest, platform: x64 }
                     - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
-                    - { name: 'macOS x64', os: macos-13, platform: x64 }
+                    - { name: 'macOS x64', os: macos-15-intel, platform: x64 }
                     - { name: 'macOS arm64', os: macos-latest, platform: arm64 }
 
         env:
@@ -45,10 +43,10 @@ jobs:
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v6
               with:
                   python-version: '3.11'
 
@@ -69,25 +67,22 @@ jobs:
                       libudev-dev
 
             - name: Install pnpm
-              # Uses the version declared via `packageManager` in package.json.
-              uses: pnpm/action-setup@v4
+              # Installs the version in the `packageManager` field of package.json.
+              uses: pnpm/action-setup@v5
 
             - name: Set up Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: 20
                   cache: pnpm
 
             - name: Set up MSBuild (Windows)
-              # See pr-ci.yml for the reasoning. Microsoft-maintained action
-              # puts MSBuild.exe on PATH; GYP_MSVS_VERSION at workflow env
-              # level pins node-gyp to VS 2022.
+              # Puts MSBuild.exe on PATH for node-gyp.
               if: matrix.config.os == 'windows-latest'
-              uses: microsoft/setup-msbuild@v2
+              uses: microsoft/setup-msbuild@v3
 
             - name: Install dependencies
-              # --frozen-lockfile: fail if pnpm-lock.yaml drifts from package.json.
-              # `.npmrc`'s node-linker=hoisted gives us the flat tree Electron needs.
+              # Installs exactly what pnpm-lock.yaml lists; .npmrc sets the flat (hoisted) layout.
               run: pnpm install --frozen-lockfile
 
             - name: Build ${{ matrix.config.name }}
@@ -103,7 +98,7 @@ jobs:
               run: pnpm run build:mac-${{ matrix.config.platform }}
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               if: matrix.config.os == 'windows-latest'
               with:
                   name: windows-latest
@@ -111,7 +106,7 @@ jobs:
                       dist/*.exe
 
             - name: 'Upload ${{ matrix.config.name }} Deb Artifact'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               if: matrix.config.os == 'ubuntu-latest'
               with:
                   name: ubuntu-latest-deb
@@ -119,7 +114,7 @@ jobs:
                       dist/*.deb
 
             - name: 'Upload ${{ matrix.config.name }} Snap Artifact'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               if: matrix.config.os == 'ubuntu-latest'
               with:
                   name: ubuntu-latest-snap
@@ -127,7 +122,7 @@ jobs:
                       dist/*.snap
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               if: matrix.config.name == 'macOS x64'
               with:
                   name: macos-x64
@@ -135,7 +130,7 @@ jobs:
                       dist/*.dmg
 
             - name: 'Upload ${{ matrix.config.name }} Artifact'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               if: matrix.config.name == 'macOS arm64'
               with:
                   name: macos-arm64

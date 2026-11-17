@@ -3,21 +3,15 @@ name: Hugin Desktop Pull Request Pipeline
 on: [pull_request]
 
 env:
-    # Explicit hint for node-gyp on Windows so it doesn't fall back to
-    # registry-detection guesswork inside electron-rebuild's postinstall.
-    # Harmless on Linux/macOS (they ignore it).
+    # Visual Studio version node-gyp uses on Windows.
     GYP_MSVS_VERSION: '2022'
-    # Electron 30's v8 headers use C++17 features (std::void_t,
-    # std::string_view, std::is_void_v, etc.) but gyp / node-gyp default
-    # to a pre-C++17 standard for the native module builds. Force gnu++17
-    # so the rebuild step compiles cleanly. Ignored by MSVC on Windows
-    # (which reads CXXFLAGS not-at-all), so this is safe globally.
+    # C++ standard for the native modules built against the Electron headers.
     CXXFLAGS: '-std=gnu++17'
 
 concurrency:
-  # Cancel any in-flight run on the same PR when a new commit lands.
-  group: pr-ci-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+    # A new commit on the PR cancels the running build.
+    group: pr-ci-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
 
 jobs:
     build:
@@ -30,7 +24,7 @@ jobs:
                 config:
                     - { name: 'Windows Latest', os: windows-latest, platform: x64 }
                     - { name: 'Ubuntu Latest', os: ubuntu-latest, platform: x64 }
-                    - { name: 'macOS x64', os: macos-13, platform: x64 }
+                    - { name: 'macOS x64', os: macos-15-intel, platform: x64 }
                     - { name: 'macOS arm64', os: macos-latest, platform: arm64 }
 
         env:
@@ -38,21 +32,16 @@ jobs:
 
         steps:
             - name: Check out Git repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Set up Python
-              # Some node-gyp builds (better-sqlite3-multiple-ciphers, uiohook-napi)
-              # still need Python at install time.
-              uses: actions/setup-python@v5
+              # Python for node-gyp (better-sqlite3-multiple-ciphers, uiohook-napi).
+              uses: actions/setup-python@v6
               with:
                   python-version: '3.11'
 
             - name: Install libudev + X11 headers
-              # Keep this list in sync with main-ci.yml and release-ci.yml —
-              # PRs and main must compile from the same system-library set,
-              # otherwise a PR can pass CI while main breaks (or vice versa).
-              # These are what the native modules (uiohook-napi, wrtc,
-              # better-sqlite3-multiple-ciphers) need on Linux.
+              # System libraries for the native modules on Linux; the same list as main-ci.yml and release-ci.yml.
               if: matrix.config.os == 'ubuntu-latest'
               run: |
                   sudo apt-get update
@@ -69,41 +58,25 @@ jobs:
                       libudev-dev
 
             - name: Install pnpm
-              # Reads `packageManager: "pnpm@10.33.4"` from package.json and
-              # installs that exact version — dev and CI always use the same one.
-              uses: pnpm/action-setup@v4
+              # Installs the version in the `packageManager` field of package.json.
+              uses: pnpm/action-setup@v5
 
             - name: Set up Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
-                  # Should match your local Node major. Bump when you upgrade
-                  # dev machines.
                   node-version: 20
                   cache: pnpm
 
             - name: Set up MSBuild (Windows)
-              # electron-rebuild's postinstall shells out to node-gyp, which
-              # locates a Visual Studio installation via vswhere. On
-              # windows-latest, VS 2022 is installed but node-gyp doesn't
-              # always find MSBuild from a plain shell — this Microsoft-
-              # maintained action puts MSBuild.exe on PATH so the discovery
-              # completes. Paired with `GYP_MSVS_VERSION: 2022` at the
-              # workflow env level to explicitly tell node-gyp which toolset
-              # to look for, removing any registry-detection guesswork.
+              # Puts MSBuild.exe on PATH for node-gyp.
               if: matrix.config.os == 'windows-latest'
-              uses: microsoft/setup-msbuild@v2
+              uses: microsoft/setup-msbuild@v3
 
             - name: Install dependencies
-              # --frozen-lockfile means "fail if pnpm-lock.yaml is out of sync
-              # with package.json" — the review-time guarantee that CI validates
-              # the exact resolution devs have on disk. `.npmrc` in the repo
-              # (`node-linker=hoisted`) gives us the flat layout Electron needs.
+              # Installs exactly what pnpm-lock.yaml lists; .npmrc sets the flat (hoisted) layout.
               run: pnpm install --frozen-lockfile
 
-            # All three build steps use the non-`-gh` variants (electron-builder
-            # `-p never`) so PRs only validate the build — they never attempt to
-            # publish a release. The `-gh` variants are reserved for
-            # release-ci.yml which is what actually publishes to GitHub Releases.
+            # The build scripts without `-gh` run electron-builder with `-p never`: build only, no release.
             - name: Build ${{ matrix.config.name }}
               if: matrix.config.os == 'windows-latest'
               run: pnpm run build:win-${{ matrix.config.platform }}
