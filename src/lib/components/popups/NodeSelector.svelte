@@ -41,12 +41,26 @@
     nodeInput = `${node.url}:${node.port}`
     selectedNode = i
   }
+
+  // An xkrd node found over Hyperswarm (no address needed); a private node's `xkr:` invite can
+  // be pasted into the field instead.
+  function chooseHyperswarm() {
+    nodeInput = 'hyperswarm'
+    selectedNode = 'hyperswarm'
+  }
 </script>
 
 <div in:fade|global class="wrapper">
     <h1>Pick a node</h1>
-    <input spellcheck="false" type="text" placeholder="Enter url & port" bind:value="{nodeInput}"/>
+    <input spellcheck="false" type="text" placeholder="url:port, hyperswarm or an xkr: invite" bind:value="{nodeInput}"/>
     <div class="node-list">
+        <div
+                class="node-card"
+                class:selected="{selectedNode === 'hyperswarm'}"
+                onclick={chooseHyperswarm}
+        >
+            <p id="node">Hyperswarm (automatic)</p>
+        </div>
         {#each $nodelist.nodes as node, i}
             <div
                     class="node-card"

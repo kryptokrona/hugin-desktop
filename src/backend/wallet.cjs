@@ -19,6 +19,7 @@ const { start_message_syncer } = require('./messages.cjs')
 const { getRooms } = require('./database.cjs')
 const P2P = require('./p2p-host.cjs').instance()
 const { cryptoGate } = require('./crypto-backend.cjs')
+const { isSwarmNode, parseNodeInput, defaultNode, makeDaemon } = require('./daemon.cjs')
 
 let js_wallet
 let daemon
@@ -234,7 +235,7 @@ const createWallet = async () => {
 }
 
 const loadDaemon = (nodeUrl, nodePort) => {
-  daemon = new WB.Daemon(nodeUrl, nodePort)
+  daemon = makeDaemon(nodeUrl, nodePort)
 }
 
 const checkPass = async (pass) => {
@@ -403,9 +404,9 @@ function sendNodeInfo() {
 }
 
 const pickNode = async (node) => {
-    let nodeUrl = node.split(':')[0]
-    let nodePort = parseInt(node.split(':')[1])
-    const picked = { node: nodeUrl, port: nodePort }
+    const picked = parseNodeInput(node)
+    const nodeUrl = picked.node
+    const nodePort = picked.port
     if (!await checkNodeStatus(picked)) return
     loadDaemon(nodeUrl, nodePort)
     await js_wallet.swapNode(daemon)
@@ -439,8 +440,8 @@ const loadMiscData = async () => {
     let node = db.data.node.node
     let port = db.data.node.port
     if (node === undefined) {
-        node = "techy.ddns.net"
-        port = 11898
+        // no node chosen yet: the local node when one answers, else an xkrd node over Hyperswarm
+        ({ node, port } = await defaultNode())
     }
     
     return [{node, port}, db.data.walletNames]
@@ -449,6 +450,8 @@ const loadMiscData = async () => {
 
 
 async function checkNodeStatus (node) {
+    // Hyperswarm finds a synchronized node itself (and keeps looking)
+    if (isSwarmNode(node.node)) return true
     try {
         const req = await fetch('http://' + node.node + ':' + node.port.toString() + '/getinfo')
         const res = await req.json()
